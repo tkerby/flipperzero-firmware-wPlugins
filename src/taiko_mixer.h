@@ -5,6 +5,8 @@
 
 #include "tja_parser.h"
 
+#define TAIKO_MASTER_VOLUME_MAX 200U
+
 typedef struct {
     const uint8_t* samples;
     uint32_t count;
@@ -30,5 +32,6 @@ void taiko_mixer_mix(
     uint32_t position);
 
 /* Final application gain for all PCM output, including music without effects.
+ * Range: 0..200 percent, with saturation to unsigned 8-bit PCM.
  * Unsigned PCM silence stays centered at 128. */
 void taiko_mixer_apply_volume(uint8_t* samples, size_t count, uint8_t volume);

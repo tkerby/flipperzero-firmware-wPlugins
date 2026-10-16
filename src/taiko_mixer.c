@@ -10,13 +10,18 @@
 #define AUTO_RETRIGGER_FADE_MS 3U
 
 void taiko_mixer_apply_volume(uint8_t* samples, size_t count, uint8_t volume) {
-    if(volume >= 100) return;
+    if(volume > TAIKO_MASTER_VOLUME_MAX) volume = TAIKO_MASTER_VOLUME_MAX;
+    if(volume == 100) return;
     if(!volume) {
         memset(samples, 128, count);
         return;
     }
-    for(size_t i = 0; i < count; i++)
-        samples[i] = 128 + ((int32_t)samples[i] - 128) * volume / 100;
+    for(size_t i = 0; i < count; i++) {
+        int32_t value = 128 + ((int32_t)samples[i] - 128) * volume / 100;
+        if(value < 0) value = 0;
+        if(value > 255) value = 255;
+        samples[i] = (uint8_t)value;
+    }
 }
 
 static uint32_t clip_duration(const TaikoPcmClip* clip) {

@@ -58,6 +58,30 @@ int main(void) {
     assert(!menu.gpio.enabled);
     assert(menu.frame_rate == 50);
 
+    /* Boosted master volume persists without expanding the per-drum ranges. */
+    for(unsigned master = 0; master <= 200; master += 10) {
+        settings = defaults;
+        settings.volume = master;
+        assert(taiko_settings_validate(&settings));
+        taiko_settings_apply(&settings, &menu, &volume);
+        assert(volume == master && menu.don_volume == 70 && menu.ka_volume == 70);
+        taiko_settings_capture(&captured, &menu, volume);
+        assert(taiko_settings_equal(&settings, &captured));
+    }
+    const uint32_t invalid_volumes[] = {75, 201, 210, 255, UINT32_MAX};
+    for(unsigned i = 0; i < sizeof(invalid_volumes) / sizeof(invalid_volumes[0]); i++) {
+        settings = defaults;
+        settings.volume = invalid_volumes[i];
+        assert(!taiko_settings_validate(&settings));
+        assert(settings.volume == 70);
+    }
+    settings = defaults;
+    settings.volume = 180;
+    settings.don_volume = 110;
+    settings.ka_volume = 200;
+    assert(!taiko_settings_validate(&settings));
+    assert(settings.volume == 180 && settings.don_volume == 70 && settings.ka_volume == 70);
+
     /* Invalid / absent numeric preferences fall back independently. */
     const uint32_t invalid_rates[] = {0, 14, 61, UINT32_MAX};
     for(unsigned i = 0; i < sizeof(invalid_rates) / sizeof(invalid_rates[0]); i++) {

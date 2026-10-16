@@ -255,6 +255,44 @@ static void test_master_volume(void) {
     assert(mixed[0] == 128 && mixed[1] == 128);
 }
 
+static void test_master_volume_boost(void) {
+    const uint8_t original[] = {0, 32, 64, 96, 127, 128, 129, 160, 191, 192, 224, 255};
+    const uint8_t boosted[] = {0, 0, 0, 64, 126, 128, 130, 192, 254, 255, 255, 255};
+    const uint8_t one_and_half[] = {0, 0, 32, 80, 127, 128, 129, 176, 222, 224, 255, 255};
+    uint8_t samples[sizeof(original)];
+    memcpy(samples, original, sizeof(samples));
+    taiko_mixer_apply_volume(samples, sizeof(samples), 150);
+    assert(memcmp(samples, one_and_half, sizeof(samples)) == 0);
+    memcpy(samples, original, sizeof(samples));
+    taiko_mixer_apply_volume(samples, sizeof(samples), 200);
+    assert(memcmp(samples, boosted, sizeof(samples)) == 0);
+    memcpy(samples, original, sizeof(samples));
+    taiko_mixer_apply_volume(samples, sizeof(samples), 255);
+    assert(memcmp(samples, boosted, sizeof(samples)) == 0); /* Cap invalid API input. */
+
+    for(unsigned volume = 0; volume <= 200; volume += 10) {
+        uint8_t ramp[256];
+        for(size_t i = 0; i < sizeof(ramp); i++)
+            ramp[i] = i;
+        taiko_mixer_apply_volume(ramp, sizeof(ramp), volume);
+        assert(ramp[128] == 128); /* Gain never changes the silence center. */
+        for(size_t i = 1; i < sizeof(ramp); i++)
+            assert(ramp[i] >= ramp[i - 1]); /* Saturate instead of wrapping peaks. */
+    }
+
+    const uint8_t don[] = {168, 88};
+    const TjaNote notes[] = {{.time_ms = 0, .kind = 1}};
+    TaikoMixer mixer = {
+        .don = {don, sizeof(don), 8000},
+        .chart = &(TjaChart){.notes = (TjaNote*)notes, .note_count = 1},
+        .don_volume = 50};
+    uint8_t mixed[] = {148, 108};
+    taiko_mixer_mix(&mixer, mixed, sizeof(mixed), 8000, 0);
+    assert(mixed[0] == 168 && mixed[1] == 88);
+    taiko_mixer_apply_volume(mixed, sizeof(mixed), 200);
+    assert(mixed[0] == 208 && mixed[1] == 48); /* Music and drums both get the boost. */
+}
+
 int main(void) {
     test_notes_and_clipping();
     test_buffer_boundaries_and_seeking();
@@ -264,6 +302,7 @@ int main(void) {
     test_long_note_with_shorter_hits();
     test_independent_volume();
     test_master_volume();
+    test_master_volume_boost();
     puts(
         "Drum mixing, volume, overlap, clipping, resampling, DMA boundaries and seeking tests passed");
     return 0;

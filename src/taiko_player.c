@@ -323,7 +323,8 @@ static bool play_song(TaikoPlayer* app, const char* path) {
         if(furi_message_queue_get(app->input, &event, furi_ms_to_ticks(2)) == FuriStatusOk) {
             if(event.key == InputKeyBack && event.type == InputTypeLong) break;
             if(!app->menu.open && (event.key == InputKeyUp || event.key == InputKeyDown)) {
-                if(event.key == InputKeyUp && app->volume < 100) app->volume += 10;
+                if(event.key == InputKeyUp && app->volume < TAIKO_MASTER_VOLUME_MAX)
+                    app->volume += 10;
                 if(event.key == InputKeyDown && app->volume > 0) app->volume -= 10;
                 if(audio) pcm_audio_set_volume(audio, app->volume);
                 next_frame = furi_get_tick();

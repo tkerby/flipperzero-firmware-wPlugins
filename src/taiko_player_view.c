@@ -2,6 +2,7 @@
 // Copyright (C) 2026 ZeroNinx
 
 #include "taiko_player_view.h"
+#include "taiko_mixer.h"
 
 #include <furi.h>
 #include <gui/elements.h>
@@ -472,7 +473,9 @@ void taiko_player_view_draw(Canvas* canvas, const TaikoPlayerView* view, FuriStr
     const char* course = furi_string_get_cstr(text);
     canvas_draw_str(canvas, status_center - canvas_string_width(canvas, course) / 2, 49, course);
     canvas_draw_frame(canvas, 123, 30, 5, 21);
-    const int volume_height = (view->volume * 19 + 50) / 100;
+    const unsigned volume = MIN(view->volume, TAIKO_MASTER_VOLUME_MAX);
+    const int volume_height =
+        (volume * 19 + TAIKO_MASTER_VOLUME_MAX / 2) / TAIKO_MASTER_VOLUME_MAX;
     if(volume_height) canvas_draw_box(canvas, 124, 50 - volume_height, 3, volume_height);
     draw_control(canvas, "BWD", AlignLeft);
     draw_control(

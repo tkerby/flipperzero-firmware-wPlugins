@@ -2,6 +2,7 @@
 // Copyright (C) 2026 ZeroNinx
 
 #include "taiko_settings.h"
+#include "taiko_mixer.h"
 
 #include <ctype.h>
 #include <string.h>
@@ -25,8 +26,8 @@ void taiko_settings_defaults(TaikoSettings* settings) {
     taiko_settings_capture(settings, &menu, TAIKO_DEFAULT_VOLUME);
 }
 
-static bool valid_volume(uint32_t volume) {
-    return volume <= 100 && volume % 10 == 0;
+static bool valid_volume(uint32_t volume, uint32_t maximum) {
+    return volume <= maximum && volume % 10 == 0;
 }
 
 bool taiko_settings_validate(TaikoSettings* settings) {
@@ -34,8 +35,9 @@ bool taiko_settings_validate(TaikoSettings* settings) {
     taiko_settings_defaults(&defaults);
     bool valid = true;
     uint32_t* volumes[] = {&settings->volume, &settings->don_volume, &settings->ka_volume};
+    const uint32_t volume_limits[] = {TAIKO_MASTER_VOLUME_MAX, 100, 100};
     for(size_t i = 0; i < sizeof(volumes) / sizeof(volumes[0]); i++) {
-        if(!valid_volume(*volumes[i])) {
+        if(!valid_volume(*volumes[i], volume_limits[i])) {
             *volumes[i] = TAIKO_DEFAULT_VOLUME;
             valid = false;
         }

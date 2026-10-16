@@ -32,6 +32,6 @@ PcmAudioState pcm_audio_state(PcmAudio* audio);
 uint32_t pcm_audio_position_ms(PcmAudio* audio);
 uint32_t pcm_audio_duration_ms(PcmAudio* audio);
 const char* pcm_audio_error(PcmAudio* audio);
-/* Applies to newly filled DMA buffers without restarting playback. */
+/* 0..200 percent; applies to newly filled DMA buffers without restarting playback. */
 void pcm_audio_set_volume(PcmAudio* audio, uint8_t volume);
 void pcm_audio_free(PcmAudio* audio);

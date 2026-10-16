@@ -63,6 +63,8 @@ Copy the generated sdcard/apps_data/taiko_player/sfx/ folder, including its lice
 | Short Back | Open the menu / return |
 | Hold Back during playback | Exit the app |
 
+App master volume ranges from **0 to 200%**, with **70%** as the default. Above 100%, software gain boosts both music and drum sounds; peaks are clipped to the PCM range and may distort. The volume bar is full at 200%. Individual Don/Ka volume remains 0–100%.
+
 In the menu, use Up/Down to select, Left/Right to adjust, and OK to activate. Opening the menu pauses playback. **Return** resumes the previous state; **Restart** starts over; **Play New Song** opens the song browser.
 
 Difficulty defaults to Oni, or the highest available course when Oni is absent. Playback speed ranges from **0.5× to 2.0×** in 0.1 steps and changes pitch. Scroll speed is independent: **0.5× to 2.5×** in 0.1 steps, plus **3.0× and 4.0×**. **Frame Rate**, below Scroll Speed, sets the target display refresh rate from **15 to 60 FPS** in 1 FPS steps (default: **50 FPS**), without changing audio or hit scheduling. Volume, speeds, frame rate, seek intervals, and GPIO pin mappings are saved in `/ext/apps_data/taiko_player/settings.ff`; GPIO output starts disabled each time.

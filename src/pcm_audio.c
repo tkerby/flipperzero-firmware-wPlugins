@@ -253,7 +253,7 @@ PcmAudio* pcm_audio_start(
     audio->started_tick = 0;
     audio->position_ms = position_ms;
     audio->mixer = *mixer;
-    audio->volume = MIN(volume, 100);
+    audio->volume = MIN(volume, TAIKO_MASTER_VOLUME_MAX);
     audio->speed_tenths = MAX(5, MIN(speed_tenths, 20));
     audio->thread = furi_thread_alloc_ex("TaikoAudio", AUDIO_STACK, audio_worker, audio);
     if(!audio->thread) goto fail;
@@ -268,7 +268,7 @@ fail:
 
 void pcm_audio_set_volume(PcmAudio* audio, uint8_t volume) {
     furi_mutex_acquire(audio->mutex, FuriWaitForever);
-    audio->volume = MIN(volume, 100);
+    audio->volume = MIN(volume, TAIKO_MASTER_VOLUME_MAX);
     furi_mutex_release(audio->mutex);
 }
 
