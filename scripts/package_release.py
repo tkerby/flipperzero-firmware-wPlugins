@@ -65,7 +65,7 @@ python3 scripts/prepare_songs.py songs --output sdcard/apps_data/taiko_player/so
 
 将生成的 `sdcard/apps_data/taiko_player/songs/` 上传到 SD 卡的同名目录。
 脚本会生成 UTF-8 TJA 副本及 22050 Hz、8 位、单声道 PCM WAV，并更新 WAVE 字段。
-设备不直接解码 OGG。详细功能及操作见 README.md。
+设备不直接解码 OGG。详细功能及操作见 docs/usage.md；英文入门见 README.en.md。
 
 ## 操作
 
@@ -110,10 +110,13 @@ def package(version, output):
             files = {
                 "sdcard/apps/Media/taiko_player.fap": fap.read_bytes(),
                 "README.md": (ROOT / "README.md").read_bytes(),
+                "README.en.md": (ROOT / "README.en.md").read_bytes(),
                 "assets/taiko_player.svg": (ROOT / "assets/taiko_player.svg").read_bytes(),
                 "INSTALL.md": installation(version, firmware, sdk["version"], metadata["api"]).encode(),
                 "BUILD.json": (json.dumps(metadata, indent=2) + "\n").encode(),
             }
+            for document in sorted((ROOT / "docs").rglob("*.md")):
+                files[document.relative_to(ROOT).as_posix()] = document.read_bytes()
             for name in ("dong.wav", "ka.wav"):
                 files[f"sdcard/apps_data/taiko_player/sfx/{name}"] = (effects / name).read_bytes()
             for name in ("prepare_songs.py", "prepare_sfx.py"):
