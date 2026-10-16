@@ -1,3 +1,8 @@
+# v3.1 (2026-07-7)
+
+## Bug-fix
+- Fix external module detection and usage [PR #10], by @Lechnio
+
 # v3.0 (2026-02-12)
 
 ## New Features

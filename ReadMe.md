@@ -226,6 +226,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Kindle Click v0.3 (By zuyan9)](https://github.com/zuyan9/Flipper-Zero-Kindle-Click)
 - Updated: [ProtoPirate v4.1 (By RocketGod-git)](https://protopirate.net/ProtoPirate/ProtoPirate)
 - Updated: [Tesla Mod v2.17.0b1 (By hypery11)](https://github.com/hypery11/flipper-tesla-fsd)
+- Updated: [Sub-GHz Scheduler v3.1 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler) (Version Only)
 
 <a name="release"></a>
 
@@ -1078,7 +1079,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Sub-GHz RAW Edit v1.7 (By Lechnio)](https://github.com/Lechnio/SubGHz-RAW-Edit)
 - [Sub-GHz Remote v1.8 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote)
 - [Sub-GHz Rolling Flaws v1.5 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials)
-- [Sub-GHz Scheduler v3.0 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
+- [Sub-GHz Scheduler v3.1 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
 - [Sub-GHz Spectrum v1.0 (By barkandbite)](https://github.com/barkandbite/flipper_suite)
 - [Sub-GHz Toolkit 1808 v1.0 (By RocketGod-git)](https://github.com/RocketGod-git/RocketGods-SubGHz-Toolkit)
 - [Sub-GHz WarDriving v0.1 (By xMasterX)](https://github.com/xMasterX/all-the-plugins/tree/213baa6e872d1db597a25d2c16e81406e9634440/base_pack/subghz_wardriving)
