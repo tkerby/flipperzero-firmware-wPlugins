@@ -4,7 +4,7 @@
 
 一个用于 Flipper Zero 的轻量 TJA 播放器。从 SD 卡选择谱面，使用内置扬声器播放配套音频，同时显示鼓点，并通过四路 GPIO 输出打击脉冲。
 
-<img width="512" height="256" alt="Screenshot-20261015-235515" src="https://github.com/user-attachments/assets/eeb9ab7a-9c96-4b82-ac06-68039bfc259f" />
+<img width="512" height="256" alt="Screenshot-20261017-012454" src="https://github.com/user-attachments/assets/a167050b-013c-442f-b299-9ff15816d7da" />
 
 
 ## 功能
