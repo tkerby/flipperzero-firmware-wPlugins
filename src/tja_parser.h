@@ -7,8 +7,8 @@
 /* Player display calibration shared by all songs: 1x at 240 BPM.
  * This is an application choice, not a TJA format default. */
 #define TAIKO_SCROLL_REFERENCE_BPM 240.0f
-/* Independent of display calibration: automatic hits never exceed 24 Hz. */
-#define TAIKO_ROLL_MAX_HZ          24
+/* Independent of display calibration: automatic hits never exceed 32 Hz. */
+#define TAIKO_ROLL_MAX_HZ          32
 
 typedef enum {
     TjaCourseEasy,
@@ -98,7 +98,7 @@ TjaCourse tja_default_course(uint8_t courses);
 float tja_chart_bpm_at(const TjaChart* chart, uint32_t position_ms);
 /* GOGO is initially off and always ends at #END, including after a seek. */
 bool tja_chart_gogo_at(const TjaChart* chart, uint32_t position_ms);
-/* Rebuild automatic hits for the playback speed, preserving a 24 Hz real-time
+/* Rebuild automatic hits for the playback speed, preserving a 32 Hz real-time
  * cap. Audio must be stopped/finished. Failure leaves the chart unchanged. */
 bool tja_chart_set_roll_speed(TjaChart* chart, uint8_t speed_tenths, const char** error);
 void tja_chart_free(TjaChart* chart);

@@ -88,6 +88,82 @@ static void test_missing_effects(void) {
     assert(memcmp(samples, original, sizeof(samples)) == 0);
 }
 
+static void test_auto_retrigger(void) {
+    uint8_t don[2000], samples[2400];
+    memset(don, 168, sizeof(don));
+    TjaHitRun runs[] = {
+        {.first_ms = 0, .interval_ms = 10, .count = 3},
+        {.first_ms = 40, .interval_ms = 10, .count = 1}};
+    TjaChart chart = {.hit_runs = runs, .hit_run_count = 2};
+    TaikoMixer mixer = {.don = {don, sizeof(don), 8000}, .chart = &chart, .don_volume = 100};
+    memset(samples, 128, sizeof(samples));
+    taiko_mixer_mix(&mixer, samples, sizeof(samples), 8000, 0);
+    assert(samples[0] == 168 && samples[55] == 168);
+    assert(samples[56] < 168 && samples[56] > 128);
+    assert(samples[79] == 128 && samples[80] == 168);
+    assert(samples[159] == 128 && samples[160] == 168);
+    /* A later run replaces the same auto voice; the final hit keeps its tail. */
+    assert(samples[319] == 128 && samples[320] == 168);
+    assert(samples[2319] == 168 && samples[2320] == 128);
+    for(size_t i = 0; i < sizeof(samples); i++)
+        assert(samples[i] <= 168); /* Long auto samples never accumulate. */
+
+    TjaNote notes[] = {{.time_ms = 5, .kind = 1}, {.time_ms = 10, .kind = 2}};
+    const uint8_t ka[] = {148, 108};
+    chart.notes = notes;
+    chart.note_count = 2;
+    mixer.ka = (TaikoPcmClip){ka, sizeof(ka), 8000};
+    mixer.ka_volume = 100;
+    memset(samples, 128, sizeof(samples));
+    taiko_mixer_mix(&mixer, samples, sizeof(samples), 8000, 0);
+    assert(samples[40] == 208); /* Normal Don overlaps the automatic voice. */
+    assert(samples[79] == 168); /* Only the auto tail fades. */
+    assert(samples[80] == 228 && samples[81] == 188); /* Normal Ka is independent. */
+    assert(samples[319] == 168 && samples[320] == 208);
+
+    /* Short clips finish naturally, without a fade caused by a later hit. */
+    mixer.don.count = 16;
+    chart.note_count = 0;
+    memset(samples, 128, sizeof(samples));
+    taiko_mixer_mix(&mixer, samples, sizeof(samples), 8000, 0);
+    assert(samples[15] == 168 && samples[16] == 128 && samples[80] == 168);
+}
+
+static void test_auto_retrigger_boundaries(void) {
+    uint8_t don[2400], full[6000], streamed[6000], seeked[257];
+    for(size_t i = 0; i < sizeof(don); i++)
+        don[i] = 80 + i % 100;
+    TjaHitRun runs[] = {
+        {.first_ms = 0, .interval_ms = 31.25, .count = 3},
+        {.first_ms = 130, .interval_ms = 62.5, .count = 3}};
+    TjaNote notes[] = {{.time_ms = 81, .kind = 3}, {.time_ms = 130, .kind = 4}};
+    TjaChart chart = {.hit_runs = runs, .hit_run_count = 2, .notes = notes, .note_count = 2};
+    TaikoMixer mixer = {
+        .don = {don, sizeof(don), 8000},
+        .ka = {don, sizeof(don), 22050},
+        .chart = &chart,
+        .don_volume = 70,
+        .ka_volume = 30};
+    const uint32_t rates[] = {8000, 22050, 44100, 48000};
+    for(size_t r = 0; r < sizeof(rates) / sizeof(rates[0]); r++) {
+        memset(full, 128, sizeof(full));
+        taiko_mixer_mix(&mixer, full, sizeof(full), rates[r], 0);
+        memset(streamed, 128, sizeof(streamed));
+        for(size_t pos = 0; pos < sizeof(streamed);) {
+            size_t count = sizeof(streamed) - pos;
+            if(count > 61) count = 61; /* Splits inside fades, with the next hit outside. */
+            taiko_mixer_mix(&mixer, streamed + pos, count, rates[r], pos);
+            pos += count;
+        }
+        assert(memcmp(full, streamed, sizeof(full)) == 0);
+        for(size_t pos = 0; pos + sizeof(seeked) <= sizeof(full); pos += 113) {
+            memset(seeked, 128, sizeof(seeked));
+            taiko_mixer_mix(&mixer, seeked, sizeof(seeked), rates[r], pos);
+            assert(memcmp(seeked, full + pos, sizeof(seeked)) == 0);
+        }
+    }
+}
+
 static void test_independent_volume(void) {
     const uint8_t don[] = {228, 28};
     const uint8_t ka[] = {88, 168};
@@ -152,6 +228,8 @@ int main(void) {
     test_notes_and_clipping();
     test_buffer_boundaries_and_seeking();
     test_missing_effects();
+    test_auto_retrigger();
+    test_auto_retrigger_boundaries();
     test_independent_volume();
     test_master_volume();
     puts(

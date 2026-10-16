@@ -3,7 +3,8 @@
 
 #include <string.h>
 
-#define MIX_BLOCK 128U
+#define MIX_BLOCK              128U
+#define AUTO_RETRIGGER_FADE_MS 3U
 
 void taiko_mixer_apply_volume(uint8_t* samples, size_t count, uint8_t volume) {
     if(volume >= 100) return;
@@ -57,6 +58,20 @@ void taiko_mixer_mix(
             if(!clip_duration(clip)) continue;
             uint64_t clip_end =
                 onset + ((uint64_t)clip->count * rate + clip->rate - 1) / clip->rate;
+            uint32_t fade_samples = 0;
+            if(hit.roll && block.run < mixer->chart->hit_run_count) {
+                /* The advanced cursor identifies the next automatic hit even across
+                 * run boundaries and intervening normal notes. Look ahead beyond
+                 * this buffer so fades are identical after a split or seek. */
+                uint64_t next = (uint64_t)taiko_hit_run_time(
+                                    &mixer->chart->hit_runs[block.run], block.repeat) *
+                                rate / 1000;
+                if(next < clip_end) {
+                    clip_end = next;
+                    fade_samples = ((uint64_t)rate * AUTO_RETRIGGER_FADE_MS + 999) / 1000;
+                    if(fade_samples > clip_end - onset) fade_samples = clip_end - onset;
+                }
+            }
             if(clip_end <= start) continue;
             uint64_t first = onset > start ? onset : start;
             uint64_t last = clip_end < end ? clip_end : end;
@@ -64,8 +79,10 @@ void taiko_mixer_mix(
             uint32_t index = phase / rate;
             uint32_t fraction = phase % rate;
             for(uint64_t sample = first; sample < last && index < clip->count; sample++) {
-                mixed[sample - start] +=
-                    ((int32_t)clip->samples[index] - 128) * (int32_t)volume / 100;
+                int32_t value = ((int32_t)clip->samples[index] - 128) * (int32_t)volume / 100;
+                if(fade_samples && clip_end - sample <= fade_samples)
+                    value = value * (int32_t)(clip_end - sample - 1) / (int32_t)fade_samples;
+                mixed[sample - start] += value;
                 fraction += clip->rate;
                 index += fraction / rate;
                 fraction %= rate;

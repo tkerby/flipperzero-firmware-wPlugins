@@ -70,11 +70,10 @@ static void test_tempo_phase_and_offset(void) {
         &chart));
     assert(chart.roll_count == 1 && chart.hit_run_count == 2);
     assert(chart.hit_runs[0].count == 17 && chart.hit_runs[0].interval_ms == 62.5);
-    assert(
-        chart.hit_runs[1].count == 6 && fabs(chart.hit_runs[1].interval_ms - 1000.0 / 24) < 1e-6);
-    assert(fabs(chart.hit_runs[1].first_ms - 1051.6666667) < 0.001);
+    assert(chart.hit_runs[1].count == 8 && fabs(chart.hit_runs[1].interval_ms - 31.25) < 1e-6);
+    assert(fabs(chart.hit_runs[1].first_ms - 1046.25) < 0.001);
     assert(chart.rolls[0].end_ms == 1280);
-    assert(taiko_hit_run_time(&chart.hit_runs[1], 5) == 1260);
+    assert(taiko_hit_run_time(&chart.hit_runs[1], 7) == 1265);
     tja_chart_free(&chart);
     assert(parse("BPM:120\nWAVE:a.ogg\nOFFSET:0.5\n#START\n5008,\n#END\n", TjaCourseOni, &chart));
     TaikoHitCursor cursor;
@@ -87,9 +86,9 @@ static void test_tempo_phase_and_offset(void) {
     assert(
         parse("BPM:10000\nWAVE:a.ogg\n#START\n5\n#DELAY 3599\n8,\n#END\n", TjaCourseOni, &chart));
     assert(chart.note_count == 0 && chart.hit_run_count == 1);
-    assert(chart.rolls[0].hit_count > 86300 && chart.rolls[0].hit_count < 86400);
+    assert(chart.rolls[0].hit_count > 115100 && chart.rolls[0].hit_count < 115200);
     taiko_hits_seek(&chart, &cursor, chart.rolls[0].end_ms - 1);
-    assert(cursor.ordinal > 86300);
+    assert(cursor.ordinal > 115100);
     tja_chart_free(&chart);
 }
 
@@ -98,10 +97,10 @@ static void assert_rate_cap(const TjaChart* chart, unsigned speed) {
     bool have_last = false;
     for(size_t i = 0; i < chart->hit_run_count; i++) {
         const TjaHitRun* run = &chart->hit_runs[i];
-        assert(run->interval_ms * 10 / speed >= 1000.0 / 24 - 1e-6);
+        assert(run->interval_ms * 10 / speed >= 31.25 - 1e-6);
         for(uint32_t j = 0; j < run->count; j++) {
             double time = run->first_ms + j * run->interval_ms;
-            if(have_last) assert((time - last) * 10 / speed >= 1000.0 / 24 - 1e-6);
+            if(have_last) assert((time - last) * 10 / speed >= 31.25 - 1e-6);
             last = time;
             have_last = true;
         }
@@ -112,13 +111,13 @@ static void test_rate_cap(void) {
     TjaChart chart;
     const char* error;
     assert(parse("BPM:300\nWAVE:a.ogg\n#START\n5008,\n#END\n", TjaCourseOni, &chart));
-    assert(chart.rolls[0].end_ms == 600 && chart.rolls[0].hit_count == 15);
+    assert(chart.rolls[0].end_ms == 600 && chart.rolls[0].hit_count == 20);
     assert_rate_cap(&chart, 10);
     for(unsigned speed = 5; speed <= 20; speed++) {
         assert(tja_chart_set_roll_speed(&chart, speed, &error) && !error);
         assert_rate_cap(&chart, speed);
         if(speed == 5) assert(chart.rolls[0].hit_count == 24);
-        if(speed == 20) assert(chart.rolls[0].hit_count == 8);
+        if(speed == 20) assert(chart.rolls[0].hit_count == 10);
     }
     TjaRoll* original_rolls = chart.rolls;
     TjaHitRun* original_runs = chart.hit_runs;
@@ -131,20 +130,20 @@ static void test_rate_cap(void) {
     uint8_t mixed[4800];
     memset(mixed, 128, sizeof(mixed));
     taiko_mixer_mix(&mixer, mixed, sizeof(mixed), 8000, 0);
-    assert(mixed[0] == 228 && mixed[504] == 128 && mixed[664] == 228);
+    assert(mixed[0] == 228 && mixed[400] == 128 && mixed[504] == 228 && mixed[1000] == 228);
     tja_chart_free(&chart);
 
     assert(parse("BPM:300\nWAVE:a.ogg\nBALLOON:12\n#START\n7008,\n#END\n", TjaCourseOni, &chart));
     assert(chart.rolls[0].hit_count == 12);
     assert(taiko_balloon_remaining(&chart, &chart.rolls[0], 599) == 0);
     assert(tja_chart_set_roll_speed(&chart, 20, &error));
-    assert(chart.rolls[0].hit_count == 8);
-    assert(taiko_balloon_remaining(&chart, &chart.rolls[0], 599) == 4);
+    assert(chart.rolls[0].hit_count == 10);
+    assert(taiko_balloon_remaining(&chart, &chart.rolls[0], 599) == 2);
     TaikoHitCursor cursor;
     TaikoHit hit;
     taiko_hits_seek(&chart, &cursor, 500);
     assert(taiko_hits_peek(&chart, &cursor, &hit) && hit.time_ms == 500);
-    assert(cursor.ordinal == 6 && hit.right);
+    assert(cursor.ordinal == 8 && hit.right);
     assert(tja_chart_set_roll_speed(&chart, 10, &error));
     assert(taiko_balloon_remaining(&chart, &chart.rolls[0], 599) == 0);
     tja_chart_free(&chart);

@@ -94,7 +94,7 @@ int main(void) {
     assert(chart.rolls[0].hit_count == count);
     free_heap = 100000;
     assert(tja_chart_set_roll_speed(&chart, 20, &error));
-    assert(chart.rolls[0].hit_count == 8);
+    assert(chart.rolls[0].hit_count == 10);
     tja_chart_free(&chart);
     puts(
         "Chart allocation exhaustion, fragmentation, retry and speed-change rollback tests passed");
