@@ -132,6 +132,7 @@ typedef enum {
     TagScan, // scanner looking for any tag
     TagPoll, // reading the UID of the tag just found
     TagRest, // short pause before scanning again
+    TagBusy, // another owner holds the NFC chip; retrying
 } TagState;
 
 typedef enum {
@@ -993,18 +994,35 @@ static void tag_scan_begin(App* app) {
     app->tag_scan_start = furi_get_tick();
 }
 
-static void tag_start(App* app) {
+// Brings up the NFC stack. Fails when something else holds the chip: nfc_alloc
+// would assert inside the firmware in that case rather than report it.
+static bool tag_open(App* app) {
+    if(furi_hal_nfc_acquire() != FuriHalNfcErrorNone) return false;
+    furi_hal_nfc_release();
     app->nfc = nfc_alloc();
     app->scanner = nfc_scanner_alloc(app->nfc);
     app->tag_device = nfc_device_alloc();
+    tag_scan_begin(app);
+    return true;
+}
+
+static void tag_start(App* app) {
     app->tag_n = 0;
     app->tag_uid_len = 0;
     app->tag_present = false;
     app->tag_event = false;
-    tag_scan_begin(app);
+    if(!tag_open(app)) {
+        app->tag_state = TagBusy;
+        app->tag_deadline = furi_get_tick() + 1000;
+    }
 }
 
 static void tag_stop(App* app) {
+    if(app->tag_state == TagBusy) {
+        // nothing was allocated
+        app->tag_state = TagRest;
+        return;
+    }
     if(app->tag_state == TagScan) {
         nfc_scanner_stop(app->scanner);
     } else if(app->tag_state == TagPoll) {
@@ -1073,6 +1091,11 @@ static void tag_step(App* app) {
         break;
     case TagRest:
         if(tick_reached(now, app->tag_deadline)) tag_scan_begin(app);
+        break;
+    case TagBusy:
+        if(tick_reached(now, app->tag_deadline) && !tag_open(app)) {
+            app->tag_deadline = now + 1000;
+        }
         break;
     }
 }
@@ -1434,6 +1457,8 @@ static void sweep_step(App* app) {
             sweep_report(app, true, text);
         } else if(app->sw_ticks >= 30 && app->tag_state == TagScan) {
             sweep_report(app, false, "TAG none");
+        } else if(app->sw_ticks >= 30 && app->tag_state == TagBusy) {
+            sweep_report(app, false, "TAG busy");
         }
         break;
     default:
@@ -1868,13 +1893,21 @@ static void draw_scanning(Canvas* canvas, App* app) {
 }
 
 static void draw_tag(Canvas* canvas, App* app) {
+    bool busy = app->tag_state == TagBusy;
     draw_frame(
         canvas,
         app,
         "NFC TAG",
+        busy             ? "BUSY" :
         app->tag_present ? "CONTACT" :
         app->tag_n       ? "LAST" :
                            "SCAN");
+    if(busy) {
+        canvas_draw_str(canvas, GX, GY + 9, "NFC chip is held by");
+        canvas_draw_str(canvas, GX, GY + 19, "another app or service.");
+        draw_footer(canvas, app, "Retrying every second");
+        return;
+    }
     if(app->tag_n == 0) {
         draw_scanning(canvas, app);
         draw_footer(canvas, app, "Hold a tag to my back");
