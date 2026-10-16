@@ -23,7 +23,7 @@
 #include <subghz_scheduler_icons.h>
 
 #define SCHEDULER_APP_NAME    "Sub-GHz Scheduler"
-#define SCHEDULER_APP_VERSION "3.0"
+#define SCHEDULER_APP_VERSION "3.1"
 #define SCHEDULER_APP_AUTHOR  "Patrick Edwards"
 #define SCHEDULER_APP_HANDLE  "@shalebridge"
 
