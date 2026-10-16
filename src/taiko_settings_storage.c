@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 ZeroNinx
+
 #include "taiko_settings_storage.h"
 
 #include <flipper_format/flipper_format.h>
@@ -19,7 +22,8 @@ static const SettingsField fields[] = {
     {"BackwardInterval", offsetof(TaikoSettings, backward_ms)},
     {"ForwardInterval", offsetof(TaikoSettings, forward_ms)},
     {"PlaybackSpeed", offsetof(TaikoSettings, playback_tenths)},
-    {"ScrollSpeed", offsetof(TaikoSettings, scroll_tenths)}};
+    {"ScrollSpeed", offsetof(TaikoSettings, scroll_tenths)},
+    {"FrameRate", offsetof(TaikoSettings, frame_rate)}};
 static const char* pin_keys[] = {"LeftKaPin", "LeftDongPin", "RightDongPin", "RightKaPin"};
 
 bool taiko_settings_load(Storage* storage, TaikoSettings* settings) {

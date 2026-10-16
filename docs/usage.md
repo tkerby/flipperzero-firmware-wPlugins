@@ -21,6 +21,16 @@ apps_data/taiko_player/sfx/
   ka.wav
 ```
 
+## 仅安装应用时准备鼓声
+
+从商店安装或只复制 FAP 时，不会自动获得 Release ZIP 中的鼓声音效。下载并解压[源码](https://github.com/ZeroNinx/flipper-zero-taiko-player/archive/refs/heads/main.zip)，在电脑安装 Python 3 和 FFmpeg，然后在源码目录运行：
+
+```sh
+python3 scripts/prepare_sfx.py
+```
+
+将生成的 sdcard/apps_data/taiko_player/sfx/ 目录连同许可、来源文件复制到 SD 卡同名位置，重新启动应用加载。转换不需要安装 uFBT；缺少鼓声时仍可播放伴奏。歌曲按下节另外准备。
+
 ## 准备曲目
 
 将自己的 TJA 和对应音频放入本地 `songs/` 目录，音频文件名由谱面的 `WAVE:` 字段指定。例如：
@@ -66,7 +76,7 @@ python3 scripts/prepare_songs.py songs --output sdcard/apps_data/taiko_player/so
 
 暂停时，音频、谱面与鼓点指示一起停止，并清空 GPIO 输出。暂停期间也可前后跳转，按 OK 后从当前位置继续播放。跳转会限制在曲目起止范围内，不补发跳过的鼓点；左右手交替仍按谱面中的原始音符顺序计算。恢复和跳转时需要重新读取音频缓冲，可能有短暂延迟。
 
-播放菜单从上到下为 **Return（返回）、Restart（重新播放）、Play New Song（播放新曲）、Difficulty（难度）、Playback Speed（播放速度）、Scroll Speed（谱面流速）、Backward Interval（后退间隔）、Forward Interval（前进间隔）、Dong Volume（咚音量）、Ka Volume（咔音量）、GPIO Output（GPIO 输出开关）、GPIO Setting（GPIO 引脚设置）、Restore Defaults（恢复默认设置）、Exit（退出应用）**。菜单每屏显示五行，上下选择时自动滚动。前后间隔分别支持 **1 / 3 / 5 / 10 秒**，默认均为 5 秒；音量默认各为 70%。音量、跳转间隔、播放速度、流速和 GPIO 引脚映射自动保存，下次启动恢复。打开菜单会暂停音频并清空 GPIO，选择 Return 或短按返回时恢复进入菜单前的播放或暂停状态；Restart 从头开始播放；Play New Song 停止当前曲目并回到 `taiko_player/songs/` 目录重新选曲，保留本次运行中的音量和跳转间隔设置，选定后从头播放。取消选曲会退出应用。播放结束时进入菜单再返回，仍保留结束状态。
+播放菜单从上到下为 **Return（返回）、Restart（重新播放）、Play New Song（播放新曲）、Difficulty（难度）、Playback Speed（播放速度）、Scroll Speed（谱面流速）、Frame Rate（刷新率）、Backward Interval（后退间隔）、Forward Interval（前进间隔）、Dong Volume（咚音量）、Ka Volume（咔音量）、GPIO Output（GPIO 输出开关）、GPIO Setting（GPIO 引脚设置）、Restore Defaults（恢复默认设置）、Exit（退出应用）**。菜单每屏显示五行，上下选择时自动滚动。前后间隔分别支持 **1 / 3 / 5 / 10 秒**，默认均为 5 秒；音量默认各为 70%。音量、跳转间隔、播放速度、流速、刷新率和 GPIO 引脚映射自动保存，下次启动恢复。打开菜单会暂停音频并清空 GPIO，选择 Return 或短按返回时恢复进入菜单前的播放或暂停状态；Restart 从头开始播放；Play New Song 停止当前曲目并回到 `taiko_player/songs/` 目录重新选曲，保留本次运行中的音量和跳转间隔设置，选定后从头播放。取消选曲会退出应用。播放结束时进入菜单再返回，仍保留结束状态。
 
 难度选项只列出当前 TJA 中存在的 COURSE，支持名称、数字编号和 Ura（Edit）别名；优先 Oni，否则按 COURSE 顺序选最高难度。返回播放或选择 Restart 时应用难度变更，并从头开始；原本暂停时返回仍保持暂停。文件中尚未选择的难度不会同时载入音符数组。
 
@@ -75,6 +85,12 @@ python3 scripts/prepare_songs.py songs --output sdcard/apps_data/taiko_player/so
 播放速度支持 **0.5～2.0 倍，每档 0.1**；谱面流速支持 **0.5～2.5 倍（每档 0.1），以及 3.0、4.0 倍**。两者默认均为 1.0 倍，独立设置并保存到 SD 卡。播放速度同步改变音频、鼓声与 GPIO 的节奏，音高随速度变化，播放时间显示原曲位置；修改速度保留当前位置。菜单流速叠加在谱面自带的 HS 上，只改变音符显示距离，不改变音频或 GPIO。换曲时重新选择默认难度，速度设置保留。
 
 HS 的计算方式见[谱面支持](chart-support.md)。
+
+## 刷新率
+
+菜单中的 **Frame Rate** 位于 Scroll Speed 下方，支持 **15～60 FPS，每档 1 FPS**，默认 **50 FPS**。左右键调整，OK 增加，到边界后循环选择。返回播放后按新目标刷新率绘制；设置跨曲目及应用重启保留，Restore Defaults 恢复为 50 FPS。
+
+此选项只调整界面更新频率，音频播放、击打检查与 GPIO 调度不随之降频。实际可见帧率仍受绘制耗时、系统负载及屏幕响应影响。
 
 ## 音量与鼓声
 
@@ -107,7 +123,7 @@ HS 的计算方式见[谱面支持](chart-support.md)。
 
 ## 设置保存
 
-配置文件位于 `/ext/apps_data/taiko_player/settings.ff`，采用 FlipperFormat 文本格式。保存总音量、咚/咔音量、前后跳转间隔、播放速度、谱面流速和四路 GPIO 引脚名称。GPIO 输出开关每次启动保持关闭；每首曲目仍优先选择 Oni，没有时选择最高难度，选曲默认目录仍为 `songs/`。
+配置文件位于 `/ext/apps_data/taiko_player/settings.ff`，采用 FlipperFormat 文本格式。保存总音量、咚/咔音量、前后跳转间隔、播放速度、谱面流速、刷新率和四路 GPIO 引脚名称。GPIO 输出开关每次启动保持关闭；每首曲目仍优先选择 Oni，没有时选择最高难度，选曲默认目录仍为 `songs/`。
 
 修改先在内存中生效，有变更时才写卡。打开菜单、从一级菜单返回播放或换曲、正常退出时保存；选择 Restore Defaults 会立即恢复并保存默认值，保持当前曲目、难度和播放位置，GPIO 输出关闭。播放界面上下调整总音量后，在下一次打开菜单或正常退出时保存，因此直接断电可能丢失最近尚未保存的音量变更。写卡集中在音频暂停或停止时。
 
@@ -125,8 +141,11 @@ BackwardInterval: 5000
 ForwardInterval: 5000
 PlaybackSpeed: 10
 ScrollSpeed: 10
+FrameRate: 50
 LeftKaPin: A7
 LeftDongPin: A6
 RightDongPin: A4
 RightKaPin: B3
 ```
+
+旧版配置缺少 `FrameRate` 时采用 50 FPS，其余有效设置继续保留；后续保存时补上该字段，配置版本仍为 1。

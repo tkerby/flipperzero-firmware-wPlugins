@@ -33,10 +33,10 @@ make momentum-sdk MOMENTUM_SDK="<对应固件的 SDK ZIP URL>"
 两套 SDK 初始化后，可生成不含本地曲目和设置的双固件发布包：
 
 ```sh
-make release VERSION=0.3
+make release VERSION=0.4
 ```
 
-此命令运行测试、依次编译两个版本，并输出 `dist/releases/v0.3/` 下的两个 ZIP 和 SHA-256 校验文件。每个包记录源码提交、固件 SDK 版本及 FAP API，并包含中英文 README 与 `docs/` 下的 Markdown 文档。GitHub Release 工作流使用固定版本的 SDK；准备好对应的 `docs/releases/v<版本>.md` 并推送 `v<版本>` 标签后，会自动构建并发布。
+此命令运行测试、依次编译两个版本，并输出 `dist/releases/v0.4/` 下的两个 ZIP 和 SHA-256 校验文件。每个包记录源码提交、固件 SDK 版本及 FAP API，并包含中英文 README 与 `docs/` 下的 Markdown 文档。GitHub Release 工作流使用固定版本的 SDK；准备好对应的 `docs/releases/v<版本>.md` 并推送 `v<版本>` 标签后，会自动构建并发布。
 
 ## 打包与 USB 上传
 
@@ -62,6 +62,8 @@ make launch
 SD 卡目录与手动安装步骤见[使用指南](usage.md)。
 
 ## 鼓声音效
+
+默认咚／咔来自 TJAPlayer3 的 SimpleStyle 皮肤，按上游固定提交原样保存。具体来源、校验值与转换说明见[音效来源](../assets/SFX-NOTICE.md)，原 MIT 许可全文见[SFX-LICENSE.txt](../assets/SFX-LICENSE.txt)。转换、USB 上传和发布包均携带这两个声明文件；再分发音效及其 WAV 副本时应保留。
 
 将咚、咔原始音效分别放在 `assets/dong.ogg` 和 `assets/ka.ogg`，然后转换并上传：
 
@@ -91,6 +93,8 @@ make upload-sfx
 设备端的谱面分配会预先检查可用内存和最大连续空闲块，并为音频及界面保留 16 KiB 余量。内存不足时提示错误；单谱事件上限不代表任何大小的谱面都能装入设备内存。
 
 音效样本和音频播放对象分配前也会检查内存余量；无法加载音效时保留伴奏播放，音频播放对象无法创建时显示错误并返回选曲。绘制文本缓冲在应用内复用，混音时跳过已经结束的事件，减少重复分配和扫描。
+
+界面刷新在主循环中按 Frame Rate 设置调度，不新增线程或定时器。帧间隔累计小数 tick，避免 30 FPS 等无法整除系统 tick 频率的档位持续偏快或偏慢；错过刷新时隙时跳过旧帧。音频和击打检查保持独立调度。
 
 内存预检查不会为其他线程预留实际内存；它用于尽早拒绝内存不足或连续空闲块不足的分配。
 

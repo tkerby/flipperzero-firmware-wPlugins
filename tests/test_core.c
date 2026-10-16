@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 ZeroNinx
+
 #include "tja_parser.h"
 #include "wav_reader.h"
 

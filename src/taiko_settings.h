@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 ZeroNinx
+
 #pragma once
 
 #include "taiko_menu.h"
@@ -12,6 +15,7 @@ typedef struct {
     uint32_t forward_ms;
     uint32_t playback_tenths;
     uint32_t scroll_tenths;
+    uint32_t frame_rate;
     TaikoGpioPin pins[TaikoGpioOutputCount];
 } TaikoSettings;
 

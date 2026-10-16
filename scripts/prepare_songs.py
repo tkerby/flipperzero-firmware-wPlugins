@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 ZeroNinx
+
 """Prepare TJA + 8-bit mono PCM WAV files for Taiko Player's SD directory."""
 
 import argparse

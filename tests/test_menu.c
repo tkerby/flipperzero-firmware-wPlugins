@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 ZeroNinx
+
 #include "taiko_menu.h"
 
 #include <assert.h>
@@ -12,6 +15,7 @@ int main(void) {
     assert(menu.don_volume == 70 && menu.ka_volume == 70);
     assert(taiko_menu_playback_tenths(&menu) == 10);
     assert(taiko_menu_scroll_tenths(&menu) == 10);
+    assert(menu.frame_rate == 50);
     assert(!menu.gpio.enabled && taiko_gpio_config_valid(&menu.gpio));
     assert(menu.gpio.pins[TaikoGpioLeftKa] == TaikoGpioPinA7);
     assert(menu.gpio.pins[TaikoGpioLeftDon] == TaikoGpioPinA6);
@@ -61,6 +65,30 @@ int main(void) {
     assert(taiko_menu_scroll_tenths(&menu) == 5);
     taiko_menu_adjust(&menu, false);
     assert(taiko_menu_scroll_tenths(&menu) == 40);
+    taiko_menu_move(&menu, true);
+    assert(menu.selected == TaikoMenuFrameRate);
+    assert(taiko_menu_set_value(&menu, TaikoMenuFrameRate, 60));
+    taiko_menu_adjust(&menu, true);
+    assert(menu.frame_rate == 15); /* Same wraparound behavior as speed settings. */
+    for(unsigned rate = 15; rate <= 60; rate++) {
+        assert(menu.frame_rate == rate);
+        taiko_menu_adjust(&menu, true);
+    }
+    taiko_menu_adjust(&menu, false);
+    assert(menu.frame_rate == 60);
+    for(unsigned rate = 60; rate >= 15; rate--) {
+        assert(menu.frame_rate == rate);
+        taiko_menu_adjust(&menu, false);
+    }
+    assert(menu.frame_rate == 60);
+    assert(taiko_menu_activate(&menu) == TaikoMenuActionNone);
+    assert(menu.open && menu.frame_rate == 15);
+    assert(taiko_menu_set_value(&menu, TaikoMenuFrameRate, 37));
+    assert(!taiko_menu_set_value(&menu, TaikoMenuFrameRate, 14));
+    assert(!taiko_menu_set_value(&menu, TaikoMenuFrameRate, 61));
+    assert(!taiko_menu_set_value(&menu, TaikoMenuFrameRate, UINT32_MAX));
+    assert(menu.frame_rate == 37);
+    assert(taiko_menu_playback_tenths(&menu) == 20 && taiko_menu_scroll_tenths(&menu) == 40);
     taiko_menu_move(&menu, true);
     assert(menu.selected == TaikoMenuBackward);
     taiko_menu_adjust(&menu, false);
@@ -166,6 +194,7 @@ int main(void) {
     assert(taiko_menu_forward_ms(&menu) == 1000);
     assert(menu.don_volume == 100 && menu.ka_volume == 80);
     taiko_menu_open(&menu);
+    assert(menu.frame_rate == 37);
     assert(!menu.gpio_settings && menu.gpio.enabled);
     assert(menu.gpio.pins[TaikoGpioLeftKa] == TaikoGpioPinC0);
     taiko_menu_move(&menu, false);
@@ -173,6 +202,7 @@ int main(void) {
     assert(taiko_menu_activate(&menu) == TaikoMenuActionExit);
     assert(!menu.open);
     taiko_menu_init(&menu);
+    assert(menu.frame_rate == 50);
     assert(taiko_menu_backward_ms(&menu) == 5000);
     assert(taiko_menu_forward_ms(&menu) == 5000);
     assert(menu.don_volume == 70 && menu.ka_volume == 70);

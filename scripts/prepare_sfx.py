@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 ZeroNinx
+
 """Convert drum effects to PCM WAV and optionally prepare a silent test chart."""
 
 import argparse
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
 import wave
@@ -42,6 +46,11 @@ def prepare(source, output):
                 raise ValueError(f"Effect exceeds the device's 32768-sample limit: {target}")
             print(f"{target}: {audio.getnframes() / audio.getframerate():.3f}s, "
                   f"{audio.getnframes():,} PCM bytes")
+    # Keep upstream attribution with the converted sounds and USB uploads.
+    for name in ("SFX-LICENSE.txt", "SFX-NOTICE.md"):
+        notice = source / name
+        if notice.is_file() and notice.resolve() != (output / name).resolve():
+            shutil.copyfile(notice, output / name)
 
 
 def test_song(output):

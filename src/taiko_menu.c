@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 ZeroNinx
+
 #include "taiko_menu.h"
 
 static const uint32_t intervals[] = {1000, 3000, 5000, 10000};
@@ -18,7 +21,8 @@ void taiko_menu_init(TaikoMenu* menu) {
         .courses = 1U << TjaCourseOni,
         .course = TjaCourseOni,
         .playback_index = 5,
-        .scroll_index = 5};
+        .scroll_index = 5,
+        .frame_rate = TAIKO_DEFAULT_FRAME_RATE};
     menu->gpio = taiko_gpio_default_config();
 }
 
@@ -65,6 +69,15 @@ void taiko_menu_adjust(TaikoMenu* menu, bool forward) {
         size_t count = menu->selected == TaikoMenuPlaybackSpeed ? PLAYBACK_SPEED_COUNT :
                                                                   SCROLL_SPEED_COUNT;
         *index = (*index + (forward ? 1 : count - 1)) % count;
+        return;
+    }
+    if(menu->selected == TaikoMenuFrameRate) {
+        if(forward)
+            menu->frame_rate = menu->frame_rate < TAIKO_MAX_FRAME_RATE ? menu->frame_rate + 1U :
+                                                                         TAIKO_MIN_FRAME_RATE;
+        else
+            menu->frame_rate = menu->frame_rate > TAIKO_MIN_FRAME_RATE ? menu->frame_rate - 1U :
+                                                                         TAIKO_MAX_FRAME_RATE;
         return;
     }
     if(menu->selected == TaikoMenuDonVolume || menu->selected == TaikoMenuKaVolume) {
@@ -148,6 +161,11 @@ uint8_t taiko_menu_scroll_tenths(const TaikoMenu* menu) {
 }
 
 bool taiko_menu_set_value(TaikoMenu* menu, TaikoMenuItem item, uint32_t value) {
+    if(item == TaikoMenuFrameRate) {
+        if(value < TAIKO_MIN_FRAME_RATE || value > TAIKO_MAX_FRAME_RATE) return false;
+        menu->frame_rate = value;
+        return true;
+    }
     if(item == TaikoMenuBackward || item == TaikoMenuForward) {
         for(size_t i = 0; i < INTERVAL_COUNT; i++) {
             if(intervals[i] != value) continue;

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 ZeroNinx
+
 """Capture Flipper framebuffer screenshots and measure USB stream FPS.
 
 Requires pyserial and Pillow (also available in the uFBT toolchain Python).

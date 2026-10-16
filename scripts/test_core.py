@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 ZeroNinx
+
 """Build and run portable C tests, including local songs when present."""
 
 import os

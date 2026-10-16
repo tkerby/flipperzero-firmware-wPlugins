@@ -6,13 +6,13 @@
 
 一个用于 Flipper Zero 的轻量 TJA 播放器：从 SD 卡选曲，通过内置扬声器播放伴奏与鼓声，同时显示滚动谱面，还可输出四路 GPIO 鼓点脉冲。
 
-<img width="512" height="256" alt="Taiko Player 播放界面" src="https://github.com/user-attachments/assets/a167050b-013c-442f-b299-9ff15816d7da" />
+<img width="512" height="256" alt="Taiko Player 播放界面" src="screenshots/playing.png" />
 
 ## 功能
 
 - 支持普通／大咚咔、连打、气球、分段流速（`#SCROLL`）及 GOGO TIME。
 - 按谱面自动混入咚／咔音效，显示左右鼓面指示。
-- 支持选难度、暂停、前后跳转，以及独立的播放速度、流速和音量调节。
+- 支持选难度、暂停、前后跳转，以及播放速度、流速、刷新率和音量调节。
 - 可自定义四路 GPIO 输出，默认关闭；常用设置自动保存。
 - 提供官方固件和 Momentum 两种安装包。
 
@@ -49,6 +49,7 @@
 - [谱面支持](docs/chart-support.md)：音符显示、HS、连打与气球、GOGO TIME 和格式限制。
 - [开发指南](docs/development.md)：编译、测试、打包、资源管理及参考项目。
 - [版本记录](https://github.com/ZeroNinx/flipper-zero-taiko-player/releases)：各版本更新说明与下载。
+- [应用商店提交](docs/catalog-submission.md)：商店资料、校验和提交步骤。
 
 ## 从源码构建
 
@@ -60,6 +61,14 @@ cd flipper-zero-taiko-player
 make setup
 make build
 ```
+
+## 致谢
+
+默认咚／咔音效来自 TJAPlayer3 的 SimpleStyle 皮肤，使用 MIT 许可，见[来源及许可说明](assets/SFX-NOTICE.md)。
+
+## 许可证
+
+本项目代码和原创图标采用 [GPL-3.0-or-later](LICENSE)。第三方鼓声音效保留其 MIT 许可及版权声明。
 
 ## AI 协作
 

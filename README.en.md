@@ -6,7 +6,7 @@
 
 A lightweight TJA player for Flipper Zero. Choose a chart from the SD card, play backing audio and drum sounds through the built-in speaker, and watch the scrolling notes. Optional GPIO outputs provide four channels of drum-hit pulses.
 
-<img width="512" height="256" alt="Taiko Player playback screen" src="https://github.com/user-attachments/assets/a167050b-013c-442f-b299-9ff15816d7da" />
+<img width="512" height="256" alt="Taiko Player playback screen" src="screenshots/playing.png" />
 
 ## Features
 
@@ -43,6 +43,16 @@ This is a chart player; hit judgment is not implemented. Convert OGG audio to PC
 
 To upgrade, replace the app and drum-sound files while keeping your songs and `settings.ff`. Release packages do not require a build environment.
 
+## Prepare drum sounds separately
+
+If you install the app without a Release ZIP, drum sounds need to be uploaded separately. Download the [source archive](https://github.com/ZeroNinx/flipper-zero-taiko-player/archive/refs/heads/main.zip), extract it, and run this command from its root directory with Python 3 and FFmpeg installed:
+
+```sh
+python3 scripts/prepare_sfx.py
+```
+
+Copy the generated sdcard/apps_data/taiko_player/sfx/ folder, including its license and attribution files, to the same location on the SD card. Restart the app to load the sounds. No uFBT setup is needed for conversion; without these optional sounds, backing audio still plays.
+
 ## Controls
 
 | Button | Action |
@@ -55,7 +65,7 @@ To upgrade, replace the app and drum-sound files while keeping your songs and `s
 
 In the menu, use Up/Down to select, Left/Right to adjust, and OK to activate. Opening the menu pauses playback. **Return** resumes the previous state; **Restart** starts over; **Play New Song** opens the song browser.
 
-Difficulty defaults to Oni, or the highest available course when Oni is absent. Playback speed ranges from **0.5× to 2.0×** in 0.1 steps and changes pitch. Scroll speed is independent: **0.5× to 2.5×** in 0.1 steps, plus **3.0× and 4.0×**. Volume, speeds, seek intervals, and GPIO pin mappings are saved in `/ext/apps_data/taiko_player/settings.ff`; GPIO output starts disabled each time.
+Difficulty defaults to Oni, or the highest available course when Oni is absent. Playback speed ranges from **0.5× to 2.0×** in 0.1 steps and changes pitch. Scroll speed is independent: **0.5× to 2.5×** in 0.1 steps, plus **3.0× and 4.0×**. **Frame Rate**, below Scroll Speed, sets the target display refresh rate from **15 to 60 FPS** in 1 FPS steps (default: **50 FPS**), without changing audio or hit scheduling. Volume, speeds, frame rate, seek intervals, and GPIO pin mappings are saved in `/ext/apps_data/taiko_player/settings.ff`; GPIO output starts disabled each time.
 
 GPIO uses 3.3 V logic and 70 ms high pulses; connect the receiver to Flipper's GND. The default mapping is **Left Ka → A7, Left Don → A6, Right Don → A4, Right Ka → B3**. Configure it under **GPIO Setting** and enable it with **GPIO Output**.
 
@@ -67,6 +77,7 @@ Detailed guides are currently in Chinese:
 - [Chart support](docs/chart-support.md): note rendering, scroll behavior, rolls, balloons, GOGO TIME, and format limits.
 - [Development guide](docs/development.md): builds, tests, packaging, resource management, and references.
 - [Release history](https://github.com/ZeroNinx/flipper-zero-taiko-player/releases): downloads and release notes.
+- [Catalog submission](docs/catalog-submission.md): catalog metadata, validation, and submission steps (Chinese).
 
 Branching charts, Dan courses, pitch-preserving playback speed changes, and precise synchronization are not supported. Audio must be unsigned 8-bit mono PCM WAV at 8000–48000 Hz; the device does not decode OGG directly.
 
@@ -89,6 +100,14 @@ make build FIRMWARE=momentum
 ```
 
 The Momentum build is saved to `dist/momentum/taiko_player.fap`. Use an SDK compatible with your device's firmware API. Run `make test` for local tests.
+
+## Credits
+
+The default Don/Ka sounds come from TJAPlayer3's SimpleStyle skin under the MIT license. See [sound attribution and license](assets/SFX-NOTICE.md).
+
+## License
+
+The project code and original icons are licensed under [GPL-3.0-or-later](LICENSE). Third-party drum sounds retain their MIT license and copyright notice.
 
 ## AI collaboration
 

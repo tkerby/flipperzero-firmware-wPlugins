@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 ZeroNinx
+
 #include "taiko_player_view.h"
 
 #include <furi.h>
@@ -21,6 +24,7 @@ static void draw_menu(Canvas* canvas, const TaikoMenu* menu) {
         "Difficulty",
         "Playback Speed",
         "Scroll Speed",
+        "Frame Rate",
         "Backward Interval",
         "Forward Interval",
         "Dong Volume",
@@ -61,6 +65,8 @@ static void draw_menu(Canvas* canvas, const TaikoMenu* menu) {
                 unsigned speed = i == TaikoMenuPlaybackSpeed ? taiko_menu_playback_tenths(menu) :
                                                                taiko_menu_scroll_tenths(menu);
                 snprintf(value, sizeof(value), "< %u.%ux >", speed / 10, speed % 10);
+            } else if(i == TaikoMenuFrameRate) {
+                snprintf(value, sizeof(value), "< %u FPS >", (unsigned)menu->frame_rate);
             } else if(i == TaikoMenuBackward || i == TaikoMenuForward) {
                 const uint32_t interval = i == TaikoMenuBackward ? taiko_menu_backward_ms(menu) :
                                                                    taiko_menu_forward_ms(menu);

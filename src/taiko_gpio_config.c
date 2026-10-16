@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 ZeroNinx
+
 #include "taiko_gpio_config.h"
 
 TaikoGpioConfig taiko_gpio_default_config(void) {

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 ZeroNinx
+
 #include "taiko_settings.h"
 
 #include <ctype.h>
@@ -11,7 +14,8 @@ void taiko_settings_capture(TaikoSettings* settings, const TaikoMenu* menu, uint
         .backward_ms = taiko_menu_backward_ms(menu),
         .forward_ms = taiko_menu_forward_ms(menu),
         .playback_tenths = taiko_menu_playback_tenths(menu),
-        .scroll_tenths = taiko_menu_scroll_tenths(menu)};
+        .scroll_tenths = taiko_menu_scroll_tenths(menu),
+        .frame_rate = menu->frame_rate};
     memcpy(settings->pins, menu->gpio.pins, sizeof(settings->pins));
 }
 
@@ -39,17 +43,23 @@ bool taiko_settings_validate(TaikoSettings* settings) {
     TaikoMenu menu;
     taiko_menu_init(&menu);
     const TaikoMenuItem items[] = {
-        TaikoMenuBackward, TaikoMenuForward, TaikoMenuPlaybackSpeed, TaikoMenuScrollSpeed};
+        TaikoMenuBackward,
+        TaikoMenuForward,
+        TaikoMenuPlaybackSpeed,
+        TaikoMenuScrollSpeed,
+        TaikoMenuFrameRate};
     uint32_t* values[] = {
         &settings->backward_ms,
         &settings->forward_ms,
         &settings->playback_tenths,
-        &settings->scroll_tenths};
+        &settings->scroll_tenths,
+        &settings->frame_rate};
     const uint32_t fallback[] = {
         defaults.backward_ms,
         defaults.forward_ms,
         defaults.playback_tenths,
-        defaults.scroll_tenths};
+        defaults.scroll_tenths,
+        defaults.frame_rate};
     for(size_t i = 0; i < sizeof(items) / sizeof(items[0]); i++) {
         if(!taiko_menu_set_value(&menu, items[i], *values[i])) {
             *values[i] = fallback[i];
@@ -75,6 +85,7 @@ void taiko_settings_apply(const TaikoSettings* settings, TaikoMenu* menu, uint8_
     taiko_menu_set_value(menu, TaikoMenuForward, valid.forward_ms);
     taiko_menu_set_value(menu, TaikoMenuPlaybackSpeed, valid.playback_tenths);
     taiko_menu_set_value(menu, TaikoMenuScrollSpeed, valid.scroll_tenths);
+    taiko_menu_set_value(menu, TaikoMenuFrameRate, valid.frame_rate);
     memcpy(menu->gpio.pins, valid.pins, sizeof(menu->gpio.pins));
     menu->gpio.enabled = false;
 }
@@ -83,7 +94,8 @@ bool taiko_settings_equal(const TaikoSettings* a, const TaikoSettings* b) {
     return a->volume == b->volume && a->don_volume == b->don_volume &&
            a->ka_volume == b->ka_volume && a->backward_ms == b->backward_ms &&
            a->forward_ms == b->forward_ms && a->playback_tenths == b->playback_tenths &&
-           a->scroll_tenths == b->scroll_tenths && memcmp(a->pins, b->pins, sizeof(a->pins)) == 0;
+           a->scroll_tenths == b->scroll_tenths && a->frame_rate == b->frame_rate &&
+           memcmp(a->pins, b->pins, sizeof(a->pins)) == 0;
 }
 
 bool taiko_settings_parse_uint(const char* text, uint32_t* value) {

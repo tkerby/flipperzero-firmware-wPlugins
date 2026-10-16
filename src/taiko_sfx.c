@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 ZeroNinx
+
 #include "taiko_sfx.h"
 #include "taiko_memory.h"
 #include "wav_reader.h"

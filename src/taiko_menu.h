@@ -1,9 +1,16 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 ZeroNinx
+
 #pragma once
 
 #include <stdbool.h>
 #include <stdint.h>
 #include "tja_parser.h"
 #include "taiko_gpio_config.h"
+
+#define TAIKO_MIN_FRAME_RATE     15U
+#define TAIKO_MAX_FRAME_RATE     60U
+#define TAIKO_DEFAULT_FRAME_RATE 50U
 
 typedef enum {
     TaikoMenuReturn,
@@ -12,6 +19,7 @@ typedef enum {
     TaikoMenuDifficulty,
     TaikoMenuPlaybackSpeed,
     TaikoMenuScrollSpeed,
+    TaikoMenuFrameRate,
     TaikoMenuBackward,
     TaikoMenuForward,
     TaikoMenuDonVolume,
@@ -55,6 +63,7 @@ typedef struct {
     TjaCourse course;
     uint8_t playback_index;
     uint8_t scroll_index;
+    uint8_t frame_rate;
 } TaikoMenu;
 
 void taiko_menu_init(TaikoMenu* menu);

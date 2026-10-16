@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 ZeroNinx
+
 """Package official and Momentum builds without local songs or settings."""
 
 import argparse
@@ -89,7 +92,8 @@ def package(version, output):
     with tempfile.TemporaryDirectory(prefix="taiko-release-") as temporary:
         effects = Path(temporary) / "sfx"
         prepare(ROOT / "assets", effects)
-        for name in ("dong.wav", "ka.wav"):
+        effect_files = ("dong.wav", "ka.wav", "SFX-LICENSE.txt", "SFX-NOTICE.md")
+        for name in effect_files:
             if not (effects / name).is_file():
                 raise ValueError(f"Required release effect missing: {name}")
         for firmware, sdk_home in sdk_homes.items():
@@ -111,13 +115,17 @@ def package(version, output):
                 "sdcard/apps/Media/taiko_player.fap": fap.read_bytes(),
                 "README.md": (ROOT / "README.md").read_bytes(),
                 "README.en.md": (ROOT / "README.en.md").read_bytes(),
+                "LICENSE": (ROOT / "LICENSE").read_bytes(),
+                "screenshots/playing.png": (ROOT / "screenshots/playing.png").read_bytes(),
                 "assets/taiko_player.svg": (ROOT / "assets/taiko_player.svg").read_bytes(),
                 "INSTALL.md": installation(version, firmware, sdk["version"], metadata["api"]).encode(),
                 "BUILD.json": (json.dumps(metadata, indent=2) + "\n").encode(),
             }
             for document in sorted((ROOT / "docs").rglob("*.md")):
                 files[document.relative_to(ROOT).as_posix()] = document.read_bytes()
-            for name in ("dong.wav", "ka.wav"):
+            for name in ("SFX-LICENSE.txt", "SFX-NOTICE.md"):
+                files[f"assets/{name}"] = (ROOT / "assets" / name).read_bytes()
+            for name in effect_files:
                 files[f"sdcard/apps_data/taiko_player/sfx/{name}"] = (effects / name).read_bytes()
             for name in ("prepare_songs.py", "prepare_sfx.py"):
                 files[f"scripts/{name}"] = (ROOT / "scripts" / name).read_bytes()
@@ -143,7 +151,7 @@ def package(version, output):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--version", default="0.3")
+    parser.add_argument("--version", default="0.4")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     if not re.fullmatch(r"\d+\.\d+", args.version):

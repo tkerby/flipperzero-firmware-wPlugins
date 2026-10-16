@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 ZeroNinx
+
 #include "pcm_audio.h"
 #include "taiko_gpio.h"
 #include "taiko_hits.h"
@@ -235,7 +238,8 @@ static bool play_song(TaikoPlayer* app, const char* path) {
     bool resume_after_menu = false;
     uint32_t paused_position = 0;
     uint32_t duration = 0;
-    const uint32_t frame_ticks = furi_ms_to_ticks(20);
+    const uint32_t tick_frequency = furi_kernel_get_tick_frequency();
+    uint32_t frame_remainder = 0;
     uint32_t next_frame = furi_get_tick();
     while(true) {
         if(error) {
@@ -306,6 +310,10 @@ static bool play_song(TaikoPlayer* app, const char* path) {
                 &app->view.balloon);
             furi_mutex_release(app->mutex);
             view_port_update(app->viewport);
+            /* Carry fractional ticks: 30 FPS at 1 kHz alternates 33/34 ticks. */
+            frame_remainder += tick_frequency;
+            const uint32_t frame_ticks = frame_remainder / app->menu.frame_rate;
+            frame_remainder %= app->menu.frame_rate;
             next_frame += frame_ticks;
             /* Skip missed refresh slots instead of submitting a burst of old frames. */
             if((int32_t)(now - next_frame) >= 0) next_frame = now + frame_ticks;
