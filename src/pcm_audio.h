@@ -16,7 +16,8 @@ typedef enum {
 typedef struct PcmAudio PcmAudio;
 
 /* Worker starts at the requested WAV position and owns speaker, file, timers
- * and DMA. Freeing joins the worker and releases all hardware. */
+ * and DMA. Freeing joins the worker and releases all hardware. Returns NULL
+ * without starting a worker if the allocation preflight fails. */
 PcmAudio* pcm_audio_start(
     Storage* storage,
     const char* path,

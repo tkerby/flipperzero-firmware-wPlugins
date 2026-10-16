@@ -1,4 +1,5 @@
 #include "tja_parser.h"
+#include "taiko_memory.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -33,6 +34,27 @@ static FILE* large_chart(void) {
 }
 
 int main(void) {
+    /* The shared preflight rejects both exhausted and fragmented heaps, while
+     * allowing allocations exactly on the reserve / allocator-overhead limit. */
+    free_heap = 1088;
+    largest_block = 96;
+    assert(taiko_memory_available(64, 1024));
+    void* allocation = taiko_alloc(64, 1024);
+    assert(allocation);
+    free(allocation);
+    assert(!taiko_alloc(65, 1024));
+    largest_block = 95;
+    assert(!taiko_alloc(64, 1024));
+    largest_block = 31;
+    assert(!taiko_alloc(1, 0));
+    assert(!taiko_alloc(0, 0));
+    free_heap = 0;
+    largest_block = 100000;
+    assert(!taiko_alloc(1, 0));
+    free_heap = (size_t)-1;
+    largest_block = (size_t)-1;
+    assert(!taiko_memory_available(64, (size_t)-1));
+
     const char* error;
     TjaChart chart;
     FILE* file = large_chart();

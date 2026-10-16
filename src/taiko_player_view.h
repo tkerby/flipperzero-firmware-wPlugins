@@ -2,6 +2,7 @@
 
 #include "taiko_lane.h"
 #include "taiko_menu.h"
+#include <furi/core/string.h>
 #include <gui/canvas.h>
 
 typedef struct {
@@ -26,4 +27,5 @@ typedef struct {
     TaikoMenu menu;
 } TaikoPlayerView;
 
-void taiko_player_view_draw(Canvas* canvas, const TaikoPlayerView* view);
+/* text is caller-owned scratch storage, used only by the drawing thread. */
+void taiko_player_view_draw(Canvas* canvas, const TaikoPlayerView* view, FuriString* text);

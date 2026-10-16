@@ -1,4 +1,5 @@
 #include "pcm_audio.h"
+#include "taiko_memory.h"
 #include "wav_reader.h"
 
 #include <furi_hal.h>
@@ -7,6 +8,8 @@
 #include <string.h>
 
 #define HALF_SAMPLES   4096U
+#define AUDIO_STACK    2048U
+#define START_RESERVE  (8U * 1024)
 #define FLAG_STOP      (1U << 0)
 #define FLAG_HALF      (1U << 1)
 #define FLAG_FULL      (1U << 2)
@@ -228,10 +231,19 @@ PcmAudio* pcm_audio_start(
     const TaikoMixer* mixer,
     uint8_t volume,
     uint8_t speed_tenths) {
-    PcmAudio* audio = malloc(sizeof(PcmAudio));
+    const size_t path_size = strlen(path) + 1;
+    /* Keep room for the worker stack, RTOS/file objects and error dialogs. */
+    PcmAudio* audio = taiko_alloc(sizeof(PcmAudio), START_RESERVE + path_size);
+    if(!audio) return NULL;
+    audio->path = taiko_alloc(path_size, START_RESERVE);
+    audio->mutex = NULL;
+    if(!audio->path) goto fail;
+    memcpy(audio->path, path, path_size);
+    /* Thread construction also needs a contiguous stack plus bookkeeping. */
+    if(!taiko_memory_available(AUDIO_STACK + 1024, 4096)) goto fail;
     audio->storage = storage;
-    audio->path = strdup(path);
     audio->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
+    if(!audio->mutex) goto fail;
     audio->state = PcmAudioLoading;
     audio->error = NULL;
     audio->duration_ms = 0;
@@ -240,9 +252,15 @@ PcmAudio* pcm_audio_start(
     audio->mixer = *mixer;
     audio->volume = MIN(volume, 100);
     audio->speed_tenths = MAX(5, MIN(speed_tenths, 20));
-    audio->thread = furi_thread_alloc_ex("TaikoAudio", 2048, audio_worker, audio);
+    audio->thread = furi_thread_alloc_ex("TaikoAudio", AUDIO_STACK, audio_worker, audio);
+    if(!audio->thread) goto fail;
     furi_thread_start(audio->thread);
     return audio;
+fail:
+    if(audio->mutex) furi_mutex_free(audio->mutex);
+    free(audio->path);
+    free(audio);
+    return NULL;
 }
 
 void pcm_audio_set_volume(PcmAudio* audio, uint8_t volume) {

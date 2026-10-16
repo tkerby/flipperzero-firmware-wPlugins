@@ -164,6 +164,34 @@ static void test_auto_retrigger_boundaries(void) {
     }
 }
 
+static void test_long_note_with_shorter_hits(void) {
+    uint8_t don[8000], samples[10000];
+    memset(don, 168, sizeof(don));
+    const uint8_t ka[] = {148};
+    TjaNote notes[] = {{.time_ms = 5, .kind = 1}, {.time_ms = 120, .kind = 2}};
+    TjaHitRun run = {.first_ms = 0, .interval_ms = 10, .count = 3};
+    TjaChart chart = {.notes = notes, .note_count = 2, .hit_runs = &run, .hit_run_count = 1};
+    TaikoMixer mixer = {
+        .don = {don, sizeof(don), 8000},
+        .ka = {ka, sizeof(ka), 8000},
+        .chart = &chart,
+        .don_volume = 100,
+        .ka_volume = 100};
+    memset(samples, 128, sizeof(samples));
+    taiko_mixer_mix(&mixer, samples, sizeof(samples), 8000, 0);
+    /* Retiring short auto voices must not discard an earlier, still-playing
+     * normal note, or the final automatic tail after that normal note ends. */
+    assert(samples[960] == 228 && samples[961] == 208);
+    assert(samples[8039] == 208 && samples[8040] == 168);
+    assert(samples[8159] == 168 && samples[8160] == 128);
+
+    mixer.don_volume = 0;
+    memset(samples, 128, sizeof(samples));
+    taiko_mixer_mix(&mixer, samples, sizeof(samples), 8000, 0);
+    for(size_t i = 0; i < sizeof(samples); i++)
+        assert(samples[i] == (i == 960 ? 148 : 128));
+}
+
 static void test_independent_volume(void) {
     const uint8_t don[] = {228, 28};
     const uint8_t ka[] = {88, 168};
@@ -230,6 +258,7 @@ int main(void) {
     test_missing_effects();
     test_auto_retrigger();
     test_auto_retrigger_boundaries();
+    test_long_note_with_shorter_hits();
     test_independent_volume();
     test_master_volume();
     puts(

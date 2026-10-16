@@ -1,4 +1,5 @@
 #include "tja_parser.h"
+#include "taiko_memory.h"
 
 #include <ctype.h>
 #include <math.h>
@@ -6,29 +7,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef FAP_VERSION
-#include <furi/core/memmgr.h>
-#include <furi/core/memmgr_heap.h>
-#endif
-
 #define MAX_NOTES    8192
 #define MAX_SLOTS    2048
 #define MAX_COMMANDS 64
 #define MAX_TIME_MS  3600000.0f
 
 static void* chart_alloc(size_t size) {
-#ifdef FAP_VERSION
-    /* Firmware malloc aborts on exhaustion. Leave room for the audio worker
-     * and error dialogs, and check fragmentation before entering the allocator. */
-    const size_t reserve = 16 * 1024;
-    const size_t overhead = 32;
-    const size_t available = memmgr_get_free_heap();
-    const size_t largest = memmgr_heap_get_max_free_block();
-    if(size > available || available - size < reserve || largest < overhead ||
-       size > largest - overhead)
-        return NULL;
-#endif
-    return malloc(size);
+    return taiko_alloc(size, 16 * 1024);
 }
 
 static void* chart_resize(void* data, size_t used, size_t size) {

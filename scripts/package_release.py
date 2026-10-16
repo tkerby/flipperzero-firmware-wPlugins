@@ -72,7 +72,7 @@ python3 scripts/prepare_songs.py songs --output sdcard/apps_data/taiko_player/so
 - OK：播放 / 暂停；左 / 右：后退 / 前进。
 - 上 / 下：调节应用音量；短按返回：菜单；播放时长按返回：退出。
 - GPIO 输出默认关闭，可在菜单内开启并设置引脚。
-- 连打和气球最多每秒自动打咚 24 下；暂不提供打击判定。
+- 连打和气球最多每秒自动打咚 32 下；暂不提供打击判定。
 
 源码：https://github.com/ZeroNinx/flipper-zero-taiko-player/tree/v{version}
 """
@@ -140,7 +140,7 @@ def package(version, output):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--version", default="0.2")
+    parser.add_argument("--version", default="0.3")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     if not re.fullmatch(r"\d+\.\d+", args.version):

@@ -1,4 +1,5 @@
 #include "taiko_sfx.h"
+#include "taiko_memory.h"
 #include "wav_reader.h"
 
 #include <furi.h>
@@ -20,7 +21,7 @@ static TaikoPcmClip load_clip(Storage* storage, const char* path) {
         WavInfo info;
         if(size <= UINT32_MAX && wav_read_header(read_at, file, size, &info) &&
            info.sample_count <= SFX_MAX_SAMPLES) {
-            uint8_t* samples = malloc(info.sample_count);
+            uint8_t* samples = taiko_alloc(info.sample_count, 16 * 1024);
             if(samples && read_at(file, info.data_offset, samples, info.sample_count)) {
                 clip = (TaikoPcmClip){samples, info.sample_count, info.sample_rate};
             } else {

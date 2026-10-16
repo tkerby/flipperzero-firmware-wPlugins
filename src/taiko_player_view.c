@@ -415,7 +415,7 @@ static void draw_lane(Canvas* canvas, const TaikoPlayerView* view) {
     canvas_set_color(canvas, ColorBlack);
 }
 
-void taiko_player_view_draw(Canvas* canvas, const TaikoPlayerView* view) {
+void taiko_player_view_draw(Canvas* canvas, const TaikoPlayerView* view, FuriString* text) {
     canvas_clear(canvas);
     canvas_set_color(canvas, ColorBlack);
     canvas_set_font(canvas, FontSecondary);
@@ -423,7 +423,7 @@ void taiko_player_view_draw(Canvas* canvas, const TaikoPlayerView* view) {
         draw_menu(canvas, &view->menu);
         return;
     }
-    FuriString* text = furi_string_alloc_set(view->title);
+    furi_string_set(text, view->title);
     elements_string_fit_width(canvas, text, 124);
     canvas_draw_str(canvas, 2, 9, furi_string_get_cstr(text));
 
@@ -465,7 +465,6 @@ void taiko_player_view_draw(Canvas* canvas, const TaikoPlayerView* view) {
     elements_string_fit_width(canvas, text, 31);
     const char* course = furi_string_get_cstr(text);
     canvas_draw_str(canvas, status_center - canvas_string_width(canvas, course) / 2, 49, course);
-    furi_string_free(text);
     canvas_draw_frame(canvas, 123, 30, 5, 21);
     const int volume_height = (view->volume * 19 + 50) / 100;
     if(volume_height) canvas_draw_box(canvas, 124, 50 - volume_height, 3, volume_height);
