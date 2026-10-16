@@ -13,6 +13,8 @@ App(
     fap_description="Staff time-clock for Flipper Zero (official and custom firmwares): register collaborators on NFC, RFID or iButton badges and log clock in/out to a CSV timesheet. Left/Right picks which technology is active, and any existing card works - even one from another company - since only the UID is read. Identification only: no badge emulation, no authentication bypass.",
     fap_weburl="https://github.com/vladpereverzyev/flipper-staff-time-clock",
     fap_icon="timeclock_10px.png", # 10x10 px, 1-bit clock icon
+    # The default "*.c*" would also pick up CITATION.cff and try to link it.
+    sources=["*.c"],
     requires=[
         "gui",
         "storage",
