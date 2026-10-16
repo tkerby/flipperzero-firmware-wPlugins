@@ -3,7 +3,7 @@ UFBT := .venv/bin/ufbt
 MOMENTUM_HOME := $(CURDIR)/.ufbt/momentum
 MOMENTUM_SDK := https://github.com/Next-Flip/Momentum-Firmware/releases/download/mntm-009/flipper-z-f7-sdk-mntm-009.zip
 FIRMWARE ?= official
-VERSION ?= 0.1
+VERSION ?= 0.2
 TOOLCHAIN_HOME := $(HOME)/.ufbt
 SDK_HOME := $(if $(filter momentum,$(FIRMWARE)),$(MOMENTUM_HOME),$(TOOLCHAIN_HOME))
 SDK_ENV := UFBT_HOME="$(SDK_HOME)" FBT_TOOLCHAIN_PATH="$(TOOLCHAIN_HOME)"

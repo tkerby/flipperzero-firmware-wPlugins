@@ -218,18 +218,21 @@ static void draw_gogo_background(Canvas* canvas, const TaikoPlayerView* view) {
     if(!view->gogo) return;
     static const uint8_t bayer[4][4] = {
         {0, 8, 2, 10}, {12, 4, 14, 6}, {3, 11, 1, 9}, {15, 7, 13, 5}};
-    static const uint8_t density[] = {7, 4, 2, 1};
-    static const int8_t jitter[] = {0, 1, 0, -1, 0, 0, 1, -1};
+    static const uint8_t density[] = {12, 8, 4, 2};
+    static const uint8_t jitter[] = {0, 0, 1, 0, 0, 0, 1, 0};
+    static const int8_t pulse[] = {0, 0, 1, 0, 0, -1, 0, 0};
     /* Source time keeps the animation still on pause and deterministic on seek.
-     * Four dithered rows jitter by one pixel, underneath the notes and target. */
-    const uint32_t phase = view->position_ms / 80;
+     * Four dithered rows ripple gently, with a small brightness variation.
+     * Keep the effect within five rows and underneath the notes and target. */
+    const uint32_t phase = view->position_ms / 70;
+    const int brightness = pulse[phase & 7];
     canvas_set_color(canvas, ColorWhite);
     for(int x = 0; x < 128; x++) {
-        const int offset = jitter[((x / 3) + phase) & 7];
-        for(int row = 0; row < 4; row++) {
+        const int offset = jitter[((x / 4) + phase) & 7];
+        for(size_t row = 0; row < COUNT_OF(density); row++) {
             const int y = LANE_TOP + row + offset;
-            if(y < LANE_TOP || y > LANE_TOP + 4) continue;
-            if(bayer[(row + phase / 2) & 3][(x + phase) & 3] < density[row])
+            const int threshold = density[row] + (row ? brightness : 0);
+            if(bayer[(row + phase / 2) & 3][(x + phase) & 3] < threshold)
                 canvas_draw_dot(canvas, x, y);
         }
     }
@@ -260,6 +263,8 @@ static void draw_target_flash(Canvas* canvas) {
 static void draw_lane(Canvas* canvas, const TaikoPlayerView* view) {
     canvas_draw_box(canvas, 0, LANE_TOP, 128, LANE_BOTTOM - LANE_TOP + 1);
     draw_gogo_background(canvas, view);
+    /* Keep the white target readable against the bright GOGO band. */
+    if(view->gogo) lane_disc(canvas, TAIKO_LANE_HIT_X, 8, ColorBlack);
     canvas_set_color(canvas, ColorWhite);
     canvas_draw_circle(canvas, TAIKO_LANE_HIT_X, LANE_Y, 7);
     canvas_draw_circle(canvas, TAIKO_LANE_HIT_X, LANE_Y, 5);
@@ -291,6 +296,7 @@ static void draw_lane(Canvas* canvas, const TaikoPlayerView* view) {
     for(size_t i = view->lane_count; i > 0; i--) {
         TaikoLaneNote note = view->lane_notes[i - 1];
         int radius = note.kind >= 3 ? TAIKO_LANE_BIG_RADIUS : TAIKO_LANE_SMALL_RADIUS;
+        if(view->gogo) lane_disc(canvas, note.x, radius + 1, ColorBlack);
         lane_disc(canvas, note.x, radius, ColorWhite);
         /* Thicken large-note borders inward without changing the outer radius. */
         lane_disc(canvas, note.x, radius - (note.kind == 3 ? 2 : 1), ColorBlack);
@@ -343,10 +349,13 @@ void taiko_player_view_draw(Canvas* canvas, const TaikoPlayerView* view) {
     char time[16];
     uint32_t seconds = view->position_ms / 1000;
     snprintf(time, sizeof(time), "%lu:%02lu", seconds / 60, seconds % 60);
-    canvas_draw_str(canvas, 89, 39, time);
+    /* Keep Normal's current center as the shared axis for both status lines. */
+    const int status_center = 89 + canvas_string_width(canvas, "Normal") / 2;
+    canvas_draw_str(canvas, status_center - canvas_string_width(canvas, time) / 2, 39, time);
     furi_string_set(text, view->course);
     elements_string_fit_width(canvas, text, 31);
-    canvas_draw_str(canvas, 89, 49, furi_string_get_cstr(text));
+    const char* course = furi_string_get_cstr(text);
+    canvas_draw_str(canvas, status_center - canvas_string_width(canvas, course) / 2, 49, course);
     furi_string_free(text);
     canvas_draw_frame(canvas, 123, 30, 5, 21);
     const int volume_height = (view->volume * 19 + 50) / 100;
