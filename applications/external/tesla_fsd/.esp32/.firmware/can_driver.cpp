@@ -5,8 +5,9 @@
  *   CAN_DRIVER_TWAI        — ESP32 built-in TWAI peripheral
  *   CAN_DRIVER_MCP2515     — SPI-attached MCP2515
  *   CAN_DRIVER_T2CAN_DUAL  — LilyGO T-2CAN: TWAI can0 + MCP2515 can1
+ *                            (+ BOARD_LILYGO_T2CAN_FD: MCP2518FD can1)
  *
- * Both drivers implement the CanDriver interface from can_driver.h.
+ * All drivers implement the CanDriver interface from can_driver.h.
  */
 
 #include "can_driver.h"
@@ -201,6 +202,27 @@ public:
         return info.tx_failed_count;
     }
 
+    // rx_overrun (the controller's own FIFO overflowing while the ISR is held
+    // off, e.g. during a flash write) is not part of errorCount(). tx_queued
+    // counts frames not yet sent; on a bus where nothing ACKs they stay there.
+    void describeState(char *out, size_t n) override {
+        static const char *const kState[] = {"stopped", "running", "bus-off", "recovering"};
+        twai_status_info_t info;
+        if (!installed_ || twai_get_status_info(&info) != ESP_OK) {
+            snprintf(out, n, "TWAI not installed");
+            return;
+        }
+        snprintf(out, n,
+                 "TWAI %s %s TEC=%lu REC=%lu rx_missed=%lu rx_overrun=%lu bus_err=%lu "
+                 "tx_fail=%lu tx_queued=%lu",
+                 listen_only_ ? "Listen-Only" : "Normal",
+                 info.state <= TWAI_STATE_RECOVERING ? kState[info.state] : "?",
+                 (unsigned long)info.tx_error_counter, (unsigned long)info.rx_error_counter,
+                 (unsigned long)info.rx_missed_count, (unsigned long)info.rx_overrun_count,
+                 (unsigned long)info.bus_error_count, (unsigned long)info.tx_failed_count,
+                 (unsigned long)info.msgs_to_tx);
+    }
+
     void setListenOnly(bool enable) override {
 #ifdef SNIFFER_ONLY
         (void)enable;   // sniffer build is permanently Listen-Only; ignore mode switches
@@ -266,7 +288,7 @@ public:
 #endif
 
 // ── MCP2515 driver ────────────────────────────────────────────────────────────
-#if defined(CAN_DRIVER_MCP2515) || defined(CAN_DRIVER_T2CAN_DUAL)
+#if defined(CAN_DRIVER_MCP2515) || (defined(CAN_DRIVER_T2CAN_DUAL) && !defined(BOARD_LILYGO_T2CAN_FD))
 
 #include <SPI.h>
 #include <mcp2515.h>   // autowp/autowp-mcp2515
@@ -451,6 +473,28 @@ public:
     // Every errorCount() event is a sendMessage() failure.
     uint32_t txFailedCount() override { return err_count_; }
 
+    // The chip keeps no count of lost or errored frames, only flags: an RXnOVR
+    // bit means a frame was lost at least once since the last reset, since
+    // nothing here clears it. So say that, rather than print a 0 that reads
+    // like a clean bus next to the TWAI's real counts.
+    void describeState(char *out, size_t n) override {
+        if (!installed_) {
+            snprintf(out, n, "MCP2515 %s", chip_detected_ ? "mode change failed"
+                                                          : "not detected on SPI");
+            return;
+        }
+        uint8_t eflg = mcp_.getErrorFlags();
+        snprintf(out, n,
+                 "MCP2515 %s EFLG=0x%02X%s%s%s TEC=%u REC=%u tx_fail=%lu "
+                 "(no rx_missed/bus_err counts on this chip)",
+                 listen_only_ ? "Listen-Only" : "Normal", (unsigned)eflg,
+                 (eflg & (MCP2515::EFLG_RX0OVR | MCP2515::EFLG_RX1OVR)) ? " rx-overflow-seen" : "",
+                 (eflg & MCP2515::EFLG_TXBO) ? " bus-off" : "",
+                 (eflg & (MCP2515::EFLG_TXEP | MCP2515::EFLG_RXEP)) ? " error-passive" : "",
+                 (unsigned)mcp_.errorCountTX(), (unsigned)mcp_.errorCountRX(),
+                 (unsigned long)err_count_);
+    }
+
     void setListenOnly(bool enable) override {
         if (!installed_ || listen_only_ == enable) return;
         MCP2515::ERROR err = enable ? mcp_.setListenOnlyMode() : mcp_.setNormalMode();
@@ -498,6 +542,384 @@ public:
 };
 #endif
 
+// ── MCP2518FD driver (LilyGO T-2CAN FD can1) ──────────────────────────────────
+#if defined(CAN_DRIVER_T2CAN_DUAL) && defined(BOARD_LILYGO_T2CAN_FD)
+
+#include <SPI.h>
+#include <ACAN2517FD.h>   // pierremolinaro/ACAN2517FD
+#include "can_mcp2518fd.h"
+
+// The controller runs on a 20 MHz SYSCLK either way, and the library clocks SPI
+// at 2/5 of SYSCLK: 8 MHz, below the 10 MHz the classic T-2CAN's MCP2515 uses
+// on the same pins.
+#if MCP2518FD_OSC_HZ == 40000000
+#define MCP2518FD_OSC ACAN2517FDSettings::OSC_40MHz_DIVIDED_BY_2
+#elif MCP2518FD_OSC_HZ == 20000000
+#define MCP2518FD_OSC ACAN2517FDSettings::OSC_20MHz
+#else
+#error "MCP2518FD_OSC_HZ must be 20000000 or 40000000"
+#endif
+
+// Classic CAN 2.0 at 500 kbit/s on an MCP2518FD through ACAN2517FD. The library
+// runs without its INT pin: receive() polls the controller over SPI from the
+// loop task, so its own ESP32 task never wakes and nothing else touches the
+// chip or the SPI bus. begin() first starts the controller in Listen-Only and
+// measures the crystal; nothing else starts it until that matches the build.
+class Mcp2518FdDriver : public CanDriver {
+    // Outside the library's begin() error bits (0..20).
+    static constexpr uint32_t kTimingRejected = 1u << 31;
+    // Raw register access for the crystal check and the error counters; in
+    // spec for SYSCLK down to 10 MHz.
+    static constexpr uint32_t kRawSpiHz = 4000000;
+
+    ACAN2517FD can_;
+    const char *label_;
+    int      cs_pin_;
+    int      sck_pin_;
+    int      miso_pin_;
+    int      mosi_pin_;
+    bool     spi_begun_     = false;
+    bool     started_       = false;  // library begin() ran, end() still owed
+    bool     begun_         = false;  // last begin() succeeded
+    bool     installed_     = false;
+    bool     listen_only_   = false;
+    bool     chip_detected_ = false;
+    uint32_t crystal_hz_    = 0;      // last measurement
+    bool     crystal_wrong_ = false;  // measured, and not the build's crystal
+    const char *filter_mode_ = "unknown";
+    uint8_t  filter_count_  = 0;
+    uint32_t filter_ids_[CAN_CAPTURE_MAX_IDS] = {};
+    uint32_t tx_count_      = 0;
+    uint32_t rx_count_      = 0;
+    uint32_t rx_rejected_   = 0;   // DLC>8 and CAN FD frames dropped
+    uint32_t rx_missed_     = 0;   // RX FIFO overflow events
+    uint32_t tx_failed_     = 0;   // tryToSend() refused: TX FIFO full
+    uint32_t bus_errors_    = 0;
+
+    static ACAN2517FDSettings settings(ACAN2517FDSettings::Oscillator osc, bool listen_only) {
+        ACAN2517FDSettings s(osc, 500UL * 1000UL, DataBitRateFactor::x1);
+        // Listen-Only sends no ACK and no error frames. Active is the CAN 2.0
+        // mode: the controller transmits FDF and BRS as zero whatever a
+        // message says.
+        s.mRequestedMode = listen_only ? ACAN2517FDSettings::ListenOnly
+                                       : ACAN2517FDSettings::Normal20B;
+        // 8-byte message objects: 32 RX and 8 TX slots (the MCP2515 has 2 and
+        // 3), and a longer payload does not fit, so it is never sent.
+        s.mControllerReceiveFIFOPayload  = ACAN2517FDSettings::PAYLOAD_8;
+        s.mControllerReceiveFIFOSize     = 32;
+        s.mControllerTransmitFIFOPayload = ACAN2517FDSettings::PAYLOAD_8;
+        s.mControllerTransmitFIFOSize    = 8;
+        // No software TX queue behind the controller FIFO: when that is full,
+        // send() fails and is counted instead of queuing frames that go stale.
+        s.mDriverTransmitFIFOSize = 0;
+        // The library masks interrupts while it reads the controller; a small
+        // ring caps one poll at four frames, so can0's TWAI interrupt is
+        // never held off for long.
+        s.mDriverReceiveFIFOSize = 4;
+        return s;
+    }
+
+    // Configure from scratch. The library loads bit timing, FIFOs and filters
+    // only in Configuration mode, so every mode or filter change restarts the
+    // controller, as the TWAI driver reinstalls; end() first aborts pending TX.
+    // Returns the library's begin() error code, 0 when running.
+    uint32_t start(ACAN2517FDSettings::Oscillator osc, bool listen_only) {
+        stop();
+        ACAN2517FDSettings s = settings(osc, listen_only);
+        if (!mcp2518fd_timing_ok(s.sysClock(), s.mBitRatePrescaler, s.mArbitrationPhaseSegment1,
+                                 s.mArbitrationPhaseSegment2, s.mArbitrationSJW)) {
+            return kTimingRejected;
+        }
+        ACAN2517FDFilters filters;
+        mcp2518fd_capture_filters(filters, kStandard, filter_ids_, filter_count_);
+        started_ = true;
+        return can_.begin(s, nullptr, filters);
+    }
+
+    // Configuration mode, then the SPI reset: off the bus, and it stays there
+    // across an ESP32 reset until begin() runs again.
+    void stop() {
+        if (!started_) return;
+        rxMissedCount();  // begin() clears the library's overflow count
+        can_.end();
+        started_   = false;
+        installed_ = false;
+    }
+
+    // Start in the given mode with the current filters. On failure the
+    // controller is left stopped. Returns the start() error code.
+    uint32_t restart(bool listen_only) {
+        uint32_t err = start(MCP2518FD_OSC, listen_only);
+        listen_only_ = listen_only;
+        installed_ = (err == 0);
+        if (!installed_) stop();
+        filter_mode_ = installed_ ? (filter_count_ ? "exact" : "accept-all") : "unknown";
+        return err;
+    }
+
+    void transfer(uint8_t *buf, size_t len) {
+        SPI.beginTransaction(SPISettings(kRawSpiHz, MSBFIRST, SPI_MODE0));
+        taskDISABLE_INTERRUPTS();   // same CS handling as the library
+        digitalWrite((uint8_t)cs_pin_, LOW);
+        SPI.transfer(buf, len);
+        digitalWrite((uint8_t)cs_pin_, HIGH);
+        taskENABLE_INTERRUPTS();
+        SPI.endTransaction();
+    }
+
+    uint32_t read_reg32(uint16_t addr) {
+        uint8_t b[6] = {(uint8_t)(0x30 | (addr >> 8)), (uint8_t)addr, 0, 0, 0, 0};
+        transfer(b, sizeof(b));
+        return (uint32_t)b[2] | ((uint32_t)b[3] << 8) | ((uint32_t)b[4] << 16) |
+               ((uint32_t)b[5] << 24);
+    }
+
+    void write_reg32(uint16_t addr, uint32_t value) {
+        uint8_t b[6] = {(uint8_t)(0x20 | (addr >> 8)), (uint8_t)addr, (uint8_t)value,
+                        (uint8_t)(value >> 8), (uint8_t)(value >> 16), (uint8_t)(value >> 24)};
+        transfer(b, sizeof(b));
+    }
+
+    // One time-base-counter sample: two reads that agree, and micros() right
+    // after; a sample that took long was preempted and is thrown away.
+    bool sample_tbc(uint32_t &us, uint32_t &ticks) {
+        uint32_t t0 = micros();
+        uint32_t first = read_reg32(MCP2518FD_REG_TBC);
+        ticks = read_reg32(MCP2518FD_REG_TBC);
+        us = micros();
+        return us - t0 < 200u && mcp2518fd_tbc_steady(first, ticks);
+    }
+
+    // SYSCLK from the time base counter against micros() over 10 ms. In the
+    // undivided Listen-Only start, SYSCLK is the crystal. 0 when no clean pair
+    // of samples was taken.
+    uint32_t measure_sysclk_hz() {
+        write_reg32(MCP2518FD_REG_TSCON, MCP2518FD_TSCON_TBCEN | (MCP2518FD_TBC_PRESCALE - 1));
+        for (uint8_t attempt = 0; attempt < 3; attempt++) {
+            uint32_t t0, c0, t1, c1;
+            if (!sample_tbc(t0, c0)) continue;
+            delay(10);
+            if (!sample_tbc(t1, c1)) continue;
+            return mcp2518fd_sysclk_hz(c1 - c0, t1 - t0);
+        }
+        return 0;
+    }
+
+public:
+    Mcp2518FdDriver(const char *label, int cs_pin, int sck_pin, int miso_pin, int mosi_pin)
+        : can_((uint8_t)cs_pin, SPI, 255),  // 255: no INT pin, polled
+          label_(label),
+          cs_pin_(cs_pin),
+          sck_pin_(sck_pin),
+          miso_pin_(miso_pin),
+          mosi_pin_(mosi_pin) {}
+
+    bool begin(bool listen_only) override {
+        begun_ = false;
+        if (crystal_wrong_) {
+            // A crystal does not change at run time: no restart per retry.
+            Serial.printf("[CAN] %s MCP2518FD crystal measured %lu kHz, build expects %lu kHz — "
+                          "left off the bus\n", label_, (unsigned long)(crystal_hz_ / 1000),
+                          (unsigned long)(MCP2518FD_OSC_HZ / 1000));
+            return false;
+        }
+        if (!spi_begun_) {
+            digitalWrite((uint8_t)cs_pin_, HIGH);
+            pinMode((uint8_t)cs_pin_, OUTPUT);
+            SPI.begin(sck_pin_, miso_pin_, mosi_pin_, cs_pin_);
+            spi_begun_ = true;
+        }
+
+        // Probe: Listen-Only on the undivided clock. Nothing reaches the bus
+        // whatever the crystal is, and the library's SPI clock for a 20 MHz
+        // SYSCLK is in spec with a 20 or a 40 MHz crystal.
+        uint32_t err = start(ACAN2517FDSettings::OSC_20MHz, true);
+        crystal_hz_ = err ? 0 : measure_sysclk_hz();
+        stop();
+        chip_detected_ = (err & (kTimingRejected | ACAN2517FD::kRequestedConfigurationModeTimeOut |
+                                 ACAN2517FD::kReadBackErrorWith1MHzSPIClock)) == 0;
+        if (err & kTimingRejected) {
+            Serial.printf("[CAN] %s MCP2518FD bit timing rejected — not started\n", label_);
+            return false;
+        }
+        if (!chip_detected_) {
+            Serial.printf("[CAN] %s MCP2518FD NOT detected on SPI "
+                          "(CS=%d SCK=%d MISO=%d MOSI=%d, code 0x%lX) — check wiring and power\n",
+                          label_, cs_pin_, sck_pin_, miso_pin_, mosi_pin_, (unsigned long)err);
+            return false;
+        }
+        if (err != 0) {
+            Serial.printf("[CAN] %s MCP2518FD detected but configuration FAILED (code 0x%lX)\n",
+                          label_, (unsigned long)err);
+            return false;
+        }
+        // A wrong crystal is a wrong bit rate, and a controller in normal mode
+        // at the wrong bit rate puts error frames on the car's bus.
+        if (crystal_hz_ == 0) {
+            Serial.printf("[CAN] %s MCP2518FD crystal check FAILED (time base counter) — "
+                          "left off the bus\n", label_);
+            return false;
+        }
+        if (!mcp2518fd_osc_matches(crystal_hz_, MCP2518FD_OSC_HZ)) {
+            crystal_wrong_ = true;
+            Serial.printf("[CAN] %s MCP2518FD crystal measured %lu kHz, build expects %lu kHz — "
+                          "left off the bus\n", label_, (unsigned long)(crystal_hz_ / 1000),
+                          (unsigned long)(MCP2518FD_OSC_HZ / 1000));
+            return false;
+        }
+
+        err = restart(listen_only);
+        if (err != 0) {
+            Serial.printf("[CAN] %s MCP2518FD start FAILED (code 0x%lX)\n", label_,
+                          (unsigned long)err);
+            return false;
+        }
+        begun_ = true;
+        ACAN2517FDSettings s = settings(MCP2518FD_OSC, listen_only);
+        Serial.printf("[CAN] %s MCP2518FD detected on SPI — %s mode @ 500 kbps, crystal %lu kHz "
+                      "(SYSCLK %lu MHz, sample point %lu%%)\n",
+                      label_, listen_only ? "Listen-Only" : "Normal CAN 2.0",
+                      (unsigned long)(crystal_hz_ / 1000), (unsigned long)(s.sysClock() / 1000000),
+                      (unsigned long)s.arbitrationSamplePointFromBitStart());
+        return true;
+    }
+
+    bool hardwarePresent() override { return chip_detected_; }
+
+    bool send(const CanFrame &frame) override {
+        if (!installed_ || listen_only_) return false;
+        CANFDMessage msg;
+        if (!mcp2518fd_tx_message(frame, msg)) return false;
+        // There is no software queue: a full controller FIFO fails the send,
+        // as an MCP2515 with all TX buffers busy does.
+        if (!can_.tryToSend(msg)) {
+            tx_failed_++;
+            return false;
+        }
+        tx_count_++;
+        return true;
+    }
+
+    bool receive(CanFrame &frame) override {
+        if (!installed_) return false;
+        for (uint8_t i = 0; i < CAN_RX_REJECT_BURST_MAX; i++) {
+            CANFDMessage msg;
+            // The library returns what an earlier poll buffered and then polls
+            // the controller; when nothing was buffered, take what that poll
+            // just moved instead of waiting for the next loop.
+            if (!can_.receive(msg) && !(can_.available() && can_.receive(msg))) return false;
+            if (!mcp2518fd_rx_frame(msg, frame)) {
+                rx_rejected_++;
+                continue;
+            }
+            rx_count_++;
+            return true;
+        }
+        return false;
+    }
+
+    uint32_t errorCount() override {
+        return rxMissedCount() + busErrorCount() + txFailedCount();
+    }
+
+    uint32_t txCount() override { return tx_count_; }
+
+    uint32_t rxCount() override { return rx_count_; }
+
+    uint32_t rxRejectedCount() override { return rx_rejected_; }
+
+    // The controller flags an RX FIFO overflow, it doesn't count frames: one
+    // event is one or more frames lost.
+    uint32_t rxMissedCount() override {
+        rx_missed_ += can_.hardwareReceiveBufferOverflowCount();
+        can_.resetHardwareReceiveBufferOverflowCount();
+        return rx_missed_;
+    }
+
+    // CiBDIAG0 holds four 8-bit error counters (nominal/data, RX/TX) that only
+    // count up; fold them in and clear them so they never sit at 255.
+    uint32_t busErrorCount() override {
+        if (installed_) {
+            uint32_t diag = read_reg32(MCP2518FD_REG_BDIAG0);
+            if (diag != 0) {
+                write_reg32(MCP2518FD_REG_BDIAG0, 0);
+                bus_errors_ += mcp2518fd_bdiag0_errors(diag);
+            }
+        }
+        return bus_errors_;
+    }
+
+    uint32_t txFailedCount() override { return tx_failed_; }
+
+    // CiTREC: REC in bits 0-7, TEC in 8-15, bus-off in bit 21, error-passive
+    // in bits 19-20. rx_missed counts FIFO overflow events, each one or more
+    // frames.
+    void describeState(char *out, size_t n) override {
+        if (!installed_) {
+            snprintf(out, n, "MCP2518FD %s",
+                     crystal_wrong_ ? "crystal mismatch, kept off the bus"
+                                    : chip_detected_ ? "stopped" : "not detected on SPI");
+            return;
+        }
+        uint32_t trec = can_.errorCounters();
+        snprintf(out, n,
+                 "MCP2518FD %s TEC=%lu REC=%lu%s%s rx_missed=%lu bus_err=%lu tx_fail=%lu "
+                 "crystal=%lukHz",
+                 listen_only_ ? "Listen-Only" : "Normal",
+                 (unsigned long)((trec >> 8) & 0xFFu), (unsigned long)(trec & 0xFFu),
+                 (trec & (1u << 21)) ? " bus-off" : "",
+                 (trec & ((1u << 19) | (1u << 20))) ? " error-passive" : "",
+                 (unsigned long)rxMissedCount(), (unsigned long)busErrorCount(),
+                 (unsigned long)tx_failed_, (unsigned long)(crystal_hz_ / 1000u));
+    }
+
+    void setListenOnly(bool enable) override {
+        if (!begun_ || (installed_ && listen_only_ == enable)) return;
+        uint32_t err = restart(enable);
+        if (err != 0) {
+            Serial.printf("[CAN] %s MCP2518FD mode switch FAILED (code 0x%lX) — controller stopped\n",
+                          label_, (unsigned long)err);
+        }
+    }
+
+    void setAcceptanceFilter(bool single, uint32_t id) override {
+        setAcceptanceFilters(single ? &id : nullptr, single ? 1 : 0);
+    }
+
+    void setAcceptanceFilters(const uint32_t *ids, uint8_t count) override {
+        if (!ids) count = 0;
+        if (count > CAN_CAPTURE_MAX_IDS) count = CAN_CAPTURE_MAX_IDS;
+        bool same = filter_count_ == count;
+        for (uint8_t i = 0; same && i < count; i++) {
+            same = filter_ids_[i] == (ids[i] & 0x7FFu);
+        }
+        filter_count_ = count;
+        for (uint8_t i = 0; i < count; i++) filter_ids_[i] = ids[i] & 0x7FFu;
+        if (!begun_ || (same && installed_)) return;  // begin() loads them
+        uint32_t err = restart(listen_only_);
+        if (err != 0) {
+            Serial.printf("[CAN] %s MCP2518FD filter switch FAILED (code 0x%lX) — controller stopped\n",
+                          label_, (unsigned long)err);
+        } else if (count) {
+            Serial.printf("[CAN] %s MCP2518FD hardware filter -> %u exact ids\n",
+                          label_, (unsigned)count);
+        } else {
+            Serial.printf("[CAN] %s MCP2518FD hardware filter -> accept all\n", label_);
+        }
+    }
+
+    const char *acceptanceFilterMode() override {
+        return installed_ ? filter_mode_ : "down";
+    }
+
+    // Pre-reboot quiesce: Configuration mode and the SPI reset (see stop()).
+    void shutdown() override {
+        stop();
+        begun_ = false;
+    }
+};
+#endif
+
 CanDriver *can_driver_create() {
 #if defined(CAN_DRIVER_TWAI)
     return new TwaiDriver("can0", PIN_CAN_TX, PIN_CAN_RX);
@@ -514,8 +936,13 @@ CanDriver *can_driver_create() {
 CanDriver *can_driver_create(CanBusId bus) {
 #if defined(CAN_DRIVER_T2CAN_DUAL)
     if (bus == CAN_BUS_SECONDARY) {
+#if defined(BOARD_LILYGO_T2CAN_FD)
+        return new Mcp2518FdDriver("can1", PIN_MCP_CS, PIN_MCP_SCK, PIN_MCP_MISO,
+                                   PIN_MCP_MOSI);
+#else
         return new Mcp2515Driver("can1", PIN_MCP_CS, PIN_MCP_SCK, PIN_MCP_MISO,
                                  PIN_MCP_MOSI, PIN_MCP_RST);
+#endif
     }
     return new TwaiDriver("can0", PIN_CAN_TX, PIN_CAN_RX);
 #else
@@ -544,4 +971,9 @@ void can_shutdown_all(CanDriver **buses, uint8_t count) {
 
 #if !defined(CAN_DRIVER_TWAI) && !defined(CAN_DRIVER_MCP2515) && !defined(CAN_DRIVER_T2CAN_DUAL)
 #error "Define CAN_DRIVER_TWAI, CAN_DRIVER_MCP2515, or CAN_DRIVER_T2CAN_DUAL in platformio.ini build_flags"
+#endif
+// The FD board is a T-2CAN in every other respect (pins, bus count, black box),
+// and those paths key off the two plain T-2CAN flags.
+#if defined(BOARD_LILYGO_T2CAN_FD) && !(defined(BOARD_LILYGO_T2CAN) && defined(CAN_DRIVER_T2CAN_DUAL))
+#error "BOARD_LILYGO_T2CAN_FD also needs BOARD_LILYGO_T2CAN and CAN_DRIVER_T2CAN_DUAL"
 #endif

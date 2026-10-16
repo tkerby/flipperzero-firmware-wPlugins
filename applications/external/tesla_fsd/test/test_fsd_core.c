@@ -26,8 +26,10 @@
 #include "fsd_checksum.h"
 #include "fsd_events.h"
 #include "fsd_handler.h"
+#include "fsd_power.h"
 #include "fsd_profile.h"
 #include "fsd_profile_db.h"
+#include "fsd_tpms.h"
 
 static int g_pass = 0;
 static int g_fail = 0;
@@ -1285,6 +1287,50 @@ static void test_capability(void) {
     r = fsd_capability_eval(unk_legacy, TeslaHW_Unknown);
     CHECK(r.hw_effective == TeslaHW_Legacy, "0x3EE present -> inferred Legacy");
     CHECK(r.has_das, "inferred Legacy: 0x399 is DAS state");
+
+    // ── Vehicle CAN hint from 0x3C2 (a hint, never a verdict) ──
+    FSDCapSeen vehicle_pair = {0};
+    vehicle_pair.vcleft_switch = true;
+    vehicle_pair.body_ui = true;
+    r = fsd_capability_eval(vehicle_pair, TeslaHW_HW3);
+    CHECK(r.has_vcleft_switch, "0x3C2 seen");
+    CHECK(
+        r.vehicle_hint == CAP_VEH_HINT_DIRECT,
+        "0x3C2 seen: hint Vehicle CAN pair (%d)",
+        r.vehicle_hint);
+
+    // Forwarded subset: body frames arrive, 0x3C2 does not.
+    FSDCapSeen forwarded = {0};
+    forwarded.epas = true;
+    forwarded.das_hw3 = true;
+    forwarded.ap_control = true;
+    forwarded.body_ui = true;
+    forwarded.body_window = true;
+    r = fsd_capability_eval(forwarded, TeslaHW_HW3);
+    CHECK(!r.has_vcleft_switch, "forwarded subset: no 0x3C2");
+    CHECK(
+        r.vehicle_hint == CAP_VEH_HINT_FORWARDED,
+        "body frames but no 0x3C2: hint forwarded subset (%d)",
+        r.vehicle_hint);
+    CHECK(r.nag_killer == CAP_OK, "forwarded subset still fine for nag killer");
+
+    // 0x3C2 moves the hint and nothing else.
+    forwarded.vcleft_switch = true;
+    FSDCapReport with_switch = fsd_capability_eval(forwarded, TeslaHW_HW3);
+    CHECK(
+        with_switch.vehicle_hint == CAP_VEH_HINT_DIRECT &&
+            with_switch.nag_killer == r.nag_killer && with_switch.ap_first == r.ap_first &&
+            with_switch.fsd_activation == r.fsd_activation &&
+            with_switch.soft_engage == r.soft_engage &&
+            with_switch.body_control == r.body_control && with_switch.bus_hint == r.bus_hint,
+        "0x3C2 changes only the vehicle hint");
+
+    // Neither 0x3C2 nor any body frame: nothing to go on.
+    r = fsd_capability_eval(hw3_das, TeslaHW_HW3);
+    CHECK(
+        r.vehicle_hint == CAP_VEH_HINT_NONE,
+        "no body/0x3C2 frames: no vehicle hint (%d)",
+        r.vehicle_hint);
 
     // ── bus hint: steering, no 0x370 -> Chassis/Vehicle-like ──
     FSDCapSeen chassis = {0};
@@ -2981,6 +3027,339 @@ static void test_readonly_parsers(void) {
     CHECK(s.energy_seen, "energy seen");
 }
 
+// ── tyre pressures, 0x219 (fsd_tpms.h) ───────────────────────────────────────
+// The 7-byte frames are copied from captures, not built from a table: the #211
+// dump (2024 Fremont Model Y, Vehicle CAN, parked), in capture order with its
+// timestamps, and the frames quoted in ukinora's fork from another car.
+static void tpms_zero(FSDTpms* t) {
+    memset(t, 0, sizeof(*t));
+}
+
+static void test_tpms_real_frames(void) {
+    static const struct {
+        uint32_t ms;
+        uint8_t d[7];
+    } k211[] = {
+        {1963, {0x02, 0x80, 0xFF, 0xFF, 0xFF, 0xF8, 0x0F}},
+        {2163, {0x04, 0x74, 0x74, 0x00, 0x00, 0x00, 0x00}},
+        {2476, {0x01, 0x80, 0xFF, 0xFF, 0xFF, 0xFB, 0x0F}},
+        {2663, {0x03, 0x80, 0xFF, 0xFF, 0xFF, 0xF9, 0x0F}},
+        {3063, {0x01, 0x80, 0xFF, 0xFF, 0xFF, 0xFB, 0x0F}},
+        {3563, {0x00, 0x80, 0xFF, 0xFF, 0xFF, 0xFA, 0x0F}},
+        {3663, {0x01, 0x80, 0xFF, 0xFF, 0xFF, 0xFB, 0x0F}},
+        {3763, {0x02, 0x80, 0xFF, 0xFF, 0xFF, 0xF8, 0x0F}},
+        {4063, {0x05, 0x00, 0x6F, 0x6E, 0x72, 0x70, 0x00}},
+    };
+    FSDTpms t;
+    tpms_zero(&t);
+    CHECK(!fsd_tpms_seen(&t) && !fsd_tpms_has_reading(&t), "tpms: zeroed state has seen nothing");
+
+    // The per-sensor frames carry 0x80 (3.2 bar) in byte 1 on every wheel: never a reading.
+    for(int i = 0; i < 8; i++) {
+        FSDTpmsRx rx = fsd_tpms_update(&t, k211[i].d, 7, k211[i].ms);
+        FSDTpmsRx want = k211[i].d[0] == 4 ? FSD_TPMS_RX_TARGET : FSD_TPMS_RX_IGNORED;
+        CHECK(
+            rx == want,
+            "tpms #211 frame %d (kind %u) got rx %d want %d",
+            i,
+            k211[i].d[0],
+            rx,
+            want);
+        CHECK(!fsd_tpms_has_reading(&t), "tpms #211 frame %d: no reading yet", i);
+    }
+    CHECK(fsd_tpms_seen(&t) && t.frame_dlc == 7, "tpms: seen, dlc %u", t.frame_dlc);
+    CHECK(
+        t.target[0] == 0x74 && t.target[1] == 0x74,
+        "tpms: target %02X %02X",
+        t.target[0],
+        t.target[1]);
+    CHECK(
+        fsd_tpms_mbar(t.target[0]) == 2900,
+        "tpms: target 2900 mbar, got %u",
+        fsd_tpms_mbar(t.target[0]));
+
+    CHECK(
+        fsd_tpms_update(&t, k211[8].d, 7, k211[8].ms) == FSD_TPMS_RX_READING,
+        "tpms: kind 5 is a reading");
+    CHECK(t.source == FSD_TPMS_SRC_ALL, "tpms: source ALL, got %u", t.source);
+    static const unsigned mbar[4] = {2775, 2750, 2850, 2800};
+    for(int i = 0; i < 4; i++) {
+        CHECK(
+            fsd_tpms_mbar(t.pressure[i]) == mbar[i],
+            "tpms slot %d %u mbar want %u",
+            i,
+            fsd_tpms_mbar(t.pressure[i]),
+            mbar[i]);
+        CHECK(t.temp[i] == FSD_TPMS_NA, "tpms slot %d: kind 5 has no temperature", i);
+        CHECK(t.pos[i] == FSD_TPMS_POS_UNKNOWN, "tpms slot %d: kind 5 names no corner", i);
+    }
+    CHECK(
+        t.last_ms == 4063 && fsd_tpms_age_ms(&t, 4663) == 600,
+        "tpms: age 600 ms, got %u",
+        (unsigned)fsd_tpms_age_ms(&t, 4663));
+    CHECK(!fsd_tpms_stale(&t, 4663), "tpms: fresh after one cycle");
+
+    // The next cycle's per-sensor frames leave the four values alone.
+    for(int i = 0; i < 8; i++)
+        fsd_tpms_update(&t, k211[i].d, 7, 4163 + k211[i].ms);
+    CHECK(
+        t.source == FSD_TPMS_SRC_ALL && t.pressure[0] == 0x6F && t.pressure[3] == 0x70,
+        "tpms: per-sensor frames do not overwrite kind 5");
+    for(int i = 0; i < 4; i++)
+        CHECK(t.pressure[i] != 0x80, "tpms slot %d is not 0x80", i);
+
+    // ukinora's car: the same 80 FF FF FF with another byte-5 permutation, the
+    // same target, and kind 5 on three days. On the last one the driver's tyre
+    // had been let down and byte 2 alone moved.
+    static const uint8_t fork_sensor[4][7] = {
+        {0x00, 0x80, 0xFF, 0xFF, 0xFF, 0xF8, 0x0F},
+        {0x01, 0x80, 0xFF, 0xFF, 0xFF, 0xF9, 0x0F},
+        {0x02, 0x80, 0xFF, 0xFF, 0xFF, 0xFB, 0x0F},
+        {0x03, 0x80, 0xFF, 0xFF, 0xFF, 0xFA, 0x0F},
+    };
+    static const uint8_t fork_target[7] = {0x04, 0x74, 0x74, 0x00, 0x00, 0x00, 0x00};
+    static const uint8_t fork_0901[7] = {0x05, 0x00, 0x7A, 0x7A, 0x7A, 0x7A, 0x00};
+    static const uint8_t fork_0903[7] = {0x05, 0x00, 0x75, 0x76, 0x74, 0x75, 0x00};
+    static const uint8_t fork_0906[7] = {0x05, 0x00, 0x6D, 0x74, 0x73, 0x74, 0x00};
+    tpms_zero(&t);
+    for(int i = 0; i < 4; i++)
+        CHECK(
+            fsd_tpms_update(&t, fork_sensor[i], 7, 100) == FSD_TPMS_RX_IGNORED,
+            "tpms fork kind %d ignored",
+            i);
+    CHECK(
+        fsd_tpms_update(&t, fork_target, 7, 200) == FSD_TPMS_RX_TARGET && t.target[0] == 0x74 &&
+            t.target[1] == 0x74,
+        "tpms fork target pair");
+    CHECK(
+        fsd_tpms_update(&t, fork_0901, 7, 300) == FSD_TPMS_RX_READING && t.pressure[0] == 0x7A &&
+            t.pressure[3] == 0x7A,
+        "tpms fork 09-01 reads 0x7A x4");
+    CHECK(
+        fsd_tpms_update(&t, fork_0903, 7, 400) == FSD_TPMS_RX_READING && t.pressure[0] == 0x75 &&
+            t.pressure[1] == 0x76 && t.pressure[2] == 0x74 && t.pressure[3] == 0x75,
+        "tpms fork 09-03 in byte order");
+    CHECK(
+        fsd_tpms_update(&t, fork_0906, 7, 500) == FSD_TPMS_RX_READING && t.pressure[0] == 0x6D,
+        "tpms fork 09-06 slot 0 = byte 2, got %02X",
+        t.pressure[0]);
+    CHECK(
+        t.pressure[0] < t.pressure[1] && t.pressure[0] < t.pressure[2] &&
+            t.pressure[0] < t.pressure[3],
+        "tpms fork 09-06: the let-down tyre is the low slot");
+    for(int i = 0; i < 4; i++)
+        CHECK(
+            fsd_tpms_update(&t, fork_sensor[i], 7, 600) == FSD_TPMS_RX_IGNORED &&
+                t.pressure[i] != 0x80,
+            "tpms fork kind %d leaves slot %d alone",
+            i,
+            i);
+}
+
+// The 5-byte form exactly as the public DBC lays it out (no capture of it yet).
+static void
+    tpms_dbc(uint8_t* d, uint8_t sensor, uint8_t p, uint8_t temp, uint8_t volt, uint8_t loc) {
+    d[0] = sensor;
+    d[1] = p;
+    d[2] = temp;
+    d[3] = volt;
+    d[4] = loc;
+}
+
+static void test_tpms_dbc_form(void) {
+    FSDTpms t;
+    uint8_t d[5];
+    tpms_zero(&t);
+
+    // Asleep before anything was read: nothing to show, source stays empty.
+    tpms_dbc(d, 0, 0x80, 0xFF, 0xFF, 0x02);
+    CHECK(fsd_tpms_update(&t, d, 5, 10) == FSD_TPMS_RX_EMPTY, "tpms dbc: placeholder is empty");
+    CHECK(
+        !fsd_tpms_has_reading(&t) && t.source == FSD_TPMS_SRC_NONE,
+        "tpms dbc: placeholder starts no source");
+
+    // Four sensors, the car placing them RL RR FL FR. 0x3C = 20 C, 0x8C = 2.9 V.
+    static const uint8_t p[4] = {0x70, 0x71, 0x72, 0x73};
+    static const uint8_t loc[4] = {2, 3, 0, 1};
+    for(uint8_t k = 0; k < 4; k++) {
+        tpms_dbc(d, k, p[k], (uint8_t)(0x3C + k), 0x8C, loc[k]);
+        CHECK(fsd_tpms_update(&t, d, 5, 100 + k) == FSD_TPMS_RX_READING, "tpms dbc sensor %u", k);
+    }
+    CHECK(t.source == FSD_TPMS_SRC_SENSOR && t.frame_dlc == 5, "tpms dbc: source SENSOR");
+    for(int k = 0; k < 4; k++) {
+        CHECK(t.pressure[k] == p[k], "tpms dbc slot %d pressure %02X", k, t.pressure[k]);
+        CHECK(
+            fsd_tpms_temp_c(t.temp[k]) == 20 + k,
+            "tpms dbc slot %d temp %d",
+            k,
+            fsd_tpms_temp_c(t.temp[k]));
+        CHECK(t.pos[k] == loc[k], "tpms dbc slot %d pos %u", k, t.pos[k]);
+    }
+    CHECK(t.last_ms == 103, "tpms dbc: last reading at 103, got %u", (unsigned)t.last_ms);
+
+    // The car loses sensor 1: its slot goes back to unknown, the rest stay.
+    tpms_dbc(d, 1, 0x80, 0xFF, 0xFF, 0x03);
+    CHECK(fsd_tpms_update(&t, d, 5, 200) == FSD_TPMS_RX_EMPTY, "tpms dbc: sensor 1 placeholder");
+    CHECK(t.pressure[1] == FSD_TPMS_NA && t.temp[1] == FSD_TPMS_NA, "tpms dbc: slot 1 cleared");
+    CHECK(
+        t.pressure[0] == 0x70 && t.pressure[2] == 0x72 && t.pressure[3] == 0x73,
+        "tpms dbc: other slots kept");
+    CHECK(t.last_ms == 103, "tpms dbc: an empty frame is not a reading");
+    tpms_dbc(d, 2, 0xFF, 0x3C, 0x8C, 0x00);
+    CHECK(
+        fsd_tpms_update(&t, d, 5, 210) == FSD_TPMS_RX_EMPTY && t.pressure[2] == FSD_TPMS_NA,
+        "tpms dbc: pressure FF is no reading");
+
+    // Temperature missing but battery there: still a reading.
+    tpms_dbc(d, 3, 0x74, 0xFF, 0x8C, 0x01);
+    CHECK(
+        fsd_tpms_update(&t, d, 5, 220) == FSD_TPMS_RX_READING && t.pressure[3] == 0x74 &&
+            t.temp[3] == FSD_TPMS_NA,
+        "tpms dbc: no temperature, pressure kept");
+
+    // 0 bar from a live sensor is a flat tyre, not "unknown".
+    tpms_dbc(d, 0, 0x00, 0x3C, 0x8C, 0x02);
+    CHECK(
+        fsd_tpms_update(&t, d, 5, 230) == FSD_TPMS_RX_READING && t.pressure[0] == 0x00,
+        "tpms dbc: 0 bar kept as 0");
+
+    // Location 4 is unknown in the DBC; 5..7 are not in it at all.
+    tpms_dbc(d, 0, 0x70, 0x3C, 0x8C, 0x04);
+    fsd_tpms_update(&t, d, 5, 240);
+    CHECK(t.pos[0] == FSD_TPMS_POS_UNKNOWN, "tpms dbc: location 4 unknown, got %u", t.pos[0]);
+    tpms_dbc(d, 0, 0x70, 0x3C, 0x8C, 0x07);
+    fsd_tpms_update(&t, d, 5, 250);
+    CHECK(t.pos[0] == FSD_TPMS_POS_UNKNOWN, "tpms dbc: location 7 unknown, got %u", t.pos[0]);
+    tpms_dbc(d, 0, 0x70, 0x3C, 0x8C, 0xF9); // upper bits are not part of the location
+    fsd_tpms_update(&t, d, 5, 260);
+    CHECK(t.pos[0] == FSD_TPMS_POS_FR, "tpms dbc: location from bits 0-2, got %u", t.pos[0]);
+}
+
+static void test_tpms_malformed(void) {
+    FSDTpms t;
+    uint8_t d[8] = {0x05, 0x00, 0x6F, 0x6E, 0x72, 0x70, 0x00, 0x00};
+    tpms_zero(&t);
+
+    CHECK(
+        fsd_tpms_update(&t, d, 0, 10) == FSD_TPMS_RX_IGNORED && !fsd_tpms_seen(&t),
+        "tpms: dlc 0 is not a frame");
+    CHECK(fsd_tpms_update(NULL, d, 7, 10) == FSD_TPMS_RX_IGNORED, "tpms: null state");
+    CHECK(
+        fsd_tpms_update(&t, NULL, 7, 10) == FSD_TPMS_RX_IGNORED && !fsd_tpms_seen(&t),
+        "tpms: null data");
+
+    // Kind 5 bytes at every length but 7: nothing taken.
+    for(uint8_t dlc = 1; dlc <= 8; dlc++) {
+        if(dlc == 7) continue;
+        CHECK(fsd_tpms_update(&t, d, dlc, 20) == FSD_TPMS_RX_IGNORED, "tpms: dlc %u ignored", dlc);
+        CHECK(t.frame_dlc == dlc, "tpms: dlc %u recorded", dlc);
+    }
+    CHECK(!fsd_tpms_has_reading(&t), "tpms: no reading from odd lengths");
+    // The first frame turned every value into "not available", not 0.
+    CHECK(
+        t.target[0] == FSD_TPMS_NA && t.target[1] == FSD_TPMS_NA && t.pressure[0] == FSD_TPMS_NA,
+        "tpms: unknown is FF, not 0");
+
+    // Kinds a form does not have.
+    static const uint8_t kinds[] = {0x06, 0x07, 0x45, 0x84, 0x85, 0xFF};
+    for(size_t i = 0; i < sizeof(kinds); i++) {
+        d[0] = kinds[i];
+        CHECK(
+            fsd_tpms_update(&t, d, 7, 30) == FSD_TPMS_RX_IGNORED,
+            "tpms: 7-byte kind %02X ignored",
+            kinds[i]);
+        CHECK(
+            fsd_tpms_update(&t, d, 5, 30) == FSD_TPMS_RX_IGNORED,
+            "tpms: 5-byte kind %02X ignored",
+            kinds[i]);
+    }
+    d[0] = 0x04;
+    CHECK(
+        fsd_tpms_update(&t, d, 5, 40) == FSD_TPMS_RX_IGNORED,
+        "tpms: no kind 4 in the 5-byte form");
+    d[0] = 0x05;
+    CHECK(
+        fsd_tpms_update(&t, d, 5, 40) == FSD_TPMS_RX_IGNORED,
+        "tpms: no kind 5 in the 5-byte form");
+    // A per-sensor kind in the 7-byte form, however live it looks.
+    static const uint8_t live_looking[7] = {0x00, 0x72, 0x3C, 0x8C, 0x00, 0xFA, 0x0F};
+    CHECK(
+        fsd_tpms_update(&t, live_looking, 7, 50) == FSD_TPMS_RX_IGNORED,
+        "tpms: 7-byte kind 0 never decoded");
+    CHECK(!fsd_tpms_has_reading(&t) && t.target[0] == FSD_TPMS_NA, "tpms: still nothing");
+
+    // Kind 5 slots that say nothing, and kind 4 with nothing in it.
+    static const uint8_t gaps[7] = {0x05, 0x00, 0x6F, 0x00, 0xFF, 0x70, 0x00};
+    CHECK(fsd_tpms_update(&t, gaps, 7, 60) == FSD_TPMS_RX_READING, "tpms: partial kind 5");
+    CHECK(
+        t.pressure[0] == 0x6F && t.pressure[1] == FSD_TPMS_NA && t.pressure[2] == FSD_TPMS_NA &&
+            t.pressure[3] == 0x70,
+        "tpms: 0 and FF slots unknown");
+    static const uint8_t none5[7] = {0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    CHECK(
+        fsd_tpms_update(&t, none5, 7, 70) == FSD_TPMS_RX_EMPTY && !fsd_tpms_has_reading(&t),
+        "tpms: empty kind 5 clears kind 5 values");
+    static const uint8_t none4[7] = {0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    CHECK(
+        fsd_tpms_update(&t, none4, 7, 80) == FSD_TPMS_RX_EMPTY && t.target[0] == FSD_TPMS_NA,
+        "tpms: empty kind 4");
+}
+
+static void test_tpms_sources_and_age(void) {
+    FSDTpms t;
+    uint8_t d[5];
+    static const uint8_t all[7] = {0x05, 0x00, 0x6F, 0x6E, 0x72, 0x70, 0x00};
+    tpms_zero(&t);
+
+    CHECK(fsd_tpms_update(&t, all, 7, 1000) == FSD_TPMS_RX_READING, "tpms src: kind 5 first");
+    // A live sensor reading replaces all four: kind 5 slots are in another order.
+    tpms_dbc(d, 2, 0x71, 0x3C, 0x8C, 0x00);
+    CHECK(
+        fsd_tpms_update(&t, d, 5, 1100) == FSD_TPMS_RX_READING && t.source == FSD_TPMS_SRC_SENSOR,
+        "tpms src: sensor reading wins");
+    CHECK(
+        t.pressure[0] == FSD_TPMS_NA && t.pressure[1] == FSD_TPMS_NA && t.pressure[2] == 0x71 &&
+            t.pressure[3] == FSD_TPMS_NA,
+        "tpms src: only the sensor's own slot is set");
+    CHECK(
+        fsd_tpms_update(&t, all, 7, 1200) == FSD_TPMS_RX_IGNORED && t.pressure[2] == 0x71,
+        "tpms src: kind 5 waits while sensor readings are fresh");
+    CHECK(
+        fsd_tpms_update(&t, all, 7, 1100 + FSD_TPMS_STALE_MS) == FSD_TPMS_RX_IGNORED,
+        "tpms src: still fresh at the limit");
+    CHECK(
+        fsd_tpms_update(&t, all, 7, 1101 + FSD_TPMS_STALE_MS) == FSD_TPMS_RX_READING &&
+            t.source == FSD_TPMS_SRC_ALL && t.pressure[2] == 0x72,
+        "tpms src: kind 5 takes over from stale sensor readings");
+
+    // Sensor source with every slot cleared by the car: kind 5 at once.
+    tpms_dbc(d, 0, 0x71, 0x3C, 0x8C, 0x00);
+    fsd_tpms_update(&t, d, 5, 50000);
+    tpms_dbc(d, 0, 0x80, 0xFF, 0xFF, 0x00);
+    fsd_tpms_update(&t, d, 5, 50100);
+    CHECK(
+        t.source == FSD_TPMS_SRC_SENSOR && !fsd_tpms_has_reading(&t),
+        "tpms src: sensor source with nothing left");
+    CHECK(
+        fsd_tpms_update(&t, all, 7, 50200) == FSD_TPMS_RX_READING && t.source == FSD_TPMS_SRC_ALL,
+        "tpms src: kind 5 fills an empty sensor source");
+
+    // Age and staleness.
+    CHECK(fsd_tpms_age_ms(&t, 50200) == 0 && !fsd_tpms_stale(&t, 50200), "tpms age: 0 right away");
+    CHECK(!fsd_tpms_stale(&t, 50200 + FSD_TPMS_STALE_MS), "tpms age: not stale at the limit");
+    CHECK(fsd_tpms_stale(&t, 50201 + FSD_TPMS_STALE_MS), "tpms age: stale past the limit");
+    CHECK(fsd_tpms_age_ms(&t, 50200 + 312000) == 312000, "tpms age: 312 s");
+    t.last_ms = 0xFFFFF000u;
+    CHECK(
+        fsd_tpms_age_ms(&t, 0x100u) == 0x1100u && !fsd_tpms_stale(&t, 0x100u),
+        "tpms age: across the millis wrap");
+    FSDTpms none;
+    tpms_zero(&none);
+    CHECK(
+        fsd_tpms_age_ms(&none, 123456) == 0 && !fsd_tpms_stale(&none, 123456),
+        "tpms age: nothing read is never stale");
+}
+
 // ── extras write handlers (Service-gated) + frame builders ────────────────────
 static void test_extras_and_builders(void) {
     FSDState s;
@@ -3148,6 +3527,242 @@ static void test_blackbox_filter(void) {
     CHECK(!fsd_blackbox_should_record(0x7FF), "0x7FF dropped");
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Power / reset log
+//
+// The question this answers is whether the rear tap's 12V is switched or
+// always-on, and it exists because a multimeter cannot answer it comfortably:
+// reaching the connector means opening a door, and opening a door wakes the
+// car. It also separates three causes a voltage reading collapses into one --
+// the supply going away, the supply sagging, and us crashing.
+// ─────────────────────────────────────────────────────────────────────────────
+static void test_power_verdict(void) {
+    printf("\n-- power: switched or always-on --\n");
+
+    FsdPwrRecord slept = {true, 2400000u, 1200000u}; // up 40 min, quiet 20 min
+    FsdPwrRecord awake = {true, 2400000u, 0u}; // up 40 min, bus never quiet
+
+    // The whole point: quiet bus, then the supply died.
+    CHECK(
+        fsd_pwr_verdict(FSD_PWR_RESET_POWERON, &slept) == FSD_PWR_SWITCHED,
+        "quiet then power-cycled -> switched");
+
+    // 🔴 The trap. "Came back from a power cut" looks like switched, but if the
+    // bus never went quiet the car never slept -- sentry left on, a scheduled
+    // charge, someone opening the app. Reporting SWITCHED here would be a
+    // confident answer to a question that was never asked.
+    CHECK(
+        fsd_pwr_verdict(FSD_PWR_RESET_POWERON, &awake) == FSD_PWR_NO_SLEEP,
+        "power cut but the bus never went quiet -> inconclusive");
+
+    // A sagging supply is a wiring verdict, not a switching one. Thin tap wire,
+    // a cold crimp, or an e-fuse near its limit all land here, and all of them
+    // want a different response than "the car switched us off".
+    CHECK(
+        fsd_pwr_verdict(FSD_PWR_RESET_BROWNOUT, &slept) == FSD_PWR_BROWNOUT,
+        "brownout is reported as brownout, not as switched");
+
+    // We fell over. The supply is not implicated and must not be blamed.
+    CHECK(
+        fsd_pwr_verdict(FSD_PWR_RESET_SOFTWARE, &slept) == FSD_PWR_CRASH,
+        "software reset says nothing about the supply");
+    CHECK(
+        fsd_pwr_verdict(FSD_PWR_RESET_EXTERNAL, &slept) == FSD_PWR_CRASH,
+        "reset pin says nothing about the supply");
+
+    // Nothing recorded yet -- first boot, or NVS cleared.
+    FsdPwrRecord none = {false, 0u, 0u};
+    CHECK(
+        fsd_pwr_verdict(FSD_PWR_RESET_POWERON, &none) == FSD_PWR_UNKNOWN, "no record -> unknown");
+    CHECK(
+        fsd_pwr_verdict(FSD_PWR_RESET_POWERON, NULL) == FSD_PWR_UNKNOWN, "NULL record -> unknown");
+    CHECK(
+        fsd_pwr_verdict(FSD_PWR_RESET_UNKNOWN, &slept) == FSD_PWR_UNKNOWN,
+        "unknown reset reason -> unknown");
+
+    // ALWAYS_ON can never come from the boot path: a module that kept its power
+    // never rebooted to report anything. It has to come from the live path.
+    CHECK(
+        fsd_pwr_live_verdict(FSD_PWR_ALWAYS_ON_MS) == FSD_PWR_ALWAYS_ON,
+        "still alive long after the bus went quiet -> always-on");
+    CHECK(
+        fsd_pwr_live_verdict(FSD_PWR_ALWAYS_ON_MS - 1u) == FSD_PWR_UNKNOWN,
+        "not quiet long enough yet -> no claim");
+    CHECK(fsd_pwr_live_verdict(0) == FSD_PWR_UNKNOWN, "bus busy -> no claim");
+
+    // Every value has to be printable, or the serial line reports a number.
+    for(int r = 0; r <= FSD_PWR_RESET_EXTERNAL; r++)
+        CHECK(fsd_pwr_reset_str((FsdPwrReset)r)[0] != '\0', "reset %d has a name", r);
+    for(int v = 0; v <= FSD_PWR_CRASH; v++)
+        CHECK(fsd_pwr_verdict_str((FsdPwrVerdict)v)[0] != '\0', "verdict %d has a name", v);
+}
+
+static void test_power_quiet_ms(void) {
+    // Never received anything: we have not seen the bus go quiet, we have seen
+    // nothing at all. Returning a huge quiet time here would make a module that
+    // was never wired to the car look like a car that fell asleep.
+    CHECK(fsd_pwr_quiet_ms(60000u, 0u, false) == 0u, "no frame ever -> not quiet");
+
+    // Traffic within the threshold is not quiet.
+    CHECK(fsd_pwr_quiet_ms(10000u, 9999u, true) == 0u, "recent frame -> not quiet");
+    CHECK(
+        fsd_pwr_quiet_ms(10000u + FSD_PWR_QUIET_MS - 1u, 10000u, true) == 0u,
+        "just under the threshold -> not quiet");
+
+    // Past the threshold the answer is the full gap, not the excess. The
+    // operator reads "quiet for N minutes", which is the gap.
+    uint32_t gap = FSD_PWR_QUIET_MS + 5000u;
+    CHECK(
+        fsd_pwr_quiet_ms(10000u + gap, 10000u, true) == gap,
+        "quiet returns the whole gap, got %u",
+        fsd_pwr_quiet_ms(10000u + gap, 10000u, true));
+
+    // The ms clock wraps after ~49 days. Unsigned subtraction handles it; a
+    // signed comparison would report a wildly quiet bus for a moment and the
+    // module would announce that the car had slept when it had not.
+    //
+    // 0xFFFFFF00 -> 50 is a gap of 306 ms across the wrap, which is short.
+    CHECK(
+        fsd_pwr_quiet_ms(50u, 0xFFFFFF00u, true) == 0u,
+        "a short gap across the wrap is not quiet, got %u",
+        fsd_pwr_quiet_ms(50u, 0xFFFFFF00u, true));
+
+    // ... and a long one across the wrap is reported as the whole gap.
+    CHECK(
+        fsd_pwr_quiet_ms(20000u, 0xFFFFFF00u, true) == 20256u,
+        "long gap across the wrap, got %u",
+        fsd_pwr_quiet_ms(20000u, 0xFFFFFF00u, true));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Power / reset log — checkpoint schedule, deep-sleep and USB (#218 rework)
+//
+// The persistence has one hard rule: no flash write while the bus is active, so
+// a commit never drops a frame to the flash stall. The scheduler below is what
+// enforces it, as pure logic fed the current quiet duration, so the cadence is
+// decided here rather than on a board.
+// ─────────────────────────────────────────────────────────────────────────────
+static void test_power_checkpoint(void) {
+    printf("\n-- power: flash-checkpoint schedule --\n");
+    FsdPwrCheckpoint cp = {false, 0};
+
+    // Bus active: never written here, and it re-arms the next episode.
+    CHECK(!fsd_pwr_checkpoint_due(&cp, 0u), "bus active -> no commit");
+
+    // The trap: power lost before the first checkpoint. Quiet climbs toward the
+    // window but never reaches it, so nothing is ever committed, and the next
+    // boot reads a cleared record (NO_SLEEP), not a false SWITCHED.
+    CHECK(!fsd_pwr_checkpoint_due(&cp, FSD_PWR_QUIET_MS), "just quiet -> no commit yet");
+    CHECK(
+        !fsd_pwr_checkpoint_due(&cp, FSD_PWR_CHECKPOINT_MS - 1u), "under the window -> no commit");
+    CHECK(cp.writes == 0, "nothing written before the window");
+
+    // Settled quiet: exactly one commit for the episode, however many ticks.
+    CHECK(fsd_pwr_checkpoint_due(&cp, FSD_PWR_CHECKPOINT_MS), "window reached -> commit");
+    CHECK(cp.writes == 1, "one write so far");
+    CHECK(
+        !fsd_pwr_checkpoint_due(&cp, FSD_PWR_CHECKPOINT_MS + 60000u),
+        "still quiet -> no second commit");
+    CHECK(
+        !fsd_pwr_checkpoint_due(&cp, FSD_PWR_CHECKPOINT_MS + 600000u),
+        "an hour later -> still one");
+    CHECK(cp.writes == 1, "a long sleep is still a single write");
+
+    // Bus wakes, then goes quiet again: a new episode, a new commit.
+    CHECK(!fsd_pwr_checkpoint_due(&cp, 0u), "bus busy again -> re-arm");
+    CHECK(fsd_pwr_checkpoint_due(&cp, FSD_PWR_CHECKPOINT_MS), "second quiet episode -> commit");
+    CHECK(cp.writes == 2, "two episodes -> two writes");
+
+    // The per-session cap bounds writes no matter how the bus flaps.
+    FsdPwrCheckpoint cap = {false, 0};
+    unsigned commits = 0;
+    for(int episode = 0; episode < (int)FSD_PWR_MAX_CHECKPOINTS + 5; episode++) {
+        fsd_pwr_checkpoint_due(&cap, 0u); // bus busy (re-arm)
+        if(fsd_pwr_checkpoint_due(&cap, FSD_PWR_CHECKPOINT_MS)) commits++; // then quiet
+    }
+    CHECK(
+        commits == FSD_PWR_MAX_CHECKPOINTS,
+        "writes capped at %u per session, got %u",
+        FSD_PWR_MAX_CHECKPOINTS,
+        commits);
+
+    CHECK(!fsd_pwr_checkpoint_due(NULL, FSD_PWR_CHECKPOINT_MS), "NULL checkpoint -> no commit");
+}
+
+static void test_power_deepsleep_usb(void) {
+    printf("\n-- power: deep-sleep wake and USB guard --\n");
+
+    // A board that woke from its own deep sleep kept its power through it: a
+    // switched feed would have cut power and booted POWERON instead.
+    CHECK(
+        fsd_pwr_deepsleep_verdict(true) == FSD_PWR_ALWAYS_ON,
+        "deep-sleep wake on a quiet bus -> always-on");
+    CHECK(
+        fsd_pwr_deepsleep_verdict(false) == FSD_PWR_UNKNOWN,
+        "deep-sleep wake but not on a quiet bus -> no claim");
+
+    // The trap: USB powered the board, so "still alive" proves nothing. An
+    // always-on claim becomes inconclusive; everything else stands, because it
+    // came from a reboot that happened whether or not USB was attached.
+    CHECK(
+        fsd_pwr_apply_usb_guard(FSD_PWR_ALWAYS_ON, true) == FSD_PWR_USB,
+        "always-on + USB -> inconclusive (USB)");
+    CHECK(
+        fsd_pwr_apply_usb_guard(FSD_PWR_ALWAYS_ON, false) == FSD_PWR_ALWAYS_ON,
+        "always-on without USB stands");
+    CHECK(
+        fsd_pwr_apply_usb_guard(FSD_PWR_SWITCHED, true) == FSD_PWR_SWITCHED,
+        "switched is not masked by USB");
+    CHECK(
+        fsd_pwr_apply_usb_guard(FSD_PWR_CRASH, true) == FSD_PWR_CRASH,
+        "crash is not masked by USB");
+    CHECK(
+        fsd_pwr_apply_usb_guard(FSD_PWR_UNKNOWN, true) == FSD_PWR_UNKNOWN,
+        "no verdict stays no verdict");
+
+    // The two values added in the rework are printable, or the serial/dash line
+    // reports a number.
+    CHECK(fsd_pwr_reset_str(FSD_PWR_RESET_DEEPSLEEP)[0] != '\0', "deep-sleep reset has a name");
+    CHECK(fsd_pwr_verdict_str(FSD_PWR_USB)[0] != '\0', "USB verdict has a name");
+}
+
+static void test_power_restart_count(void) {
+    printf("\n-- power: restarts since power-on --\n");
+
+    // A power-on starts from zero, whatever RTC RAM held.
+    CHECK(fsd_pwr_restart_count(FSD_PWR_RESET_POWERON, false, 0u) == 0u, "power-on -> 0");
+    CHECK(fsd_pwr_restart_count(FSD_PWR_RESET_POWERON, true, 7u) == 0u, "power-on resets a count");
+
+    // Crashes, watchdogs, brownouts, software and pin resets each add one.
+    CHECK(fsd_pwr_restart_count(FSD_PWR_RESET_SOFTWARE, true, 2u) == 3u, "crash/software -> +1");
+    CHECK(fsd_pwr_restart_count(FSD_PWR_RESET_BROWNOUT, true, 2u) == 3u, "brownout -> +1");
+    CHECK(fsd_pwr_restart_count(FSD_PWR_RESET_EXTERNAL, true, 2u) == 3u, "reset pin -> +1");
+    CHECK(fsd_pwr_restart_count(FSD_PWR_RESET_UNKNOWN, true, 2u) == 3u, "unknown reset -> +1");
+
+    // A deep-sleep wake is a boot but not a restart: the count stays.
+    CHECK(
+        fsd_pwr_restart_count(FSD_PWR_RESET_DEEPSLEEP, true, 2u) == 2u,
+        "deep-sleep wake -> unchanged");
+
+    // RTC RAM lost without a power-on (a deep brownout): count from zero.
+    CHECK(
+        fsd_pwr_restart_count(FSD_PWR_RESET_BROWNOUT, false, 99u) == 1u,
+        "lost RTC + brownout -> 1");
+
+    // A LilyGO's night: power-on, ten CAN wakes, one crash, ten more wakes.
+    uint32_t n = fsd_pwr_restart_count(FSD_PWR_RESET_POWERON, false, 0u);
+    for(int i = 0; i < 10; i++)
+        n = fsd_pwr_restart_count(FSD_PWR_RESET_DEEPSLEEP, true, n);
+    n = fsd_pwr_restart_count(FSD_PWR_RESET_SOFTWARE, true, n);
+    for(int i = 0; i < 10; i++)
+        n = fsd_pwr_restart_count(FSD_PWR_RESET_DEEPSLEEP, true, n);
+    CHECK(n == 1u, "20 deep-sleep wakes and one crash -> 1 restart, got %u", n);
+
+    CHECK(
+        fsd_pwr_restart_count(FSD_PWR_RESET_SOFTWARE, true, UINT32_MAX) == UINT32_MAX,
+        "the count saturates");
+}
+
 int main(void) {
     printf("test_fsd_core: Tesla FSD protocol core host tests\n");
     test_set_bit();
@@ -3198,10 +3813,20 @@ int main(void) {
     test_scroll_press();
     test_misc_parsers();
     test_readonly_parsers();
+    test_tpms_real_frames();
+    test_tpms_dbc_form();
+    test_tpms_malformed();
+    test_tpms_sources_and_age();
     test_extras_and_builders();
     test_profile();
     test_state_init();
     test_blackbox_filter();
+
+    test_power_verdict();
+    test_power_quiet_ms();
+    test_power_checkpoint();
+    test_power_deepsleep_usb();
+    test_power_restart_count();
 
     printf("\n%d passed, %d failed\n", g_pass, g_fail);
     return g_fail == 0 ? 0 : 1;

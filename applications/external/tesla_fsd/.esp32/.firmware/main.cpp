@@ -31,10 +31,12 @@
 #include "blackbox.h"
 #include "capability.h"
 #include "profile_match.h"
+#include "gear_tx_route.h"
 #include "../../fsd_logic/fsd_events.h"
 #include "../../fsd_logic/fsd_can_ops.h"  // tesla_can_rx_accept
 #include "prefs.h"
 #include "ota_verify.h"
+#include "power_log.h"
 #if defined(BOARD_TTGO_DISPLAY)
 #include "display.h"
 #endif
@@ -123,6 +125,29 @@ static bool serial_cmd_equals(const char *cmd, const char *expected) {
     return *cmd == '\0' && *expected == '\0';
 }
 
+// Serial `canstat`: one line per bus. The combined error count is left out on
+// purpose: on TWAI it is mostly RX-queue drops, on the MCP2515 only failed
+// sends, so the same number would mean two different things side by side.
+// Each driver states its own counters instead.
+static void print_can_stats() {
+    for (uint8_t i = 0; i < CAN_ACTIVE_BUS_COUNT; i++) {
+        const char *name = can_bus_name(bus_id_from_index(i));
+        if (!g_can[i]) {
+            Serial.printf("[CAN] %s: no driver\n", name);
+            continue;
+        }
+        char state[192];
+        g_can[i]->describeState(state, sizeof(state));
+        Serial.printf("[CAN] %s %s RX=%lu TX=%lu rejected=%lu filter=%s | %s\n",
+                      name, g_can_ok[i] ? "up" : "down",
+                      (unsigned long)g_can[i]->rxCount(),
+                      (unsigned long)g_can[i]->txCount(),
+                      (unsigned long)g_can[i]->rxRejectedCount(),
+                      g_can_ok[i] ? g_can[i]->acceptanceFilterMode() : "down",
+                      state);
+    }
+}
+
 static NOINLINE void serial_command_tick() {
     static char buf[24];
     static uint8_t len = 0;
@@ -136,10 +161,12 @@ static NOINLINE void serial_command_tick() {
 
             if (serial_cmd_equals(buf, "ip") || serial_cmd_equals(buf, "wifi")) {
                 wifi_print_status();
+            } else if (serial_cmd_equals(buf, "canstat")) {
+                print_can_stats();
             } else if (serial_cmd_equals(buf, "help") || serial_cmd_equals(buf, "?")) {
-                Serial.println("[SER] Commands: ip");
+                Serial.println("[SER] Commands: ip | canstat (per-bus CAN counters and state)");
             } else {
-                Serial.println("[SER] Unknown command. Type: ip");
+                Serial.println("[SER] Unknown command. Type: ip, canstat");
             }
             continue;
         }
@@ -209,9 +236,8 @@ static bool send_modified_frame(CanBusId bus, const CanFrame &frame) {
     return send_on_bus(bus, frame);
 }
 
-static uint8_t g_last_gear_counter = 0;
-static bool g_last_gear_counter_valid = false;
-static uint32_t g_last_gear_counter_ms = 0;
+// Last 0x229 counter per bus. A press goes out only on a bus fresh here.
+static GearCounterCache g_gear_counter[CAN_ACTIVE_BUS_COUNT] = {};
 
 enum ContinuousApFlowState : uint8_t {
     ContAp_Idle = 0,
@@ -237,6 +263,7 @@ static uint32_t g_gear_sequence_progress_ms = 0;
 static uint32_t g_gear_sequence_next_ms = 0;
 static bool g_gear_sequence_counter_valid = false;
 static uint8_t g_gear_sequence_counter = 0;
+static uint8_t g_gear_sequence_bus = 0;  // bus index the running press goes out on
 static uint32_t g_gear_sequence_send_fail_count = 0;
 
 enum GearSequenceSendResult : uint8_t {
@@ -248,12 +275,6 @@ enum GearSequenceSendResult : uint8_t {
     GearSeqSend_BuildFailed,
     GearSeqSend_TxFailed,
 };
-
-static CanBusId preferred_generated_bus(uint32_t frame_id) {
-    if (frame_id == CAN_ID_SCCM_RSTALK)
-        return configured_bus_from_index(GEAR_LEVER_TX_BUS_INDEX);
-    return CAN_BUS_PRIMARY;
-}
 
 static bool gear_sequence_active() {
     return g_gear_sequence_index < g_gear_sequence_len;
@@ -267,12 +288,6 @@ static void clear_gear_sequence() {
     g_gear_sequence_counter_valid = false;
     g_gear_sequence_counter = 0;
     g_gear_sequence_send_fail_count = 0;
-}
-
-static bool cached_gear_counter_is_fresh(uint32_t now) {
-    return g_last_gear_counter_valid &&
-           g_last_gear_counter_ms != 0u &&
-           (uint32_t)(now - g_last_gear_counter_ms) <= GEAR_LEVER_CACHED_COUNTER_MAX_AGE_MS;
 }
 
 static const char *gear_sequence_send_result_name(GearSequenceSendResult result) {
@@ -295,9 +310,11 @@ static GearSequenceSendResult send_gear_position_for_sequence(uint8_t gear_pos,
     FSDState s = state_snapshot();
     if (!fsd_can_transmit(&s)) return GearSeqSend_TxBlocked;
 
+    GearCounterCache &bus_counter = g_gear_counter[g_gear_sequence_bus];
     if (!g_gear_sequence_counter_valid) {
-        if (!cached_gear_counter_is_fresh(now)) return GearSeqSend_WaitCounter;
-        g_gear_sequence_counter = g_last_gear_counter;
+        if (!gear_counter_fresh(bus_counter, now, GEAR_LEVER_CACHED_COUNTER_MAX_AGE_MS))
+            return GearSeqSend_WaitCounter;
+        g_gear_sequence_counter = bus_counter.counter;
         g_gear_sequence_counter_valid = true;
     }
 
@@ -308,12 +325,12 @@ static GearSequenceSendResult send_gear_position_for_sequence(uint8_t gear_pos,
         return GearSeqSend_BuildFailed;
     }
 
-    bool sent = send_generated_frame(preferred_generated_bus(CAN_ID_SCCM_RSTALK), f);
+    bool sent = send_generated_frame(bus_id_from_index(g_gear_sequence_bus), f);
     if (sent) {
         g_gear_sequence_counter = next_counter;
-        g_last_gear_counter = next_counter;
-        g_last_gear_counter_ms = now;
-        g_last_gear_counter_valid = true;
+        bus_counter.counter = next_counter;
+        bus_counter.ms = now;
+        bus_counter.valid = true;
         return GearSeqSend_Sent;
     }
     return GearSeqSend_TxFailed;
@@ -350,7 +367,8 @@ static GearSequenceSendResult gear_sequence_tick(uint32_t now, const char *name)
     return send_next_gear_sequence_frame(name);
 }
 
-static GearSequenceSendResult arm_gear_ap_double_press_sequence(uint32_t now) {
+static GearSequenceSendResult arm_gear_ap_double_press_sequence(uint32_t now, uint8_t bus) {
+    g_gear_sequence_bus = bus;
     g_gear_sequence[0] = SIG_GEAR_LEVER_FULL_DOWN;
     g_gear_sequence[1] = SIG_GEAR_LEVER_CENTER;
     g_gear_sequence[2] = SIG_GEAR_LEVER_FULL_DOWN;
@@ -361,18 +379,6 @@ static GearSequenceSendResult arm_gear_ap_double_press_sequence(uint32_t now) {
     g_gear_sequence_next_ms = now;
     return gear_sequence_tick(now, "CONT-AP");
 }
-
-#if defined(CAN_DRIVER_T2CAN_DUAL)
-static void debug_log_bus_stats() {
-    Serial.printf("[CAN] RX can0=%lu can1=%lu TX can0=%lu can1=%lu Err can0=%lu can1=%lu\n",
-                  (unsigned long)(g_can[0] ? g_can[0]->rxCount() : 0),
-                  (unsigned long)(g_can[1] ? g_can[1]->rxCount() : 0),
-                  (unsigned long)(g_can[0] ? g_can[0]->txCount() : 0),
-                  (unsigned long)(g_can[1] ? g_can[1]->txCount() : 0),
-                  (unsigned long)(g_can[0] ? g_can[0]->errorCount() : 0),
-                  (unsigned long)(g_can[1] ? g_can[1]->errorCount() : 0));
-}
-#endif
 
 static const char *hw_to_str(TeslaHWVersion hw) {
     switch (hw) {
@@ -722,11 +728,15 @@ static bool continuous_ap_stalk_stop_allows(uint32_t now, const FSDState &s) {
 }
 
 static bool continuous_ap_hw3_legacy_try_start_attempt(uint32_t now) {
-    if (!cached_gear_counter_is_fresh(now)) {
+    // Only on a bus carrying the car's own 0x229 right now (#218): a press
+    // routed to a fixed bus could land on one that never carried it.
+    int bus = gear_tx_bus_index(g_gear_counter, CAN_ACTIVE_BUS_COUNT, GEAR_LEVER_TX_BUS_INDEX,
+                                now, GEAR_LEVER_CACHED_COUNTER_MAX_AGE_MS);
+    if (bus < 0) {
         return false;
     }
 
-    GearSequenceSendResult result = arm_gear_ap_double_press_sequence(now);
+    GearSequenceSendResult result = arm_gear_ap_double_press_sequence(now, (uint8_t)bus);
     if (result != GearSeqSend_Sent) {
         clear_gear_sequence();
         return false;
@@ -738,7 +748,7 @@ static bool continuous_ap_hw3_legacy_try_start_attempt(uint32_t now) {
     Serial.printf("[CONT-AP] attempt %u/%u: 0x229 full-down double press started on %s\n",
                   (unsigned)g_cont_ap_attempts,
                   (unsigned)CONT_AP_MAX_RETRIES,
-                  can_bus_name(preferred_generated_bus(CAN_ID_SCCM_RSTALK)));
+                  can_bus_name(bus_id_from_index((uint8_t)bus)));
     return true;
 }
 
@@ -944,6 +954,11 @@ static bool     g_btn2_ignore_boot = true;
 static uint32_t g_last_can_rx_ms = 0;
 static bool     g_sleep_warned   = false;
 #endif
+
+// Last CAN frame time + "seen anything yet", for the power/12V log on every
+// board (the LilyGO sleep timer above is a separate, board-only counter).
+static uint32_t g_power_last_rx_ms = 0;
+static bool     g_power_seen_any   = false;
 
 static void dispatch_clicks(int n) {
     if (n == 1) {
@@ -1168,6 +1183,8 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
     g_last_can_rx_ms = millis();
     g_sleep_warned   = false;
 #endif
+    g_power_last_rx_ms = millis();
+    g_power_seen_any   = true;
 
     if (!usable) return;
 
@@ -1292,13 +1309,15 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
             g_cont_ap_last_stalk_full_up_ms = g_state.stalk_full_up_ms;
         }
         state_exit();
-        if (frame.dlc > SIG_GEAR_LEVER_COUNTER_BYTE) {
-            g_last_gear_counter =
+        uint8_t bi = bus_index(bus);
+        if (frame.dlc > SIG_GEAR_LEVER_COUNTER_BYTE && bi < CAN_ACTIVE_BUS_COUNT) {
+            g_gear_counter[bi].counter =
                 frame.data[SIG_GEAR_LEVER_COUNTER_BYTE] & SIG_GEAR_LEVER_COUNTER_MASK;
-            g_last_gear_counter_valid = true;
-            g_last_gear_counter_ms = now_ms;
+            g_gear_counter[bi].valid = true;
+            g_gear_counter[bi].ms = now_ms;
         }
-        if (frame.dlc > SIG_GEAR_LEVER_COUNTER_BYTE) {
+        // Only the car's 0x229 on the press's own bus paces the press.
+        if (frame.dlc > SIG_GEAR_LEVER_COUNTER_BYTE && bi == g_gear_sequence_bus) {
             if (gear_sequence_active() && fsd_can_transmit(&s)) gear_sequence_tick(now_ms, "CONT-AP");
         }
         return;
@@ -1387,11 +1406,39 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
         state_exit();
         return;
     }
+    // Tyre pressures (0x219) — read-only, whichever bus carries it, every mode.
+    if (frame.id == CAN_ID_VCSEC_TPMS) {
+        state_enter();
+        fsd_tpms_update(&g_state.tpms, frame.data, frame.dlc, now);
+        state_exit();
+        return;
+    }
     // Steering angle (0x129) — read-only, feeds the Soft Engage gate (#108).
     if (!steer_cfg && frame.id == CAN_ID_STEER_ANGLE) {
         state_enter();
         fsd_handle_steering_angle(&g_state, &frame);
         state_exit();
+        return;
+    }
+
+    // Charge-port type (0x25D CP_status, Vehicle CAN, #228). Read-only decode
+    // runs in every mode; the EU rewrite (opt-in) re-sends a US-type frame as
+    // IEC_CCS on the bus it arrived on, behind the plug guard inside the handler
+    // and the standard TX gate. Not placed in the TX-only block below so the
+    // dashboard shows the car's own type even in Listen-Only.
+    if (frame.id == CAN_ID_CP_STATUS) {
+        CanFrame f = frame;
+        state_enter();
+        bool modified = fsd_handle_cp_type_rewrite(&g_state, &f, now);
+        bool cp_tx = fsd_can_transmit(&g_state);
+        state_exit();
+        // Counted only once the copy is out: a send refused by a full TX queue
+        // is not one the dashboard should report.
+        if (modified && cp_tx && send_on_bus(bus, f)) {
+            state_enter();
+            g_state.cp_type_tx_count++;
+            state_exit();
+        }
         return;
     }
 
@@ -1575,6 +1622,11 @@ static NOINLINE void sleep_tick(uint32_t now) {
         Serial.printf("[SLEEP] Entering deep sleep after %lu ms CAN silence\n",
                       (unsigned long)idle_ms);
         ota_verify_confirm("deep sleep");  // wake is a reset: don't roll back a running image
+        // Record "slept on a quiet bus" in RTC RAM and flush the 12V checkpoint
+        // before powering down: a deep-sleep wake then proves the feed is
+        // always-on, while a switched feed cuts power mid-sleep and boots as
+        // POWERON with the checkpoint already in flash (#218). Bus is quiet here.
+        power_log_note_deep_sleep(now, g_power_last_rx_ms, g_power_seen_any);
         can_dump_stop();
         sd_syslog_close();
         led_set(LED_SLEEP);
@@ -1621,7 +1673,9 @@ void setup() {
     }
     ota_verify_begin();  // a fresh OTA image stays rollback-able until it has run
 
-#if defined(CAN_DRIVER_T2CAN_DUAL)
+#if defined(CAN_DRIVER_T2CAN_DUAL) && defined(BOARD_LILYGO_T2CAN_FD)
+    Serial.println("[CAN] Driver: LilyGO T-2CAN FD dual CAN (TWAI can0 + MCP2518FD can1, classic CAN)");
+#elif defined(CAN_DRIVER_T2CAN_DUAL)
     Serial.println("[CAN] Driver: LilyGO T-2CAN dual CAN (TWAI can0 + MCP2515 can1)");
 #elif defined(CAN_DRIVER_TWAI)
   #if defined(BOARD_WAVESHARE_S3)
@@ -1663,8 +1717,8 @@ void setup() {
                   PIN_MCP_CS, PIN_MCP_SCK, PIN_MCP_MISO, PIN_MCP_MOSI);
     Serial.printf("[CFG] TX route: modified frames -> source bus, generated precondition -> %s\n",
                   can_bus_name(configured_bus_from_index(PRECONDITION_TX_BUS_INDEX)));
-    Serial.printf("[CFG] Continuous AP gear TX route: 0x229 -> %s\n",
-                  can_bus_name(preferred_generated_bus(CAN_ID_SCCM_RSTALK)));
+    Serial.printf("[CFG] Continuous AP gear TX route: 0x229 -> bus carrying the car's 0x229, %s first\n",
+                  can_bus_name(configured_bus_from_index(GEAR_LEVER_TX_BUS_INDEX)));
 #elif defined(CAN_DRIVER_TWAI)
     Serial.printf("[CFG] pins: LED=%d BUTTON=%d CAN_TX=%d CAN_RX=%d\n",
                   PIN_LED, PIN_BUTTON, PIN_CAN_TX, PIN_CAN_RX);
@@ -1696,6 +1750,11 @@ void setup() {
     g_state.blackbox_enabled      = BLACKBOX_DEFAULT_ENABLED;  // ON on LittleFS/SD, OFF on volatile RAM (#124)
 
     prefs_load(&g_state);
+    // Read why we rebooted and the 12V-feed record from the last session, print
+    // the verdict, and start a fresh session. Its own NVS namespace, so the
+    // order against prefs_load() does not matter; this sits here to land near
+    // the boot banner. (#218)
+    power_log_init();
     // Apply a saved manual HW selection immediately (#110) so the correct
     // handlers are live from the first frame, without waiting on detection.
     if (g_state.hw_override != TeslaHW_Unknown) {
@@ -1811,7 +1870,9 @@ void loop() {
     ota_verify_tick(now);
 
     // Drain all available CAN frames in one shot. On LilyGO T-2CAN, can1 is the
-    // MCP2515 side with only two RX buffers, so poll it before and after can0.
+    // SPI controller, read only when polled (the MCP2515 has just two RX
+    // buffers, the T-2CAN FD's MCP2518FD a 32-frame FIFO), so poll it before
+    // and after can0.
 #if defined(CAN_DRIVER_T2CAN_DUAL) && defined(BOARD_LILYGO_T2CAN)
     drain_can_bus_index(1);
     drain_can_bus_index(0);
@@ -1968,6 +2029,10 @@ void loop() {
     can_dump_tick(now);
     blackbox_tick(now);  // post-roll countdown + flush (#124)
     capability_tick(now);  // finalize the capability listen window (#125)
+    // 12V-feed / reset log (#218). Commits one NVS record per quiet episode,
+    // only once the bus has been silent past the checkpoint window, so no flash
+    // write ever lands while frames are arriving.
+    power_log_tick(now, g_power_last_rx_ms, g_power_seen_any);
 
 #if defined(BOARD_LILYGO)
     sleep_tick(now);

@@ -11,6 +11,7 @@
 
 #include "fsd_types.h" // TeslaHWVersion, OpMode, CANFRAME
 #include "fsd_perf.h" // FSDPerf — read-only performance read-out state (ESP32 dashboard)
+#include "fsd_tpms.h" // FSDTpms — read-only tyre pressure state (0x219)
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -78,6 +79,9 @@ typedef struct FSDState {
     float wheel_speed_rl_kph;
     float wheel_speed_rr_kph;
 
+    // live tyre pressures (read-only sniff, 0x219 VCSEC_TPMSData — Vehicle CAN)
+    FSDTpms tpms;
+
     // Read-only performance read-out (ESP32 web dashboard). Derived only from
     // frames already received (0x257 speed, 0x175 wheels, 0x312 batt temp);
     // transmits nothing. Inert on the Flipper build.
@@ -141,7 +145,7 @@ typedef struct FSDState {
         // car disengages — keeps injection off the abort edge (#108). Off by default.
     uint8_t
         ap_inject_count; // AP-enable frames modified this engagement (Minimal Inject burst budget;
-    // reset to 0 on disengage, das_ap_state < DAS_APSTATE_ENGAGED)
+        // reset to 0 on disengage, das_ap_state < DAS_APSTATE_ENGAGED)
     uint8_t das_ap_state; // DAS_autopilotState (byte0 low nibble on 0x39B/0x399):
         // 0=DISABLED 1=UNAVAILABLE 2=AVAILABLE (offered, NOT engaged)
         // 3=ACTIVE_NOMINAL (first engaged) 4=ACTIVE_RESTRICTED 5=ACTIVE_NAV
@@ -339,6 +343,19 @@ typedef struct FSDState {
     float energy_wh_per_km;
     bool energy_seen;
 
+    // --- Charge-port type (0x25D CP_status, Vehicle CAN; #228) ---
+    // Read-only decode is always on (even Listen-Only); the rewrite is opt-in.
+    bool cp_status_seen; // an 8-byte 0x25D has been decoded (false => tap carries no CP_status)
+    uint8_t cp_type; // CP_type the car reports: 0 US_TESLA 1 EURO_IEC 2 GB 3 IEC_CCS
+    uint8_t cp_plug_state; // FsdCpPlugState from the last 0x25D (plug guard read-out)
+    uint32_t cp_status_ms; // when the last 8-byte 0x25D arrived (stale read-out)
+    // EU CP Type rewrite: when on, re-send each received US-type 0x25D with
+    // CP_type=IEC_CCS on the bus it arrived on, so EU Superchargers show in nav.
+    // Opt-in, default OFF. Plug guard (no rewrite while a cable is present /
+    // charging) is enforced per frame, so it is safe to persist. Experimental.
+    bool cp_type_eu_rewrite;
+    uint32_t cp_type_tx_count; // copies sent (diagnostics)
+
     // --- extras: write toggles (BETA, Service mode only) ---
     bool extra_hazard_lights;
     bool extra_wiper_off;
@@ -382,6 +399,7 @@ typedef struct FSDState {
     char wifi_pass[65]; // max 64 chars + null
     char wifi_sta_ssid[33]; // optional station SSID
     char wifi_sta_pass[65]; // optional station password
+    char wifi_hostname[32]; // station hostname: DNS label, max 31 chars + null
     bool wifi_hidden;
 
     // 2026.14.x firmware warning (persisted in NVS on ESP32)

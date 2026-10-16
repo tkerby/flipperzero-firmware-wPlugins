@@ -55,9 +55,10 @@ jobs:
           # /firmware/beta/ newest build of any kind, only while it is newer than that
           # Stable means not flagged pre-release and no -alpha/-beta/-rc in the tag
           # (some betas were published without the flag). Only releases that carry
-          # flashable merged images count.
+          # flashable merged images count. The API lists the "Latest" release first
+          # rather than strictly by date, so sort by creation time here.
           gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=100" --jq \
-            '[.[] | select(.draft | not) | select(any(.assets[]; .name | endswith("-merged.bin")))]' > releases.json
+            '[.[] | select(.draft | not) | select(any(.assets[]; .name | endswith("-merged.bin")))] | sort_by(.created_at) | reverse' > releases.json
           NEWEST=$(jq -r '.[0].tag_name // empty' releases.json)
           STABLE=$(jq -r '[.[] | select(.prerelease | not) | select(.tag_name | test("-(alpha|beta|rc)") | not)][0].tag_name // empty' releases.json)
           rm releases.json

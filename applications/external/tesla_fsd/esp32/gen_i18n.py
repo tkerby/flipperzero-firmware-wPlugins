@@ -193,6 +193,11 @@ T = [
     ),
     ("FORMAT SD CARD", "格式化 SD 卡", "格式化 SD 卡"),
     (
+        "Some files or folders could not be deleted (nested too deep, or refused by the card)",
+        "部分文件或文件夹无法删除（嵌套过深，或被卡拒绝）",
+        "部分檔案或資料夾無法刪除（巢狀過深，或遭記憶卡拒絕）",
+    ),
+    (
         "Format SD card? All data will be lost.",
         "确定格式化 SD 卡吗？所有数据都将丢失。",
         "確定要格式化 SD 卡嗎？所有資料都會遺失。",
@@ -245,6 +250,32 @@ T = [
     ("FSD Unlock", "FSD 解锁", "FSD 解鎖"),
     ("Summon EU Unlock", "欧盟版召唤解锁", "歐盟版召喚解鎖"),
     ("Track Mode (experimental)", "赛道模式（实验性）", "賽道模式（實驗性）"),
+    ("Charge Port", "充电口", "充電埠"),
+    (
+        "0x25D CP_status — Vehicle CAN only",
+        "0x25D CP_status — 仅在车辆 CAN 上",
+        "0x25D CP_status — 僅在車輛 CAN 上",
+    ),
+    (
+        "Stale: no CP_status from the car for",
+        "未更新：车辆已停止发送 CP_status，已持续",
+        "未更新：車輛已停止傳送 CP_status，已持續",
+    ),
+    (
+        "no CP_status on this tap (the 8-byte 0x25D, Vehicle CAN only)",
+        "此接入点没有 CP_status（8 字节的 0x25D，仅在车辆 CAN 上）",
+        "此接線點沒有 CP_status（8 位元組的 0x25D，僅在車輛 CAN 上）",
+    ),
+    (
+        "EU Charge-Port Type (experimental)",
+        "欧盟充电口类型（实验性）",
+        "歐盟充電埠類型（實驗性）",
+    ),
+    (
+        "Re-sends 0x25D on the Vehicle bus with CP_type set to IEC CCS so EU Superchargers show in nav. Held while a cable is plugged in or charging. Experimental.",
+        "在车辆总线上重发 0x25D，把 CP_type 设为 IEC CCS，使导航显示欧盟超充。插着充电线或充电时暂停。实验性。",
+        "在車輛匯流排上重送 0x25D，把 CP_type 設為 IEC CCS，使導航顯示歐盟超充。插著充電線或充電時暫停。實驗性。",
+    ),
     ("Compressor Overclock", "压缩机超频", "壓縮機超頻"),
     ("Post-drive Cooling", "停车后散热", "停車後散熱"),
     ("Precondition", "电池预处理", "電池預處理"),
@@ -372,6 +403,22 @@ T = [
     ),
     ("No CAN Traffic", "无 CAN 流量", "無 CAN 流量"),
     ("Body/comfort bus", "车身/舒适总线", "車身/舒適匯流排"),
+    ("Bus hint", "总线提示", "匯流排提示"),
+    (
+        "no 0x3C2 and no body frames — no hint",
+        "没有 0x3C2，也没有车身帧 — 无提示",
+        "沒有 0x3C2，也沒有車身訊框 — 無提示",
+    ),
+    (
+        "0x3C2 seen — likely the Vehicle CAN pair (a hint, not a verdict)",
+        "看到 0x3C2 — 可能是车辆 CAN 线对（仅供参考，不是定论）",
+        "看到 0x3C2 — 可能是車輛 CAN 線對（僅供參考，不是定論）",
+    ),
+    (
+        "body frames without 0x3C2 — likely a forwarded subset, not the Vehicle CAN pair (a hint, not a verdict)",
+        "有车身帧但没有 0x3C2 — 可能是网关转发的子集，而不是车辆 CAN 线对（仅供参考，不是定论）",
+        "有車身訊框但沒有 0x3C2 — 可能是閘道轉發的子集，而不是車輛 CAN 線對（僅供參考，不是定論）",
+    ),
     ("DAS state readable", "DAS 状态可读", "DAS 狀態可讀"),
     (
         "Records the key diagnostic CAN IDs around anomalies (aborts, bus-off, manual marks) to the device only — never uploaded. Use the toggle below to enable or disable.",
@@ -413,6 +460,8 @@ T = [
     ),
     ("Network Name", "网络名称", "網路名稱"),
     ("Network Password", "网络密码", "網路密碼"),
+    ("Hostname", "主机名", "主機名稱"),
+    ("name shown on your router", "路由器上显示的名称", "路由器上顯示的名稱"),
     ("Password", "密码", "密碼"),
     ("Access Point", "接入点", "存取點"),
     (
@@ -438,6 +487,31 @@ T = [
     ("Temp", "温度", "溫度"),
     ("SOC", "电量", "電量"),
     ("Battery", "电池", "電池"),
+    ("Tyre Pressure", "胎压", "胎壓"),
+    ("Receiving", "接收中", "接收中"),
+    ("Stale", "未更新", "未更新"),
+    ("No reading", "无读数", "無讀數"),
+    ("Since last reading", "距上次读数", "距上次讀數"),
+    ("Car's target", "车辆目标胎压", "車輛目標胎壓"),
+    ("FL", "左前", "左前"),
+    ("FR", "右前", "右前"),
+    ("RL", "左后", "左後"),
+    ("RR", "右后", "右後"),
+    (
+        "Columns follow the order the car sends them. Which wheel each one belongs to is not confirmed yet.",
+        "各列按车辆发送的顺序排列，尚未确认分别对应哪个车轮。",
+        "各欄依車輛傳送的順序排列，尚未確認分別對應哪個車輪。",
+    ),
+    (
+        "0x219 is arriving on this tap, but the car is not reporting a pressure in it.",
+        "此接入点收到了 0x219，但车辆没有在其中报告胎压。",
+        "此接線點收到了 0x219，但車輛沒有在其中回報胎壓。",
+    ),
+    (
+        "This 0x219 has a length this firmware does not read yet. A capture of it would help.",
+        "本固件尚无法解读此长度的 0x219，欢迎采集该帧并提供。",
+        "本韌體尚無法解讀此長度的 0x219，歡迎擷取該訊框並提供。",
+    ),
     ("Uptime", "运行时间", "運行時間"),
     ("BMS Frames", "BMS 帧", "BMS 訊框"),
     ("BMS Status", "BMS 状态", "BMS 狀態"),
@@ -484,6 +558,37 @@ T = [
         "密碼須為空或 8 位以上",
     ),
     ("SSID required", "需要填写 SSID", "需要填寫 SSID"),
+    ("WiFi settings were not saved.", "WiFi 设置未保存。", "WiFi 設定未儲存。"),
+    (
+        "SSID must be 1 to 32 bytes.",
+        "SSID 须为 1 到 32 字节。",
+        "SSID 須為 1 到 32 位元組。",
+    ),
+    (
+        "Password must be empty, 8 to 63 bytes, or exactly 64 hex digits (0-9, a-f), which are the key itself.",
+        "密码须为空、8 到 63 字节，或正好 64 位十六进制数字（0-9、a-f，即密钥本身）。",
+        "密碼須為空、8 到 63 位元組，或正好 64 位十六進位數字（0-9、a-f，即金鑰本身）。",
+    ),
+    (
+        "Network name must be at most 32 bytes.",
+        "网络名称最多 32 字节。",
+        "網路名稱最多 32 位元組。",
+    ),
+    (
+        "Network password must be empty, 8 to 63 bytes, or exactly 64 hex digits (0-9, a-f), which are the key itself.",
+        "网络密码须为空、8 到 63 字节，或正好 64 位十六进制数字（0-9、a-f，即密钥本身）。",
+        "網路密碼須為空、8 到 63 位元組，或正好 64 位十六進位數字（0-9、a-f，即金鑰本身）。",
+    ),
+    (
+        "Characters outside plain ASCII take 2 to 4 bytes each; control characters are not accepted.",
+        "非 ASCII 字符（如中文）每个占 2 到 4 字节；不接受控制字符。",
+        "非 ASCII 字元（如中文）每個佔 2 到 4 位元組；不接受控制字元。",
+    ),
+    (
+        "Hostname must be 1 to 31 letters, digits or hyphens, and cannot start or end with a hyphen.",
+        "主机名须为 1 到 31 个字母、数字或连字符，且不能以连字符开头或结尾。",
+        "主機名稱須為 1 到 31 個字母、數字或連字號，且不能以連字號開頭或結尾。",
+    ),
     (
         "OTA writes to the next app partition when available. The new image is kept only after 15 s of runtime; a crash or power cut before that restores the previous firmware. Keep USB reflashing available as a recovery path.",
         "OTA 会在可用时写入下一个 app 分区；新固件需连续运行 15 秒后才会被保留，在此之前崩溃或断电会回滚到上一版固件。请保留 USB 线刷作为恢复手段。",
@@ -491,6 +596,36 @@ T = [
     ),
     ("WiFi Clients", "WiFi 客户端", "WiFi 客戶端"),
     ("Memory", "内存", "記憶體"),
+    # Power / reset log (#218). Device-card label, reset reasons, 12V verdicts.
+    ("Power", "电源", "電源"),
+    ("Unknown reset", "未知复位", "未知重置"),
+    ("Power-on", "上电", "上電"),
+    ("Brownout", "电压骤降", "電壓驟降"),
+    ("Panic", "崩溃", "當機"),
+    ("Watchdog", "看门狗", "看門狗"),
+    ("Software restart", "软件重启", "軟體重啟"),
+    ("Deep-sleep wake", "深度睡眠唤醒", "深層睡眠喚醒"),
+    ("External reset", "外部复位", "外部重置"),
+    ("restarts since power-on", "上电后重启次数", "上電後重啟次數"),
+    ("Not known yet", "尚无结果", "尚無結果"),
+    (
+        "Inconclusive (car never slept)",
+        "无法判定（车辆未休眠）",
+        "無法判定（車輛未休眠）",
+    ),
+    (
+        "Switched (dies with the car)",
+        "随车断电（车辆休眠即断电）",
+        "隨車斷電（車輛休眠即斷電）",
+    ),
+    (
+        "Always-on (outlives the car)",
+        "常供电（车辆休眠仍供电）",
+        "常供電（車輛休眠仍供電）",
+    ),
+    ("Brownout (check wiring)", "电压骤降（请检查接线）", "電壓驟降（請檢查接線）"),
+    ("Crash (supply not implicated)", "崩溃（与供电无关）", "當機（與供電無關）"),
+    ("Inconclusive (USB powered)", "无法判定（USB 供电）", "無法判定（USB 供電）"),
 ]
 JS_TEMPLATE = r"""// web_i18n.inc — GENERATED by esp32/gen_i18n.py. DO NOT EDIT.
 // Chinese (Simplified + Traditional) translation layer for the ESP32 web

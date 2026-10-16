@@ -1,5 +1,6 @@
 #include "http_can_stream.h"
 #include "can_capture_filter.h"
+#include "web_dashboard.h"   // web_dashboard_stream_access(): whose requests are served
 #include <WiFi.h>
 #include <esp_heap_caps.h>
 #include <ctype.h>
@@ -10,6 +11,10 @@
 #define HTTP_CAN_STREAM_RING_SIZE 3072u
 #define HTTP_CAN_STREAM_FLUSH_BUDGET 160u
 #define HTTP_CAN_STREAM_MAX_FILTER_IDS 32u
+// Longest Origin / Host value kept from a request. Ours are far shorter
+// (http:// and a 31-character hostname under a local domain); a longer one is
+// someone else's.
+#define HTTP_CAN_STREAM_HEADER_MAX 80u
 
 struct StreamFrame {
     uint32_t elapsed_ms;
@@ -228,11 +233,20 @@ static void close_stream() {
     ring_reset();
 }
 
-static void send_response(WiFiClient &client, int code, const char *status, const char *body) {
+// The dashboard page reads the stream from :80, so a reply to it names its
+// Origin; any other reply grants nobody (web_stream_access()).
+static void print_cors(WiFiClient &client, const char *allow_origin) {
+    if (!allow_origin || !allow_origin[0]) return;
+    client.printf("Access-Control-Allow-Origin: %s\r\n", allow_origin);
+    client.print("Vary: Origin\r\n");
+}
+
+static void send_response(WiFiClient &client, int code, const char *status, const char *body,
+                          const char *allow_origin = nullptr) {
     client.printf("HTTP/1.1 %d %s\r\n", code, status);
     client.print("Content-Type: text/plain; charset=utf-8\r\n");
     client.print("Cache-Control: no-store\r\n");
-    client.print("Access-Control-Allow-Origin: *\r\n");
+    print_cors(client, allow_origin);
     client.print("X-Content-Type-Options: nosniff\r\n");
     client.print("Connection: close\r\n\r\n");
     if (body != nullptr) client.print(body);
@@ -240,7 +254,7 @@ static void send_response(WiFiClient &client, int code, const char *status, cons
     client.stop();
 }
 
-static void begin_stream(WiFiClient &client) {
+static void begin_stream(WiFiClient &client, const char *allow_origin) {
     close_stream();
     g_client = client;
     g_client.setNoDelay(true);
@@ -253,7 +267,7 @@ static void begin_stream(WiFiClient &client) {
     g_client.print("HTTP/1.1 200 OK\r\n");
     g_client.print("Content-Type: text/plain; charset=utf-8\r\n");
     g_client.print("Cache-Control: no-store\r\n");
-    g_client.print("Access-Control-Allow-Origin: *\r\n");
+    print_cors(g_client, allow_origin);
     g_client.print("X-Content-Type-Options: nosniff\r\n");
     g_client.print("Connection: close\r\n\r\n");
     g_active = true;
@@ -285,9 +299,28 @@ static void begin_stream(WiFiClient &client) {
                   g_meta_enabled ? 1 : 0);
 }
 
-static bool parse_request_path(WiFiClient &client, char *path, size_t path_len) {
+// The value of header line `line` when it is `name`: copied to out, trimmed,
+// "?" when it does not fit (a value that is not ours). False for another header.
+static bool header_value(const String &line, const char *name, char *out, size_t out_len) {
+    size_t n = strlen(name);
+    if (line.length() <= n || line.charAt(n) != ':' ||
+        strncasecmp(line.c_str(), name, n) != 0) return false;
+    String v = line.substring(n + 1);
+    v.trim();
+    if (v.length() >= out_len) v = "?";
+    memcpy(out, v.c_str(), v.length() + 1);
+    return true;
+}
+
+// Request line and headers. Origin and Host are kept for
+// web_dashboard_stream_access(), empty when the request has none. False when
+// the request is not a GET, or its headers did not all arrive in time: then
+// whether it may have the stream cannot be told.
+static bool parse_request_path(WiFiClient &client, char *path, size_t path_len,
+                               char *origin, char *host, size_t header_len) {
     if (path_len == 0) return false;
     path[0] = '\0';
+    origin[0] = host[0] = '\0';
 
     client.setTimeout(20);
     String request_line = client.readStringUntil('\n');
@@ -304,30 +337,46 @@ static bool parse_request_path(WiFiClient &client, char *path, size_t path_len) 
     path[len] = '\0';
 
     uint32_t deadline = millis() + 20u;
-    while (client.connected() && millis() < deadline) {
-        if (!client.available()) break;
+    while ((int32_t)(millis() - deadline) < 0) {
+        if (!client.available()) {
+            if (!client.connected()) break;
+            delay(1);
+            continue;
+        }
         String header = client.readStringUntil('\n');
-        if (header == "\r" || header.length() == 0) break;
+        if (header == "\r" || header.length() == 0) return true;
+        if (!header_value(header, "Origin", origin, header_len))
+            header_value(header, "Host", host, header_len);
     }
-    return true;
+    return false;
 }
 
 static void accept_client() {
     WiFiClient incoming = g_server.available();
     if (!incoming) return;
 
+    char path[256];
+    char origin[HTTP_CAN_STREAM_HEADER_MAX], host[HTTP_CAN_STREAM_HEADER_MAX];
+    if (!parse_request_path(incoming, path, sizeof(path), origin, host, sizeof(origin))) {
+        send_response(incoming, 400, "Bad Request", "Bad Request\n");
+        return;
+    }
+    // Before anything else: a refused request must not end the stream that is
+    // running or change its filters.
+    WebStreamAccess access = web_dashboard_stream_access(origin, host);
+    if (access == WEB_STREAM_REFUSE) {
+        Serial.printf("[HTTP-CAN] refused: Origin %.64s Host %.64s\n", origin, host);
+        send_response(incoming, 403, "Forbidden", "Forbidden\n");
+        return;
+    }
+    const char *grant = access == WEB_STREAM_SERVE_GRANT ? origin : nullptr;
+
     if (!g_enabled) {
-        send_response(incoming, 409, "Conflict", "HTTP CAN log disabled in Active mode\n");
+        send_response(incoming, 409, "Conflict", "HTTP CAN log disabled in Active mode\n", grant);
         return;
     }
     if (!g_ring) {
-        send_response(incoming, 503, "Service Unavailable", "No memory for the capture buffer\n");
-        return;
-    }
-
-    char path[256];
-    if (!parse_request_path(incoming, path, sizeof(path))) {
-        send_response(incoming, 400, "Bad Request", "Bad Request\n");
+        send_response(incoming, 503, "Service Unavailable", "No memory for the capture buffer\n", grant);
         return;
     }
 
@@ -344,7 +393,7 @@ static void accept_client() {
         g_bus_filter_enabled = old_bus_filter_enabled;
         g_bus_filter = old_bus_filter;
         g_meta_enabled = old_meta_enabled;
-        send_response(incoming, 400, "Bad Request", "Invalid stream filter\n");
+        send_response(incoming, 400, "Bad Request", "Invalid stream filter\n", grant);
         return;
     }
 
@@ -354,11 +403,11 @@ static void accept_client() {
         g_bus_filter_enabled = old_bus_filter_enabled;
         g_bus_filter = old_bus_filter;
         g_meta_enabled = old_meta_enabled;
-        send_response(incoming, 404, "Not Found", "Not Found\n");
+        send_response(incoming, 404, "Not Found", "Not Found\n", grant);
         return;
     }
 
-    begin_stream(incoming);
+    begin_stream(incoming, grant);
 }
 
 static bool write_all(const char *line, size_t len) {
