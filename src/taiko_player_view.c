@@ -4,13 +4,14 @@
 #include <gui/elements.h>
 #include <stdio.h>
 
-#define LANE_TOP          11
-#define LANE_BOTTOM       27
-#define LANE_Y            19
-#define DRUM_X            18
-#define DRUM_Y            40
-#define DRUM_INNER_RADIUS 7
-#define DRUM_OUTER_RADIUS 11
+#define LANE_TOP           11
+#define LANE_BOTTOM        27
+#define LANE_Y             19
+#define DRUM_X             18
+#define DRUM_Y             40
+#define DRUM_INNER_RADIUS  7
+#define DRUM_OUTER_RADIUS  11
+#define BALLOON_MAX_RADIUS 18
 
 static void draw_menu(Canvas* canvas, const TaikoMenu* menu) {
     static const char* main_labels[] = {
@@ -103,16 +104,43 @@ static void draw_control(Canvas* canvas, const char* text, Align align) {
     canvas_invert_color(canvas);
 }
 
+/* Sample a circle through the outer pixels' half-pixel boundary. Using r*r
+ * alone leaves single-pixel tips; mixing that fill with midpoint outlines
+ * also leaves bumps around diagonals. Share this contour for fills and rims. */
+static int circle_extent(int radius, int row) {
+    if(row > radius) return -1;
+    int extent = radius;
+    const int limit = radius * (radius + 1);
+    while(extent * extent + row * row > limit)
+        extent--;
+    return extent;
+}
+
+static void draw_circle_outline(Canvas* canvas, int x, int y, int radius) {
+    for(int row = -radius; row <= radius; row++) {
+        const int offset = row < 0 ? -row : row;
+        const int outer = circle_extent(radius, offset);
+        /* Remove the four-neighbor interior of the same filled shape. This
+         * keeps the one-pixel outline connected where the row width changes. */
+        int inner = circle_extent(radius, offset + 1);
+        if(inner >= outer) inner = outer - 1;
+        if(inner < 0) {
+            canvas_draw_line(canvas, x - outer, y + row, x + outer, y + row);
+        } else {
+            canvas_draw_line(canvas, x - outer, y + row, x - inner - 1, y + row);
+            canvas_draw_line(canvas, x + inner + 1, y + row, x + outer, y + row);
+        }
+    }
+}
+
 static void draw_hit(Canvas* canvas, bool right, bool rim) {
     const int radius = rim ? DRUM_OUTER_RADIUS : DRUM_INNER_RADIUS;
     const int inner_radius = rim ? DRUM_INNER_RADIUS : 0;
     for(int y = -radius; y <= radius; y++) {
-        int end = radius;
-        while(end * end + y * y > radius * radius)
-            end--;
+        const int offset = y < 0 ? -y : y;
+        const int end = circle_extent(radius, offset);
         int start = 1;
-        while(start <= end && start * start + y * y < inner_radius * inner_radius)
-            start++;
+        if(rim && offset <= inner_radius) start = circle_extent(inner_radius, offset) + 1;
         if(start > end) continue;
         int x1 = right ? DRUM_X + start : DRUM_X - end;
         int x2 = right ? DRUM_X + end : DRUM_X - start;
@@ -124,14 +152,8 @@ static void draw_hit(Canvas* canvas, bool right, bool rim) {
  * canvas edge or draw into the title and status areas. */
 static void lane_disc(Canvas* canvas, int x, int radius, Color color) {
     canvas_set_color(canvas, color);
-    if(x >= radius && x + radius < 128) {
-        canvas_draw_disc(canvas, x, LANE_Y, radius);
-        return;
-    }
     for(int y = -radius; y <= radius; y++) {
-        int extent = radius;
-        while(extent * extent + y * y > radius * radius)
-            extent--;
+        const int extent = circle_extent(radius, y < 0 ? -y : y);
         int left = x - extent;
         int right = x + extent;
         if(right < 0 || left > 127) continue;
@@ -172,6 +194,35 @@ static void draw_balloon_note(Canvas* canvas, const TaikoLaneRoll* note) {
     draw_balloon_head(canvas, note->x);
 }
 
+static void balloon_neck_profile(uint8_t* profile, int length, int start, int end) {
+    const int scale = length * length * length;
+    for(int x = 0; x <= length; x++) {
+        const int curve = x * x * (3 * length - 2 * x);
+        profile[x] = start + ((end - start) * curve + scale / 2) / scale;
+    }
+    /* Before the inflection, shorten rather than lengthen successive stairs.
+     * Swap a one-pixel run followed by a longer run, moving only their shared
+     * corner one pixel. Mirror the adjustment on the other half of the cubic. */
+    for(int x = 1; x + 2 <= length / 2; x++) {
+        if(profile[x] == profile[x - 1] + 1 && profile[x + 1] == profile[x] + 1 &&
+           profile[x + 2] == profile[x + 1]) {
+            profile[x + 1]--;
+            profile[length - x - 1]++;
+        }
+    }
+}
+
+static int balloon_bulb_extent(int radius, int column) {
+    int height = circle_extent(radius, column);
+    if(column > 0 && column < radius) {
+        const int before = circle_extent(radius, column - 1) - height;
+        const int after = height - circle_extent(radius, column + 1);
+        /* Avoid a long vertical stair followed by a shorter one near the tip. */
+        if(before >= 2 && before > after) height++;
+    }
+    return height;
+}
+
 static void draw_balloon_counter(Canvas* canvas, const TaikoPlayerView* view) {
     if(view->balloon.remaining && view->balloon.total) {
         char count[12], total[12];
@@ -184,27 +235,34 @@ static void draw_balloon_counter(Canvas* canvas, const TaikoPlayerView* view) {
         int radius = canvas_string_width(canvas, total) / 2 + 2;
         if(radius < 7) radius = 7;
         radius += inflation;
-        if(radius > 18) radius = 18;
+        if(radius > BALLOON_MAX_RADIUS) radius = BALLOON_MAX_RADIUS;
         int direction = view->balloon.direction < 0 ? -1 : 1;
         const int reach = TAIKO_LANE_BIG_RADIUS + 4 + 2 * radius + 1;
         /* The counter must stay readable even for a reverse-scroll balloon. */
         if(TAIKO_LANE_HIT_X + direction * reach < 0 || TAIKO_LANE_HIT_X + direction * reach > 127)
             direction = -direction;
         const int center = TAIKO_LANE_HIT_X + direction * (TAIKO_LANE_BIG_RADIUS + 4 + radius);
-        int neck_start = TAIKO_LANE_HIT_X + direction * (TAIKO_LANE_BIG_RADIUS - 1);
-        int neck_end = center - direction * (radius / 2);
-        int neck_length = direction * (neck_end - neck_start);
+        const int neck_start = TAIKO_LANE_HIT_X + direction * (TAIKO_LANE_BIG_RADIUS - 1);
+        const int neck_length = direction * (center - neck_start);
+        const int neck_height = 2 + inflation / 2;
+        uint8_t neck[BALLOON_MAX_RADIUS + 6];
+        balloon_neck_profile(neck, neck_length, neck_height, radius + 1);
         for(int pass = 0; pass < 3; pass++) {
             canvas_set_color(canvas, pass == 1 ? ColorBlack : ColorWhite);
-            for(int step = 0; step <= neck_length; step++) {
-                int height =
-                    2 + inflation / 2 + (inflation - inflation / 2) * step / neck_length - pass;
+            const int bulb_radius = radius + 1 - pass;
+            /* A cubic taper meets the bulb at its widest column with a flat
+             * tangent at both ends. Draw only the bulb's far half, so no
+             * separate circle edge can protrude through the curved neck. */
+            for(int step = 0; step <= neck_length + bulb_radius; step++) {
+                int height;
+                if(step < neck_length) {
+                    height = neck[step] - pass;
+                } else {
+                    height = balloon_bulb_extent(bulb_radius, step - neck_length);
+                }
                 int x = neck_start + direction * step;
                 canvas_draw_line(canvas, x, LANE_Y - height, x, LANE_Y + height);
             }
-            /* Paint the neck and bulb as one shape in each border layer, so the
-             * join has no circular outline cutting through the white center. */
-            lane_disc(canvas, center, radius + 1 - pass, pass == 1 ? ColorBlack : ColorWhite);
         }
         canvas_set_color(canvas, ColorBlack);
         canvas_draw_str(
@@ -282,9 +340,7 @@ static void draw_lane(Canvas* canvas, const TaikoPlayerView* view) {
             int r = radius - pass;
             canvas_set_color(canvas, pass == 1 ? ColorBlack : ColorWhite);
             for(int y = -r; y <= r; y++) {
-                int extent = r;
-                while(extent * extent + y * y > r * r)
-                    extent--;
+                const int extent = circle_extent(r, y < 0 ? -y : y);
                 int x1 = left - extent, x2 = right + extent;
                 if(x2 < 0 || x1 > 127) continue;
                 if(x1 < 0) x1 = 0;
@@ -326,8 +382,8 @@ void taiko_player_view_draw(Canvas* canvas, const TaikoPlayerView* view) {
     if(hit_active) {
         draw_hit(canvas, view->hit_right, view->hit_rim);
     }
-    canvas_draw_circle(canvas, DRUM_X, DRUM_Y, DRUM_INNER_RADIUS);
-    canvas_draw_circle(canvas, DRUM_X, DRUM_Y, DRUM_OUTER_RADIUS);
+    draw_circle_outline(canvas, DRUM_X, DRUM_Y, DRUM_INNER_RADIUS);
+    draw_circle_outline(canvas, DRUM_X, DRUM_Y, DRUM_OUTER_RADIUS);
     canvas_draw_line(
         canvas, DRUM_X, DRUM_Y - DRUM_OUTER_RADIUS, DRUM_X, DRUM_Y + DRUM_OUTER_RADIUS);
 
