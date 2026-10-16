@@ -4,7 +4,7 @@
 
 # Gitphin
 
-### Git hosting in your pocket — a Git server with a web UI that runs on the Flipper Zero.
+**Git hosting in your pocket — a Git server with a web UI that runs on the Flipper Zero.**
 
 Gitphin keeps your Git repositories on the Flipper's SD card and serves them to plain `git`
 over USB. Plug the Flipper in, `git push`, and browse code, commits, diffs, branches, tags,
@@ -128,7 +128,7 @@ pocket.</sub>
 
 Two parts: the **app** on the Flipper and the small **bridge** on the PC.
 
-### 1. The Flipper app
+## 1. The Flipper app
 
 Download **`gitphin.fap`** from [**Releases**](https://github.com/Adhamura/Gitphin/releases/latest)
 and copy it to the SD card as **`/ext/apps/Tools/gitphin.fap`** with
@@ -136,7 +136,7 @@ and copy it to the SD card as **`/ext/apps/Tools/gitphin.fap`** with
 manager. The web page and the plugins are inside the `.fap`; the Flipper unpacks them on the
 first start. On dev firmware use the file from `gitphin-<version>-dev-firmware.zip`.
 
-### 2. The PC bridge
+## 2. The PC bridge
 
 Download `gitphin-<version>-pc.tar.gz` from the same release (or clone this repository), then:
 
@@ -158,7 +158,7 @@ sudo udevadm control --reload && sudo udevadm trigger --subsystem-match=tty
 Membership in the `uucp` group also works, after a new login. Check downloads with
 `sha256sum -c SHA256SUMS --ignore-missing`.
 
-### From source
+## From source
 
 ```bash
 pip install ufbt && ufbt update           # SDK for your firmware (ufbt update --channel=dev for dev)
@@ -205,7 +205,7 @@ git remote add flipper flipper://myproject
 git push flipper main
 ```
 
-### Extras on the PC
+## Extras on the PC
 
 The bridge and `git flipper` add a few things that the Flipper alone cannot do. All settings are
 in `~/.config/gitphin/` (mode 0600); the running bridge reads them again at each use.
