@@ -41,6 +41,7 @@ _MAIN_APP_SOURCES = [
     "!views/protopirate_remote_analyzer.c",
     "!helpers/RemoteAnalyzer/protopirate_remote_analyzer_worker.c",
     "!helpers/RemoteAnalyzer/cc1101.c",
+    "!helpers/protopirate_settings.c",
     "protocols/protocol_items.c",
     "protocols/protocols_common.c",
     "!raw_file_reader.c",
@@ -79,7 +80,7 @@ App(
     fap_author="RocketGod-git & xMasterX",
     fap_weburl="https://github.com/RocketGod-git/ProtoPirate",
     #  fap_weburl="https://protopirate.net/ProtoPirate/ProtoPirate",
-    fap_version="4.0",
+    fap_version="4.1",
     fap_description="Decode car key fob signals from Sub-GHz",
 )
 
@@ -469,6 +470,8 @@ def ProtoPirateEmbed_plugins(
         sources=[
             "helpers/protopirate_models.c",
             "helpers/variable_item_list.c",
+            "helpers/protopirate_settings.c",
+            "helpers/protopirate_storage.c",
             "scenes/plugins/protopirate_config_plugin.c",
         ],
         fap_icon_assets="images",

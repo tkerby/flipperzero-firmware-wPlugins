@@ -176,7 +176,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [DNDCharacter Sheet v4.20.2 (By RogueMaster)](https://github.com/RogueMaster/Dungeons_and_Dolphins)
 - Updated: [DNDCombat v4.20.2 (By RogueMaster)](https://github.com/RogueMaster/Dungeons_and_Dolphins)
 - Updated: [DNDGrants v4.20.2 (By RogueMaster)](https://github.com/RogueMaster/Dungeons_and_Dolphins)
-- Updated: [ProtoPirate v4.0 (By RocketGod-git)](https://protopirate.net/ProtoPirate/ProtoPirate)
 - Updated: [FlipDeFlock v0.99 (By ReconGrunt)](https://github.com/ReconGrunt/FlipDeFlock) `Req: ESP32`
 - ESP Flasher: [Comes with Marauder v1.18.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.18.0)
 - Updated: [OpenPrintTag v1.0 (By Houzvicka)](https://github.com/Houzvicka/FlipperPrintTag)
@@ -226,6 +225,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: NFC: [Fix FeliCa command handling #4465 (By kormax)](https://github.com/flipperdevices/flipperzero-firmware/pull/4465)
 - Added: [Kindle Click v0.3 (By zuyan9)](https://github.com/zuyan9/Flipper-Zero-Kindle-Click)
 - Updated: [Tesla Mod v2.16.0 (By hypery11)](https://github.com/hypery11/flipper-tesla-fsd)
+- Updated: [ProtoPirate v4.1 (By RocketGod-git)](https://protopirate.net/ProtoPirate/ProtoPirate)
 
 <a name="release"></a>
 
@@ -995,7 +995,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Postman v0.1 (By MassivDash)](https://github.com/MassivDash/flipper-postman) `Req: ESP32` with [Postman Firmware](https://github.com/MassivDash/flipper-postman-esp32s2)
 - [Prime Factors v1.0 (By gbritoda)](https://github.com/gbritoda/flipper0-prime_factors)
 - [Programmer Calculator v0.9.2 (By armixz)](https://github.com/armixz/Flipper-Zero-Programmer-Calculator)
-- [ProtoPirate v4.0 (By RocketGod-git)](https://protopirate.net/ProtoPirate/ProtoPirate)
+- [ProtoPirate v4.1 (By RocketGod-git)](https://protopirate.net/ProtoPirate/ProtoPirate)
 - [ProtoView v1.3 (By antirez)](https://github.com/antirez/protoview)
 - [Pulse BPM v1.0 (By alaviation)](https://github.com/alaviation/flipper-pulse)
 - [QR Code v2.1.4 (By bmatcuk)](https://github.com/bmatcuk/flipperzero-qrcode)
