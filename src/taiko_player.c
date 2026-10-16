@@ -195,8 +195,8 @@ static bool play_song(TaikoPlayer* app, const char* path) {
         loaded = load_chart(app, path, app->menu.course, &chart, &error);
     }
     if(!loaded) {
-        show_error(app, error);
         tja_chart_free(&chart);
+        show_error(app, error);
         return true;
     }
 
@@ -221,18 +221,24 @@ static bool play_song(TaikoPlayer* app, const char* path) {
     const uint32_t frame_ticks = furi_ms_to_ticks(20);
     uint32_t next_frame = furi_get_tick();
     while(true) {
-        PcmAudioState state = paused ? PcmAudioPaused : pcm_audio_state(audio);
+        PcmAudioState state = paused ? PcmAudioPaused :
+                              audio  ? pcm_audio_state(audio) :
+                                       PcmAudioFinished;
         if(state == PcmAudioError) {
             error = pcm_audio_error(audio);
             next_song = true;
             break;
         }
+        uint32_t position = audio ? pcm_audio_position_ms(audio) : paused_position;
+        if(audio) duration = pcm_audio_duration_ms(audio);
         if(state == PcmAudioFinished && !outputs_finished) {
             taiko_gpio_reset(app->gpio);
+            paused_position = position;
+            /* Keep the end position, not the finished worker and its DMA buffer. */
+            if(audio) pcm_audio_free(audio);
+            audio = NULL;
             outputs_finished = true;
         }
-        uint32_t position = paused ? paused_position : pcm_audio_position_ms(audio);
-        if(audio) duration = pcm_audio_duration_ms(audio);
         if(state == PcmAudioPlaying) {
             TaikoHit hit;
             while(taiko_hits_peek(&chart, &hits, &hit) && hit.time_ms <= (int64_t)position) {
@@ -340,11 +346,25 @@ static bool play_song(TaikoPlayer* app, const char* path) {
                     }
                     if((action == TaikoMenuActionReturn || action == TaikoMenuActionRestart) &&
                        app->menu.course != chart.course_id) {
-                        TjaChart replacement = {0};
+                        const TjaCourse previous_course = chart.course_id;
+                        /* A second chart can exceed the device heap. Stop the
+                         * mixer before releasing the chart it borrows. */
+                        if(audio) pcm_audio_free(audio);
+                        audio = NULL;
+                        tja_chart_free(&chart);
                         const char* change_error = NULL;
-                        if(!load_chart(app, path, app->menu.course, &replacement, &change_error)) {
-                            tja_chart_free(&replacement);
-                            app->menu.course = chart.course_id;
+                        if(!load_chart(app, path, app->menu.course, &chart, &change_error)) {
+                            tja_chart_free(&chart);
+                            app->menu.course = previous_course;
+                            /* Recover by rereading the old course, never by
+                             * retaining two charts while loading a new one. */
+                            const char* restore_error = NULL;
+                            if(!load_chart(app, path, previous_course, &chart, &restore_error)) {
+                                error = restore_error;
+                                next_song = true;
+                                break;
+                            }
+                            taiko_hits_seek(&chart, &hits, paused_position);
                             app->menu.open = true;
                             app->menu.selected = TaikoMenuDifficulty;
                             show_error(app, change_error);
@@ -352,10 +372,6 @@ static bool play_song(TaikoPlayer* app, const char* path) {
                             continue;
                         }
                         if(state == PcmAudioFinished) resume_after_menu = true;
-                        if(audio) pcm_audio_free(audio);
-                        audio = NULL;
-                        tja_chart_free(&chart);
-                        chart = replacement;
                         furi_string_free(wave);
                         wave = audio_path(path, chart.wave);
                         taiko_hits_seek(&chart, &hits, 0);
@@ -396,7 +412,7 @@ static bool play_song(TaikoPlayer* app, const char* path) {
             }
             if(event.key != InputKeyOk && event.key != InputKeyLeft && event.key != InputKeyRight)
                 continue;
-            position = paused ? paused_position : pcm_audio_position_ms(audio);
+            position = audio ? pcm_audio_position_ms(audio) : paused_position;
             taiko_gpio_reset(app->gpio);
             furi_mutex_acquire(app->mutex, FuriWaitForever);
             app->view.hit_until = 0;
@@ -407,7 +423,7 @@ static bool play_song(TaikoPlayer* app, const char* path) {
                     audio = start_audio(app, wave, position, &mixer);
                     paused = false;
                 } else if(state == PcmAudioFinished) {
-                    pcm_audio_free(audio);
+                    if(audio) pcm_audio_free(audio);
                     audio = start_audio(app, wave, 0, &mixer);
                     taiko_hits_seek(&chart, &hits, 0);
                 } else {

@@ -6,10 +6,38 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef FAP_VERSION
+#include <furi/core/memmgr.h>
+#include <furi/core/memmgr_heap.h>
+#endif
+
 #define MAX_NOTES    8192
 #define MAX_SLOTS    2048
 #define MAX_COMMANDS 64
 #define MAX_TIME_MS  3600000.0f
+
+static void* chart_alloc(size_t size) {
+#ifdef FAP_VERSION
+    /* Firmware malloc aborts on exhaustion. Leave room for the audio worker
+     * and error dialogs, and check fragmentation before entering the allocator. */
+    const size_t reserve = 16 * 1024;
+    const size_t overhead = 32;
+    const size_t available = memmgr_get_free_heap();
+    const size_t largest = memmgr_heap_get_max_free_block();
+    if(size > available || available - size < reserve || largest < overhead ||
+       size > largest - overhead)
+        return NULL;
+#endif
+    return malloc(size);
+}
+
+static void* chart_resize(void* data, size_t used, size_t size) {
+    void* replacement = chart_alloc(size);
+    if(!replacement) return NULL;
+    if(used) memcpy(replacement, data, used);
+    free(data);
+    return replacement;
+}
 
 typedef struct {
     size_t slot;
@@ -99,7 +127,7 @@ static bool is_start(const char* line) {
 bool tja_list_courses(TjaReadLine reader, void* context, uint8_t* courses, const char** error) {
     *courses = 0;
     *error = "Missing #START or #END";
-    char* buffer = malloc(2048);
+    char* buffer = chart_alloc(2048);
     if(!buffer) {
         *error = "Not enough memory";
         return false;
@@ -191,7 +219,8 @@ static bool add_note(Parser* p, TjaChart* chart, char kind, const char** error) 
         }
         if(chart->roll_count == p->roll_capacity) {
             size_t capacity = p->roll_capacity ? p->roll_capacity * 2 : 16;
-            TjaRoll* rolls = realloc(chart->rolls, capacity * sizeof(TjaRoll));
+            TjaRoll* rolls = chart_resize(
+                chart->rolls, chart->roll_count * sizeof(TjaRoll), capacity * sizeof(TjaRoll));
             if(!rolls) {
                 *error = "Not enough memory";
                 return false;
@@ -209,7 +238,8 @@ static bool add_note(Parser* p, TjaChart* chart, char kind, const char** error) 
     }
     if(chart->note_count == p->note_capacity) {
         size_t capacity = p->note_capacity ? p->note_capacity * 2 : 256;
-        TjaNote* notes = realloc(chart->notes, capacity * sizeof(TjaNote));
+        TjaNote* notes = chart_resize(
+            chart->notes, chart->note_count * sizeof(TjaNote), capacity * sizeof(TjaNote));
         if(!notes) {
             *error = "Not enough memory";
             return false;
@@ -231,7 +261,10 @@ static bool
     if(c->kind == CommandBpm) {
         if(chart->bpm_change_count == p->bpm_capacity) {
             size_t capacity = p->bpm_capacity ? p->bpm_capacity * 2 : 16;
-            TjaBpmChange* changes = realloc(chart->bpm_changes, capacity * sizeof(TjaBpmChange));
+            TjaBpmChange* changes = chart_resize(
+                chart->bpm_changes,
+                chart->bpm_change_count * sizeof(TjaBpmChange),
+                capacity * sizeof(TjaBpmChange));
             if(!changes) {
                 *error = "Not enough memory";
                 return false;
@@ -253,8 +286,10 @@ static bool
                     return false;
                 }
                 size_t capacity = p->gogo_capacity ? p->gogo_capacity * 2 : 16;
-                TjaGogoChange* changes =
-                    realloc(chart->gogo_changes, capacity * sizeof(TjaGogoChange));
+                TjaGogoChange* changes = chart_resize(
+                    chart->gogo_changes,
+                    chart->gogo_change_count * sizeof(TjaGogoChange),
+                    capacity * sizeof(TjaGogoChange));
                 if(!changes) {
                     *error = "Not enough memory";
                     return false;
@@ -388,7 +423,10 @@ static bool build_hit_runs(TjaChart* chart, uint8_t speed_tenths, const char** e
                         return false;
                     }
                     capacity = capacity ? capacity * 2 : 16;
-                    TjaHitRun* runs = realloc(chart->hit_runs, capacity * sizeof(TjaHitRun));
+                    TjaHitRun* runs = chart_resize(
+                        chart->hit_runs,
+                        chart->hit_run_count * sizeof(TjaHitRun),
+                        capacity * sizeof(TjaHitRun));
                     if(!runs) {
                         *error = "Not enough memory";
                         return false;
@@ -424,7 +462,7 @@ bool tja_chart_set_roll_speed(TjaChart* chart, uint8_t speed_tenths, const char*
     replacement.hit_run_count = 0;
     replacement.rolls = NULL;
     if(chart->roll_count) {
-        replacement.rolls = malloc(chart->roll_count * sizeof(TjaRoll));
+        replacement.rolls = chart_alloc(chart->roll_count * sizeof(TjaRoll));
         if(!replacement.rolls) {
             *error = "Not enough memory";
             return false;
@@ -453,14 +491,15 @@ static bool parse_selected(
     const char** error) {
     memset(chart, 0, sizeof(*chart));
     *error = "Invalid TJA";
-    Parser* p = calloc(1, sizeof(Parser));
-    char* buffer = malloc(2048);
+    Parser* p = chart_alloc(sizeof(Parser));
+    char* buffer = chart_alloc(2048);
     if(!p || !buffer) {
         free(p);
         free(buffer);
         *error = "Not enough memory";
         return false;
     }
+    memset(p, 0, sizeof(*p));
     p->bpm = 120;
     chart->roll_speed_tenths = 10;
     p->scroll = 1;

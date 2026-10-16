@@ -71,6 +71,14 @@ def main():
         "tests/test_rolls.c", "-lm", "-o", str(rolls_test),
     ], cwd=root, check=True)
     subprocess.run([str(rolls_test)], cwd=root, check=True)
+    memory_test = build / "test_memory"
+    subprocess.run([
+        *shlex.split(os.environ.get("CC", "cc")),
+        "-std=c11", "-Wall", "-Wextra", "-Werror", "-g",
+        "-fsanitize=address,undefined", "-DFAP_VERSION=1", "-Itests/stubs", "-Isrc",
+        "src/tja_parser.c", "tests/test_memory.c", "-lm", "-o", str(memory_test),
+    ], cwd=root, check=True)
+    subprocess.run([str(memory_test)], cwd=root, check=True)
 
 
 if __name__ == "__main__":
