@@ -2,9 +2,19 @@
 
 ## [Unreleased]
 
+## [2.8.0] — 2026-10-17
+
+> Flipper app only. Board firmware stays **2.7.3** — you do not need to reflash the board.
+
+### Changed
+- Built with the Official Flipper **1.5.1** f7 SDK, API **88.2**. This is the package for Official **1.5.1**.
+- **v2.7.8** stays the API **87.1** package for Official **1.4.3** and Momentum **mntm-012**. Both files are named `5ghost_wifi_lab.fap`. The v2.7.8 GitHub release asset is unchanged.
+- Unleashed **unlshd-094** is API 88.19. Its loader source compares API major only, so this build is not rejected for major. It has not been loaded on Unleashed hardware.
+
 ## [2.7.8] — 2026-10-10
 
 > Flipper app only. Board firmware stays **2.7.3** — you do not need to reflash the board.
+> API **87.1**. This release stays the package for Official **1.4.3** and Momentum **mntm-012**.
 
 ### Changed
 - **Scan Wi-Fi** opens a menu and does not scan. **Scan now** runs the passive
