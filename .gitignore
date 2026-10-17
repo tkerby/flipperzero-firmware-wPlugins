@@ -5,3 +5,4 @@ dist/
 .editorconfig
 .gitignore.ufbt
 __pycache__/
+.build/

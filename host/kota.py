@@ -5,6 +5,8 @@
 # ///
 """Kota host: keeps a BLE link to the Flipper and pushes Claude plan usage to it.
 
+For Linux and Windows. On macOS use the native agent instead: brew install cobanov/tap/kota
+
 Usage:  uv run host/kota.py            (or ./host/kota.py)
 
 Reads the OAuth token Claude Code stores in ~/.claude/.credentials.json and asks
@@ -71,10 +73,14 @@ def is_flipper(device, adv) -> bool:
 
 async def serve(client: BleakClient, gone: asyncio.Event, state: dict) -> None:
     hello = asyncio.Event()
+    refresh = asyncio.Event()
 
     def on_notify(_handle, data: bytearray) -> None:
-        if b"KOTA" in data:
+        lines = bytes(data).split(b"\n")
+        if any(line.startswith(b"KOTA") for line in lines):
             hello.set()
+        if b"R" in lines:  # OK pressed on the Flipper
+            refresh.set()
 
     await client.start_notify(TX_CHAR, on_notify)
 
@@ -99,10 +105,14 @@ async def serve(client: BleakClient, gone: asyncio.Event, state: dict) -> None:
             line = build_line(state["usage"], now)
             await client.write_gatt_char(RX_CHAR, line.encode(), response=True)
             log(f"sent {line.strip()}")
-        try:
-            await asyncio.wait_for(gone.wait(), timeout=REFRESH_S)
-        except asyncio.TimeoutError:
-            pass
+        refresh.clear()
+        waiters = [asyncio.create_task(gone.wait()), asyncio.create_task(refresh.wait())]
+        await asyncio.wait(waiters, timeout=REFRESH_S, return_when=asyncio.FIRST_COMPLETED)
+        for w in waiters:
+            w.cancel()
+        if refresh.is_set() and time.time() - state["fetched"] > 10:
+            log("refresh requested")
+            state["fetched"] = 0.0
     log("disconnected")
 
 

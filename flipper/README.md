@@ -17,6 +17,7 @@ The numbers come from a small companion script on your computer, sent over Bluet
 
 ## Controls
 
+- OK: refresh now
 - Back: exit
 
 While Kota is open, the Flipper's normal Bluetooth connection (mobile app) is paused. It returns when you exit.

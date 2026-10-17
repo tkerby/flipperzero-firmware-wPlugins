@@ -8,6 +8,7 @@
  * Reset times are seconds from "now"; the app counts them down locally between
  * updates. While connected and not yet fed, the app sends "KOTA <version>\n" every
  * second so the host knows it is talking to Kota and not the default RPC profile.
+ * Pressing OK sends "R\n", asking the host to fetch fresh numbers right away.
  */
 
 #include <furi.h>
@@ -20,7 +21,8 @@
 
 #define TAG          "Kota"
 #define RX_BUF_SIZE  128
-#define HELLO        "KOTA 0.1\n"
+#define HELLO        "KOTA 0.2\n"
+#define REFRESH      "R\n"
 #define BAR_W        98
 #define BAR_H        9
 
@@ -43,6 +45,8 @@ typedef struct {
     bool ble_ok;
     volatile bool connected;
     volatile bool got_data; /* host sent a line since this connect */
+    volatile bool refreshing; /* OK pressed, waiting for the answer */
+    uint32_t refresh_tick;
     Usage usage;
     char rx[RX_BUF_SIZE];
     size_t rx_len;
@@ -79,6 +83,7 @@ static void kota_parse_line(Kota* app, const char* line) {
     app->usage.has_data = true;
     furi_mutex_release(app->mutex);
     app->got_data = true;
+    app->refreshing = false;
 
     view_port_update(app->view_port);
 }
@@ -113,6 +118,7 @@ static void kota_bt_status(BtStatus status, void* context) {
         app->rx_len = 0;
     }
     app->got_data = false;
+    app->refreshing = false;
     app->connected = connected;
     view_port_update(app->view_port);
 }
@@ -222,6 +228,8 @@ static void kota_draw(Canvas* canvas, void* context) {
         snprintf(status, sizeof(status), "BT off");
     } else if(!u.has_data) {
         snprintf(status, sizeof(status), connected ? "linked" : "no link");
+    } else if(app->refreshing) {
+        snprintf(status, sizeof(status), "syncing");
     } else if(age_s < 60) {
         snprintf(status, sizeof(status), "live");
     } else {
@@ -277,10 +285,21 @@ int32_t kota_app(void* p) {
     while(true) {
         if(furi_message_queue_get(app->input_queue, &event, 1000) == FuriStatusOk) {
             if(event.key == InputKeyBack && event.type == InputTypeShort) break;
+            if(event.key == InputKeyOk && event.type == InputTypeShort && app->connected &&
+               app->profile) {
+                app->refreshing = true;
+                app->refresh_tick = furi_get_tick();
+                ble_profile_serial_tx(app->profile, (uint8_t*)REFRESH, strlen(REFRESH));
+            }
         }
         /* Repeat the hello until the host answers: it may subscribe a moment after connecting. */
         if(app->connected && !app->got_data && app->profile) {
             ble_profile_serial_tx(app->profile, (uint8_t*)HELLO, strlen(HELLO));
+        }
+        /* Give up on a refresh the host never answered (older host, fetch error). */
+        if(app->refreshing &&
+           furi_get_tick() - app->refresh_tick > 10 * furi_kernel_get_tick_frequency()) {
+            app->refreshing = false;
         }
         view_port_update(app->view_port); /* tick the countdowns */
     }
