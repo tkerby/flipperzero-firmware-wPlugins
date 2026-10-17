@@ -3,9 +3,7 @@
 import os, re, subprocess, sys
 
 BIN, REPOS = sys.argv[1:3]
-ENV = dict(
-    os.environ, GIT_CONFIG_GLOBAL="/dev/null", GIT_CONFIG_SYSTEM="/dev/null", LC_ALL="C"
-)
+ENV = dict(os.environ, GIT_CONFIG_GLOBAL="/dev/null", GIT_CONFIG_SYSTEM="/dev/null", LC_ALL="C")
 fails = 0
 peak = 0
 
@@ -17,17 +15,13 @@ def fail(m):
 
 
 def git(repo, *a):
-    r = subprocess.run(
-        ["git", "--git-dir", repo] + list(a), capture_output=True, env=ENV
-    )
+    r = subprocess.run(["git", "--git-dir", repo] + list(a), capture_output=True, env=ENV)
     return r.stdout
 
 
 def run(repo, tree, q, *extra):
     global peak
-    r = subprocess.run(
-        [BIN, repo, tree, q] + [str(x) for x in extra], capture_output=True, env=ENV
-    )
+    r = subprocess.run([BIN, repo, tree, q] + [str(x) for x in extra], capture_output=True, env=ENV)
     m = re.search(rb"heap_peak=(\d+)", r.stderr)
     if m:
         peak = max(peak, int(m.group(1)))
@@ -63,7 +57,7 @@ def expected(repo, rev, q, max_blob):
         a = rec.split(b"\0", 2)
         if len(a) != 3:
             continue
-        path = a[0][len(rev) + 1 :]
+        path = a[0][len(rev) + 1:]
         mode, size = files.get(path, (b"", b"0"))
         if max_blob and int(size) > max_blob:
             continue
@@ -85,23 +79,9 @@ def check(repo, rev, tree, q, max_blob=0, label=""):
         fail("%s %r names: got %d want %d" % (label, q, len(got_n), len(names)))
     if got_c != sorted(norm):
         gs, ws = set(got_c), set(norm)
-        fail(
-            "%s %r content: got %d want %d (missing %s, extra %s)"
-            % (
-                label,
-                q,
-                len(got_c),
-                len(norm),
-                sorted(ws - gs)[:2],
-                sorted(gs - ws)[:2],
-            )
-        )
+        fail("%s %r content: got %d want %d (missing %s, extra %s)" % (label, q, len(got_c), len(norm), sorted(ws - gs)[:2], sorted(gs - ws)[:2]))
     for h in hits:
-        if h[1] > 0 and (h[2] == 1) != (
-            len(h[3]) == 200
-            and True
-            and any(len(t) > 200 for p, l, t in want_c if p == h[0] and l == h[1])
-        ):
+        if h[1] > 0 and (h[2] == 1) != (len(h[3]) == 200 and True and any(len(t) > 200 for p, l, t in want_c if p == h[0] and l == h[1])):
             fail("%s %r cut flag wrong at %s:%d" % (label, q, h[0], h[1]))
             break
     if sm.get("rc") != 0 or sm.get("truncated") != 0:
@@ -110,28 +90,8 @@ def check(repo, rev, tree, q, max_blob=0, label=""):
 
 
 def main():
-    queries = [
-        "fox",
-        "edited in commit 17",
-        "main",
-        "Flipper",
-        "item 10",
-        "unicode",
-        "NOMATCH123",
-        "a",
-        "line 00042",
-        "README",
-        "int a(",
-        ".",
-        "ün",
-        "FOX JUMPS",
-        "dev 2",
-        "octopus",
-        "feature",
-        "ZO",
-        "slot 3",
-        " ",
-    ]
+    queries = ["fox", "edited in commit 17", "main", "Flipper", "item 10", "unicode", "NOMATCH123", "a", "line 00042",
+               "README", "int a(", ".", "ün", "FOX JUMPS", "dev 2", "octopus", "feature", "ZO", "slot 3", " "]
     total = 0
     for layout in ("onepack", "multi"):
         repo = os.path.join(REPOS, layout + ".git")
@@ -140,14 +100,7 @@ def main():
             tree = git(repo, "rev-parse", rev + "^{tree}").decode().strip()
             for q in queries:
                 for mb in (0, 30000):
-                    check(
-                        repo,
-                        rev + "^{tree}",
-                        tree,
-                        q,
-                        mb,
-                        "%s/%s/mb%d" % (layout, rev, mb),
-                    )
+                    check(repo, rev + "^{tree}", tree, q, mb, "%s/%s/mb%d" % (layout, rev, mb))
                     total += 1
     repo = os.path.join(REPOS, "onepack.git")
     tree = git(repo, "rev-parse", "main^{tree}").decode().strip()
@@ -178,10 +131,7 @@ def main():
     if sm["skipped"] < 1 or sm["scanned"] < 1:
         fail("max_blob: %s" % sm)
     # a long line is cut but still matched at its end
-    print(
-        "search: %d git comparisons, %d failures, heap peak %d bytes"
-        % (total, fails, peak)
-    )
+    print("search: %d git comparisons, %d failures, heap peak %d bytes" % (total, fails, peak))
     return fails
 
 

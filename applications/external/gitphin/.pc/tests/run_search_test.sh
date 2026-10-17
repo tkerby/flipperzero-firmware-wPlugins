@@ -10,8 +10,8 @@ export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null
 [[ -n "${KEEP:-}" ]] || trap 'rm -rf "$W"' EXIT
 CF="-g -O1 -Wall -Wextra -fsanitize=address,undefined -fno-sanitize-recover=undefined"
 cd "$W"
-for f in hub_inflate hub_gitobj hub_gitsearch; do
-    gcc $CF -include "$HERE/malloc_wrap.h" -c "$APP/$f.c" -o "$f.o"
+for f in util/hub_inflate obj/hub_gitobj ext/hub_gitsearch; do
+    gcc $CF -include "$HERE/malloc_wrap.h" -c "$APP/src/$f.c" -o "${f##*/}.o"
 done
 gcc $CF -c "$HERE/gitio_stdio.c" -o gitio.o
 gcc $CF -c "$HERE/search_test.c" -o test.o

@@ -14,10 +14,10 @@ export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_SYSTEM=/dev/null
 CF0="-g -O1 -fsanitize=address,undefined"
 CF="-include $HERE/malloc_wrap.h -g -O1 -Wall -Wextra -fsanitize=address,undefined -fno-sanitize-recover=undefined -I$HERE/furi_stub -Wno-unused-parameter"
 cd "$W/b"
-for f in hub_chunk hub_gitview hub_git hub_gitobj hub_inflate hub_gitdiff hub_gitsearch; do
-    gcc $CF -c "$APP/$f.c" -o "$f.o"
+for f in http/hub_chunk git/hub_gitview git/hub_git obj/hub_gitobj util/hub_inflate write/hub_gitdiff ext/hub_gitsearch; do
+    gcc $CF -c "$APP/src/$f.c" -o "${f##*/}.o"
 done
-gcc $CF -DHUB_EXT_QUERY -c "$APP/hub_gitext.c" -o hub_gitext.o
+gcc $CF -DHUB_EXT_QUERY -c "$APP/src/ext/hub_gitext.c" -o hub_gitext.o
 gcc $CF0 -I$HERE/furi_stub -c "$HERE/gitio_stdio.c" -o gitio.o
 gcc $CF -c "$HERE/furi_stub.c" -o furi_stub.o
 gcc $CF -c "$HERE/route_test.c" -o route_test.o

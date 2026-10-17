@@ -235,6 +235,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - SubGHz: [Reject unknown presets safely on load, receive and transmit instead of crashing; apply the matching guard to Sub-GHz Remote (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/e1ebaa318b6dec205c2dce4575844b8e9bd56c3f)
 - SubGHz: [Free the temporary Security+ 2.0 generator transmitter and clear its pointer after generation (By xMasterX; RM adaptation Vy RogueMaster)](https://github.com/DarkFlippers/unleashed-firmware/commit/e1ebaa318b6dec205c2dce4575844b8e9bd56c3f)
 - Updated: [Sub-GHz Remote v1.8 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote) [Changes (By xMasterX)](https://github.com/DarkFlippers/SubGHz_Remote/commit/a94f7c754f4e0f9881b7f3432906b46da4007e21)
+- Updated: [Gitphin v1.2 (By Adhamura)](https://github.com/Adhamura/gitphin)
 
 <a name="release"></a>
 
@@ -768,7 +769,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Ghost ESP v1.8.2 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 - [GhostBook v0.6 (By digitard)](https://github.com/digitard/ghostbook)
 - [GhostTag v2.0 (By at0m-b0mb)](https://github.com/at0m-b0mb/GhostTag-FlipperZero) `Req: ESP32`
-- [Gitphin v1.1 (By Adhamura)](https://github.com/Adhamura/gitphin)
+- [Gitphin v1.2 (By Adhamura)](https://github.com/Adhamura/gitphin)
 - [GlitchTrigger v1.3 (By at0m-b0mb)](https://github.com/at0m-b0mb/GlitchTrigger-FlipperZero)
 - [GnomishTool v1.0 (By Andreeved88)](https://github.com/Andreeved88/GnomishTool)
 - [Goodweather AC v1.0 (By xMasterX)](https://github.com/xMasterX/all-the-plugins/tree/213baa6e872d1db597a25d2c16e81406e9634440/non_catalog_apps/goodweather_ac_remote)

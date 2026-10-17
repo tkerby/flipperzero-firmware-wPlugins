@@ -159,4 +159,35 @@ w("releases/index.json", {"next": 3, "items": [{k: r[k] for k in ("id", "tag", "
 w("wiki/Home.md", "# Weather Station wiki\n\nStart here: [[Wiring]], [[Field test log]].\n\n"
   "The station wakes every 10 minutes, samples the BME280 and sends 12 bytes over LoRa.\n")
 PY
+
+# Repo avatars (<repo>.git/hub/avatar.png): a symmetric 8x8 pattern per repo, like a default
+# identicon, scaled to 64 px. Made from the name, so they are the same on every run.
+python3 -I - "$ROOT/git" <<'PY'
+import hashlib, os, struct, sys, zlib
+root = sys.argv[1]
+def png(w, h, rows):
+    raw = b"".join(b"\x00" + r for r in rows)
+    c = lambda t, b: struct.pack(">I", len(b)) + t + b + struct.pack(">I", zlib.crc32(t + b))
+    return (b"\x89PNG\r\n\x1a\n" + c(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0))
+            + c(b"IDAT", zlib.compress(raw, 9)) + c(b"IEND", b""))
+colors = [(255, 130, 0), (31, 122, 61), (107, 63, 181), (184, 87, 0), (20, 17, 13)]
+for repo in sorted(os.listdir(root)):
+    if not repo.endswith(".git") or repo.startswith(("notes", "dotfiles")):
+        continue  # some repos keep the plain icon
+    h = hashlib.sha1(repo.encode()).digest()
+    fg, bg = colors[h[0] % len(colors)], (255, 244, 224)
+    cells = [[(h[1 + y] >> x) & 1 for x in range(4)] for y in range(8)]
+    S = 8
+    rows = []
+    for y in range(64):
+        line = b""
+        for x in range(64):
+            cx, cy = x // S, y // S
+            on = cells[cy][cx if cx < 4 else 7 - cx]
+            line += bytes(fg if on else bg)
+        rows.append(line)
+    os.makedirs(os.path.join(root, repo, "hub"), exist_ok=True)
+    with open(os.path.join(root, repo, "hub", "avatar.png"), "wb") as f:
+        f.write(png(64, 64, rows))
+PY
 echo "demo repos in $ROOT/git"

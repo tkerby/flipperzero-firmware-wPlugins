@@ -6,8 +6,8 @@
  *   gitwrite_test commit <repo> <tree> <time> <tz> <msgfile> [parent...]
  *   gitwrite_test self <repo>
  */
-#include "../../flipper_app/hub_gitwrite.h"
-#include "../../flipper_app/hub_sha1.h"
+#include "../../flipper_app/src/write/hub_gitwrite.h"
+#include "../../flipper_app/src/util/hub_sha1.h"
 
 #include <stdio.h>
 #include <stdlib.h>

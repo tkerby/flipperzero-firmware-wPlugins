@@ -2,7 +2,7 @@
  *   gitdoc_test crc <file>     prints the CRC-32 as 8 hex digits (run_write_test.sh
  *                              compares it with python zlib.crc32)
  *   gitdoc_test                run the built-in checks */
-#include "../../flipper_app/hub_gitdocutil.h"
+#include "../../flipper_app/src/doc/hub_gitdocutil.h"
 
 #include <stdio.h>
 #include <stdlib.h>

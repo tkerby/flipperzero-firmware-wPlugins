@@ -7,27 +7,23 @@ App(
     fap_icon="gitphin_10.png",
     fap_file_assets="files",
     targets=["f7"],
-    # The resident core. Everything else is a plugin (.fal) that the core loads
-    # on demand, one at a time (hub_plugin.c). The plugins are embedded in the
-    # .fap (fal_embedded) and unpacked to apps_assets/gitphin/plugins/ on start,
-    # so the single .fap is the whole app.
     sources=[
-        "gitphin.c",
-        "hub_http.c",
-        "hub_chunk.c",
-        "hub_transport.c",
-        "hub_mem.c",
-        "hub_plugin.c",
-        "hub_git.c",
-        "hub_gitview.c",
-        "hub_gitobj.c",
-        "hub_gitio_furi.c",
-        "hub_inflate.c",
+        "src/app/gitphin.c",
+        "src/http/hub_http.c",
+        "src/http/hub_chunk.c",
+        "src/http/hub_transport.c",
+        "src/http/hub_mem.c",
+        "src/http/hub_plugin.c",
+        "src/git/hub_git.c",
+        "src/git/hub_gitview.c",
+        "src/obj/hub_gitobj.c",
+        "src/obj/hub_gitio_furi.c",
+        "src/util/hub_inflate.c",
     ],
     fap_category="USB",
     fap_author="Kazuki Kimura (Adhamura)",
     fap_weburl="https://github.com/Adhamura/Gitphin",
-    fap_version="1.1",
+    fap_version="1.2",
     fap_description="Git hosting in your pocket: a Git server and web UI for your repos, used from the PC over USB",
 )
 
@@ -37,7 +33,7 @@ App(
     entry_point="hub_pl_dav_ep",
     requires=["gitphin"],
     fal_embedded=True,
-    sources=["hub_dav.c"],
+    sources=["src/dav/hub_dav.c"],
 )
 
 App(
@@ -46,14 +42,7 @@ App(
     entry_point="hub_pl_pack_ep",
     requires=["gitphin"],
     fal_embedded=True,
-    sources=[
-        "hub_plugin_pack.c",
-        "hub_gitpack.c",
-        "hub_gitgraph.c",
-        "hub_deflate.c",
-        "hub_sha1.c",
-        "hub_gitdocutil.c",
-    ],
+    sources=["src/pack/hub_plugin_pack.c", "src/pack/hub_gitpack.c", "src/pack/hub_gitgraph.c", "src/pack/hub_deflate.c", "src/util/hub_sha1.c", "src/doc/hub_gitdocutil.c"],
 )
 
 App(
@@ -64,12 +53,12 @@ App(
     fal_embedded=True,
     cdefines=["HUB_EXT_WRITE"],
     sources=[
-        "hub_gitext.c",
-        "hub_gitcommit.c",
-        "hub_gitwrite.c",
-        "hub_gitwrite_furi.c",
-        "hub_gitdiff.c",
-        "hub_sha1.c",
+        "src/ext/hub_gitext.c",
+        "src/write/hub_gitcommit.c",
+        "src/write/hub_gitwrite.c",
+        "src/write/hub_gitwrite_furi.c",
+        "src/write/hub_gitdiff.c",
+        "src/util/hub_sha1.c",
     ],
 )
 
@@ -80,7 +69,7 @@ App(
     requires=["gitphin"],
     fal_embedded=True,
     cdefines=["HUB_EXT_QUERY"],
-    sources=["hub_gitext.c", "hub_gitdiff.c", "hub_gitsearch.c"],
+    sources=["src/ext/hub_gitext.c", "src/write/hub_gitdiff.c", "src/ext/hub_gitsearch.c"],
 )
 
 App(
@@ -89,5 +78,5 @@ App(
     entry_point="hub_pl_doc_ep",
     requires=["gitphin"],
     fal_embedded=True,
-    sources=["hub_gitdoc.c", "hub_gitdocutil.c"],
+    sources=["src/doc/hub_gitdoc.c", "src/doc/hub_gitdocutil.c"],
 )

@@ -2,7 +2,7 @@
  *   search_test <repo> <tree> <query> [max_hits] [max_blob] [stop_after_chunks] [flags]
  * flags: n = no name hits, c = no content hits
  * Prints "H<TAB>path<TAB>line<TAB>cut<TAB>text" per hit and a summary line "S ...". */
-#include "../../flipper_app/hub_gitsearch.h"
+#include "../../flipper_app/src/ext/hub_gitsearch.h"
 
 #include <stdio.h>
 #include <stdlib.h>

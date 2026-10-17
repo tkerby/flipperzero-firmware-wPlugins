@@ -3,8 +3,9 @@
 
 Usage: python3 pc/tests/mock_hub.py ROOT [--host 127.0.0.1] [--port 8099] [--verbose]
 
-ROOT is served as /ext. Implements GET /git/..., /api/git/*, and the existing
-PUT /api/file, GET /api/list, POST /api/delete.
+ROOT is served as /ext. Implements GET /git/..., /api/git/* (including tree, blob and
+commit, which use the git of this machine), and the existing PUT /api/file, GET /api/list,
+POST /api/delete.
 """
 
 import argparse
@@ -13,6 +14,7 @@ import mimetypes
 import os
 import re
 import shutil
+import subprocess
 import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, unquote, urlsplit
@@ -42,9 +44,7 @@ def valid_ref(ref, prefixes=("refs/heads/", "refs/tags/")):
         return False
     if ".." in ref or "//" in ref or "@{" in ref or ref.endswith(("/", ".", ".lock")):
         return False
-    return all(
-        p and not p.startswith(".") and not p.endswith(".lock") for p in ref.split("/")
-    )
+    return all(p and not p.startswith(".") and not p.endswith(".lock") for p in ref.split("/"))
 
 
 def fs_path(path):
@@ -87,7 +87,6 @@ def write_text(path, text):
 
 # ---- git state
 
-
 def packed_refs(d):
     refs = {}
     for line in read_text(os.path.join(d, "packed-refs")).splitlines():
@@ -111,16 +110,9 @@ def all_refs(d):
 
 def server_info(d):
     refs = all_refs(d)
-    write_text(
-        os.path.join(d, "info", "refs"), "".join(f"{s}\t{n}\n" for n, s in refs.items())
-    )
-    packs = sorted(
-        f for f in os.listdir(os.path.join(d, "objects", "pack")) if f.endswith(".pack")
-    )
-    write_text(
-        os.path.join(d, "objects", "info", "packs"),
-        "".join(f"P {p}\n" for p in packs) + "\n",
-    )
+    write_text(os.path.join(d, "info", "refs"), "".join(f"{s}\t{n}\n" for n, s in refs.items()))
+    packs = sorted(f for f in os.listdir(os.path.join(d, "objects", "pack")) if f.endswith(".pack"))
+    write_text(os.path.join(d, "objects", "info", "packs"), "".join(f"P {p}\n" for p in packs) + "\n")
 
 
 def head_branch(d):
@@ -130,17 +122,12 @@ def head_branch(d):
 
 def count_packs(d):
     try:
-        return sum(
-            1
-            for f in os.listdir(os.path.join(d, "objects", "pack"))
-            if f.endswith(".pack")
-        )
+        return sum(1 for f in os.listdir(os.path.join(d, "objects", "pack")) if f.endswith(".pack"))
     except OSError:
         return 0
 
 
 # ---- /api/git handlers: each returns a dict merged into {"ok": true}
-
 
 def g_repos(q, body):
     repos = []
@@ -148,14 +135,8 @@ def g_repos(q, body):
     for fn in sorted(os.listdir(gd)) if os.path.isdir(gd) else []:
         d = os.path.join(gd, fn)
         if fn.endswith(".git") and os.path.isdir(d):
-            repos.append(
-                {
-                    "name": fn[:-4],
-                    "description": read_text(os.path.join(d, "description")).strip(),
-                    "head": head_branch(d),
-                    "packs": count_packs(d),
-                }
-            )
+            repos.append({"name": fn[:-4], "description": read_text(os.path.join(d, "description")).strip(),
+                          "head": head_branch(d), "packs": count_packs(d)})
     return {"repos": repos}
 
 
@@ -169,13 +150,9 @@ def g_create(q, body):
     for sub in ("refs/heads", "refs/tags", "objects/pack", "objects/info", "info"):
         os.makedirs(os.path.join(d, sub))
     write_text(os.path.join(d, "HEAD"), f"ref: refs/heads/{branch}\n")
-    write_text(
-        os.path.join(d, "config"),
-        "[core]\n\trepositoryformatversion = 0\n\tfilemode = false\n\tbare = true\n",
-    )
-    write_text(
-        os.path.join(d, "description"), q.get("description") or "Unnamed repository"
-    )
+    write_text(os.path.join(d, "config"),
+               "[core]\n\trepositoryformatversion = 0\n\tfilemode = false\n\tbare = true\n")
+    write_text(os.path.join(d, "description"), q.get("description") or "Unnamed repository")
     write_text(os.path.join(d, "info", "refs"), "")
     write_text(os.path.join(d, "objects", "info", "packs"), "\n")
     return {}
@@ -196,9 +173,7 @@ def g_rename(q, body):
 
 
 def g_describe(q, body):
-    write_text(
-        os.path.join(existing_repo(q.get("name")), "description"), q.get("text", "")
-    )
+    write_text(os.path.join(existing_repo(q.get("name")), "description"), q.get("text", ""))
     return {}
 
 
@@ -244,21 +219,121 @@ def g_server_info(q, body):
     return {}
 
 
+# ---- browse routes (hub_gitview.c / hub_gitext.c): tree, blob, commit. They use the
+# git of the test machine on the repo folder; the answers follow docs/git-design.md.
+
+def git_run(d, *args):
+    p = subprocess.run(["git", "--git-dir", d, *args], capture_output=True)
+    return p.returncode, p.stdout
+
+
+def resolve_commit(d, ref):
+    """Ref resolution of the Flipper: 40-hex as is, else HEAD, refs/..., heads/<x>, tags/<x>;
+    annotated tags are peeled. Returns the commit sha or raises Fail(404)."""
+    if SHA_RE.match(ref):
+        cands = [ref]
+    elif ref == "HEAD":
+        cands = ["HEAD"]
+    else:
+        cands = [ref, "refs/heads/" + ref, "refs/tags/" + ref] if ref.startswith("refs/") else \
+                ["refs/heads/" + ref, "refs/tags/" + ref]
+    for c in cands:
+        rc, out = git_run(d, "rev-parse", "--verify", "-q", c + "^{commit}")
+        if rc == 0 and SHA_RE.match(out.decode().strip()):
+            return out.decode().strip()
+    raise Fail(404, "ref not found")
+
+
+def clean_path(p):
+    parts = [x for x in p.split("/") if x]
+    if ".." in parts or "." in parts:
+        raise Fail(400, "bad path")
+    return "/".join(parts)
+
+
+def g_tree(q, body):
+    d = existing_repo(q.get("name"))
+    commit = resolve_commit(d, q.get("ref") or q.get("sha") or "HEAD")
+    path = clean_path(q.get("path", ""))
+    spec = commit + ":" + path
+    rc, kind = git_run(d, "cat-file", "-t", spec)
+    if rc != 0:
+        raise Fail(404, "not found")
+    if kind.strip() != b"tree":
+        raise Fail(400, "not a folder")
+    rc, out = git_run(d, "ls-tree", "-z", spec)
+    entries = []
+    for rec in out.split(b"\0"):
+        if not rec:
+            continue
+        meta, _, name = rec.partition(b"\t")
+        mode, otype, sha = meta.decode().split()
+        t = "link" if mode == "120000" else {"tree": "tree", "commit": "commit"}.get(otype, "blob")
+        entries.append({"name": name.decode("utf-8", "surrogateescape"), "type": t, "mode": mode, "sha": sha})
+    entries.sort(key=lambda e: (e["type"] != "tree", e["name"]))
+    return {"commit": commit, "path": path, "entries": entries}
+
+
+def g_blob(q, body):
+    d = existing_repo(q.get("name"))
+    if q.get("sha") and not q.get("path"):
+        if not SHA_RE.match(q["sha"]):
+            raise Fail(400, "bad sha")
+        spec = q["sha"]
+    else:
+        path = clean_path(q.get("path", ""))
+        if not path:
+            raise Fail(400, "missing path or sha")
+        spec = resolve_commit(d, q.get("ref") or "HEAD") + ":" + path
+    rc, kind = git_run(d, "cat-file", "-t", spec)
+    if rc != 0:
+        raise Fail(404, "not found")
+    if kind.strip() == b"tree":
+        raise Fail(400, "path is a folder")
+    if kind.strip() == b"commit":
+        raise Fail(400, "path is a submodule")
+    rc, sha = git_run(d, "rev-parse", spec)
+    rc, data = git_run(d, "cat-file", "blob", spec)
+    return RawBody(data, {"X-Git-Sha": sha.decode().strip()})
+
+
+def parse_person(line):
+    m = re.match(r"^(.*) <(.*)> (\d+) ([+-]\d{4})$", line)
+    return {"name": m.group(1), "email": m.group(2), "time": int(m.group(3)), "tz": m.group(4)}
+
+
+def g_commit(q, body):
+    d = existing_repo(q.get("name"))
+    sha = resolve_commit(d, q.get("sha") or q.get("ref") or "HEAD")
+    rc, raw = git_run(d, "cat-file", "commit", sha)
+    head, _, msg = raw.decode("utf-8", "replace").partition("\n\n")
+    out = {"sha": sha, "tree": "", "parents": []}
+    for line in head.split("\n"):
+        key, _, val = line.partition(" ")
+        if key == "tree":
+            out["tree"] = val
+        elif key == "parent":
+            out["parents"].append(val)
+        elif key in ("author", "committer"):
+            out[key] = parse_person(val)
+    out["message"] = msg
+    return out
+
+
+class RawBody:
+    def __init__(self, data, headers):
+        self.data, self.headers = data, headers
+
+
 GIT_ROUTES = {
-    ("GET", "repos"): g_repos,
-    ("POST", "create"): g_create,
-    ("POST", "delete"): g_delete,
-    ("POST", "rename"): g_rename,
-    ("POST", "describe"): g_describe,
-    ("GET", "refs"): g_refs,
-    ("POST", "ref"): g_ref,
-    ("POST", "head"): g_head,
-    ("POST", "server-info"): g_server_info,
+    ("GET", "tree"): g_tree, ("GET", "blob"): g_blob, ("GET", "commit"): g_commit,
+    ("GET", "repos"): g_repos, ("POST", "create"): g_create, ("POST", "delete"): g_delete,
+    ("POST", "rename"): g_rename, ("POST", "describe"): g_describe, ("GET", "refs"): g_refs,
+    ("POST", "ref"): g_ref, ("POST", "head"): g_head, ("POST", "server-info"): g_server_info,
 }
 
 
 # ---- existing file API
-
 
 def f_list(q, body):
     p = fs_path(q.get("path", "/ext"))
@@ -268,9 +343,7 @@ def f_list(q, body):
     for fn in sorted(os.listdir(p)):
         full = os.path.join(p, fn)
         isdir = os.path.isdir(full)
-        entries.append(
-            {"name": fn, "dir": isdir, "size": 0 if isdir else os.path.getsize(full)}
-        )
+        entries.append({"name": fn, "dir": isdir, "size": 0 if isdir else os.path.getsize(full)})
     return {"path": q.get("path", "/ext"), "entries": entries}
 
 
@@ -304,9 +377,11 @@ class Handler(BaseHTTPRequestHandler):
         if VERBOSE:
             print("[mock-hub]", fmt % args, file=sys.stderr)
 
-    def send(self, status, data, ctype):
+    def send(self, status, data, ctype, headers=None):
         self.send_response(status)
         self.send_header("Content-Type", ctype)
+        for k, v in (headers or {}).items():
+            self.send_header(k, v)
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
         self.wfile.write(data)
@@ -325,16 +400,16 @@ class Handler(BaseHTTPRequestHandler):
                 return self.raw_file(path)
             handler = None
             if path.startswith("/api/git/"):
-                handler = GIT_ROUTES.get((method, path[len("/api/git/") :]))
+                handler = GIT_ROUTES.get((method, path[len("/api/git/"):]))
             else:
-                handler = {
-                    ("GET", "/api/list"): f_list,
-                    ("PUT", "/api/file"): f_put,
-                    ("POST", "/api/delete"): f_delete,
-                }.get((method, path))
+                handler = {("GET", "/api/list"): f_list, ("PUT", "/api/file"): f_put,
+                           ("POST", "/api/delete"): f_delete}.get((method, path))
             if handler is None:
                 raise Fail(404, "no such route")
-            self.json(200, {"ok": True, **handler(q, body)})
+            got = handler(q, body)
+            if isinstance(got, RawBody):
+                return self.send(200, got.data, "application/octet-stream", got.headers)
+            self.json(200, {"ok": True, **got})
         except Fail as e:
             self.json(e.status, {"ok": False, "error": e.msg})
         except Exception as e:  # keep the mock alive, show the bug
@@ -342,15 +417,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def raw_file(self, path):
         m = re.match(r"^/git/([^/]+)\.git/(.+)$", path)
-        if (
-            not m
-            or any(p in ("", "..") for p in m.group(2).split("/"))
-            or not valid_name(m.group(1))
-        ):
+        if not m or any(p in ("", "..") for p in m.group(2).split("/")) or not valid_name(m.group(1)):
             raise Fail(404, "not found")
-        full = os.path.join(
-            ROOT, *GIT_ROOT, m.group(1) + ".git", *m.group(2).split("/")
-        )
+        full = os.path.join(ROOT, *GIT_ROOT, m.group(1) + ".git", *m.group(2).split("/"))
         if not os.path.isfile(full):
             raise Fail(404, "not found")
         with open(full, "rb") as f:
@@ -378,11 +447,7 @@ def main():
     args = ap.parse_args()
     ROOT, VERBOSE = os.path.abspath(args.root), args.verbose
     os.makedirs(ROOT, exist_ok=True)
-    print(
-        f"[mock-hub] {args.host}:{args.port} serving {ROOT} as /ext",
-        file=sys.stderr,
-        flush=True,
-    )
+    print(f"[mock-hub] {args.host}:{args.port} serving {ROOT} as /ext", file=sys.stderr, flush=True)
     ThreadingHTTPServer((args.host, args.port), Handler).serve_forever()
 
 

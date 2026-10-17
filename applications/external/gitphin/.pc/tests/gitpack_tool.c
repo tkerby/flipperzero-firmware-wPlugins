@@ -2,10 +2,10 @@
  *   gitpack_tool pack <repo.git> [max_objects] [--stop-after K]
  *   gitpack_tool deflate <in> <out>
  * malloc of the library code is wrapped (malloc_wrap.h) to report the peak heap. */
-#include "../../flipper_app/hub_deflate.h"
-#include "../../flipper_app/hub_gitobj.h"
-#include "../../flipper_app/hub_gitpack.h"
-#include "../../flipper_app/hub_gitgraph.h"
+#include "../../flipper_app/src/pack/hub_deflate.h"
+#include "../../flipper_app/src/obj/hub_gitobj.h"
+#include "../../flipper_app/src/pack/hub_gitpack.h"
+#include "../../flipper_app/src/pack/hub_gitgraph.h"
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,0 +1,55 @@
+/* ---- shell ---- */
+#app{display:grid;grid-template-rows:48px 1fr;grid-template-columns:var(--side-w) 1fr;height:100vh;height:100dvh}
+.top{grid-column:1/-1;display:flex;align-items:center;gap:var(--s3);padding:0 var(--s3);background:var(--chrome);color:var(--on-chrome2);border-bottom:2px solid var(--on-chrome);min-width:0}
+.brand{display:flex;align-items:center;gap:var(--s2);text-decoration:none;color:var(--on-chrome);flex:none}
+.brand .logo{width:34px;height:25px;fill:currentColor;shape-rendering:crispEdges}
+.dev{color:var(--on-chrome2);font-size:var(--fs-s);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
+.crumb{display:flex;align-items:center;gap:var(--s1);min-width:0;flex:1;overflow:hidden;white-space:nowrap}
+.crumb a,.crumb span{color:var(--on-chrome2);text-decoration:none;overflow:hidden;text-overflow:ellipsis}
+.crumb a:hover{color:var(--on-chrome)}
+.crumb b{color:var(--on-chrome);font-weight:600}
+.gsearch{display:flex;align-items:center;gap:var(--s2);height:32px;padding:0 var(--s2);border:2px solid var(--on-chrome);background:var(--chrome);flex:0 1 260px;min-width:0;color:var(--on-chrome)}
+.gsearch input[type=search]{flex:1;min-width:0;min-height:0;border:0;background:none;color:var(--on-chrome2);font:inherit;outline:0;padding:0}
+.gsearch input[type=search]::placeholder{color:#a58a63}
+.gsearch kbd{font:11px ui-monospace,monospace;border:1px solid var(--on-chrome);padding:0 4px;color:var(--on-chrome)}
+.gsearch:focus-within{background:var(--chrome2)}
+.ib{width:32px;height:32px;min-height:0;padding:0;border:2px solid var(--on-chrome);background:var(--chrome);color:var(--on-chrome);box-shadow:none;display:inline-flex;align-items:center;justify-content:center;flex:none;cursor:pointer}
+.ib:hover{background:var(--on-chrome);color:var(--chrome)}
+.ib:active{transform:translate(1px,1px)}
+#menubtn{display:none}
+.side{background:var(--chrome);color:var(--on-chrome2);overflow:auto;padding:var(--s3) 0;border-right:2px solid var(--on-chrome);min-height:0}
+.side .grp{padding:var(--s2) var(--s3) var(--s1);color:var(--on-chrome);opacity:.85}
+.side a.si{display:flex;align-items:center;gap:var(--s2);height:36px;padding:0 var(--s3);color:var(--on-chrome2);text-decoration:none;border-left:4px solid transparent;white-space:nowrap}
+.side a.si:hover{background:var(--chrome2);color:var(--on-chrome)}
+.side a.si.on{background:var(--on-chrome);color:var(--chrome);border-left-color:var(--on-chrome2)}
+.side a.si .n{margin-left:auto;font-size:11px;font-family:ui-monospace,monospace;border:1px solid currentColor;padding:0 4px}
+.side a.si .lb{overflow:hidden;text-overflow:ellipsis}
+.side .sub{padding-left:var(--s3)}
+.side .rname{padding:0 var(--s3) var(--s2);color:var(--on-chrome);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.main{padding:var(--s4) var(--s5);min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.scrim{display:none}
+.panel{display:none;min-height:0}
+.panel.active{display:flex;flex-direction:column;flex:1;overflow:auto}
+.pt{margin:0 0 var(--s3);color:var(--chrome);display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap}
+:root[data-theme=dark] .pt{color:var(--on-chrome)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .pt{color:var(--on-chrome)}}
+@media (max-width:1024px){
+:root{--side-w:56px}
+.side a.si .lb,.side a.si .n,.side .grp,.side .rname{display:none}
+.side a.si{justify-content:center;padding:0;border-left-width:0}
+.dev{display:none}
+}
+@media (max-width:720px){
+#app{grid-template-columns:1fr}
+#menubtn{display:inline-flex}
+.side{position:fixed;top:48px;bottom:0;left:0;width:260px;z-index:50;transform:translateX(-100%);transition:transform .15s steps(4)}
+.side a.si .lb,.side .grp,.side .rname{display:block}
+.side a.si .n{display:inline}
+.side a.si{justify-content:flex-start;padding:0 var(--s3);border-left-width:4px}
+body.nav-open .side{transform:none}
+body.nav-open .scrim{display:block;position:fixed;inset:48px 0 0 0;background:rgba(0,0,0,.55);z-index:40}
+.main{padding:var(--s2)}
+.crumb{display:none}
+.gsearch{flex:1}
+.gsearch kbd{display:none}
+}

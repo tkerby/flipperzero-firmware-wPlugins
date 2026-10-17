@@ -61,9 +61,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if u.path == "/api/info":
             return self.send(200, json.dumps(INFO).encode())
         if u.path == "/pc/hub":
-            return self.send(
-                200, b'{"connected":true,"busy_s":null,"stuck_after_s":180}'
-            )
+            return self.send(200, b'{"connected":true,"busy_s":null,"stuck_after_s":180}')
+        if u.path == "/api/file":
+            return self.file(q.get("path", ""))
         if u.path in ("/api/git/doc", "/api/git/docs"):
             return self.doc(u.path, q)
         if u.path.startswith("/api/git/") or u.path.startswith("/git/"):
@@ -84,12 +84,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 for n in sorted(os.listdir(d)):
                     p = os.path.join(d, n)
                     if os.path.isfile(p):
-                        keys.append(
-                            {
-                                "key": q.get("prefix", "") + "/" + n,
-                                "size": os.path.getsize(p),
-                            }
-                        )
+                        keys.append({"key": q.get("prefix", "") + "/" + n, "size": os.path.getsize(p)})
             return self.send(200, json.dumps({"ok": True, "keys": keys}).encode())
         p = os.path.join(hub, q.get("key", ""))
         if ".." in q.get("key", "") or not os.path.isfile(p):
@@ -98,6 +93,16 @@ class Handler(http.server.BaseHTTPRequestHandler):
             body = f.read()
         ctype = mimetypes.guess_type(p)[0] or "application/octet-stream"
         return self.send(200, body, ctype, {"ETag": '"%08x"' % zlib.crc32(body)})
+
+    def file(self, path):
+        # read-only: only the repo folders (avatars are <repo>.git/hub/avatar.png)
+        pre = "/ext/apps_data/gitphin/git/"
+        rel = path[len(pre):] if path.startswith(pre) else ""
+        p = os.path.join(ROOT, "git", rel)
+        if not rel or ".." in rel.split("/") or not os.path.isfile(p):
+            return self.send(404, b'{"ok":false,"error":"file not found"}')
+        with open(p, "rb") as f:
+            return self.send(200, f.read(), mimetypes.guess_type(p)[0] or "application/octet-stream")
 
     def route(self, path, query):
         p = subprocess.run([BIN, ROOT, "GET", path, query], capture_output=True)

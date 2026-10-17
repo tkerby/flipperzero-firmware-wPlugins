@@ -3,11 +3,11 @@
 #define _GNU_SOURCE
 #include <furi.h>
 #include <storage/storage.h>
-#include "../../flipper_app/hub_req.h"
-#include "../../flipper_app/hub_git.h"
-#include "../../flipper_app/hub_plugin.h"
-#include "../../flipper_app/hub_gitpack.h"
-#include "../../flipper_app/hub_gitgraph.h"
+#include "../../flipper_app/src/http/hub_req.h"
+#include "../../flipper_app/src/git/hub_git.h"
+#include "../../flipper_app/src/http/hub_plugin.h"
+#include "../../flipper_app/src/pack/hub_gitpack.h"
+#include "../../flipper_app/src/pack/hub_gitgraph.h"
 
 #include <dirent.h>
 #include <sys/stat.h>
