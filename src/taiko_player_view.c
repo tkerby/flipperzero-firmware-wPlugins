@@ -35,7 +35,7 @@ static void draw_menu(Canvas* canvas, const TaikoMenu* menu) {
         "Restore Defaults",
         "Exit"};
     static const char* gpio_labels[] = {
-        "Return", "Left Ka", "Left Dong", "Right Dong", "Right Ka"};
+        "Return", "Left Ka", "Left Dong", "Right Dong", "Right Ka", "Pulse Width"};
     const char* const* labels = menu->gpio_settings ? gpio_labels : main_labels;
     const size_t count = menu->gpio_settings ? TaikoGpioMenuItemCount : TaikoMenuItemCount;
     const size_t selection = menu->gpio_settings ? (size_t)menu->gpio_selected :
@@ -52,7 +52,9 @@ static void draw_menu(Canvas* canvas, const TaikoMenu* menu) {
         canvas_draw_str(canvas, 6, y, labels[i]);
         char value[16] = "";
         if(menu->gpio_settings) {
-            if(i != TaikoGpioMenuReturn)
+            if(i == TaikoGpioMenuPulseWidth)
+                snprintf(value, sizeof(value), "< %lums >", menu->gpio.pulse_ms);
+            else if(i >= TaikoGpioMenuLeftKa && i <= TaikoGpioMenuRightKa)
                 snprintf(
                     value, sizeof(value), "< %s >", taiko_gpio_pin_name(menu->gpio.pins[i - 1]));
         } else if(i == TaikoMenuGpioOutput) {

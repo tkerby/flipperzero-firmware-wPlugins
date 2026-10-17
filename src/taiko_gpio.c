@@ -44,7 +44,8 @@ TaikoGpio* taiko_gpio_alloc(void) {
 
 bool taiko_gpio_configure(TaikoGpio* gpio, const TaikoGpioConfig* config) {
     if(!taiko_gpio_config_valid(config)) return false;
-    bool changed = config->enabled != gpio->config.enabled;
+    bool changed = config->enabled != gpio->config.enabled ||
+                   config->pulse_ms != gpio->config.pulse_ms;
     for(size_t i = 0; i < COUNT_OF(gpio->outputs); i++)
         if(config->pins[i] != gpio->config.pins[i]) changed = true;
     if(!changed) return true;
@@ -78,7 +79,8 @@ void taiko_gpio_pulse(TaikoGpio* gpio, bool right, bool rim) {
     furi_timer_flush();
     furi_hal_gpio_write(output->pin, false);
     furi_hal_gpio_write(output->pin, true);
-    furi_check(furi_timer_start(output->timer, furi_ms_to_ticks(TAIKO_HIT_MS)) == FuriStatusOk);
+    furi_check(
+        furi_timer_start(output->timer, furi_ms_to_ticks(gpio->config.pulse_ms)) == FuriStatusOk);
 }
 
 void taiko_gpio_reset(TaikoGpio* gpio) {

@@ -16,6 +16,7 @@ typedef struct {
     uint32_t playback_tenths;
     uint32_t scroll_tenths;
     uint32_t frame_rate;
+    uint32_t gpio_pulse_ms;
     TaikoGpioPin pins[TaikoGpioOutputCount];
 } TaikoSettings;
 

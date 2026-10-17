@@ -45,7 +45,17 @@ void taiko_menu_move(TaikoMenu* menu, bool down) {
 void taiko_menu_adjust(TaikoMenu* menu, bool forward) {
     if(!menu->open) return;
     if(menu->gpio_settings) {
-        if(menu->gpio_selected != TaikoGpioMenuReturn)
+        if(menu->gpio_selected == TaikoGpioMenuPulseWidth) {
+            uint32_t* pulse = &menu->gpio.pulse_ms;
+            if(forward)
+                *pulse = *pulse < TAIKO_GPIO_PULSE_MAX_MS ? *pulse + TAIKO_GPIO_PULSE_STEP_MS :
+                                                            TAIKO_GPIO_PULSE_MIN_MS;
+            else
+                *pulse = *pulse > TAIKO_GPIO_PULSE_MIN_MS ? *pulse - TAIKO_GPIO_PULSE_STEP_MS :
+                                                            TAIKO_GPIO_PULSE_MAX_MS;
+        } else if(
+            menu->gpio_selected >= TaikoGpioMenuLeftKa &&
+            menu->gpio_selected <= TaikoGpioMenuRightKa)
             taiko_gpio_config_adjust(&menu->gpio, menu->gpio_selected - 1, forward);
         return;
     }

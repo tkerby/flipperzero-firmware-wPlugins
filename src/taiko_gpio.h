@@ -5,8 +5,6 @@
 
 #include "taiko_gpio_config.h"
 
-#define TAIKO_HIT_MS 70U
-
 typedef struct TaikoGpio TaikoGpio;
 
 /* Owned by the player thread. Disabled by default, without configuring any pins.

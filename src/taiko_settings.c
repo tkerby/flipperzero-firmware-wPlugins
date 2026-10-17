@@ -16,7 +16,8 @@ void taiko_settings_capture(TaikoSettings* settings, const TaikoMenu* menu, uint
         .forward_ms = taiko_menu_forward_ms(menu),
         .playback_tenths = taiko_menu_playback_tenths(menu),
         .scroll_tenths = taiko_menu_scroll_tenths(menu),
-        .frame_rate = menu->frame_rate};
+        .frame_rate = menu->frame_rate,
+        .gpio_pulse_ms = menu->gpio.pulse_ms};
     memcpy(settings->pins, menu->gpio.pins, sizeof(settings->pins));
 }
 
@@ -68,7 +69,11 @@ bool taiko_settings_validate(TaikoSettings* settings) {
             valid = false;
         }
     }
-    TaikoGpioConfig gpio = {.enabled = false};
+    if(!taiko_gpio_pulse_valid(settings->gpio_pulse_ms)) {
+        settings->gpio_pulse_ms = defaults.gpio_pulse_ms;
+        valid = false;
+    }
+    TaikoGpioConfig gpio = taiko_gpio_default_config();
     memcpy(gpio.pins, settings->pins, sizeof(gpio.pins));
     if(!taiko_gpio_config_valid(&gpio)) {
         memcpy(settings->pins, defaults.pins, sizeof(settings->pins));
@@ -88,6 +93,7 @@ void taiko_settings_apply(const TaikoSettings* settings, TaikoMenu* menu, uint8_
     taiko_menu_set_value(menu, TaikoMenuPlaybackSpeed, valid.playback_tenths);
     taiko_menu_set_value(menu, TaikoMenuScrollSpeed, valid.scroll_tenths);
     taiko_menu_set_value(menu, TaikoMenuFrameRate, valid.frame_rate);
+    menu->gpio.pulse_ms = valid.gpio_pulse_ms;
     memcpy(menu->gpio.pins, valid.pins, sizeof(menu->gpio.pins));
     menu->gpio.enabled = false;
 }
@@ -97,7 +103,7 @@ bool taiko_settings_equal(const TaikoSettings* a, const TaikoSettings* b) {
            a->ka_volume == b->ka_volume && a->backward_ms == b->backward_ms &&
            a->forward_ms == b->forward_ms && a->playback_tenths == b->playback_tenths &&
            a->scroll_tenths == b->scroll_tenths && a->frame_rate == b->frame_rate &&
-           memcmp(a->pins, b->pins, sizeof(a->pins)) == 0;
+           a->gpio_pulse_ms == b->gpio_pulse_ms && memcmp(a->pins, b->pins, sizeof(a->pins)) == 0;
 }
 
 bool taiko_settings_parse_uint(const char* text, uint32_t* value) {

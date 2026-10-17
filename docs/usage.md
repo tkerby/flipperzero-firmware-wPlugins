@@ -104,9 +104,9 @@ HS 的计算方式见[谱面支持](chart-support.md)。
 
 ## GPIO 输出
 
-`GPIO Output` 默认 **Off**，关闭时不触发 GPIO，应用启动时也不会配置外部引脚。使用左右键或 OK 切换 On / Off。`GPIO Setting` 为二级菜单，依次为 Return、Left Ka、Left Dong、Right Dong、Right Ka；上下选择鼓点，左右键切换引脚，OK 切换到下一个可用引脚。短按返回或选择 Return 回到一级菜单，再次短按返回恢复播放。
+`GPIO Output` 默认 **Off**，关闭时不触发 GPIO，应用启动时也不会配置外部引脚。使用左右键或 OK 切换 On / Off。`GPIO Setting` 为二级菜单，依次为 Return、Left Ka、Left Dong、Right Dong、Right Ka、Pulse Width。上下选择项目，四路鼓点使用左右键切换引脚，OK 切换到下一个可用引脚；Pulse Width 使用左右键调整脉冲时长，OK 增加一档，到边界后循环。短按返回或选择 Return 回到一级菜单，再次短按返回恢复播放。
 
-可选引脚为 **A7、A6、A4、B3、B2、C3、C1、C0**，自动跳过其他鼓点已使用的引脚，四路保持独立。关闭输出时也可修改映射；开关与映射在换曲时保留；引脚映射跨次运行保存，输出开关每次启动均为 Off。首次使用及恢复默认时的映射如下：
+可选引脚为 **A7、A6、A4、B3、B2、C3、C1、C0**，自动跳过其他鼓点已使用的引脚，四路保持独立。关闭输出时也可修改映射；开关与映射在换曲时保留；引脚映射与脉冲时长跨次运行保存，输出开关每次启动均为 Off。首次使用及恢复默认时的映射如下：
 
 | 鼓点 | GPIO | 排针编号 |
 | --- | --- | --- |
@@ -117,21 +117,21 @@ HS 的计算方式见[谱面支持](chart-support.md)。
 
 输出为 **3.3 V 逻辑信号**，接收端应与 Flipper 的 GND 共地。
 
-每个音符输出一个 **70 ms 高电平脉冲**，空闲为低电平。四路独立计时，不同路的脉冲可以重叠；同一路重复触发时，先拉低再拉高，并重新计时。软件定时器的实际脉宽会有少量调度抖动。
+每个音符输出一个高电平脉冲，默认 **70 ms**，可在 **GPIO Setting → Pulse Width** 中调整为 **25～100 ms，每档 5 ms**；四路共用该设置，脉宽不随播放速度变化，空闲为低电平。四路独立计时，不同路的脉冲可以重叠；同一路重复触发时，先拉低再拉高，并重新计时。软件定时器的实际脉宽会有少量调度抖动。
 
-暂停、跳转、播放结束、出错或退出时，清空已启用的输出。关闭 GPIO 或更换引脚时，先取消脉冲并拉低输出，再将原引脚恢复为下拉输入；退出应用时释放已使用的引脚。GPIO 开关不影响音频和屏幕鼓面指示。音频只输出到内置扬声器。
+暂停、跳转、播放结束、出错或退出时，清空已启用的输出。关闭 GPIO、更换引脚或修改脉宽时，先取消脉冲并拉低输出，再将原引脚恢复为下拉输入；退出应用时释放已使用的引脚。GPIO 开关不影响音频和屏幕鼓面指示。音频只输出到内置扬声器。
 
-默认映射与可选引脚位于 [taiko_gpio_config.c](https://github.com/ZeroNinx/flipper-zero-taiko-player/blob/main/src/taiko_gpio_config.c)，脉宽由 [taiko_gpio.h](https://github.com/ZeroNinx/flipper-zero-taiko-player/blob/main/src/taiko_gpio.h) 中的 `TAIKO_HIT_MS` 控制。
+默认映射与可选引脚位于 [taiko_gpio_config.c](https://github.com/ZeroNinx/flipper-zero-taiko-player/blob/main/src/taiko_gpio_config.c)，脉宽范围和默认值位于 [taiko_gpio_config.h](https://github.com/ZeroNinx/flipper-zero-taiko-player/blob/main/src/taiko_gpio_config.h)。屏幕鼓面和命中闪动仍保持 70 ms，与 GPIO 脉宽独立。
 
 ## 设置保存
 
-配置文件位于 `/ext/apps_data/taiko_player/settings.ff`，采用 FlipperFormat 文本格式。保存总音量、咚/咔音量、前后跳转间隔、播放速度、谱面流速、刷新率和四路 GPIO 引脚名称。GPIO 输出开关每次启动保持关闭；每首曲目仍优先选择 Oni，没有时选择最高难度，选曲默认目录仍为 `songs/`。
+配置文件位于 `/ext/apps_data/taiko_player/settings.ff`，采用 FlipperFormat 文本格式。保存总音量、咚/咔音量、前后跳转间隔、播放速度、谱面流速、刷新率、GPIO 脉冲时长和四路 GPIO 引脚名称。GPIO 输出开关每次启动保持关闭；每首曲目仍优先选择 Oni，没有时选择最高难度，选曲默认目录仍为 `songs/`。
 
 修改先在内存中生效，有变更时才写卡。打开菜单、从一级菜单返回播放或换曲、正常退出时保存；选择 Restore Defaults 会立即恢复并保存默认值，保持当前曲目、难度和播放位置，GPIO 输出关闭。播放界面上下调整总音量后，在下一次打开菜单或正常退出时保存，因此直接断电可能丢失最近尚未保存的音量变更。写卡集中在音频暂停或停止时。
 
 保存时先完整写入临时文件，再替换正式文件。文件缺失或版本不支持时采用默认配置；无效或缺失字段回退到对应默认值，重复或无效的 GPIO 引脚映射整体恢复为默认四路。保存失败会显示提示，当前设置仍可继续使用。
 
-示例配置中，间隔单位为毫秒，速度为倍率的十倍（`10` 表示 `1.0x`），音量为百分比：
+示例配置中，间隔与 GPIO 脉冲时长的单位为毫秒，速度为倍率的十倍（`10` 表示 `1.0x`），音量为百分比：
 
 ```text
 Filetype: Taiko Player Settings
@@ -144,10 +144,11 @@ ForwardInterval: 5000
 PlaybackSpeed: 10
 ScrollSpeed: 10
 FrameRate: 50
+GpioPulseMs: 70
 LeftKaPin: A7
 LeftDongPin: A6
 RightDongPin: A4
 RightKaPin: B3
 ```
 
-旧版配置缺少 `FrameRate` 时采用 50 FPS，其余有效设置继续保留；后续保存时补上该字段，配置版本仍为 1。
+旧版配置缺少 `FrameRate` 时采用 50 FPS，缺少 `GpioPulseMs` 时采用 70 ms，其余有效设置继续保留；后续保存时补上缺少的字段，配置版本仍为 1。

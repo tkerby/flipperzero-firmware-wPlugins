@@ -18,8 +18,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#define PLAYER_PATH EXT_PATH("apps_data/taiko_player")
-#define SONGS_PATH  PLAYER_PATH "/songs"
+#define PLAYER_PATH  EXT_PATH("apps_data/taiko_player")
+#define SONGS_PATH   PLAYER_PATH "/songs"
+#define HIT_FLASH_MS 70U
 
 typedef struct {
     Storage* storage;
@@ -270,7 +271,7 @@ static bool play_song(TaikoPlayer* app, const char* path) {
                 if(hit.time_ms < 0 || (int64_t)position - hit.time_ms > 120) continue;
                 taiko_gpio_pulse(app->gpio, hit.right, hit.rim);
                 furi_mutex_acquire(app->mutex, FuriWaitForever);
-                app->view.hit_until = furi_get_tick() + furi_ms_to_ticks(TAIKO_HIT_MS);
+                app->view.hit_until = furi_get_tick() + furi_ms_to_ticks(HIT_FLASH_MS);
                 if(!hit.roll) app->view.target_hit_until = app->view.hit_until;
                 app->view.hit_right = hit.right;
                 app->view.hit_rim = hit.rim;

@@ -23,7 +23,8 @@ static const SettingsField fields[] = {
     {"ForwardInterval", offsetof(TaikoSettings, forward_ms)},
     {"PlaybackSpeed", offsetof(TaikoSettings, playback_tenths)},
     {"ScrollSpeed", offsetof(TaikoSettings, scroll_tenths)},
-    {"FrameRate", offsetof(TaikoSettings, frame_rate)}};
+    {"FrameRate", offsetof(TaikoSettings, frame_rate)},
+    {"GpioPulseMs", offsetof(TaikoSettings, gpio_pulse_ms)}};
 static const char* pin_keys[] = {"LeftKaPin", "LeftDongPin", "RightDongPin", "RightKaPin"};
 
 bool taiko_settings_load(Storage* storage, TaikoSettings* settings) {

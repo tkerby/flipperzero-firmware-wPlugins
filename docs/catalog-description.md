@@ -29,7 +29,7 @@ Follow the [English setup instructions](https://github.com/ZeroNinx/flipper-zero
 - Short Back: open the menu or return.
 - Hold Back during playback: exit.
 
-GPIO is optional. It uses 3.3 V logic and 70 ms high pulses; connect the receiver to Flipper's GND. Choose pins in GPIO Setting before enabling GPIO Output.
+GPIO is optional. It uses 3.3 V logic and 70 ms high pulses by default (25–100 ms in 5 ms steps, set in GPIO Setting → Pulse Width); connect the receiver to Flipper's GND. Choose pins in GPIO Setting before enabling GPIO Output.
 
 ## Limitations
 

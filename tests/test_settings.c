@@ -13,6 +13,7 @@ int main(void) {
     assert(defaults.backward_ms == 5000 && defaults.forward_ms == 5000);
     assert(defaults.playback_tenths == 10 && defaults.scroll_tenths == 10);
     assert(defaults.frame_rate == 50);
+    assert(defaults.gpio_pulse_ms == 70);
     assert(taiko_settings_validate(&defaults));
 
     settings = defaults;
@@ -24,6 +25,7 @@ int main(void) {
     settings.playback_tenths = 7;
     settings.scroll_tenths = 30;
     settings.frame_rate = 37;
+    settings.gpio_pulse_ms = 85;
     settings.pins[TaikoGpioLeftKa] = TaikoGpioPinC0;
     assert(taiko_settings_validate(&settings));
     TaikoMenu menu;
@@ -43,6 +45,7 @@ int main(void) {
     assert(taiko_menu_backward_ms(&menu) == 1000 && taiko_menu_forward_ms(&menu) == 10000);
     assert(taiko_menu_playback_tenths(&menu) == 7 && taiko_menu_scroll_tenths(&menu) == 30);
     assert(menu.frame_rate == 37);
+    assert(menu.gpio.pulse_ms == 85);
     taiko_settings_capture(&captured, &menu, volume);
     assert(taiko_settings_equal(&settings, &captured));
     menu.gpio.enabled = true;
@@ -57,6 +60,28 @@ int main(void) {
     assert(menu.open && menu.course == TjaCourseEasy && menu.selected == TaikoMenuNewSong);
     assert(!menu.gpio.enabled);
     assert(menu.frame_rate == 50);
+    assert(menu.gpio.pulse_ms == 70);
+
+    for(unsigned pulse = 25; pulse <= 100; pulse += 5) {
+        settings = defaults;
+        settings.gpio_pulse_ms = pulse;
+        assert(taiko_settings_validate(&settings));
+        assert(taiko_settings_equal(&settings, &defaults) == (pulse == 70));
+        taiko_settings_apply(&settings, &menu, &volume);
+        assert(menu.gpio.pulse_ms == pulse && !menu.gpio.enabled);
+        taiko_settings_capture(&captured, &menu, volume);
+        assert(taiko_settings_equal(&settings, &captured));
+    }
+    const uint32_t invalid_pulses[] = {0, 24, 26, 99, 101, UINT32_MAX};
+    for(unsigned i = 0; i < sizeof(invalid_pulses) / sizeof(invalid_pulses[0]); i++) {
+        settings = defaults;
+        settings.gpio_pulse_ms = invalid_pulses[i];
+        settings.volume = 40;
+        settings.pins[TaikoGpioLeftKa] = TaikoGpioPinC0;
+        assert(!taiko_settings_validate(&settings));
+        assert(settings.gpio_pulse_ms == 70 && settings.volume == 40);
+        assert(settings.pins[TaikoGpioLeftKa] == TaikoGpioPinC0);
+    }
 
     /* Boosted master volume persists without expanding the per-drum ranges. */
     for(unsigned master = 0; master <= 200; master += 10) {

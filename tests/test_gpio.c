@@ -31,6 +31,7 @@ static unsigned writes;
 static unsigned inits;
 static uint32_t now;
 static FuriTimer* queued_callback;
+static uint32_t expected_pulse = 70;
 
 FuriTimer* furi_timer_alloc(FuriTimerCallback callback, FuriTimerType type, void* context) {
     assert(type == FuriTimerTypeOnce);
@@ -48,7 +49,7 @@ FuriTimer* furi_timer_alloc(FuriTimerCallback callback, FuriTimerType type, void
 }
 
 FuriStatus furi_timer_start(FuriTimer* timer, uint32_t ticks) {
-    assert(ticks == 70);
+    assert(ticks == expected_pulse);
     timer->deadline = now + ticks;
     timer->running = true;
     return FuriStatusOk;
@@ -126,10 +127,11 @@ int main(void) {
     assert(writes == 0 && inits == 0);
     gpio = taiko_gpio_alloc();
     TaikoGpioConfig config = taiko_gpio_default_config();
-    assert(!config.enabled);
+    assert(!config.enabled && config.pulse_ms == 70);
     config.pins[TaikoGpioLeftKa] = TaikoGpioPinC0;
+    config.pulse_ms = 100;
     assert(taiko_gpio_configure(gpio, &config));
-    assert(writes == 0 && inits == 0); /* Can edit mappings while disabled. */
+    assert(writes == 0 && inits == 0); /* Can edit mappings and width while disabled. */
     config = taiko_gpio_default_config();
     config.enabled = true;
     assert(taiko_gpio_configure(gpio, &config));
@@ -149,6 +151,34 @@ int main(void) {
         assert_low();
     }
 
+    /* Every selectable pulse width reaches the timer and lasts the full interval. */
+    for(uint32_t pulse = 25; pulse <= 100; pulse += 5) {
+        config.pulse_ms = pulse;
+        expected_pulse = pulse;
+        assert(taiko_gpio_configure(gpio, &config));
+        taiko_gpio_pulse(gpio, true, false);
+        advance(pulse - 1);
+        assert(pins[2]);
+        advance(1);
+        assert_low();
+    }
+    /* A width-only change drains the old callback before starting a new pulse. */
+    taiko_gpio_pulse(gpio, true, false);
+    advance(10);
+    queued_callback = timers[TaikoGpioRightDon];
+    config.pulse_ms = 25;
+    expected_pulse = 25;
+    assert(taiko_gpio_configure(gpio, &config));
+    assert_low();
+    taiko_gpio_pulse(gpio, true, false);
+    advance(24);
+    assert(pins[2]);
+    advance(1);
+    assert_low();
+    config.pulse_ms = 70;
+    expected_pulse = 70;
+    assert(taiko_gpio_configure(gpio, &config));
+
     /* Different outputs retain their full pulse even when notes overlap. */
     taiko_gpio_pulse(gpio, true, false);
     advance(20);
@@ -160,7 +190,7 @@ int main(void) {
 
     /* Same output retriggers with another rising edge and a fresh 70 ms. */
     taiko_gpio_pulse(gpio, true, false);
-    advance(50);
+    advance(30);
     unsigned edges = rising_edges[2];
     queued_callback = timers[2];
     taiko_gpio_pulse(gpio, true, false);
@@ -210,6 +240,20 @@ int main(void) {
     taiko_gpio_pulse(gpio, true, false);
     assert(pins[TaikoGpioPinC1]);
 
+    const uint32_t invalid_pulses[] = {0, 24, 26, 99, 101, UINT32_MAX};
+    previous_writes = writes;
+    for(unsigned i = 0; i < COUNT_OF(invalid_pulses); i++) {
+        invalid = config;
+        invalid.pulse_ms = invalid_pulses[i];
+        assert(!taiko_gpio_configure(gpio, &invalid));
+        assert(pins[TaikoGpioPinC1] && writes == previous_writes);
+    }
+    advance(69);
+    assert(pins[TaikoGpioPinC1]);
+    advance(1);
+    assert_low();
+
+    taiko_gpio_pulse(gpio, true, false);
     queued_callback = timers[TaikoGpioRightDon];
     config.enabled = false;
     assert(taiko_gpio_configure(gpio, &config));
@@ -239,6 +283,6 @@ int main(void) {
     }
     taiko_gpio_free(gpio);
     puts(
-        "GPIO defaults, enable/disable, remapping, pulse timing, retrigger and cleanup tests passed");
+        "GPIO defaults, enable/disable, remapping, adjustable pulse timing, retrigger and cleanup tests passed");
     return 0;
 }

@@ -37,6 +37,7 @@ typedef enum {
     TaikoGpioMenuLeftDon,
     TaikoGpioMenuRightDon,
     TaikoGpioMenuRightKa,
+    TaikoGpioMenuPulseWidth,
     TaikoGpioMenuItemCount,
 } TaikoGpioMenuItem;
 
