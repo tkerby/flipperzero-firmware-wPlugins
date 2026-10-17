@@ -641,12 +641,17 @@ typedef struct {
     bool success;
 } IsoUidWrite;
 
-static bool iso_send_uid_frame(Iso15693_3Poller* poller, const uint8_t* frame, size_t length) {
+static bool iso_send_uid_frame(Iso15693_3Poller* poller, const uint8_t* frame, size_t length, bool allow_timeout) {
     BitBuffer* tx = bit_buffer_alloc(16);
     BitBuffer* rx = bit_buffer_alloc(16);
     bit_buffer_copy_bytes(tx, frame, length);
-    bool result = iso15693_3_poller_send_frame(poller, tx, rx, 1356000U) == Iso15693_3ErrorNone &&
+    Iso15693_3Error error = iso15693_3_poller_send_frame(poller, tx, rx, 1356000U);
+    FURI_LOG_I("MTools", "ISO15 cmd=%02X block=%02X error=%u len=%u resp=%02X",
+               frame[1], frame[2], error, (unsigned)bit_buffer_get_size_bytes(rx),
+               bit_buffer_get_size_bytes(rx) ? bit_buffer_get_byte(rx, 0) : 0);
+    bool result = error == Iso15693_3ErrorNone &&
                   bit_buffer_get_size_bytes(rx) >= 1 && !(bit_buffer_get_byte(rx, 0) & 1U);
+    if(allow_timeout && error == Iso15693_3ErrorTimeout) result = true;
     bit_buffer_free(rx);
     bit_buffer_free(tx);
     return result;
@@ -659,20 +664,23 @@ static NfcCommand iso_uid_write_callback(NfcGenericEvent event, void* context) {
     if(poller_event->type != Iso15693_3PollerEventTypeReady) return NfcCommandContinue;
     Iso15693_3Poller* poller = event.instance;
     bool valid = true;
-    uint8_t block_count = 0;
     if(write->generation == 1) {
-        Iso15693_3SystemInfo info = {0};
-        valid = iso15693_3_poller_get_system_info(poller, &info) == Iso15693_3ErrorNone &&
-                info.block_size == 4 && info.block_count == 28 && info.ic_ref == 0x01;
-        block_count = info.block_count;
+        /* Proxmark3 SetTag15693Uid: unlock the hidden configuration first.
+         * These are fixed magic addresses, unrelated to advertised capacity. */
+        static const uint8_t unlock[][7] = {
+            {0x02, 0x21, 0x3E, 0x00, 0x00, 0x00, 0x00},
+            {0x02, 0x21, 0x3F, 0x69, 0x96, 0x00, 0x00},
+        };
+        for(size_t i = 0; i < COUNT_OF(unlock) && valid; i++)
+            valid = iso_send_uid_frame(poller, unlock[i], sizeof(unlock[i]), true);
     }
     for(uint8_t part = 0; part < 2 && valid; part++) {
         uint8_t frame[8];
         size_t length;
         if(write->generation == 1) {
-            frame[0] = 0x01;
+            frame[0] = 0x02;
             frame[1] = 0x21;
-            frame[2] = block_count + part;
+            frame[2] = 0x38 + part;
             length = 7;
         } else {
             frame[0] = 0x02;
@@ -683,7 +691,7 @@ static NfcCommand iso_uid_write_callback(NfcGenericEvent event, void* context) {
         }
         size_t offset = write->generation == 1 ? 3 : 4;
         for(size_t i = 0; i < 4; i++) frame[offset + i] = write->uid[(part ? 0 : 4) + (3 - i)];
-        valid = iso_send_uid_frame(poller, frame, length);
+        valid = iso_send_uid_frame(poller, frame, length, write->generation == 1);
     }
     write->success = valid;
     furi_semaphore_release(write->complete);
@@ -720,7 +728,11 @@ static bool write_iso15693_uid(Nfc* nfc, const uint8_t uid[8], uint8_t generatio
     nfc_poller_stop(poller);
     nfc_poller_free(poller);
     furi_semaphore_free(write.complete);
-    if(!completed || !write.success) return false;
+    if(!completed || !write.success) {
+        snprintf(magic_write_error, sizeof(magic_write_error), "ISO15 command failed");
+        FURI_LOG_W("MTools", "ISO15 Gen%u write commands failed", generation);
+        return false;
+    }
 
     /* Gen1 applies hidden UID blocks after the RF field is restarted. */
     furi_delay_ms(80);
@@ -733,6 +745,10 @@ static bool write_iso15693_uid(Nfc* nfc, const uint8_t uid[8], uint8_t generatio
     nfc_poller_stop(poller);
     nfc_poller_free(poller);
     furi_semaphore_free(verify.complete);
+    FURI_LOG_I("MTools", "ISO15 Gen%u UID verify: %s", generation,
+               completed && verify.matches ? "OK" : "failed");
+    if(!completed || !verify.matches)
+        snprintf(magic_write_error, sizeof(magic_write_error), "ISO15 verify failed");
     return completed && verify.matches;
 }
 
