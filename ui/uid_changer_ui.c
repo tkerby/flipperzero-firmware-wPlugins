@@ -3,7 +3,7 @@
 #include <furi.h>
 
 static const char* const gen_names[MagicGenCount] = {
-    "MFC GEN1 - UID", "MFC GEN2 - CUID", "MFC GEN3 - APDU",
+    "MFC GEN1A - UID", "MFC GEN2 - CUID", "MFC GEN3 - APDU",
     "MFC GEN4 - UMC", "MFC GDM  - USCUID",
     "ISO15 GEN1", "ISO15 GEN2", "ISO15 GEN3",
     "MFU/NTAG DirectWrite",

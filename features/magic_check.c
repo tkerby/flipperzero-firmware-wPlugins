@@ -148,8 +148,11 @@ bool mtools_magic_check_event(MToolsApp* app, uint32_t event) {
                 notification_message(app->notifications, &sequence_blink_start_blue);
                 if(mtools_detect_magic_tag(app->nfc, MagicGenMfcGen4))
                     app->magic_pending_status = 10;
-                else if(mtools_detect_magic_tag(app->nfc, MagicGenMfcGdm))
-                    app->magic_pending_status = 11;
+                else if(mtools_detect_magic_tag(app->nfc, MagicGenMfcGdm)) {
+                    /* GDM identity and Gen1a wakeup are independent capabilities. */
+                    app->magic_pending_status =
+                        mtools_detect_magic_tag(app->nfc, MagicGenMfcGen1a) ? 13 : 11;
+                }
                 else if(mtools_detect_magic_tag(app->nfc, MagicGenMfcGen3))
                     app->magic_pending_status = 9;
                 else if(mtools_detect_magic_tag(app->nfc, MagicGenMfcGen1a))

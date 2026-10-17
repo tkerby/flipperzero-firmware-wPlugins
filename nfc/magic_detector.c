@@ -149,13 +149,18 @@ static NfcCommand mfc_magic_probe_callback(NfcGenericEvent event, void* context)
             bit_buffer_reset(rx);
             error = iso14443_3a_poller_txrx(poller, tx, rx, 1356000U);
             if(error == Iso14443_3aErrorNone && mfc_ack(rx)) {
+                /* Gen1a wakeup is a capability, also supported by some GDM cards. */
+                if(probe->gen == MagicGenMfcGen1a) {
+                    probe->match = true;
+                    goto done;
+                }
                 const uint8_t config_command[2] = {0xE0, 0x00};
                 bit_buffer_copy_bytes(tx, config_command, sizeof(config_command));
                 bit_buffer_reset(rx);
                 bool gdm = iso14443_3a_poller_send_standard_frame(
                                poller, tx, rx, 1356000U) == Iso14443_3aErrorNone &&
                            bit_buffer_get_size_bytes(rx) == 16;
-                probe->match = probe->gen == MagicGenMfcGdm ? gdm : !gdm;
+                probe->match = gdm;
             }
         }
     } else if(probe->gen == MagicGenMfcGen3) {

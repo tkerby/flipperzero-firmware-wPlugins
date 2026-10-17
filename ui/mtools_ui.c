@@ -72,7 +72,7 @@ static void mtools_draw_about(Canvas* canvas, MToolsApp* app) {
         if(app->about_list_page == 0) {
             canvas_draw_str(canvas, 4, 24, "MTools NFC by MTCK");
             canvas_draw_str(canvas, 4, 34, "Supported magic cards:");
-            canvas_draw_str(canvas, 7, 44, "MFC GEN1 - UID");
+            canvas_draw_str(canvas, 7, 44, "MFC GEN1A - UID");
             canvas_draw_str(canvas, 7, 53, "MFC GEN2 - CUID");
             canvas_draw_str(canvas, 7, 62, "MFC GEN3 - APDU");
         } else {
@@ -151,12 +151,13 @@ static void mtools_draw_detail(Canvas* canvas, MToolsApp* app) {
         case 3: magic_name = "ISO15 GEN2"; break;
         case 4: magic_name = "ISO15 GEN1"; break;
         case 5: magic_name = "ISO15 GEN3"; break;
-        case 7: magic_name = "MFC GEN1 - UID"; break;
+        case 7: magic_name = "MFC GEN1A - UID"; break;
         case 8: magic_name = "MFC GEN2 - CUID"; break;
         case 9: magic_name = "MFC GEN3 - APDU"; break;
         case 10: magic_name = "MFC GEN4 - UMC"; break;
         case 11: magic_name = "MFC GDM - USCUID"; break;
         case 12: magic_name = "MFU GEN2 - DirectWrite"; break;
+        case 13: magic_name = "GDM/USCUID + GEN1A"; break;
         }
         if(app->magic_detecting) {
             canvas_draw_rframe(canvas, 2, 49, 124, 14, 3);

@@ -58,6 +58,9 @@ leave `7A FF` enabled so the card can be recovered through its magic wakeup.
 
 ## MFC Gen2 / CUID detection
 
+GDM/USCUID cards may also support Gen1a wakeup. Magic Check checks both
+capabilities and displays `GDM/USCUID + GEN1A` on one line when both respond.
+
 Magic Check follows Proxmark3's MifareCIdent approach: check known four-byte
 and seven-byte UID ATS fingerprints, even when SAK does not advertise
 ISO14443-4. If neither matches, authenticate block 0 with default Key B
