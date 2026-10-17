@@ -110,7 +110,8 @@ static void mtools_draw_detail(Canvas* canvas, MToolsApp* app) {
         if(app->magic_protocol == 1) {
             snprintf(line, sizeof(line), "%s", mtools_iso15_chip_name(app->magic_uid, app->magic_uid_len));
         } else if(app->magic_type2) {
-            snprintf(line, sizeof(line), "Ultralight / NTAG");
+            snprintf(line, sizeof(line), "%s", app->magic_type2_name ?
+                     app->magic_type2_name : "Ultralight / NTAG");
         } else if(app->magic_sak == 0x08) {
             snprintf(line, sizeof(line), "MFC 1K / %uB", app->magic_uid_len);
         } else if(app->magic_sak == 0x18) {

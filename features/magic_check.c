@@ -36,6 +36,7 @@ void mtools_magic_check_start(MToolsApp* app) {
     app->magic_read_handled = false;
     app->magic_finish_queued = false;
     app->magic_type2 = false;
+    app->magic_type2_name = NULL;
     app->magic_scan_found = false;
     mtools_card_scan_start(
         app->scanner, &app->magic_scanning, app->notifications, mtools_scanner_callback, app);
@@ -59,6 +60,8 @@ static NfcCommand mtools_magic_read_callback(NfcGenericEvent event, void* contex
          * The selected card's Classic SAK takes precedence over that hint. */
         if(app->magic_sak == 0x08 || app->magic_sak == 0x18)
             app->magic_type2 = false;
+        else if(app->magic_sak == 0x00 && uid_len == 7)
+            app->magic_type2 = true;
     } else if(event.protocol == NfcProtocolIso15693_3) {
         Iso15693_3PollerEvent* poller_event = event.event_data;
         if(poller_event->type != Iso15693_3PollerEventTypeReady) return NfcCommandContinue;
@@ -127,6 +130,8 @@ bool mtools_magic_check_event(MToolsApp* app, uint32_t event) {
     if(event < MTOOLS_EVENT_MFC || event > MTOOLS_EVENT_MAGIC_READ) return false;
     if(event == MTOOLS_EVENT_MAGIC_READ) {
         mtools_magic_check_stop(app);
+        if(app->magic_protocol == 0 && app->magic_type2)
+            app->magic_type2_name = mtools_type2_chip_name(app->nfc);
         if(app->magic_protocol == 1) {
             /* ISO15693 generation was checked while its original poller was ready. */
             app->magic_read_handled = true;

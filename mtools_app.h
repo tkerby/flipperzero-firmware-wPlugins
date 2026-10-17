@@ -56,6 +56,7 @@ typedef struct MToolsApp {
     bool magic_scan_found;
     uint8_t magic_protocol;
     bool magic_type2;
+    const char* magic_type2_name;
     uint8_t magic_iso_status;
     uint16_t magic_iso_blocks;
     uint8_t magic_iso_block_size;

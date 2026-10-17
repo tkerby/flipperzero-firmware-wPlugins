@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <nfc/nfc_scanner.h>
+#include <nfc/nfc.h>
 
 typedef struct {
     bool iso14443a;
@@ -14,4 +15,5 @@ typedef struct {
 /** Classify a scanner result once for all NFC tools. */
 MToolsCardProtocols mtools_card_protocols(const NfcScannerEvent* event);
 const char* mtools_iso15_chip_name(const uint8_t* uid, size_t uid_len);
+const char* mtools_type2_chip_name(Nfc* nfc);
 void mtools_uid_format_hex(char* output, size_t size, const uint8_t* uid, size_t uid_len);
