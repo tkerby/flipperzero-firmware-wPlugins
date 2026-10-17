@@ -7,7 +7,7 @@ The numbers come from a small companion script on your computer, sent over Bluet
 ## Setup
 
 1. On your Mac, with Claude Code logged in, run the companion script from https://github.com/cobanov/kota:
-   `uv run host/kota.py`
+   uv run host/kota.py
 2. Open Kota on the Flipper. It links within a few seconds.
 
 ## Screen
