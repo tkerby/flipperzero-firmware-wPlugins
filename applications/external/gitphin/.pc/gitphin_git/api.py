@@ -58,14 +58,21 @@ class Hub:
     """Plain HTTP client for the Flipper server (or the mock)."""
 
     def __init__(self, base=None):
-        base = base or os.environ.get("GITPHIN_URL") or os.environ.get("FLIPPER_HUB_URL") or DEFAULT_URL
+        base = (
+            base
+            or os.environ.get("GITPHIN_URL")
+            or os.environ.get("FLIPPER_HUB_URL")
+            or DEFAULT_URL
+        )
         parts = urlsplit(base if "//" in base else "http://" + base)
         self.host = parts.hostname or "127.0.0.1"
         self.port = parts.port or 80
         self.base = f"http://{self.host}:{self.port}"
         self.progress = True
 
-    def _open(self, method, path, query=None, body=None, headers=None, timeout=API_TIMEOUT_S):
+    def _open(
+        self, method, path, query=None, body=None, headers=None, timeout=API_TIMEOUT_S
+    ):
         if query:
             q = {k: v for k, v in query.items() if v is not None}
             path += "?" + urlencode(q, quote_via=quote, safe="/")
@@ -121,8 +128,13 @@ class Hub:
         meter = Meter(label, size, self.progress)
         with open(local_path, "rb") as f:
             body = MeteredFile(f, meter)
-            headers = {"Content-Length": str(size), "Content-Type": "application/octet-stream"}
-            conn, resp = self._open("PUT", "/api/file", {"path": remote_path}, body, headers, None)
+            headers = {
+                "Content-Length": str(size),
+                "Content-Type": "application/octet-stream",
+            }
+            conn, resp = self._open(
+                "PUT", "/api/file", {"path": remote_path}, body, headers, None
+            )
             try:
                 self._json(resp)
             finally:
@@ -170,13 +182,20 @@ class Meter:
     def add(self, n):
         self.seen += n
         if self.live and self.total:
-            print(f"\r[flipper-git] {self.label} {100 * self.seen // self.total}%",
-                  end="", file=sys.stderr, flush=True)
+            print(
+                f"\r[flipper-git] {self.label} {100 * self.seen // self.total}%",
+                end="",
+                file=sys.stderr,
+                flush=True,
+            )
 
     def done(self):
         if self.live:
-            print(f"\r[flipper-git] {self.label} done ({self.seen // 1024} KB)    ",
-                  file=sys.stderr, flush=True)
+            print(
+                f"\r[flipper-git] {self.label} done ({self.seen // 1024} KB)    ",
+                file=sys.stderr,
+                flush=True,
+            )
 
 
 class MeteredFile:

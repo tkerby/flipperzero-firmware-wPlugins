@@ -20,8 +20,8 @@ import time
 from . import activity, config, link, upstream
 
 NAME_RE = re.compile(r"^[A-Za-z0-9_-][A-Za-z0-9._-]{0,63}$")
-IDLE_S = 1.5       # the Flipper must be quiet this long before a repo starts
-PAUSE_S = 1.0      # pause between two repos
+IDLE_S = 1.5  # the Flipper must be quiet this long before a repo starts
+PAUSE_S = 1.0  # pause between two repos
 WAIT_STEP_S = 0.5
 
 
@@ -35,8 +35,12 @@ def git_cmd(args):
 
 
 def run_git(args):
-    env = dict(os.environ, GIT_TERMINAL_PROMPT="0", NO_PROXY="127.0.0.1,localhost", LC_ALL="C")
-    p = subprocess.run(git_cmd(args), env=env, stdin=subprocess.DEVNULL, capture_output=True, text=True)
+    env = dict(
+        os.environ, GIT_TERMINAL_PROMPT="0", NO_PROXY="127.0.0.1,localhost", LC_ALL="C"
+    )
+    p = subprocess.run(
+        git_cmd(args), env=env, stdin=subprocess.DEVNULL, capture_output=True, text=True
+    )
     if p.returncode != 0:
         lines = [l for l in (p.stderr or p.stdout).strip().splitlines() if l.strip()]
         raise RuntimeError(lines[-1] if lines else f"git exit {p.returncode}")
@@ -52,7 +56,13 @@ class Backup:
         self.thread = None
         self.auto_done = False
         self.notifier = notifier
-        self.state = {"running": False, "started": None, "finished": None, "summary": "", "repos": []}
+        self.state = {
+            "running": False,
+            "started": None,
+            "finished": None,
+            "summary": "",
+            "repos": [],
+        }
 
     # ---- entry points
     def on_connect(self):
@@ -68,15 +78,21 @@ class Backup:
             if self.thread and self.thread.is_alive():
                 return False
             self.thread = threading.Thread(target=self._run, daemon=True, name="backup")
-            self.state.update(running=True, started=int(time.time()), summary="", repos=[])
+            self.state.update(
+                running=True, started=int(time.time()), summary="", repos=[]
+            )
             self.thread.start()
             return True
 
     def status(self):
         cfg = config.backup()
         with self.lock:
-            return {"enabled": cfg["enabled"], "dir": cfg["dir"], **{k: v for k, v in self.state.items()},
-                    "repos": list(self.state["repos"])}
+            return {
+                "enabled": cfg["enabled"],
+                "dir": cfg["dir"],
+                **{k: v for k, v in self.state.items()},
+                "repos": list(self.state["repos"]),
+            }
 
     # ---- the run
     def _wait_idle(self):
@@ -94,8 +110,11 @@ class Backup:
         try:
             if not self._wait_idle():
                 raise RuntimeError("the Flipper app is not connected")
-            names = [r["name"] for r in upstream.api("/api/git/repos").get("repos", [])
-                     if NAME_RE.match(r.get("name", ""))]
+            names = [
+                r["name"]
+                for r in upstream.api("/api/git/repos").get("repos", [])
+                if NAME_RE.match(r.get("name", ""))
+            ]
             os.makedirs(cfg["dir"], exist_ok=True)
             for name in names:
                 if not self._wait_idle():
@@ -123,7 +142,13 @@ class Backup:
     def _one(self, folder, name):
         dest = os.path.join(folder, name + ".git")
         url = f"http://127.0.0.1:{upstream.PORT}/git/{name}.git"
-        res = {"name": name, "ok": True, "action": "update", "error": "", "time": int(time.time())}
+        res = {
+            "name": name,
+            "ok": True,
+            "action": "update",
+            "error": "",
+            "time": int(time.time()),
+        }
         try:
             if os.path.isdir(dest):
                 run_git(["-C", dest, "remote", "update", "--prune"])
@@ -144,8 +169,11 @@ class Backup:
 
 def notify_send(text):
     if shutil.which("notify-send"):
-        subprocess.Popen(["notify-send", "-a", "Gitphin", "Gitphin", text],
-                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.Popen(
+            ["notify-send", "-a", "Gitphin", "Gitphin", text],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
 
 
 BACKUP = Backup(notify_send)

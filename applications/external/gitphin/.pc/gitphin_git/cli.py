@@ -8,12 +8,15 @@ from . import cli_extra
 from .api import PACK_RE, Hub, HubError, check_name, log
 from .gitutil import fetch_packs, git, upload_pack
 
+
 def cmd_list(hub, args):
     repos = hub.api("GET", "/api/git/repos").get("repos", [])
     width = max([len(r["name"]) for r in repos] + [4])
     for r in repos:
-        print(f"{r['name']:<{width}}  {r.get('head', ''):<10} {r.get('packs', 0):>3} pack(s)  "
-              f"{r.get('description', '')}")
+        print(
+            f"{r['name']:<{width}}  {r.get('head', ''):<10} {r.get('packs', 0):>3} pack(s)  "
+            f"{r.get('description', '')}"
+        )
 
 
 def cmd_create(hub, args):
@@ -29,7 +32,9 @@ def cmd_create(hub, args):
     if len(names) != 1:
         raise HubError("usage: git flipper create <name> [-d text] [-b branch]")
     name = check_name(names[0])
-    hub.api("POST", "/api/git/create", name=name, branch=opts["-b"], description=opts["-d"])
+    hub.api(
+        "POST", "/api/git/create", name=name, branch=opts["-b"], description=opts["-d"]
+    )
     print(f"created {name}")
     print(f"flipper://{name}")
 
@@ -51,7 +56,9 @@ def cmd_rename(hub, args):
 def cmd_describe(hub, args):
     if len(args) < 2:
         raise HubError("usage: git flipper describe <name> <text>")
-    hub.api("POST", "/api/git/describe", name=check_name(args[0]), text=" ".join(args[1:]))
+    hub.api(
+        "POST", "/api/git/describe", name=check_name(args[0]), text=" ".join(args[1:])
+    )
 
 
 def cmd_url(hub, args):
@@ -83,12 +90,18 @@ def cmd_gc(hub, args):
         for ref, sha in refs.items():
             git(["update-ref", ref, sha], git_dir=repo)
         git(["repack", "-a", "-d", "-q"], git_dir=repo)
-        new = [f for f in os.listdir(os.path.join(repo, "objects", "pack")) if PACK_RE.match(f)]
+        new = [
+            f
+            for f in os.listdir(os.path.join(repo, "objects", "pack"))
+            if PACK_RE.match(f)
+        ]
         if len(new) != 1:
             raise HubError(f"repack made {len(new)} packs, expected 1")
         keep = new[0][:-5]
         if new[0] not in old_packs:
-            upload_pack(hub, name, os.path.join(repo, "objects", "pack"), keep[len("pack-"):])
+            upload_pack(
+                hub, name, os.path.join(repo, "objects", "pack"), keep[len("pack-") :]
+            )
         hub.server_info(name)
         for fname in old:
             if fname.startswith("pack-") and not fname.startswith(keep + "."):
@@ -100,10 +113,17 @@ def cmd_gc(hub, args):
 
 
 COMMANDS = {
-    "list": cmd_list, "create": cmd_create, "delete": cmd_delete, "rename": cmd_rename,
-    "describe": cmd_describe, "url": cmd_url, "gc": cmd_gc,
-    "webhook": cli_extra.cmd_webhook, "backup": cli_extra.cmd_backup,
-    "mirror-add": cli_extra.cmd_mirror_add, "mirror-remove": cli_extra.cmd_mirror_remove,
+    "list": cmd_list,
+    "create": cmd_create,
+    "delete": cmd_delete,
+    "rename": cmd_rename,
+    "describe": cmd_describe,
+    "url": cmd_url,
+    "gc": cmd_gc,
+    "webhook": cli_extra.cmd_webhook,
+    "backup": cli_extra.cmd_backup,
+    "mirror-add": cli_extra.cmd_mirror_add,
+    "mirror-remove": cli_extra.cmd_mirror_remove,
 }
 
 

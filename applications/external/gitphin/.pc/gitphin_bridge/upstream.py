@@ -49,7 +49,10 @@ def api(route, **query):
     if status == 503:
         raise UpstreamError("the Flipper app is not running", 503)
     if status >= 400 or not isinstance(data, dict) or not data.get("ok", False):
-        raise UpstreamError((data.get("error") if isinstance(data, dict) else None) or f"HTTP {status}", status)
+        raise UpstreamError(
+            (data.get("error") if isinstance(data, dict) else None) or f"HTTP {status}",
+            status,
+        )
     return data
 
 

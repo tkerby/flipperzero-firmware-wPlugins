@@ -20,7 +20,8 @@ from .webhooks import HOOKS
 def respond(sock, status, reason, body=b"", ctype="application/json"):
     sock.sendall(
         b"HTTP/1.1 %d %s\r\nContent-Type: %s\r\nCache-Control: no-store\r\n"
-        b"Content-Length: %d\r\nConnection: close\r\n\r\n" % (status, reason.encode(), ctype.encode(), len(body))
+        b"Content-Length: %d\r\nConnection: close\r\n\r\n"
+        % (status, reason.encode(), ctype.encode(), len(body))
         + body
     )
 
@@ -38,7 +39,9 @@ def serve(sock, method, target):
     url = urlsplit(target)
     route = url.path
     if route == "/pc/zip" and method in ("GET", "HEAD"):
-        query = {k: v[0] for k, v in parse_qs(url.query, keep_blank_values=True).items()}
+        query = {
+            k: v[0] for k, v in parse_qs(url.query, keep_blank_values=True).items()
+        }
         zipdl.serve(sock, query)
         return
     if route == "/pc/backup/now" and method == "POST":

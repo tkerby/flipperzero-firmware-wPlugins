@@ -95,7 +95,9 @@ def _active_connections():
     """Active NetworkManager connections: name, type, device."""
     if not shutil.which("nmcli"):
         return []
-    out = _run(["nmcli", "-t", "-f", "NAME,TYPE,DEVICE", "connection", "show", "--active"])
+    out = _run(
+        ["nmcli", "-t", "-f", "NAME,TYPE,DEVICE", "connection", "show", "--active"]
+    )
     conns = []
     for line in out.splitlines():
         # nmcli escapes ':' inside fields as '\:'; split on unescaped ':'.
@@ -167,7 +169,15 @@ def _read_psk(conn_name):
 
     # 1. Direct nmcli (works when the bridge itself is root).
     out = _run(
-        ["nmcli", "-s", "-g", "802-11-wireless-security.psk", "connection", "show", conn_name]
+        [
+            "nmcli",
+            "-s",
+            "-g",
+            "802-11-wireless-security.psk",
+            "connection",
+            "show",
+            conn_name,
+        ]
     )
     psk = out.strip()
     if psk:

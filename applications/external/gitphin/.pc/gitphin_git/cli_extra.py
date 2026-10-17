@@ -18,7 +18,9 @@ from .gitutil import git, git_out
 
 # ---------------------------------------------------------------- webhook
 
-WEBHOOK_USAGE = "usage: git flipper webhook list|add <url>|remove <url>|secret <text>|test"
+WEBHOOK_USAGE = (
+    "usage: git flipper webhook list|add <url>|remove <url>|secret <text>|test"
+)
 
 
 def bridge_json(hub, method, route):
@@ -43,14 +45,19 @@ def cmd_webhook(hub, args):
     sub, rest = (args[0], args[1:]) if args else ("", [])
     cfg = config.webhooks()
     if sub == "list" and not rest:
-        live = {u["url"]: u.get("last") for u in (bridge_json(hub, "GET", "/pc/webhooks") or {}).get("urls", [])}
+        live = {
+            u["url"]: u.get("last")
+            for u in (bridge_json(hub, "GET", "/pc/webhooks") or {}).get("urls", [])
+        }
         for url in cfg["urls"]:
             last = live.get(url)
             note = ""
             if last:
                 note = f"  last: {last.get('event', '')} {last.get('code') or last.get('error')}"
             print(url + note)
-        print(f"{len(cfg['urls'])} URL(s), secret {'set' if cfg['secret'] else 'not set'}")
+        print(
+            f"{len(cfg['urls'])} URL(s), secret {'set' if cfg['secret'] else 'not set'}"
+        )
     elif sub == "add" and len(rest) == 1:
         if not valid_url(rest[0]):
             raise HubError("the URL must start with http:// or https://")
@@ -77,7 +84,9 @@ def cmd_webhook(hub, args):
             r = webhook_core.post(url, body, "ping", str(uuid.uuid4()), cfg["secret"])
             ok = webhook_core.ok(r)
             failed += not ok
-            print(f"{url}: {'HTTP ' + str(r['code']) if ok else r['error'] or 'no answer'}")
+            print(
+                f"{url}: {'HTTP ' + str(r['code']) if ok else r['error'] or 'no answer'}"
+            )
         if failed:
             raise HubError(f"{failed} of {len(cfg['urls'])} deliveries failed")
     else:
@@ -105,12 +114,19 @@ def cmd_backup(hub, args):
         else:
             print("no run since the bridge started")
         for r in st.get("repos", []):
-            print(f"  {r['name']}: {r['action']} " + ("ok" if r["ok"] else "FAILED " + r["error"]))
+            print(
+                f"  {r['name']}: {r['action']} "
+                + ("ok" if r["ok"] else "FAILED " + r["error"])
+            )
     elif sub == "now" and not rest:
         got = bridge_json(hub, "POST", "/pc/backup/now")
         if got is None:
             raise HubError(f"cannot reach the bridge at {hub.base}")
-        print("backup started (see: git flipper backup status)" if got.get("started") else "a backup is running already")
+        print(
+            "backup started (see: git flipper backup status)"
+            if got.get("started")
+            else "a backup is running already"
+        )
     elif sub in ("on", "off") and not rest:
         config.save_backup(sub == "on", cfg["dir_raw"])
         print(f"backup {sub}")
@@ -124,9 +140,14 @@ def cmd_backup(hub, args):
 
 # ---------------------------------------------------------------- mirror
 
+
 def is_flipper_url(url, hub):
-    return url.startswith("flipper://") or url.startswith(hub.base + "/git/") or \
-        re.match(r"^https?://(127\.0\.0\.1|localhost)(:\d+)?/git/[^/]+\.git$", url) is not None
+    return (
+        url.startswith("flipper://")
+        or url.startswith(hub.base + "/git/")
+        or re.match(r"^https?://(127\.0\.0\.1|localhost)(:\d+)?/git/[^/]+\.git$", url)
+        is not None
+    )
 
 
 def split_remote_args(args):
@@ -157,7 +178,9 @@ def current_repo_name():
 
 
 def push_urls(remote):
-    out = git(["config", "--get-all", f"remote.{remote}.pushurl"], check=False).stdout.decode()
+    out = git(
+        ["config", "--get-all", f"remote.{remote}.pushurl"], check=False
+    ).stdout.decode()
     return [l for l in out.splitlines() if l]
 
 
@@ -174,12 +197,18 @@ def cmd_mirror_add(hub, args):
     if not valid_name(name):
         raise HubError(f"{name!r} is not a valid Flipper repo name; use --name <repo>")
     fetch_url = remote_url(remote)
-    flipper = f"flipper://{name}" if shutil.which("git-remote-flipper") else f"{hub.base}/git/{name}.git"
+    flipper = (
+        f"flipper://{name}"
+        if shutil.which("git-remote-flipper")
+        else f"{hub.base}/git/{name}.git"
+    )
     urls = push_urls(remote)
     if flipper in urls:
         print(f"{remote} pushes to {flipper} already")
     else:
-        if not urls:  # a push URL replaces the fetch URL for pushing: keep the old target first
+        if (
+            not urls
+        ):  # a push URL replaces the fetch URL for pushing: keep the old target first
             git(["remote", "set-url", "--add", "--push", remote, fetch_url])
         git(["remote", "set-url", "--add", "--push", remote, flipper])
         print(f"git push {remote} now pushes to {fetch_url} and {flipper}")
@@ -188,7 +217,9 @@ def cmd_mirror_add(hub, args):
             hub.api("POST", "/api/git/create", name=name)
             print(f"created {name} on the Flipper")
     except HubError as e:
-        log(f"cannot check the Flipper ({e}); create the repo later: git flipper create {name}")
+        log(
+            f"cannot check the Flipper ({e}); create the repo later: git flipper create {name}"
+        )
 
 
 def cmd_mirror_remove(hub, args):

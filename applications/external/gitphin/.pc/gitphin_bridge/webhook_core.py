@@ -24,8 +24,12 @@ def body_of(event):
 
 
 def ping_event():
-    return {"event": "ping", "server": "gitphin", "message": "Test from gitphin-bridge",
-            "time": int(time.time())}
+    return {
+        "event": "ping",
+        "server": "gitphin",
+        "message": "Test from gitphin-bridge",
+        "time": int(time.time()),
+    }
 
 
 def permanent(code):
@@ -44,8 +48,12 @@ _OPENER = urllib.request.build_opener(_NoRedirect)
 def post(url, body, event, delivery, secret):
     """One try. Never raises. Returns {"time","code","error"}; code 0 = no answer."""
     result = {"time": int(time.time()), "code": 0, "error": ""}
-    headers = {"Content-Type": "application/json", "User-Agent": USER_AGENT,
-               "X-Gitphin-Event": event, "X-Gitphin-Delivery": delivery}
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": USER_AGENT,
+        "X-Gitphin-Event": event,
+        "X-Gitphin-Delivery": delivery,
+    }
     if secret:
         headers["X-Gitphin-Signature-256"] = signature(secret, body)
     try:

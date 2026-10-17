@@ -42,7 +42,14 @@ App(
     entry_point="hub_pl_pack_ep",
     requires=["gitphin"],
     fal_embedded=True,
-    sources=["src/pack/hub_plugin_pack.c", "src/pack/hub_gitpack.c", "src/pack/hub_gitgraph.c", "src/pack/hub_deflate.c", "src/util/hub_sha1.c", "src/doc/hub_gitdocutil.c"],
+    sources=[
+        "src/pack/hub_plugin_pack.c",
+        "src/pack/hub_gitpack.c",
+        "src/pack/hub_gitgraph.c",
+        "src/pack/hub_deflate.c",
+        "src/util/hub_sha1.c",
+        "src/doc/hub_gitdocutil.c",
+    ],
 )
 
 App(
@@ -69,7 +76,11 @@ App(
     requires=["gitphin"],
     fal_embedded=True,
     cdefines=["HUB_EXT_QUERY"],
-    sources=["src/ext/hub_gitext.c", "src/write/hub_gitdiff.c", "src/ext/hub_gitsearch.c"],
+    sources=[
+        "src/ext/hub_gitext.c",
+        "src/write/hub_gitdiff.c",
+        "src/ext/hub_gitsearch.c",
+    ],
 )
 
 App(

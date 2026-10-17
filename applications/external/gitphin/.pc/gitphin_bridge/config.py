@@ -13,13 +13,17 @@ DEFAULT_BACKUP_DIR = "~/GitphinBackup"
 
 
 def config_dir():
-    return os.environ.get("GITPHIN_CONFIG_DIR") or os.path.join(os.path.expanduser("~"), ".config", "gitphin")
+    return os.environ.get("GITPHIN_CONFIG_DIR") or os.path.join(
+        os.path.expanduser("~"), ".config", "gitphin"
+    )
 
 
 def load(name, default):
     """Read <config dir>/<name>.json; the default (merged over) when missing or broken."""
     try:
-        with open(os.path.join(config_dir(), name + ".json"), "r", encoding="utf-8") as f:
+        with open(
+            os.path.join(config_dir(), name + ".json"), "r", encoding="utf-8"
+        ) as f:
             data = json.load(f)
         if isinstance(data, dict):
             return {**default, **data}
@@ -46,10 +50,18 @@ def save(name, data):
 
 # ---- webhooks.json: {"urls": [...], "secret": ""}
 
+
 def webhooks():
     cfg = load("webhooks", {"urls": [], "secret": ""})
-    urls = [u for u in cfg["urls"] if isinstance(u, str) and u.startswith(("http://", "https://"))]
-    return {"urls": urls, "secret": cfg["secret"] if isinstance(cfg["secret"], str) else ""}
+    urls = [
+        u
+        for u in cfg["urls"]
+        if isinstance(u, str) and u.startswith(("http://", "https://"))
+    ]
+    return {
+        "urls": urls,
+        "secret": cfg["secret"] if isinstance(cfg["secret"], str) else "",
+    }
 
 
 def save_webhooks(cfg):
@@ -58,11 +70,17 @@ def save_webhooks(cfg):
 
 # ---- backup.json: {"enabled": true, "dir": "~/GitphinBackup"}
 
+
 def backup():
     cfg = load("backup", {"enabled": True, "dir": DEFAULT_BACKUP_DIR})
-    folder = cfg["dir"] if isinstance(cfg["dir"], str) and cfg["dir"] else DEFAULT_BACKUP_DIR
-    return {"enabled": bool(cfg["enabled"]), "dir": os.path.abspath(os.path.expanduser(folder)),
-            "dir_raw": folder}
+    folder = (
+        cfg["dir"] if isinstance(cfg["dir"], str) and cfg["dir"] else DEFAULT_BACKUP_DIR
+    )
+    return {
+        "enabled": bool(cfg["enabled"]),
+        "dir": os.path.abspath(os.path.expanduser(folder)),
+        "dir_raw": folder,
+    }
 
 
 def save_backup(enabled, folder):

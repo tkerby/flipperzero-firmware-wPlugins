@@ -24,10 +24,44 @@ NAME_RE = re.compile(r"^[A-Za-z0-9_-][A-Za-z0-9._-]{0,63}$")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 CHUNK = 64 * 1024
 STORED_EXT = {
-    ".zip", ".gz", ".tgz", ".bz2", ".xz", ".zst", ".7z", ".rar", ".lz4", ".jar", ".apk", ".whl",
-    ".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif", ".heic", ".mp3", ".mp4", ".m4a", ".mkv",
-    ".webm", ".ogg", ".opus", ".flac", ".aac", ".mov", ".woff", ".woff2", ".pdf", ".docx",
-    ".xlsx", ".pptx", ".odt", ".ods", ".epub",
+    ".zip",
+    ".gz",
+    ".tgz",
+    ".bz2",
+    ".xz",
+    ".zst",
+    ".7z",
+    ".rar",
+    ".lz4",
+    ".jar",
+    ".apk",
+    ".whl",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".webp",
+    ".avif",
+    ".heic",
+    ".mp3",
+    ".mp4",
+    ".m4a",
+    ".mkv",
+    ".webm",
+    ".ogg",
+    ".opus",
+    ".flac",
+    ".aac",
+    ".mov",
+    ".woff",
+    ".woff2",
+    ".pdf",
+    ".docx",
+    ".xlsx",
+    ".pptx",
+    ".odt",
+    ".ods",
+    ".epub",
 }
 
 
@@ -61,7 +95,9 @@ def validate(query):
 
 def tree(name, commit_or_ref, path):
     try:
-        return upstream.api("/api/git/tree", name=name, ref=commit_or_ref, path=path or None)
+        return upstream.api(
+            "/api/git/tree", name=name, ref=commit_or_ref, path=path or None
+        )
     except upstream.UpstreamError as e:
         if e.status in (400, 404):
             raise ZipError(404, e.args[0]) from e
@@ -72,7 +108,11 @@ def commit_time(name, sha):
     """Committer time of the commit, or now when it cannot be read."""
     try:
         c = upstream.api("/api/git/commit", name=name, sha=sha)
-        return int(c.get("committer", {}).get("time") or c.get("author", {}).get("time") or time.time())
+        return int(
+            c.get("committer", {}).get("time")
+            or c.get("author", {}).get("time")
+            or time.time()
+        )
     except (upstream.UpstreamError, ValueError, AttributeError):
         return int(time.time())
 
@@ -103,7 +143,10 @@ class ChunkedOut:
 def zinfo(name, when, mode, is_dir=False):
     year = max(time.localtime(when).tm_year, 1980)
     t = time.localtime(when)
-    zi = zipfile.ZipInfo(name + ("/" if is_dir else ""), (year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec & ~1))
+    zi = zipfile.ZipInfo(
+        name + ("/" if is_dir else ""),
+        (year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec & ~1),
+    )
     zi.create_system = 3
     zi.external_attr = (mode << 16) | (0x10 if is_dir else 0)
     return zi
@@ -122,7 +165,9 @@ def add_file(zf, top, rel, entry, when, name):
         zf.writestr(zi, data, compress_type=zipfile.ZIP_STORED)
         return
     zi = zinfo(top + rel, when, 0o100755 if mode == "100755" else 0o100644)
-    zf.writestr(zi, data, compress_type=zipfile.ZIP_STORED if not data else method_for(rel))
+    zf.writestr(
+        zi, data, compress_type=zipfile.ZIP_STORED if not data else method_for(rel)
+    )
 
 
 def write_archive(zf, name, commit, sub, root, when, top):
@@ -134,14 +179,27 @@ def write_archive(zf, name, commit, sub, root, when, top):
         rel, listing = stack.pop()
         for e in listing["entries"]:
             ename = e.get("name", "")
-            if not ename or ename in (".", "..") or "/" in ename or "\\" in ename or "\0" in ename:
+            if (
+                not ename
+                or ename in (".", "..")
+                or "/" in ename
+                or "\\" in ename
+                or "\0" in ename
+            ):
                 continue
             path = rel + ename
             kind = e.get("type")
             if kind == "tree":
                 zf.writestr(zinfo(top + path, when, 0o40755, True), b"")
                 try:
-                    stack.append((path + "/", upstream.api("/api/git/tree", name=name, ref=commit, path=base + path)))
+                    stack.append(
+                        (
+                            path + "/",
+                            upstream.api(
+                                "/api/git/tree", name=name, ref=commit, path=base + path
+                            ),
+                        )
+                    )
                 except upstream.UpstreamError as err:
                     raise ZipError(502, f"{path}: {err.args[0]}") from err
             elif kind == "commit":  # submodule: git archive writes an empty folder
@@ -155,10 +213,15 @@ def write_archive(zf, name, commit, sub, root, when, top):
 
 def send_json_error(sock, status, msg):
     body = json.dumps({"ok": False, "error": msg}).encode()
-    reason = {400: "Bad Request", 404: "Not Found", 502: "Bad Gateway"}.get(status, "Error")
+    reason = {400: "Bad Request", 404: "Not Found", 502: "Bad Gateway"}.get(
+        status, "Error"
+    )
     sock.sendall(
         b"HTTP/1.1 %d %s\r\nContent-Type: application/json\r\nCache-Control: no-store\r\n"
-        b"Content-Length: %d\r\nConnection: close\r\n\r\n" % (status, reason.encode(), len(body)) + body)
+        b"Content-Length: %d\r\nConnection: close\r\n\r\n"
+        % (status, reason.encode(), len(body))
+        + body
+    )
 
 
 def serve(sock, query):
@@ -176,9 +239,11 @@ def serve(sock, query):
         return
     when = commit_time(name, commit)
     label = f"{name}-{safe_label(ref)}"
-    head = (b"HTTP/1.1 200 OK\r\nContent-Type: application/zip\r\nCache-Control: no-store\r\n"
-            b'Content-Disposition: attachment; filename="%s.zip"\r\n'
-            b"Transfer-Encoding: chunked\r\nConnection: close\r\n\r\n" % label.encode())
+    head = (
+        b"HTTP/1.1 200 OK\r\nContent-Type: application/zip\r\nCache-Control: no-store\r\n"
+        b'Content-Disposition: attachment; filename="%s.zip"\r\n'
+        b"Transfer-Encoding: chunked\r\nConnection: close\r\n\r\n" % label.encode()
+    )
     try:
         sock.sendall(head)
         out = ChunkedOut(sock)

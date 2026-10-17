@@ -4,6 +4,7 @@ Usage: logic_check.py <logic_test binary> <repos dir from make_test_repo.sh> <wo
 The checks live in pc/tests/logic/ (run with python3 -I: the dir is put on sys.path here).
 """
 import os, random, sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "logic"))
 from common import *
 from diffcheck import *
@@ -11,6 +12,7 @@ from handrepo import *
 from comparecheck import *
 from cfilecheck import *
 from mergecheck import *
+
 
 def main():
     rnd = random.Random(42)
@@ -28,7 +30,10 @@ def main():
     test_merge_hand(h)
     test_wide(h)
     print("\nchecks: %d" % S.checks)
-    print("heap peaks (bytes, library code incl. gitobj/inflate, default limit 32 KB): " + ", ".join("%s=%d" % kv for kv in sorted(peaks.items())))
+    print(
+        "heap peaks (bytes, library code incl. gitobj/inflate, default limit 32 KB): "
+        + ", ".join("%s=%d" % kv for kv in sorted(peaks.items()))
+    )
     if fails:
         print("%d FAILURES" % len(fails))
         sys.exit(1)

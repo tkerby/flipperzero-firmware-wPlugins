@@ -1,7 +1,9 @@
 """logic_check parts: diff checks against git."""
+
 import os, random, re, shutil, subprocess, sys, tempfile
 from common import *
 from common import S
+
 
 # ------------------------------------------------------------------ diff
 def git_diff_files(repo, a, b):
@@ -70,9 +72,15 @@ def check_diff_pairs(repo, pairs, label, max_files=None):
             if sorted(r["files"]) == sorted(exp):
                 fail("%s diff %s %s: same set but different order" % (label, a, b))
             else:
-                fail("%s diff %s %s: mismatch (%d vs %d files)" % (label, a, b, len(r["files"]), len(exp)))
+                fail(
+                    "%s diff %s %s: mismatch (%d vs %d files)"
+                    % (label, a, b, len(r["files"]), len(exp))
+                )
         if r["trunc"] != (len(want) > limit):
-            fail("%s diff %s %s: truncated flag %s, files %d" % (label, a, b, r["trunc"], len(want)))
+            fail(
+                "%s diff %s %s: truncated flag %s, files %d"
+                % (label, a, b, r["trunc"], len(want))
+            )
 
 
 def tree_of(repo, c):
@@ -94,5 +102,3 @@ def test_diff_repo(name, rnd):
     pairs.append((tree_of(repo, commits[0]), None))
     check_diff_pairs(repo, pairs, name)
     print("diff %-9s %d pairs" % (name, len(pairs)))
-
-

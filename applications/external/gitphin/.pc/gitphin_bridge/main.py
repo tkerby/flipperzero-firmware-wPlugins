@@ -74,8 +74,11 @@ def main():
     ap = argparse.ArgumentParser(description=DESCRIPTION)
     ap.add_argument("--port", type=int, default=8080)
     ap.add_argument("--open-browser", action="store_true")
-    ap.add_argument("--upstream", metavar="HOST:PORT",
-                    help="tests only: use an HTTP server (tests/mock_hub.py) instead of the Flipper")
+    ap.add_argument(
+        "--upstream",
+        metavar="HOST:PORT",
+        help="tests only: use an HTTP server (tests/mock_hub.py) instead of the Flipper",
+    )
     args = ap.parse_args()
     url = f"http://localhost:{args.port}"
 

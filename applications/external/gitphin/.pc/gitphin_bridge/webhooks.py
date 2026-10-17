@@ -45,7 +45,11 @@ def classify(method, target):
     m = GIT_PATH.match(route)
     if m:
         return [(m.group(1), "")]
-    if method == "POST" and route.startswith("/api/git/") and route[len("/api/git/"):] in WRITE_ROUTES:
+    if (
+        method == "POST"
+        and route.startswith("/api/git/")
+        and route[len("/api/git/") :] in WRITE_ROUTES
+    ):
         q = parse_qs(qs)
         name = (q.get("name") or [""])[0]
         if not name:
@@ -65,7 +69,9 @@ def snapshot(name):
         if e.status == 404:
             return None
         raise
-    return {r["name"]: r["sha"] for r in data.get("refs", []) if "name" in r and "sha" in r}
+    return {
+        r["name"]: r["sha"] for r in data.get("refs", []) if "name" in r and "sha" in r
+    }
 
 
 def diff_refs(before, after):
@@ -80,9 +86,9 @@ def diff_refs(before, after):
 class Hooks:
     def __init__(self):
         self.lock = threading.Lock()
-        self.cache = {}    # repo -> {ref: sha} or None (missing); the last known state
+        self.cache = {}  # repo -> {ref: sha} or None (missing); the last known state
         self.pending = {}  # repo -> [first touch time, timer, role]
-        self.status = {}   # url -> last delivery result
+        self.status = {}  # url -> last delivery result
 
     # ---- called by the proxy
     @staticmethod
@@ -172,8 +178,12 @@ class Hooks:
                 except upstream.UpstreamError:
                     return None
                 author = c.get("author") or {}
-                return {"id": r["after"], "message": (c.get("message") or "").split("\n", 1)[0],
-                        "author": author.get("name", ""), "time": author.get("time", 0)}
+                return {
+                    "id": r["after"],
+                    "message": (c.get("message") or "").split("\n", 1)[0],
+                    "author": author.get("name", ""),
+                    "time": author.get("time", 0),
+                }
         return None
 
     # ---- delivery
@@ -181,18 +191,35 @@ class Hooks:
         body = webhook_core.body_of(event)
         delivery = str(uuid.uuid4())
         for url in config.webhooks()["urls"]:
-            threading.Thread(target=self._send, args=(url, body, event["event"], delivery),
-                             daemon=True, name="webhook").start()
+            threading.Thread(
+                target=self._send,
+                args=(url, body, event["event"], delivery),
+                daemon=True,
+                name="webhook",
+            ).start()
 
     def _send(self, url, body, event, delivery):
         for attempt in range(len(BACKOFF_S) + 1):
-            result = webhook_core.post(url, body, event, delivery, config.webhooks()["secret"])
-            retry = (not webhook_core.ok(result) and attempt < len(BACKOFF_S)
-                     and not webhook_core.permanent(result["code"]))
+            result = webhook_core.post(
+                url, body, event, delivery, config.webhooks()["secret"]
+            )
+            retry = (
+                not webhook_core.ok(result)
+                and attempt < len(BACKOFF_S)
+                and not webhook_core.permanent(result["code"])
+            )
             with self.lock:
-                self.status[url] = {**result, "event": event, "tries": attempt + 1, "retrying": retry}
+                self.status[url] = {
+                    **result,
+                    "event": event,
+                    "tries": attempt + 1,
+                    "retrying": retry,
+                }
             if not webhook_core.ok(result):
-                log(f"{event} to {url}: {result['error']}" + (" (will retry)" if retry else ""))
+                log(
+                    f"{event} to {url}: {result['error']}"
+                    + (" (will retry)" if retry else "")
+                )
             if not retry:
                 return
             time.sleep(BACKOFF_S[attempt])
@@ -201,8 +228,10 @@ class Hooks:
         cfg = config.webhooks()
         with self.lock:
             last = dict(self.status)
-        return {"urls": [{"url": u, "last": last.get(u)} for u in cfg["urls"]],
-                "secret_set": bool(cfg["secret"])}
+        return {
+            "urls": [{"url": u, "last": last.get(u)} for u in cfg["urls"]],
+            "secret_set": bool(cfg["secret"]),
+        }
 
 
 HOOKS = Hooks()

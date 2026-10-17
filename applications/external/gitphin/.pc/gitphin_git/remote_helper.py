@@ -6,13 +6,22 @@ import sys
 import tempfile
 
 from .api import SHA_RE, ZERO, Hub, HubError, check_name, log, valid_ref
-from .gitutil import build_pack, fetch_packs, git, git_out, local_objects, pack_dir, upload_pack
+from .gitutil import (
+    build_pack,
+    fetch_packs,
+    git,
+    git_out,
+    local_objects,
+    pack_dir,
+    upload_pack,
+)
+
 
 class Helper:
     def __init__(self, name):
         self.name = name
         self.hub = Hub()
-        self.refs = None   # {ref: sha} as read by `list`; None until read
+        self.refs = None  # {ref: sha} as read by `list`; None until read
         self.head = ""
         self.exists = False
 
@@ -112,7 +121,9 @@ class Helper:
     def update_ref(self, dst, new):
         old = self.refs.get(dst, ZERO)
         try:
-            self.hub.api("POST", "/api/git/ref", name=self.name, ref=dst, old=old, new=new)
+            self.hub.api(
+                "POST", "/api/git/ref", name=self.name, ref=dst, old=old, new=new
+            )
         except HubError as e:
             return "stale info" if e.status == 409 else str(e)
         if new == ZERO:
@@ -122,9 +133,13 @@ class Helper:
         return None
 
     def finish(self, changes, results, uploaded):
-        pushed = [d for d, n in changes if n != ZERO and results[d] is None and d.startswith("refs/heads/")]
+        pushed = [
+            d
+            for d, n in changes
+            if n != ZERO and results[d] is None and d.startswith("refs/heads/")
+        ]
         if pushed and self.head not in self.refs:
-            branch = pushed[0][len("refs/heads/"):]
+            branch = pushed[0][len("refs/heads/") :]
             try:
                 self.hub.api("POST", "/api/git/head", name=self.name, branch=branch)
                 self.head = "refs/heads/" + branch
@@ -149,7 +164,7 @@ def read_batch(stdin, first):
 
 
 def parse_push(line):
-    spec = line[len("push "):]
+    spec = line[len("push ") :]
     force = spec.startswith("+")
     src, _, dst = spec.lstrip("+").partition(":")
     return force, src, dst

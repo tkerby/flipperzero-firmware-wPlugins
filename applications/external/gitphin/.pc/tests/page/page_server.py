@@ -15,7 +15,10 @@ import sys
 from urllib.parse import parse_qs, urlsplit
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-spec = importlib.util.spec_from_file_location("demo_server", os.path.join(HERE, "..", "..", "..", "tools", "screenshots", "demo_server.py"))
+spec = importlib.util.spec_from_file_location(
+    "demo_server",
+    os.path.join(HERE, "..", "..", "..", "tools", "screenshots", "demo_server.py"),
+)
 demo = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(demo)
 
@@ -30,7 +33,11 @@ class H(demo.Handler):
         if not (p == "/ext" or p.startswith("/ext/")):
             return None
         real = os.path.realpath(os.path.join(SD, p[5:]))
-        ok = real == os.path.realpath(SD) or real.startswith(os.path.realpath(SD) + os.sep) or real.startswith(os.path.realpath(demo.ROOT))
+        ok = (
+            real == os.path.realpath(SD)
+            or real.startswith(os.path.realpath(SD) + os.sep)
+            or real.startswith(os.path.realpath(demo.ROOT))
+        )
         return real if ok else None
 
     def err(self, code, msg):
@@ -44,8 +51,22 @@ class H(demo.Handler):
             d = self.fs(q)
             if not d or not os.path.isdir(d):
                 return self.err(404, "no such folder")
-            ents = [{"name": n, "dir": os.path.isdir(os.path.join(d, n)), "size": os.path.getsize(os.path.join(d, n)) if os.path.isfile(os.path.join(d, n)) else 0} for n in sorted(os.listdir(d))]
-            return self.send(200, json.dumps({"ok": True, "path": q["path"], "entries": ents}).encode())
+            ents = [
+                {
+                    "name": n,
+                    "dir": os.path.isdir(os.path.join(d, n)),
+                    "size": (
+                        os.path.getsize(os.path.join(d, n))
+                        if os.path.isfile(os.path.join(d, n))
+                        else 0
+                    ),
+                }
+                for n in sorted(os.listdir(d))
+            ]
+            return self.send(
+                200,
+                json.dumps({"ok": True, "path": q["path"], "entries": ents}).encode(),
+            )
         if u.path == "/api/file":
             f = self.fs(q)
             if not f or not os.path.isfile(f):

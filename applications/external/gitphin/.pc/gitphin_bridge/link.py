@@ -186,7 +186,9 @@ class TcpLink:
         with self.lock:
             self.busy_since = time.monotonic()
             try:
-                with socket.create_connection(self.addr, timeout=RESPONSE_TIMEOUT_S) as up:
+                with socket.create_connection(
+                    self.addr, timeout=RESPONSE_TIMEOUT_S
+                ) as up:
                     for chunk in request_chunks:
                         up.sendall(chunk)
                     client_ok = True
