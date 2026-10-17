@@ -56,6 +56,16 @@ ready, and restores the original wakeup setting. Each block and the final UID
 are verified. A failed write after the temporary configuration is enabled may
 leave `7A FF` enabled so the card can be recovered through its magic wakeup.
 
+## MFC Gen2 / CUID detection
+
+Magic Check follows Proxmark3's MifareCIdent approach: check known four-byte
+and seven-byte UID ATS fingerprints, even when SAK does not advertise
+ISO14443-4. If neither matches, authenticate block 0 with default Key B
+`FFFFFFFFFFFF` and check the encrypted `A0 00` write-command ACK. The probe
+sends no block data and ends the RF session immediately. Authentication failure
+or a missing ACK leaves the card unconfirmed; cards with a changed Key B may
+therefore remain undetected.
+
 ## Asset attribution
 
 `images/NFC_manual_60x50.png` is the NFC manual illustration from [Flipper Zero firmware](https://github.com/flipperdevices/flipperzero-firmware/blob/dev/assets/icons/NFC/NFC_manual_60x50.png), which is licensed under GPL-3.0. Magic Check draws the original Flipper body and overlays a new card illustration at runtime.

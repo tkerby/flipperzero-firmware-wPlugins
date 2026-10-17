@@ -175,21 +175,22 @@ static NfcCommand mfc_magic_probe_callback(NfcGenericEvent event, void* context)
         probe->match = error == Iso14443_3aErrorNone && bit_buffer_get_size_bytes(rx) >= 30;
         if(probe->match) memcpy(probe->gen4_config, bit_buffer_get_data(rx), 30);
     } else if(probe->gen == MagicGenMfcGen2) {
-        /* Only known ATS signatures are positive evidence. Most CUID cards
-         * have no read-only signature and remain unconfirmed. */
+        /* Like Proxmark3 MifareCIdent, issue RATS even when SAK does not
+         * advertise ISO14443-4: some Classic Gen2 clones still return ATS. */
         const uint8_t rats[2] = {0xE0, 0x80};
-        const Iso14443_3aData* data = nfc_poller_get_data(probe->poller);
-        if(iso14443_3a_get_sak(data) & 0x20U) {
-            bit_buffer_copy_bytes(tx, rats, sizeof(rats));
-            error = iso14443_3a_poller_send_standard_frame(poller, tx, rx, 1356000U);
-        }
+        bit_buffer_copy_bytes(tx, rats, sizeof(rats));
+        error = iso14443_3a_poller_send_standard_frame(poller, tx, rx, 1356000U);
         static const uint8_t ats_a[] = {0x09, 0x78, 0x00, 0x91, 0x02, 0xDA, 0xBC, 0x19, 0x10};
+        /* PM3's 7B signature includes trailing CRC 56 3D. The standard
+         * frame API strips CRC-A, so compare only the 13 ATS bytes. */
         static const uint8_t ats_b[] = {0x0D, 0x78, 0x00, 0x71, 0x02, 0x88, 0x49, 0xA1,
-                                        0x30, 0x20, 0x15, 0x06, 0x08, 0x56, 0x3D};
+                                        0x30, 0x20, 0x15, 0x06, 0x08};
         size_t size = bit_buffer_get_size_bytes(rx);
         probe->match = error == Iso14443_3aErrorNone &&
                        ((size >= sizeof(ats_a) && memcmp(bit_buffer_get_data(rx), ats_a, sizeof(ats_a)) == 0) ||
                         (size >= sizeof(ats_b) && memcmp(bit_buffer_get_data(rx), ats_b, sizeof(ats_b)) == 0));
+        FURI_LOG_I("MTools", "MFC Gen2 ATS: error=%u bytes=%u match=%u", error,
+                   (unsigned)size, probe->match);
     }
 done:
     bit_buffer_free(rx);
@@ -239,8 +240,9 @@ static NfcCommand mfc_gen2_probe_callback(NfcGenericEvent event, void* context) 
     MfClassicKey key;
     memset(key.data, 0xFF, sizeof(key.data));
     MfClassicAuthContext auth = {0};
-    if(mf_classic_poller_auth(poller, 0, &key, MfClassicKeyTypeB, &auth, false) ==
-       MfClassicErrorNone) {
+    MfClassicError auth_error = mf_classic_poller_auth(
+        poller, 0, &key, MfClassicKeyTypeB, &auth, false);
+    if(auth_error == MfClassicErrorNone) {
         BitBuffer* tx = bit_buffer_alloc(4);
         BitBuffer* rx = bit_buffer_alloc(4);
         const uint8_t command[] = {0xA0, 0x00};
@@ -251,7 +253,11 @@ static NfcCommand mfc_gen2_probe_callback(NfcGenericEvent event, void* context) 
                        (bit_buffer_get_byte(rx, 0) & 0x0F) == 0x0A;
         bit_buffer_free(rx);
         bit_buffer_free(tx);
-        /* Stop after the command ACK. Never send the 16-byte write payload. */
+        FURI_LOG_I("MTools", "MFC Gen2 authenticated A0: error=%u match=%u", error, probe->match);
+        /* Stop after the command ACK. Never send the 16-byte write payload,
+         * HALT, or another command while the tag expects write data. */
+    } else {
+        FURI_LOG_I("MTools", "MFC Gen2 default Key B auth failed: %u", auth_error);
     }
     furi_semaphore_release(probe->complete);
     return NfcCommandStop;
