@@ -33,7 +33,7 @@ struct MToolsUidChanger {
     UidPage page;
     uint8_t source;
     uint8_t protocol; // 0=MFC / ISO14443-A, 1=ISO15693
-    uint8_t card_type; // 0=MFC 1K, 1=MFC 4K, 2=ISO15693, 3=MFC unknown
+    uint8_t card_type; // 0=MFC 1K, 1=MFC 4K, 2=ISO15693, 3=MFC unknown, 4=MFU/NTAG
     uint8_t target_card_type;
     uint8_t read_card_type;
     bool read_type2;
@@ -188,6 +188,11 @@ static void uid_start_poller(MToolsUidChanger* instance) {
 }
 
 static void uid_select_valid_gen(MToolsUidChanger* instance) {
+    if(instance->card_type == 4) {
+        instance->gen = MagicGenMfuDirectWrite;
+        return;
+    }
+    if(instance->gen == MagicGenMfuDirectWrite) instance->gen = MagicGenCount;
     const bool iso = instance->card_type == 2;
     const bool selected_iso =
         instance->gen >= MagicGenIso15693Gen1 && instance->gen <= MagicGenIso15693Gen3;
@@ -217,6 +222,7 @@ static void uid_detect_gen(MToolsUidChanger* instance) {
 
 static const char* uid_card_name(uint8_t card_type) {
     switch(card_type) {
+    case 4: return "MFU / NTAG";
     case 0: return "MFC 1K";
     case 1: return "MFC 4K";
     case 2: return "ISO15693";
@@ -249,7 +255,8 @@ static void uid_show(MToolsUidChanger* instance) {
         snprintf(model->lines[0], sizeof(model->lines[0]), "MFC 1K");
         snprintf(model->lines[1], sizeof(model->lines[1]), "MFC 4K");
         snprintf(model->lines[2], sizeof(model->lines[2]), "ISO15693");
-        model->selected = instance->card_type;
+        snprintf(model->lines[3], sizeof(model->lines[3]), "MIFARE Ultralight (7B)");
+        model->selected = instance->card_type == 4 ? 3 : instance->card_type;
         break;
     case UidPageManualLength:
         snprintf(model->lines[0], sizeof(model->lines[0]), "4 bytes");
@@ -277,7 +284,10 @@ static void uid_show(MToolsUidChanger* instance) {
                 mtools_uid_format_hex(hex, sizeof(hex), instance->uid + 8, instance->uid_len - 8);
                 snprintf(model->info_lines[model->info_count++], sizeof(model->info_lines[0]), "     %s", hex);
             }
-            if(instance->card_type != 2) {
+            if(instance->card_type == 4)
+                snprintf(model->info_lines[model->info_count++], sizeof(model->info_lines[0]),
+                         "Target: DirectWrite only");
+            if(instance->card_type != 2 && instance->card_type != 4) {
                 snprintf(model->info_lines[model->info_count++], sizeof(model->info_lines[0]),
                          "SAK: %02X ATQA: %02X%02X", instance->sak,
                          instance->atqa[0], instance->atqa[1]);
@@ -303,7 +313,7 @@ static void uid_show(MToolsUidChanger* instance) {
             if(instance->gen == MagicGenMfcGdm)
                 snprintf(model->info_lines[model->info_count++], sizeof(model->info_lines[0]),
                          "GDM Block0 auto-built");
-            else if(instance->card_type != 2)
+            else if(instance->card_type != 2 && instance->card_type != 4)
                 snprintf(model->info_lines[model->info_count++], sizeof(model->info_lines[0]),
                          "SAK: %02X ATQA: %02X%02X", instance->sak,
                          instance->atqa[0], instance->atqa[1]);
@@ -346,15 +356,17 @@ static void uid_load_file(MToolsUidChanger* instance) {
     if(!nfc_device_load(device, furi_string_get_cstr(path))) {
         error = "Cannot load NFC file";
     } else if(nfc_device_get_protocol(device) != NfcProtocolMfClassic &&
-              nfc_device_get_protocol(device) != NfcProtocolIso15693_3) {
+              nfc_device_get_protocol(device) != NfcProtocolIso15693_3 &&
+              nfc_device_get_protocol(device) != NfcProtocolMfUltralight) {
         error = "Unsupported card type";
     } else {
         size_t length = 0;
         const uint8_t* uid = nfc_device_get_uid(device, &length);
         bool classic = nfc_device_get_protocol(device) == NfcProtocolMfClassic;
+        bool type2 = nfc_device_get_protocol(device) == NfcProtocolMfUltralight;
         const MfClassicData* data = classic ?
             nfc_device_get_data(device, NfcProtocolMfClassic) : NULL;
-        if((classic && (length != 4 && length != 7)) || (!classic && length != 8)) {
+        if((classic && (length != 4 && length != 7)) || (!classic && length != (type2 ? 7U : 8U))) {
             error = "UID length unsupported";
         } else if(classic && data->type != MfClassicType1k && data->type != MfClassicType4k) {
             error = "Unsupported card type";
@@ -364,8 +376,8 @@ static void uid_load_file(MToolsUidChanger* instance) {
             memcpy(instance->uid, uid, length);
             instance->uid_len = length;
             instance->uid_valid = true;
-            instance->protocol = classic ? 0 : 1;
-            instance->card_type = classic ? (data->type == MfClassicType4k ? 1 : 0) : 2;
+            instance->protocol = classic || type2 ? 0 : 1;
+            instance->card_type = classic ? (data->type == MfClassicType4k ? 1 : 0) : (type2 ? 4 : 2);
             instance->read_type2 = false;
             instance->type2_name = NULL;
             instance->block0_valid = classic;
@@ -391,6 +403,7 @@ static void uid_load_file(MToolsUidChanger* instance) {
 static void uid_edit(MToolsUidChanger* instance) {
     instance->page = UidPageEdit;
     if(instance->card_type == 2) instance->edit_len = 8;
+    if(instance->card_type == 4) instance->edit_len = 7;
     instance->edit_touched = false;
     memset(instance->draft, 0, sizeof(instance->draft));
     if(instance->uid_valid && instance->card_type != 2) {
@@ -410,7 +423,7 @@ static void uid_edit(MToolsUidChanger* instance) {
 }
 
 static void uid_edit_block0(MToolsUidChanger* instance) {
-    if((instance->uid_len != 4 && instance->uid_len != 7) || instance->card_type == 2) {
+    if((instance->uid_len != 4 && instance->uid_len != 7) || instance->card_type == 2 || instance->card_type == 4) {
         uid_popup(instance, "MFC 4/7B only");
         return;
     }
@@ -488,7 +501,8 @@ bool mtools_uid_changer_back(MToolsUidChanger* instance) {
         break;
     case UidPageReadResult: instance->page = UidPageSource; break;
     case UidPageEdit:
-        instance->page = instance->card_type == 2 ? UidPageManualProtocol : UidPageManualLength;
+        instance->page = instance->card_type == 2 || instance->card_type == 4 ?
+                             UidPageManualProtocol : UidPageManualLength;
         break;
     case UidPageBlock0Edit: instance->page = UidPageReadResult; break;
     case UidPageMagic: instance->page = UidPageReadResult; break;
@@ -528,10 +542,10 @@ bool mtools_uid_changer_event(MToolsUidChanger* instance, uint32_t event) {
         memcpy(instance->uid, instance->read_uid, instance->read_len);
         instance->uid_len = instance->read_len;
         instance->uid_valid = true;
-        instance->card_type = instance->read_card_type;
+        instance->card_type = instance->read_type2 && instance->sak == 0 ? 4 : instance->read_card_type;
         instance->gen = MagicGenCount;
         uid_select_valid_gen(instance);
-        uid_detect_gen(instance);
+        if(instance->card_type != 4) uid_detect_gen(instance);
         if(instance->gen == MagicGenMfcGen4) {
             uint8_t config[30];
             if(instance->card_type == 3 && mtools_mfc_gen4_read_config(instance->app->nfc, config)) {
@@ -548,7 +562,7 @@ bool mtools_uid_changer_event(MToolsUidChanger* instance, uint32_t event) {
                 instance->atqa[1] = 0;
             }
         }
-        if(instance->card_type != 2) uid_make_block0(instance);
+        if(instance->card_type != 2 && instance->card_type != 4) uid_make_block0(instance);
         else {
             instance->block0_valid = false;
             instance->block0_edited = false;
@@ -570,7 +584,7 @@ bool mtools_uid_changer_event(MToolsUidChanger* instance, uint32_t event) {
         instance->uid_len = instance->edit_len;
         memcpy(instance->uid, instance->draft, instance->uid_len);
         instance->uid_valid = true;
-        if(instance->card_type != 2) {
+        if(instance->card_type != 2 && instance->card_type != 4) {
             instance->sak = instance->card_type == 1 ? 0x18 : 0x08;
             instance->atqa[0] = instance->uid_len == 7 ? (instance->card_type == 1 ? 0x42 : 0x44) :
                                  (instance->card_type == 1 ? 0x02 : 0x04);
@@ -617,13 +631,16 @@ bool mtools_uid_changer_event(MToolsUidChanger* instance, uint32_t event) {
     if(key == InputKeyUp || key == InputKeyDown) {
         int direction = key == InputKeyDown ? 1 : -1;
         if(instance->page == UidPageSource) instance->source = (instance->source + direction + 3) % 3;
-        if(instance->page == UidPageManualProtocol)
-            instance->card_type = (instance->card_type + direction + 3) % 3;
+        if(instance->page == UidPageManualProtocol) {
+            int selected = instance->card_type == 4 ? 3 : instance->card_type;
+            selected = (selected + direction + 4) % 4;
+            instance->card_type = selected == 3 ? 4 : selected;
+        }
         if(instance->page == UidPageManualLength)
             instance->edit_len = instance->edit_len == 4 ? 7 : 4;
         if(instance->page == UidPageGen4Target)
             instance->target_card_type ^= 1;
-        if(instance->page == UidPageMagic) {
+        if(instance->page == UidPageMagic && instance->card_type != 4) {
             const int start = instance->card_type == 2 ? MagicGenIso15693Gen1 : MagicGenMfcGen1a;
             const int count = instance->card_type == 2 ? 3 : 5;
             int index = instance->gen - start;
@@ -643,12 +660,15 @@ bool mtools_uid_changer_event(MToolsUidChanger* instance, uint32_t event) {
             uid_load_file(instance);
             return true;
         }
+        if(instance->card_type == 3) instance->card_type = 0;
         instance->page = UidPageManualProtocol;
         break;
     case UidPageManualProtocol:
+        instance->type2_name = NULL;
+        instance->read_type2 = false;
         instance->uid_valid = false;
         instance->gen = MagicGenCount;
-        if(instance->card_type != 2) {
+        if(instance->card_type != 2 && instance->card_type != 4) {
             instance->edit_len = 4;
             instance->page = UidPageManualLength;
             break;
@@ -670,7 +690,7 @@ bool mtools_uid_changer_event(MToolsUidChanger* instance, uint32_t event) {
     case UidPageReading:
         return true;
     case UidPageReadResult:
-        if(key == InputKeyOk && instance->card_type != 2) {
+        if(key == InputKeyOk && instance->card_type != 2 && instance->card_type != 4) {
             if(instance->gen == MagicGenMfcGdm) {
                 uid_popup(instance, "GDM Block0 auto-built");
                 return true;

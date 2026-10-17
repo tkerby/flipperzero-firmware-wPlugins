@@ -158,6 +158,9 @@ bool mtools_magic_check_event(MToolsApp* app, uint32_t event) {
                     app->magic_pending_status = 8;
                 else
                     app->magic_pending_status = 1;
+            } else if(app->magic_type2 && app->magic_uid_len == 7) {
+                app->magic_pending_status =
+                    mtools_detect_magic_tag(app->nfc, MagicGenMfuDirectWrite) ? 12 : 1;
             } else {
                 app->magic_pending_status = 1;
             }

@@ -156,6 +156,7 @@ static void mtools_draw_detail(Canvas* canvas, MToolsApp* app) {
         case 9: magic_name = "MFC GEN3 - APDU"; break;
         case 10: magic_name = "MFC GEN4 - UMC"; break;
         case 11: magic_name = "MFC GDM - USCUID"; break;
+        case 12: magic_name = "MFU GEN2 - DirectWrite"; break;
         }
         if(app->magic_detecting) {
             canvas_draw_rframe(canvas, 2, 49, 124, 14, 3);

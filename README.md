@@ -59,3 +59,23 @@ leave `7A FF` enabled so the card can be recovered through its magic wakeup.
 ## Asset attribution
 
 `images/NFC_manual_60x50.png` is the NFC manual illustration from [Flipper Zero firmware](https://github.com/flipperdevices/flipperzero-firmware/blob/dev/assets/icons/NFC/NFC_manual_60x50.png), which is licensed under GPL-3.0. Magic Check draws the original Flipper body and overlays a new card illustration at runtime.
+
+## DirectWrite MFU / NTAG UID changes
+
+UID Changer supports seven-byte UIDs on compatible DirectWrite Type 2 magic
+cards. Choose MFU / NTAG in manual entry, read a Type 2 source card, or load a
+saved Ultralight/NTAG NFC file. This selects a write method; ordinary locked UID tags are not supported.
+Magic Check identifies supported Gen2 variants using the Proxmark3 ATS
+fingerprint, followed by a compatibility-WRITE stage-1 ACK probe if needed.
+The probe sends no page data and ends its RF session before further commands.
+Unmatched cards remain unconfirmed; a match does not guarantee that a locked
+or password-protected card can be written.
+
+The writer reads pages 0–3, recalculates both BCC bytes, and writes pages 0, 1,
+and 2 within one active ISO14443-A poller callback. It keeps the RF field active
+and does not reselect the card between writes. Page 2's internal and static
+lock bytes are preserved. It verifies pages 0–2 before stopping the poller,
+then starts a fresh RF session to check the anticollision UID. If a later page
+write fails, it attempts to restore the original UID pages in the same session.
+An interrupted RF field or unsuccessful restoration can still require UID/BCC
+recovery with a separate recovery tool.

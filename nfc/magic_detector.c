@@ -288,6 +288,76 @@ static bool detect_iso15693_gen3(Nfc* nfc) {
     return detect_iso15693_fingerprint(nfc, true);
 }
 
+typedef struct {
+    FuriSemaphore* complete;
+    NfcPoller* poller;
+    bool compatible_write;
+    bool matches;
+} MfuMagicProbe;
+
+static NfcCommand mfu_magic_probe_callback(NfcGenericEvent event, void* context) {
+    MfuMagicProbe* probe = context;
+    if(event.protocol != NfcProtocolIso14443_3a) return NfcCommandContinue;
+    Iso14443_3aPollerEvent* ready = event.event_data;
+    if(ready->type != Iso14443_3aPollerEventTypeReady) return NfcCommandContinue;
+    const Iso14443_3aData* card = nfc_poller_get_data(probe->poller);
+    size_t length = 0;
+    iso14443_3a_get_uid(card, &length);
+    if(length == 7 && iso14443_3a_get_sak(card) == 0) {
+        BitBuffer* tx = bit_buffer_alloc(32);
+        BitBuffer* rx = bit_buffer_alloc(32);
+        if(!probe->compatible_write) {
+            /* Proxmark3 ul_magic_test: 14 bytes on air, including CRC-A.
+             * send_standard_frame validates/removes CRC, leaving 12 bytes. */
+            static const uint8_t ats[] = {
+                0x0A, 0x78, 0x00, 0x81, 0x02, 0xDB, 0xA0, 0xC1, 0x19, 0x40, 0x2A, 0xB5};
+            const uint8_t rats[] = {0xE0, 0x80};
+            bit_buffer_copy_bytes(tx, rats, sizeof(rats));
+            Iso14443_3aError error = iso14443_3a_poller_send_standard_frame(
+                event.instance, tx, rx, 1356000U);
+            probe->matches = error == Iso14443_3aErrorNone &&
+                             bit_buffer_get_size_bytes(rx) == sizeof(ats) &&
+                             memcmp(bit_buffer_get_data(rx), ats, sizeof(ats)) == 0;
+            FURI_LOG_I("MTools", "MFU Gen2 ATS: error=%u bytes=%u match=%u", error,
+                       (unsigned)bit_buffer_get_size_bytes(rx), probe->matches);
+        } else {
+            /* Compatibility WRITE stage 1 only, as described by Proxmark3.
+             * Never send its 16-byte data stage or an A2 page write. Stop the
+             * poller immediately after ACK/NACK to cancel pending writes. */
+            const uint8_t command[] = {0xA0, 0x00};
+            bit_buffer_copy_bytes(tx, command, sizeof(command));
+            iso14443_crc_append(Iso14443CrcTypeA, tx);
+            Iso14443_3aError error = iso14443_3a_poller_txrx(
+                event.instance, tx, rx, 1356000U);
+            probe->matches = error == Iso14443_3aErrorNone &&
+                             bit_buffer_get_size(rx) == 4 &&
+                             (bit_buffer_get_byte(rx, 0) & 0x0F) == 0x0A;
+            FURI_LOG_I("MTools", "MFU Gen2 A0 probe: error=%u bits=%u ack=%u", error,
+                       (unsigned)bit_buffer_get_size(rx), probe->matches);
+        }
+        bit_buffer_free(rx);
+        bit_buffer_free(tx);
+    }
+    furi_semaphore_release(probe->complete);
+    return NfcCommandStop;
+}
+
+static bool detect_mfu_direct_write(Nfc* nfc) {
+    MfuMagicProbe probe = {.complete = furi_semaphore_alloc(1, 0)};
+    for(uint8_t stage = 0; stage < 2; stage++) {
+        probe.compatible_write = stage == 1;
+        probe.poller = nfc_poller_alloc(nfc, NfcProtocolIso14443_3a);
+        nfc_poller_start(probe.poller, mfu_magic_probe_callback, &probe);
+        bool completed = furi_semaphore_acquire(probe.complete, furi_ms_to_ticks(2000)) == FuriStatusOk;
+        nfc_poller_stop(probe.poller);
+        nfc_poller_free(probe.poller);
+        if(completed && probe.matches) break;
+        if(stage == 0) furi_delay_ms(80);
+    }
+    furi_semaphore_free(probe.complete);
+    return probe.matches;
+}
+
 bool mtools_detect_magic_tag(Nfc* nfc, MagicGenType gen) {
     if(!nfc) return false;
     switch(gen) {
@@ -299,6 +369,7 @@ bool mtools_detect_magic_tag(Nfc* nfc, MagicGenType gen) {
     case MagicGenIso15693Gen1: return detect_iso15693_gen1(nfc);
     case MagicGenIso15693Gen2: return false;
     case MagicGenIso15693Gen3: return detect_iso15693_gen3(nfc);
+    case MagicGenMfuDirectWrite: return detect_mfu_direct_write(nfc);
     case MagicGenCount: break;
     }
     return false;

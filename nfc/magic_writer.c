@@ -819,8 +819,123 @@ static bool write_iso15693_gen3(Nfc* nfc, const uint8_t uid[8]) {
     return completed && write.success;
 }
 
+typedef struct {
+    FuriSemaphore* complete;
+    NfcPoller* poller;
+    uint8_t uid[7];
+    bool success;
+    bool verify_only;
+} MfuUidWrite;
+
+static bool mfu_read_uid_pages(Iso14443_3aPoller* poller, BitBuffer* tx, BitBuffer* rx, uint8_t pages[16]) {
+    const uint8_t command[] = {0x30, 0x00};
+    bit_buffer_copy_bytes(tx, command, sizeof(command));
+    bit_buffer_reset(rx);
+    if(iso14443_3a_poller_send_standard_frame(poller, tx, rx, 1356000U) !=
+           Iso14443_3aErrorNone || bit_buffer_get_size_bytes(rx) != 16) return false;
+    memcpy(pages, bit_buffer_get_data(rx), 16);
+    return true;
+}
+
+static NfcCommand mfu_uid_write_callback(NfcGenericEvent event, void* context) {
+    MfuUidWrite* write = context;
+    if(event.protocol != NfcProtocolIso14443_3a) return NfcCommandContinue;
+    Iso14443_3aPollerEvent* ready = event.event_data;
+    if(ready->type != Iso14443_3aPollerEventTypeReady) return NfcCommandContinue;
+    const Iso14443_3aData* card = nfc_poller_get_data(write->poller);
+    size_t length = 0;
+    const uint8_t* uid = iso14443_3a_get_uid(card, &length);
+    bool valid = length == 7 && iso14443_3a_get_sak(card) == 0;
+    if(write->verify_only) {
+        write->success = valid && memcmp(uid, write->uid, 7) == 0;
+    } else if(valid) {
+        Iso14443_3aPoller* poller = event.instance;
+        BitBuffer* tx = bit_buffer_alloc(32);
+        BitBuffer* rx = bit_buffer_alloc(32);
+        uint8_t original[16], expected[12], observed[16];
+        valid = mfu_read_uid_pages(poller, tx, rx, original);
+        if(valid) {
+            memcpy(expected, original, sizeof(expected));
+            memcpy(expected, write->uid, 3);
+            expected[3] = 0x88 ^ write->uid[0] ^ write->uid[1] ^ write->uid[2];
+            memcpy(expected + 4, write->uid + 3, 4);
+            expected[8] = write->uid[3] ^ write->uid[4] ^ write->uid[5] ^ write->uid[6];
+            /* All three A2 commands run in this callback: no stop, halt, or
+             * reselection while the UID and its BCC bytes are inconsistent.
+             * Preserve the internal byte and both static lock bytes on page 2. */
+            for(uint8_t page = 0; page < 3 && valid; page++) {
+                uint8_t command[6] = {0xA2, page};
+                memcpy(command + 2, expected + page * 4, 4);
+                bit_buffer_copy_bytes(tx, command, sizeof(command));
+                iso14443_crc_append(Iso14443CrcTypeA, tx);
+                bit_buffer_reset(rx);
+                valid = iso14443_3a_poller_txrx(poller, tx, rx, 1356000U) ==
+                            Iso14443_3aErrorNone && bit_buffer_get_size(rx) == 4 &&
+                        (bit_buffer_get_byte(rx, 0) & 0x0F) == 0x0A;
+                if(!valid) {
+                    snprintf(magic_write_error, sizeof(magic_write_error), "Page %u write failed", page);
+                    /* If a preceding page changed, try to restore the complete
+                     * original UID/BCC before leaving this RF session. */
+                    if(page > 0) {
+                        for(uint8_t restore = 0; restore < 3; restore++) {
+                            command[1] = restore;
+                            memcpy(command + 2, original + restore * 4, 4);
+                            bit_buffer_copy_bytes(tx, command, sizeof(command));
+                            iso14443_crc_append(Iso14443CrcTypeA, tx);
+                            bit_buffer_reset(rx);
+                            iso14443_3a_poller_txrx(poller, tx, rx, 1356000U);
+                        }
+                        bool restored = mfu_read_uid_pages(poller, tx, rx, observed) &&
+                                        memcmp(original, observed, 12) == 0;
+                        snprintf(magic_write_error, sizeof(magic_write_error),
+                                 restored ? "Write failed; restored" : "UID recovery needed");
+                    }
+                }
+            }
+            if(valid) {
+                valid = mfu_read_uid_pages(poller, tx, rx, observed) &&
+                        memcmp(expected, observed, sizeof(expected)) == 0;
+                if(!valid) snprintf(magic_write_error, sizeof(magic_write_error), "MFU page verify failed");
+            }
+        } else {
+            snprintf(magic_write_error, sizeof(magic_write_error), "MFU read failed");
+        }
+        bit_buffer_free(rx);
+        bit_buffer_free(tx);
+        write->success = valid;
+    } else {
+        snprintf(magic_write_error, sizeof(magic_write_error), "Need 7B Type 2 tag");
+    }
+    furi_semaphore_release(write->complete);
+    return NfcCommandStop;
+}
+
+static bool write_mfu_uid(Nfc* nfc, const uint8_t uid[7]) {
+    MfuUidWrite write = {.complete = furi_semaphore_alloc(1, 0)};
+    memcpy(write.uid, uid, sizeof(write.uid));
+    for(uint8_t phase = 0; phase < 2; phase++) {
+        write.success = false;
+        write.verify_only = phase == 1;
+        write.poller = nfc_poller_alloc(nfc, NfcProtocolIso14443_3a);
+        nfc_poller_start(write.poller, mfu_uid_write_callback, &write);
+        bool completed = furi_semaphore_acquire(write.complete, furi_ms_to_ticks(4000)) == FuriStatusOk;
+        nfc_poller_stop(write.poller);
+        nfc_poller_free(write.poller);
+        if(!completed || !write.success) {
+            if(!magic_write_error[0]) snprintf(magic_write_error, sizeof(magic_write_error),
+                                              phase ? "MFU UID verify failed" : "MFU write timed out");
+            furi_semaphore_free(write.complete);
+            return false;
+        }
+        if(phase == 0) furi_delay_ms(80);
+    }
+    furi_semaphore_free(write.complete);
+    return true;
+}
+
 bool mtools_magic_uid_length_supported(MagicGenType gen, size_t uid_len) {
     switch(gen) {
+    case MagicGenMfuDirectWrite: return uid_len == 7;
     case MagicGenMfcGen1a:
     case MagicGenMfcGen3: return uid_len == 4 || uid_len == 7;
     case MagicGenMfcGen2: return uid_len == 4 || uid_len == 7;
@@ -842,6 +957,7 @@ bool mtools_write_magic_uid_with_block0(
     magic_write_error[0] = 0;
     if(!nfc || !uid || !mtools_magic_uid_length_supported(gen, uid_len)) return false;
     switch(gen) {
+    case MagicGenMfuDirectWrite: return write_mfu_uid(nfc, uid);
     case MagicGenMfcGen1a:
     case MagicGenMfcGen3:
     case MagicGenMfcGen4:

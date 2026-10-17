@@ -16,6 +16,7 @@ typedef enum {
     MagicGenIso15693Gen1,
     MagicGenIso15693Gen2,
     MagicGenIso15693Gen3,
+    MagicGenMfuDirectWrite,
     MagicGenCount,
 } MagicGenType;
 
@@ -31,7 +32,8 @@ bool mtools_write_magic_uid_with_block0(
 const char* mtools_magic_write_error(void);
 bool mtools_magic_uid_length_supported(MagicGenType gen, size_t uid_len);
 
-/** Returns true when a supported read-only generation fingerprint matches. */
+/** Probe generation fingerprints without sending memory data writes.
+ * MFU DirectWrite also probes compatibility-WRITE stage 1, then drops RF. */
 bool mtools_detect_magic_tag(Nfc* nfc, MagicGenType gen);
 MagicGenType mtools_detect_iso15693_ready(
     Iso15693_3Poller* poller,

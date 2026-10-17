@@ -6,6 +6,7 @@ static const char* const gen_names[MagicGenCount] = {
     "MFC GEN1 - UID", "MFC GEN2 - CUID", "MFC GEN3 - APDU",
     "MFC GEN4 - UMC", "MFC GDM  - USCUID",
     "ISO15 GEN1", "ISO15 GEN2", "ISO15 GEN3",
+    "MFU/NTAG DirectWrite",
 };
 
 const char* mtools_uid_gen_name(MagicGenType gen) {
@@ -61,8 +62,9 @@ void mtools_uid_flow_draw(Canvas* canvas, void* context) {
         uid_draw_reading(canvas, model);
     } else if(model->page == UidPageMagic) {
         canvas_set_font(canvas, FontKeyboard);
-        const uint8_t start = model->card_type == 2 ? MagicGenIso15693Gen1 : MagicGenMfcGen1a;
-        const uint8_t count = model->card_type == 2 ? 3 : 5;
+        const uint8_t start = model->card_type == 4 ? MagicGenMfuDirectWrite :
+                              model->card_type == 2 ? MagicGenIso15693Gen1 : MagicGenMfcGen1a;
+        const uint8_t count = model->card_type == 4 ? 1 : model->card_type == 2 ? 3 : 5;
         const uint8_t selected = model->gen - start;
         const uint8_t top = selected >= 4 ? selected - 3 : 0;
         for(uint8_t row = 0; row < 4 && top + row < count; row++) {
@@ -91,13 +93,17 @@ void mtools_uid_flow_draw(Canvas* canvas, void* context) {
     } else {
         const bool has_title = model->title[0] != '\0';
         if(has_title) canvas_draw_str(canvas, 2, 35, model->title);
-        for(int row = 0; row < 3; row++) {
-            const int row_y = has_title ? 37 + row * 9 : 28 + row * 11;
-            if(model->selected == row) {
-                canvas_draw_rbox(canvas, 1, row_y, 126, has_title ? 9 : 11, 2);
+        const bool protocol_menu = model->page == UidPageManualProtocol;
+        const int count = protocol_menu ? 4 : 3;
+        for(int row = 0; row < count; row++) {
+            const int index = row;
+            const int row_y = protocol_menu ? 27 + row * 9 :
+                              has_title ? 37 + row * 9 : 28 + row * 11;
+            if(model->selected == index) {
+                canvas_draw_rbox(canvas, 1, row_y, 126, protocol_menu || has_title ? 9 : 11, 2);
                 canvas_set_color(canvas, ColorWhite);
             }
-            canvas_draw_str(canvas, 4, row_y + (has_title ? 8 : 9), model->lines[row]);
+            canvas_draw_str(canvas, 4, row_y + (protocol_menu || has_title ? 8 : 9), model->lines[index]);
             canvas_set_color(canvas, ColorBlack);
         }
     }
