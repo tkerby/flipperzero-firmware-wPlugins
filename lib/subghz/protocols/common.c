@@ -49,6 +49,15 @@ uint32_t subghz_protocol_decoder_common_get_hash_data(void* context) {
         &instance->decoder, (instance->decoder.decode_count_bit / 8) + 1);
 }
 
+uint32_t subghz_protocol_decoder_common_get_hash_data_serial(void* context) {
+    furi_assert(context);
+    SubGhzProtocolDecoderCommon* instance = context;
+    /* The mini counter inside each parcel changes while the button is held; the serial
+     * and press counter do not, and still separate one remote from another. */
+    uint32_t hash = (2166136261u ^ instance->generic.serial) * 16777619u;
+    return (hash ^ instance->generic.cnt) * 16777619u;
+}
+
 SubGhzProtocolStatus subghz_protocol_decoder_common_serialize(
     void* context,
     FlipperFormat* flipper_format,

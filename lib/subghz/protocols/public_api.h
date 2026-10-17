@@ -180,6 +180,16 @@ bool subghz_protocol_nice_o_create_data(
     uint16_t ic,
     SubGhzRadioPreset* preset);
 
+/** Same, in the 72 bit Nice One frame. */
+bool subghz_protocol_nice_o_one_create_data(
+    void* context,
+    FlipperFormat* flipper_format,
+    uint32_t serial,
+    uint8_t btn,
+    uint16_t cnt,
+    uint16_t ic,
+    SubGhzRadioPreset* preset);
+
 /**
  * Key generation from simple data.
  * @param context Pointer to a SubGhzProtocolEncoderSomfyTelis instance
@@ -376,6 +386,13 @@ uint64_t subghz_protocol_nice_o_make_key(
  * @param skip true to hide O-Code frames
  */
 void subghz_protocol_decoder_nice_flor_s_set_skip_o_code(void* context, bool skip);
+
+/**
+ * True when the last decoded Nice frame was O-Code with no installer code known. Such a
+ * frame has no recoverable serial or counter and must not be transmitted.
+ * @param context Pointer to a SubGhzProtocolDecoderNiceFlorS instance
+ */
+bool subghz_protocol_decoder_nice_flor_s_is_o_code_no_ic(void* context);
 
 /** Returned by the Nice Flor-S cipher when the rainbow table cannot be read. */
 #define SUBGHZ_NO_NICE_FLOR_S_RAINBOW_TABLE 0

@@ -195,8 +195,12 @@ bool subghz_key_load(SubGhz* subghz, const char* file_path, bool show_dialog) {
             temp_lon = NAN;
         }
 
-        size_t preset_index =
+        int preset_index =
             subghz_setting_get_inx_preset_by_name(setting, furi_string_get_cstr(temp_str));
+        if(preset_index < 0) {
+            FURI_LOG_E(TAG, "Unknown Preset");
+            break;
+        }
 
         //Edit TX power, if necessary.
         uint8_t* preset_data = subghz_setting_get_preset_data(setting, preset_index);

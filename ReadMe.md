@@ -227,6 +227,15 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [ProtoPirate v4.1 (By RocketGod-git)](https://protopirate.net/ProtoPirate/ProtoPirate)
 - Updated: [Tesla Mod v2.17.0b1 (By hypery11)](https://github.com/hypery11/flipper-tesla-fsd)
 - Updated: [Sub-GHz Scheduler v3.1 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler) (Version Only)
+- SubGHz: [Add Nice O-Code One 433MHz manual and advanced generation with 72-bit frames; preserve captured frame length when saving recovered remotes (By xMasterX; RM adaptation by RogueMaster)](https://github.com/DarkFlippers/unleashed-firmware/commit/7e26e042b48a1e6173ba95c265733d2b145b46ca)
+- Nice O-Code: [Distinguish O-Code from ordinary FloR-S/Nice One, recognize long 112-bit captures, and build saved files through the protocol encoder (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/f67bb1fff48e68bfd14a5f8556a10f03dc220523)
+- SubGHz: [Show O-Code frames with an unknown installer code as raw keys and hide their Save/Send actions (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/f67bb1fff48e68bfd14a5f8556a10f03dc220523)
+- Apps: [Use an attached external CC1101 in Nice O-Code and Security+ PIN, with internal-radio fallback and an Int/Ext indicator (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/f67bb1fff48e68bfd14a5f8556a10f03dc220523)
+- SubGHz: [Deduplicate rotating parcels from Beninca ARC, CAME Atomo and Nice remotes while retaining RM's 32-bit history hashes and leaving CAME Atomo raw frame data intact (By xMasterX; RM adaptation by RogueMaster)](https://github.com/DarkFlippers/unleashed-firmware/commit/ea01dfccfd324db081c3ab793c33c0fd71492a68)
+- SubGHz: [Reject unknown presets safely on load, receive and transmit instead of crashing; apply the matching guard to Sub-GHz Remote (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/e1ebaa318b6dec205c2dce4575844b8e9bd56c3f)
+- SubGHz: [Free the temporary Security+ 2.0 generator transmitter and clear its pointer after generation (By xMasterX; RM adaptation Vy RogueMaster)](https://github.com/DarkFlippers/unleashed-firmware/commit/e1ebaa318b6dec205c2dce4575844b8e9bd56c3f)
+- OFW: [Fix FeliCa rejected-command recovery, system selection, polling system codes, PMm-based timeouts, response statuses, extended block addressing and atomic Standard writes without changing the saved PMm during emulation #4465 (By kormax)](https://github.com/flipperdevices/flipperzero-firmware/commit/3fb1d51727733d2007abc5ec636a89328857803e)
+- Updated: [Sub-GHz Remote v1.8 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote) [Changes (By xMasterX)](https://github.com/DarkFlippers/SubGHz_Remote/commit/a94f7c754f4e0f9881b7f3432906b46da4007e21)
 
 <a name="release"></a>
 
