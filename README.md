@@ -8,9 +8,9 @@
 
 <p align="center">
   <img alt="Bands: 2.4 + 5 GHz" src="https://img.shields.io/badge/Wi--Fi-2.4%20%2B%205%20GHz-ff6b00">
-  <img alt="Firmware: Official · Momentum · Unleashed" src="https://img.shields.io/badge/Firmware-Official%20%C2%B7%20Momentum%20%C2%B7%20Unleashed-44a8b3">
+  <img alt="Two FAPs: API 87.1 and API 88.2" src="https://img.shields.io/badge/FAP-API%2087.1%20%2B%2088.2-44a8b3">
   <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue">
-  <img alt="Version 2.7.8" src="https://img.shields.io/badge/app-v2.7.8-555">
+  <img alt="Version 2.8.0" src="https://img.shields.io/badge/app-v2.8.0-555">
 </p>
 
 <p align="center">
@@ -35,7 +35,7 @@ Almost every Flipper Wi-Fi add-on is built on an **ESP32**, and the common ESP32
 - 🧭 **Guided Audit.** Pick an AP and wait. The app chooses handshake or clientless PMKID from PMF and whether stations are present. **Complete** only if a quality-gated PCAP or `.22000` file was written; DFS stays receive-only.
 - 🤝 **Manual captures when you want them.** Handshake (5 GHz EAPOL) and PMKID *(beta)* stay under **Scan Wi-Fi** for a single path you pick yourself.
 - 📻 **BLE a bare Flipper can't do.** The Flipper's own firmware never exposes a general BLE scanner to apps; the BW16 radio lists advertisers, flags trackers across all four big ecosystems (AirTag, Tile, Samsung SmartTag, Google Find My) and nearby Flipper Zeros, names vendors — then goes active with GATT service discovery, iBeacon broadcast, and a BLE HID keyboard.
-- 🎛️ **One clean app, three firmwares.** Purpose-built UI for the 128×64 screen, and one build runs on Official, Momentum, and Unleashed.
+- 🎛️ **Two Flipper builds.** Purpose-built UI for the 128×64 screen. **2.8.0** (API 88.2) is for Official 1.5.1. **v2.7.8** (API 87.1) stays for Official 1.4.3 and Momentum mntm-012.
 
 ---
 
@@ -80,7 +80,7 @@ The **[5Ghost WiFi Devboard →](https://www.pingequa.com/products/flipper-zero-
 - **PMF / WPA3 awareness.** By parsing each beacon's RSN IE, it labels WPA3-SAE and 802.11w-required APs as **deauth-immune** up front — so you don't burn time attacking something that ignores you.
 - **Clientless PMKID** *(beta).* Grabs a crackable PMKID via AUTHPROBE without waiting for a client to connect — with an on-device capture-quality gate before it claims success. Guided Audit can take this path when there are no stations (or PMF required).
 - **BLE recon + injection a bare Flipper can't do.** Flipper's official firmware never exposes a general BLE scanner to apps ([issue #2906](https://github.com/flipperdevices/flipperzero-firmware/issues/2906), closed unimplemented); the BW16 lists every advertiser, flags trackers across all four big ecosystems (AirTag, Tile, Samsung SmartTag, Google Find My) and other Flipper Zeros, names vendors — then goes active with GATT service discovery, iBeacon broadcast, and a BLE HID keyboard.
-- **One build, three firmwares.** A single `.fap` runs on Official, Momentum, and Unleashed (it avoids the APIs the official firmware disables, so it loads cleanly everywhere).
+- **Two FAP builds, not one.** **2.8.0** is API 88.2 for Official 1.5.1. **v2.7.8** is API 87.1 for Official 1.4.3 and Momentum mntm-012. The app still does not call `strtok` or `strcat`, which Official disables.
 - **Browser-based recovery.** If the module firmware ever gets corrupted, it re-flashes from a desktop Chromium/Firefox browser over USB — no toolchain to install. See [flash.pingequa.com](https://flash.pingequa.com/devices/bw16-5ghost).
 
 ---
@@ -107,7 +107,7 @@ The **[5Ghost WiFi Devboard →](https://www.pingequa.com/products/flipper-zero-
 
 | Capability | **5Ghost** (RTL8720DN) | ESP32 Marauder | Bruce | GhostESP |
 |---|:---:|:---:|:---:|:---:|
-| Latest version *(2026-10-10)* | 2.7.8 | v1.18.0 | 1.16.1 | v2.2.1 |
+| Latest version *(5Ghost 2026-10-17; other columns unchanged from 2026-10-10)* | 2.8.0 | v1.18.0 | 1.16.1 | v2.2.1 |
 | Radio | RTL8720DN **dual-band** | ESP32 ¹ | ESP32 ¹ | ESP32 ¹ |
 | **5 GHz** scan | ✅ native | C5 hardware only ¹ | C5, experimental ¹ | C5 hardware only ¹ |
 | 2.4 GHz toolkit | ✅ | ✅ mature | ✅ | ✅ |
@@ -150,7 +150,10 @@ Tools that overpromise waste your time. The straight talk:
 Not on its own — the Flipper Zero has no Wi-Fi radio, and the common ESP32 add-on boards (ESP32 / S2 / S3 / C3 / C6) are 2.4 GHz only. 5Ghost adds real 5 GHz by using a dual-band Realtek RTL8720DN (BW16) board instead.
 
 **Board firmware 2.7.4**
-Replays one saved BLE advertisement. The Flipper app stays **2.7.8**. On board firmware 2.7.3 the replay page says **Firmware too old**. Reflash the board at [flash.pingequa.com](https://flash.pingequa.com/devices/bw16-5ghost).
+Replays one saved BLE advertisement. The Flipper app does not include that board firmware. On board firmware 2.7.3 the replay page says **Firmware too old**. Reflash the board at [flash.pingequa.com](https://flash.pingequa.com/devices/bw16-5ghost).
+
+**What's new in 2.8.0?**
+This app version is **2.8.0**, API **88.2**, for Official Flipper firmware **1.5.1**. **v2.7.8** on GitHub Releases stays the API **87.1** file for Official **1.4.3** and Momentum **mntm-012**. Both files are named `5ghost_wifi_lab.fap`. Board firmware stays 2.7.3. Replaying a saved BLE advertisement still needs board firmware **2.7.4**.
 
 **What's new in 2.7.8?**
 Install the Flipper app **2.7.8** from [GitHub Releases](../../releases). **Scan Wi-Fi** opens a menu and does not scan. **Scan now** runs the passive sweep. After that scan, **AP list N** reopens the list. Channel Map, Guided Audit, Handshake, and PMKID are on this menu. That app works on board firmware 2.7.3. Replaying a saved BLE advertisement needs board firmware **2.7.4**.
@@ -201,7 +204,11 @@ No — and neither can any other tool offline. WPA3-SAE is designed so a capture
 No. Flipper's official firmware doesn't expose a general BLE scanner to third-party apps (feature request #2906 is closed, unimplemented). 5Ghost's BW16 radio does the BLE sweep — listing advertisers, flagging trackers across all four big ecosystems (Apple AirTag, Tile, Samsung SmartTag, Google Find My) and other Flipper Zeros, and naming vendors. It can also actively connect for GATT recon, broadcast an iBeacon, and act as a BLE HID keyboard.
 
 **Which Flipper firmware does it need?**
-One universal `.fap` runs on all three major firmwares — **Official**, **Momentum**, and **Unleashed** (API 87.1). It avoids the APIs Official disables, so it loads cleanly everywhere.
+Two packages, both named `5ghost_wifi_lab.fap`:
+
+- **2.8.0**, API **88.2** — Official **1.5.1**.
+- **v2.7.8**, API **87.1** — Official **1.4.3** and Momentum **mntm-012**. That file stays on the v2.7.8 GitHub release.
+- Unleashed **unlshd-094** is API 88.19. Its loader source compares API major only, so 2.8.0 is not rejected for major. It has not been loaded on Unleashed hardware.
 
 **Does 5Ghost work on any BW16 board?**
 It's designed for the PINGEQUA 5Ghost board, which ships preloaded with matching firmware, pinout, and antenna. Other BW16 / RTL8720DN boards are not supported and may not work.
@@ -210,7 +217,14 @@ It's designed for the PINGEQUA 5Ghost board, which ships preloaded with matching
 
 ## Compatibility
 
-One universal `.fap` build runs on the three major Flipper firmwares: **Official** · **Momentum** · **Unleashed** (API 87.1).
+Two `.fap` builds, same filename:
+
+| App | API | Flipper firmware |
+|---|---|---|
+| **2.8.0** | 88.2 | Official **1.5.1** |
+| **v2.7.8** | 87.1 | Official **1.4.3**, Momentum **mntm-012** |
+
+Unleashed **unlshd-094** (API 88.19) compares API major only in its loader source, so 2.8.0 is not rejected for major. That package has not been loaded on an Unleashed device.
 
 It's a companion app **for Flipper Zero**, designed for the PINGEQUA 5Ghost dual-band board (RTL8720DN / BW16) over the GPIO UART.
 
@@ -218,8 +232,10 @@ It's a companion app **for Flipper Zero**, designed for the PINGEQUA 5Ghost dual
 
 ## Install
 
-1. Download the latest **`.fap`** (**2.7.8**) from [**Releases**](../../releases).
-2. Copy it to your Flipper SD card under `/ext/apps/GPIO/`.
+1. Pick the `.fap` for the Flipper firmware. Both files are named `5ghost_wifi_lab.fap`. The later copy on the SD card replaces the earlier one.
+   - Official **1.5.1** — app **2.8.0** (API 88.2).
+   - Official **1.4.3** or Momentum **mntm-012** — app **v2.7.8** (API 87.1) from [the v2.7.8 release](../../releases/tag/v2.7.8). Do not replace that release's asset.
+2. Copy the file to your Flipper SD card under `/ext/apps/GPIO/`.
 3. Dock your PINGEQUA 5Ghost board and open **Apps → GPIO → 5Ghost WiFi Lab**.
 
 The board ships **preloaded**. **Firmware 2.7.3 is enough for Guided Audit**. Replaying a saved BLE advertisement needs board firmware **2.7.4**. Recover a board, or move it to 2.7.4, at [flash.pingequa.com](https://flash.pingequa.com/devices/bw16-5ghost) (picker **2.7.4**).
@@ -232,7 +248,7 @@ The board ships **preloaded**. **Firmware 2.7.3 is enough for Guided Audit**. Re
 
 Only test networks you **own** or have **written permission** to test.
 
-1. **Apps → GPIO → 5Ghost WiFi Lab → Scan Wi-Fi → Guided Audit**. Needs app **2.7.8** from [GitHub Releases](../../releases); firmware **2.7.3** is enough.
+1. **Apps → GPIO → 5Ghost WiFi Lab → Scan Wi-Fi → Guided Audit**. Needs app **2.8.0** on Official 1.5.1, or **v2.7.8** on Official 1.4.3 and Momentum mntm-012. Board firmware **2.7.3** is enough.
 2. Wait for the scan if the list is empty. The list is titled **Pick AP (audit)** and includes **both bands**. DFS rows are selectable. **Rescan** repeats the sweep.
 
    ![Pick AP (audit)](assets/screenshots/audit-pick.png)
