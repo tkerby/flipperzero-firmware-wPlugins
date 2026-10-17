@@ -1,3 +1,7 @@
+## 1.1
+- External CC1101 (cc1101_ext) radio support: auto-selects the external module when one is
+  present, otherwise falls back to the built-in Sub-GHz radio.
+
 ## 1.0
 - Range config: Band presets (full-spectrum / full-band / ~26 tagged known allocations) plus
   a Frequency-Analyzer-style custom Start/End editor, modulation preset and step.

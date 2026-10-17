@@ -236,6 +236,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - SubGHz: [Free the temporary Security+ 2.0 generator transmitter and clear its pointer after generation (By xMasterX; RM adaptation Vy RogueMaster)](https://github.com/DarkFlippers/unleashed-firmware/commit/e1ebaa318b6dec205c2dce4575844b8e9bd56c3f)
 - Updated: [Sub-GHz Remote v1.8 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote) [Changes (By xMasterX)](https://github.com/DarkFlippers/SubGHz_Remote/commit/a94f7c754f4e0f9881b7f3432906b46da4007e21)
 - Updated: [Gitphin v1.2 (By Adhamura)](https://github.com/Adhamura/gitphin)
+- Updated: [RF Survey v1.1 (By tbelbek)](https://github.com/tbelbek/flipper-rf-survey)
 
 <a name="release"></a>
 
@@ -1024,7 +1025,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Remote Maker (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/487)
 - [Resistance Calculator v1.4 (By instantiator)](https://github.com/instantiator/flipper-zero-experimental-apps)
 - [Restaurant Pager Trigger v1.7 (By leedave)](https://github.com/leedave/flipper-zero-meal-pager)
-- [RF Survey v1.0 (By tbelbek)](https://github.com/tbelbek/flipper-rf-survey)
+- [RF Survey v1.1 (By tbelbek)](https://github.com/tbelbek/flipper-rf-survey)
 - [RFID Fuzzer v1.8 (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/507)
 - [RFID Metal Detector v1.0 (By hnsvrdmn)](https://github.com/hnsvrdmn/flipper-rfid-metal-detector)
 - [RFIDMaker v0.9 (By KindaCharming / jeremydbean)](https://github.com/jeremydbean/FlipperRFIDMaker)
