@@ -239,6 +239,11 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Nice O-Code v2.0 (By zero-mega & xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/e6ded9b108454b30a3e710295e6d2b7fd146e188)
 - SubGHz: [Nice O-Code 112bit frames are decoded and sent - the receiver certificate they carry is shown on the Read screen and saved with the remote, and a remote that has one broadcasts it for its first 20 presses so the receiver enrols it by itself. Nice O-Code+Crt 433MHz is the matching Add Manually entry & other Nice O-Code changes (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/5d3c950e98a3504c018e0810eb7faca3540827d8)
 - Updated: [MTools v1.1 (By mtoolstec)](https://github.com/mtoolstec/flipper-mtools)
+- iButton: [Fix write-success text going off screen (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/2cdc85a6ae041faa14ab4ef28afd48add8337349)
+- RFID: [Move Writing-screen text up so long filenames and chip/protocol details fit (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/b510f625dd5a8962d9129b6bb17dc8a73c90fa07)
+- SubGHz Remote: [Highlight the sending button and show the last signal's protocol, frequency/modulation, key/serial and counter details (By xMasterX)](https://github.com/DarkFlippers/SubGHz_Remote/commit/df6334cdde0c88e22ab09ba16b12222cfccf834a)
+- SubGHz Remote: [Support hold-to-transmit, full RAW-file clicks and held RAW repeats; remove forced Repeat=200 and correct custom-button/counter cleanup (By xMasterX)](https://github.com/DarkFlippers/SubGHz_Remote/commit/6674983c3e94622bc17f1985c18a2c30ab838861)
+- SubGHz WarDriving: [Resume RX after TX and prevent received/history signals from overwriting an unrelated saved file; reset FAAC programming state (By xMasterX)](https://github.com/xMasterX/all-the-plugins/commit/1aa52e2a30efaf3f16d59abce9803d9b0f769972)
 
 <a name="release"></a>
 
