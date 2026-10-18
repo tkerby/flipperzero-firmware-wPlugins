@@ -8,7 +8,7 @@ This allows reflashing TLSR chips, namely cheap Tuya devices.
 
 This project is highly vibe-coded, refer to `AGENTS.md` for more info.
 
-![Flipper Zero wired to a ZG-226Z board over SWS](demo.jpg)
+![Flipper Zero wired to a ZG-226Z board over SWS](demo2.jpg)
 
 ## How to use it
 
