@@ -21,7 +21,16 @@ int GetMinimumAttackingPlateIndex(const GameState* gameState) {
 
 static void StartEnemy(GameState* gameState) {
     gameState->enemy = MakeEnemy(gameState->round, &gameState->randomGenerator);
+
     gameState->enemyReward = CalculateEnemyReward(&gameState->enemy);
+    if(gameState->round >= 16 && gameState->enemyReward > 9) {
+        gameState->enemyReward = 9;
+    } else if(gameState->round >= 11 && gameState->enemyReward > 12) {
+        gameState->enemyReward = 12;
+    } else if(gameState->enemyReward > 15) {
+        gameState->enemyReward = 15;
+    }
+    
     SelectOutermostPlayerPlate(gameState);
     gameState->mode = GameModePlayerSelect;
 }
