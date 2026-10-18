@@ -87,6 +87,19 @@ const char* uhf_protocol_tag_error_text(uint8_t code) {
         return "Read failed";
     case 0x33:
         return "Write failed";
+    case 0x11:
+        return "Operation failed";
+    case 0x36:
+        return "No tag";
+    case 0x37:
+        return "Tag access failed";
+    case 0x40:
+        return "Access/password error";
+    case 0x41:
+        return "Invalid parameter";
+    case 0x42:
+    case 0x43:
+        return "Word count too long";
     default:
         return "Tag operation failed";
     }
