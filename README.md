@@ -26,3 +26,6 @@ For use on your own devices and testing only.
 ## Source
 
 https://github.com/Clawzman/flipper-ir-jammer
+
+## Credits
+Ported from the IR jammer in Bruce firmware by Thoxy67
