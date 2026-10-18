@@ -6,9 +6,11 @@
 void scheduler_scene_run_on_enter(void* context) {
     SchedulerApp* app = context;
     scheduler_start(app->scheduler);
+    app->last_blink_countdown = UINT32_MAX;
 
     scheduler_run_view_set_static_fields(app->run_view, app->scheduler);
-    scheduler_run_view_update(app->run_view, app->scheduler, false);
+    scheduler_run_view_update(
+        app->run_view, app->scheduler, false, scheduler_get_countdown_seconds(app->scheduler));
 
     subghz_devices_init();
     view_dispatcher_switch_to_view(app->view_dispatcher, SchedulerAppViewRunSchedule);
@@ -44,21 +46,28 @@ bool scheduler_scene_run_on_event(void* context, SceneManagerEvent event) {
         scheduler_tx_done(app->scheduler);
     }
 
-    const uint8_t tick_counter = scheduler_run_view_get_tick_counter(app->run_view);
-    const bool busy = app->thread != NULL;
+    //const uint8_t tick_counter = scheduler_run_view_get_tick_counter(app->run_view);
+    bool busy = app->thread != NULL;
 
     if(!busy && scheduler_time_to_trigger(app->scheduler)) {
+        app->last_blink_countdown = UINT32_MAX;
+
         const int16_t line = scheduler_fire(app->scheduler);
         scheduler_start_tx(app, line);
-    } else if(
-        !busy && !(tick_counter % 2) && scheduler_is_armed(app->scheduler) &&
-        scheduler_get_countdown_seconds(app->scheduler) <= IDLE_BLINK_WINDOW_S) {
-        // Keep quiet during long waits, only blink in the last minute before a send
+
+        busy = app->thread != NULL;
+    }
+
+    const uint32_t countdown = scheduler_get_countdown_seconds(app->scheduler);
+
+    if(!busy && scheduler_is_armed(app->scheduler) && countdown > 0 &&
+       countdown <= IDLE_BLINK_WINDOW_S && countdown != app->last_blink_countdown) {
+        app->last_blink_countdown = countdown;
         notification_message(app->notifications, &sequence_blink_red_10);
     }
 
-    scheduler_run_view_update(app->run_view, app->scheduler, app->thread != NULL);
     scheduler_run_view_inc_tick_counter(app->run_view);
+    scheduler_run_view_update(app->run_view, app->scheduler, busy, countdown);
 
     return true;
 }

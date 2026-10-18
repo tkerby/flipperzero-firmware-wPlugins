@@ -202,7 +202,8 @@ void scheduler_run_view_set_static_fields(SchedulerRunView* run_view, Scheduler*
 void scheduler_run_view_update(
     SchedulerRunView* run_view,
     Scheduler* scheduler,
-    bool transmitting) {
+    bool transmitting,
+    uint32_t countdown_seconds) {
     furi_assert(run_view);
     furi_assert(scheduler);
 
@@ -242,8 +243,7 @@ void scheduler_run_view_update(
     if(transmitting) {
         snprintf(countdown, sizeof(countdown), "Sending");
     } else {
-        scheduler_seconds_to_hms_string(
-            scheduler_get_countdown_seconds(scheduler), countdown, sizeof(countdown));
+        scheduler_seconds_to_hms_string(countdown_seconds, countdown, sizeof(countdown));
     }
 
     with_view_model(

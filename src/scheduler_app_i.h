@@ -59,6 +59,7 @@ struct SchedulerApp {
     char save_name_tmp[SCHEDULER_MAX_LEN_NAME];
     volatile bool is_transmitting;
     volatile bool tx_abort;
+    uint32_t last_blink_countdown;
     int16_t tx_line; // playlist line being sent, -1 for all
     int16_t edit_line; // playlist line being edited, -1 for the global interval
     uint8_t start_menu_ids[MenuIndexNum]; // start list position -> MenuIndices

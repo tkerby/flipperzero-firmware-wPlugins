@@ -98,7 +98,7 @@ SchedulerApp* scheduler_app_alloc(void) {
     view_dispatcher_set_navigation_event_callback(
         app->view_dispatcher, scheduler_app_back_event_callback);
     view_dispatcher_set_tick_event_callback(
-        app->view_dispatcher, scheduler_app_tick_event_callback, 500);
+        app->view_dispatcher, scheduler_app_tick_event_callback, furi_ms_to_ticks(500));
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
 
     app->text_input = text_input_alloc();

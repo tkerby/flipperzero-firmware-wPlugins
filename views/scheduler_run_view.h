@@ -17,4 +17,5 @@ void scheduler_run_view_set_static_fields(SchedulerRunView* run_view, Scheduler*
 void scheduler_run_view_update(
     SchedulerRunView* run_view,
     Scheduler* scheduler,
-    bool transmitting);
+    bool transmitting,
+    uint32_t countdown_seconds);
