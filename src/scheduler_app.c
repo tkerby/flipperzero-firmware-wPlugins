@@ -2,6 +2,7 @@
 
 #include <applications/drivers/subghz/cc1101_ext/cc1101_ext_interconnect.h>
 #include <lib/subghz/devices/devices.h>
+#include <power/power_service/power.h>
 
 #include <furi_hal_power.h>
 
@@ -35,30 +36,41 @@ static void scheduler_make_app_folder(SchedulerApp* app) {
     furi_record_close(RECORD_STORAGE);
 }
 
-static void scheduler_app_ext_device_cleanup() {
-    if(furi_hal_power_is_otg_enabled()) {
-        furi_hal_power_disable_otg();
-    }
+static void scheduler_app_ext_device_cleanup(void) {
+    Power* power = furi_record_open(RECORD_POWER);
+    power_enable_otg(power, false);
+    furi_record_close(RECORD_POWER);
 }
 
 static bool scheduler_app_ext_device_init() {
-    bool present = false;
+    Power* power = furi_record_open(RECORD_POWER);
+    power_enable_otg(power, true);
+    furi_record_close(RECORD_POWER);
 
-    uint8_t otg_attempts = 5;
-    while (!(present = furi_hal_power_is_otg_enabled()) && otg_attempts--) {
-        furi_hal_power_enable_otg();
+    bool is_powered = false;
+
+    // Wait up to 500ms for OTG power
+    for(uint8_t i = 0; i < 5; i++) {
+        is_powered = furi_hal_power_is_otg_enabled() || furi_hal_power_get_usb_voltage() >= 4.5f;
+
+        if(is_powered) break;
         furi_delay_ms(100);
     }
 
-    if(present) {
+    bool present = false;
+
+    if(is_powered) {
         subghz_devices_init();
+
         const SubGhzDevice* device = subghz_devices_get_by_name(SUBGHZ_DEVICE_CC1101_EXT_NAME);
+
         present = subghz_devices_is_connect(device);
-        if(!present) {
-            scheduler_app_ext_device_cleanup();
-        }
 
         subghz_devices_deinit();
+    }
+
+    if(!present) {
+        scheduler_app_ext_device_cleanup();
     }
 
     return present;
