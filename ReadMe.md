@@ -186,7 +186,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Game Mode: Load game-menu discovery and configuration parsing from internal instead of an on-demand FAL. (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/b52ad0ff3b50f46270f0de4459cd1ed5a6656857)
 - OFW: [appmanifest: reject float fap_version with a clear error (refs ufbt#52) #4375 (By hypery11)](https://github.com/flipperdevices/flipperzero-firmware/pull/4375)
 - OFW: RFID: [feat: add Indala 224-bit (long format) RFID protocol support #4343 — fix decoding of phase runs spanning all 224 bits (By kuzaxak)](https://github.com/flipperdevices/flipperzero-firmware/pull/4343)
-- [Game Mode: Load game-menu safely and quickly. Automatically doubles held scrolling speed after four consecutive pages. (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/e4cb0791152123c5a3499e083d94ea4406d968b3)
+- [Game Mode: Load game-menu safely and quickly. Automatically doubles held scrolling speed after four consecutive pages. (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/e4cb0791152123c5a3499e083d94ea4406d968b3)
 - SubGHz: [KeeLoq Erreka programming mode - the 0xF button now sends the seed in the clear like the original remote, same as BFT, and the seed is saved with the signal so the hops can be rebuilt (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/1139732616045a15b9efc59790cc83e3a8ad292a)
 - Added: [TamaConnect v1.0 (By s2013p)](https://github.com/s2013p/TamaConnect)
 - Updated: [SigRoam Wardriving v0.6.1 (By pingequalab)](https://github.com/pingequalab/sigroam-wardriving) `Req: ESP32`
@@ -237,6 +237,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Sub-GHz Remote v1.8 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote) [Changes (By xMasterX)](https://github.com/DarkFlippers/SubGHz_Remote/commit/a94f7c754f4e0f9881b7f3432906b46da4007e21)
 - Updated: [Gitphin v1.2 (By Adhamura)](https://github.com/Adhamura/gitphin)
 - Updated: [RF Survey v1.1 (By tbelbek)](https://github.com/tbelbek/flipper-rf-survey)
+- Updated: [Nice O-Code v2.0 (By zero-mega & xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/e6ded9b108454b30a3e710295e6d2b7fd146e188)
+- SubGHz: [Nice O-Code 112bit frames are decoded and sent - the receiver certificate they carry is shown on the Read screen and saved with the remote, and a remote that has one broadcasts it for its first 20 presses so the receiver enrols it by itself. Nice O-Code+Crt 433MHz is the matching Add Manually entry & other Nice O-Code changes (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/5d3c950e98a3504c018e0810eb7faca3540827d8)
 
 <a name="release"></a>
 
@@ -955,7 +957,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [NFC Tools v1.3 (By wakdev)](https://github.com/wakdev/nfctools-fz)
 - [NFC URL v1.0 (By y-dejong)](https://github.com/y-dejong/nfcurl)
 - [NFC/RFID Detector v1.4 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2795)
-- [Nice O-Code v1.0 (By zero-mega & xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/e6ded9b108454b30a3e710295e6d2b7fd146e188)
+- [Nice O-Code v2.0 (By zero-mega & xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/e6ded9b108454b30a3e710295e6d2b7fd146e188)
 - [Nickname Generator v0.2 (By disaxq)](https://github.com/disaxq/Nickname-Generator)
 - [Nightstand Clock v1.3 (By nymda)](https://github.com/nymda/FlipperNightStand)
 - [Noptel LRF Sampler v2.4 (By Giraut)](https://github.com/Giraut/flipper_zero_noptel_lrf_sampler)
