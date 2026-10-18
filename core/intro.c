@@ -54,7 +54,6 @@ const char* const introParagraphs[] = {
     "A rival managed to track you down using a WYRM of their own.",
 
     "You prepare to attack!"
-    ""
 };
 
 size_t GetIntroParagraphCount(void) {
