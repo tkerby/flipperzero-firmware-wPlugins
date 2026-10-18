@@ -19,20 +19,22 @@ UHF RFID Reader/Writer expansion for Flipper Zero, communicating over UART bridg
 - **Paged EPC List** — Browse scanned tags page by page, with truncated preview
 - **Tag Details** — View full EPC, RSSI, and PC (Protocol Control) bits for each tag
 - **Tag Memory Actions** — Read and write EPC, TID, and User Data on compatible tags
+- **TID-Changeable Tag Support** — Reads short and 128-bit TID banks with automatic window fallback and EPC-filter recovery
 - **Tag Protection Actions** — Erase writable banks and reversibly lock or unlock EPC, TID, and User memory
-- **Access Keys** — Keep four reusable 32-bit access-password slots in the app data directory
+- **Access Keys** — Keep four reusable 32-bit access-password slots in the app data directory, shown directly in the key list
+- **RGB LED Feedback** — Blue/magenta blinking during single-tag reads and writes, with green/cyan success and red failure flashes
 - **Save CSV Records** — Export scanned tags to CSV file on SD card
 - **About Page** — Project details and a second page with reader firmware, temperature, power, and UUID
 
 ## Screenshots
 
-| Main menu | TID Decoder |
-|:--:|:--:|
-| ![Main menu](images/01.png) | ![TID Decoder](images/05.png) |
-| **Tag operations** | **Tag Inventory** |
-| ![Tag operations](images/04.png) | ![Tag Inventory](images/03.png) |
-| **UHF Radar** | **EPC Fuzzing** |
-| ![UHF Radar](images/02.png) | ![EPC Fuzzing](images/06.png) |
+| Main Menu | UHF Radar | Tag Inventory |
+|:--:|:--:|:--:|
+| ![Main menu with six feature tiles](images/01.png) | ![UHF radar with tag count and reader telemetry](images/02.png) | ![Inventory list of scanned EPC tags](images/03.png) |
+
+| Tag Memory | TID Decoder | EPC Fuzzing |
+|:--:|:--:|:--:|
+| ![Tag memory viewer with read, edit and write actions](images/04.png) | ![TID decoder showing tag manufacturer and model](images/05.png) | ![EPC fuzzing with incremental tag data](images/06.png) |
 
 ## Hardware Setup
 
@@ -68,7 +70,8 @@ Install **UHF Expansion** directly from the
 git clone https://github.com/mtoolstec/fz-uhf-expansion.git
 cd fz-uhf-expansion
 
-# Build and install
+# Update the SDK to match the current official firmware, then build and install
+ufbt update --channel release
 ufbt build
 ufbt launch
 ```
@@ -85,10 +88,16 @@ Requirements:
 - [ufbt](https://pypi.org/project/ufbt/) — Flipper Zero build tool (`pip install ufbt`)
 
 ```bash
+ufbt update --channel release
 ufbt build
 ```
 
-The compiled `.fap` will be at `build/uhf_expansion.fap`.
+The compiled `.fap` will be at `dist/uhf_expansion.fap`.
+
+After upgrading Flipper firmware, rebuild and replace the installed FAP: an older
+binary may target a different firmware API. The source has been built and passed
+`APPCHK` with the official 1.5.1 SDK (target 7, API 88.2). This verifies SDK
+compatibility; reader operation still requires testing on the device.
 
 ## Publishing a New Catalog Version
 
@@ -117,8 +126,9 @@ Catalog bundle, updates the Catalog fork, and opens the upstream pull request.
 10. Set **EPC Display** to **ASCII** to show printable ASCII EPCs in Tag Inventory
 11. Use **EPC ASCII** to capture one tag, edit up to 12 characters, and write the 96-bit EPC with Right
 
-> **Key storage:** Access-password slots are stored locally on the SD card for
-> convenience. They are masked in the UI but are not hardware-backed secrets.
+> **Key storage:** Access-password slots are stored locally on the SD card and
+> shown in plain text in the Access Keys list for verification. They are not
+> hardware-backed secrets.
 > Set a non-zero Access Password on the tag before locking. The Tag Control
 > recovery action can initialize it on tags whose current password is zero.
 
@@ -151,87 +161,3 @@ to test. Follow local radio, privacy, and data-protection requirements.
 ---
 
 *Built for Flipper Zero — https://flipperzero.one*
-
-### Inventory actions and memory
-
-Hold **OK** in Inventory to open **Actions**: **Tag Control**, **Save Tag**,
-and **Save CSV**. UP/DOWN selects an item; OK opens it; BACK
-returns. Opening Actions pauses scanning and snapshots the current list cursor.
-Leaving Actions restores the previous scanning state. With no valid cursor,
-Tag Control and Save Tag are unavailable. Short OK still starts/pauses scanning
-or opens the selected tag when browsing in the framed Tag Operation bank view. The Left/Clear shortcut asks for a short OK confirmation, then returns directly
-to the empty Inventory list with scanning paused.
-
-Tag Operation and Tag Control use the selected EPC without scanning for another tag:
-
-- Short **OK** opens Tag Operation on EPC. Left cycles
-  EPC → TID → USER → Reserved → EPC without a separate bank menu. EPC shows
-  the bank's CRC and PC followed by scrollable words. Reserved reads the four password words.
-  TID and USER read 16-word windows: UP/DOWN scrolls inside the window
-  with a right scrollbar, then reads the adjacent window at its edge; a memory-overrun
-  response retries smaller windows to read the final words. Next-window overrun
-  preserves the last valid page and stops paging. Other failures preserve the
-  data and briefly show Next page unreadable, allowing retry. OK opens the full keyboard to edit current data (same window length);
-  hold LEFT rereads the current page; BACK returns to the Inventory list. Right writes the displayed EPC data or current TID/USER window directly; Reserved is read-only. Reads use the active access key
-  and EPC matching, with a bounded reader timeout and error messages.
-- **Tag Control** opens Access key, Lock bank, Unlock bank and Erase bank directly.
-  Left cycles EPC/TID/USER; TID erase is unavailable. BACK returns to Actions.
-  It reuses the existing access-key, erase and reversible lock/unlock operations. Inventory erases, locks/unlocks
-  require a separate short-OK confirmation; BACK cancels. Results use a timed popup
-  over the previous menu. Tag Control wraps UP/DOWN selection and shows a right scrollbar.
-
-**Save Tag** opens the keyboard with `Tag X` as the default name, where X is
-the current number of saved tags plus one. Confirming creates `tags/tag_001.uhf`
-through `tag_999.uhf` in the app data folder without replacing existing records.
-The chosen name appears in Saved Tags; older records retain their numbered labels.
-Records contain the name, EPC, captured PC,
-RSSI, the Flipper RTC timestamp, and any cached TID/USER data. Saved TID/USER
-values are the contiguous prefix actually read, capped at 32/64 bytes; they
-are not a claim that the complete bank was dumped. Reserved passwords are not
-saved.
-
-**Saved Tags** lists records numerically as Tag 001, Tag 002, etc. Select a
-record with OK to open its data directly. Hold OK opens **View / Delete**. View uses the existing framed
-bank style: Left cycles EPC/TID/User/Info, UP/DOWN scrolls long hex, and Info
-shows captured PC, RSSI and timestamp. Missing TID/User show "Not recorded".
-OK opens the full keyboard to edit and save the current bank in the original
-record; BACK returns to the library. Info is read-only. Right offers Write
-for recorded EPC/TID/USER only. It stays on the data page while capturing a single physical target, rejects
-multiple tags, and writes automatically once a unique target is stable.
-The result appears as a short popup with sound, then returns to the saved data.
-EPC writes require the target and saved EPC to have the same length. Capture
-has a ten-second timeout; writes reuse the existing verification and access key.
-Viewing alone does not communicate with a physical tag.
-Delete requires a separate short-OK confirmation; BACK cancels. Its result uses a timed
-popup; success returns to the library and failure keeps the record menu. Malformed or
-missing records report an error but can still be deleted. An empty library
-shows Refresh; hold OK on the list refreshes it at any time. Existing saved
-files remain compatible. Compare is deferred.
-**Save CSV** continues to export the original `index,epc` format.
-
-Memory paging currently covers word addresses 0–255, matching the existing
-read helper's address range. Actual bank support, passwords and write behavior
-must be checked on the connected reader/tag; this release adds no speculative
-reader commands. The home screen retains six tiles with tools in submenus.
-
-Host regression fixtures: `python3 tests/test_memory_reply.py`,
-`python3 tests/test_inventory_actions.py`, `python3 tests/test_saved_tags.py`,
-`python3 tests/test_saved_tags_ui.py`, `python3 tests/test_saved_storage.py`, `python3 tests/test_saved_write_target.py`,
-and `python3 tests/test_home_navigation.py`. Device acceptance cases are in
-[tests/HARDWARE_CHECKLIST.md](tests/HARDWARE_CHECKLIST.md).
-
-App Settings includes **Action Confirm** below Startup App. It defaults to **Yes**,
-including existing settings files: Clear Inventory, Erase, Lock/Unlock and Saved Tag
-Delete show a confirmation page and execute on short OK. With **No**, those actions
-execute immediately and show a timed result popup. LEFT/RIGHT toggles the setting;
-Save persists it.
-
-Reader Settings includes **Indicator**, **RF Power**, and **Reset**. Save applies
-the indicator and power settings and sends the reader's save-parameters command.
-Selecting Reset and pressing OK sends the reader reset command. In About, press
-RIGHT to view reader details and LEFT to return to the project page.
-
-Radar LEFT/Clear always clears immediately, regardless of Action Confirm, and
-keeps the radar page and scan state. Inventory clearing follows Action Confirm
-but keeps the current scan state and uses the empty list itself as feedback,
-with no result popup.
