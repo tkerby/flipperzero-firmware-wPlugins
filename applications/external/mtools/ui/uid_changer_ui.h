@@ -20,7 +20,7 @@ typedef struct {
     uint8_t step;
     UidPage page;
     char title[24];
-    char lines[3][25];
+    char lines[4][25];
     char info_lines[5][28];
     uint8_t info_count;
     int8_t selected;

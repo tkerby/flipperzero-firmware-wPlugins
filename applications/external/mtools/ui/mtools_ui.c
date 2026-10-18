@@ -72,7 +72,7 @@ static void mtools_draw_about(Canvas* canvas, MToolsApp* app) {
         if(app->about_list_page == 0) {
             canvas_draw_str(canvas, 4, 24, "MTools NFC by MTCK");
             canvas_draw_str(canvas, 4, 34, "Supported magic cards:");
-            canvas_draw_str(canvas, 7, 44, "MFC GEN1 - UID");
+            canvas_draw_str(canvas, 7, 44, "MFC GEN1A - UID");
             canvas_draw_str(canvas, 7, 53, "MFC GEN2 - CUID");
             canvas_draw_str(canvas, 7, 62, "MFC GEN3 - APDU");
         } else {
@@ -114,7 +114,11 @@ static void mtools_draw_detail(Canvas* canvas, MToolsApp* app) {
                 "%s",
                 mtools_iso15_chip_name(app->magic_uid, app->magic_uid_len));
         } else if(app->magic_type2) {
-            snprintf(line, sizeof(line), "Ultralight / NTAG");
+            snprintf(
+                line,
+                sizeof(line),
+                "%s",
+                app->magic_type2_name ? app->magic_type2_name : "Ultralight / NTAG");
         } else if(app->magic_sak == 0x08) {
             snprintf(line, sizeof(line), "MFC 1K / %uB", app->magic_uid_len);
         } else if(app->magic_sak == 0x18) {
@@ -166,7 +170,7 @@ static void mtools_draw_detail(Canvas* canvas, MToolsApp* app) {
             magic_name = "ISO15 GEN3";
             break;
         case 7:
-            magic_name = "MFC GEN1 - UID";
+            magic_name = "MFC GEN1A - UID";
             break;
         case 8:
             magic_name = "MFC GEN2 - CUID";
@@ -179,6 +183,12 @@ static void mtools_draw_detail(Canvas* canvas, MToolsApp* app) {
             break;
         case 11:
             magic_name = "MFC GDM - USCUID";
+            break;
+        case 12:
+            magic_name = "MFU GEN2 - DirectWrite";
+            break;
+        case 13:
+            magic_name = "GDM/USCUID + GEN1A";
             break;
         }
         if(app->magic_detecting) {

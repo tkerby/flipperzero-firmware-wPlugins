@@ -149,13 +149,18 @@ static NfcCommand mfc_magic_probe_callback(NfcGenericEvent event, void* context)
             bit_buffer_reset(rx);
             error = iso14443_3a_poller_txrx(poller, tx, rx, 1356000U);
             if(error == Iso14443_3aErrorNone && mfc_ack(rx)) {
+                /* Gen1a wakeup is a capability, also supported by some GDM cards. */
+                if(probe->gen == MagicGenMfcGen1a) {
+                    probe->match = true;
+                    goto done;
+                }
                 const uint8_t config_command[2] = {0xE0, 0x00};
                 bit_buffer_copy_bytes(tx, config_command, sizeof(config_command));
                 bit_buffer_reset(rx);
                 bool gdm = iso14443_3a_poller_send_standard_frame(poller, tx, rx, 1356000U) ==
                                Iso14443_3aErrorNone &&
                            bit_buffer_get_size_bytes(rx) == 16;
-                probe->match = probe->gen == MagicGenMfcGdm ? gdm : !gdm;
+                probe->match = gdm;
             }
         }
     } else if(probe->gen == MagicGenMfcGen3) {
@@ -175,37 +180,28 @@ static NfcCommand mfc_magic_probe_callback(NfcGenericEvent event, void* context)
         probe->match = error == Iso14443_3aErrorNone && bit_buffer_get_size_bytes(rx) >= 30;
         if(probe->match) memcpy(probe->gen4_config, bit_buffer_get_data(rx), 30);
     } else if(probe->gen == MagicGenMfcGen2) {
-        /* Only known ATS signatures are positive evidence. Most CUID cards
-         * have no read-only signature and remain unconfirmed. */
+        /* Like Proxmark3 MifareCIdent, issue RATS even when SAK does not
+         * advertise ISO14443-4: some Classic Gen2 clones still return ATS. */
         const uint8_t rats[2] = {0xE0, 0x80};
-        const Iso14443_3aData* data = nfc_poller_get_data(probe->poller);
-        if(iso14443_3a_get_sak(data) & 0x20U) {
-            bit_buffer_copy_bytes(tx, rats, sizeof(rats));
-            error = iso14443_3a_poller_send_standard_frame(poller, tx, rx, 1356000U);
-        }
+        bit_buffer_copy_bytes(tx, rats, sizeof(rats));
+        error = iso14443_3a_poller_send_standard_frame(poller, tx, rx, 1356000U);
         static const uint8_t ats_a[] = {0x09, 0x78, 0x00, 0x91, 0x02, 0xDA, 0xBC, 0x19, 0x10};
+        /* PM3's 7B signature includes trailing CRC 56 3D. The standard
+         * frame API strips CRC-A, so compare only the 13 ATS bytes. */
         static const uint8_t ats_b[] = {
-            0x0D,
-            0x78,
-            0x00,
-            0x71,
-            0x02,
-            0x88,
-            0x49,
-            0xA1,
-            0x30,
-            0x20,
-            0x15,
-            0x06,
-            0x08,
-            0x56,
-            0x3D};
+            0x0D, 0x78, 0x00, 0x71, 0x02, 0x88, 0x49, 0xA1, 0x30, 0x20, 0x15, 0x06, 0x08};
         size_t size = bit_buffer_get_size_bytes(rx);
         probe->match = error == Iso14443_3aErrorNone &&
                        ((size >= sizeof(ats_a) &&
                          memcmp(bit_buffer_get_data(rx), ats_a, sizeof(ats_a)) == 0) ||
                         (size >= sizeof(ats_b) &&
                          memcmp(bit_buffer_get_data(rx), ats_b, sizeof(ats_b)) == 0));
+        FURI_LOG_I(
+            "MTools",
+            "MFC Gen2 ATS: error=%u bytes=%u match=%u",
+            error,
+            (unsigned)size,
+            probe->match);
     }
 done:
     bit_buffer_free(rx);
@@ -259,8 +255,9 @@ static NfcCommand mfc_gen2_probe_callback(NfcGenericEvent event, void* context) 
     MfClassicKey key;
     memset(key.data, 0xFF, sizeof(key.data));
     MfClassicAuthContext auth = {0};
-    if(mf_classic_poller_auth(poller, 0, &key, MfClassicKeyTypeB, &auth, false) ==
-       MfClassicErrorNone) {
+    MfClassicError auth_error =
+        mf_classic_poller_auth(poller, 0, &key, MfClassicKeyTypeB, &auth, false);
+    if(auth_error == MfClassicErrorNone) {
         BitBuffer* tx = bit_buffer_alloc(4);
         BitBuffer* rx = bit_buffer_alloc(4);
         const uint8_t command[] = {0xA0, 0x00};
@@ -271,7 +268,11 @@ static NfcCommand mfc_gen2_probe_callback(NfcGenericEvent event, void* context) 
                        (bit_buffer_get_byte(rx, 0) & 0x0F) == 0x0A;
         bit_buffer_free(rx);
         bit_buffer_free(tx);
-        /* Stop after the command ACK. Never send the 16-byte write payload. */
+        FURI_LOG_I("MTools", "MFC Gen2 authenticated A0: error=%u match=%u", error, probe->match);
+        /* Stop after the command ACK. Never send the 16-byte write payload,
+         * HALT, or another command while the tag expects write data. */
+    } else {
+        FURI_LOG_I("MTools", "MFC Gen2 default Key B auth failed: %u", auth_error);
     }
     furi_semaphore_release(probe->complete);
     return NfcCommandStop;
@@ -310,6 +311,83 @@ static bool detect_iso15693_gen3(Nfc* nfc) {
     return detect_iso15693_fingerprint(nfc, true);
 }
 
+typedef struct {
+    FuriSemaphore* complete;
+    NfcPoller* poller;
+    bool compatible_write;
+    bool matches;
+} MfuMagicProbe;
+
+static NfcCommand mfu_magic_probe_callback(NfcGenericEvent event, void* context) {
+    MfuMagicProbe* probe = context;
+    if(event.protocol != NfcProtocolIso14443_3a) return NfcCommandContinue;
+    Iso14443_3aPollerEvent* ready = event.event_data;
+    if(ready->type != Iso14443_3aPollerEventTypeReady) return NfcCommandContinue;
+    const Iso14443_3aData* card = nfc_poller_get_data(probe->poller);
+    size_t length = 0;
+    iso14443_3a_get_uid(card, &length);
+    if(length == 7 && iso14443_3a_get_sak(card) == 0) {
+        BitBuffer* tx = bit_buffer_alloc(32);
+        BitBuffer* rx = bit_buffer_alloc(32);
+        if(!probe->compatible_write) {
+            /* Proxmark3 ul_magic_test: 14 bytes on air, including CRC-A.
+             * send_standard_frame validates/removes CRC, leaving 12 bytes. */
+            static const uint8_t ats[] = {
+                0x0A, 0x78, 0x00, 0x81, 0x02, 0xDB, 0xA0, 0xC1, 0x19, 0x40, 0x2A, 0xB5};
+            const uint8_t rats[] = {0xE0, 0x80};
+            bit_buffer_copy_bytes(tx, rats, sizeof(rats));
+            Iso14443_3aError error =
+                iso14443_3a_poller_send_standard_frame(event.instance, tx, rx, 1356000U);
+            probe->matches = error == Iso14443_3aErrorNone &&
+                             bit_buffer_get_size_bytes(rx) == sizeof(ats) &&
+                             memcmp(bit_buffer_get_data(rx), ats, sizeof(ats)) == 0;
+            FURI_LOG_I(
+                "MTools",
+                "MFU Gen2 ATS: error=%u bytes=%u match=%u",
+                error,
+                (unsigned)bit_buffer_get_size_bytes(rx),
+                probe->matches);
+        } else {
+            /* Compatibility WRITE stage 1 only, as described by Proxmark3.
+             * Never send its 16-byte data stage or an A2 page write. Stop the
+             * poller immediately after ACK/NACK to cancel pending writes. */
+            const uint8_t command[] = {0xA0, 0x00};
+            bit_buffer_copy_bytes(tx, command, sizeof(command));
+            iso14443_crc_append(Iso14443CrcTypeA, tx);
+            Iso14443_3aError error = iso14443_3a_poller_txrx(event.instance, tx, rx, 1356000U);
+            probe->matches = error == Iso14443_3aErrorNone && bit_buffer_get_size(rx) == 4 &&
+                             (bit_buffer_get_byte(rx, 0) & 0x0F) == 0x0A;
+            FURI_LOG_I(
+                "MTools",
+                "MFU Gen2 A0 probe: error=%u bits=%u ack=%u",
+                error,
+                (unsigned)bit_buffer_get_size(rx),
+                probe->matches);
+        }
+        bit_buffer_free(rx);
+        bit_buffer_free(tx);
+    }
+    furi_semaphore_release(probe->complete);
+    return NfcCommandStop;
+}
+
+static bool detect_mfu_direct_write(Nfc* nfc) {
+    MfuMagicProbe probe = {.complete = furi_semaphore_alloc(1, 0)};
+    for(uint8_t stage = 0; stage < 2; stage++) {
+        probe.compatible_write = stage == 1;
+        probe.poller = nfc_poller_alloc(nfc, NfcProtocolIso14443_3a);
+        nfc_poller_start(probe.poller, mfu_magic_probe_callback, &probe);
+        bool completed = furi_semaphore_acquire(probe.complete, furi_ms_to_ticks(2000)) ==
+                         FuriStatusOk;
+        nfc_poller_stop(probe.poller);
+        nfc_poller_free(probe.poller);
+        if(completed && probe.matches) break;
+        if(stage == 0) furi_delay_ms(80);
+    }
+    furi_semaphore_free(probe.complete);
+    return probe.matches;
+}
+
 bool mtools_detect_magic_tag(Nfc* nfc, MagicGenType gen) {
     if(!nfc) return false;
     switch(gen) {
@@ -329,6 +407,8 @@ bool mtools_detect_magic_tag(Nfc* nfc, MagicGenType gen) {
         return false;
     case MagicGenIso15693Gen3:
         return detect_iso15693_gen3(nfc);
+    case MagicGenMfuDirectWrite:
+        return detect_mfu_direct_write(nfc);
     case MagicGenCount:
         break;
     }

@@ -29,8 +29,8 @@ This software is for experimental purposes only and is not meant for any illegal
 
 ## Latest Updates - [PATREON: Latest Release RM1013-0207-28360c1b-Patreon](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-10-13 02:07 EST`
-- Last Synced/Checked CFW, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-10-13 02:07 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-10-17 21:40 EST`
+- Last Synced/Checked CFW, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-10-17 21:40 EST`
 - Updated: [Maze 3D v7.2 (By k20120509)](https://github.com/k20120509/flipper-release)
 - Updated: [DFC v1.1.1 (By cindersocket)](https://github.com/cindersocket/dfc-flipper)
 - OFW: [Fixes of various valid issues found by code scan #4456 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4456)
@@ -190,7 +190,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - SubGHz: [KeeLoq Erreka programming mode - the 0xF button now sends the seed in the clear like the original remote, same as BFT, and the seed is saved with the signal so the hops can be rebuilt (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/1139732616045a15b9efc59790cc83e3a8ad292a)
 - Added: [TamaConnect v1.0 (By s2013p)](https://github.com/s2013p/TamaConnect)
 - Updated: [SigRoam Wardriving v0.6.1 (By pingequalab)](https://github.com/pingequalab/sigroam-wardriving) `Req: ESP32`
-- Updated: [MTools v1.0 (By mtoolstec)](https://github.com/mtoolstec/flipper-mtools)
 - OFW: [Enforce new build flags #4461 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4461)
 - OFW: [NFC: Type 4 Support (NTAG4xx/DESFire) + Many Improvements #4242 (By WillyJL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4242) (Already in RM)
 - OFW: [BadUSB: Full USB/BLE parameter customization, UI improvements, and more #4136 (By WillyJL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4136) (Already in RM)
@@ -239,6 +238,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [RF Survey v1.1 (By tbelbek)](https://github.com/tbelbek/flipper-rf-survey)
 - Updated: [Nice O-Code v2.0 (By zero-mega & xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/e6ded9b108454b30a3e710295e6d2b7fd146e188)
 - SubGHz: [Nice O-Code 112bit frames are decoded and sent - the receiver certificate they carry is shown on the Read screen and saved with the remote, and a remote that has one broadcasts it for its first 20 presses so the receiver enrols it by itself. Nice O-Code+Crt 433MHz is the matching Add Manually entry & other Nice O-Code changes (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/5d3c950e98a3504c018e0810eb7faca3540827d8)
+- Updated: [MTools v1.1 (By mtoolstec)](https://github.com/mtoolstec/flipper-mtools)
 
 <a name="release"></a>
 
@@ -920,7 +920,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [MP3 Player v3.5 (By coolshrimp)](https://github.com/coolshrimp/flipperzero-mp3-player)
 - [MQ-3 Alcometer v1.0 (By serjantlk)](https://github.com/serjantlk/MQ-3-Alcometer) `Req: MQ-3 Breathalyzer` [Sold Here](https://flipperaddons.com/product/mq-3-alkotester)
 - [MR60FDA1 Radar v0.1 (By adamaratski)](https://github.com/adamaratski/flipperzero-r60afd1) `Req: MR60FDA1/MR60FDA2`
-- [MTools v1.0 (By mtoolstec)](https://github.com/mtoolstec/flipper-mtools)
+- [MTools v1.1 (By mtoolstec)](https://github.com/mtoolstec/flipper-mtools)
 - [Multi Converter v1.3 (By theisolinearchip)](https://github.com/theisolinearchip)
 - [Multi Tally v1.0 (By aseypalich1)](https://github.com/aseypalich1/flipper-multi-counter)
 - [MultiTimer v1.1 (By C0d3-5t3w)](https://github.com/C0d3-5t3w/flipper-multitimer)

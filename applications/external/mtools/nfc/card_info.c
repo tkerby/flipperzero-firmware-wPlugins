@@ -1,6 +1,7 @@
 #include "card_info.h"
 
 #include <nfc/protocols/nfc_protocol.h>
+#include <nfc/protocols/mf_ultralight/mf_ultralight_poller_sync.h>
 #include <stdio.h>
 
 MToolsCardProtocols mtools_card_protocols(const NfcScannerEvent* event) {
@@ -19,6 +20,41 @@ MToolsCardProtocols mtools_card_protocols(const NfcScannerEvent* event) {
             result.iso15693 = true;
     }
     return result;
+}
+
+const char* mtools_type2_chip_name(Nfc* nfc) {
+    MfUltralightVersion version = {0};
+    if(mf_ultralight_poller_sync_read_version(nfc, &version) == MfUltralightErrorNone) {
+        if(version.prod_type == 0x04) {
+            switch(version.storage_size) {
+            case 0x0F:
+                return "NTAG213";
+            case 0x11:
+                return "NTAG215";
+            case 0x13:
+                return "NTAG216";
+            default:
+                return "NTAG";
+            }
+        }
+        if(version.prod_type == 0x03) {
+            switch(version.storage_size) {
+            case 0x0B:
+                return "MFUL11";
+            case 0x0E:
+                return "MFUL21";
+            default:
+                return "MFUL";
+            }
+        }
+        return "Ultralight / NTAG";
+    }
+    MfUltralightPage page = {0};
+    if(mf_ultralight_poller_sync_read_page(nfc, 0x29, &page) == MfUltralightErrorNone)
+        return "MFUL-C";
+    return mf_ultralight_poller_sync_read_page(nfc, 0, &page) == MfUltralightErrorNone ?
+               "NTAG203" :
+               "Ultralight / NTAG";
 }
 
 const char* mtools_iso15_chip_name(const uint8_t* uid, size_t uid_len) {

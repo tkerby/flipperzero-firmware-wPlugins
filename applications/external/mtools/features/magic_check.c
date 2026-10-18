@@ -37,6 +37,7 @@ void mtools_magic_check_start(MToolsApp* app) {
     app->magic_read_handled = false;
     app->magic_finish_queued = false;
     app->magic_type2 = false;
+    app->magic_type2_name = NULL;
     app->magic_scan_found = false;
     mtools_card_scan_start(
         app->scanner, &app->magic_scanning, app->notifications, mtools_scanner_callback, app);
@@ -58,7 +59,10 @@ static NfcCommand mtools_magic_read_callback(NfcGenericEvent event, void* contex
         iso14443_3a_get_atqa(card, app->magic_atqa);
         /* Some Gen3 Classic cards also answer the Ultralight scanner probe.
          * The selected card's Classic SAK takes precedence over that hint. */
-        if(app->magic_sak == 0x08 || app->magic_sak == 0x18) app->magic_type2 = false;
+        if(app->magic_sak == 0x08 || app->magic_sak == 0x18)
+            app->magic_type2 = false;
+        else if(app->magic_sak == 0x00 && uid_len == 7)
+            app->magic_type2 = true;
     } else if(event.protocol == NfcProtocolIso15693_3) {
         Iso15693_3PollerEvent* poller_event = event.event_data;
         if(poller_event->type != Iso15693_3PollerEventTypeReady) return NfcCommandContinue;
@@ -128,6 +132,8 @@ bool mtools_magic_check_event(MToolsApp* app, uint32_t event) {
     if(event < MTOOLS_EVENT_MFC || event > MTOOLS_EVENT_MAGIC_READ) return false;
     if(event == MTOOLS_EVENT_MAGIC_READ) {
         mtools_magic_check_stop(app);
+        if(app->magic_protocol == 0 && app->magic_type2)
+            app->magic_type2_name = mtools_type2_chip_name(app->nfc);
         if(app->magic_protocol == 1) {
             /* ISO15693 generation was checked while its original poller was ready. */
             app->magic_read_handled = true;
@@ -144,9 +150,11 @@ bool mtools_magic_check_event(MToolsApp* app, uint32_t event) {
                 notification_message(app->notifications, &sequence_blink_start_blue);
                 if(mtools_detect_magic_tag(app->nfc, MagicGenMfcGen4))
                     app->magic_pending_status = 10;
-                else if(mtools_detect_magic_tag(app->nfc, MagicGenMfcGdm))
-                    app->magic_pending_status = 11;
-                else if(mtools_detect_magic_tag(app->nfc, MagicGenMfcGen3))
+                else if(mtools_detect_magic_tag(app->nfc, MagicGenMfcGdm)) {
+                    /* GDM identity and Gen1a wakeup are independent capabilities. */
+                    app->magic_pending_status =
+                        mtools_detect_magic_tag(app->nfc, MagicGenMfcGen1a) ? 13 : 11;
+                } else if(mtools_detect_magic_tag(app->nfc, MagicGenMfcGen3))
                     app->magic_pending_status = 9;
                 else if(mtools_detect_magic_tag(app->nfc, MagicGenMfcGen1a))
                     app->magic_pending_status = 7;
@@ -154,6 +162,9 @@ bool mtools_magic_check_event(MToolsApp* app, uint32_t event) {
                     app->magic_pending_status = 8;
                 else
                     app->magic_pending_status = 1;
+            } else if(app->magic_type2 && app->magic_uid_len == 7) {
+                app->magic_pending_status =
+                    mtools_detect_magic_tag(app->nfc, MagicGenMfuDirectWrite) ? 12 : 1;
             } else {
                 app->magic_pending_status = 1;
             }
