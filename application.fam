@@ -1,0 +1,13 @@
+App(
+    appid="flipper_lotto",
+    name="Flipper Lotto",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="flipper_lotto_app",
+    stack_size=2 * 1024,
+    fap_category="Tools",
+    fap_version="1.0",
+    fap_icon="lottery_icon.png",
+    fap_description="Pick random numbers for lottery tickets",
+    fap_author="molykima",
+    fap_weburl="https://github.com/user/flipper_lotto",
+)
