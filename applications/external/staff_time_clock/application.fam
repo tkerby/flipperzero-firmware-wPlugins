@@ -5,6 +5,7 @@ App(
     entry_point="timeclock_app",
     stack_size=4 * 1024,
     fap_icon="timeclock_10px.png",
+    sources=["*.c"],
     fap_category="Tools",
     fap_author="Vladyslav Pereverzyev",
     fap_weburl="https://github.com/vladpereverzyev/flipper-staff-time-clock",

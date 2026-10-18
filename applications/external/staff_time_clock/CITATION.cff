@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use Staff Time Clock in your work, please cite it as below."
+title: "Staff Time Clock for Flipper Zero"
+abstract: >-
+  Staff time clock for Flipper Zero. Register collaborators on NFC, RFID or iButton
+  badges and log clock in and out to a CSV timesheet. Only the badge UID is read,
+  never written. Standalone, PIN protected and offline.
+type: software
+authors:
+  - given-names: "Vladyslav"
+    family-names: "Pereverzyev"
+    email: "info@vladpereverzyev.com"
+    website: "https://www.vladpereverzyev.com"
+repository-code: "https://github.com/vladpereverzyev/flipper-staff-time-clock"
+url: "https://lab.flipper.net/apps/timeclock"
+license: GPL-3.0-or-later
+keywords:
+  - Flipper Zero
+  - time clock
+  - attendance
+  - NFC
+  - RFID
+  - iButton
