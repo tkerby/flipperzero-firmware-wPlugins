@@ -1,0 +1,144 @@
+# Zone identity (M4 polish): the city is paved (pavers, flagstone streets and a flagstone square with a 2 x 2 fountain and benches), street lamps, trees in
+# stone planters. Memory: the map may not grow more than 256 B resident, so it uses ONE paver and ONE flagstone tile (they replace the three grass tiles,
+# the flowers and the two path tiles) and the small city pieces are mask-free.
+# Ciudad Nodo, 24 x 24. column = i, row = j; Ruta 1 arrives from the south (j = 23, screen down-left),
+# Ruta 2 leaves to the north (j = 0, screen up-right). Centro (door c), tienda (door m), the closed gym (sign Z), two decorative houses,
+# three townsfolk with hints and the old guard in the north corridor: he blocks it until the parcel was delivered to Profesora Lin
+# (flag parcel_delivered), then steps aside (his twin NPC `guard2`, shown by guard_aside, stands in the alcove).
+# C9 (contract 56): the WEST gate (v, (0,7) / (0,8)) leads to Ruta 22: spawn `west` (1,8).
+# C8 (contract 51): the gym (door y, (17,6)) is enterable: a guard (x, (17,7)) holds the cell in front of it until flag 86 (the 7th badge), when he hides. The gym is `gimnasio_nodo` (Director Varo).
+@map ciudad_nodo
+@size 24 24
+@interior no
+@area ciudad_nodo
+@fly 1 ciudad_nodo 4 13 face=S   # the Planeador lands here, in front of the Centro door; slot 1 = visited flag 985 (contract 46.1)
+@bg 0
+@fill pave_a
+@spawn south 11 22 N           # arriving from Ruta 1
+@spawn north 11 1 S            # arriving from Ruta 2 (only possible once the guard stepped aside)
+@spawn centro_door 4 13 S      # in front of the Centro door
+@spawn tienda_door 18 13 S     # in front of the tienda door
+@spawn gym_door 17 8 S         # two steps from the gym door (C8): where the hero comes out of the gym (the cell in front of the door is the guard's)
+@spawn west 1 8 SE             # C9: arriving from Ruta 22
+@spawn insectos_door 4 7 S     # F2 (contract 74): in front of the first decorative house (the bug collector)
+@spawn motes_door 4 19 S        # F2: in front of the second one (the name changer)
+@flag parcel_given 40          # the tienda's clerk handed over the parcel (script clerk, tienda.map)
+@flag parcel_delivered 41      # Profesora Lin received it (villa_lab.map, script lin)
+@flag guard_aside 42           # the guard stepped aside: guard hidden, guard2 shown
+@flag catch_done 222           # (contract 80): the old man's catch lesson was given: set by the script catch_demo, the HOOK of the future demo battle
+@legend
+  .  tile=pave_a                  # the city is paved: pavers instead of the three grass tiles and the flowers
+  =  tile=plaza_a                 # streets: flagstones (was the path tile)
+  T  object=planter               # a tree in a stone planter (was the plain tree)
+  P  tile=plaza_a                 # the fountain square (open flagstones)
+  O  tile=plaza_a object=fountain # 2 x 2 fountain
+  e  tile=plaza_a object=bench
+  L  object=lamp                  # street lamp
+  B  tile=plaza_a object=lamp     # the lamp at the road barrier beside the guard (was a fence piece)
+  S  object=sign interact=look text=nodo.sign
+  Z  object=sign interact=look text=nodo.gym
+  C  object=center
+  c  door=center
+  M  object=mart
+  m  door=mart
+  Y  object=gym
+  y  door=gym                     # the gym door (C8, contract 51): a walkable door cell with a @warp; the cell in front of it is held by the gym guard until the 7th badge
+  x  tile=plaza_a npc=guardia id=gym_guard face=NE script=gym_guard hide_flag=86 gate=yes   # the gym guard (C8): blocks the only cell in front of the door until flag 86 (the 7th badge); then he is gone
+  H  object=house_player
+  h  door=house_player           # F2 (contract 74): the bug collector's house (casa_insectos)
+  R  object=house_player
+  r  door=house_player           # F2: the name changer's house (casa_motes)
+  a  npc=vecino_m id=hint_grass face=NW text=nodo.npc.a
+  b  npc=vecino_m id=hint_center face=SE text=nodo.npc.b
+  k  npc=vecino_m id=hint_forest face=NW text=nodo.npc.k
+  N  tile=plaza_a npc=guardia id=guard face=SW script=guard hide_flag=42
+  G  npc=guardia id=guard2 face=SE script=guard2 show_flag=42
+  u  tile=plaza_a
+  v  tile=pave_a                  # C9: the west gate to Ruta 22
+  d  tile=plaza_a
+  I  tile=pave_a hidden=salve   # hidden (contract 80, hidden items)
+@grid
+  TTTTTTTTTTTuuTTTTTTTTTTT
+  TTTTTTTTTTT==TTTTTTTTTTT
+  TTTTTTTTTTGNBTTTTTTTTTTT
+  TTTTTTTTTTT==TTTTTTTTTTT
+  T.TT.......==........TTT
+  T.THH.....L==L.TYYY...TT
+  T..Hh......==..ZYyY....T
+  v...=============x==...T
+  v..........==POOPP.....T
+  TT....e....==POOPe....TT
+  TT........L==PkPPP....TT
+  T..CCC.....==....MM....T
+  T..CcC.....==....Mm....T
+  T...===============....T
+  T.......b..==..........T
+  TTT........==..........T
+  T.........L==L.......TTT
+  T..RR......==.........TT
+  T..Rr......==L.........T
+  T...=========.........IT
+  T.........L==.a........T
+  TTT...TT..S==...TT...TTT
+  T.T........==........TTT
+  TTTTTTTTTTTddTTTTTTTTTTT
+@warp c -> centro spawn=door
+@warp m -> tienda spawn=door
+@warp u -> ruta_2 spawn=south
+@warp d -> ruta_1 spawn=north
+@warp y -> gimnasio_nodo spawn=door
+@warp h -> casa_insectos spawn=door
+@warp r -> casa_motes spawn=door
+@warp v -> ruta_22 spawn=east
+# ---------------------------------------------------------------------------------------------------------------
+# The old guard: before the delivery he stops you and pushes
+# you back one step; after it, the next talk makes him step aside (NW, into the alcove: the flag swaps him for his twin guard2) and give a tip.
+@script guard npc
+    jnf parcel_delivered stop
+    npc_face_hero guard
+    say nodo.guard.thanks
+    # (contract 80): old man of Ciudad Nodo (after the coffee = the parcel) offers to SHOW HOW TO CATCH: YES = the lesson (script catch_demo), NO = a shrug; he steps aside either way.
+    ask extra.catch.ask
+    jv 0 1 lesson
+    say extra.catch.no
+    jmp aside
+  lesson:
+    call catch_demo
+  aside:
+    npc_walk guard NW 1
+    npc_face guard SE
+    setf guard_aside
+    say nodo.guard.tip
+    end
+  stop:
+    npc_face_hero guard
+    say nodo.guard.stop
+    hero_walk S 1
+@end
+@script guard2 npc
+    npc_face_hero guard2
+    say nodo.guard.after
+    ask extra.catch.again       # the lesson can be heard again (as often as the player likes)
+    jv 0 1 lesson
+    end
+  lesson:
+    call catch_demo
+@end
+# (contract 80), THE CATCH LESSON. This tree narrates it: weaken -> status -> throw -> try again, 4 text pages, then flag catch_done.
+# >>> HOOK for the battle agent: when the battle plugin gets a scripted demo battle (a wild creature that does not fight back + a scripted Crystal throw + the old man's lines), call it HERE, between the last `say` and
+# `setf catch_done`, with a native / op of its own (the result may go in var 0); nothing else in the game reads this script, and both callers (guard and guard2) already `call` it. The flag catch_done (222) is set
+# by it either way, so a later demo can run only when !catch_done if it wants to be offered once. Documented in contract section 80.
+@script catch_demo called
+    say extra.catch.t1
+    say extra.catch.t2
+    say extra.catch.t3
+    say extra.catch.t4
+    setf catch_done
+@end
+# The gym guard. He stands in front of the door
+# (the only cell that reaches it) and hides with flag 86 (`hide_flag`): then the door is open and walking into it enters the gym.
+@script gym_guard npc
+    npc_face_hero gym_guard
+    say nodo.gymguard
+    npc_face gym_guard NE
+@end

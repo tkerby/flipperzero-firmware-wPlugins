@@ -1,0 +1,62 @@
+# Centro Comercial, 2F (5F: stones and vitamins, C4a, contract 39), 14 x 11, interior. column = i, row = j. Same slabs and cases as 1F. The stones clerk (`shop comercial_piedras`: Fire / Water /
+# Thunder / Leaf; the Lunar Gem is never sold), the vitamins clerk (`shop comercial_tonicos`), the DRINK VENDING MACHINE (an object with a script: `shop comercial_bebidas`: roof vending machine),
+# the escalator back down (door cell (12,5) -> 1F).
+@map comercial_2
+@size 14 11
+@interior yes
+@bg 0
+@fill polished_00
+@spawn esc 12 6 N
+@legend
+  .  tile=polished_00
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  tile=polished_11 object=machine interact=look script=vend
+  f  tile=polished_01 object=machine interact=look script=vend
+  g  tile=polished_11
+  h  tile=polished_01
+  i  tile=polished_11 object=sign text=mall.guide2 interact=look
+  j  tile=polished_10
+  k  tile=polished_10 npc=dependienta id=clerk_a face=SW script=clerk_a
+  l  tile=polished_10 npc=dependienta id=clerk_b face=SW script=clerk_b
+  m  tile=polished_01 object=vitrina
+  n  tile=polished_11 object=vitrina
+  o  tile=polished_01 object=counter
+  p  tile=polished_11 object=counter
+  q  tile=none object=wall_win_i
+  r  object=escalator
+  s  tile=polished_01 door=escalator
+  t  object=vitrina
+  u  tile=polished_10 object=vitrina
+  v  tile=polished_10 object=planter
+  w  npc=vecino_m id=shopper face=W text=mall.shopper.b
+  x  tile=polished_11 object=planter
+  y  tile=polished_01 object=planter
+  z  tile=polished_11 item=disc_20
+  A  tile=polished_10 item=disc_48
+  B  tile=polished_10 item=disc_49
+@grid
+  abbcbbcbbcbbbb
+  defghghihghghg
+  dj.j.k.j.l.j.j
+  dzmnopoghpoghg
+  qj.j.j.j.j.jrj
+  dghghghghghgsg
+  dBtu.j.j.v.j.j
+  dghghghghghghg
+  qA.j.j.jwj.j.j
+  dxhghghghghgyg
+  dj.j.j.j.j.j.j
+@warp s -> comercial_1 spawn=esc
+@script clerk_a npc
+    shop comercial_piedras
+@end
+@script clerk_b npc
+    shop comercial_tonicos
+@end
+@script vend interact
+    say mall.vend
+    shop comercial_bebidas
+@end

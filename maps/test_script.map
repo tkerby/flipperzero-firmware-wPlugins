@@ -1,0 +1,105 @@
+# TEST FIXTURE (id 90): exercises the M2 script system (nucleo/script.c, contract section 8).
+# Not part of the game: reached only by the host harness (tools/host_world, `make scripts`).
+# Texts are borrowed from other maps' keys (placeholders). Flags 200..203 are reserved for this map.
+@map test_script
+@size 12 9
+@interior yes
+@bg 3
+@fill floor_lab
+@spawn start 7 4 SE
+@spawn near_orb 4 5 S
+@flag intro_done 200
+@flag orb_taken 201
+@flag tripped 202
+@flag fade_seen 203
+@var starter 2
+@var result 4
+@legend
+  .  tile=floor_lab
+  C  tile=none object=wall_corner
+  w  tile=none object=wall_j
+  y  tile=none object=wall_win_j
+  |  tile=none object=wall_i
+  q  tile=none object=wall_win_i
+  P  object=pc interact=look script=walk_test
+  M  object=machine interact=look script=fade_test
+  B  object=bookshelf interact=look script=exit
+  K  object=bookshelf interact=look script=cross
+  W  npc=mama id=walker face=SE text=mom.b
+  O  npc=vecino id=orb face=S script=orb hide_flag=201   # hide_flag: stays gone after a reload
+  G  npc=lin id=guide face=S script=guide
+  X  tile=mat interact=step script=trip
+@grid
+  Cwywwwywwwww
+  |.....G.B...
+  |..........M
+  q..X.K......
+  |W......P...
+  |...........
+  |...O.......
+  |...........
+  |...........
+@script intro on_enter if !intro_done
+    cam_npc walker
+    wait 400
+    npc_walk walker SE 3
+    npc_face_hero walker
+    wait 400
+    npc_walk walker NW 3
+    npc_face walker SE
+    cam_hero
+    setf intro_done
+@end
+@script walk_test interact
+    say sign.aliso
+    npc_walk walker SE 9      # blocks until the walker stops: it ends up in front of the hero
+    npc_face_hero walker
+    say lin.b
+    npc_walk walker NW 9      # and walks back to the wall
+    npc_face walker SE
+@end
+@script orb npc
+    say vecino.a
+    ask mom.b                 # Yes/No -> var 0
+    jv 0 1 took
+    say sign.lab              # answered No
+    end
+  took:
+    npc_hide orb              # the "orb" disappears ...
+    setf orb_taken            # ... and stays gone (a later setf must not bring it back)
+    setv result 7
+    addv result 1
+    say lin.b
+@end
+@script guide npc
+    call helper
+    choose_starter starter    # native stubs: var starter = 1
+    battle 5 result           # trainer 5 -> var result = 1 (won)
+    say lin.b
+@end
+@script helper called
+    say mom.a
+@end
+@script fade_test interact
+    fade_out
+    npc_place walker 2 2 S
+    setf fade_seen
+    wait 300
+    fade_in
+    say sign.lab
+@end
+@script cross interact
+    hero_walk NW 1            # onto the step trigger X (tripped must NOT fire: a script is running)
+    say lin.b
+    hero_walk SE 1
+@end
+@script trip step if !tripped
+    setf tripped
+    say trig.norte
+    hero_walk SE 1
+@end
+@script exit interact
+    say door.rival
+    fade_out
+    warp villa_lab spawn=door
+@end

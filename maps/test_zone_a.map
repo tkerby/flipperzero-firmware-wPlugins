@@ -1,0 +1,29 @@
+# TEST FIXTURE (id 91): zone banner + animated sprites (contract section 22). Not part of the game: reached only by the host
+# harness (tools/host_world, `make zones`). Outdoor area "villa_aliso" with an animated tile patch and an animated flag (maps/test_catalog.toml),
+# a warp east to test_zone_b (another area, no animation) and a door south to test_zone_in (an interior: no area).
+@map test_zone_a
+@size 10 8
+@interior no
+@bg 0
+@area villa_aliso
+@fill grass_a
+@spawn start 2 2 S
+@spawn from_b 7 4 W
+@spawn from_in 4 5 S
+@legend
+  .  tile=grass_a
+  a  tile=test_anim_tile
+  F  object=test_anim_flag
+  e  tile=mat
+  d  tile=mat
+@grid
+  ..........
+  ..aaa.....
+  ..aaa...F.
+  ..........
+  ........e.
+  ..........
+  ....d.....
+  ..........
+@warp e -> test_zone_b spawn=from_a
+@warp d -> test_zone_in spawn=from_a

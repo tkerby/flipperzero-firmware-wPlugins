@@ -1,0 +1,74 @@
+# TEST FIXTURE (id 224): the two rooms of the C9 mini league (contract section 50.2), stacked in one map. Not part of the game: reached only through the lobby (test_c9sys, 223) by the host harness.
+#   room A (j 11..18): the first member `m1` (a trainer, beaten flag league_e1) at (5,13). The door BEHIND the hero is the NPC `x` (5,19): it appears when league_run is set (the on_enter script sets it as the hero arrives)
+#   and is solid; there is no warp back at all (the real rooms are one map each, with no exit warp). The door AHEAD is the NPC `A` (4,11) in front of the warp cell `a` (4,10): shut (solid, `gate=yes` for mapc's
+#   reachability) until the beaten flag of the member (league_e1) is set (hide_flag).
+#   room B (j 1..9): the champion at (5,2) (a hand-written script: the fight, league_champ, `ending run`, `ending title`); the door behind B is the NPC `b` (7,9), the same as `x`.
+# NPC doors are the idiom: a solid NPC with show_flag / hide_flag on the tile IN FRONT of a warp cell (mapc refuses an NPC on a warp cell).
+@map test_c9sys_b
+@size 11 21
+@interior no
+@bg 0
+@fill dirt_a
+@spawn enter1 5 18 NE
+@spawn roomb 4 9 NE
+@legend
+  .  tile=dirt_a
+  W  tile=dirt_a solid=yes
+  a  tile=dirt_a
+  M  tile=dirt_a npc=vecino id=m1 face=SW trainer=rival_lab text=c9sys.m1.pre after=c9sys.m1.after beaten_flag=league_e1 range=4
+  C  tile=dirt_a npc=rival id=champ face=SW script=champ
+  A  tile=dirt_a npc=keydoor id=door_a face=S solid=yes gate=yes text=gl.c9.door.locked hide_flag=league_e1
+  x  tile=dirt_a npc=keydoor id=door_x face=S solid=yes gate=yes text=gl.c9.door.shut show_flag=league_run
+  b  tile=dirt_a npc=keydoor id=door_b face=S solid=yes gate=yes text=gl.c9.door.shut show_flag=league_run
+@warp a -> test_c9sys_b spawn=roomb
+@grid
+  WWWWWWWWWWW
+  W.........W
+  W....C....W
+  W.........W
+  W.........W
+  W.........W
+  W.........W
+  W.........W
+  W.........W
+  W......b..W
+  WWWWaWWWWWW
+  W...A.....W
+  W.........W
+  W....M....W
+  W.........W
+  W.........W
+  W.........W
+  W.........W
+  W.........W
+  W....x....W
+  WWWWWWWWWWW
+# Entering room A shuts the door behind the hero and starts the run (flag league_run; a blackout clears it). Idempotent: a Continuar inside does not shut it twice.
+@script league_in on_enter
+    jf league_run in
+    sfx door
+    setf league_run
+    say gl.c9.door.shut
+  in:
+@end
+# The champion: the fight, then the ending: the Hall of Legacy -> the record -> the save at home -> the credits (all inside `ending run`), then back to the title. A defeat is a blackout.
+@script champ npc
+    jf league_champ again
+    say c9sys.champ.pre
+    battle 1 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    setf league_champ
+    say c9sys.champ.win
+    ending run 1
+    jv 1 0 fail
+    ending title
+    end
+  fail:
+    say gl.c9.end.fail
+    end
+  again:
+    say c9sys.champ.after
+@end

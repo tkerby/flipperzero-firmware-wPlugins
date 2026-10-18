@@ -1,0 +1,96 @@
+# Puerto Dinamo (C3, contract 34), 24 x 18. column = i, row = j. Ruta 6 arrives at the north edge, the docks (muelle_dinamo) lie south, Ruta 11 leaves by the east edge.
+# The town of an INDUSTRIAL PORT: light concrete in big slabs (2 variants) with a painted safety line down the main road, stacked containers, crates, barrels and bollards, net racks and lobster traps,
+# harbour lamps; Centro (door c), tienda (door k), the gym (door g, with a CUTTABLE BUSH closing the pocket in front of its door: the Cortador is needed to enter) and the trader's house (door z) in a row
+# along j = 3..4. (The docks with the ferry are a map of their own, memory: the whole port did not fit the budget of one map.)
+@map puerto_dinamo
+@size 24 18
+@interior no
+@area puerto_dinamo
+@fly 4 puerto_dinamo 3 5 face=S   # the Planeador lands here, in front of the Centro door; slot 4 = visited flag 988 (contract 46.1)
+@bg 0
+@fill quay
+@spawn north 11 1 S             # arriving from Ruta 6
+@spawn centro_door 3 5 S
+@spawn tienda_door 8 5 S
+@spawn gym_door 14 5 S          # inside the pocket in front of the gym door (the bush stands south of it: cut it to leave)
+@spawn trueque_door 20 5 S
+@spawn south 11 16 N            # back from the docks
+@spawn east 22 8 W              # back from Ruta 11
+@legend
+  .  tile=quay                     # light concrete in big slabs (2 variants)
+  P  tile=quay_s                   # the painted safety line
+  H  object=crate_plain
+  x  object=barrel
+  T  object=crate_stack
+  b  object=bollard
+  t  object=trap
+  l  object=lamp_s                 # harbour lamp
+  n  tile=quay
+  m  tile=quay
+  E  tile=quay
+  C  object=center_f
+  c  door=center_f
+  M  object=mart_f
+  k  door=mart_f
+  G  object=gym_dinamo
+  g  door=gym_dinamo
+  Z  object=house_f                # the trader's house
+  z  door=house_f
+  u  cut=yes                       # the cuttable bush in front of the gym
+  K  object=container
+  N  object=net_rack
+  Y  object=net_rack interact=look script=find_net   # D1 (contract 68): the net rack that hides the third Origin Fragment
+  S  object=sign interact=look text=puerto.sign
+  Q  object=sign interact=look text=puerto.gym.sign
+  a  npc=vecino_m id=npc_a face=E script=rumor_dinamo
+  V  npc=vecino_m id=npc_b face=SW text=puerto.npc.b
+  v  npc=mama id=npc_c face=W text=puerto.npc.c
+  I  tile=quay hidden=savia_max   # hidden (contract 80, hidden items)
+@grid
+  HHxHHHxHHHxnnHxHHHxHHHxH
+  H...........P..........H
+  H..........SP..........H
+  H.CCC..MM...PGGG...ZZ..H
+  H.CcC..Mk...PGgG...Zz..H
+  H.........lQPx.x.......H
+  H...........PHuH.......H
+  H.....l.a...P.....l....H
+  H...........P....V.....E
+  H..HHH......P..........E
+  H..T.x......P....KKKT..H
+  H..x.....v..P...HKKKH..H
+  H....I..x.l.P.l........H
+  H.NY.t......P..........H
+  H...........P..........H
+  H.....b.....P....b.....H
+  H...........P..........H
+  HHHxHHHxHHHmmHHxHHHxHHHx
+@warp n -> ruta_6 spawn=north
+@warp m -> muelle_dinamo spawn=north
+@warp E -> ruta_11 spawn=west
+@warp c -> centro_dinamo spawn=door
+@warp k -> tienda_dinamo spawn=door
+@warp g -> gimnasio_dinamo spawn=door
+@warp z -> casa_trueque spawn=door
+# D1 (contract 68): the third Origin Fragment is tangled in a net rack (the sailor's line first, then the rumor + the clue).
+@script rumor_dinamo npc
+    npc_face_hero npc_a
+    say puerto.npc.a
+    say d1.dinamo.rumor
+    setf legend_rumor
+@end
+@script find_net interact
+    jf frag_3 empty
+    say d1.net.look
+    give_item origin_shard 1
+    jv 0 0 full
+    setf frag_3
+    sfx item
+    say gl.d1.got
+    end
+  full:
+    say gl.found.full
+    end
+  empty:
+    say d1.net.empty
+@end

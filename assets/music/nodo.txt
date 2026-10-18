@@ -1,0 +1,28 @@
+title Ciudad Nodo - busy city: every beat is a bass-and-chord arpeggio with a kick or a snare on it, between syncopated hooks (F Eb Bb C, then D G Bb C)
+tempo 124
+vol 215
+meter 4/4
+inst pmaj arp=-12,0,4,7 rate=12 tone=255,200,150,120
+inst hook v=255,255,200,170,150
+inst spark arp=0,4,7 rate=1 lvl=0.8
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+inst snr drum=a6 noise=25 seed=2 fall=12
+l4
+# --- A: groove bar, then the hook, over F, Eb, Bb, C
+@pmaj o5 [ !kick:f !snr:f ]2 |
+@hook o6 c8. o5 a8. f8 a8. o6 c8. o5 a8 |
+@pmaj o5 [ !kick:e- !snr:e- ]2 |
+@hook o5 b-8. g8. e-8 g8. b-8. g8 |
+@pmaj o5 [ !kick:b- !snr:b- ]2 |
+@hook o6 d8. o5 b-8. f8 b-8. o6 d8. o5 b-8 |
+@pmaj o6 [ !kick:c !snr:c ]2 |
+@hook o6 e8. c8. o5 g8 o6 c8. e8. g8 |
+# --- B: up a step (D, G, Bb), the hook climbs, and the fountain sparkles before the loop
+@pmaj o5 [ !kick:d !snr:d ]2 |
+@hook o6 d8. o5 a8. f+8 a8. o6 d8. o5 a8 |
+@pmaj o5 [ !kick:g !snr:g ]2 |
+@hook o6 g8. d8. o5 b8 o6 d8. g8. d8 |
+@pmaj o5 [ !kick:b- !snr:b- ]2 |
+@hook o6 f8. d8. o5 b-8 o6 d8. f8. a8 |
+@pmaj o6 !kick:c !snr:c @spark c2 |
+@hook o6 e8. c8. o5 g8 o6 c8. e8. g8 |

@@ -1,0 +1,1689 @@
+# Nucleo trainers. Trainer id = position in this file (1-based; 0 = none / wild).
+# ai: the trainer's AI class (assets/data/ai.toml, contract 82): its move-choice modifiers (1: no second status on a creature that has one, 2: set-up moves on the second turn,
+#     3: super effective moves) and its item / switch routine (salves, boost items, Cure-All ...). The old `ai_mod = [..]` list of this file is gone: the class says it.
+# party = [[species, level], ...] (<= 6). When counter_starter = true, party slot 0's species is
+# replaced at runtime by counter[<player's starter species>] (rival: picks the starter that
+# beats yours). name = the trainer's class + personal name shown in the battle ("Explorador Teo"): a global text key
+# "gl.tr.<id>" (assets/text/<lang>.txt, <= 15 glyphs), or "rival" = the runtime {rival} name the player chose.
+# money = base money.
+
+[rival_lab]
+name = "rival"
+ai = "basic"
+money = 35
+counter_starter = true
+party = [["embercub", 5]]
+counter = { sprouton = "embercub", embercub = "puddlet", puddlet = "sprouton" }
+
+# ---- M4-D: the trainers of Ruta 2 and the Bosque Umbrio. `art` = the battle picture folder under
+# assets/art/npcs/ (monc.py reads it; regc.py ignores it). money = base money (prize = base x level of the last creature).
+[explorador_r2]
+name = "gl.tr.explorador_r2"
+ai = "plain"
+art = "explorador"
+money = 12
+party = [["muncrit", 5], ["flitter", 5]]
+
+[cazabichos_1]
+name = "gl.tr.cazabichos_1"
+ai = "basic"
+art = "cazabichos"
+money = 8
+party = [["grubbit", 6], ["stingle", 6]]
+
+[cazabichos_2]
+name = "gl.tr.cazabichos_2"
+ai = "basic"
+art = "cazabichos"
+money = 8
+party = [["stingle", 7], ["grubbit", 7], ["grubshell", 7]]
+
+# ---- M5-D: the Rock gym of Pueblo Cantera.
+# `aprendiz_cantera` stands in the gym's path (sight range 3); `garrick` is the leader on his dais (script `garrick` of gimnasio_cantera.map, flag 80 = the Medalla Cantera).
+[aprendiz_cantera]
+name = "gl.tr.aprendiz_cantera"
+ai = "basic"
+art = "aprendiz"
+money = 12
+party = [["pebblump", 10], ["pebblump", 11]]
+
+[garrick]
+name = "gl.tr.garrick"
+ai = "garrick"
+art = "garrick"
+money = 99
+party = [["pebblump", 12], ["boulderback", 14]]
+
+# ---- Nerea, the leader of the Water gym (money 99 x 21): (the music table has 256 trainer slots since music.bin format 3)
+[nerea]
+name = "gl.tr.nerea"
+ai = "nerea"
+art = "nerea"
+money = 99
+party = [["gleamlet", 18], ["gleamjell", 21]]
+
+# ======================================================================================================================
+# C2 (contract 31; Route 3 .. Ciudad Marea). Ids 7+ (positions; never reorder). `art` = the battle picture folder under assets/art/npcs/.
+# Levels follow (Route 3 9-13, Monte Eco 10-12, Route 4 12, the Ciudad Marea rival 15-18, Nerea 18 / 21, the bridge of five 12-14, Route 25 13-14).
+# ======================================================================================================================
+# ---- Ruta 3 (Route 3: Youngster Ben, Lass Janice, Bug Catcher Colton, Hiker, Youngster Calvin)
+[explorador_r3a]
+name = "gl.tr.explorador_r3a"
+ai = "plain"
+art = "explorador"
+money = 12
+party = [["muncrit", 10], ["quillix", 10]]
+
+[chica_r3]
+name = "gl.tr.chica_r3"
+ai = "basic"
+art = "chica"
+money = 12
+party = [["flitter", 9], ["flitter", 9]]
+
+[cazabichos_r3]
+name = "gl.tr.cazabichos_r3"
+ai = "basic"
+art = "cazabichos"
+money = 8
+party = [["grubshell", 10], ["stingle", 10], ["stingle", 10]]
+
+[montanista_r3]
+name = "gl.tr.montanista_r3"
+ai = "basic"
+art = "montanista"
+money = 15
+party = [["pebblump", 10], ["pebblump", 12]]
+
+[explorador_r3b]
+name = "gl.tr.explorador_r3b"
+ai = "plain"
+art = "explorador"
+money = 12
+party = [["jabbird", 13]]
+
+# ---- Monte Eco
+[montanista_eco]
+name = "gl.tr.montanista_eco"
+ai = "basic"
+art = "montanista"
+money = 15
+party = [["pebblump", 10], ["pebblump", 11], ["pebblump", 12]]
+
+[vertice_eco1]
+name = "gl.tr.vertice_eco1"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["muncrit", 11], ["echolet", 11]]
+
+[vertice_eco2]
+name = "gl.tr.vertice_eco2"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["zaphid", 11], ["echolet", 12]]
+
+[vertice_eco3]
+name = "gl.tr.vertice_eco3"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["muncrit", 11], ["muncrit", 11], ["echolet", 12]]
+
+[cientifico_eco]
+name = "gl.tr.cientifico_eco"
+ai = "basic"
+art = "vertice"
+money = 18
+party = [["stinglet", 12], ["zaphid", 12], ["quillix", 12]]
+
+# ---- Ruta 4
+[chica_r4]
+name = "gl.tr.chica_r4"
+ai = "basic"
+art = "chica"
+money = 12
+party = [["lullabun", 12], ["dunedil", 12]]
+
+[explorador_r4]
+name = "gl.tr.explorador_r4"
+ai = "plain"
+art = "explorador"
+money = 12
+party = [["coilisp", 12], ["muncrit", 12], ["flitter", 12]]
+
+# ---- the rival in Ciudad Marea (his starter's first evolution at 17: slot 0 is replaced at run time by
+# the counter of the player's starter, here the STAGE-2 form of the species that beats it)
+[rival_marea]
+name = "rival"
+ai = "rival2"
+money = 35
+counter_starter = true
+party = [["flarewolf", 17], ["flitwing", 18], ["dozelf", 15], ["muncrit", 15]]
+counter = { sprouton = "flarewolf", embercub = "tidalux", puddlet = "thornbuck" }
+
+# ---- Gimnasio de Agua
+[nadadora_1]
+name = "gl.tr.nadadora_1"
+ai = "m13"
+art = "nadadora"
+money = 10
+party = [["puddlet", 16], ["gleamlet", 16]]
+
+[nadadora_2]
+name = "gl.tr.nadadora_2"
+ai = "m13"
+art = "nadadora"
+money = 10
+party = [["tidalux", 19]]
+
+# ---- Ruta 24, the bridge of five (the bridge of five: Jr. Trainer, Lass, Youngster, Bug Catcher, villain-team member)
+[explorador_r24a]
+name = "gl.tr.explorador_r24a"
+ai = "plain"
+art = "explorador"
+money = 12
+party = [["muncrit", 18], ["quillix", 18]]
+
+[chica_r24]
+name = "gl.tr.chica_r24"
+ai = "basic"
+art = "chica"
+money = 12
+party = [["lullabun", 18], ["jabbird", 18]]
+
+[cazabichos_r24]
+name = "gl.tr.cazabichos_r24"
+ai = "basic"
+art = "cazabichos"
+money = 8
+party = [["velvex", 18], ["lanternmoth", 18]]
+
+[explorador_r24b]
+name = "gl.tr.explorador_r24b"
+ai = "plain"
+art = "explorador"
+money = 12
+party = [["dunedil", 19], ["coilisp", 19]]
+
+[vertice_r24]
+name = "gl.tr.vertice_r24"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["echolet", 19], ["muncrit", 19], ["quillix", 19]]
+
+# ---- Ruta 25
+[montanista_r25]
+name = "gl.tr.montanista_r25"
+ai = "basic"
+art = "montanista"
+money = 15
+party = [["pebblump", 18], ["pebblump", 18], ["pebblump", 19]]
+
+[chica_r25]
+name = "gl.tr.chica_r25"
+ai = "basic"
+art = "chica"
+money = 12
+party = [["mossbud", 19], ["flitter", 19]]
+
+# ======================================================================================================================
+# C3 (Chapter 3, appended: ids 30..46; contract 34). Levels on a curve after Nerea (Gleamjell 21): Ruta 6 15-17, the ferry 17-20, Ruta 11 18-20, the gym 20-21, Ohm's star 24.
+# ======================================================================================================================
+# ---- Ruta 6 (Route 6: Jr. Trainers, Bug Catchers; the pond's fisherman)
+[explorador_r6]
+name = "gl.tr.explorador_r6"
+ai = "plain"
+art = "explorador"
+money = 12
+party = [["ramplet", 15], ["glintail", 15]]
+
+[chica_r6]
+name = "gl.tr.chica_r6"
+ai = "basic"
+art = "chica"
+money = 12
+party = [["mossbud", 16], ["glintail", 16]]
+
+[cazabichos_r6]
+name = "gl.tr.cazabichos_r6"
+ai = "basic"
+art = "cazabichos"
+money = 8
+party = [["lanternmoth", 16], ["velvex", 16], ["velvex", 16]]
+
+[pescador_r6]
+name = "gl.tr.pescador_r6"
+ai = "m13"
+art = "pescador"
+money = 16
+party = [["puddlet", 17], ["puddlet", 17]]
+
+# ---- Ruta 11 (Route 11: Engineers with a creature, Gamblers, a Youngster)
+[mecanico_r11a]
+name = "gl.tr.mecanico_r11a"
+ai = "basic"
+art = "mecanico"
+money = 12
+party = [["spoolt", 18], ["spoolt", 18], ["zaphid", 18]]
+
+[pescador_r11]
+name = "gl.tr.pescador_r11"
+ai = "m13"
+art = "pescador"
+money = 16
+party = [["puddlet", 18], ["jabbird", 18], ["dunedil", 19]]
+
+[explorador_r11]
+name = "gl.tr.explorador_r11"
+ai = "plain"
+art = "explorador"
+money = 12
+party = [["coilisp", 18], ["jabbird", 18], ["muncrit", 19]]
+
+[mecanico_r11b]
+name = "gl.tr.mecanico_r11b"
+ai = "basic"
+art = "mecanico"
+money = 12
+party = [["zaphid", 20], ["spoolt", 20]]
+
+[chica_r11]
+name = "gl.tr.chica_r11"
+ai = "basic"
+art = "chica"
+money = 12
+party = [["mesmoli", 19], ["lullabun", 19]]
+
+# ---- the Ferry Albatros
+[marinero_f1]
+name = "gl.tr.marinero_f1"
+ai = "m13"
+art = "marinero"
+money = 12
+party = [["ramplet", 18], ["puddlet", 18]]
+
+[marinero_f2]
+name = "gl.tr.marinero_f2"
+ai = "m13"
+art = "marinero"
+money = 12
+party = [["ramplet", 19], ["puddlet", 19], ["puddlet", 19]]
+
+[marinero_f3]
+name = "gl.tr.marinero_f3"
+ai = "m13"
+art = "marinero"
+money = 12
+party = [["ramplet", 20], ["glintail", 19]]
+
+[chica_f]
+name = "gl.tr.chica_f"
+ai = "basic"
+art = "chica"
+money = 12
+party = [["lullabun", 18], ["glintail", 18]]
+
+[pescador_f]
+name = "gl.tr.pescador_f"
+ai = "m13"
+art = "pescador"
+money = 16
+party = [["puddlet", 17], ["puddlet", 17], ["tidalux", 19]]
+
+# the rival on the ferry (his starter's first evolution at 20; slot 0 is replaced at run time by the counter of the
+# player's starter, the STAGE-2 form of the species that beats it, like rival_marea)
+[rival_ferry]
+name = "rival"
+ai = "rival2"
+money = 40
+counter_starter = true
+party = [["flarewolf", 20], ["flitwing", 19], ["trancelf", 18], ["munchmole", 16]]
+counter = { sprouton = "flarewolf", embercub = "tidalux", puddlet = "thornbuck" }
+
+# ---- Gimnasio Voltio (the two gym trainers stand in the entrance band (south of the cabinet field) and look along the diagonals across the hero's first steps: a diagonal line cannot cross the cabinet field)
+[mecanico_g]
+name = "gl.tr.mecanico_g"
+ai = "basic"
+art = "mecanico"
+money = 12
+party = [["spoolt", 20], ["zaphid", 20]]
+
+[aprendiz_g]
+name = "gl.tr.aprendiz_g"
+ai = "basic"
+art = "aprendiz"
+money = 12
+party = [["zaphid", 20], ["spoolt", 21]]
+
+[ohm]
+name = "gl.tr.ohm"
+ai = "ohm"
+art = "ohm"
+money = 99
+party = [["spoolt", 21], ["zaphid", 18], ["voltgecko", 24]]
+
+# ---- C4a trainers (contract 39): Ruta 9 (6), Ruta 10 (4), Tunel 1 (3), Tunel 2 (4), Ruta 8 (4), Ruta 7 (3), Gimnasio Neon (4 + Flora Nyx). Levels follow after Ohm (Route 9/10 ~ 18-23, Tunel Oscuro ~ 17-24, Route 8/7 ~ 18-26, Metropolis Neon gym 23-29; Flora).
+
+[explorador_r9a]
+name = "gl.tr.explorador_r9a"
+ai = "plain"
+art = "explorador"
+money = 12
+party = [["muncrit", 20], ["jabbird", 20]]
+
+[chica_r9a]
+name = "gl.tr.chica_r9a"
+ai = "basic"
+art = "chica"
+money = 12
+party = [["glintail", 21], ["mossbud", 21]]
+
+[cazabichos_r9]
+name = "gl.tr.cazabichos_r9"
+ai = "basic"
+art = "cazabichos"
+money = 8
+party = [["lanternmoth", 21], ["velvex", 21], ["lanternmoth", 20]]
+
+[montanista_r9]
+name = "gl.tr.montanista_r9"
+ai = "basic"
+art = "montanista"
+money = 15
+party = [["pebblump", 21], ["ramplet", 21]]
+
+[explorador_r9b]
+name = "gl.tr.explorador_r9b"
+ai = "plain"
+art = "explorador"
+money = 12
+party = [["dunedil", 21], ["ramplet", 21]]
+
+[mecanico_r9]
+name = "gl.tr.mecanico_r9"
+ai = "basic"
+art = "mecanico"
+money = 12
+party = [["smogkeg", 22], ["spoolt", 21]]
+
+[montanista_r10]
+name = "gl.tr.montanista_r10"
+ai = "basic"
+art = "montanista"
+money = 15
+party = [["pebblump", 22], ["pebblump", 22], ["ramplet", 23]]
+
+[chica_r10]
+name = "gl.tr.chica_r10"
+ai = "basic"
+art = "chica"
+money = 12
+party = [["mesmoli", 22], ["lullabun", 22]]
+
+[explorador_r10]
+name = "gl.tr.explorador_r10"
+ai = "plain"
+art = "explorador"
+money = 12
+party = [["coilisp", 22], ["jabbird", 22], ["dunedil", 23]]
+
+[cazabichos_r10]
+name = "gl.tr.cazabichos_r10"
+ai = "basic"
+art = "cazabichos"
+money = 8
+party = [["lanternmoth", 22], ["velvex", 22]]
+
+[montanista_t1]
+name = "gl.tr.montanista_t1"
+ai = "basic"
+art = "montanista"
+money = 15
+party = [["pebblump", 21], ["pebblump", 23], ["ramplet", 22]]
+
+[chica_t1]
+name = "gl.tr.chica_t1"
+ai = "basic"
+art = "chica"
+money = 12
+party = [["echolet", 22], ["glintail", 22]]
+
+[explorador_t1]
+name = "gl.tr.explorador_t1"
+ai = "plain"
+art = "explorador"
+money = 12
+party = [["muncrit", 22], ["dunedil", 22]]
+
+[montanista_t2a]
+name = "gl.tr.montanista_t2a"
+ai = "basic"
+art = "montanista"
+money = 15
+party = [["pebblump", 23], ["rockroll", 25]]
+
+[montanista_t2b]
+name = "gl.tr.montanista_t2b"
+ai = "basic"
+art = "montanista"
+money = 15
+party = [["ramplet", 23], ["ramplet", 23], ["pebblump", 24]]
+
+[chica_t2]
+name = "gl.tr.chica_t2"
+ai = "basic"
+art = "chica"
+money = 12
+party = [["mesmoli", 23], ["lullabun", 23], ["glintail", 23]]
+
+[explorador_t2]
+name = "gl.tr.explorador_t2"
+ai = "plain"
+art = "explorador"
+money = 12
+party = [["dunedil", 23], ["coilisp", 23], ["jabbird", 23]]
+
+[jugador_r8a]
+name = "gl.tr.jugador_r8a"
+ai = "basic"
+art = "jugador"
+money = 22
+party = [["cindermeer", 24], ["cindermeer", 24]]
+
+[jugador_r8b]
+name = "gl.tr.jugador_r8b"
+ai = "basic"
+art = "jugador"
+money = 22
+party = [["glintail", 25], ["cindermeer", 25], ["mesmoli", 25]]
+
+[chica_r8]
+name = "gl.tr.chica_r8"
+ai = "basic"
+art = "chica"
+money = 12
+party = [["lullabun", 24], ["lunelle", 24]]
+
+[mecanico_r8]
+name = "gl.tr.mecanico_r8"
+ai = "basic"
+art = "mecanico"
+money = 12
+party = [["smogkeg", 24], ["smogkeg", 24]]
+
+[chica_r7]
+name = "gl.tr.chica_r7"
+ai = "basic"
+art = "chica"
+money = 12
+party = [["mossbud", 24], ["glintail", 24]]
+
+[explorador_r7]
+name = "gl.tr.explorador_r7"
+ai = "plain"
+art = "explorador"
+money = 12
+party = [["cindermeer", 25], ["jabhawk", 25]]
+
+[jugador_r7]
+name = "gl.tr.jugador_r7"
+ai = "basic"
+art = "jugador"
+money = 22
+party = [["glintail", 25], ["mesmoli", 25]]
+
+[chica_g1]
+name = "gl.tr.chica_g1"
+ai = "basic"
+art = "chica"
+money = 12
+party = [["thornbuck", 24], ["mossbud", 24]]
+
+[chica_g2]
+name = "gl.tr.chica_g2"
+ai = "basic"
+art = "chica"
+money = 12
+party = [["mossbloom", 25], ["shellfern", 25]]
+
+[chica_g3]
+name = "gl.tr.chica_g3"
+ai = "basic"
+art = "chica"
+money = 12
+party = [["mossbloom", 26], ["shellfern", 26]]
+
+[medium_g]
+name = "gl.tr.medium_g"
+ai = "basic"
+art = "medium"
+money = 11
+party = [["mossbloom", 25], ["mossbloom", 26]]
+
+# Flora Nyx, the plant gym leader of Metropolis Neon 
+[flora]
+name = "gl.tr.flora"
+ai = "flora"
+art = "flora"
+money = 99
+party = [["dewlash", 29], ["mossbloom", 24], ["bloomoss", 29]]
+
+# ---- C4b (contract 41): the casino, the Vertice hideout and the Torre de los Recuerdos (levels after Flora (29): gamblers 27-28, hideout grunts 24-29, mediums 22-25, Varo 24-29)
+# The casino: three gamblers and the grunt who guards the poster
+[jugador_c1]
+name = "gl.tr.jugador_c1"
+ai = "basic"
+art = "jugador"
+money = 22
+party = [["glintail", 27], ["mesmoli", 27]]
+
+[jugador_c2]
+name = "gl.tr.jugador_c2"
+ai = "basic"
+art = "jugador"
+money = 22
+party = [["cindermeer", 28], ["smogkeg", 27], ["spoolt", 27]]
+
+[jugador_c3]
+name = "gl.tr.jugador_c3"
+ai = "basic"
+art = "jugador"
+money = 22
+party = [["ramplet", 28], ["glintail", 28]]
+
+[vertice_casino]
+name = "gl.tr.vertice_casino"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["hoodcoil", 26], ["echowing", 26]]
+
+# The hideout, B1F
+[vertice_b1a]
+name = "gl.tr.vertice_b1a"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["smogkeg", 24], ["coilisp", 24]]
+
+[vertice_b1b]
+name = "gl.tr.vertice_b1b"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["echolet", 24], ["quillord", 25]]
+
+# B2F
+[vertice_b2a]
+name = "gl.tr.vertice_b2a"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["hoodcoil", 25], ["smogkeg", 25]]
+
+[vertice_b2b]
+name = "gl.tr.vertice_b2b"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["dunedrake", 25], ["coilisp", 25]]
+
+[vertice_b2c]
+name = "gl.tr.vertice_b2c"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["quillord", 26], ["smogkeg", 26], ["echowing", 26]]
+
+# B3F, with the grunt who carries the Hoist Key
+[vertice_b3a]
+name = "gl.tr.vertice_b3a"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["hoodcoil", 26], ["dunedrake", 26]]
+
+[vertice_b3b]
+name = "gl.tr.vertice_b3b"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["smogkeg", 27], ["quillord", 27], ["echowing", 27]]
+
+[vertice_llave]
+name = "gl.tr.vertice_llave"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["hoodcoil", 27], ["echowing", 28]]
+
+# B4F: the grunt in front of the boss, and DIRECTOR VARO (villain hideout; money base 99)
+[vertice_b4]
+name = "gl.tr.vertice_b4"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["smogkeg", 28], ["quillord", 28]]
+
+[varo]
+name = "gl.tr.varo"
+ai = "jefe_vertice"
+art = "varo"
+money = 99
+party = [["boulderback", 25], ["dunedrake", 24], ["shellbrute", 29]]
+
+# The Torre de los Recuerdos
+[medium_t1]
+name = "gl.tr.medium_t1"
+ai = "basic"
+art = "medium"
+money = 11
+party = [["wispsheet", 21], ["trancelf", 21]]
+
+# the rival (floor 2): slot 0 is replaced at run time by the counter of the player's starter (the STAGE-2 form of the species that beats it) at 25, like rival_marea / rival_ferry
+[rival_torre]
+name = "rival"
+ai = "rival2"
+money = 45
+counter_starter = true
+party = [["flarewolf", 25], ["flitwing", 25], ["cindermeer", 23], ["trancelf", 20]]
+counter = { sprouton = "flarewolf", embercub = "tidalux", puddlet = "thornbuck" }
+
+[medium_t3a]
+name = "gl.tr.medium_t3a"
+ai = "basic"
+art = "medium"
+money = 11
+party = [["wispsheet", 22], ["wispsheet", 23]]
+
+[medium_t3b]
+name = "gl.tr.medium_t3b"
+ai = "basic"
+art = "medium"
+money = 11
+party = [["wispsheet", 24], ["shroudle", 25]]
+
+[medium_t3c]
+name = "gl.tr.medium_t3c"
+ai = "basic"
+art = "medium"
+money = 11
+party = [["trancelf", 24], ["wispsheet", 24], ["shroudle", 25]]
+
+# the mother's spirit: with the Lente Espectral it is a TRAINER fight (a trainer's creature cannot be caught); art `espiritu` (a pale, dissolving Shellbrute made from its art)
+[espiritu_madre]
+name = "gl.tr.espiritu_madre"
+ai = "basic"
+art = "espiritu"
+money = 1
+party = [["shellbrute", 30]]
+
+# the top floor: the Vertice grunts who hold the old man
+[vertice_t1]
+name = "gl.tr.vertice_t1"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["hoodcoil", 28], ["smogkeg", 28]]
+
+[vertice_t2]
+name = "gl.tr.vertice_t2"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["quillord", 29], ["echowing", 28]]
+
+
+# ======================================================================================================================================================
+# C5a (contract 47; ids 99 .. 119): Ruta 12 (the pier's fishermen), Rutas 13 - 15 (bird keepers, lasses, bikers and punks), the poison gym and Kai .
+# like levels after the tower (the rival 25, the grunts 28 - 29): Ruta 12 24 - 26, Ruta 13 25 - 27, Ruta 14 27 - 29, Ruta 15 29 - 31, the gym 34 - 37. Kai: Smogkeg 37, Slickslime 39, Smogkeg 37, Twinkeg 43.
+# ======================================================================================================================================================
+
+[pescador_r12a]
+name = "gl.tr.pescador_r12a"
+ai = "m13"
+art = "pescador"
+money = 16
+party = [["clubrimp", 27], ["skipgoby", 28]]
+
+[pescador_r12b]
+name = "gl.tr.pescador_r12b"
+ai = "m13"
+art = "pescador"
+money = 16
+party = [["urchip", 28], ["lazatee", 29]]
+
+[pescador_r12c]
+name = "gl.tr.pescador_r12c"
+ai = "m13"
+art = "pescador"
+money = 16
+party = [["gobyhop", 29], ["clubrimp", 29], ["urchip", 29]]
+
+[explorador_r13a]
+name = "gl.tr.explorador_r13a"
+ai = "plain"
+art = "explorador"
+money = 12
+party = [["flitwing", 28], ["flitwing", 29], ["jabhawk", 29]]
+
+[chica_r13]
+name = "gl.tr.chica_r13"
+ai = "basic"
+art = "chica"
+money = 12
+party = [["mossbloom", 29], ["mossbloom", 29]]
+
+[rider_r13]
+name = "gl.tr.rider_r13"
+ai = "basic"
+art = "rider"
+money = 11
+party = [["glintail", 29], ["smogkeg", 29]]
+
+[explorador_r13b]
+name = "gl.tr.explorador_r13b"
+ai = "plain"
+art = "explorador"
+money = 12
+party = [["jabhawk", 29], ["flitwing", 30]]
+
+[explorador_r14]
+name = "gl.tr.explorador_r14"
+ai = "plain"
+art = "explorador"
+money = 12
+party = [["jabhawk", 31], ["flitwing", 32]]
+
+[rider_r14a]
+name = "gl.tr.rider_r14a"
+ai = "basic"
+art = "rider"
+money = 11
+party = [["smogkeg", 32], ["hoodcoil", 32], ["spoolt", 32]]
+
+[punk_r14]
+name = "gl.tr.punk_r14"
+ai = "plain"
+art = "punk"
+money = 11
+party = [["spoolt", 32], ["smogkeg", 33], ["hoodcoil", 32]]
+
+[chica_r14]
+name = "gl.tr.chica_r14"
+ai = "basic"
+art = "chica"
+money = 12
+party = [["mossbloom", 32], ["lullabun", 32]]
+
+[rider_r14b]
+name = "gl.tr.rider_r14b"
+ai = "basic"
+art = "rider"
+money = 11
+party = [["lustrel", 33], ["smogkeg", 33]]
+
+[rider_r15]
+name = "gl.tr.rider_r15"
+ai = "basic"
+art = "rider"
+money = 11
+party = [["smogkeg", 34], ["voltspool", 34]]
+
+[chica_r15]
+name = "gl.tr.chica_r15"
+ai = "basic"
+art = "chica"
+money = 12
+party = [["mossbloom", 33], ["ferncairn", 34]]
+
+[explorador_r15]
+name = "gl.tr.explorador_r15"
+ai = "plain"
+art = "explorador"
+money = 12
+party = [["flitwing", 34], ["jabhawk", 34]]
+
+[punk_r15]
+name = "gl.tr.punk_r15"
+ai = "plain"
+art = "punk"
+money = 11
+party = [["voltspool", 34], ["hoodcoil", 35], ["smogkeg", 35]]
+
+[ninja_g1]
+name = "gl.tr.ninja_g1"
+ai = "switcher"
+art = "aprendiz"
+money = 14
+party = [["smogkeg", 34], ["hoodcoil", 34]]
+
+[ninja_g2]
+name = "gl.tr.ninja_g2"
+ai = "switcher"
+art = "medium"
+money = 14
+party = [["shroudle", 35], ["hoodcoil", 35]]
+
+[ninja_g3]
+name = "gl.tr.ninja_g3"
+ai = "switcher"
+art = "aprendiz"
+money = 14
+party = [["smogkeg", 36], ["hoodcoil", 36], ["quillord", 36]]
+
+[ninja_g4]
+name = "gl.tr.ninja_g4"
+ai = "switcher"
+art = "cazabichos"
+money = 14
+party = [["hoodcoil", 37], ["dunedrake", 37]]
+
+[kai]
+name = "gl.tr.kai"
+ai = "kai"
+art = "kai"
+money = 99
+party = [["smogkeg", 37], ["slickslime", 39], ["smogkeg", 37], ["twinkeg", 43]]
+
+# ---- C5b (contract 48): Ruta 16, the Autopista Mag, Ruta 18 and the sea of Ambar (Cue Balls / Bikers / Birdkeepers / Swimmers of Routes 16 - 19 at L28 - 35;
+# the Autopista's gang are `punk` / `rider`). ids 120 .. 135 (appended: ids are positions).
+[punk_r16a]
+name = "gl.tr.punk_r16a"
+ai = "plain"
+art = "punk"
+money = 11
+party = [["spoolt", 28], ["smogkeg", 28], ["hoodcoil", 29]]
+
+[rider_r16]
+name = "gl.tr.rider_r16"
+ai = "basic"
+art = "rider"
+money = 11
+party = [["glintail", 29], ["ramplet", 29], ["smogkeg", 30]]
+
+[punk_r16b]
+name = "gl.tr.punk_r16b"
+ai = "plain"
+art = "punk"
+money = 11
+party = [["hoodcoil", 30], ["spoolt", 30]]
+
+[rider_ap1]
+name = "gl.tr.rider_ap1"
+ai = "basic"
+art = "rider"
+money = 11
+party = [["lustrel", 30], ["smogkeg", 30]]
+
+[punk_ap1]
+name = "gl.tr.punk_ap1"
+ai = "plain"
+art = "punk"
+money = 11
+party = [["spoolt", 30], ["hoodcoil", 31], ["smogkeg", 31]]
+
+[rider_ap2]
+name = "gl.tr.rider_ap2"
+ai = "basic"
+art = "rider"
+money = 11
+party = [["ibexer", 31], ["glintail", 30]]
+
+[punk_ap2]
+name = "gl.tr.punk_ap2"
+ai = "plain"
+art = "punk"
+money = 11
+party = [["voltspool", 31], ["smogkeg", 32]]
+
+[rider_ap3]
+name = "gl.tr.rider_ap3"
+ai = "basic"
+art = "rider"
+money = 11
+party = [["lustrel", 32], ["hoodcoil", 32]]
+
+[punk_ap3]
+name = "gl.tr.punk_ap3"
+ai = "plain"
+art = "punk"
+money = 11
+party = [["hoodcoil", 32], ["spoolt", 32], ["smogkeg", 33]]
+
+[rider_ap4]
+name = "gl.tr.rider_ap4"
+ai = "basic"
+art = "rider"
+money = 11
+party = [["ibexer", 33], ["lustrel", 33]]
+
+[punk_ap4]
+name = "gl.tr.punk_ap4"
+ai = "plain"
+art = "punk"
+money = 11
+party = [["voltspool", 33], ["hoodcoil", 33], ["twinkeg", 34]]
+
+[rider_r18]
+name = "gl.tr.rider_r18"
+ai = "basic"
+art = "rider"
+money = 11
+party = [["lustrel", 34], ["ibexer", 34]]
+
+[explorador_r18]
+name = "gl.tr.explorador_r18"
+ai = "plain"
+art = "explorador"
+money = 12
+party = [["jabhawk", 34], ["skyrrow", 34]]
+
+[pescador_r18]
+name = "gl.tr.pescador_r18"
+ai = "m13"
+art = "pescador"
+money = 16
+party = [["urchip", 33], ["smashrimp", 34], ["lazatee", 34]]
+
+[nadadora_m1]
+name = "gl.tr.nadadora_m1"
+ai = "m13"
+art = "nadadora"
+money = 10
+party = [["gleamlet", 33], ["urchlord", 34]]
+
+[nadadora_m2]
+name = "gl.tr.nadadora_m2"
+ai = "m13"
+art = "nadadora"
+money = 10
+party = [["gobyhop", 35], ["lazatee", 35]]
+
+# ----------------------------------------------------------------------------------------------------------------------
+# C6 (contract 49): arc, ids 136 .. 167 (positions): the Fighting dojo (the master's a creature /), the Team Vertice grunts of the streets and
+# of a corporation (the Torre Vertice) at L26 - 34, its scientists, the rival (the starter's last form 40), Director Varo again
+# the psychic gym.
+# ----------------------------------------------------------------------------------------------------------------------
+
+[karateka_d1]
+name = "gl.tr.karateka_d1"
+ai = "brawler"
+art = "karateka"
+money = 14
+party = [["ramplet", 31], ["ibexer", 31]]
+
+[karateka_d2]
+name = "gl.tr.karateka_d2"
+ai = "brawler"
+art = "karateka"
+money = 14
+party = [["ibexer", 32], ["ibexer", 32]]
+
+[karateka_d3]
+name = "gl.tr.karateka_d3"
+ai = "brawler"
+art = "karateka"
+money = 14
+party = [["gobyhop", 32], ["gobrawl", 33]]
+
+[karateka_d4]
+name = "gl.tr.karateka_d4"
+ai = "brawler"
+art = "karateka"
+money = 14
+party = [["ibexer", 33], ["ibexer", 32], ["ibexer", 34]]
+
+[maestro_dojo]
+name = "gl.tr.maestro_dojo"
+ai = "brawler"
+art = "maestro_dojo"
+money = 99
+party = [["kickaroo", 37], ["jabadillo", 37]]
+
+[vertice_c1]
+name = "gl.tr.vertice_c1"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["smogkeg", 31], ["hoodcoil", 31]]
+
+[vertice_c2]
+name = "gl.tr.vertice_c2"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["hoodcoil", 32], ["quillord", 32], ["dunedrake", 32]]
+
+[vertice_c3]
+name = "gl.tr.vertice_c3"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["hoodcoil", 33], ["smogkeg", 33]]
+
+[vertice_t1a]
+name = "gl.tr.vertice_t1a"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["hoodcoil", 34], ["smogkeg", 34]]
+
+[vertice_t1b]
+name = "gl.tr.vertice_t1b"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["dunedrake", 34], ["hoodcoil", 33], ["quillord", 34]]
+
+[vertice_t2a]
+name = "gl.tr.vertice_t2a"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["smogkeg", 35], ["hoodcoil", 35]]
+
+[cientifico_t2a]
+name = "gl.tr.cientifico_t2a"
+ai = "m12"
+art = "cientifico"
+money = 18
+party = [["voltspool", 35], ["voltspool", 35], ["zaphid", 34]]
+
+[cientifico_t2b]
+name = "gl.tr.cientifico_t2b"
+ai = "m12"
+art = "cientifico"
+money = 18
+party = [["slickslime", 36], ["smogkeg", 36]]
+
+[cientifico_t3a]
+name = "gl.tr.cientifico_t3a"
+ai = "m12"
+art = "cientifico"
+money = 18
+party = [["voltspool", 36], ["voltspool", 36]]
+
+[vertice_t3a]
+name = "gl.tr.vertice_t3a"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["quillord", 36], ["dunedrake", 36]]
+
+[cientifico_t3b]
+name = "gl.tr.cientifico_t3b"
+ai = "m12"
+art = "cientifico"
+money = 18
+party = [["twinkeg", 37], ["slickslime", 36]]
+
+[vertice_t4a]
+name = "gl.tr.vertice_t4a"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["hoodcoil", 36], ["dunedrake", 36]]
+
+[cientifico_t4a]
+name = "gl.tr.cientifico_t4a"
+ai = "m12"
+art = "cientifico"
+money = 18
+party = [["slickslime", 36], ["voltspool", 36]]
+
+# the rival on 4F of the tower: slot 0 is replaced at run time by the counter of the player's starter (here the LAST form of the species that beats it, L40), like rival_marea / rival_ferry / rival_torre
+[rival_vtx]
+name = "rival"
+ai = "rival2"
+money = 50
+counter_starter = true
+party = [["pyrewolf", 40], ["skyrrow", 37], ["pyromeer", 35], ["dewlash", 38], ["somnarch", 35]]
+counter = { sprouton = "pyrewolf", embercub = "tidalgard", puddlet = "grovestag" }
+
+[vertice_t5a]
+name = "gl.tr.vertice_t5a"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["echowing", 36], ["hoodcoil", 36], ["quillord", 36]]
+
+[cientifico_t5a]
+name = "gl.tr.cientifico_t5a"
+ai = "m12"
+art = "cientifico"
+money = 18
+party = [["twinkeg", 36], ["voltspool", 36]]
+
+[vertice_t5b]
+name = "gl.tr.vertice_t5b"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["dunedrake", 37], ["quillord", 37]]
+
+[vertice_t6a]
+name = "gl.tr.vertice_t6a"
+ai = "basic"
+art = "vertice"
+money = 11
+party = [["hoodcoil", 38], ["echowing", 38]]
+
+[varo_vtx]
+name = "gl.tr.varo"
+ai = "jefe_vertice"
+art = "varo"
+money = 99
+party = [["quillord", 37], ["wombamma", 35], ["dunedrake", 37], ["quilltyrant", 41]]
+
+[psiquico_g1]
+name = "gl.tr.psiquico_g1"
+ai = "m12"
+art = "psiquico"
+money = 12
+party = [["trancelf", 31], ["mesmaris", 31], ["lazatee", 31]]
+
+[psiquico_g2]
+name = "gl.tr.psiquico_g2"
+ai = "m12"
+art = "psiquico"
+money = 12
+party = [["trancelf", 32], ["shroudle", 32]]
+
+[psiquico_g3]
+name = "gl.tr.psiquico_g3"
+ai = "m12"
+art = "psiquico"
+money = 12
+party = [["mesmaris", 33], ["sagatee", 33]]
+
+[psiquico_g4]
+name = "gl.tr.psiquico_g4"
+ai = "m12"
+art = "psiquico"
+money = 12
+party = [["shroudle", 34], ["trancelf", 34]]
+
+[psiquico_g5]
+name = "gl.tr.psiquico_g5"
+ai = "m12"
+art = "psiquico"
+money = 12
+party = [["mesmaris", 33], ["mesmaris", 33], ["shroudle", 34]]
+
+[psiquico_g6]
+name = "gl.tr.psiquico_g6"
+ai = "m12"
+art = "psiquico"
+money = 12
+party = [["lazatee", 34], ["shroudle", 34], ["trancelf", 33]]
+
+[psiquico_g7]
+name = "gl.tr.psiquico_g7"
+ai = "m12"
+art = "psiquico"
+money = 12
+party = [["sagatee", 35], ["mesmaris", 35]]
+
+[sena]
+name = "gl.tr.sena"
+ai = "sena"
+art = "sena"
+money = 99
+party = [["trancelf", 38], ["mirrimime", 37], ["veilmoth", 38], ["somnarch", 43]]
+
+# ---- C8 (contract 51): the Ground gym of Ciudad Nodo.
+# Appended LAST (ids are positions): 7 disciples and the gym's Director Varo (`varo_g`: the C4b boss `varo` is a different trainer; same picture and name text).
+
+[montanista_n1]
+name = "gl.tr.montanista_n1"
+ai = "basic"
+art = "montanista"
+money = 15
+party = [["boulderback", 41], ["rockroll", 42]]
+
+[mecanico_n1]
+name = "gl.tr.mecanico_n1"
+ai = "basic"
+art = "mecanico"
+money = 12
+party = [["voltspool", 42], ["augeroot", 43]]
+
+[montanista_n2]
+name = "gl.tr.montanista_n2"
+ai = "basic"
+art = "montanista"
+money = 15
+party = [["dunedrake", 43], ["boulderback", 44], ["bouldrum", 44]]
+
+[explorador_n1]
+name = "gl.tr.explorador_n1"
+ai = "plain"
+art = "explorador"
+money = 12
+party = [["gnucharge", 44], ["hoodcoil", 45]]
+
+[mecanico_n2]
+name = "gl.tr.mecanico_n2"
+ai = "basic"
+art = "mecanico"
+money = 12
+party = [["shellbrute", 45], ["voltspool", 45], ["augeroot", 46]]
+
+[chica_n1]
+name = "gl.tr.chica_n1"
+ai = "basic"
+art = "chica"
+money = 12
+party = [["mesmaris", 46], ["dunedrake", 46]]
+
+[montanista_n3]
+name = "gl.tr.montanista_n3"
+ai = "basic"
+art = "montanista"
+money = 15
+party = [["bouldrum", 47], ["dunedrake", 48]]
+
+[varo_g]
+name = "gl.tr.varo"
+ai = "jefe_vertice"
+art = "varo"
+money = 99
+party = [["clubtail", 48], ["augeroot", 45], ["shellbrute", 47], ["quilltyrant", 48], ["anklord", 53]]
+
+
+# ======================================================================================================================================================
+# C9 (contract 56): Ruta 22's rival, the Senda de Campeones (Veterans and Brawlers at L40 - 45), the League four (L53 - 60) and the champion.
+# Ids = positions (176 .. 189 in this tree; they shift when other chapters' trainers merge first: maps / scripts name them by key, `battle rival_r22 0`). `# C7SWAP a>b` marks the species of C7 (Belugrand, Barnaclad, Frostiva, Archaeon:
+# not in this tree) that stand here as stand-ins: `python3 tools/c9_c7_swap.py` swaps them for the real ones once species.toml has them (idempotent).
+# ======================================================================================================================================================
+# the rival on Ruta 22 (after the 8th badge + his starter's last form 50): slot 0 is replaced at run time by the counter of the
+# player's starter (the LAST form of the species that beats it), like rival_vtx
+[nadador_r19a]
+name = "gl.tr.nadador_r19a"
+ai = "m13"
+art = "nadador"
+money = 10
+party = [["soarfin", 37], ["inkrake", 37]]
+
+[nadadora_r19b]
+name = "gl.tr.nadadora_r19b"
+ai = "m13"
+art = "nadadora"
+money = 10
+party = [["plattymind", 38], ["urchlord", 37]]
+
+[nadador_r19c]
+name = "gl.tr.nadador_r19c"
+ai = "m13"
+art = "nadador"
+money = 10
+party = [["smashrimp", 38], ["gobyhop", 38], ["lazatee", 37]]
+
+[nadadora_r19d]
+name = "gl.tr.nadadora_r19d"
+ai = "m13"
+art = "nadadora"
+money = 10
+party = [["gleamlet", 36], ["gobyhop", 36], ["urchlord", 37]]
+
+[nadador_r20a]
+name = "gl.tr.nadador_r20a"
+ai = "m13"
+art = "nadador"
+money = 10
+party = [["soarfin", 40], ["inkrake", 39]]
+
+[nadadora_r20b]
+name = "gl.tr.nadadora_r20b"
+ai = "m13"
+art = "nadadora"
+money = 10
+party = [["plattymind", 40], ["belugrand", 39]]
+
+[nadador_r20c]
+name = "gl.tr.nadador_r20c"
+ai = "m13"
+art = "nadador"
+money = 10
+party = [["urchlord", 40], ["sagatee", 41]]
+
+[nadadora_r20d]
+name = "gl.tr.nadadora_r20d"
+ai = "m13"
+art = "nadadora"
+money = 10
+party = [["soarfin", 39], ["inkrake", 39], ["gleamjell", 40]]
+
+[nadador_r21a]
+name = "gl.tr.nadador_r21a"
+ai = "m13"
+art = "nadador"
+money = 10
+party = [["belugrand", 40], ["soarfin", 40]]
+
+[nadadora_r21b]
+name = "gl.tr.nadadora_r21b"
+ai = "m13"
+art = "nadadora"
+money = 10
+party = [["inkrake", 40], ["plattymind", 40], ["smashrimp", 41]]
+
+[pescador_r21a]
+name = "gl.tr.pescador_r21a"
+ai = "m13"
+art = "pescador"
+money = 16
+party = [["stormgill", 39], ["soarfin", 40]]
+
+[pescador_r21b]
+name = "gl.tr.pescador_r21b"
+ai = "m13"
+art = "pescador"
+money = 16
+party = [["urchlord", 41], ["stormgill", 40], ["soarfin", 41]]
+
+[ladron_m1a]
+name = "gl.tr.ladron_m1a"
+ai = "m13"
+art = "ladron"
+money = 24
+party = [["cindibex", 36], ["cindermeer", 37]]
+
+[cientifico_m1b]
+name = "gl.tr.cientifico_m1b"
+ai = "m12"
+art = "cientifico"
+money = 18
+party = [["voltspool", 38], ["hoodcoil", 38]]
+
+[ladron_m2a]
+name = "gl.tr.ladron_m2a"
+ai = "m13"
+art = "ladron"
+money = 24
+party = [["bellowkiln", 39], ["cindermeer", 38]]
+
+[cientifico_m2b]
+name = "gl.tr.cientifico_m2b"
+ai = "m12"
+art = "cientifico"
+money = 18
+party = [["twinkeg", 39], ["voltspool", 38], ["slickslime", 38]]
+
+[ladron_m3a]
+name = "gl.tr.ladron_m3a"
+ai = "m13"
+art = "ladron"
+money = 24
+party = [["blazibex", 40], ["bellowkiln", 39]]
+
+[cientifico_m3b]
+name = "gl.tr.cientifico_m3b"
+ai = "m12"
+art = "cientifico"
+money = 18
+party = [["tarbog", 40], ["twinkeg", 39], ["voltspool", 40]]
+
+[ladron_b1]
+name = "gl.tr.ladron_b1"
+ai = "m13"
+art = "ladron"
+money = 24
+party = [["bellowkiln", 41], ["blazibex", 41]]
+
+[cientifico_b1]
+name = "gl.tr.cientifico_b1"
+ai = "m12"
+art = "cientifico"
+money = 18
+party = [["twinkeg", 41], ["origamorph", 40], ["tarbog", 41]]
+
+[comefuego_g1]
+name = "gl.tr.comefuego_g1"
+ai = "m13"
+art = "comefuego"
+money = 14
+party = [["cindibex", 38], ["cindermeer", 39]]
+
+[cientifico_g2]
+name = "gl.tr.cientifico_g2"
+ai = "m12"
+art = "cientifico"
+money = 18
+party = [["voltspool", 39], ["hoodcoil", 40]]
+
+[comefuego_g3]
+name = "gl.tr.comefuego_g3"
+ai = "m13"
+art = "comefuego"
+money = 14
+party = [["bellowkiln", 40], ["cindibex", 40]]
+
+[cientifico_g4]
+name = "gl.tr.cientifico_g4"
+ai = "m12"
+art = "cientifico"
+money = 18
+party = [["twinkeg", 40], ["origamorph", 40]]
+
+[comefuego_g5]
+name = "gl.tr.comefuego_g5"
+ai = "m13"
+art = "comefuego"
+money = 14
+party = [["cindermeer", 41], ["blazibex", 41], ["cindibex", 40]]
+
+[ladron_g6]
+name = "gl.tr.ladron_g6"
+ai = "m13"
+art = "ladron"
+money = 24
+party = [["cindibex", 42], ["bellowkiln", 42]]
+
+[brasa]
+name = "gl.tr.brasa"
+ai = "brasa"
+art = "brasa"
+money = 99
+party = [["cindermeer", 42], ["cindibex", 40], ["blazibex", 42], ["pyromeer", 47]]
+
+[mecanico_c1]
+name = "gl.tr.mecanico_c1"
+ai = "basic"
+art = "mecanico"
+money = 12
+party = [["voltspool", 40], ["hoodcoil", 40]]
+
+[mecanico_c2]
+name = "gl.tr.mecanico_c2"
+ai = "basic"
+art = "mecanico"
+money = 12
+party = [["voltgecko", 41], ["voltspool", 41]]
+
+[punk_c3]
+name = "gl.tr.punk_c3"
+ai = "plain"
+art = "punk"
+money = 11
+party = [["hoodcoil", 41], ["slickslime", 41]]
+
+[mecanico_c4]
+name = "gl.tr.mecanico_c4"
+ai = "basic"
+art = "mecanico"
+money = 12
+party = [["voltaboon", 43], ["voltspool", 42]]
+
+[cientifico_c5]
+name = "gl.tr.cientifico_c5"
+ai = "m12"
+art = "cientifico"
+money = 18
+party = [["voltspool", 42], ["twinkeg", 42], ["voltgecko", 43]]
+
+[cientifico_c6]
+name = "gl.tr.cientifico_c6"
+ai = "m12"
+art = "cientifico"
+money = 18
+party = [["voltaboon", 44], ["voltgecko", 44], ["voltspool", 44]]
+[rival_r22]
+name = "rival"
+ai = "rival2"
+money = 50
+counter_starter = true
+party = [["pyrewolf", 50], ["skyrrow", 47], ["somnarch", 47], ["clubtail", 45], ["pyromeer", 45], ["dewlash", 45]]
+counter = { sprouton = "pyrewolf", embercub = "tidalgard", puddlet = "grovestag" }
+
+# ---- the Senda de Campeones (Senda de Campeones: Veterans, Brawlers, a Switcher): `art` = the picture folder under assets/art/npcs/
+[elite_s1a]
+name = "gl.tr.elite_s1a"
+ai = "veteran_m"
+art = "elite"
+money = 15
+party = [["kickaroo", 43], ["ibexer", 43], ["skyrrow", 44]]
+
+[karateka_s1b]
+name = "gl.tr.karateka_s1b"
+ai = "brawler"
+art = "karateka"
+money = 14
+party = [["tuskmash", 42], ["jabadillo", 43]]
+
+[psiquico_s2a]
+name = "gl.tr.psiquico_s2a"
+ai = "m12"
+art = "psiquico"
+money = 12
+party = [["somnarch", 43], ["mesmaris", 44], ["trancelf", 42]]
+
+[elite_s2b]
+name = "gl.tr.elite_s2b"
+ai = "veteran_f"
+art = "elite"
+money = 15
+party = [["dewlash", 44], ["bloomoss", 43], ["grovestag", 44]]
+
+[karateka_s2c]
+name = "gl.tr.karateka_s2c"
+ai = "brawler"
+art = "karateka"
+money = 14
+party = [["tuskmash", 40], ["tuskmash", 41], ["kickaroo", 42]]
+
+[elite_s3a]
+name = "gl.tr.elite_s3a"
+ai = "veteran_m"
+art = "elite"
+money = 15
+party = [["pyromeer", 45], ["pyrewolf", 44], ["cindermeer", 42]]
+
+[karateka_s3b]
+name = "gl.tr.karateka_s3b"
+ai = "brawler"
+art = "karateka"
+money = 14
+party = [["tuskmash", 44], ["jabadillo", 44], ["kickaroo", 45]]
+
+[elite_s3c]
+name = "gl.tr.elite_s3c"
+ai = "veteran_f"
+art = "elite"
+money = 15
+party = [["gleamjell", 44], ["sagatee", 43], ["twinkeg", 43]]
+
+# ---- the League four. Iver (Ice), Tanko (Fighting), Madame Velo (Ghost), Arkan (Dragon): the roles' creatures of this game.
+[iver]
+name = "gl.tr.iver"
+ai = "iver"
+art = "iver"
+money = 99
+party = [["belugrand", 54], ["barnaclad", 53], ["sagatee", 54], ["frostiva", 56], ["glacielle", 56]]   # C7SWAP gobrawl>belugrand urchlord>barnaclad mesmaris>frostiva
+
+[tanko]
+name = "gl.tr.tanko"
+ai = "tanko"
+art = "tanko"
+money = 99
+party = [["cragodile", 53], ["jabadillo", 55], ["kickaroo", 55], ["cragodile", 56], ["tuskumo", 58]]
+
+[velo]
+name = "gl.tr.velo"
+ai = "velo"
+art = "madame_velo"
+money = 99
+party = [["gloomshroud", 56], ["echowing", 56], ["twinkeg", 55], ["hoodcoil", 58], ["gloomshroud", 60]]
+
+[arkan]
+name = "gl.tr.arkan"
+ai = "arkan"
+art = "arkan"
+money = 99
+party = [["stormgill", 56], ["reefcoil", 54], ["reefcoil", 54], ["archaeon", 58], ["reefdragon", 60]]   # C7SWAP jabhawk>archaeon
+
+# ---- the champion = the rival (his starter's last form 65 sends out LAST). Contract 80: the engine's counter table
+# replaces slot 0 only (battle_core.c bc_trainer_party), so the ace used to LEAD; now the ace is the LAST slot and there are THREE champions, one per starter of the player (no counter table: the ace is fixed in each):
+# `rival_liga` = the player took Sprouton -> the rival took Embercub's line, his ace Pyrewolf; `rival_liga_e` (Embercub -> Tidalgard) and `rival_liga_p` (Puddlet -> Grovestag) are appended at the end of this file.
+# The champion's script (liga_campeon.map `champ`) reads the player's starter (`choose_starter`) and fights the right one.
+[rival_liga]
+name = "rival"
+ai = "rival3"
+money = 99
+party = [["skyrrow", 61], ["somnarch", 59], ["anklord", 61], ["pyromeer", 63], ["dewlash", 61], ["pyrewolf", 65]]
+
+# ---- the Club de Enlace (IR link, contract 45 / 61): the exhibition battle against a friend's team. The party below is a placeholder (the friend's snapshot replaces it at run time:
+# scene_battle_trainer takes the LinkFoe block of `link battle VAR amigo`); no prize (Battle.no_reward). `art` = the battle picture; the friend's name is {v3} in the battle texts.
+[amigo]
+name = "gl.tr.amigo"
+ai = "plain"
+art = "aprendiz"
+money = 0
+party = [["embercub", 5]]
+
+# ======================================================================================================================================================
+# (contract 80): the missing story fights of, appended at the end (ids = positions; maps and scripts name them by key).
+# ======================================================================================================================================================
+# the rival on Ruta 22 BEFORE the first gym (first Route 22 fight: his starter 8 + a bird 9, after the parcel): slot 0 is replaced at run time by the counter of the player's starter (the first stage of
+# the species that beats it), like rival_lab. The late fight (rival_r22, after the 8th badge) is unchanged.
+[rival_r22a]
+name = "rival"
+ai = "basic"
+money = 35
+counter_starter = true
+party = [["embercub", 8], ["flitter", 9]]
+counter = { sprouton = "embercub", embercub = "puddlet", puddlet = "sprouton" }
+
+# the Vertice recruiter at the end of Ruta 24's bridge (villain-team member of the bridge of five): Echolet 16, Coilisp 17 (the five trainers of the bridge are at 13 - 14)
+[vertice_recluta]
+name = "gl.tr.vertice_recluta"
+art = "vertice"
+ai = "plain"
+money = 22
+party = [["echolet", 16], ["coilisp", 17]]
+
+# the Vertice the robbed warehouse in Ciudad Marea (who gives a disc once beaten): Coilisp 15, Muncrit 14
+[vertice_dig]
+name = "gl.tr.vertice_dig"
+art = "vertice"
+ai = "plain"
+money = 20
+party = [["coilisp", 15], ["muncrit", 14]]
+
+# the champion when the player took EMBERCUB (the rival took Puddlet's line: his ace is Tidalgard, last), the same five before it as rival_liga (see there)
+[rival_liga_e]
+name = "rival"
+ai = "rival3"
+money = 99
+party = [["skyrrow", 61], ["somnarch", 59], ["anklord", 61], ["pyromeer", 63], ["dewlash", 61], ["tidalgard", 65]]
+
+# the champion when the player took PUDDLET (the rival took Sprouton's line: his ace is Grovestag, last)
+[rival_liga_p]
+name = "rival"
+ai = "rival3"
+money = 99
+party = [["skyrrow", 61], ["somnarch", 59], ["anklord", 61], ["pyromeer", 63], ["dewlash", 61], ["grovestag", 65]]

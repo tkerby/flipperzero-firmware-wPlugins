@@ -1,0 +1,83 @@
+# Casa del Mimo (C6, contract 49), 9 x 7, interior. A mime artist's front room: a big mirror frame on the wall (an oval of glass), a stool, a table. He wants a DOZELF and gives a MIRRIMIME whose nickname is the fixed ASCII text `mimo.nick` (Marcel: the same in all four languages). Flag 840 = the trade was done. Species ids: dozelf 35, mirrimime 104.
+@map casa_mimo
+@size 9 7
+@interior yes
+@flag mimo_done 840   # the Dozelf-for-Mirrimime trade was done
+@flag move_copy_given 695  # (contract 80): the guest handed over Disc 34. 695 = the pick-up flag of the pouch that lay in this room until contract 80
+@var mm_res 5
+@var mm_want 6
+@var mm_give 7
+@bg 3
+@fill floor_wood
+@spawn door 4 5 N
+@legend
+  .  tile=floor_wood
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  tile=floor_wood object=planter
+  f  tile=floor_wood object=bookshelf text=mimo.books interact=look
+  g  tile=floor_wood object=vitrina text=mimo.mirror interact=look
+  h  tile=floor_wood npc=psiquico_s id=trader face=SW script=trader
+  i  tile=floor_wood object=table
+  j  tile=floor_wood object=stool
+  k  tile=floor_wood npc=vecino_m id=guest face=W script=guest
+  l  tile=mat
+  m  tile=floor_wood
+@grid
+  abbcbbcbb
+  dme.f.g..
+  d........
+  d...h.i..
+  d.j....k.
+  d........
+  d...ll...
+@warp l -> ciudad_cenit_sur spawn=mimo_door
+@script trader npc
+    npc_face_hero trader
+    setv mm_want 35
+    setv mm_give 104
+    name_var 0 mm_want
+    name_var 1 mm_give
+    jf mimo_done after
+    say mimo.hello
+    ask trueque.ask
+    jv 0 1 go
+    say trueque.no
+    end
+  go:
+    trade dozelf mirrimime mimo.nick mm_res
+    jv mm_res 1 done
+    jv mm_res 255 cancel
+    say trueque.wrong
+    end
+  cancel:
+    say trueque.no
+    end
+  done:
+    setf mimo_done
+    say trueque.done
+    end
+  after:
+    name_var 0 mm_give
+    say trueque.after
+@end
+# (contract 80), move_copy girl of Ciudad Cenit gives a disc: the guest of the mime's room hands over Disc 34 (Eco) once; a full bag keeps move_copy_given clear (he gives it at the next talk). Afterwards he says the old hint.
+@script guest npc
+    npc_face_hero guest
+    jf move_copy_given said
+    say extra.mimo.gift
+    give_item disc_34 1
+    jv 0 0 full
+    item_var 0 disc_34
+    say gl.gift
+    setf move_copy_given
+    say extra.mimo.about
+    end
+  full:
+    say gl.found.full
+    end
+  said:
+    say mimo.hint
+@end

@@ -1,0 +1,100 @@
+# Zone identity (M4 polish): forest edge - pines (two variants) mixed with round trees, fallen logs, and a wooden gateway (non-solid 2 x 1 arch) where the
+# path enters the forest (j = 2).
+# Ruta 2 (Route 2): Ciudad Nodo (south, j = 31) to the Bosque Umbrio (north, j = 0). column = i, row = j. Winding path, tall-grass
+# patches with the wild table, two one-way ledge rows facing south (hop SW = +j; the gaps keep the route two-way), a salve on the
+# ground in the west pocket, and a junior explorer looking across the path (range 4: his line of sight (-1,+1) crosses both path columns).
+@map ruta_2
+@size 20 32
+@interior no
+@area ruta_2
+@bg 0
+@fill grass
+@spawn south 10 30 N           # arriving from Ciudad Nodo
+@spawn north 10 1 S            # arriving from the Bosque Umbrio
+@spawn cave 18 25 NW           # C3: coming out of the Cueva Excavadora (the pocket is closed by a cuttable bush)
+@encounters grass rate=25      # Route 2 rate; the forest-edge bugs join the Route 1 pair
+  muncrit 3 5 40
+  flitter 3 5 35
+  grubbit 3 5 15
+  stingle 3 5 10
+@end
+# Open ground (contract 63, transit road): a step onto plain ground (not tall grass, water, a door, a ledge, an arrow floor) rolls this table when rand8 < 2 (2/256 per step).
+@open_rate 2
+# Roaming wild creatures (contract 55, rollout in 63): 2 creatures of this table wander the open ground (not the tall grass); touching one starts that wild battle.
+@roam 2 table=grass period=1800
+@legend
+  .  tile=grass
+  =  tile=path
+  g  tile=tall_grass
+  T  object=tree              # round trees (a third of the wall)
+  P  object=pine              # pines (variants pine_a / pine_b): the forest edge
+  l  object=log               # fallen log
+  A  tile=path object=arch    # wooden gateway (2 x 1) across the 2-wide path: free to walk through, the posts stand on its edges
+  r  object=rock
+  v  ledge=SW
+  u  tile=path
+  d  tile=path
+  S  tile=grass object=sign interact=look text=ruta2.sign
+  i  item=salve
+  b  cut=yes                  # C3: the cuttable bush that closes the cave's pocket
+  W  tile=grass object=hole   # C3: the cave mouth (the Cueva Excavadora, Cave south entrance)
+  x  npc=explorador id=scout face=W trainer=explorador_r2 range=4 text=tr.explorador_r2.pre after=tr.explorador_r2.after
+  Q  tile=grass npc=ayudante id=aide face=W script=aide   # C4a: Profesora Lin's aide at the Nodo end (the Linterna for 10 caught species)
+  H  tile=grass hidden=antidote   # hidden (contract 80, hidden items)
+@grid
+  TPPPTPPPTuuPTPPPTPPP
+  PPPTPPPT.==.PPPTPPPT
+  PP.....P.AA.ggggg.TP
+  P.gggggPP==.ggggg..P
+  T.ggggg..==........P
+  P.ggggg..==...l.r..T
+  P.ggggg..==..ggggg.P
+  P........==.lggggg.P
+  TPPPl....==.TgggggPP
+  PP..P...P==..gggggPT
+  P.......P==........P
+  Pvvvvvvv.==.vvvvvvvP
+  T........==P.......P
+  PPi..rPT.==....TPP.T
+  PP..r...P==.......TP
+  PT.......==...x..TPP
+  THgggggg.==.....TPPP
+  P.gggggg.===....PPPT
+  P.gggggg..==.PT...TP
+  P.ggggggl.==.......P
+  T.gggggg..==...ggggP
+  P.......P.==...ggggT
+  PP.PPP.PP.==...ggggP
+  P.........==r..ggggP
+  Tvvvvvvvv.==.vvvvPPP
+  P.........==.....b.W
+  P.gggggr.===.....PTP
+  P.gggggl.==..ggggg.P
+  T.ggggg..==..ggggg.P
+  PPggggg.S==Q.ggggg.T
+  PPT......==..gggggTP
+  PTPPPTPPPddPPTPPPTPP
+@warp u -> bosque_umbrio spawn=south
+@warp d -> ciudad_nodo spawn=north
+@warp W -> cueva_excavadora spawn=ruta2
+# C4a (contract 39): Profesora Lin's aide. With at least 10 species CAUGHT in the Registro he gives the LINTERNA module (flag 89 = `setf mod_linterna`,
+# the bracelet module that lights the dark tunnel); with fewer he says how many are still missing (`caught_ge` leaves the missing number in {v2}).
+@var c4_ok 5
+@script aide npc
+    npc_face_hero aide
+    jf mod_linterna said
+    say ruta2.aide.hi
+    caught_ge c4_ok 10
+    jv c4_ok 1 give
+    say ruta2.aide.more
+    end
+  give:
+    say ruta2.aide.give
+    setf mod_linterna
+    sfx item
+    say ruta2.aide.got
+    say ruta2.aide.about
+    end
+  said:
+    say ruta2.aide.after
+@end

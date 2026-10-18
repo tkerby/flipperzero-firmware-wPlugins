@@ -1,0 +1,26 @@
+title Gym battle - heavier, epic: pounding kicks and snares under a minor-key anthem with long held notes and a fast chromatic climb (D minor, 12 bars, slower and bigger than the trainer battle)
+tempo 144
+vol 195
+meter 4/4
+inst pow arp=-12,0,7,0 rate=10 tone=255,210,170,130
+inst lead v=255,255,225,200,185
+inst hero att=3 vib=2 vdelay=8 vper=16 slow
+inst kick drum=g5 v=255,230,180,120 d=0,-30,-55,-80
+inst snr drum=a6 noise=30 seed=9 fall=14
+inst hat drum=c8 v=130,70
+l4
+# --- the anthem's pillar (Dm, Bb, C, A): kick-snare under a held power chord
+@pow o5 [ !kick:d !snr:d ]2 |
+@pow o5 [ !kick:b- !snr:b- ]2 |
+@pow o5 [ !kick:c !snr:c ]2 |
+@pow o5 [ !kick:a !snr:a ]2 |
+# --- the theme, a minor sixth up and the long notes
+@lead o5 d4. d8 a4 o6 d4 |
+@hero o6 e-2 d4 c+4 |
+@lead o5 b-4. b-8 o6 d4 f4 |
+@hero o6 e2 c+2 |
+# --- the climb and the fall
+@lead o5 d8 e8 f8 g8 a8 b-8 b8 o6 c+8 |
+o6 d8 e8 f8 g8 a4 f4 |
+@hero o6 d1 |
+o5 [ !snr=4 ]6 !snr=5 !snr=5 |

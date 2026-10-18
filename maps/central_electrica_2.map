@@ -1,0 +1,67 @@
+# Central Electrica 2F (C7, contract 53), 20 x 14, interior: the control room under the roof, the same steel plates and generators. Two scientists and FULGURION (L50, a legendary encounter (legend=) NPC; the legendary idiom replaces it) at the top (10,4). Stairs down (9,14).
+@map central_electrica_2
+@size 20 16
+@interior yes
+@area central_electrica
+@bg 3
+@fill metal_00
+@flag fulgurion_gone 868   # Fulgurion was dealt with (won, caught or ran)
+@encounters grass rate=11
+  spoolt 36 40 5
+  zaphid 36 40 20
+  voltspool 38 42 25
+  coilisp 36 40 5
+  hoodcoil 38 42 15
+  voltaboon 42 44 10
+  coilet 36 40 15
+  teslarch 40 44 5
+@end
+# Roaming wild creatures (contract 55, rollout in 63): 2 creatures of this table wander the whole walkable floor (grass included); touching one starts that wild battle.
+@roam 2 table=grass area=abcdghijkl period=1800
+@spawn down 9 13 N
+@legend
+  .  tile=air_3
+  a  tile=metal_11
+  b  tile=metal_01
+  c  tile=metal_10
+  d  tile=metal_00
+  e  tile=none object=cable_wall_j
+  f  tile=none object=cable_wall_i
+  g  tile=spark_10
+  h  tile=spark_00
+  i  tile=metal_11 object=cable_i
+  j  tile=metal_01 object=cable_i
+  k  tile=spark_11
+  l  tile=spark_01
+  m  tile=metal_11 object=transformer
+  n  tile=metal_01 object=transformer
+  o  tile=metal_00 object=generator
+  p  tile=metal_10 object=generator
+  # Legendary encounter (contract 52): the legend= idiom; the hide flag is the story flag above (won, caught -> gone; Run keeps it)
+  q  tile=metal_00 legend=fulgurion level=50 npc=fulgurion_ow hide_flag=fulgurion_gone
+  r  tile=metal_01 item=prime_salve
+  s  tile=metal_00 after=tr.cientifico_c6.after face=NW id=t6 npc=cientifico_s range=4 text=tr.cientifico_c6.pre trainer=cientifico_c6
+  t  tile=metal_01 object=generator
+  u  tile=metal_11 object=generator
+  v  tile=metal_00 after=tr.cientifico_c5.after face=SE id=t5 npc=cientifico_s range=4 text=tr.cientifico_c5.pre trainer=cientifico_c5
+  w  tile=metal_10 door=stairs
+  x  tile=metal_11 item=growth_seed
+  H  tile=metal_11 hidden=trueno   # hidden (contract 80, hidden items)
+@grid
+  ....................
+  ....................
+  ...eeeeeeeeeeeeee...
+  ..fmbababababHbxn...
+  ..fcocdpdcqcocdpd...
+  ..fababababababar...
+  ..fcdcdcdcdcdcdcd...
+  ..fabijijabijijab...
+  ..fcdcdcdcdcdcscd...
+  ..fatabababababub...
+  ..fcdgvghcdghghcd...
+  ..fabklklabklklab...
+  ..fcdghghcdghghcd...
+  ..fmbabababababan...
+  .......fdwdc........
+  ....................
+@warp w -> central_electrica spawn=up

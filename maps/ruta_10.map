@@ -1,0 +1,102 @@
+# Ruta 10 (C4a, contract 39), 28 x 30. column = i, row = j. Ruta 9 arrives at the WEST edge of the NORTH half (i = 0, rows 6..7); the north half holds the healing center at the tunnel entrance (
+# the Centro door c) and the north MOUTH of the Tunel Oscuro (23,2). A wall of cliff rows (j = 14..16) is the mountain: the way to the south half is the tunnel (its south mouth (6,17)); the road then leads to Pueblo
+# Bruma at the SOUTH edge (i = 13..14, j = 29). Look: a rocky pass at the foot of a mountain: gravel, boulders, scree, cairns, cliff faces, a rope fence; signs warn that the tunnel is pitch dark.
+@map ruta_10
+@size 28 30
+@interior no
+@area ruta_10
+@bg 0
+@fill gravel
+@surf yes     # C7 (contract 53): the lake of the Central Electrica (the plant is reached by surfing across it)
+@spawn west 1 6 E
+@spawn south 13 28 N
+@spawn centro_door 9 5 S
+@spawn tunnel_n 23 3 S
+@spawn tunnel_s 6 18 S
+@spawn lake_gate 22 18 S     # C7: back from the Central Electrica (the shore in front of the lake)
+@encounters grass rate=15      # Route 10: the voltage ball is the common one, with the songbird, the snake and the sand mouse around it
+  spoolt 19 23 45
+  jabbird 19 22 20
+  coilisp 19 22 35
+@end
+# Open ground (contract 63, normal route): a step onto plain ground (not tall grass, water, a door, a ledge, an arrow floor) rolls this table when rand8 < 4 (4/256 per step).
+@open_rate 4
+# Roaming wild creatures (contract 55, rollout in 63): 3 creatures of this table wander the open ground (not the tall grass); touching one starts that wild battle.
+@roam 3 table=grass period=1800
+@encounters water rate=10
+  urchip 30 33 50
+  skipgoby 30 33 30
+  lazatee 31 33 20
+@end
+@legend
+  D  object=central_door    # C7: the plant's service door in a rock face on the north shore of the lake, reachable only from the water (its other three neighbours are rocks)
+  S  object=sign text=ruta10.lake.sign interact=look
+  ~  tile=canal_o
+  .  tile=gravel
+  a  object=rock
+  b  object=boulder
+  c  object=cairn
+  d  tile=trail_b
+  e  tile=trail_a object=hole
+  f  object=center_f
+  g  object=sign text=ruta10.tunnel.sign interact=look
+  h  tile=trail_a
+  i  object=scree
+  j  door=center_f
+  k  object=sign text=ruta10.centro.sign interact=look
+  l  item=exit_wisp
+  m  npc=montanista id=t1 face=S trainer=montanista_r10 range=3 text=tr.montanista_r10.pre after=tr.montanista_r10.after
+  n  object=lamp
+  o  tile=trail_a
+  p  tile=trail_b
+  q  tile=tall_grass
+  r  npc=chica id=t2 face=N trainer=chica_r10 range=3 text=tr.chica_r10.pre after=tr.chica_r10.after
+  s  object=rfence_j
+  t  object=cliff
+  u  tile=trail_a object=hole
+  v  item=antidote
+  w  npc=cazabichos id=t4 face=W trainer=cazabichos_r10 range=3 text=tr.cazabichos_r10.pre after=tr.cazabichos_r10.after
+  x  npc=explorador id=t3 face=E trainer=explorador_r10 range=3 text=tr.explorador_r10.pre after=tr.explorador_r10.after
+  y  item=prime_salve
+  z  tile=trail_a
+  A  tile=trail_b
+  H  tile=gravel hidden=prime_salve   # F2 (contract 74): a hidden item
+@grid
+  abbabbabbabbabbabbabbabbabba
+  b..........................b
+  b....................cde...b
+  a..a....fff....b.....ghdc..a
+  b...i...fjf.k....l.a..dh...b
+  b....m.n...n..........hd...b
+  ohdhdhdhdhdhdhdhdhdhdhdh...a
+  pdhdhdhdhdhdhdhdhdhdhdhd...b
+  b...............qqqqq......b
+  a.i.......i....rqqqqq......a
+  b....b..........aqqqq......b
+  b..qqqqq........qqiqq......b
+  a..qqqqq...c..a............a
+  b.............ssssss.......b
+  tttttttttttttttttttttttttttt
+  tttttttttttttttttttttttttttt
+  tttttttttttttttttttttttttttt
+  b....cu.c............S.aaa.b
+  a...v.dh.i.......w.....aDa.a
+  b.....hd............b~~~~~~b
+  b..b..dhdhdhdhd.i....~~~~~~b
+  a.....hdhdhdhdh......~~~~~~a
+  b..qqqqqq....hd.......c....b
+  b..qqqqqq..x.dh.qbqqqq.....b
+  a..qaqqqq..i.hd.qqqqqq..y..a
+  b..qqqqqq....dh.qqqqqq.....b
+  b.........c..hd.qqqaqq.....b
+  a..a.........dh............a
+  bH...........hd............b
+  babbabbabbabbzAbabbabbabbabb
+@warp e -> tunel_1 spawn=north
+@warp j -> centro_ruta10 spawn=door
+@warp o -> ruta_9 spawn=east
+@warp p -> ruta_9 spawn=east
+@warp u -> tunel_1 spawn=south
+@warp z -> pueblo_bruma spawn=north
+@warp A -> pueblo_bruma spawn=north
+@warp D -> central_electrica spawn=door

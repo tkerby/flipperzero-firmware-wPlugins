@@ -1,0 +1,59 @@
+# Pasadizo 2, the tunnel (C4a, contract 39), 6 x 34, interior. column = i, row = j. The second underground passage: the C3 pieces (concrete slabs, small white tile walls, light posts, floor grates, black void on the
+# open sides) with ONE new signature touch: an animated HOLO billboard (the city's advertising reaches under the road). North ladder (2,1), south ladder (2,31), an Ether-less stash: a Prime Salve (1,22), a keeper.
+@map pasadizo2
+@size 6 34
+@interior yes
+@bg 3
+@fill concrete
+@spawn north 2 2 S
+@spawn south 2 30 N
+@legend
+  .  tile=concrete
+  a  object=twall
+  b  door=rope_ladder
+  c  tile=void_dark
+  d  object=sign text=pasadizo2.sign interact=look
+  e  object=light_post
+  f  tile=grate
+  g  object=holo text=pasadizo2.holo interact=look
+  h  npc=guardia id=keeper face=SW text=pasadizo2.keeper
+  i  object=holo text=pasadizo2.holo2 interact=look
+  j  item=prime_salve
+  k  door=rope_ladder
+@grid
+  aaaaaa
+  a.b..c
+  a....c
+  a..d.c
+  a....c
+  a....c
+  a...ec
+  a....c
+  a....c
+  a..f.c
+  a....c
+  a....c
+  a...ec
+  a..f.c
+  a....c
+  ag...c
+  a....c
+  a..f.c
+  a...ec
+  a..h.c
+  a....c
+  a...ic
+  aj...c
+  a..f.c
+  a...ec
+  a....c
+  a....c
+  a..f.c
+  a....c
+  a....c
+  a...ec
+  a.k..c
+  a....c
+  cccccc
+@warp b -> pasadizo2_n spawn=ladder
+@warp k -> pasadizo2_s spawn=ladder

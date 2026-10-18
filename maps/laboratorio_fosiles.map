@@ -1,0 +1,162 @@
+# Laboratorio de fosiles (C7, contract 53), 16 x 11, interior: BIG light polished slabs, the two reviving capsules and the fossil scientist (the Lily Fossil -> Sealily L30, the Trilobite Fossil -> Trilobite L30,
+# the Ambar fosil -> Archaeon L30), the trade scientist (a GOBYHOP for a FROSTIVA, nickname Lola) and one who explains trade evolution (Trancelf -> Somnarch).
+@map laboratorio_fosiles
+@size 16 11
+@interior yes
+@bg 0
+@fill polished_00
+@flag lab_trade 859       # the Gobyhop-for-Frostiva trade was done
+@flag metro_given 697      # (contract 80): the explaining scientist handed over Disc 37. 697 = the pick-up flag of the pouch that lay on the lab's shelf until contract 80
+@var rv_a 5
+@var rv_b 6
+@var rv_c 7
+@var sp_id 8
+@var tw_res 9
+@var tw_want 10
+@var tw_give 11
+@spawn door 7 9 N
+@legend
+  .  tile=polished_10
+  a  tile=polished_11
+  b  tile=polished_00
+  c  tile=polished_01
+  d  tile=none object=wall_j
+  e  tile=none object=wall_i
+  f  tile=none object=wall_win_j
+  g  tile=polished_11 object=reviver
+  h  tile=polished_01 object=fb_lab_table
+  i  tile=none object=wall_corner
+  j  tile=polished_11 object=fb_lab_table
+  k  tile=polished_01 object=vitrina interact=look text=lab.vitrina
+  l  tile=polished_11 object=vitrina interact=look text=lab.vitrina2
+  m  tile=polished_11 object=bookshelf interact=look text=lab.books
+  n  tile=polished_01 face=N id=rev npc=cientifico_s script=rev
+  o  tile=polished_00 face=SW id=trader npc=cientifico_s script=trader
+  p  tile=polished_10 face=E id=explainer npc=cientifico script=explainer
+  q  tile=polished_01 object=planter
+  r  tile=polished_00 object=planter
+  s  tile=polished_10
+  t  tile=polished_00
+  u  tile=polished_01
+@grid
+  idddfddddfdddfdd
+  eacgcgcahjhaklum
+  e.b.b.b.b.b.b.b.
+  eacanacacacacaca
+  e.b.b.b.b.b.o.b.
+  eacacacacacacaca
+  e.b.b.bpb.b.b.b.
+  eacacacacacacaqa
+  e.r.b.b.b.b.b.b.
+  eacacacacacacaca
+  e.b.b.bst.b.b.b.
+@warp s -> isla_ceniza spawn=lab_door
+@warp t -> isla_ceniza spawn=lab_door
+# The fossil scientist: the Lily Fossil -> Sealily L30, the Trilobite Fossil -> Trilobite L30 (the two Monte Eco fossils, C2: items fossil_sealily / fossil_trilobite) and the Ambar fosil of the
+# Mansion Calcinada -> Archaeon L30. He asks about each one he finds in the bag; the creature is given FIRST (a full party sends it to the PC box), then the fossil is taken.
+@script rev npc
+    npc_face_hero rev
+    say lab.rev.hello
+    has_item fossil_sealily rv_a
+    has_item fossil_trilobite rv_b
+    has_item ambar_fosil rv_c
+    jv rv_a 0 t2
+    ask lab.rev.lily
+    jv 0 1 go_a
+  t2:
+    jv rv_b 0 t3
+    ask lab.rev.tri
+    jv 0 1 go_b
+  t3:
+    jv rv_c 0 t4
+    ask lab.rev.amber
+    jv 0 1 go_c
+  t4:
+    jv rv_a 1 bye
+    jv rv_b 1 bye
+    jv rv_c 1 bye
+    say lab.rev.none
+    end
+  bye:
+    say lab.rev.bye
+    end
+  go_a:
+    give_box sealily 30
+    jv 0 0 fail
+    take_item fossil_sealily 0
+    setv_sp sp_id sealily
+    jmp show
+  go_b:
+    give_box trilobite 30
+    jv 0 0 fail
+    take_item fossil_trilobite 0
+    setv_sp sp_id trilobite
+    jmp show
+  go_c:
+    give_box archaeon 30
+    jv 0 0 fail
+    take_item ambar_fosil 0
+    setv_sp sp_id archaeon
+  show:
+    say lab.rev.start
+    fade_out
+    sfx evo_start
+    wait 1500
+    sfx evo_done
+    fade_in
+    name_var 0 sp_id
+    mon_show sp_id
+    sfx item
+    say gl.gift
+    say lab.rev.done
+    end
+  fail:
+    say lab.rev.fail
+@end
+# The trade (Lab: a creature for a creature): a GOBYHOP for FROSTIVA, nickname "Lola" (the fixed ASCII text `lab.trade.nick`), the in-game trade idiom of the Mimo's house (`trade`, contract 32.5).
+@script trader npc
+    npc_face_hero trader
+    setv_sp tw_want gobyhop
+    setv_sp tw_give frostiva
+    name_var 0 tw_want
+    name_var 1 tw_give
+    jf lab_trade after
+    say lab.trade.hello
+    ask trueque.ask
+    jv 0 1 go
+    say trueque.no
+    end
+  go:
+    trade gobyhop frostiva lab.trade.nick tw_res
+    jv tw_res 1 done
+    jv tw_res 255 cancel
+    say trueque.wrong
+    end
+  cancel:
+    say trueque.no
+    end
+  done:
+    setf lab_trade
+    say trueque.done
+    end
+  after:
+    name_var 0 tw_give
+    say trueque.after
+@end
+# (contract 80): after explaining the trade evolution the scientist gives away the spare Disc 37 (Comodin) once; a full bag keeps metro_given clear (next talk).
+@script explainer npc
+    npc_face_hero explainer
+    say lab.explain
+    jf metro_given done
+    say extra.lab.gift
+    give_item disc_37 1
+    jv 0 0 full
+    item_var 0 disc_37
+    say gl.gift
+    setf metro_given
+    say extra.lab.gift_about
+    end
+  full:
+    say gl.found.full
+  done:
+@end

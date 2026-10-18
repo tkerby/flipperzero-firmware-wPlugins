@@ -1,0 +1,308 @@
+# Elementis Zeta - music index (contract section 28). The ORDER is the id order of music.bin (nucleo/gen/music_gen.h gets SND_<NAME> / SND_FX_<NAME>).
+# Music first (ids below SND_FX0), then the effects; an effect with a LOWER id is more important (it is not cut by a later one that plays at the same time).
+# Every track is an original composition (tools/musc.py documents the text format); assets/music/<name>.txt.
+music title
+music villa
+music route
+music nodo
+music cantera
+music forest
+music centro
+music gym
+music battle_wild
+music battle_trainer
+music battle_gym
+music win_wild
+music win_trainer
+music ruta3
+music eco
+music costa
+music marea
+music teo
+music rival
+music dinamo
+music ferry
+music pasadizo
+music guarderia
+music gym_voltio
+music bruma
+music torre
+music neon
+music casino
+music escondite
+music bici
+music gym_planta
+music tunel
+music varo
+music ambar
+music reserva
+music mar
+music autopista
+music gym_veneno
+music cenit                       # C6 (contract 49): 17 tracks of chapters 6 - 9 (the music notes); the C6 ones are mapped below, the rest wait in the `# C7:` .. `# C9:` blocks
+music torre_vertice
+music dojo
+music gym_mente
+music planeador
+music ceniza
+music mansion
+music escarcha
+music laboratorio
+music gym_fuego
+music gym_tierra
+music victoria
+music alto_mando
+music campeon
+music salon_fama
+music creditos
+music fin_jingle
+music legendario                  # C7 / C9 (contract 52): the battle music of a LEGENDARY encounter (a wild battle started by the map idiom `legend=`, played by battle_open.c: SND_LEGENDARIO)
+fx heal
+fx levelup
+fx evo_start
+fx evo_done
+fx item
+fx badge
+fx capture
+fx door
+fx hit
+fx confirm
+fx cancel
+fx lowhp
+fx legend_cry   # contract 52: the legendary creature's cry (the map idiom's script and the battle intro: SND_FX_LEGEND_CRY); before the slot effects, which stay the last four (sound_check.c)
+fx slot_spin    # C4-C (contract 37): the slot machine's sounds
+fx slot_stop
+fx slot_win
+fx slot_jackpot
+
+# The music of each map (maps/maps.txt names); interiors keep the town's track, except the Centros and the gym. Maps without a line (the test maps) keep what plays.
+map villa_aliso villa
+map villa_casa villa
+map villa_lab villa
+map ruta_1 route
+map ciudad_nodo nodo
+map centro centro
+map tienda nodo
+map ruta_2 route
+map bosque_umbrio forest
+map pueblo_cantera cantera
+map centro_cantera centro
+map tienda_cantera cantera
+map gimnasio_cantera gym
+map almacen_asaltado marea           # (contract 80): the robbed warehouse of Ciudad Marea keeps the harbour's tune
+map museo_cantera cantera         # (contract 80): the museum keeps the town's tune
+# C2 (contract 31): every zone has a track of its own since the C3 music work (contract 28.3): a mountain trail, a cave, the sea shore, the harbour, the inventor's cottage
+map ruta_3 ruta3
+map monte_eco_1 eco
+map monte_eco_2 eco
+map ruta_4 costa
+map ciudad_marea marea
+map centro_marea centro
+map tienda_marea marea
+map gimnasio_marea gym
+map ruta_24 costa
+map ruta_25 costa
+map casa_teo teo
+
+# C3 (contract 34, Route 5 -> Puerto Dinamo arc): every C3 map has its track (the tracks were composed in the C3 music work, contract 28.3). `rival` has no map: it is the ferry rival's
+# walk-up (`music rival` in the script, contract 28.3), after which the battle music takes over and the map's track returns by itself.
+map ruta_5 route                  # the outskirts, flat open country: the walking tune
+map guarderia guarderia           # the day care house: the warm lullaby
+map pasadizo_n pasadizo           # the underground passage between Route 5 and Route 6: hollow footsteps (the two huts share it)
+map pasadizo pasadizo
+map pasadizo_s pasadizo
+map ruta_6 route
+map puerto_dinamo dinamo          # the industrial port town (+ its Centro and tienda: centro / dinamo)
+map muelle_dinamo dinamo          # the docks
+map centro_dinamo centro
+map tienda_dinamo dinamo
+map gimnasio_dinamo gym_voltio    # the electric gym (Ohm's counterpart)
+map casa_trueque dinamo           # the trader's house keeps the port's tune
+map ferry_cubierta ferry          # on board the ferry (every deck and cabin map)
+map ferry_camarotes ferry
+map ferry_capitan ferry
+map ruta_11 route
+map cueva_excavadora eco          # the burrow cave: the echoing cave track
+
+# The music of a battle: wild, or a trainer (assets/data/trainers.toml names; * = every other trainer).
+trainer wild battle_wild
+trainer * battle_trainer
+trainer garrick battle_gym
+trainer nerea battle_gym
+trainer ohm battle_gym
+
+# C4a (contract 39): the first half of chapter 4 (Route 9 / 10 -> Tunel Oscuro -> Pueblo Bruma -> Routes 8 / 7 -> Metropolis Neon), the lines of the `# C4:` block below with the real map ids
+map ruta_9 route                  # the hills east of Ciudad Marea: the walking tune
+map ruta_10 route
+map centro_ruta10 centro
+map tunel_1 tunel                 # the dark tunnel, both floors
+map tunel_2 tunel
+map pueblo_bruma bruma            # the misty town (+ its houses; the Centro keeps `centro`)
+map centro_bruma centro
+map tienda_bruma bruma
+map casa_anciano bruma
+map ruta_8 route                  # the city outskirts: the walking tune
+map pasadizo2_n pasadizo          # the second underground passage (the three maps share the first one's track)
+map pasadizo2 pasadizo
+map pasadizo2_s pasadizo
+map ruta_7 route
+map metropolis_neon neon          # the cyberpunk city, both halves and its buildings (the Centro keeps `centro`)
+map metropolis_neon_2 neon
+map centro_neon centro
+map comercial_1 neon
+map comercial_2 neon
+map gimnasio_neon gym_planta      # the greenhouse gym with its own floral gym theme
+map club_fans neon
+map tienda_bicis bici             # the bike shop in Ciudad Marea (also played while riding: automatic)
+map mansion_neon neon
+map mansion_neon_2 neon
+trainer flora battle_gym
+
+# C4b (contract 41): the second half of chapter 4 (-> villain hideout -> ghost tower), the lines of the `# C4:` block below with the real map names
+map casino_neon casino            # the casino (slot machines, coin clerks)
+map sala_premios casino           # the prize counter next door keeps the casino's tune
+map restaurante_neon neon         # the diner: the city's tune
+map escondite_1 escondite         # the villains' hideout, every floor and the lift
+map escondite_2 escondite
+map escondite_3 escondite
+map escondite_4 escondite
+map torre_1 torre                 # every floor of the haunting memorial tower
+map torre_2 torre
+map torre_3 torre
+map torre_4 torre
+trainer varo varo                 # the boss battle: Director Varo (the `varo` track); `rival` is the walk-up of the tower's rival (`music rival` in the script)
+
+# C5a (contract 47): Route 12 .. 15 -> Ciudad Ambar with Kai's gym, the lines of the `# C5:` block below with the real map names (the C5b lines were commented here and are live below since contract 48)
+map ruta_12 costa                 # the fishing pier over the sea: the shore tune
+map ruta_13 route                 # the fence mazes and the open fields: the walking tune
+map ruta_14 route
+map ruta_15 route
+map ciudad_ambar ambar            # the warm seaside town (+ its houses and the shop; the Centro keeps `centro`)
+map centro_ambar centro
+map tienda_ambar ambar
+map casa_cana_buena ambar
+map casa_guardian ambar
+map gimnasio_ambar gym_veneno     # the poison gym: the sneaky ninja variant of the gym theme
+trainer kai battle_gym            # Kai, the poison leader (like garrick -> battle_gym)
+
+# C5b (contract 48): Route 16 -> the Autopista -> Route 18 -> the Reserva Salvaje -> the sea south of Ciudad Ambar: the lines of the `# C5:` block below with the real map names (surfing plays `mar` by itself)
+map ruta_16 route                 # the west outskirts of the neon city: the walking tune (+ its fisherman's and the girl's houses)
+map casa_cana_super route
+map casa_planeador route
+map autopista autopista           # the downhill Autopista: the punks' track
+map ruta_18 costa                 # the boardwalk: the shore tune
+map puerta_reserva ambar          # the Reserva's gate house keeps the town's tune
+map reserva_1 reserva             # the four areas of the Reserva Salvaje, its rest house and the secret house
+map reserva_2 reserva
+map reserva_3 reserva
+map reserva_4 reserva
+map casa_descanso_1 reserva
+map casa_secreta reserva
+map mar_ambar costa               # the sea of Ambar (the beach and the water): the shore tune; on the Hidrodeslizador `mar` takes over
+
+# C6 (contract 49): arc (Cenit, the Torre Vertice = a corporation, the Fighting dojo, the psychic gym). `planeador` has no map: it is the flight's tune (`music planeador` is a script / `world_feat`
+# hook: the Planeador's flight is the PC plugin's fade today, no music call); the C7 .. C9 lines are the commented blocks at the end of this file
+map ciudad_cenit cenit            # the psychic / cyberpunk city, both halves (the Centro keeps `centro`)
+map ciudad_cenit_sur cenit
+map centro_cenit centro
+map tienda_cenit cenit
+map casa_mimo cenit               # the mime trader's and the fortune-teller's houses keep the city's tune
+map casa_psiquico cenit
+map torre_vertice_1 torre_vertice # every floor of the corporate tower
+map torre_vertice_2 torre_vertice
+map torre_vertice_3 torre_vertice
+map torre_vertice_4 torre_vertice
+map torre_vertice_5 torre_vertice
+map torre_vertice_6 torre_vertice
+map dojo_puno dojo                # the Fighting dojo: taiko and a shamisen-like tune
+map gimnasio_mente gym_mente      # the psychic gym: the gym theme but eerie
+trainer sena battle_gym           # Dra. Sena, the psychic leader (like kai -> battle_gym)
+trainer maestro_dojo battle_gym   # the dojo master
+trainer varo_vtx varo           # Director Varo in the tower (the `varo` boss track of the hideout)
+
+# C8 (contract 51): (Director Varo's Ground gym in Ciudad Nodo): the composed gym track `gym_tierra` and the boss track `varo` (as the tower's Varo)
+map gimnasio_nodo gym_tierra      # the Ground gym
+trainer varo_g varo               # Director Varo, the last gym leader: the boss track like the other Varo fights (varo, varo_vtx)
+
+# C4 (contract 37 / 28.9): the tracks for chapter 4 (-> Metropolis Neon + casino -> villain hideout -> ghost tower -> the Bike Shop -> Ciudad Cenit), composed by the casino task.
+# They are NOT mapped yet: the map names do not exist until the maintainer builds the maps. When it does it copies the `map NAME TRACK` lines below, removing the `# C4:` marker
+# (musc.py check refuses an unknown map name, so a line cannot be left in by mistake). Place -> track, one character each (the standing zone-identity rule):
+# C4a (done): map pueblo_bruma bruma # the misty, melancholic town: its streets, house and interiors; its Centro keeps `centro`
+# C4b (done): map torre_bruma torre # every floor of the haunting memorial tower
+# C4a (done): map ciudad_neon neon # the big cyberpunk city: its streets, the department-store interiors, its tienda
+# C4b (done): map sala_juegos casino # the casino (slot machines, coin clerk, prize counter)
+# C4b (done): map escondite_1 escondite         # the villains' hideout, every floor and the lift (villain hideout)
+# C4a (done):  map tienda_bicis bici             # the bike shop interior; ALSO play it (`music bici`) while riding the bike, then `music_map` when getting off
+# C4a (done): map gimnasio_planta gym_planta # the plant gym, a floral variant of the gym theme
+# C4a (done):  map tunel_oscuro tunel            # the dark tunnel / cave of chapter 4 (every floor)
+# C4b (done): trainer <villain boss> varo       # the optional boss battle (`varo`): the villains' leaders; add one `trainer NAME varo` line per boss (like garrick -> battle_gym)
+# C4: (the wild battles, trainers and Centros keep their tracks; `rival`, `battle_*` are unchanged)
+
+# C5 (contract 43 / 28.10): the tracks for chapter 5 (the Autopista and the sea), composed by the C5-B music task. The maps do not exist yet (the content
+# agent builds them): when it does, it copies the `map NAME TRACK` lines below, removing the `# C5:` marker and using the real map names (musc.py check refuses an unknown map name, so a
+# line cannot be left in by mistake). Place -> track, one character each (the standing zone-identity rule); the map names here are the intended ones:
+# C5a (done): map ciudad_ambar ambar # the warm seaside town at the edge of the savanna: its streets, houses and interiors; its Centro keeps `centro`
+# C5a (done): map tienda_ambar ambar            # the shop (sells the Ultra Crystal)
+# C5b (done): map puerta_reserva ambar          # the Reserva's gate house (the entrance fee, `reserva_start` / `reserva_end`): the town's tune
+# C5b (done): map reserva_1 reserva # every area of the Reserva Salvaje, one line each (reserva_1 .. reserva_4: Reserva Salvaje areas) and its rest house
+# C5b (done): map autopista autopista # the downhill Autopista; the bike's `bici` is played in the bike shop only, the road has its own punk track
+# C5a (done): map gimnasio_ambar gym_veneno     # the poison gym (a sneaky ninja variant of the gym theme)
+# C5a (done): trainer kai battle_gym  # one line per gym leader of chapter 5 (like garrick -> battle_gym)
+# C5: `mar` has NO map line: it is the surfing music. world_music_id (world.c) returns SND_MAR while World's FLAG_SURF is set (the same way it returns SND_BICI on the bicycle) and the map's own track
+#     comes back by itself when the hero steps on land (battle_open.c already asks world_music_id() after a battle).
+
+# C7 (contract 53 / the music notes): Routes 19 - 21, the Islas Escarcha, Isla Ceniza + the mansion + the fossil lab + the gym, and the Power Plant. `ceniza` = the volcanic town, `mansion` = the burned mansion,
+# `escarcha` = the frozen islands / ice caves, `laboratorio` = the fossil lab, `gym_fuego` = the fire gym; the sea routes keep the shore tune `costa` (and `mar` while surfing, the engine's rule); no track was composed for the Power Plant:
+# it borrows the electric gym's `gym_voltio`.
+map ruta_19 costa
+map ruta_20 costa
+map ruta_21 costa
+map islas_escarcha_1 escarcha     # frozen islands and ice caves, every floor
+map islas_escarcha_2 escarcha
+map islas_escarcha_3 escarcha
+map isla_ceniza ceniza
+map isla_ceniza_sur ceniza
+map centro_ceniza centro
+map tienda_ceniza ceniza
+map laboratorio_fosiles laboratorio
+map mansion_calcinada_1 mansion   # every floor of the ruins
+map mansion_calcinada_2 mansion
+map mansion_calcinada_3 mansion
+map mansion_calcinada_4 mansion
+map gimnasio_fuego gym_fuego
+map central_electrica gym_voltio
+map central_electrica_2 gym_voltio
+trainer brasa battle_gym          # Profesor Brasa, the fire leader (like kai -> battle_gym)
+
+# C8: Ciudad Nodo's earth gym
+# C8 (done, contract 51): map gimnasio_nodo gym_tierra; trainer varo_g varo
+
+# C9: the League. `creditos` / `fin_jingle` are script-played (`music creditos` after the Hall of Legacy, `music fin_jingle` at "THE END", once)
+# C9 (done, contract 56): the League road and the League (`victoria`: the champions' road, outdoor and cave floors; `alto_mando`: the five rooms; the Centros keep `centro`; the Hall of Legacy and the credits are played by the ending scene)
+map ruta_22 route                 # the road to the League: the walking tune
+map puerta_liga victoria          # from the gate house on the champions' road start
+map ruta_23 victoria              # the badge road
+map senda_1 victoria              # the Senda de Campeones, every floor
+map senda_2 victoria
+map senda_3 victoria
+map meseta_cumbre victoria        # the summit plaza (+ the lobby: the Centro keeps `centro`)
+map liga_lobby centro
+map liga_hielo alto_mando         # the five rooms of the League four run + the champion's
+map liga_lucha alto_mando
+map liga_fantasma alto_mando
+map liga_dragon alto_mando
+map liga_campeon alto_mando
+map cueva_secreta_1 eco           # the post-game cave: the echoing cave track
+map cueva_secreta_2 eco
+map cueva_secreta_3 eco
+map casa_lengua costa             # the Ruta 18 trade house keeps the boardwalk's tune
+# D1 (contract 68): Chapter 10 (the ruins and the hidden cave keep the echoing cave track)
+map ruinas_origen eco
+map gruta_eclipse eco
+trainer iver battle_gym           # the League four members (like garrick -> battle_gym)
+trainer tanko battle_gym
+trainer velo battle_gym
+trainer arkan battle_gym
+trainer rival_liga campeon        # only the champion uses `campeon`
+trainer rival_liga_e campeon      # (contract 80): the champion has three forms, one per starter of the player
+trainer rival_liga_p campeon

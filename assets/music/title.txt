@@ -1,0 +1,34 @@
+title Elementis Zeta - the title theme: a rising fanfare on a shimmering dominant, then a heroic tune (D minor) that lifts into F major (16 bars, loops)
+tempo 124
+vol 195
+meter 4/4
+inst lead v=255,255,215,185,170
+inst hero att=2 vib=1 vdelay=8 vper=16 slow
+inst maj arp=0,4,7 rate=2
+inst min arp=0,3,7 rate=2
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+l4
+# --- the fanfare (once): D F A D' in a flash, a long call, the dominant shimmers
+@lead o5 d16 f16 a16 o6 d16 f4. e8 d4 |
+@maj o5 a1 |
+@loop
+# --- the theme: three notes up and a leap (Dm Bb F A)
+o5 d8 f8 a4 o6 d4. c8 |
+o5 b-4 a8 g8 f4 a4 |
+o6 c8 c8 f4 e8 d8 c4 |
+o6 e4 c+4 @hero o5 a2 @lead |
+# --- again, and it climbs to the cadence
+o5 d8 f8 a4 o6 d4. c8 |
+o5 b-4 o6 d4 f4 d4 |
+o6 g4 f4 e4 d4 |
+@min o5 d2 r2 @lead |
+# --- it lifts into F major (F Bb C A), the kick enters
+o5 !kick:f8 a8 o6 c4 f4 e8 d8 |
+!kick:d4. c8 o5 b-4 f4 |
+!kick:e8 g8 o6 c4 e4 d8 c8 |
+!kick:e4 c+4 o5 a4 e4 |
+# --- the same, rising to the high A and home (Dm Bb C A)
+o6 !kick:d2 o5 a4 f4 |
+!kick:b-4 o6 d4 f4 a4 |
+!kick:g4 e4 c4 e4 |
+@hero o6 c+4 e4 a2 |

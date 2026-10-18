@@ -1,0 +1,59 @@
+# TEST FIXTURE (id 227): the roaming wild creatures (contract section 55). Not part of the game: reached only by the host harness (tools/host_world, `make roam`).
+# column = i, row = j. A meadow with everything a roamer must keep out of or live next to: the roam AREA is `.` (plain grass) and `f` (flowers) only; the path `=` (walkable, outside the area), the tall grass `g`, the ponds `w`,
+# the ledge row `v`, the rocks `r` and the door `D` (a warp) are NOT in it. The trainer `a` (11,3) looks down the column (range 4), a static talker `x` (10,8) and a scripted NPC `y` (14,9) stand in the field.
+# @roam 3 = the three LAST NPC slots (the map has 3 NPCs besides them; the cap is 16).
+@map test_roam
+@size 24 24
+@interior no
+@bg 0
+@fill grass
+@spawn start 12 21 N
+@spawn north 9 2 S
+@flag tr_roam 1010
+@encounters grass rate=25
+  flitter 3 6 60
+  muncrit 3 6 40
+@end
+@roam 3 table=grass area=.f period=1000
+@legend
+  .  tile=grass
+  f  tile=flowers
+  =  tile=path
+  g  tile=tall_grass
+  w  tile=sea_o
+  B  object=bush
+  r  object=rock
+  v  ledge=SW
+  D  tile=path
+  a  tile=grass npc=vecino id=trainer face=SW trainer=rival_lab range=4 text=tr.test.pre after=tr.test.after beaten_flag=tr_roam
+  x  tile=grass npc=vecino id=talker face=S text=tr.test.after
+  y  tile=grass npc=vecino id=scripted face=S script=hello
+@grid
+  BBBBBBBBBBBBBBBBBBBBBBBB
+  B......f.......ggggg...B
+  B..r...........ggggg...B
+  B..........a...ggggg...B
+  B..f...........ggggg...B
+  B......================B
+  B.....f...........ww...B
+  B..vvvvvv.........ww...B
+  B.........x.......ww...B
+  B..f..........y........B
+  B......................B
+  B...gggggg.............B
+  B...gggggg.....wwwwww..B
+  B...gggggg.....wwwwww..B
+  B..............wwwwww..B
+  B....==========........B
+  B..f.......r...........B
+  B......................B
+  B.........f............B
+  B......................B
+  B....D.................B
+  B......................B
+  B......................B
+  BBBBBBBBBBBBBBBBBBBBBBBB
+@warp D -> ruta_1 spawn=south oneway
+@script hello npc
+    say tr.test.after
+@end

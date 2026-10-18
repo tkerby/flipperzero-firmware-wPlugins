@@ -1,0 +1,27 @@
+title Ciudad Dinamo - the industrial port: a ship's horn, then the machine (piston octaves with a kick and a clang on the beat) under a bright E major hook that climbs through E, B, C# minor, A
+tempo 132
+vol 225
+meter 4/4
+inst motor v=255,170,140
+inst lead v=255,255,225,195,180
+inst spark arp=0,4,7 rate=1 lvl=0.85
+inst horn att=4 vib=1 vdelay=10 vper=16 slow lvl=0.85
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+inst clang drum=a6 v=255,200 d=0,-6
+l8
+# --- the horn (two tones), and the machine starts
+@horn o4 e2 o3 b2 |
+@motor o4 [ !kick:e16 >e16< e16 >e16< !clang:e16 >e16< e16 >e16< !kick:e16 >e16< e16 >e16< !clang:e16 >e16< e16 >e16< ]4 |
+# --- the bright hook (E, B, C# minor, A): up the chord, hold, and back down
+@lead o5 e g+ b o6 e4 o5 b g+ e |
+@lead o5 b o6 d+ f+ b4 f+ d+ o5 b |
+@lead o5 c+ e g+ o6 c+4 o5 g+ e c+ |
+@lead o5 a o6 c+ e a4 e c+ o5 a |
+# --- the machine again, with a hiss of sparks on the last bar
+@motor o4 [ !kick:e16 >e16< e16 >e16< !clang:e16 >e16< e16 >e16< !kick:e16 >e16< e16 >e16< !clang:e16 >e16< e16 >e16< ]2 |
+@motor o4 [ !kick:a16 >a16< a16 >a16< !clang:a16 >a16< a16 >a16< !kick:b16 >b16< b16 >b16< !clang:b16 >b16< b16 >b16< ]2 |
+# --- the hook answered a step up (F# minor, B, E, then the dominant that goes round again)
+@lead o5 f+ a c+ o6 f+4 o5 c+ a f+ |
+@lead o5 b o6 d+ f+ b4 f+ d+ o5 b |
+@lead o5 e g+ b o6 e4 o5 b g+ e |
+@spark o5 b2 @lead o6 d+4 f+4 |

@@ -1,0 +1,17 @@
+# Elementis Zeta (public tree)
+.venv/
+__pycache__/
+*.pyc
+build/
+dist/
+*.fap
+.ufbt/
+.ufbt_priv/
+.ufbt_*
+.vscode/
+.idea/
+.DS_Store
+nucleo/.clang-format
+
+# export marker (local only)
+.export_public_stamp

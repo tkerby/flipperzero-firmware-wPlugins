@@ -1,0 +1,21 @@
+title Planeador - gliding between towns: wide, soaring leaps in D lydian (the raised fourth makes it float), a shimmer of wings, a gust that passes (132 bpm, short)
+tempo 132
+vol 225
+meter 4/4
+inst soar v=255,255,235,215,200
+inst wing arp=0,4,7 rate=1 lvl=0.8
+inst gust drum=g7 v=40,90,150,190,150,90,40 noise=70 seed=7 slow
+l8
+# --- 1-4: up and up (D, A, high D; E, F sharp, A; the lydian G sharp), the wings open
+@soar o5 d4 a4 >d2< |
+@soar o6 e4 f+4 a2 |
+@soar o6 f+4 g+4 a4 b4 |
+@wing o6 d1 |
+# --- 5-8: the glide back down, one more lift, a gust passes
+@soar o6 a4 f+4 d4 e4 |
+@soar o6 f+4 a4 >d2< |
+@soar o6 b4 a4 g+4 f+4 |
+# --- 8-9: the second lift, higher still
+@soar o6 d4 f+4 a4 o7 d4 |
+@soar o7 e4 d4 o6 b4 a4 |
+@wing o6 d2 !gust2 |

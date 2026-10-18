@@ -1,0 +1,82 @@
+# Central Electrica 1F (C7, contract 53), 28 x 22, interior. Reached by surfing the lake of Ruta 10 to the plant's facade (`central_gate`): the way in is (13..14,21) -> Ruta 10 `lake_gate`. The look (the user's mock CENTRAL): BIG
+# steel plates of 2 x 2 tiles (the gym floor's `metal_<i%2><j%2>`), cable walls on the back sides, rows of animated GENERATORS (an arc jumps between two posts), transformers, floor cables and pylons; the wild-encounter tiles are scorched plates with a bolt crack
+# (`spark_<i%2><j%2>`, C_GRASS). Four engineers / a punk (static art: their lines of sight follow the rows and columns), three items, a sign; the stairs (13,2) go up to the roost.
+@map central_electrica
+@size 28 22
+@interior yes
+@area central_electrica
+@bg 3
+@fill metal_00
+@encounters grass rate=11
+  spoolt 36 40 5
+  zaphid 36 40 20
+  voltspool 38 42 25
+  coilisp 36 40 5
+  hoodcoil 38 42 15
+  voltaboon 42 44 10
+  coilet 36 40 15
+  teslarch 40 44 5
+@end
+# Roaming wild creatures (contract 55, rollout in 63): 2 creatures of this table wander the whole walkable floor (grass included); touching one starts that wild battle.
+@roam 2 table=grass area=abcdghijlm period=1800
+@spawn door 13 19 N
+@spawn up 13 3 S
+@legend
+  .  tile=air_3
+  a  tile=metal_00
+  b  tile=metal_10
+  c  tile=metal_01
+  d  tile=metal_11
+  e  tile=none object=cable_wall_j
+  f  tile=none object=cable_wall_i
+  g  tile=spark_10
+  h  tile=spark_11
+  i  tile=spark_01
+  j  tile=spark_00
+  k  tile=metal_11 object=generator
+  l  tile=metal_01 object=cable_i
+  m  tile=metal_11 object=cable_i
+  n  tile=metal_01 object=generator
+  o  tile=metal_00 object=transformer
+  p  tile=metal_10 object=transformer
+  q  tile=mat
+  r  tile=metal_10 door=stairs
+  s  tile=metal_01 object=transformer
+  t  tile=metal_11 object=transformer
+  u  tile=metal_10 after=tr.mecanico_c4.after face=SW id=t4 npc=mecanico_s range=2 text=tr.mecanico_c4.pre trainer=mecanico_c4
+  v  tile=metal_10 item=prime_salve
+  w  tile=metal_00 item=ultra_cristal
+  x  tile=metal_00 after=tr.punk_c3.after face=S id=t3 npc=punk range=3 text=tr.punk_c3.pre trainer=punk_c3
+  y  tile=metal_00 after=tr.mecanico_c1.after face=SE id=t1 npc=mecanico_s range=4 text=tr.mecanico_c1.pre trainer=mecanico_c1
+  z  tile=metal_10 after=tr.mecanico_c2.after face=NW id=t2 npc=mecanico_s range=4 text=tr.mecanico_c2.pre trainer=mecanico_c2
+  A  tile=metal_11 object=pylon
+  B  tile=metal_01 object=pylon
+  C  tile=metal_00 object=sign interact=look text=central.sign
+  D  tile=metal_11 item=rich_salve
+  E  tile=metal_10 item=disc_30
+  H  tile=metal_11 hidden=vigor_flask   # hidden (contract 80, hidden items)
+@grid
+  ............................
+  ..........eeeeeeee..........
+  .........fabarabab..........
+  .........fsdcdcdct..........
+  .........fababauab..........
+  ...eeeeeeecdcdcdcdeeeeeee...
+  ..fvoEababababababababapw...
+  ..fdckcdndckcdndckcdndckc...
+  ..fbabababagxgabababababa...
+  ..fdldcmihlhimchlhimcdldc...
+  ..fbybagjgjbabagjgjgabaza...
+  ..fdcmchlhimcdlhimihldcmc...
+  ..fbjgjgjbababababjgjgaba...
+  ..fHihnhikcdndckcdnhikcdc...
+  ..fpababababababababababo...
+  .........fcdcdcdcd..........
+  .........fabababab..........
+  .........fcAcdcdBd..........
+  .........fabCbabab..........
+  .........fcdcdcdcD..........
+  .........fabababab..........
+  .............qq.............
+@warp q -> ruta_10 spawn=lake_gate
+@warp r -> central_electrica_2 spawn=down

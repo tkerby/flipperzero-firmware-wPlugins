@@ -1,0 +1,116 @@
+# Gimnasio Mente (C6, contract 49), 15 x 15, interior. column = i, row = j. The user's mock "Gimnasio Mente": big pale ring slabs (`ring_<i%2><j%2>`, the city's plaza) and LOW GLASS PARTITIONS (`rail_i` / `rail_j`) between
+# nine closed 4 x 4 rooms: teleport maze. The only way between rooms is a PAD (`P`, `@pad`): the entrance room is the bottom middle (door at (7..8,14)); the TRUE way is E -> R20 -> R10 -> R00 -> Dra. Sena's room
+# (R01, top middle); the right-hand chain E -> R22 -> R12 -> R02 -> R11 (the centre) is a dead end. Seven psychic trainers, one per room (psiquico walk set: a trainer in a corner looks along the diagonal of its room and the two pads of the
+# room are on opposite sides of it, so crossing the room is a fight). Win: `badge_mente` (85, the card's 6th badge, an EYE), Disc 07 (flag 854). Rooms (top-left corner): R00 (1,1) R01 (6,1) R02 (11,1) / R10 (1,6) R11 (6,6) R12 (11,6) / R20 (1,11) R21 (6,11) R22 (11,11).
+@map gimnasio_mente
+@size 15 15
+@interior yes
+@flag sena_disc 854   # Dra. Sena's Disc 07 was handed over (a full bag keeps it clear)
+@bg 0
+@fill ring_00
+@spawn door 7 13 N
+@legend
+  .  tile=ring_01
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  tile=pad pad=yes
+  f  tile=ring_11
+  g  tile=ring_11 object=rail_i
+  h  tile=ring_01 object=orb
+  i  tile=ring_11 object=orb
+  j  tile=ring_01 object=rail_i
+  k  tile=ring_01 npc=psiquico id=t6 face=W trainer=psiquico_g6 range=4 text=tr.psiquico_g6.pre after=tr.psiquico_g6.after
+  l  tile=ring_10
+  m  tile=ring_00
+  n  tile=ring_10 object=rail_i
+  o  tile=ring_00 npc=sena id=sena face=SW script=sena
+  p  tile=ring_00 object=rail_i
+  q  tile=ring_10 npc=psiquico id=t3 face=E trainer=psiquico_g3 range=4 text=tr.psiquico_g3.pre after=tr.psiquico_g3.after
+  r  tile=ring_11 object=rail_j
+  s  tile=ring_01 object=rail_j
+  t  tile=ring_00 npc=psiquico id=t2 face=W trainer=psiquico_g2 range=4 text=tr.psiquico_g2.pre after=tr.psiquico_g2.after
+  u  tile=ring_10 npc=psiquico id=t5 face=S trainer=psiquico_g5 range=4 text=tr.psiquico_g5.pre after=tr.psiquico_g5.after
+  v  tile=ring_00 object=orb
+  w  tile=ring_01 npc=psiquico id=t7 face=E trainer=psiquico_g7 range=4 text=tr.psiquico_g7.pre after=tr.psiquico_g7.after
+  x  tile=ring_10 object=rail_j
+  y  tile=ring_00 object=rail_j
+  z  tile=ring_11 npc=psiquico id=t1 face=S trainer=psiquico_g1 range=4 text=tr.psiquico_g1.pre after=tr.psiquico_g1.after
+  A  tile=mat
+  B  tile=ring_00 npc=psiquico id=t4 face=N trainer=psiquico_g4 range=4 text=tr.psiquico_g4.pre after=tr.psiquico_g4.after
+@grid
+  abbcbbbbcbbbcbb
+  de.f.ghf.ijf.fk
+  dlmlenmlolpemlm
+  df.f.g.f.fjf.f.
+  dqmlmnmemlplelm
+  drsrsgsrsrjrsrs
+  dlmltnmlmlpumlm
+  de.f.g.i.fjf.fe
+  dlmlmnmlvlplmlm
+  dfef.gwf.ejfef.
+  dxyxynyxyxpxyxy
+  dz.f.g.f.fjf.f.
+  dlmlenelmeplmle
+  df.f.g.f.fjf.f.
+  dlelmnmAAlplelB
+@warp A -> ciudad_cenit_sur spawn=gym_door
+@pad 6 12 -> 4 12 face=NW
+@pad 4 12 -> 6 12 face=SE
+@pad 2 14 -> 2 9 face=NE
+@pad 2 9 -> 2 14 face=NE
+@pad 1 7 -> 4 2 face=NW
+@pad 4 2 -> 1 7 face=SE
+@pad 1 1 -> 7 4 face=NE
+@pad 7 4 -> 1 1 face=SE
+@pad 9 12 -> 14 12 face=NW
+@pad 14 12 -> 9 12 face=NW
+@pad 12 14 -> 14 7 face=NW
+@pad 14 7 -> 12 14 face=NE
+@pad 12 9 -> 12 4 face=NE
+@pad 12 4 -> 12 9 face=NE
+@pad 11 2 -> 9 9 face=NE
+@pad 9 9 -> 11 2 face=SE
+# Dra. Sena. The camera cuts to her; the fight (trainer sena: Trancelf 38, Mirrimime 37, Veilmoth 38, Somnarch 43); a win: her speech, the Medalla Mente (flag 85, the card's 6th badge, an
+# eye), what it is, then Disc 07 (a full bag keeps sena_disc clear and she hands it over the next time you talk to her). A loss is the blackout. Afterwards a last line.
+@script sena npc
+    jf badge_mente after
+    npc_face_hero sena
+    cam_npc sena
+    say gym.sena.pre
+    battle sena 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    say gym.sena.win
+    setf badge_mente
+    say gym.sena.badge
+    say gym.sena.about
+    call sena_gift
+    cam_hero
+    end
+  after:
+    npc_face_hero sena
+    cam_npc sena
+    jf sena_disc said
+    call sena_gift
+    cam_hero
+    end
+  said:
+    say gym.sena.after
+    cam_hero
+@end
+@script sena_gift called
+    say gym.sena.disc
+    give_item disc_07 1
+    jv 0 0 full
+    item_var 0 disc_07
+    say gl.gift
+    setf sena_disc
+    say gym.sena.disc_about
+    end
+  full:
+    say gl.found.full
+@end

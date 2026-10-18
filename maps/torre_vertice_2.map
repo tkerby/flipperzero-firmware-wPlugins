@@ -1,0 +1,53 @@
+# Torre Vertice, 2F (C6, contract 49), 16 x 12, interior. column = i, row = j. Open offices cut by a glass partition (gap (7,5..6)) and a closed STORAGE room in the bottom left (1..4,8..11) that only a PAD
+# reaches ((9,9) <-> (2,9); a Prime Salve inside). Stairs down (2,2) and up (13,2). Two grunts and two scientists (one by the partition's gap).
+@map torre_vertice_2
+@size 16 12
+@interior yes
+@area torre_vertice
+@bg 0
+@fill carpet_00
+@spawn down 2 3 S
+@spawn up 13 3 S
+@legend
+  .  tile=carpet_11
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  tile=carpet_01 object=escalator
+  f  tile=carpet_01
+  g  tile=carpet_11 object=escalator
+  h  tile=carpet_10
+  i  tile=carpet_00 door=escalator
+  j  tile=carpet_00
+  k  tile=carpet_10 object=pc text=vtx.pc.a interact=look
+  l  tile=carpet_10 door=escalator
+  m  tile=carpet_11 object=rail_i
+  n  tile=carpet_01 object=desk
+  o  tile=carpet_11 object=desk
+  p  tile=carpet_10 npc=vertice id=t2a face=S trainer=vertice_t2a range=4 text=tr.vertice_t2a.pre after=tr.vertice_t2a.after
+  q  tile=carpet_10 object=rail_i
+  r  tile=carpet_11 object=planter
+  s  tile=carpet_01 npc=cientifico id=t2b face=W trainer=cientifico_t2a range=4 text=tr.cientifico_t2a.pre after=tr.cientifico_t2a.after
+  t  tile=carpet_00 object=planter
+  u  tile=carpet_00 npc=cientifico id=t2c face=N trainer=cientifico_t2b range=4 text=tr.cientifico_t2b.pre after=tr.cientifico_t2b.after
+  v  tile=pad pad=yes
+  w  tile=carpet_10 item=prime_salve
+  x  tile=carpet_01 item=disc_38
+@grid
+  abbbcbbbbcbbbcbb
+  d.e.f.f.f.f.fgf.
+  dhihjhjhjkjhjljh
+  d.f.f.fmf.nof.f.
+  dhjhjpjqjhjhjhjh
+  d.fon.f.frf.s.f.
+  dhjhjhjhjhjhjhth
+  dbbbbbfmf.f.f.f.
+  dhjhjdjqjhuhjhjh
+  d.v.fdxmfvf.nof.
+  dhjwjdthjhjhjhjh
+  d.f.fdf.f.f.f.f.
+@warp i -> torre_vertice_1 spawn=up
+@warp l -> torre_vertice_3 spawn=down
+@pad 2 9 -> 9 9 face=NE
+@pad 9 9 -> 2 9 face=SE

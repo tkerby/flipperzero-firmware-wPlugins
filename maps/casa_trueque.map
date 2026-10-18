@@ -1,0 +1,66 @@
+# Casa del Trueque (C3, contract 34), 9 x 7, interior. column = i, row = j. A harbour trader's front room: net racks, lobster traps, crates and a barrel, a table
+# and the trader (`trueque`). creature-for-creature trade: he wants a JABBIRD and gives an OTTEROCK whose nickname is the fixed ASCII text `trueque.nick` (Pipo, the same in all
+# four languages; contract 32.5). Flag 54 = the trade was done. Species ids: jabbird 30, otterock 61 (species.toml positions).
+@map casa_trueque
+@size 9 7
+@interior yes
+@bg 3
+@fill floor_wood
+@spawn door 4 5 N
+@flag pipo_done 54
+@var pp_res 5
+@var pp_want 6
+@var pp_give 7
+@legend
+  .  tile=floor_wood
+  C  tile=none object=wall_corner
+  w  tile=none object=wall_j
+  y  tile=none object=wall_win_j
+  |  tile=none object=wall_i
+  q  tile=none object=wall_win_i
+  N  object=net_rack
+  H  object=crate_plain
+  x  object=barrel
+  t  object=trap
+  T  object=table
+  B  object=bookshelf interact=look text=trueque.books
+  L  npc=trueque id=trader face=S script=trader
+  m  tile=mat
+@grid
+  Cwwywwyww
+  |NN..B.H.
+  |...L..x.
+  q.....T..
+  |t.......
+  |t.......
+  |...mm...
+@warp m -> puerto_dinamo spawn=trueque_door
+@script trader npc
+    npc_face_hero trader
+    setv pp_want 30
+    setv pp_give 61
+    name_var 0 pp_want
+    name_var 1 pp_give
+    jf pipo_done after
+    say trueque.hello
+    ask trueque.ask
+    jv 0 1 go
+    say trueque.no
+    end
+  go:
+    trade jabbird otterock trueque.nick pp_res
+    jv pp_res 1 done
+    jv pp_res 255 cancel
+    say trueque.wrong
+    end
+  cancel:
+    say trueque.no
+    end
+  done:
+    setf pipo_done
+    say trueque.done
+    end
+  after:
+    name_var 0 pp_give
+    say trueque.after
+@end

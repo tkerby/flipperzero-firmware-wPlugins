@@ -1,0 +1,95 @@
+# Mar de Ambar (C5b, contract 48), 26 x 36. column = i, row = j. Ciudad Ambar's south edge arrives at the NORTH edge (spawn `north`); rows 0..5 are the BEACH (sand, palms, beach grass,
+# a sign), rows 6.. the open SEA (foam, 2 frames) to surf on with the Hidrodeslizador (a step from the beach onto the water; a step back onto the sand gets off). Two walls of rocks (rows 18 and 30) cross the sea; the gaps
+# (12..13,18) and (5..6,30) are watched by two SWIMMERS on sandbars (13,18) / (6,30), who look along the wall: a rider passing the free cell (12,18) / (5,30) is next to them in line (sea tiles are solid for the sight rule, so a swimmer only sees at distance 1). The far wall (row 34) is the blocked end (the way on to Isla Ceniza,
+# C7): the rocks at (12..13,34) (with a buoy in front) say the current is too strong. Wild water table (rate 15) + the three rods' tables. No grass: no land encounters.
+@map mar_ambar
+@size 26 36
+@interior no
+@area mar_ambar
+@bg 0
+@nofollow yes                   # contract 69: the follower stays out of the ferry and the sea
+@surf yes
+@fill sea_o
+@spawn north 12 1 S
+@spawn beach 12 2 S
+@spawn south 12 33 N          # C7: back from Ruta 19 (the way on is open)
+@encounters water rate=15
+  urchip 28 32 40
+  clubrimp 28 32 20
+  gleamlet 28 31 15
+  skipgoby 28 30 15
+  lazatee 30 33 10
+@end
+@encounters fish_old
+  flopfin 5 5 100
+@end
+@encounters fish_good rate=128
+  flopfin 10 10 25
+  skipgoby 10 10 30
+  clubrimp 10 10 25
+  lazatee 10 10 20
+@end
+@encounters fish_super
+  urchip 20 26 30
+  clubrimp 20 26 25
+  gleamlet 20 26 20
+  lazatee 20 26 15
+  flopfin 20 26 10
+@end
+@legend
+  ~  tile=sea_o
+  t  tile=sea_tr
+  ,  tile=sand
+  P  tile=sand object=palm_0
+  B  tile=sand object=beach_grass
+  n  tile=sand
+  s  tile=sand object=sign text=mar.sign interact=look
+  S  tile=sand object=sign text=mar.sign2 interact=look
+  i  tile=sand item=crystal_plus
+  l  tile=sand object=lifebuoy
+  k  tile=sea_o object=sea_rock_a
+  q  tile=sea_o object=sea_rock_b
+  b  tile=sea_o object=buoy
+  z  tile=sea_gate             # C7: the open far wall: the two cells of the last row lead to Ruta 19 (water but not solid)
+  y  tile=sea_gate             # C7: the spawn `south` (back from Ruta 19)
+  1  tile=sand_a npc=nadadora id=sw1 face=N trainer=nadadora_m1 range=2 text=tr.nadadora_m1.pre after=tr.nadadora_m1.after
+  2  tile=sand_a npc=nadadora id=sw2 face=N trainer=nadadora_m2 range=2 text=tr.nadadora_m2.pre after=tr.nadadora_m2.after
+@grid
+  P,PP,PP,PP,PnnPP,PP,PP,PPP
+  ,,P,,,,,,,,,,,,,,B,,,,,,,,
+  ,,,,,,,,P,,,,,,,,,,,,,iP,,
+  ,,,B,,,,,,,s,S,,,,,,,,,,,,
+  ,,,,,P,,,,,,,,,l,,,,P,,,,,
+  ,,,,,,,,,,B,,,,,,,,,,,B,,,
+  tttttttttttttttttttttttttt
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~~~~~~~~~~~~~~~~~~~~~q~~~~
+  ~~~~~~~~~~~~b~~~~~~~~~~~~~
+  ~~~~~q~~~~~~~~~~~~~~~~~~~~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~~~~~~~~~~~~~~~~~~k~~~~~~~
+  ~~~~~~~b~~~~~~~~~~~~~~~~~~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~~~~~~~~~k~~~~~~~~~~~~~~~~
+  ~~~~~~~~~~~~~~~~~~~b~~~~~~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~
+  kqkqkqkqkqkq~1kqkqkqkqkqkq
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~~~~~~~~~~~~~~~~~~~~~~~q~~
+  ~~q~~~~~~~~~~~~~~~~~~~~~~~
+  ~~~~~~~~~~k~~~~~~~~~~~~~~~
+  ~~~~~~~~~~~~~~q~~~~~~~~~~~
+  ~~~~b~~~~~~~~~~~~~~~~~b~~~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~~~~k~~~~~~b~~~~~~~~~~~~~~
+  ~~~~~~~~~~~~~~~~~~~~q~~~~~
+  ~~~~~~~~~~~~~~~b~~~~~~~~~~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~
+  kqkqk~2qkqkqkqkqkqkqkqkqkq
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~~~~~~~q~~~~~~~~k~~~~~~~~~
+  ~~~~~~~~~~~by~b~~~~~~~~~~~
+  kqkqkqkqkqkq~~kqkqkqkqkqkq
+  ~~~~~~~~~~~~zz~~~~~~~~~~~~
+@warp n -> ciudad_ambar spawn=beach
+@warp z -> ruta_19 spawn=north

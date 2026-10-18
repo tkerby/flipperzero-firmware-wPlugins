@@ -1,0 +1,84 @@
+# Puerta de la Reserva (C5b, contract 48), 11 x 8, interior. column = i, row = j. The Reserva Salvaje's gate house in Ciudad Ambar: the ATTENDANT (5,2) behind the counter takes the $500 fee and
+# gives the 30 Reserva Crystals and the 500 steps (`reserva_start`, contract 43.3: the way home = the tile in front of the counter (5,4), where the script runs); a bag that cannot hold the crystals, no money and a session already
+# on have their own texts. The door into the Reserva (10,4..5) is a pair of STEP TRIGGERS, not a warp: without a session the guard turns him back (`reserva_left`); with one the script warps him to reserva_1. A board on the wall
+# shows the rules (and the steps / crystals left while a session runs: `reserva_left` + `gl.c5b.rv_left`). Wooden floor; the mats (5..6,7) lead back to Ambar.
+@map puerta_reserva
+@size 11 8
+@interior yes
+@bg 3
+@fill floor_wood
+@spawn door 5 6 N
+@spawn from_reserva 9 4 W
+@legend
+  .  tile=floor_wood
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  object=shelf
+  S  object=sign script=board interact=look
+  A  npc=guardia id=att face=SW script=attendant
+  C  object=counter
+  t  object=stool
+  l  object=candle_s
+  M  tile=mat interact=step script=enter_reserva
+  N  tile=mat
+@grid
+  abcbbbcbbbb
+  d.ee....S..
+  d....A.....
+  d...CCC....
+  d.........M
+  dt......l.M
+  dt.........
+  d....NN....
+@warp N -> ciudad_ambar spawn=reserva_door
+# The attendant (the counter script of 43.3): the fee, the crystals, the steps. Var 4 = the session op's answer.
+@script attendant npc
+    npc_face_hero att
+    reserva_left 4
+    jv 4 1 inside
+    say puerta.hi
+    ask puerta.ask
+    jv 0 1 pay
+    say puerta.no
+    end
+  pay:
+    reserva_start 4
+    jv 4 1 ok
+    jv 4 2 nomoney
+    jv 4 3 full
+    say puerta.in
+    end
+  ok:
+    sfx item
+    say puerta.ok
+    end
+  nomoney:
+    say gl.shop.no_money
+    end
+  full:
+    say puerta.full
+    end
+  inside:
+    say puerta.in
+@end
+# The door into the Reserva: only with a session on (the fee paid); the hero is turned back otherwise.
+@script enter_reserva step
+    reserva_left 4
+    jv 4 1 go
+    say puerta.nopay
+    hero_walk NW 1
+    end
+  go:
+    warp reserva_1 spawn=gate
+@end
+# The rules board: the rules, or (with a session on) the steps and crystals left.
+@script board interact
+    reserva_left 4
+    jv 4 1 inside
+    say puerta.board
+    end
+  inside:
+    say gl.c5b.rv_left
+@end

@@ -1,0 +1,113 @@
+# Pueblo Cantera (M5-D, contract 26), 22 x 22. column = i, row = j. The Bosque Umbrio arrives from the south (j = 21, screen down-left),
+# the east exit (i = 21, screen down-right) is Ruta 3 (C2: a real two-way warp since contract 31): a man blocks it until the Medalla Cantera (flag 80), afterwards the corridor
+# leads to Ruta 3 (spawn `south`). Look: gravel ground, rock-wall cliffs ring the town instead of trees, stone houses with slate roofs, boulders, the pick-and-shovel
+# sign, mine rails with an ore cart (decoration). Centro (door z), tienda (door m), the Rock gym (door g), two decorative stone houses, four townsfolk with hints.
+# Memory: each map costs less than Ciudad Nodo (contract 5.x): gravel / rails are mask-free (bg 0), few distinct sprites, the cliffs are 3 variants of one 1 x 1 piece.
+@map pueblo_cantera
+@size 22 22
+@interior no
+@area pueblo_cantera
+@fly 2 pueblo_cantera 4 14 face=S   # the Planeador lands here, in front of the Centro door; slot 2 = visited flag 986 (contract 46.1)
+@bg 0
+@fill gravel_a
+@spawn south 10 20 N            # arriving from the Bosque Umbrio
+@spawn centro_door 4 14 S       # in front of the Centro door
+@spawn tienda_door 17 14 S      # in front of the tienda door
+@spawn gym_door 10 5 S          # in front of the gym door
+@spawn puas_door 4 5 S            # F2 (contract 74): in front of the first stone house (the hedgehog lover)
+@spawn cuadra_door 16 19 S        # F2: in front of the second one (the rider)
+@spawn east 20 10 W             # behind the blocker: where Ruta 3 arrives (C2); also what keeps the warp tiles "reachable" for mapc (the blocker is a solid NPC)
+@spawn museo_door 17 5 S         # (contract 80): in front of the museum's door
+@flag badge_cantera 80          # the Medalla Cantera (party.h FLAG_BADGE_FIRST): set by Garrick (gimnasio_cantera.map), hides the blocker
+@legend
+  .  tile=gravel                  # quarry gravel, 3 variants
+  =  tile=path_a                  # the streets
+  C  tile=gravel_a object=cliff   # rock wall (3 variants), the border of the town
+  R  tile=rails_a                 # mine rails along +i (walkable)
+  D  tile=rails_a object=cart interact=look script=find_cart     # the ore cart on the rails (solid)
+  b  tile=gravel_b object=boulder
+  o  tile=path_a object=boulder   # the boulder that closes one lane of the east corridor
+  s  tile=gravel_c object=pickaxe_sign interact=look text=cantera.sign
+  Z  object=center
+  z  door=center
+  M  object=mart
+  m  door=mart
+  G  object=gym_cantera
+  g  door=gym_cantera
+  H  object=stone_house
+  h  door=stone_house            # F2 (contract 74): casa_puas
+  K  object=stone_house
+  k  door=stone_house            # F2: casa_cuadra
+  1  tile=gravel_b npc=vecino_m id=hint_gym face=NW text=cantera.npc.gym
+  2  tile=gravel_a npc=vecino_m id=hint_quarry face=SE script=rumor_cantera
+  3  tile=gravel_c npc=vecino_m id=hint_center face=NE text=cantera.npc.center
+  4  tile=gravel_a npc=vecino_m id=hint_east face=SW text=cantera.npc.east
+  B  tile=path_a npc=guardia id=blocker face=NW script=blocker hide_flag=80
+  U  object=stone_house
+  u  door=stone_house            # (contract 80): the museum (museo_cantera), the same stone house as the two others, flanked by pillars
+  P  tile=gravel_a object=pillar
+  S  tile=gravel_b object=sign interact=look text=extra.museum.sign
+  X  tile=path_a                                               # the road to Ruta 3 (warp, C2)
+  d  tile=path_a
+  I  tile=gravel hidden=rich_salve   # hidden (contract 80, hidden items)
+@grid
+  CCCCCCCCCCCCCCCCCCCCCC
+  CCCCCCCCCCCCCCCCCCCCCC
+  C.................I..C
+  C..HH....GGG.b..UU...C
+  C..Hh....GgG...PUuPS.C
+  C.........==.1.......C
+  C......b..==..RRRDRR.C
+  C.........==.........C
+  C.........==.......CCC
+  C.....b...=========o=X
+  C.....2...=========B=X
+  C.........==.......CCC
+  C..ZZZ....==..4.MM...C
+  C..ZzZ....==....Mm...C
+  C...===============..C
+  C......3..==.......b.C
+  C.....b...==.........C
+  C.........==...KK....C
+  C.........==...Kk....C
+  C........s==.b.......C
+  C.........==.........C
+  CCCCCCCCCCddCCCCCCCCCC
+
+@warp d -> bosque_umbrio spawn=north
+@warp z -> centro_cantera spawn=door
+@warp m -> tienda_cantera spawn=door
+@warp g -> gimnasio_cantera spawn=door
+@warp h -> casa_puas spawn=door
+@warp k -> casa_cuadra spawn=door
+@warp u -> museo_cantera spawn=door
+@warp X -> ruta_3 spawn=south
+# The man at the east exit: talking to him says so and pushes the hero back one step.
+# The Medalla Cantera hides him (hide_flag 80); the corridor then leads to Ruta 3 (warp X).
+@script blocker npc
+    npc_face_hero blocker
+    say cantera.blocker
+    hero_walk NW 1
+@end
+# D1 (contract 68): the second Origin Fragment lies in the ore cart (the old line of the quarry man first, then the rumor + the clue).
+@script rumor_cantera npc
+    npc_face_hero hint_quarry
+    say cantera.npc.quarry
+    say d1.cantera.rumor
+    setf legend_rumor
+@end
+@script find_cart interact
+    jf frag_2 empty
+    say d1.cart.look
+    give_item origin_shard 1
+    jv 0 0 full
+    setf frag_2
+    sfx item
+    say gl.d1.got
+    end
+  full:
+    say gl.found.full
+    end
+  empty:
+    say d1.cart.empty
+@end

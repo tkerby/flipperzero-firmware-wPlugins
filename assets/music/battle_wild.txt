@@ -1,0 +1,19 @@
+title Wild battle - urgent and short: a galloping riff with a kick and a snare on every beat, a stabbing chase, a chromatic fall (E minor, 8 bars)
+tempo 172
+vol 190
+meter 4/4
+inst gal arp=-12,0,0,7 rate=9 tone=255,190,150,120
+inst gal2 arp=-12,0,3,7 rate=9 tone=255,190,150,120
+inst stab v=255,255,210,170,150
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+inst snr drum=a6 noise=25 seed=7 fall=12
+l4
+# --- the gallop (Em), then the stabs
+@gal o5 [ !kick:e !snr:e ]4 |
+@stab o6 e8 o5 b8 o6 e8 g8 b4 g4 |
+o6 e8 o5 b8 o6 e8 g8 f+4 d+4 |
+# --- the gallop on C and D, the chase climbs, the chromatic fall
+@gal2 o5 [ !kick:c !snr:c ]2 |
+@gal2 o5 [ !kick:d !snr:d ]2 |
+@stab o6 c8 o5 g8 o6 c8 e8 g4 e4 |
+o6 g8 f+8 f8 e8 d+8 d8 c+8 o5 b8 |

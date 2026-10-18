@@ -1,0 +1,29 @@
+title La costa (Rutas 4, 24, 25) - sea breeze and gentle waves: rolling arpeggios in C lydian (the raised fourth is the salt in the air), a high flute that floats over them, and a wash of surf between phrases
+tempo 88
+vol 225
+meter 4/4
+inst roll v=235,255,215,190,170
+inst flute att=5 vib=1 vdelay=8 vper=12 slow lvl=0.9
+inst surf drum=g7 v=15,25,38,55,75,100,125,150,170,180,170,150,125,100,75,55,38,26,18,12 noise=70 seed=3 slow
+l8
+# --- 1: the waves roll in (C, D with the raised fourth), the flute floats a long note over them
+@roll o5 c e g >c< g e g e |
+@roll o5 d f+ a >d< a f+ a f+ |
+@flute o6 e2 g4 f+4 |
+@flute o6 e2. !surf4 |
+# --- 2: Em, then Am; the flute answers lower and the surf draws back
+@roll o5 e g b >e< b g b g |
+@roll o5 c e a >c< a e a e |
+@flute o6 g2 a4 g4 |
+@flute o6 e2. !surf4 |
+# --- 3: F lydian colour (G) and the dominant; the flute climbs
+@roll o5 g b o6 d g d o5 b o6 d o5 b |
+@roll o5 a o6 c+ e a e c+ e c+ |
+@flute o5 b2 o6 d4 c+4 |
+@flute o5 a2. !surf4 |
+# --- 4: home to C, the high breeze and a long calm
+@roll o5 c e g >c< g e g e |
+@roll o5 d f+ a >d< a f+ a f+ |
+@flute o6 g2 e4 c4 |
+@flute o6 c2. r4 |
+!surf2 !surf2 |

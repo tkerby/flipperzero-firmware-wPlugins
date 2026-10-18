@@ -1,0 +1,29 @@
+title Mansion Quemada - the burned mansion: a music-box waltz (3/4, D minor) that stutters, drops notes and slips a half step wrong, a ghost chord underneath, a creak in the beams and a drip of ash (66 bpm, sparse)
+tempo 66
+vol 215
+meter 3/4
+inst box dec=3 sus=0.05 slow
+inst ghost arp=-12,-9,-6 rate=10 att=14 lvl=0.45 slow
+inst creak drum=a3 noise=30 seed=9 v=20,50,90,130,90,50,20 d=0,3,6,9,6,3,0 slow
+inst drip drum=g7 v=170,140,95,50 d=0,-10,-26,-50
+l4
+# --- 1-4: the waltz as it was (D minor), a music box
+@box o5 d f a |
+@box o6 d2 c+4 |
+@box o5 b- a g |
+@box o5 f2 r4 |
+# --- 5-8: it stutters and drops notes, the ghost chord rises under it
+@box o5 d r a |
+@box o6 d2 r4 |
+@ghost o4 d2 d4 |
+!creak2 r4 |
+# --- 9-12: the tune returns slipping a half step wrong (E flat, B natural), a drip
+@box o5 e- g b- |
+@box o6 e-2 d4 |
+@box o5 b a g+ |
+@box o5 f2 r!drip |
+# --- 13-16: the last notes fall one by one into silence
+@box o5 d f a |
+@box o5 a2 f4 |
+@box o5 d2 r4 |
+@ghost o4 a2 a4 |

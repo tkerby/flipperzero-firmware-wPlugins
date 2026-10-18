@@ -1,0 +1,13 @@
+title Slot machine, the big prize (Zero or Vertice in a row) - coins pour out: runs up the C, D and E major chords and a long high shimmer
+tempo 190
+meter 2/4
+vol 230
+inst lead v=255,255,215,185,170
+inst maj arp=0,4,7 rate=2
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+l16
+!kick:c8 @lead o5 e g o6 c e g8 |
+!kick:d8 @lead o5 f+ a o6 d f+ a8 |
+!kick:e8 @lead o5 g+ b o6 e g+ b8 |
+@lead o6 c e g o7 c e g c8 |
+@maj o7 c2 |

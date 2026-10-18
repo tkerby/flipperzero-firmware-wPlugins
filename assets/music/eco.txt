@@ -1,0 +1,39 @@
+title Monte Eco - inside the cave: a slow breathing drone on an augmented chord, drips that come back as fading echoes, chimes in the whole-tone scale (nothing resolves), a far rockfall
+tempo 60
+vol 200
+meter 4/4
+inst hollow arp=-12,0,4,8 rate=6 att=16 lvl=0.8 slow
+inst bell dec=6 sus=0.05 slow
+inst bell2 dec=6 sus=0.05 lvl=0.45 slow
+inst bell3 dec=6 sus=0.05 lvl=0.2 slow
+inst dpa drum=e7 v=190,120,60 d=0,-16,-45
+inst dpe drum=e7 v=100,60,30 d=0,-16,-45
+inst dpf drum=e7 v=55,35,18 d=0,-16,-45
+inst dqa drum=b6 v=190,120,60 d=0,-16,-45
+inst dqe drum=b6 v=100,60,30 d=0,-16,-45
+inst thud drum=c4 v=255,200,140,90 d=0,-30,-50,-70
+# the voice is shared: every section is 4 seconds = 400 ticks, a breath of drone (2 s) and then the cave answers (2 s)
+# --- 1: drone on C, a drip and its two echoes
+@hollow o4 c2
+!dpa=3 r=21 !dpe=3 r=15 !dpf=3 r=155
+# --- 2: drone on C, a chime and two echoes
+@hollow o4 c2
+@bell o6 e=28 r=12 @bell2 e=28 r=12 @bell3 e=28 r=92
+# --- 3: drone on D, a drip, then a lower drip answering
+@hollow o4 d2
+!dqa=3 r=34 !dqe=3 r=26 !dpa=3 r=30 !dpe=3 r=98
+# --- 4: drone on E, two chimes (G sharp, then C) with echoes
+@hollow o4 e2
+@bell o5 g+=30 r=10 @bell2 g+=30 r=14 @bell o6 c=30 r=10 @bell2 c=30 r=10 @bell3 c=30 r=6
+# --- 5: drone on D, the far rockfall and its dust (drips)
+@hollow o4 d2
+!thud=4 r=70 !dqa=3 r=30 !dqe=3 r=22 !dpf=3 r=65
+# --- 6: drone on C, a chime that climbs a whole tone and hangs
+@hollow o4 c2
+@bell o5 a+=28 r=12 @bell2 a+=28 r=6 @bell o6 c=28 r=12 @bell2 c=28 r=6 @bell o6 d=40 r=12
+# --- 7: drone on F sharp, three drips closing in
+@hollow o4 f+2
+!dpa=3 r=40 !dqa=3 r=24 !dpe=3 r=14 !dqe=3 r=8 !dpf=3 r=99
+# --- 8: drone on C, a last chime with a long echo, silence
+@hollow o4 c2
+@bell o6 e=40 r=16 @bell2 e=40 r=30 @bell3 e=40 r=34

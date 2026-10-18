@@ -1,0 +1,86 @@
+# Islas Escarcha, floor 3 (C7, contract 53), 24 x 18, a cave: the bottom. Two platforms joined by a CHANNEL of animated water (`current`, surfable) with two RAPIDS on it (solid NPCs `rapids`, `gate=yes`, hide flags 855 / 856: they dissolve when the matching pit of floor 2 is
+# plugged); AUROWL (L50, a legendary encounter (legend=)) on the far platform (19,5). Wild water table + frost-grass tufts + the three rods.
+@map islas_escarcha_3
+@size 24 18
+@interior no
+@cave yes
+@area islas_escarcha
+@bg 0
+@surf yes
+@flag esc_pit_a 855
+@flag esc_pit_b 856
+@flag aurowl_gone 857     # Aurowl was dealt with (won, caught or ran)
+@encounters grass rate=14
+  echowing 40 44 25
+  echolet 40 44 5
+  belubub 38 42 25
+  plattypuzz 38 42 20
+  lazatee 38 41 15
+  barnacub 38 42 10
+@end
+# Roaming wild creatures (contract 55, rollout in 63): 2 creatures of this table wander the whole walkable floor (grass included); touching one starts that wild battle.
+@roam 2 table=grass area=cdefg period=1800
+@encounters water rate=12
+  belubub 38 42 30
+  barnacub 38 42 25
+  plattypuzz 38 42 20
+  lazatee 38 41 15
+  belugrand 44 46 10
+@end
+@encounters fish_old
+  flopfin 5 5 100
+@end
+@encounters fish_good rate=128
+  inkit 24 28 50
+  glidefin 24 28 50
+@end
+@encounters fish_super
+  barnacub 34 38 40
+  inkit 34 38 30
+  belubub 34 38 30
+@end
+@spawn up 3 4 S
+@legend
+  .  tile=none
+  a  tile=none object=snow_drift
+  b  tile=none object=cwall
+  c  tile=frost_tuft
+  d  tile=ice_00
+  e  tile=ice_10
+  f  tile=ice_01
+  g  tile=ice_11
+  h  tile=current
+  i  tile=ice_10 object=ice_pillar
+  j  tile=ice_01 object=snow_drift
+  k  tile=ice_00 object=ice_pillar
+  l  tile=ice_11 door=rope_ladder
+  m  tile=ice_11 object=snow_drift
+  n  tile=current_gate face=S gate=yes hide_flag=esc_pit_a id=rapA npc=rapids text=esc3.rapids
+  o  tile=current_gate face=S gate=yes hide_flag=esc_pit_b id=rapB npc=rapids text=esc3.rapids
+  # Legendary encounter (contract 52): the legend= idiom; the hide flag is the story flag above (won, caught -> gone; Run keeps it)
+  p  tile=ice_11 legend=aurowl level=50 npc=aurowl_ow hide_flag=aurowl_gone
+  q  tile=ice_00 object=snow_drift
+  r  tile=ice_01 object=ice_pillar
+  s  tile=frost_tuft object=snow_drift
+  t  tile=frost_tuft item=prime_salve
+  H  tile=ice_11 hidden=savia_max   # hidden (contract 80, hidden items)
+@grid
+  ........................
+  .abbbbbb.......abbbbbb..
+  .bdededia......bkededea.
+  .bflfgjga......bfmfgjga.
+  .bdededebbbbbbbbdededea.
+  .bfgfgfghhnhhohhfgfpfga.
+  .bqcccceaaaaaaabdccccea.
+  .bfccccga......bfccccHa.
+  .bdccccea......bdccccia.
+  .brgfgaaa.......aaaaaaa.
+  .bdccea.................
+  .bfccga.................
+  .bdcsea.................
+  .bfctga.................
+  .bdedia.................
+  ..aaaaa.................
+  ........................
+  ........................
+@warp l -> islas_escarcha_2 spawn=down

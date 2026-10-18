@@ -1,0 +1,33 @@
+title Ferry - on board: a sea-shanty waltz in D mixolydian (3/4): the leader sings a line, the crew answers with oom-pah-pah, then everyone heaves on the beat; the boards creak
+tempo 126
+vol 225
+meter 3/4
+inst shanty v=255,255,225,200,185
+inst oom v=255,215,170,130
+inst stab arp=0,4,7 rate=1 dec=3 sus=0
+inst thump drum=c5 v=255,190,110 d=0,-35,-70
+inst creak drum=e5 v=90,110,130,150,170,150,130,110,90,70 d=0,3,6,9,12,9,6,3,0,-3 slow
+l4
+# --- the leader sings (D, C, G, A to D) and the crew answers: oom, pah, pah
+@shanty o5 d f+8 a8 o6 d |
+@oom o4 d @stab o5 d d |
+@shanty o6 c o5 a8 g8 e |
+@oom o4 c @stab o5 c c |
+@shanty o5 b o6 d8 g8 f+ |
+@oom o4 g @stab o5 g g |
+@shanty o6 e d8 c+8 d |
+@oom o4 a @stab o5 a a |
+# --- the second round, a step higher in the middle, ending on the creak of the boards
+@shanty o5 d f+8 a8 o6 d |
+@oom o4 d @stab o5 d d |
+@shanty o6 e g8 b8 a |
+@oom o4 e @stab o5 e e |
+@shanty o6 g f+8 e8 d |
+@oom o4 g @stab o5 g g |
+@shanty o6 e d8 c+8 o5 a |
+@oom o4 a @stab o5 a !creak |
+# --- heave! (A, G, F sharp, D): everyone on the beat
+@shanty o5 !thump:a a a |
+o5 !thump:g g g |
+o5 !thump:f+ f+ f+ |
+o5 !thump:d2. |

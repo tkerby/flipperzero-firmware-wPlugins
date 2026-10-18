@@ -1,0 +1,8 @@
+title Capture succeeded - three wobbles of the crystal, then a bright rising chime
+tempo 170
+vol 200
+inst wob v=255,255,255,255,255,255 d=0,-22,-44,-22,0,22 loop=0
+inst lead v=255,255,215,185,170
+inst maj arp=0,4,7 rate=2
+@wob o5 g=26 r=14 g=26 r=14 g=26 r=34
+@lead o5 c16 e16 g16 o6 c8 @maj o5 g2

@@ -1,0 +1,29 @@
+# Tienda de Ciudad Cenit (C6, contract 49, interior, Mart): the shopkeeper behind the counter; the shop opens at once: `shop ciudad_cenit` (shop 13). Same layout as the Ambar one.
+@map tienda_cenit
+@size 9 7
+@interior yes
+@bg 3
+@fill floor_wood
+@spawn door 4 5 N
+@legend
+  .  tile=floor_wood
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  tile=floor_wood object=shelf
+  f  tile=floor_wood npc=tendero id=clerk face=SW script=clerk
+  g  tile=floor_wood object=counter
+  h  tile=mat
+@grid
+  abcbbbcbb
+  d.eee.ee.
+  d...f....
+  d.ggg....
+  d.......e
+  d........
+  d...hh...
+@warp h -> ciudad_cenit spawn=tienda_door
+@script clerk npc
+    shop ciudad_cenit
+@end

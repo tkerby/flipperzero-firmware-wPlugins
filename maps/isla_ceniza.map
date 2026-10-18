@@ -1,0 +1,89 @@
+# Isla Ceniza, north half (C7, contract 53), 36 x 15. column = i, row = j. A VOLCANIC town on a bay: the two inlets of the NORTH edge ((7..8,0) -> Ruta 21 `south`, (26..27,0) -> Ruta 20 `south`; the hero arrives
+# surfing on the bay, spawns `bay_w` / `bay_e`) and the ash shore; pale volcanic ASH ground, lava rocks (the border of the other sides), animated steam vents, palms and the volcano (2 x 2, back right). The Planeador lands in front of the Centro
+# (@fly slot 9, (13,10)). Buildings (door = the middle cell of the bottom row): the fossil lab (5,9), the Centro (13,9), the tienda (21,9). The gap (16..19,14) leads to the south half. Two townsfolk, two signs. Wild water table + the three rods (the bay).
+@map isla_ceniza
+@size 36 15
+@interior no
+@area isla_ceniza
+@fly 9 isla_ceniza 13 10 face=S   # the Planeador lands here, in front of the Centro door; slot 9 = visited flag 993 (contract 46.1 / 53)
+@bg 0
+@surf yes
+@fill ash
+@encounters water rate=12
+  urchip 32 36 5
+  urchlord 34 38 55
+  gleamlet 32 35 15
+  lazatee 34 37 10
+  clubrimp 32 36 15
+@end
+@encounters fish_old
+  flopfin 5 5 100
+@end
+@encounters fish_good rate=128
+  glidefin 22 26 40
+  inkit 22 26 40
+  flopfin 15 15 20
+@end
+@encounters fish_super
+  inkit 30 36 30
+  glidefin 30 36 30
+  urchlord 34 38 20
+  barnacub 30 34 20
+@end
+@spawn bay_w 7 1 S
+@spawn bay_e 26 1 S
+@spawn centro_door 13 10 S
+@spawn tienda_door 21 10 S
+@spawn lab_door 5 10 S
+@spawn south 17 13 N
+@legend
+  .  tile=ash
+  a  tile=sea_o
+  b  tile=ash object=lava_rock
+  c  tile=sea_bl
+  d  tile=ash object=palm_0
+  e  tile=ash object=lab
+  f  tile=ash object=center_f
+  g  tile=ash object=volcano
+  h  tile=ash
+  i  tile=ash object=mart_f
+  j  tile=sea_gate
+  k  tile=sea_gate
+  l  tile=sea_gate
+  m  tile=ash object=steam_vent
+  n  tile=ash object=sign interact=look text=ceniza.sign
+  o  tile=ash door=lab
+  p  tile=ash door=center_f
+  q  tile=ash door=mart_f
+  r  tile=ash object=sign interact=look text=ceniza.sign.lab
+  s  tile=ash face=SE id=npc_b npc=chica_s text=ceniza.npc.b
+  t  tile=ash face=SW id=npc_a npc=cientifico_s script=hint_isla
+  H  tile=ash hidden=growth_seed   # hidden (contract 80, hidden items)
+@grid
+  aaaaaaajjaaaaaaaaaaaaaaaaakkaaaaaaaa
+  aaaaaaalaaaaaaaaaaaaaaaaaalaaaaaaaaa
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  cccccccccccccccccccccccccccccccccccc
+  b..d.......d.....d......d........d.b
+  b........m....b....................b
+  b.........n..............m.....gg.Hb
+  b...eee.....fff.....ii.........gg..b
+  b...eoe.....fpf.....iq.............b
+  b......r.........................b.b
+  b..............s...................b
+  b.b.....tb......b.......b...b......b
+  b.........d...........d............b
+  bbbbbbbbbbbbbbbbhhhhbbbbbbbbbbbbbbbb
+@warp j -> ruta_21 spawn=south
+@warp k -> ruta_20 spawn=south
+@warp h -> isla_ceniza_sur spawn=north
+@warp o -> laboratorio_fosiles spawn=door
+@warp p -> centro_ceniza spawn=door
+@warp q -> tienda_ceniza spawn=door
+# D1 (contract 68): a clue of the hidden Gruta del Eclipse (where it is).
+@script hint_isla npc
+    npc_face_hero npc_a
+    say ceniza.npc.a
+    say d1.hint.isla
+@end

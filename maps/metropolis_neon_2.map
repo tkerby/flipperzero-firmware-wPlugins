@@ -1,0 +1,75 @@
+# Metropolis Neon, west half (C4a, contract 39), 34 x 23. column = i, row = j. The east half arrives at the EAST edge (i = 33, rows 12..13); the avenue runs west to the CLOSED GATE of the Autopista
+# (C5b: the west end (0,12..13) now leads to Ruta 16: the sign at (3,11) points the way; the guard is gone). The same cyberpunk look (neon blocks, holo billboards, lamps, cars). The PLANT GYM (the greenhouse building, door g) stands in a pocket closed by a
+# CUTTABLE BUSH; the MANSION (a block with a door, `mansion_neon`); the casino (the casino: a block with NO door, a guard and a sign: closed for renovation in C4a, C4b gives it a door).
+@map metropolis_neon_2
+@size 34 23
+@interior no
+@area metropolis_neon
+@bg 0
+@fill sidewalk
+@spawn east 32 12 W
+@spawn gym_door 6 8 S
+@spawn mansion_door 22 8 S
+@spawn casino_door 15 19 S
+@spawn prize_door 18 19 S
+@spawn diner_door 30 20 S
+@spawn west 1 12 E
+@legend
+  .  tile=sidewalk
+  a  object=chain_i
+  b  object=chain_j
+  c  object=nblock_0
+  d  object=nblock_1
+  e  object=gym_neon
+  f  door=gym_neon
+  g  door=nblock_1
+  h  object=bush
+  i  object=sign text=neon.gym.sign interact=look
+  j  cut=yes
+  k  npc=vecino_m id=npc_a face=SE text=neon.npc.d
+  l  object=road_sign text=neon.west.sign interact=look
+  m  object=lamp_s
+  o  tile=asph
+  Z  tile=asph
+  q  tile=asph
+  r  object=sign text=neon.holo.c interact=look
+  s  object=road_sign text=neon.sign.b interact=look
+  t  npc=mama id=npc_b face=NW text=neon.npc.e
+  u  object=sign text=neon.casino.sign2 interact=look
+  G  door=nblock_0
+  P  door=nblock_1
+  D  door=nblock_0
+  V  object=sign text=neon.prize.sign interact=look
+  W  object=sign text=neon.diner.sign interact=look
+  H  tile=sidewalk hidden=vigor_drop   # hidden (contract 80, hidden items)
+@grid
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  bbccdd..ddccddccddcc..ccddccddcc.b
+  bbccdd..ddccddccddcc..ccddccddcc.b
+  bb...............................b
+  bb..........H....................b
+  bb...........cc..................b
+  bb...eee.....cc..dd..dd....cc....b
+  bb...efe.........dd..dg....cc....b
+  bb...h.h.i.......................b
+  bb...hjh.........................b
+  bb..........k....................b
+  bb.l.....m......m.......m......m.b
+  Zooooooooooooooooooooooooooooooooq
+  Zooooooooooooooooooooooooooooooooq
+  bb.....m...r.......m...s...m.....b
+  bb........................t......b
+  bb...............................b
+  bb....dd......cc.dd...dd.........b
+  bb....dd......cG.dP...dd.....cc..b
+  bb...........u.....V.........cD..b
+  bb..........................W....b
+  bb...............................b
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+@warp f -> gimnasio_neon spawn=door
+@warp g -> mansion_neon spawn=door
+@warp q -> metropolis_neon spawn=west
+@warp Z -> ruta_16 spawn=east
+@warp G -> casino_neon spawn=door
+@warp P -> sala_premios spawn=door
+@warp D -> restaurante_neon spawn=door

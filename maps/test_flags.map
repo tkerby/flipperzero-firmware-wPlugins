@@ -1,0 +1,74 @@
+# TEST FIXTURE (id 100): the 10-bit story flags (contract section 40: save format 5, `WORLD_FLAGS` = 1024): an NPC that appears at flag 900 (show_flag) and one that leaves at flag 901 (hide_flag), a talk_flag NPC (902, text .a then .b),
+# a SET_FLAG interaction (903), a ground item with an explicit hide flag (950), a trainer with an explicit beaten flag (940), scripts that setf / clrf / jf / jnf flags above 255 (the `@flag` names and plain numbers), two scripts whose condition is a
+# high flag (906, !907) and a script that touches flag 1023. Not part of the game: reached only by the host harness (`make -C tools/host_world fogflags`). column = i, row = j.
+@map test_flags
+@size 14 10
+@interior no
+@bg 0
+@fill grass
+@spawn start 1 1 S
+@spawn see 12 4 S           # on the ray of the trainer (9,7), facing E: the screen diagonal (+1,-1): (10,6) (11,5) (12,4) (13,3)
+@flag hi_a 900
+@flag hi_b 1023
+@flag hi_c 777
+@flag hi_hide 901
+@flag hi_talk 902
+@flag hi_sign 903
+@flag hi_trainer 940
+@var fl_res 5
+@legend
+  .  tile=grass
+  A  npc=vecino id=late face=S text=flg.test.sign show_flag=900
+  B  npc=vecino id=gone face=S text=flg.test.sign hide_flag=901
+  C  npc=vecino id=talker face=S text=flg.test.t.a talk_flag=902
+  S  object=sign text=flg.test.sign interact=look kind=flag flag=903
+  P  object=pc interact=look script=setall
+  G  object=pc interact=look script=gated
+  H  object=pc interact=look script=gated2
+  Q  object=pc interact=look script=probe
+  i  item=salve hide_flag=950
+  T  npc=rival id=boss face=E trainer=rival_lab text=tr.test.pre after=tr.test.after beaten_flag=hi_trainer
+@grid
+  ..............
+  ......S.......
+  ..A..B..C..P..
+  ..............
+  ..G.H.Q.......
+  ..............
+  ..............
+  .........T....
+  ..i...........
+  ..............
+# setall: ids above 255 through the @flag names and as plain numbers; the jnf jumps over `setf 770` because hi_c (777) is clear; clrf takes 1023 away again
+@script setall interact
+    setf hi_a
+    setf hi_b
+    setf 1000
+    jnf hi_c skip
+    setf 770
+  skip:
+    setf 771
+    setf 768
+    clrf hi_b
+    jf 900 on
+    end
+  on:
+    setf 769
+@end
+# the condition of a script is a flag above 255: `if 906` runs only when 906 is set, `if !907` only when 907 is clear
+@script gated interact if 906
+    say flg.test.a
+@end
+@script gated2 interact if !907
+    say flg.test.b
+@end
+# probe: var fl_res = 1 when flag 1023 is set (jf), 2 when flag 1022 is set, 3 when both are clear (jnf)
+@script probe interact
+    setv fl_res 3
+    jnf 1023 n1
+    setv fl_res 1
+  n1:
+    jnf 1022 n2
+    setv fl_res 2
+  n2:
+@end

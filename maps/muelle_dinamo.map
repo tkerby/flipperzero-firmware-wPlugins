@@ -1,0 +1,89 @@
+# Muelle de Dinamo (the docks of Puerto Dinamo, C3, contract 34), 26 x 22. column = i, row = j. The town (puerto_dinamo) arrives at the north edge. Look (the user's mock "Puerto Dinamo"): the quay of light concrete
+# slabs with its painted safety line, stacked containers, the DOCK CRANE, crates, barrels and bollards, net racks and lobster traps, harbour lamps; the boardwalk (row 13) and the bay (animated sea, foam on its
+# north bank, rows 14..21) with the FERRY ALBATROS moored in it (an NPC hidden by flag 53 when it departs, with its gangway). The sailor and the step trigger X (10,12) check the Ferry Pass (key item)
+# before the hero walks up the gangway.
+@map muelle_dinamo
+@size 26 22
+@interior no
+@area puerto_dinamo
+@bg 0
+@fill quay
+@spawn north 12 1 S             # arriving from the town
+@spawn quay 10 11 N             # back from the ferry: in front of the gangway
+@flag ferry_gone 53             # the ferry has departed (hides it and its gangway)
+@var tmp 9                      # has_item result
+@legend
+  .  tile=quay                     # light concrete in big slabs (2 variants)
+  P  tile=quay_s                   # the painted safety line
+  d  tile=quay_n                   # the boardwalk along the quay edge, water to its south (2 variants)
+  o  tile=quay_n object=bollard
+  H  object=crate_plain
+  x  object=barrel
+  T  object=crate_stack
+  t  object=trap
+  l  object=lamp_s                 # harbour lamp
+  n  tile=quay
+  K  object=container
+  R  object=crane
+  N  object=net_rack
+  S  object=sign interact=look text=muelle.sign
+  s  object=sign interact=look text=muelle.ferry.sign
+  r  tile=sea_tr                   # the bay (animated sea, 2 frames; the north bank)
+  w  tile=sea_o
+  F  tile=sea_tr object=blank npc=ferry id=ferry hide_flag=53 text=puerto.ferry
+  Y  tile=quay_n npc=gangway id=gang hide_flag=53 solid=no text=puerto.gangway
+  X  interact=step script=board
+  A  npc=marinero id=sailor face=W script=sailor
+  a  npc=vecino_m id=fisher face=SW text=muelle.npc
+@grid
+  HHxHHHxHHHxHnnxHHHxHHHxHHH
+  H............P...........H
+  H...........SP...........H
+  H..........l.P.l.........H
+  H..KKKT......P...........H
+  H.HKKKH......P.....KKK...H
+  H............P.....KKKH..H
+  H............P...........H
+  H.x.....x....P...........H
+  H..NN.t......P........R..H
+  H............P...........H
+  H...l....l...P...l......xH
+  H.........XA..s.a........H
+  ddddodddddYdddddodddodddod
+  rrrrrrrrrrrFrrrrrrrrrrrrrr
+  wwwwwwwwwwwwwwwwwwwwwwwwww
+  wwwwwwwwwwwwwwwwwwwwwwwwww
+  wwwwwwwwwwwwwwwwwwwwwwwwww
+  wwwwwwwwwwwwwwwwwwwwwwwwww
+  wwwwwwwwwwwwwwwwwwwwwwwwww
+  wwwwwwwwwwwwwwwwwwwwwwwwww
+  wwwwwwwwwwwwwwwwwwwwwwwwww
+@warp n -> puerto_dinamo spawn=south
+# Boarding: stepping on the gangway's foot needs the Ferry Pass; with it the hero walks up the gangway and the Ferry Albatros' deck loads; after the
+# departure (flag 53) the ferry is gone and so is the way.
+@script board step
+    jf ferry_gone gone
+    has_item ferry_pass tmp
+    jv tmp 1 ok
+    npc_face_hero sailor
+    say puerto.board.nopass
+    hero_walk NE 1
+    end
+  ok:
+    npc_face_hero sailor
+    say puerto.board.ok
+    hero_walk SW 3
+    warp ferry_cubierta spawn=gangway
+    end
+  gone:
+    say puerto.board.gone
+    hero_walk NE 1
+@end
+@script sailor npc
+    npc_face_hero sailor
+    jf ferry_gone gone
+    say puerto.sailor
+    end
+  gone:
+    say puerto.sailor.gone
+@end

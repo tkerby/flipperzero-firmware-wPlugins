@@ -1,0 +1,133 @@
+# Ciudad Ambar (C5a, contract 47), 34 x 24. column = i, row = j. Ruta 15 arrives at the EAST edge (i = 33, rows 12..13). Look (the user's mock "Ciudad Ambar"): a WARM seaside town at the edge of the
+# savanna: the same BIG light slabs as Bruma's (`oflag_<i%2><j%2>`, never small tiles) under PALMS, animated street lamps, benches and flowerbeds, and its own touch: the Reserva's WOODEN ARCH (the gate of the
+# Salvaje reserve, north-east): in C5b the arch is the ENTRANCE (walk under it: the gate house `puerta_reserva`; the guard is gone), the WEST edge (0,12..13) leads to Ruta 18 and the SOUTH edge (16..17,23) to the beach and the sea.
+# The Centro (door (11,4), the Planeador lands in front of it: @fly slot 7), the tienda (door (18,4): the Ultra Cristal), the Caña buena house (door (5,4)), the Warden's house (door (23,4): he lost his golden teeth)
+# and Kai's poison gym (the dojo, door (25,14)). Three townsfolk.
+@map ciudad_ambar
+@size 34 24
+@interior no
+@area ciudad_ambar
+@fly 7 ciudad_ambar 11 5 face=S   # the Planeador lands here, in front of the Centro door; slot 7 = visited flag 991 (contract 46.1)
+@bg 0
+@fill oflag_00
+@spawn east 32 12 W
+@spawn centro_door 11 5 S
+@spawn tienda_door 18 5 S
+@spawn cana_door 5 5 S
+@spawn guardian_door 23 5 S
+@spawn gym_door 25 15 S
+@spawn west 1 12 E
+@spawn reserva_door 27 2 S
+@spawn beach 16 22 N
+@legend
+  .  tile=oflag_00
+  A  tile=oflag_10 object=flowerbed
+  B  tile=oflag_00 object=lamp_h
+  C  tile=oflag_10 object=lamp_h
+  D  tile=oflag_10 object=bench
+  E  tile=oflag_01 object=bench interact=look script=find_bench
+  F  tile=oflag_00 object=flowerbed
+  G  tile=oflag_00 object=sign text=ambar.sign interact=look
+  H  tile=oflag_01 npc=mama id=npc_b face=NE text=ambar.npc.b
+  I  tile=oflag_01 npc=vecino_m id=npc_a face=SW script=rumor_ambar
+  J  tile=oflag_10
+  K  tile=oflag_01 object=gym_dojo
+  L  tile=oflag_11 object=gym_dojo
+  M  tile=oflag_11
+  N  tile=oflag_00 object=gym_dojo
+  O  tile=oflag_10 door=gym_dojo
+  P  tile=oflag_01 object=flowerbed
+  Q  tile=oflag_10 npc=cuidadora id=npc_c face=SE text=ambar.npc.c
+  R  tile=oflag_00 object=bench
+  S  tile=oflag_10 object=sign text=ambar.sign.gym interact=look
+  a  tile=oflag_00 object=palm_0
+  b  tile=oflag_10 object=palm_0
+  c  tile=oflag_01 object=palm_0
+  d  tile=oflag_11
+  e  tile=oflag_01
+  f  tile=oflag_11 door=res_arch
+  g  tile=oflag_01 door=res_arch
+  h  tile=oflag_11 object=palm_0
+  i  tile=oflag_10
+  j  tile=oflag_00
+  k  tile=oflag_10
+  W  tile=oflag_00
+  X  tile=oflag_01
+  Y  tile=oflag_01
+  Z  tile=oflag_11
+  l  tile=oflag_10 object=sign text=ambar.sign.reserva interact=look
+  m  tile=oflag_01 object=house_f
+  n  tile=oflag_11 object=house_f
+  o  tile=oflag_11 object=flowerbed
+  p  tile=oflag_01 object=center_f
+  q  tile=oflag_11 object=center_f
+  r  tile=oflag_11 object=mart_f
+  s  tile=oflag_01 object=mart_f
+  t  tile=oflag_00 object=house_f
+  u  tile=oflag_10 door=house_f
+  v  tile=oflag_00 object=center_f
+  w  tile=oflag_10 door=center_f
+  x  tile=oflag_10 object=mart_f
+  y  tile=oflag_00 door=mart_f
+  z  tile=oflag_10 door=house_f
+  U  tile=oflag_10 hidden=trozo_oro   # hidden (contract 80, hidden items)
+@grid
+  ababababababababababababababababab
+  cdededededededededededededefgdedeh
+  aijijijijijijijijijijijijijkjljijb
+  cdedmneoedpqpdedersdedmnededededeh
+  abjitujijivwvijijxyijitzjijijijijb
+  cdedededededededededededededededeh
+  aijAjijiBijijijCjijijCjijijijiaijb
+  cdedededededededededededededededeh
+  aijijijijDjijAjiaijAjijijijijCjijb
+  cdededededededededededEdededededeh
+  aiaijijijijijijijijijijijiFijiGijb
+  cdededededededHdededededededIdedeh
+  WijijijijijiBijijijijijijijijijijJ
+  XdedededededededededededKLKdededeM
+  aijijiBijijijijijiFijijiNONijijijb
+  cdededededededededededededededPdeh
+  aijijijQjijijiRijijijCjSjijijijijb
+  cdedPdedededededededededededededeh
+  aijijijiaijijijijijijijijijijijijb
+  cdedededededededededcdedededededeh
+  aijijijijijijiaijijijijijijijijbjb
+  cdedededededededededededededededeh
+  aijUjiaijijijijijijijijijijijijijb
+  chchchchchchchchYZchchchchchchchch
+@warp u -> casa_cana_buena spawn=door
+@warp w -> centro_ambar spawn=door
+@warp y -> tienda_ambar spawn=door
+@warp z -> casa_guardian spawn=door
+@warp J -> ruta_15 spawn=west
+@warp M -> ruta_15 spawn=west
+@warp W -> ruta_18 spawn=east
+@warp X -> ruta_18 spawn=east
+@warp Y -> mar_ambar spawn=north
+@warp Z -> mar_ambar spawn=north
+@warp f -> puerta_reserva spawn=door
+@warp g -> puerta_reserva spawn=door
+@warp O -> gimnasio_ambar spawn=door
+# D1 (contract 68): the fourth Origin Fragment glints under the bench of the square (the old line first, then the rumor + the clue).
+@script rumor_ambar npc
+    npc_face_hero npc_a
+    say ambar.npc.a
+    say d1.ambar.rumor
+    setf legend_rumor
+@end
+@script find_bench interact
+    jf frag_4 empty
+    say d1.bench.look
+    give_item origin_shard 1
+    jv 0 0 full
+    setf frag_4
+    sfx item
+    say gl.d1.got
+    end
+  full:
+    say gl.found.full
+    end
+  empty:
+    say d1.bench.empty
+@end
