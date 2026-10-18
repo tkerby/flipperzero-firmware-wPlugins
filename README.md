@@ -23,3 +23,6 @@ Works with the internal IR LED or an external IR module.
 
 For use on your own devices and testing only.
 
+## Source
+
+https://github.com/Clawzman/flipper-ir-jammer
