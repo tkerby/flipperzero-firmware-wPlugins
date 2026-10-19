@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.8.3
+
+- Fixed IR remote and universal button lists showing only some entries (or needing the view to be reopened) by waiting for the complete ESP reply before parsing
+
 ## v1.8.2
 
 - Reduced IR memory usage with independently allocated, dynamically growing catalogs
