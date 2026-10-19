@@ -9,5 +9,5 @@ App(
     fap_icon="lottery_icon.png",
     fap_description="Pick random numbers for lottery tickets",
     fap_author="molykima",
-    fap_weburl="https://github.com/user/flipper_lotto",
+    fap_weburl="https://github.com/molykima/Flipper-Lottery-Number-Generator",
 )

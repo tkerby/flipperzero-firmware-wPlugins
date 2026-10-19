@@ -91,8 +91,6 @@ typedef struct LottoApp {
     numbersArr_t ball_numbers;
 } LottoApp;
 
-// ==================sub menu callback functions======================
-
 void lotto_max_submenu_callback(void* context, uint32_t eventID) {
     LottoApp* instance = context;
 
@@ -110,10 +108,6 @@ void about_submenu_callback(void* context, uint32_t eventID) {
 
     view_dispatcher_send_custom_event(instance->view_dispatcher, eventID);
 }
-
-// ==================sub menu callback functions======================
-
-// ====================draw callback function=========================
 
 void lotto_app_winning_number_scene_draw_callback(Canvas* canvas, void* model) {
     LottoAppModel* model_instance = model;
@@ -140,16 +134,11 @@ void lotto_app_winning_number_scene_draw_callback(Canvas* canvas, void* model) {
     }
 }
 
-// ====================draw callback function=========================
-
-// =================SCENE HANDLER FUNCTION STUFF======================
-
 void lotto_app_main_menu_on_enter(void* context) {
     LottoApp* instance = context;
 
     submenu_set_header(instance->sub_menu, "Lottery Number Picker");
 
-    // what would happen if both callbacks used the same enum value? i think we would not be able to tell the difference in on_event
     submenu_add_item(
         instance->sub_menu,
         LOTTO_MAX_NAME,
@@ -174,8 +163,6 @@ bool lotto_app_main_menu_on_event(void* context, SceneManagerEvent event) {
 
     switch(event.type) {
     case SceneManagerEventTypeCustom:
-        // make sure the type is set properly here otherwise our generate_function()
-        // won't be able to allocate the dynamic array correctly!
         if(event.event == LottoAppEventChooseLottoMax) {
             instance->ticket_data = &all_tickets_info[LotteryTypeLottoMax];
             scene_manager_next_scene(instance->scene_manager, LottoAppSceneWinningNumbers);
@@ -204,8 +191,8 @@ bool lotto_app_main_menu_on_event(void* context, SceneManagerEvent event) {
     default:
         return false;
     }
-    // yes, i know i could use switch fallthrough here but the stupid ass compiler
-    // has treat warning as errors enabled and I'm too lazy to turn that shit off
+    // yes, i know i could use switch fallthrough here but the compiler
+    // has treat warning as errors enabled and I'm too lazy to turn it off
 }
 
 static uint32_t generate_number(uint32_t start, uint32_t end) {
@@ -261,16 +248,18 @@ static void generate_numbers(LottoApp* instance) {
 
         // loop starting from i = 0 and check to see if the number we just generated exists earlier on in the array
         // loop goes until the inner loop is 1 element behind the element at index i
-        for(size_t j = 0; j < i; ++j) {
+        for(size_t j = 0; j < i;) {
             uint32_t earlier_element_value = *numbersArr_get(arr_ptr, j);
 
             // if this evaluates to true it means the number we just generated is some kind of duplicate
-            // so change generate another number and set i = 0 so we can ensure the newly generated number also isn't a duplicate
+            // so change generate another number and set j = 0 so we can ensure the newly generated number also isn't a duplicate
             if(current_element_value == earlier_element_value) {
                 uint32_t new_generated_number = generate_number(smallest_number, largest_number);
                 *numbersArr_get(instance->ball_numbers, i) = new_generated_number;
                 current_element_value = new_generated_number;
-                j = 0; // BUG: if this fires j will never be 0 since ++j kicks in the lowest it will be is 1
+                j = 0;
+            } else {
+                ++j;
             }
         }
         FURI_LOG_I(TAG, "Generated a Number!");
@@ -292,7 +281,6 @@ void lotto_app_winning_numbers_menu_on_enter(void* context) {
     LottoApp* instance = context;
 
     generate_numbers(instance);
-    // things work out fine here since we are drawing the raw view AFTER generating the numbers
     view_dispatcher_switch_to_view(instance->view_dispatcher, LottoAppViewDisplayNumbers);
 }
 
@@ -301,7 +289,6 @@ bool lotto_app_winning_numbers_menu_on_event(void* context, SceneManagerEvent ev
     UNUSED(instance);
 
     switch(event.type) {
-    // somehow the compiler doesn't moan about this though...
     case SceneManagerEventTypeCustom:
     case SceneManagerEventTypeTick:
     case SceneManagerEventTypeBack:
@@ -325,8 +312,8 @@ void lotto_app_about_on_enter(void* context) {
         "types!\n\n"
         "Created by molykima at:\n"
         "github.com/molykima/\n"
-        "flipper_lottery_number_\n"
-        "generator\n\n"
+        "Flipper-Lottery-Number-\n"
+        "Generator\n\n"
         "Under GPL V3\n");
     view_dispatcher_switch_to_view(instance->view_dispatcher, LottoAppViewTextBox);
 }
@@ -373,10 +360,6 @@ const SceneManagerHandlers lotto_app_scene_handlers = {
     .scene_num = MAX_SCENES,
 };
 
-// =================SCENE HANDLER FUNCTION STUFF======================
-
-// =================VIEW DISPATCHER CALLBACK FUNCTIONS======================
-
 bool lotto_app_dispatcher_on_custom_event(void* context, uint32_t eventID) {
     LottoApp* instance = context;
 
@@ -395,7 +378,6 @@ bool lotto_app_dispatcher_on_navigation_event(void* context) {
     return scene_manager_handle_back_event(instance->scene_manager);
 }
 
-// =================VIEW DISPATCHER CALLBACK FUNCTIONS======================
 LottoApp* allocate_lotto_app() {
     LottoApp* instance = malloc(sizeof(LottoApp));
 
