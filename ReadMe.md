@@ -244,6 +244,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - SubGHz WarDriving: [Resume RX after TX and prevent received/history signals from overwriting an unrelated saved file; reset FAAC programming state (By xMasterX)](https://github.com/xMasterX/all-the-plugins/commit/1aa52e2a30efaf3f16d59abce9803d9b0f769972)
 - Updated: [5Ghost Wifi Lab v2.8.0 (By pingequalab)](https://github.com/pingequalab/5ghost-wifi-lab) `Req: BW15` (Version Only)
 - Updated: [UHF Expansion v1.7 (By mtoolstec)](https://github.com/mtoolstec/fz-uhf-expansion)
+- Updated: [IRONWYRM v1.0.1 (By Atompunk78)](https://github.com/Atompunk78/IRONWYRM)
 
 <a name="release"></a>
 
@@ -446,7 +447,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Impostor v0.1.3 (By Endika)](https://github.com/Endika/flipper-impostor-game)
 - [Infinite Tic Tac Toe v0.1 (By kdiller713)](https://github.com/kdiller713/public-FlipperApps/tree/main/infinite_tic_tac_toe)
 - [Insults v1.0 (By ERSUCC)](https://github.com/ERSUCC/Flipper-Insults)
-- [IRONWYRM v1.0 (By Atompunk78)](https://github.com/Atompunk78/IRONWYRM)
+- [IRONWYRM v1.0.1 (By Atompunk78)](https://github.com/Atompunk78/IRONWYRM)
 - [JetPack v1.1 (by timstrasser)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/1164e4d214efa38847e08c6387bf53578bc0d366)
 - [Jumping Pawns v0.1 (By Tyl3rA)](https://github.com/Tyl3rA/Jumping-Pawns)
 - [KC Line v1.2 (By HappyAmos)](https://github.com/HappyAmos/Flipper_FAPS/tree/master/kcline)

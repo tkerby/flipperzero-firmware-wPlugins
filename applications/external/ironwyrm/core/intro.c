@@ -53,8 +53,7 @@ const char* const introParagraphs[] = {
     "But there's no time for reading right now...\n\n",
     "A rival managed to track you down using a WYRM of their own.",
 
-    "You prepare to attack!"
-    ""};
+    "You prepare to attack!"};
 
 size_t GetIntroParagraphCount(void) {
     return sizeof(introParagraphs) / sizeof(introParagraphs[0]);
