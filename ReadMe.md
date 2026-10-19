@@ -248,6 +248,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - SubGHz: [Nice O-Code - the certificate frame index now changes from press to press as a real remote's does, instead of repeating the same value (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/3c6d6fa34f0be567d49a61a4c4c04dc2eb98f2d7)
 - Updated: [NFC QR Presenter v1.1 (By RogerF5-Security)](https://github.com/RogerF5-Security/NFC_QR_Presenter)
 - Updated: [UID Brute Smarter v1.1 (By fbettag)](https://github.com/fbettag/uid_brute_smarter)
+- Updated: [MTP WIP v1.0 (By Alex4386)](https://github.com/Alex4386/f0-mtp)
 
 <a name="release"></a>
 
