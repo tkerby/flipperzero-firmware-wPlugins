@@ -1,0 +1,13 @@
+App(
+    appid="ble_beacon",
+    name="BLE Beacon",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="ble_beacon_app",
+    stack_size=2 * 1024,
+    requires=["gui"],
+    fap_category="Bluetooth",
+    fap_version="1.0.0",
+    fap_description="Simulates unencrypted BLE beacons: BTHome v1/v2, iBeacon, Eddystone TLM, ATC1441, and MiBeacon",
+    fap_icon="ble_beacon.png",
+    fap_icon_assets="images",
+)
