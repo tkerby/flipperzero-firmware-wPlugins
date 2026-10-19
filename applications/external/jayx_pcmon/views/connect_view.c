@@ -31,7 +31,7 @@ void draw_connect_view(Canvas* canvas, JayxApp* app) {
     /* Waiting for link (USB only in practice) */
     canvas_set_font(canvas, FontSecondary);
     if(app->transport == JayxTransportUsb) {
-        canvas_draw_str_aligned(canvas, 64, 28, AlignCenter, AlignBottom, "USB · waiting...");
+        canvas_draw_str_aligned(canvas, 64, 28, AlignCenter, AlignBottom, "USB - waiting...");
         canvas_draw_str_aligned(canvas, 64, 42, AlignCenter, AlignBottom, "monitor.py --usb");
     } else {
         canvas_draw_str_aligned(canvas, 64, 36, AlignCenter, AlignBottom, "Select a link");
