@@ -1,0 +1,15 @@
+App(
+    appid="key_wizard",
+    name="Key Wizard",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="key_wizard_app",
+    stack_size=4 * 1024,
+    fap_category="RFID",
+    fap_version="1.3",
+    fap_icon="key_wizard.png",
+    fap_description="Universal Key Wizard: Auto-detect & save RFID, NFC, iButton keys. Support BTC: bc1q7fu5pck45x2v03e6yyqzf2hexu598s58c8zczg",
+    fap_author="Vazgen Grigoryan",
+    fap_weburl="https://github.com/vazgen3201/flipper-key-wizard",
+    fap_icon_assets="images",
+    requires=["gui", "notification", "storage"],
+)
