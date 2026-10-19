@@ -1,0 +1,321 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 ZeroNinx
+
+#include "pcm_audio.h"
+#include "taiko_memory.h"
+#include "wav_reader.h"
+
+#include <furi_hal.h>
+#include <stm32wbxx_ll_dma.h>
+#include <stm32wbxx_ll_tim.h>
+#include <string.h>
+
+#define HALF_SAMPLES   4096U
+#define AUDIO_STACK    2048U
+#define START_RESERVE  (8U * 1024)
+#define FLAG_STOP      (1U << 0)
+#define FLAG_HALF      (1U << 1)
+#define FLAG_FULL      (1U << 2)
+#define FLAG_DMA_ERROR (1U << 3)
+
+struct PcmAudio {
+    Storage* storage;
+    char* path;
+    FuriThread* thread;
+    FuriMutex* mutex;
+    PcmAudioState state;
+    const char* error;
+    uint32_t started_tick;
+    uint32_t position_ms;
+    uint32_t duration_ms;
+    TaikoMixer mixer;
+    uint8_t volume;
+    uint8_t speed_tenths;
+    uint8_t samples[HALF_SAMPLES * 2];
+};
+
+static void set_state(PcmAudio* audio, PcmAudioState state, const char* error) {
+    furi_mutex_acquire(audio->mutex, FuriWaitForever);
+    audio->state = state;
+    audio->error = error;
+    furi_mutex_release(audio->mutex);
+}
+
+static bool read_at(void* context, uint32_t offset, void* data, size_t size) {
+    File* file = context;
+    return storage_file_seek(file, offset, true) && storage_file_read(file, data, size) == size;
+}
+
+static void dma_isr(void* context) {
+    PcmAudio* audio = context;
+    uint32_t flags = 0;
+    if(LL_DMA_IsActiveFlag_HT1(DMA1)) {
+        LL_DMA_ClearFlag_HT1(DMA1);
+        flags |= FLAG_HALF;
+    }
+    if(LL_DMA_IsActiveFlag_TC1(DMA1)) {
+        LL_DMA_ClearFlag_TC1(DMA1);
+        flags |= FLAG_FULL;
+    }
+    if(LL_DMA_IsActiveFlag_TE1(DMA1)) {
+        LL_DMA_ClearFlag_TE1(DMA1);
+        flags |= FLAG_DMA_ERROR;
+    }
+    if(flags) furi_thread_flags_set(furi_thread_get_id(audio->thread), flags);
+}
+
+static void hardware_start(PcmAudio* audio, uint32_t rate) {
+    furi_hal_bus_enable(FuriHalBusTIM2);
+    /* TIM16 drives the internal speaker, already connected by speaker_acquire.
+     * 125 kHz PWM carrier; TIM2 requests one DMA transfer per PCM sample. */
+    LL_TIM_SetPrescaler(TIM16, 1);
+    LL_TIM_SetAutoReload(TIM16, 255);
+    LL_TIM_SetCounter(TIM16, 0);
+    LL_TIM_OC_SetMode(TIM16, LL_TIM_CHANNEL_CH1, LL_TIM_OCMODE_PWM1);
+    LL_TIM_OC_SetCompareCH1(TIM16, 128);
+    LL_TIM_OC_DisablePreload(TIM16, LL_TIM_CHANNEL_CH1);
+    LL_TIM_CC_EnableChannel(TIM16, LL_TIM_CHANNEL_CH1);
+    LL_TIM_GenerateEvent_UPDATE(TIM16);
+
+    LL_TIM_SetPrescaler(TIM2, 0);
+    LL_TIM_SetAutoReload(TIM2, (SystemCoreClock + rate / 2) / rate - 1);
+    LL_TIM_SetCounter(TIM2, 0);
+    LL_TIM_GenerateEvent_UPDATE(TIM2);
+    LL_TIM_ClearFlag_UPDATE(TIM2);
+
+    LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_1);
+    LL_DMA_ClearFlag_GI1(DMA1);
+    LL_DMA_ConfigTransfer(
+        DMA1,
+        LL_DMA_CHANNEL_1,
+        LL_DMA_DIRECTION_MEMORY_TO_PERIPH | LL_DMA_MODE_CIRCULAR | LL_DMA_PERIPH_NOINCREMENT |
+            LL_DMA_MEMORY_INCREMENT | LL_DMA_PDATAALIGN_HALFWORD | LL_DMA_MDATAALIGN_BYTE |
+            LL_DMA_PRIORITY_HIGH);
+    LL_DMA_SetPeriphRequest(DMA1, LL_DMA_CHANNEL_1, LL_DMAMUX_REQ_TIM2_UP);
+    LL_DMA_ConfigAddresses(
+        DMA1,
+        LL_DMA_CHANNEL_1,
+        (uint32_t)audio->samples,
+        (uint32_t)&TIM16->CCR1,
+        LL_DMA_DIRECTION_MEMORY_TO_PERIPH);
+    LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_1, sizeof(audio->samples));
+    furi_hal_interrupt_set_isr(FuriHalInterruptIdDma1Ch1, dma_isr, audio);
+    LL_DMA_EnableIT_HT(DMA1, LL_DMA_CHANNEL_1);
+    LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_1);
+    LL_DMA_EnableIT_TE(DMA1, LL_DMA_CHANNEL_1);
+    LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_1);
+    LL_TIM_EnableDMAReq_UPDATE(TIM2);
+    LL_TIM_EnableAllOutputs(TIM16);
+    LL_TIM_EnableCounter(TIM16);
+    furi_mutex_acquire(audio->mutex, FuriWaitForever);
+    audio->started_tick = furi_get_tick();
+    audio->state = PcmAudioPlaying;
+    LL_TIM_EnableCounter(TIM2);
+    furi_mutex_release(audio->mutex);
+}
+
+static void hardware_stop(void) {
+    LL_TIM_DisableDMAReq_UPDATE(TIM2);
+    LL_TIM_DisableCounter(TIM2);
+    LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_1);
+    LL_DMA_DisableIT_HT(DMA1, LL_DMA_CHANNEL_1);
+    LL_DMA_DisableIT_TC(DMA1, LL_DMA_CHANNEL_1);
+    LL_DMA_DisableIT_TE(DMA1, LL_DMA_CHANNEL_1);
+    LL_DMA_ClearFlag_GI1(DMA1);
+    furi_hal_interrupt_set_isr(FuriHalInterruptIdDma1Ch1, NULL, NULL);
+    LL_TIM_DisableAllOutputs(TIM16);
+    LL_TIM_DisableCounter(TIM16);
+    furi_hal_bus_disable(FuriHalBusTIM2);
+}
+
+static bool fill_half(
+    PcmAudio* audio,
+    File* file,
+    uint8_t* samples,
+    uint32_t* cursor,
+    const WavInfo* info,
+    uint32_t playback_rate) {
+    size_t count = MIN(info->sample_count - *cursor, HALF_SAMPLES);
+    memset(samples, 128, HALF_SAMPLES); /* unsigned PCM silence */
+    if(count && storage_file_read(file, samples, count) != count) return false;
+    taiko_mixer_mix(&audio->mixer, samples, count, info->sample_rate, playback_rate, *cursor);
+    furi_mutex_acquire(audio->mutex, FuriWaitForever);
+    uint8_t volume = audio->volume;
+    furi_mutex_release(audio->mutex);
+    taiko_mixer_apply_volume(samples, count, volume);
+    *cursor += count;
+    return true;
+}
+
+static int32_t audio_worker(void* context) {
+    PcmAudio* audio = context;
+    File* file = storage_file_alloc(audio->storage);
+    bool speaker_owned = false, hardware_running = false, stop_requested = false;
+    WavInfo info;
+    const char* error = NULL;
+    if(!storage_file_open(file, audio->path, FSAM_READ, FSOM_OPEN_EXISTING)) {
+        error = "WAV missing.\nPrepare songs on PC\nand copy to SD card.";
+        goto cleanup;
+    }
+    uint64_t size = storage_file_size(file);
+    if(size > UINT32_MAX || !wav_read_header(read_at, file, (uint32_t)size, &info)) {
+        error = "Use 8-bit mono PCM WAV\n(8000 - 48000 Hz).\nPrepare songs on PC.";
+        goto cleanup;
+    }
+    uint32_t duration = (uint64_t)info.sample_count * 1000 / info.sample_rate;
+    uint32_t sample =
+        MIN((uint64_t)audio->position_ms * info.sample_rate / 1000, info.sample_count);
+    if(audio->position_ms && audio->position_ms >= duration) sample = info.sample_count;
+    furi_mutex_acquire(audio->mutex, FuriWaitForever);
+    audio->duration_ms = duration;
+    audio->position_ms = (uint64_t)sample * 1000 / info.sample_rate;
+    furi_mutex_release(audio->mutex);
+    if(sample == info.sample_count) goto cleanup;
+    if(!storage_file_seek(file, info.data_offset + sample, true)) {
+        error = "Cannot seek WAV";
+        goto cleanup;
+    }
+    uint32_t cursor = sample;
+    uint32_t playback_rate = (uint64_t)info.sample_rate * audio->speed_tenths / 10;
+    if(!fill_half(audio, file, audio->samples, &cursor, &info, playback_rate) ||
+       !fill_half(audio, file, audio->samples + HALF_SAMPLES, &cursor, &info, playback_rate)) {
+        error = "Cannot read WAV";
+        goto cleanup;
+    }
+    if(!furi_hal_speaker_acquire(1000)) {
+        error = "Speaker is busy";
+        goto cleanup;
+    }
+    speaker_owned = true;
+    if(furi_hal_bus_is_enabled(FuriHalBusTIM2)) {
+        error = "Audio timer is busy";
+        goto cleanup;
+    }
+    hardware_start(audio, playback_rate);
+    hardware_running = true;
+    uint32_t played = sample;
+    uint32_t expected = FLAG_HALF;
+    while(true) {
+        uint32_t flags = furi_thread_flags_wait(
+            FLAG_STOP | FLAG_HALF | FLAG_FULL | FLAG_DMA_ERROR,
+            FuriFlagWaitAny,
+            furi_ms_to_ticks((HALF_SAMPLES * 1000 + playback_rate - 1) / playback_rate + 1000));
+        if(flags & FuriFlagError) {
+            error = "Audio DMA timeout";
+            break;
+        }
+        if(flags & FLAG_STOP) {
+            stop_requested = true;
+            break;
+        }
+        if((flags & FLAG_DMA_ERROR) || (flags & (FLAG_HALF | FLAG_FULL)) != expected) {
+            error = "Audio underrun / DMA error";
+            break;
+        }
+        played += MIN((uint32_t)HALF_SAMPLES, info.sample_count - played);
+        if(played == info.sample_count) break;
+        size_t offset = (flags & FLAG_HALF) ? 0 : HALF_SAMPLES;
+        if(!fill_half(audio, file, audio->samples + offset, &cursor, &info, playback_rate)) {
+            error = "SD card audio read failed";
+            break;
+        }
+        expected = (expected == FLAG_HALF) ? FLAG_FULL : FLAG_HALF;
+    }
+cleanup:
+    if(hardware_running) hardware_stop();
+    if(speaker_owned) furi_hal_speaker_release();
+    storage_file_close(file);
+    storage_file_free(file);
+    set_state(audio, error ? PcmAudioError : PcmAudioFinished, error);
+    /* Keep the thread ID valid until the UI explicitly releases this player. */
+    if(!stop_requested) furi_thread_flags_wait(FLAG_STOP, FuriFlagWaitAny, FuriWaitForever);
+    return 0;
+}
+
+PcmAudio* pcm_audio_start(
+    Storage* storage,
+    const char* path,
+    uint32_t position_ms,
+    const TaikoMixer* mixer,
+    uint8_t volume,
+    uint8_t speed_tenths) {
+    const size_t path_size = strlen(path) + 1;
+    /* Keep room for the worker stack, RTOS/file objects and error dialogs. */
+    PcmAudio* audio = taiko_alloc(sizeof(PcmAudio), START_RESERVE + path_size);
+    if(!audio) return NULL;
+    audio->path = taiko_alloc(path_size, START_RESERVE);
+    audio->mutex = NULL;
+    if(!audio->path) goto fail;
+    memcpy(audio->path, path, path_size);
+    /* Thread construction also needs a contiguous stack plus bookkeeping. */
+    if(!taiko_memory_available(AUDIO_STACK + 1024, 4096)) goto fail;
+    audio->storage = storage;
+    audio->mutex = furi_mutex_alloc(FuriMutexTypeNormal);
+    if(!audio->mutex) goto fail;
+    audio->state = PcmAudioLoading;
+    audio->error = NULL;
+    audio->duration_ms = 0;
+    audio->started_tick = 0;
+    audio->position_ms = position_ms;
+    audio->mixer = *mixer;
+    audio->volume = MIN(volume, TAIKO_MASTER_VOLUME_MAX);
+    audio->speed_tenths = MAX(5, MIN(speed_tenths, 20));
+    audio->thread = furi_thread_alloc_ex("TaikoAudio", AUDIO_STACK, audio_worker, audio);
+    if(!audio->thread) goto fail;
+    furi_thread_start(audio->thread);
+    return audio;
+fail:
+    if(audio->mutex) furi_mutex_free(audio->mutex);
+    free(audio->path);
+    free(audio);
+    return NULL;
+}
+
+void pcm_audio_set_volume(PcmAudio* audio, uint8_t volume) {
+    furi_mutex_acquire(audio->mutex, FuriWaitForever);
+    audio->volume = MIN(volume, TAIKO_MASTER_VOLUME_MAX);
+    furi_mutex_release(audio->mutex);
+}
+
+PcmAudioState pcm_audio_state(PcmAudio* audio) {
+    furi_mutex_acquire(audio->mutex, FuriWaitForever);
+    PcmAudioState state = audio->state;
+    furi_mutex_release(audio->mutex);
+    return state;
+}
+
+uint32_t pcm_audio_position_ms(PcmAudio* audio) {
+    furi_mutex_acquire(audio->mutex, FuriWaitForever);
+    uint32_t position = audio->position_ms;
+    if(audio->state == PcmAudioPlaying) {
+        position += (uint64_t)(furi_get_tick() - audio->started_tick) * 1000 *
+                    audio->speed_tenths / ((uint64_t)furi_kernel_get_tick_frequency() * 10);
+        position = MIN(position, audio->duration_ms);
+    } else if(audio->state == PcmAudioFinished)
+        position = audio->duration_ms;
+    furi_mutex_release(audio->mutex);
+    return position;
+}
+
+uint32_t pcm_audio_duration_ms(PcmAudio* audio) {
+    furi_mutex_acquire(audio->mutex, FuriWaitForever);
+    uint32_t duration = audio->duration_ms;
+    furi_mutex_release(audio->mutex);
+    return duration;
+}
+
+const char* pcm_audio_error(PcmAudio* audio) {
+    furi_mutex_acquire(audio->mutex, FuriWaitForever);
+    const char* error = audio->error;
+    furi_mutex_release(audio->mutex);
+    return error;
+}
+
+void pcm_audio_free(PcmAudio* audio) {
+    furi_thread_flags_set(furi_thread_get_id(audio->thread), FLAG_STOP);
+    furi_thread_join(audio->thread);
+    furi_thread_free(audio->thread);
+    furi_mutex_free(audio->mutex);
+    free(audio->path);
+    free(audio);
+}

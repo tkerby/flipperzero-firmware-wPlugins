@@ -1,0 +1,37 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2026 ZeroNinx
+
+#pragma once
+
+#include "taiko_mixer.h"
+
+#include <furi.h>
+#include <storage/storage.h>
+
+typedef enum {
+    PcmAudioLoading,
+    PcmAudioPlaying,
+    PcmAudioPaused,
+    PcmAudioFinished,
+    PcmAudioError,
+} PcmAudioState;
+
+typedef struct PcmAudio PcmAudio;
+
+/* Worker starts at the requested WAV position and owns speaker, file, timers
+ * and DMA. Freeing joins the worker and releases all hardware. Returns NULL
+ * without starting a worker if the allocation preflight fails. */
+PcmAudio* pcm_audio_start(
+    Storage* storage,
+    const char* path,
+    uint32_t position_ms,
+    const TaikoMixer* mixer,
+    uint8_t volume,
+    uint8_t speed_tenths);
+PcmAudioState pcm_audio_state(PcmAudio* audio);
+uint32_t pcm_audio_position_ms(PcmAudio* audio);
+uint32_t pcm_audio_duration_ms(PcmAudio* audio);
+const char* pcm_audio_error(PcmAudio* audio);
+/* 0..200 percent; applies to newly filled DMA buffers without restarting playback. */
+void pcm_audio_set_volume(PcmAudio* audio, uint8_t volume);
+void pcm_audio_free(PcmAudio* audio);
