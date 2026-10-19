@@ -1,0 +1,14 @@
+App(
+    appid="kota",
+    name="Kota",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="kota_app",
+    requires=["gui", "bt"],
+    stack_size=2 * 1024,
+    fap_version="0.2",
+    fap_icon="kota_10px.png",
+    fap_category="Bluetooth",
+    fap_author="cobanov",
+    fap_weburl="https://github.com/cobanov/kota",
+    fap_description="Shows your Claude plan usage (session and weekly limits), pushed from your Mac over Bluetooth.",
+)
