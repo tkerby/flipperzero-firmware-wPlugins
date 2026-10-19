@@ -308,9 +308,9 @@ char ev_last[96]; // 5Ghost: latest captured credential, handed worker -> main t
 #define GHOST_EVT_BLEADV_DEL 0x21Cu // issue #7: confirm-delete OK -> rewrite bleadv.txt
 #define GHOST_EVT_SSID_TICK \
     0x21Du // scan-list / AP-detail SSID marquee. Timer callback only posts this.
-#define GHOST_SSID_TICK_MS 100 // UI cadence, not a radio timing. Tune on device.
-#define GHOST_SSID_SCROLL_STEP 2
-#define GHOST_SSID_SCROLL_GAP 16 // px held at the end of a long name before wrap
+#define GHOST_SSID_TICK_MS 160 // UI cadence, not a radio timing. Tune on device.
+#define GHOST_SSID_SCROLL_STEP 1 // 1px/160ms (~6px/s); was 2px/100ms (~20px/s)
+#define GHOST_SSID_SCROLL_GAP 24 // px-times held at the start and at the end before moving
 #define AUDIT_TICK_MS 500
 #define AUDIT_LISTAP_TICKS 50
 #define AUDIT_STASCAN_TICKS 24
@@ -461,7 +461,7 @@ typedef struct Ghost5App {
     bool hs_have_beacon; // beacon captured (carries the SSID into the PCAP)
     bool hs_done;        // HSDONE received -> capture finished
     bool hs_stopping;    // Back pressed: CAPSTOP sent, staying on-scene until HSDONE flushes
-    char hs_path[96];    // path of the written PCAP (valid after a successful flush)
+    char hs_path[128];   // path of the written PCAP (valid after a successful flush)
     char hs_error[24];   // terminal HSERR reason, without the prefix
     char hs_ssid[36];    // target SSID, shown on the capture screen
     char hs_bssid[18];   // target BSSID "AA:BB:CC:DD:EE:FF"
@@ -476,7 +476,7 @@ typedef struct Ghost5App {
     bool pmkid_done;        // terminal state reached (ok/fail/err)
     G5PmkidReport pmkid_report; // accumulated parse of the PMKID: lines (UART worker writes)
     G5PmkidState pmkid_state;   // final classified state (after g5_pmkid_classify_ok)
-    char pmkid_path[96];    // path of the written .22000 (set only after a Valid flush)
+    char pmkid_path[128];   // path of the written .22000 (set only after a Valid flush)
     char pmkid_seen[8][18]; // BSSIDs already captured this session (Duplicate gate)
     int pmkid_seen_count;
     // Guided Audit / evidence pack: set at task start. Empty => each flush mints a
@@ -742,6 +742,13 @@ typedef struct {
 static void ghost_ensure_data_dir(Storage* storage) {
     storage_simply_mkdir(storage, "/ext/apps_data");
     storage_simply_mkdir(storage, GHOST_DATA_DIR);
+    // New writes land in type folders. Flat files already in GHOST_DATA_DIR stay put.
+    storage_simply_mkdir(storage, GHOST_DATA_DIR "/scans");
+    storage_simply_mkdir(storage, GHOST_DATA_DIR "/handshakes");
+    storage_simply_mkdir(storage, GHOST_DATA_DIR "/pmkid");
+    storage_simply_mkdir(storage, GHOST_DATA_DIR "/audits");
+    storage_simply_mkdir(storage, GHOST_DATA_DIR "/creds");
+    storage_simply_mkdir(storage, GHOST_DATA_DIR "/ble");
 }
 
 // Move leftover 2.7.5 files before any mkdir/seed of the new dir. migrate copies then
@@ -974,7 +981,7 @@ static void ghost_export_scan_csv(Ghost5App* app) {
     snprintf(
         path,
         sizeof(path),
-        GHOST_DATA_DIR "/scan_%04d%02d%02d_%02d%02d%02d.csv",
+        GHOST_DATA_DIR "/scans/scan_%04d%02d%02d_%02d%02d%02d.csv",
         dt.year,
         dt.month,
         dt.day,
@@ -1025,7 +1032,7 @@ static void ghost_save_cred(Ghost5App* app, const char* cred) {
         snprintf(
             app->creds_path,
             sizeof(app->creds_path),
-            GHOST_DATA_DIR "/creds_%04d%02d%02d_%02d%02d%02d.txt",
+            GHOST_DATA_DIR "/creds/creds_%04d%02d%02d_%02d%02d%02d.txt",
             dt.year,
             dt.month,
             dt.day,
@@ -1236,6 +1243,100 @@ static bool ghost_session_path(
     return g5_audit_join_path(GHOST_DATA_DIR, base, out, cap) > 0;
 }
 
+// ghost_evidence_atomic_write appends ".tmp" into a 112-byte stack buffer.
+static bool ghost_path_fits_evidence(const char* path) {
+    return path && path[0] && strlen(path) + 4 < 112;
+}
+
+static G5AuditFileKind ghost_capture_sibling(G5AuditFileKind kind) {
+    switch(kind) {
+    case G5AuditFileCapturePcap:
+        return G5AuditFileCaptureJson;
+    case G5AuditFileCaptureJson:
+        return G5AuditFileCapturePcap;
+    case G5AuditFilePmkid22000:
+        return G5AuditFilePmkidJson;
+    case G5AuditFilePmkidJson:
+        return G5AuditFilePmkid22000;
+    case G5AuditFileAuditJson:
+        return kind;
+    }
+    return kind;
+}
+
+// Flat GHOST_DATA_DIR file from 2.8.0 and earlier. A sibling counts: the pcap and
+// its JSON stay in the same layout.
+static bool ghost_legacy_capture_exists(
+    Storage* storage,
+    G5AuditFileKind kind,
+    const char* session_id) {
+    char path[112];
+    if(!storage) return false;
+    if(ghost_session_path(path, sizeof(path), kind, session_id) &&
+       storage_file_exists(storage, path))
+        return true;
+    const G5AuditFileKind sibling = ghost_capture_sibling(kind);
+    if(sibling == kind) return false;
+    if(!ghost_session_path(path, sizeof(path), sibling, session_id)) return false;
+    return storage_file_exists(storage, path);
+}
+
+static bool ghost_typed_capture_path(
+    char* out,
+    size_t cap,
+    G5AuditFileKind kind,
+    const char* session_id,
+    const char* ssid) {
+    const char* sub = g5_audit_kind_subdir(kind);
+    if(!sub) return false;
+    char base[G5_AUDIT_BASENAME_MAX];
+    if(g5_audit_capture_basename(kind, session_id, ssid, base, sizeof(base)) == 0) return false;
+    char dir[64];
+    const int n = snprintf(dir, sizeof(dir), "%s/%s", GHOST_DATA_DIR, sub);
+    if(n <= 0 || (size_t)n >= sizeof(dir)) return false;
+    if(g5_audit_join_path(dir, base, out, cap) == 0) return false;
+    if(!ghost_path_fits_evidence(out)) {
+        out[0] = '\0';
+        return false;
+    }
+    return true;
+}
+
+// New captures go to a type subfolder and, when the SSID sanitizes, include that
+// slug next to the session id. An existing flat file for this session is reused
+// so a card written by an older build is not split across two layouts.
+static bool ghost_capture_dest(
+    Storage* storage,
+    char* out,
+    size_t cap,
+    G5AuditFileKind kind,
+    const char* session_id,
+    const char* ssid) {
+    if(ghost_legacy_capture_exists(storage, kind, session_id) &&
+       ghost_session_path(out, cap, kind, session_id) && ghost_path_fits_evidence(out))
+        return true;
+    if(ghost_typed_capture_path(out, cap, kind, session_id, ssid)) return true;
+    if(!ghost_session_path(out, cap, kind, session_id) || !ghost_path_fits_evidence(out)) {
+        if(out && cap) out[0] = '\0';
+        return false;
+    }
+    return true;
+}
+
+static const char* ghost_path_basename(const char* path) {
+    const char* slash = path ? strrchr(path, '/') : NULL;
+    return (slash && slash[1]) ? slash + 1 : path;
+}
+
+static bool ghost_store_basename(char* out, size_t cap, const char* path) {
+    const char* base = ghost_path_basename(path);
+    if(!out || cap == 0 || !base || !base[0]) return false;
+    const size_t n = strlen(base);
+    if(n + 1 > cap) return false;
+    memcpy(out, base, n + 1);
+    return true;
+}
+
 // Finalize a capture on the main thread. A valid result is a two-file evidence
 // pack (PCAP + JSON metadata); either both commit or the PCAP is rolled back.
 // Partial/invalid captures write JSON only and never masquerade as a handshake.
@@ -1252,8 +1353,15 @@ static bool ghost_hs_flush(Ghost5App* app) {
     char pcap_path[112];
     char json_path[112];
     if(!ghost_resolve_session_id(app, session_id, sizeof(session_id)) ||
-       !ghost_session_path(pcap_path, sizeof(pcap_path), G5AuditFileCapturePcap, session_id) ||
-       !ghost_session_path(json_path, sizeof(json_path), G5AuditFileCaptureJson, session_id)) {
+       !ghost_capture_dest(
+           storage, pcap_path, sizeof(pcap_path), G5AuditFileCapturePcap, session_id, app->hs_ssid) ||
+       !ghost_capture_dest(
+           storage,
+           json_path,
+           sizeof(json_path),
+           G5AuditFileCaptureJson,
+           session_id,
+           app->hs_ssid)) {
         furi_record_close(RECORD_STORAGE);
         return false;
     }
@@ -1758,15 +1866,18 @@ static void ghost_ui_ssid(const char* ssid, char* out, size_t out_sz) {
     out[j] = '\0';
 }
 
-// Pixel offset into a string wider than max_w. Holds at the end for
-// GHOST_SSID_SCROLL_GAP px, then wraps. UI cadence only — not a radio timing.
+// Pixel offset into a string wider than max_w. Holds at the start for
+// GHOST_SSID_SCROLL_GAP steps, scrolls the excess, holds at the end for the
+// same gap, then wraps. UI cadence only — not a radio timing.
 static int ghost_ui_scroll_off(int full_w, int max_w, uint16_t px) {
     int excess = full_w - max_w;
     if(excess <= 0 || max_w <= 0) return 0;
-    int span = excess + GHOST_SSID_SCROLL_GAP;
-    int mod = (int)(px % (uint16_t)span);
-    if(mod > excess) return excess;
-    return mod;
+    int span = excess + (GHOST_SSID_SCROLL_GAP * 2);
+    if(span <= 0) return 0;
+    int mod = (int)px % span;
+    if(mod < GHOST_SSID_SCROLL_GAP) return 0;
+    if(mod < GHOST_SSID_SCROLL_GAP + excess) return mod - GHOST_SSID_SCROLL_GAP;
+    return excess;
 }
 
 // Draw `text` inside [x, x+max_w). Glyphs that are not fully inside are skipped
@@ -2073,13 +2184,18 @@ static bool ghost_list_input_callback(InputEvent* event, void* context) {
         ListModel * m,
         {
             int prev = m->sel;
-            if(event->key == InputKeyUp) {
-                if(m->sel > 0) m->sel--;
+            // wifiCount == 0 makes (wifiCount - 1) == -1. Leave sel/top alone.
+            if(app->wifiCount > 0 && event->key == InputKeyUp) {
+                m->sel = (m->sel > 0) ? m->sel - 1 : app->wifiCount - 1;
                 if(m->sel < m->top) m->top = m->sel;
+                if(m->sel >= m->top + GHOST_LIST_ROWS)
+                    m->top = m->sel - GHOST_LIST_ROWS + 1;
                 handled = true;
-            } else if(event->key == InputKeyDown) {
-                if(m->sel < app->wifiCount - 1) m->sel++;
-                if(m->sel >= m->top + GHOST_LIST_ROWS) m->top = m->sel - GHOST_LIST_ROWS + 1;
+            } else if(app->wifiCount > 0 && event->key == InputKeyDown) {
+                m->sel = (m->sel < app->wifiCount - 1) ? m->sel + 1 : 0;
+                if(m->sel < m->top) m->top = m->sel;
+                if(m->sel >= m->top + GHOST_LIST_ROWS)
+                    m->top = m->sel - GHOST_LIST_ROWS + 1;
                 handled = true;
             }
             if(handled && m->sel != prev) m->ssid_px = 0;
@@ -3741,8 +3857,10 @@ static void handshake_build_menu(Ghost5App* app) {
     submenu_set_header(app->submenu, "Pick 5G AP (handshake)");
     // Row 0 = Rescan (sentinel id); real AP rows follow at positions 1..N.
     submenu_add_item(app->submenu, "Rescan", GHOST_AP_RESCAN_ID, handshake_ap_item_callback, app);
-    int first_ap_pos = 0; // submenu position of the first AP (0 = none -> cursor stays on Rescan)
-    int pos = 1;          // running submenu position (row 0 is Rescan)
+    // submenu_set_selected_item matches the item id, not the visual row.
+    // Rescan is GHOST_AP_RESCAN_ID; each AP row uses its wifiList index.
+    // Passing visual row 1 selected the AP whose id is 1 (the second AP).
+    int first_ap_id = -1; // wifiList index of the first listed AP; none -> Rescan
     for(int i = 0; i < app->wifiCount; i++) {
         // Handshake capture needs 5GHz (this chip can't hear the client's 2.4G uplink), so list
         // only 5G APs. Dropping the "5G|/2G|" prefix lets the SSID use the full row width — the
@@ -3775,10 +3893,10 @@ static void handshake_build_menu(Ghost5App* app) {
         // item id = real wifiList index (capture scene indexes wifiList by selectedWifi); passing i
         // instead of a running counter keeps the mapping correct after filtering out the 2.4G rows.
         submenu_add_item(app->submenu, temp, i, handshake_ap_item_callback, app);
-        if(first_ap_pos == 0) first_ap_pos = pos;
-        pos++;
+        if(first_ap_id < 0) first_ap_id = i;
     }
-    submenu_set_selected_item(app->submenu, first_ap_pos); // land on the first AP, not Rescan
+    submenu_set_selected_item(
+        app->submenu, first_ap_id >= 0 ? (uint32_t)first_ap_id : GHOST_AP_RESCAN_ID);
     view_dispatcher_switch_to_view(app->view_dispatcher, scannedWifisView);
 }
 
@@ -3808,6 +3926,12 @@ void handshake_select_scene_on_enter(void* context) {
     if(app->ap_reuse && app->wifiCount > 0) {
         app->ap_reuse = false;
         handshake_build_menu(app);
+        // Back from capture: re-select the AP already stored in selectedWifi.
+        // Only 5 GHz rows are in this menu, so a filtered-out index stays on the first AP.
+        if(app->selectedWifi >= 0 && app->selectedWifi < app->wifiCount &&
+           app->wifiList[app->selectedWifi].channel > 14) {
+            submenu_set_selected_item(app->submenu, (uint32_t)app->selectedWifi);
+        }
         return;
     }
     app->ap_reuse = false;
@@ -4049,17 +4173,22 @@ static void pmkid_scan_aps(Ghost5App* app) {
     }
     notification_message(app->notif, &sequence_reset_blue);
     ghost_wifi_sweep_finish(app);
+    // Same order as the scan list: strongest RSSI first. idAP travels with the row.
+    // Do not sort on ap_reuse — selectedWifi is an index into the list the user left.
+    if(app->wifiCount > 1) wifi_sort_list(app->wifiList, app->wifiCount);
 }
 
 // Build the picker submenu from the current app->wifiList (all bands) with a Rescan row on top.
 static void pmkid_build_menu(Ghost5App* app) {
     app->submenuIndex = 0;
     submenu_reset(app->submenu);
-    submenu_set_header(app->submenu, "Pick AP (PMKID)");
+    submenu_set_header(app->submenu, "PMKID by signal");
     // Row 0 = Rescan (sentinel id); real AP rows follow at positions 1..N.
     submenu_add_item(app->submenu, "Rescan", GHOST_AP_RESCAN_ID, pmkid_ap_item_callback, app);
-    int first_ap_pos = 0; // submenu position of the first AP (0 = none -> cursor stays on Rescan)
-    int pos = 1;          // running submenu position (row 0 is Rescan)
+    // submenu_set_selected_item matches the item id, not the visual row.
+    // Rescan is GHOST_AP_RESCAN_ID; each AP row uses its wifiList index.
+    // Passing visual row 1 selected the AP whose id is 1 (the second AP).
+    int first_ap_id = -1; // wifiList index of the first listed AP; none -> Rescan
     for(int i = 0; i < app->wifiCount; i++) {
         // PMKID is clientless (the firmware auths itself), so list every band — no 5G filter.
         bool dup = false;
@@ -4081,10 +4210,10 @@ static void pmkid_build_menu(Ghost5App* app) {
             snprintf(temp, sizeof(temp), "%s", ssid);
         }
         submenu_add_item(app->submenu, temp, i, pmkid_ap_item_callback, app);
-        if(first_ap_pos == 0) first_ap_pos = pos;
-        pos++;
+        if(first_ap_id < 0) first_ap_id = i;
     }
-    submenu_set_selected_item(app->submenu, first_ap_pos); // land on the first AP, not Rescan
+    submenu_set_selected_item(
+        app->submenu, first_ap_id >= 0 ? (uint32_t)first_ap_id : GHOST_AP_RESCAN_ID);
     view_dispatcher_switch_to_view(app->view_dispatcher, scannedWifisView);
 }
 
@@ -4114,6 +4243,10 @@ void pmkid_select_scene_on_enter(void* context) {
     if(app->ap_reuse && app->wifiCount > 0) {
         app->ap_reuse = false;
         pmkid_build_menu(app);
+        // Back from capture: re-select the AP already stored in selectedWifi.
+        if(app->selectedWifi >= 0 && app->selectedWifi < app->wifiCount) {
+            submenu_set_selected_item(app->submenu, (uint32_t)app->selectedWifi);
+        }
         return;
     }
     app->ap_reuse = false;
@@ -4121,6 +4254,9 @@ void pmkid_select_scene_on_enter(void* context) {
         if(app->uart_helper && !app->uart_port_busy) {
             uart_helper_send(app->uart_helper, "STOP\n", 5);
         }
+        // Cached LISTAP (scan list / handshake) is not always RSSI-sorted.
+        // Sort before the menu. ap_reuse already returned above, so selectedWifi is not in use.
+        if(app->wifiCount > 1) wifi_sort_list(app->wifiList, app->wifiCount);
         pmkid_build_menu(app);
         return;
     }
@@ -4210,8 +4346,15 @@ static void pmkid_flush(Ghost5App* app) {
     char hc_path[112];
     char json_path[112];
     if(!ghost_resolve_session_id(app, session_id, sizeof(session_id)) ||
-       !ghost_session_path(hc_path, sizeof(hc_path), G5AuditFilePmkid22000, session_id) ||
-       !ghost_session_path(json_path, sizeof(json_path), G5AuditFilePmkidJson, session_id)) {
+       !ghost_capture_dest(
+           storage,
+           hc_path,
+           sizeof(hc_path),
+           G5AuditFilePmkid22000,
+           session_id,
+           app->pmkid_ssid) ||
+       !ghost_capture_dest(
+           storage, json_path, sizeof(json_path), G5AuditFilePmkidJson, session_id, app->pmkid_ssid)) {
         furi_record_close(RECORD_STORAGE);
         return;
     }
@@ -4249,6 +4392,8 @@ static void pmkid_flush(Ghost5App* app) {
             .pmkid_hex = app->pmkid_report.pmkid_hex,
             .reason = app->pmkid_report.reason,
             .have_22000 = app->pmkid_path[0] != '\0',
+            .artifact_hc22000 =
+                app->pmkid_path[0] ? ghost_path_basename(app->pmkid_path) : NULL,
         };
         const size_t jn = g5_audit_build_pmkid_json(&in, json, 1024);
         if(jn > 0)
@@ -4680,7 +4825,7 @@ static void ghost_export_ble_csv(Ghost5App* app) {
     snprintf(
         path,
         sizeof(path),
-        GHOST_DATA_DIR "/ble_%04d%02d%02d_%02d%02d%02d.csv",
+        GHOST_DATA_DIR "/ble/ble_%04d%02d%02d_%02d%02d%02d.csv",
         dt.year,
         dt.month,
         dt.day,
@@ -6265,11 +6410,68 @@ static void audit_start_listap(Ghost5App* app) {
 
 static void audit_write_sidecar(Ghost5App* app) {
     if(!g5_session_id_valid(app->session_id)) return;
+    Storage* storage = furi_record_open(RECORD_STORAGE);
+    ghost_ensure_data_dir(storage);
     char json_path[112];
-    if(!ghost_session_path(json_path, sizeof(json_path), G5AuditFileAuditJson, app->session_id))
-        return;
+    char scratch[112];
+    // Five basenames live on the heap. This scene already shares the 2KB app stack.
+    char* names = malloc(G5_AUDIT_BASENAME_MAX * 5);
     char* json = malloc(1024);
-    if(!json) return;
+    if(!names || !json ||
+       !ghost_capture_dest(
+           storage,
+           json_path,
+           sizeof(json_path),
+           G5AuditFileAuditJson,
+           app->session_id,
+           app->audit_ssid)) {
+        free(names);
+        free(json);
+        furi_record_close(RECORD_STORAGE);
+        return;
+    }
+    char* name_audit = names;
+    char* name_pcap = names + G5_AUDIT_BASENAME_MAX;
+    char* name_capture_json = names + (G5_AUDIT_BASENAME_MAX * 2);
+    char* name_hc = names + (G5_AUDIT_BASENAME_MAX * 3);
+    char* name_pmkid_json = names + (G5_AUDIT_BASENAME_MAX * 4);
+    const bool have_pcap = app->hs_path[0] != '\0';
+    const bool have_capture_json = (app->audit_path == G5AuditPathHs) &&
+                                   ((app->audit_result == G5AuditResultComplete) ||
+                                    (app->audit_result == G5AuditResultPartial));
+    const bool have_hc = app->pmkid_path[0] != '\0';
+    const bool have_pmkid_json = (app->audit_path == G5AuditPathPmkid) && app->pmkid_done;
+    bool names_ok = ghost_store_basename(name_audit, G5_AUDIT_BASENAME_MAX, json_path);
+    if(have_pcap)
+        names_ok = names_ok && ghost_store_basename(name_pcap, G5_AUDIT_BASENAME_MAX, app->hs_path);
+    if(names_ok && have_capture_json) {
+        names_ok = ghost_capture_dest(
+                       storage,
+                       scratch,
+                       sizeof(scratch),
+                       G5AuditFileCaptureJson,
+                       app->session_id,
+                       app->hs_ssid) &&
+                   ghost_store_basename(name_capture_json, G5_AUDIT_BASENAME_MAX, scratch);
+    }
+    if(names_ok && have_hc)
+        names_ok = ghost_store_basename(name_hc, G5_AUDIT_BASENAME_MAX, app->pmkid_path);
+    if(names_ok && have_pmkid_json) {
+        names_ok = ghost_capture_dest(
+                       storage,
+                       scratch,
+                       sizeof(scratch),
+                       G5AuditFilePmkidJson,
+                       app->session_id,
+                       app->pmkid_ssid) &&
+                   ghost_store_basename(name_pmkid_json, G5_AUDIT_BASENAME_MAX, scratch);
+    }
+    if(!names_ok) {
+        free(names);
+        free(json);
+        furi_record_close(RECORD_STORAGE);
+        return;
+    }
     G5AuditJsonIn in = {
         .session_id = app->session_id,
         .ssid = app->audit_ssid,
@@ -6280,20 +6482,20 @@ static void audit_write_sidecar(Ghost5App* app) {
         .fw_caps = app->fw_caps,
         .path = app->audit_path,
         .result = app->audit_result,
-        .have_capture_pcap = app->hs_path[0] != '\0',
-        .have_capture_json = (app->audit_path == G5AuditPathHs) &&
-                             ((app->audit_result == G5AuditResultComplete) ||
-                              (app->audit_result == G5AuditResultPartial)),
-        .have_pmkid_22000 = app->pmkid_path[0] != '\0',
-        .have_pmkid_json = (app->audit_path == G5AuditPathPmkid) && app->pmkid_done,
+        .have_capture_pcap = have_pcap,
+        .have_capture_json = have_capture_json,
+        .have_pmkid_22000 = have_hc,
+        .have_pmkid_json = have_pmkid_json,
+        .artifact_pcap = have_pcap ? name_pcap : NULL,
+        .artifact_capture_json = have_capture_json ? name_capture_json : NULL,
+        .artifact_hc22000 = have_hc ? name_hc : NULL,
+        .artifact_pmkid_json = have_pmkid_json ? name_pmkid_json : NULL,
+        .artifact_audit = name_audit,
     };
     const size_t n = g5_audit_build_audit_json(&in, json, 1024);
-    if(n > 0) {
-        Storage* storage = furi_record_open(RECORD_STORAGE);
-        ghost_ensure_data_dir(storage);
-        ghost_evidence_atomic_write(storage, json_path, (const uint8_t*)json, n);
-        furi_record_close(RECORD_STORAGE);
-    }
+    if(n > 0) ghost_evidence_atomic_write(storage, json_path, (const uint8_t*)json, n);
+    furi_record_close(RECORD_STORAGE);
+    free(names);
     free(json);
 }
 
