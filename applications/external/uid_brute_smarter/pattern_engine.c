@@ -51,9 +51,18 @@
 #define TAG                     "PatternEngine"
 #define MAX_RANGE_SIZE          1000
 #define DEFAULT_RANGE_EXPANSION 256
+// Largest step the +K detector will accept; beyond this a step is almost
+// certainly noise and the search should fall through to bitmask/unknown.
+#define MAX_INCK_STEP           0x100000
 
-static const uint32_t common_k_values[] = {16, 32, 64, 100, 256};
-static const uint8_t common_k_count = 5;
+static uint32_t pattern_engine_gcd(uint32_t a, uint32_t b) {
+    while(b != 0) {
+        uint32_t t = a % b;
+        a = b;
+        b = t;
+    }
+    return a;
+}
 
 bool pattern_engine_detect_bitmask(const uint32_t* uids, uint8_t count, PatternResult* result) {
     uint32_t and_mask = 0xFFFFFFFF;
@@ -66,19 +75,28 @@ bool pattern_engine_detect_bitmask(const uint32_t* uids, uint8_t count, PatternR
 
     uint32_t bitmask = and_mask ^ or_mask;
 
-    if(bitmask != 0 && (bitmask & (bitmask - 1)) != 0) {
+    if(bitmask != 0) {
         result->type = PatternBitmask;
         result->start_uid = and_mask;
         result->end_uid = or_mask;
         result->step = 1;
         result->bitmask = bitmask;
-        result->range_size = 0;
+
+        uint8_t popcount = 0;
         for(uint8_t i = 0; i < 32; i++) {
             if((bitmask >> i) & 1) {
-                result->range_size++;
+                popcount++;
             }
         }
-        result->range_size = 1 << result->range_size;
+        // 1 << popcount would be undefined behavior for popcount >= 32, and every
+        // other pattern type already caps range_size at MAX_RANGE_SIZE, so clamp
+        // the same way here instead of letting a noisy sample set queue up an
+        // unbounded (and uncapped-elsewhere, since build_range/validate_range are
+        // not used on the live bitmask iteration path) number of attempts.
+        result->range_size = (popcount >= 10) ? MAX_RANGE_SIZE : (1u << popcount);
+        if(result->range_size > MAX_RANGE_SIZE) {
+            result->range_size = MAX_RANGE_SIZE;
+        }
         return true;
     }
 
@@ -141,19 +159,78 @@ bool pattern_engine_detect(const uint32_t* uids, uint8_t count, PatternResult* r
         return true;
     }
 
-    // Check for +k linear pattern
-    for(uint8_t k_idx = 0; k_idx < common_k_count; k_idx++) {
-        uint32_t k = common_k_values[k_idx];
-        bool is_inc_k = true;
+    // Check for 16-bit little-endian counter pattern (must run before the
+    // generic +K branch, which would otherwise swallow uniform 0x10000 steps)
+    bool is_le16 = true;
+    for(uint8_t i = 0; i < count - 1; i++) {
+        if(deltas[i] != 0x10000) {
+            is_le16 = false;
+            break;
+        }
+    }
 
+    if(is_le16) {
+        result->type = PatternLe16;
+        // Observed deltas of exactly 0x10000 mean the upper 16 bits are the
+        // counter that increments; the lower 16 bits are the fixed part.
+        uint32_t fixed_low = uids[0] & 0x0000FFFF;
+        uint32_t counter_high = (uids[0] >> 16) & 0xFFFF;
+
+        // Create a limited range around the detected counter
+        uint32_t start_high = (counter_high > 500) ? counter_high - 500 : 0;
+        uint32_t end_high = (counter_high < 65035) ? counter_high + 500 : 0xFFFF;
+
+        // Ensure range doesn't exceed MAX_RANGE_SIZE
+        if((end_high - start_high + 1) > MAX_RANGE_SIZE) {
+            end_high = start_high + MAX_RANGE_SIZE - 1;
+        }
+
+        result->start_uid = (start_high << 16) | fixed_low;
+        result->end_uid = (end_high << 16) | fixed_low;
+        result->step = 0x10000;
+        result->range_size = ((result->end_uid - result->start_uid) / result->step) + 1;
+        return true;
+    }
+
+    // Check for +k linear pattern. Instead of matching a fixed set of "common"
+    // steps, accept any uniform step, and for non-uniform (but strictly
+    // ascending) deltas fall back to the GCD of the deltas: card batches with
+    // mixed strides (16, 32, 16, ...) still lie on a common grid.
+    // Requires count >= 3: with only two samples every pair is trivially
+    // "uniform", and the bounded bitmask description is the safer answer.
+    if(count >= 3) {
+        int32_t uniform_k = deltas[0];
+        bool is_uniform = (uniform_k > 1);
         for(uint8_t i = 0; i < count - 1; i++) {
-            if(deltas[i] != (int32_t)k) {
-                is_inc_k = false;
+            if(deltas[i] != uniform_k) {
+                is_uniform = false;
                 break;
             }
         }
 
-        if(is_inc_k) {
+        uint32_t k = 0;
+        if(is_uniform) {
+            k = (uint32_t)uniform_k;
+        } else {
+            uint32_t g = 0;
+            bool all_positive = true;
+            for(uint8_t i = 0; i < count - 1; i++) {
+                if(deltas[i] <= 0) {
+                    all_positive = false;
+                    break;
+                }
+                g = pattern_engine_gcd(g, (uint32_t)deltas[i]);
+            }
+            // A GCD of 1 means there is no common grid, and non-power-of-two
+            // GCDs (e.g. 5, 5, 10 -> 5) are more likely a varying-bit
+            // envelope, which the bounded bitmask branch describes better.
+            // Power-of-two strides match how batches are actually allocated.
+            if(all_positive && g > 1 && (g & (g - 1)) == 0) {
+                k = g;
+            }
+        }
+
+        if(k > 1 && k <= MAX_INCK_STEP) {
             result->type = PatternIncK;
             // Expand range by 5 steps in each direction (reduced from 10)
             uint32_t expand = 5 * k;
@@ -170,37 +247,6 @@ bool pattern_engine_detect(const uint32_t* uids, uint8_t count, PatternResult* r
             }
             return true;
         }
-    }
-
-    // Check for 16-bit little-endian counter pattern
-    bool is_le16 = true;
-    for(uint8_t i = 0; i < count - 1; i++) {
-        if(deltas[i] != 0x10000) {
-            is_le16 = false;
-            break;
-        }
-    }
-
-    if(is_le16) {
-        result->type = PatternLe16;
-        // For 16-bit counter, limit to MAX_RANGE_SIZE instead of full range
-        uint32_t base = uids[0] & 0xFFFF0000;
-        uint32_t offset = uids[0] & 0x0000FFFF;
-
-        // Create a limited range around the detected offset
-        uint32_t start_offset = (offset > 500) ? offset - 500 : 0;
-        uint32_t end_offset = (offset < 65035) ? offset + 500 : 0xFFFF;
-
-        // Ensure range doesn't exceed MAX_RANGE_SIZE
-        if((end_offset - start_offset + 1) > MAX_RANGE_SIZE) {
-            end_offset = start_offset + MAX_RANGE_SIZE - 1;
-        }
-
-        result->start_uid = base | start_offset;
-        result->end_uid = base | end_offset;
-        result->step = 1;
-        result->range_size = (result->end_uid - result->start_uid) + 1;
-        return true;
     }
 
     if(pattern_engine_detect_bitmask(uids, count, result)) {
@@ -280,7 +326,18 @@ bool pattern_engine_build_range(
         return false;
     }
 
-    if(!pattern_engine_validate_range(result->start_uid, result->end_uid, result->step)) {
+    // Bitmask range_size is popcount-based (2^bits), not (end-start)/step like
+    // every other pattern type, so validate_range's generic formula doesn't apply.
+    if(result->type == PatternBitmask) {
+        if(result->range_size > MAX_RANGE_SIZE) {
+            FURI_LOG_E(
+                TAG,
+                "[BUILD_RANGE] Bitmask range too large: %lu > %d",
+                result->range_size,
+                MAX_RANGE_SIZE);
+            return false;
+        }
+    } else if(!pattern_engine_validate_range(result->start_uid, result->end_uid, result->step)) {
         FURI_LOG_E(
             TAG,
             "Invalid range: start=%lu, end=%lu, step=%lu",
