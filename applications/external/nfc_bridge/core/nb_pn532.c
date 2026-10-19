@@ -1,13 +1,13 @@
 #include "nb_pn532.h"
 #include <string.h>
 
-#define TFI_HOST 0xD4
+#define TFI_HOST  0xD4
 #define TFI_PN532 0xD5
 
 /* PN532 status codes used in InDataExchange / InCommunicateThru answers */
-#define ST_OK 0x00
-#define ST_TIMEOUT 0x01
-#define ST_AUTH 0x14
+#define ST_OK          0x00
+#define ST_TIMEOUT     0x01
+#define ST_AUTH        0x14
 #define ST_WRONG_STATE 0x27
 
 static const uint8_t ACK_FRAME[6] = {0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00};
@@ -262,7 +262,8 @@ static int handle(Pn532* p, uint8_t cmd, const uint8_t* d, size_t n, uint8_t* ou
     }
     case 0x06: { /* ReadRegister: (hi,lo)* -> val* */
         size_t cnt = n / 2;
-        for(size_t i = 0; i < cnt; i++) out[i] = reg_get(p, (uint16_t)((d[2 * i] << 8) | d[2 * i + 1]));
+        for(size_t i = 0; i < cnt; i++)
+            out[i] = reg_get(p, (uint16_t)((d[2 * i] << 8) | d[2 * i + 1]));
         return (int)cnt;
     }
     case 0x08: { /* WriteRegister: (hi,lo,val)* */
@@ -378,7 +379,8 @@ static void process(Pn532* p) {
     for(;;) {
         /* find the 00 FF start code */
         size_t i = 0;
-        while(i + 1 < p->rx_len && !(p->rx[i] == 0x00 && p->rx[i + 1] == 0xFF)) i++;
+        while(i + 1 < p->rx_len && !(p->rx[i] == 0x00 && p->rx[i + 1] == 0xFF))
+            i++;
         if(i + 1 >= p->rx_len) { /* none yet: keep a trailing 00, it may be the start */
             if(p->rx_len > 0 && p->rx[p->rx_len - 1] == 0x00) {
                 p->rx[0] = 0x00;
@@ -430,7 +432,8 @@ static void process(Pn532* p) {
         if(p->rx_len < hdr + flen + 2) return; /* wait for the rest */
 
         uint8_t sum = 0;
-        for(size_t k = 0; k < flen; k++) sum = (uint8_t)(sum + p->rx[hdr + k]);
+        for(size_t k = 0; k < flen; k++)
+            sum = (uint8_t)(sum + p->rx[hdr + k]);
         uint8_t dcs = p->rx[hdr + flen];
         if((uint8_t)(sum + dcs) != 0) {
             drop(p, hdr + flen + 2);

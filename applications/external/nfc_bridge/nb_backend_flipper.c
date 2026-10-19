@@ -61,7 +61,8 @@ static void capture_ats(FbBackend* f, const Iso14443_4aData* d) {
     if(a->t0 & 0x40) f->ats[n++] = a->tc_1;
     uint32_t cnt = 0;
     const uint8_t* hist = iso14443_4a_get_historical_bytes(d, &cnt);
-    for(uint32_t i = 0; hist && i < cnt && n < NB_ATS_MAX; i++) f->ats[n++] = hist[i];
+    for(uint32_t i = 0; hist && i < cnt && n < NB_ATS_MAX; i++)
+        f->ats[n++] = hist[i];
     f->ats[0] = (uint8_t)n;
     f->ats_len = (uint8_t)n;
 }
@@ -97,7 +98,8 @@ static NfcCommand session_callback(NfcGenericEvent event, void* context) {
 static void session_close(FbBackend* f) {
     if(f->poller) {
         f->session_stop = true;
-        furi_semaphore_release(f->sem_req); /* wake the callback; fails harmlessly if already signalled */
+        furi_semaphore_release(
+            f->sem_req); /* wake the callback; fails harmlessly if already signalled */
         nfc_poller_stop(f->poller);
         nfc_poller_free(f->poller);
         f->poller = NULL;
@@ -194,7 +196,8 @@ static int fb_mfc_auth(void* ctx, uint8_t block, bool key_b, const uint8_t key[6
         f->nfc, block, &k, key_b ? MfClassicKeyTypeB : MfClassicKeyTypeA, &ac));
 }
 
-static int fb_mfc_read(void* ctx, uint8_t block, bool key_b, const uint8_t key[6], uint8_t out[16]) {
+static int
+    fb_mfc_read(void* ctx, uint8_t block, bool key_b, const uint8_t key[6], uint8_t out[16]) {
     FbBackend* f = ctx;
     session_close(f);
     MfClassicKey k;
@@ -206,7 +209,8 @@ static int fb_mfc_read(void* ctx, uint8_t block, bool key_b, const uint8_t key[6
     return r;
 }
 
-static int fb_mfc_write(void* ctx, uint8_t block, bool key_b, const uint8_t key[6], const uint8_t in[16]) {
+static int
+    fb_mfc_write(void* ctx, uint8_t block, bool key_b, const uint8_t key[6], const uint8_t in[16]) {
     FbBackend* f = ctx;
     session_close(f);
     MfClassicKey k;
@@ -237,7 +241,8 @@ static int fb_mful_read(void* ctx, uint8_t page, uint8_t out[16]) {
     session_close(f);
     for(uint8_t i = 0; i < 4; i++) {
         MfUltralightPage p;
-        MfUltralightError e = mf_ultralight_poller_sync_read_page(f->nfc, (uint16_t)(page + i), &p);
+        MfUltralightError e =
+            mf_ultralight_poller_sync_read_page(f->nfc, (uint16_t)(page + i), &p);
         if(e != MfUltralightErrorNone) {
             if(i == 0) return map_mful(e);
             memset(out + 4 * i, 0, (size_t)(16 - 4 * i)); /* ran off the end of the card */

@@ -1,8 +1,0 @@
-dist/
-.vscode/
-.clang-format
-.clangd
-.editorconfig
-.gitignore.ufbt
-__pycache__/
-.build/

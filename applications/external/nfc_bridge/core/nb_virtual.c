@@ -5,15 +5,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_BYTES 4096 /* MIFARE Classic 4K, or up to 1024 Ultralight pages */
-#define MAX_UNITS 1024 /* 16-byte blocks (Classic) or 4-byte pages (Ultralight) */
-#define MAX_SECTORS 40
+#define MAX_BYTES    4096 /* MIFARE Classic 4K, or up to 1024 Ultralight pages */
+#define MAX_UNITS    1024 /* 16-byte blocks (Classic) or 4-byte pages (Ultralight) */
+#define MAX_SECTORS  40
 #define LINE_MAX_LEN 160
-#define HEAD_LEN 64 /* bytes buffered to decide the file format */
-#define ERR_LEN 64
+#define HEAD_LEN     64 /* bytes buffered to decide the file format */
+#define ERR_LEN      64
 
 /* ------------------------------------------------------------------ helpers */
-
 
 /* ------------------------------------------------------------------ helpers */
 
@@ -52,7 +51,8 @@ static bool is_unk_char(char c) {
 static int parse_bytes(const char* s, uint8_t* out, uint8_t* unk, int max) {
     int n = 0;
     for(;;) {
-        while(*s == ' ' || *s == '\t') s++;
+        while(*s == ' ' || *s == '\t')
+            s++;
         if(!*s) break;
         char a = s[0], b = s[1];
         if(!b) return -1;
@@ -337,11 +337,14 @@ static bool flipper_line(NbVirtual* v, char* line) {
     *colon = 0;
     char* key = line;
     char* kend = colon;
-    while(kend > key && (kend[-1] == ' ' || kend[-1] == '\t')) *--kend = 0;
+    while(kend > key && (kend[-1] == ' ' || kend[-1] == '\t'))
+        *--kend = 0;
     char* val = colon + 1;
-    while(*val == ' ' || *val == '\t') val++;
+    while(*val == ' ' || *val == '\t')
+        val++;
     size_t vl = strlen(val);
-    while(vl && (val[vl - 1] == ' ' || val[vl - 1] == '\t')) val[--vl] = 0;
+    while(vl && (val[vl - 1] == ' ' || val[vl - 1] == '\t'))
+        val[--vl] = 0;
 
     if(ci_eq(key, "Filetype")) {
         if(!strstr(val, "Flipper NFC")) return fail(v, "Not a Flipper NFC file");
@@ -351,7 +354,9 @@ static bool flipper_line(NbVirtual* v, char* line) {
     if(ci_eq(key, "Device type")) {
         if(ci_eq(val, "Mifare Classic")) {
             v->dev = DevMfc;
-        } else if(ci_eq(val, "NTAG/Ultralight") || ci_eq(val, "Mifare Ultralight") || strncmp(val, "NTAG", 4) == 0) {
+        } else if(
+            ci_eq(val, "NTAG/Ultralight") || ci_eq(val, "Mifare Ultralight") ||
+            strncmp(val, "NTAG", 4) == 0) {
             v->dev = DevUl;
         } else if(ci_eq(val, "ISO14443-3A") || ci_eq(val, "UID")) {
             v->dev = DevUid;
@@ -372,7 +377,8 @@ static bool flipper_line(NbVirtual* v, char* line) {
     }
     if(ci_eq(key, "ATQA")) {
         uint8_t unk[2];
-        if(parse_bytes(val, v->atqa, unk, 2) != 2 || unk[0] || unk[1]) return fail(v, "Bad ATQA line");
+        if(parse_bytes(val, v->atqa, unk, 2) != 2 || unk[0] || unk[1])
+            return fail(v, "Bad ATQA line");
         v->have_atqa = true;
         return true;
     }
@@ -383,14 +389,19 @@ static bool flipper_line(NbVirtual* v, char* line) {
         return true;
     }
     if(ci_eq(key, "Mifare Classic type")) {
-        if(ci_eq(val, "Mini")) v->mfc_blocks = 20;
-        else if(ci_eq(val, "1K")) v->mfc_blocks = 64;
-        else if(ci_eq(val, "4K")) v->mfc_blocks = 256;
-        else return fail(v, "Unsupported Classic: %.24s", val);
+        if(ci_eq(val, "Mini"))
+            v->mfc_blocks = 20;
+        else if(ci_eq(val, "1K"))
+            v->mfc_blocks = 64;
+        else if(ci_eq(val, "4K"))
+            v->mfc_blocks = 256;
+        else
+            return fail(v, "Unsupported Classic: %.24s", val);
         return true;
     }
     if(ci_eq(key, "Pages total")) {
-        if(!parse_uint(val, &v->pages_total) || v->pages_total > MAX_UNITS) return fail(v, "Bad 'Pages total'");
+        if(!parse_uint(val, &v->pages_total) || v->pages_total > MAX_UNITS)
+            return fail(v, "Bad 'Pages total'");
         return true;
     }
     if(strncmp(key, "Block ", 6) == 0) {
@@ -442,7 +453,8 @@ static bool finish_flipper(NbVirtual* v) {
 static bool hex_line(NbVirtual* v, char* line) {
     if(line[0] == '+') return true; /* "+Sector: n" */
     uint8_t b[16], unk[16];
-    if(parse_bytes(line, b, unk, 16) != 16) return fail(v, "Line %u: need 16 bytes", v->hex_next + 1);
+    if(parse_bytes(line, b, unk, 16) != 16)
+        return fail(v, "Line %u: need 16 bytes", v->hex_next + 1);
     if(v->hex_next >= 256) return fail(v, "More than 256 blocks");
     store_block(v, v->hex_next++, b, unk);
     return true;
@@ -459,7 +471,8 @@ static bool finish_hex(NbVirtual* v) {
 static bool looks_like_text(const uint8_t* d, size_t n) {
     if(n > 16) n = 16;
     for(size_t i = 0; i < n; i++)
-        if(!((d[i] >= 0x20 && d[i] <= 0x7E) || d[i] == '\r' || d[i] == '\n' || d[i] == '\t')) return false;
+        if(!((d[i] >= 0x20 && d[i] <= 0x7E) || d[i] == '\r' || d[i] == '\n' || d[i] == '\t'))
+            return false;
     return n > 0;
 }
 
@@ -470,12 +483,14 @@ static bool finish_binary(NbVirtual* v) {
     if(n == 2048) return fail(v, "Classic 2K dumps not supported (size 2048)");
     if(n == 320 || n == 1024 || n == 4096) {
         unsigned blocks = (unsigned)(n / 16);
-        for(unsigned i = 0; i < blocks; i++) set_known(v, i);
+        for(unsigned i = 0; i < blocks; i++)
+            set_known(v, i);
         return build_mfc(v, blocks);
     }
     if(n % 4 == 0 && n <= MAX_BYTES) {
         unsigned pages = (unsigned)(n / 4);
-        for(unsigned i = 0; i < pages; i++) set_known(v, i);
+        for(unsigned i = 0; i < pages; i++)
+            set_known(v, i);
         return build_ul(v, pages);
     }
     return fail(v, "Unrecognised dump size (%u bytes)", (unsigned)n);
@@ -639,7 +654,8 @@ static int mfc_check(NbVirtual* v, unsigned blk, bool key_b, const uint8_t key[6
     unsigned t = trailer_of(blk);
     if(t >= v->units) return NB_ERR_IO;
     unsigned s = sector_of(blk);
-    if(!is_known(v, t) || (s < MAX_SECTORS && (v->key_unk[s] & (key_b ? 2 : 1)))) return NB_ERR_AUTH;
+    if(!is_known(v, t) || (s < MAX_SECTORS && (v->key_unk[s] & (key_b ? 2 : 1))))
+        return NB_ERR_AUTH;
     const uint8_t* tr = v->data + t * 16;
     return memcmp(key, key_b ? tr + 10 : tr, 6) == 0 ? NB_OK : NB_ERR_AUTH;
 }
@@ -671,7 +687,8 @@ static int v_mfc_read(void* ctx, uint8_t blk, bool key_b, const uint8_t key[6], 
     return NB_OK;
 }
 
-static int v_mfc_write(void* ctx, uint8_t blk, bool key_b, const uint8_t key[6], const uint8_t in[16]) {
+static int
+    v_mfc_write(void* ctx, uint8_t blk, bool key_b, const uint8_t key[6], const uint8_t in[16]) {
     NbVirtual* v = ctx;
     int r = mfc_check(v, blk, key_b, key);
     if(r != NB_OK) return r;
@@ -680,9 +697,11 @@ static int v_mfc_write(void* ctx, uint8_t blk, bool key_b, const uint8_t key[6],
     uint8_t* tr = v->data + t * 16;
     if(is_trailer(blk)) {
         unsigned code = acc_code(tr, 3);
-        bool w_key = (code == 0 || code == 1) ? !key_b : ((code == 4 || code == 3) ? key_b : false);
+        bool w_key = (code == 0 || code == 1) ? !key_b :
+                                                ((code == 4 || code == 3) ? key_b : false);
         bool w_ac = code == 1 ? !key_b : ((code == 3 || code == 5) ? key_b : false);
-        bool ch_a = memcmp(in, tr, 6) != 0, ch_ac = memcmp(in + 6, tr + 6, 4) != 0, ch_b = memcmp(in + 10, tr + 10, 6) != 0;
+        bool ch_a = memcmp(in, tr, 6) != 0, ch_ac = memcmp(in + 6, tr + 6, 4) != 0,
+             ch_b = memcmp(in + 10, tr + 10, 6) != 0;
         if((ch_a && !w_key) || (ch_ac && !w_ac) || (ch_b && !w_key)) return NB_ERR_AUTH;
         if(!ac_valid(in)) return NB_ERR_IO; /* a real card would be bricked; refuse instead */
         memcpy(tr, in, 16);
@@ -708,7 +727,8 @@ static int v_mful_read(void* ctx, uint8_t page, uint8_t out[16]) {
     NbVirtual* v = ctx;
     if(!v->loaded || !v->present) return NB_ERR_TIMEOUT;
     if(v->kind != KindUl || page >= v->units) return NB_ERR_IO;
-    for(unsigned i = 0; i < 4; i++) memcpy(out + 4 * i, v->data + ((page + i) % v->units) * 4, 4); /* reads roll over */
+    for(unsigned i = 0; i < 4; i++)
+        memcpy(out + 4 * i, v->data + ((page + i) % v->units) * 4, 4); /* reads roll over */
     return NB_OK;
 }
 
@@ -718,7 +738,8 @@ static int v_mful_write(void* ctx, uint8_t page, const uint8_t in[4]) {
     if(v->kind != KindUl || page < 3 || page >= v->units) return NB_ERR_IO; /* UID / lock pages */
     uint8_t* p = v->data + page * 4;
     if(page == 3) {
-        for(int i = 0; i < 4; i++) p[i] |= in[i]; /* OTP area: bits can only be set */
+        for(int i = 0; i < 4; i++)
+            p[i] |= in[i]; /* OTP area: bits can only be set */
     } else {
         memcpy(p, in, 4);
         v->dirty = true;

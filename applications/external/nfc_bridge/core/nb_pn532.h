@@ -13,8 +13,8 @@
 #pragma once
 #include "nb_backend.h"
 
-#define NB_PN532_RX_MAX 320
-#define NB_PN532_RSP_MAX 320
+#define NB_PN532_RX_MAX   320
+#define NB_PN532_RSP_MAX  320
 #define NB_PN532_REGS_MAX 48
 
 typedef void (*Pn532WriteFn)(void* io, const uint8_t* data, size_t len);

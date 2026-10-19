@@ -18,7 +18,7 @@
 #include "nb_backend.h"
 #include "nb_pn532.h"
 
-#define NB_CCID_HDR 10
+#define NB_CCID_HDR     10
 #define NB_CCID_MSG_MAX 280 /* header + up to 261 data + slack */
 
 typedef struct {

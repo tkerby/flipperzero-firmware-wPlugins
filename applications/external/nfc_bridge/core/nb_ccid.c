@@ -2,32 +2,32 @@
 #include <string.h>
 
 /* CCID message types */
-#define PC_ICC_POWER_ON 0x62
-#define PC_ICC_POWER_OFF 0x63
-#define PC_GET_SLOT_STATUS 0x65
-#define PC_XFR_BLOCK 0x6F
-#define PC_GET_PARAMETERS 0x6C
+#define PC_ICC_POWER_ON     0x62
+#define PC_ICC_POWER_OFF    0x63
+#define PC_GET_SLOT_STATUS  0x65
+#define PC_XFR_BLOCK        0x6F
+#define PC_GET_PARAMETERS   0x6C
 #define PC_RESET_PARAMETERS 0x6D
-#define PC_SET_PARAMETERS 0x61
-#define PC_ESCAPE 0x6B
-#define PC_ICC_CLOCK 0x6E
-#define PC_ABORT 0x72
+#define PC_SET_PARAMETERS   0x61
+#define PC_ESCAPE           0x6B
+#define PC_ICC_CLOCK        0x6E
+#define PC_ABORT            0x72
 
-#define RDR_DATA_BLOCK 0x80
+#define RDR_DATA_BLOCK  0x80
 #define RDR_SLOT_STATUS 0x81
-#define RDR_PARAMETERS 0x82
-#define RDR_ESCAPE 0x83
+#define RDR_PARAMETERS  0x82
+#define RDR_ESCAPE      0x83
 
-#define ICC_ACTIVE 0x00
+#define ICC_ACTIVE   0x00
 #define ICC_INACTIVE 0x01
-#define ICC_ABSENT 0x02
-#define CMD_FAILED 0x40
+#define ICC_ABSENT   0x02
+#define CMD_FAILED   0x40
 
 #define ERR_CMD_NOT_SUPPORTED 0x00
-#define ERR_BAD_SLOT 0x05
-#define ERR_ICC_MUTE 0xFE
-#define ERR_BAD_LENGTH 0x01
-#define ERR_BUSY_WITH_AUTO 0xF2
+#define ERR_BAD_SLOT          0x05
+#define ERR_ICC_MUTE          0xFE
+#define ERR_BAD_LENGTH        0x01
+#define ERR_BUSY_WITH_AUTO    0xF2
 
 void nb_ccid_init(NbCcid* c, const NbBackend* be, Pn532* pn) {
     memset(c, 0, sizeof(*c));
@@ -60,7 +60,8 @@ size_t nb_ccid_make_atr(const NbTag* t, uint8_t* atr, size_t max) {
         n += k;
     } else {
         /* ISO14443-3 card: synthesise the PC/SC part 3 contactless ATR */
-        static const uint8_t head[] = {0x8F, 0x80, 0x01, 0x80, 0x4F, 0x0C, 0xA0, 0x00, 0x00, 0x03, 0x06};
+        static const uint8_t head[] = {
+            0x8F, 0x80, 0x01, 0x80, 0x4F, 0x0C, 0xA0, 0x00, 0x00, 0x03, 0x06};
         memcpy(atr + n, head, sizeof(head));
         n += sizeof(head);
         uint16_t nn = 0;
@@ -89,14 +90,23 @@ size_t nb_ccid_make_atr(const NbTag* t, uint8_t* atr, size_t max) {
         atr[n++] = 0x00;
     }
     uint8_t tck = 0;
-    for(size_t i = 1; i < n; i++) tck ^= atr[i];
+    for(size_t i = 1; i < n; i++)
+        tck ^= atr[i];
     atr[n++] = tck;
     return n;
 }
 
 /* --------------------------------------------------------- response helpers */
 
-static size_t put_hdr(uint8_t* out, uint8_t type, uint32_t dlen, uint8_t slot, uint8_t seq, uint8_t status, uint8_t err, uint8_t spec) {
+static size_t put_hdr(
+    uint8_t* out,
+    uint8_t type,
+    uint32_t dlen,
+    uint8_t slot,
+    uint8_t seq,
+    uint8_t status,
+    uint8_t err,
+    uint8_t spec) {
     out[0] = type;
     out[1] = (uint8_t)dlen;
     out[2] = (uint8_t)(dlen >> 8);
@@ -115,8 +125,16 @@ static uint8_t icc_state(const NbCcid* c) {
     return c->powered ? ICC_ACTIVE : ICC_INACTIVE;
 }
 
-static size_t reply_status(NbCcid* c, uint8_t type, uint8_t slot, uint8_t seq, bool ok, uint8_t err, uint8_t* out) {
-    return put_hdr(out, type, 0, slot, seq, (uint8_t)(icc_state(c) | (ok ? 0 : CMD_FAILED)), ok ? 0 : err, 0);
+static size_t reply_status(
+    NbCcid* c,
+    uint8_t type,
+    uint8_t slot,
+    uint8_t seq,
+    bool ok,
+    uint8_t err,
+    uint8_t* out) {
+    return put_hdr(
+        out, type, 0, slot, seq, (uint8_t)(icc_state(c) | (ok ? 0 : CMD_FAILED)), ok ? 0 : err, 0);
 }
 
 /* ---------------------------------------------------------------- the APDUs */
@@ -210,7 +228,8 @@ static int do_apdu(NbCcid* c, const uint8_t* a, size_t n, uint8_t* r, size_t max
             if(be->mful_read(be->ctx, p2, buf) != NB_OK) return sw(r, 0x63, 0x00, 0);
         } else if(ty == NbTagMfc1k || ty == NbTagMfc4k || ty == NbTagMfcMini) {
             if(!c->auth_valid || c->auth_sector != sector_of(p2)) return sw(r, 0x69, 0x82, 0);
-            if(be->mfc_read(be->ctx, p2, c->auth_key_b, c->auth_key, buf) != NB_OK) return sw(r, 0x63, 0x00, 0);
+            if(be->mfc_read(be->ctx, p2, c->auth_key_b, c->auth_key, buf) != NB_OK)
+                return sw(r, 0x63, 0x00, 0);
         } else {
             return sw(r, 0x6A, 0x81, 0);
         }
@@ -226,13 +245,15 @@ static int do_apdu(NbCcid* c, const uint8_t* a, size_t n, uint8_t* r, size_t max
         if(ty == NbTagUltralight) {
             if(lc == 0 || lc % 4 != 0 || lc > 16) return sw(r, 0x67, 0x00, 0);
             for(size_t i = 0; i < lc / 4; i++)
-                if(be->mful_write(be->ctx, (uint8_t)(p2 + i), d + 4 * i) != NB_OK) return sw(r, 0x63, 0x00, 0);
+                if(be->mful_write(be->ctx, (uint8_t)(p2 + i), d + 4 * i) != NB_OK)
+                    return sw(r, 0x63, 0x00, 0);
             return sw(r, 0x90, 0x00, 0);
         }
         if(ty == NbTagMfc1k || ty == NbTagMfc4k || ty == NbTagMfcMini) {
             if(lc != 16) return sw(r, 0x67, 0x00, 0);
             if(!c->auth_valid || c->auth_sector != sector_of(p2)) return sw(r, 0x69, 0x82, 0);
-            if(be->mfc_write(be->ctx, p2, c->auth_key_b, c->auth_key, d) != NB_OK) return sw(r, 0x63, 0x00, 0);
+            if(be->mfc_write(be->ctx, p2, c->auth_key_b, c->auth_key, d) != NB_OK)
+                return sw(r, 0x63, 0x00, 0);
             return sw(r, 0x90, 0x00, 0);
         }
         return sw(r, 0x6A, 0x81, 0);
@@ -264,7 +285,8 @@ static bool is_pps_request(const uint8_t* d, size_t n) {
         if(d[1] & (1u << bit)) want++;
     if(n != want) return false;
     uint8_t x = 0;
-    for(size_t i = 0; i < n; i++) x ^= d[i];
+    for(size_t i = 0; i < n; i++)
+        x ^= d[i];
     return x == 0;
 }
 
@@ -273,7 +295,8 @@ static bool is_pps_request(const uint8_t* d, size_t n) {
 size_t nb_ccid_process(NbCcid* c, const uint8_t* m, size_t len, uint8_t* out, size_t out_max) {
     if(len < NB_CCID_HDR || out_max < NB_CCID_HDR + 32) return 0;
     uint8_t type = m[0];
-    uint32_t dlen = (uint32_t)m[1] | ((uint32_t)m[2] << 8) | ((uint32_t)m[3] << 16) | ((uint32_t)m[4] << 24);
+    uint32_t dlen = (uint32_t)m[1] | ((uint32_t)m[2] << 8) | ((uint32_t)m[3] << 16) |
+                    ((uint32_t)m[4] << 24);
     uint8_t slot = m[5], seq = m[6];
     if(dlen > NB_CCID_MSG_MAX || len < NB_CCID_HDR + dlen) return 0;
     const uint8_t* data = m + NB_CCID_HDR;
@@ -337,7 +360,8 @@ size_t nb_ccid_process(NbCcid* c, const uint8_t* m, size_t len, uint8_t* out, si
         return reply_status(c, rtype, slot, seq, true, 0, out);
 
     case PC_XFR_BLOCK: {
-        if(!c->present || !c->powered) return reply_status(c, rtype, slot, seq, false, ERR_ICC_MUTE, out);
+        if(!c->present || !c->powered)
+            return reply_status(c, rtype, slot, seq, false, ERR_ICC_MUTE, out);
         if(is_pps_request(data, dlen)) {
             put_hdr(out, rtype, dlen, slot, seq, ICC_ACTIVE, 0, 0);
             memcpy(out + NB_CCID_HDR, data, dlen);

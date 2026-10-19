@@ -8,10 +8,10 @@
 #include "ble_beacon_icons.h"
 
 #define BEACON_UPDATE_INTERVAL_MS 2000
-#define BEACON_TYPE_COUNT 6
-#define DEVICE_NAME "Flipper"
-#define EXIT_SPLASH_DURATION_MS 2500
-#define INTRO_SPLASH_DURATION_MS 2000
+#define BEACON_TYPE_COUNT         6
+#define DEVICE_NAME               "Flipper"
+#define EXIT_SPLASH_DURATION_MS   2500
+#define INTRO_SPLASH_DURATION_MS  2000
 
 typedef enum {
     BeaconTypeBthomeV2,
@@ -178,18 +178,21 @@ typedef struct {
 } AppEvent;
 
 static const uint8_t device_mac[6] = {
-    0x6C, 0x45, 0x23, 0x01, 0x89, 0xC0,
+    0x6C,
+    0x45,
+    0x23,
+    0x01,
+    0x89,
+    0xC0,
 };
 
 static void update_telemetry(BeaconTelemetry* telemetry) {
     telemetry->battery_percent = furi_hal_power_get_pct();
 
-    float voltage_v =
-        furi_hal_power_get_battery_voltage(FuriHalPowerICFuelGauge);
+    float voltage_v = furi_hal_power_get_battery_voltage(FuriHalPowerICFuelGauge);
     telemetry->voltage_mv = (uint16_t)(voltage_v * 1000.0f);
 
-    float current_a =
-        furi_hal_power_get_battery_current(FuriHalPowerICFuelGauge);
+    float current_a = furi_hal_power_get_battery_current(FuriHalPowerICFuelGauge);
     float current_ma = current_a * 1000.0f;
 
     if(current_ma < 0.0f) {
@@ -198,16 +201,13 @@ static void update_telemetry(BeaconTelemetry* telemetry) {
 
     telemetry->current_ma = (uint16_t)current_ma;
 
-    float battery_temp_c =
-        furi_hal_power_get_battery_temperature(FuriHalPowerICFuelGauge);
+    float battery_temp_c = furi_hal_power_get_battery_temperature(FuriHalPowerICFuelGauge);
     telemetry->battery_temp_centi_c = (int16_t)(battery_temp_c * 100.0f);
 
-    float charger_temp_c =
-        furi_hal_power_get_battery_temperature(FuriHalPowerICCharger);
+    float charger_temp_c = furi_hal_power_get_battery_temperature(FuriHalPowerICCharger);
     telemetry->charger_temp_centi_c = (int16_t)(charger_temp_c * 100.0f);
 
-    uint16_t variation =
-        (uint16_t)((telemetry->advertising_count * 37) % 601);
+    uint16_t variation = (uint16_t)((telemetry->advertising_count * 37) % 601);
     telemetry->simulated_humidity_centi_percent = 4200 + variation;
 
     telemetry->advertising_count++;
@@ -228,15 +228,12 @@ static void put_u32(uint8_t* payload, uint8_t* p, uint32_t value) {
 
 static void put_device_name(uint8_t* payload, uint8_t* p) {
     payload[(*p)++] = sizeof(DEVICE_NAME); // Length + AD type
-    payload[(*p)++] = 0x09;                // Complete Local Name
+    payload[(*p)++] = 0x09; // Complete Local Name
     memcpy(&payload[*p], DEVICE_NAME, sizeof(DEVICE_NAME) - 1);
     *p += sizeof(DEVICE_NAME) - 1;
 }
 
-static uint8_t build_bthome(
-    const AppState* state,
-    uint8_t* payload,
-    bool use_v2) {
+static uint8_t build_bthome(const AppState* state, uint8_t* payload, bool use_v2) {
     uint8_t p = 0;
 
     payload[p++] = 0x02;
@@ -279,8 +276,22 @@ static uint8_t build_bthome(
 
 static uint8_t build_ibeacon(uint8_t* payload) {
     static const uint8_t proximity_uuid[16] = {
-        0xE2, 0xC5, 0x6D, 0xB5, 0xDF, 0xFB, 0x48, 0xD2,
-        0xB0, 0x60, 0xD0, 0xF5, 0xA7, 0x10, 0x96, 0xE6,
+        0xE2,
+        0xC5,
+        0x6D,
+        0xB5,
+        0xDF,
+        0xFB,
+        0x48,
+        0xD2,
+        0xB0,
+        0x60,
+        0xD0,
+        0xF5,
+        0xA7,
+        0x10,
+        0x96,
+        0xE6,
     };
 
     uint8_t p = 0;
@@ -292,7 +303,7 @@ static uint8_t build_ibeacon(uint8_t* payload) {
     payload[p++] = 0x1A;
     payload[p++] = 0xFF;
     put_u16(payload, &p, 0x004C); // Apple
-    payload[p++] = 0x02;          // iBeacon
+    payload[p++] = 0x02; // iBeacon
     payload[p++] = 0x15;
 
     memcpy(&payload[p], proximity_uuid, sizeof(proximity_uuid));
@@ -300,14 +311,12 @@ static uint8_t build_ibeacon(uint8_t* payload) {
 
     put_u16(payload, &p, 0x0001); // Major
     put_u16(payload, &p, 0x0001); // Minor
-    payload[p++] = (uint8_t)-59;  // RSSI at 1 m
+    payload[p++] = (uint8_t)-59; // RSSI at 1 m
 
     return p;
 }
 
-static uint8_t build_eddystone_tlm(
-    const AppState* state,
-    uint8_t* payload) {
+static uint8_t build_eddystone_tlm(const AppState* state, uint8_t* payload) {
     uint8_t p = 0;
 
     payload[p++] = 0x02;
@@ -317,8 +326,8 @@ static uint8_t build_eddystone_tlm(
     payload[p++] = 0x11;
     payload[p++] = 0x16;
     put_u16(payload, &p, 0xFEAA); // Eddystone UUID
-    payload[p++] = 0x20;          // TLM frame
-    payload[p++] = 0x00;          // TLM version
+    payload[p++] = 0x20; // TLM frame
+    payload[p++] = 0x00; // TLM version
 
     put_u16(payload, &p, state->telemetry.voltage_mv);
 
@@ -334,9 +343,7 @@ static uint8_t build_eddystone_tlm(
     return p;
 }
 
-static uint8_t build_atc1441(
-    const AppState* state,
-    uint8_t* payload) {
+static uint8_t build_atc1441(const AppState* state, uint8_t* payload) {
     uint8_t p = 0;
 
     payload[p++] = 0x02;
@@ -351,14 +358,10 @@ static uint8_t build_atc1441(
     p += sizeof(device_mac);
 
     // ATC1441 temperature is int16 in 0.1 C.
-    put_u16(
-        payload,
-        &p,
-        (uint16_t)(state->telemetry.battery_temp_centi_c / 10));
+    put_u16(payload, &p, (uint16_t)(state->telemetry.battery_temp_centi_c / 10));
 
     // ATC1441 humidity is uint8 in whole percent.
-    payload[p++] =
-        (uint8_t)(state->telemetry.simulated_humidity_centi_percent / 100);
+    payload[p++] = (uint8_t)(state->telemetry.simulated_humidity_centi_percent / 100);
 
     payload[p++] = state->telemetry.battery_percent;
     put_u16(payload, &p, state->telemetry.voltage_mv);
@@ -369,9 +372,7 @@ static uint8_t build_atc1441(
     return p;
 }
 
-static uint8_t build_mibeacon(
-    const AppState* state,
-    uint8_t* payload) {
+static uint8_t build_mibeacon(const AppState* state, uint8_t* payload) {
     uint8_t p = 0;
 
     payload[p++] = 0x14;
@@ -385,16 +386,10 @@ static uint8_t build_mibeacon(
     p += sizeof(device_mac);
 
     payload[p++] = 0x0D; // Temperature
-    put_u16(
-        payload,
-        &p,
-        (uint16_t)(state->telemetry.battery_temp_centi_c / 100));
+    put_u16(payload, &p, (uint16_t)(state->telemetry.battery_temp_centi_c / 100));
 
     payload[p++] = 0x06; // Humidity
-    put_u16(
-        payload,
-        &p,
-        (uint16_t)(state->telemetry.simulated_humidity_centi_percent / 10));
+    put_u16(payload, &p, (uint16_t)(state->telemetry.simulated_humidity_centi_percent / 10));
 
     payload[p++] = 0x0A; // Battery level
     payload[p++] = state->telemetry.battery_percent;
@@ -404,10 +399,7 @@ static uint8_t build_mibeacon(
     return p;
 }
 
-static bool build_payload(
-    const AppState* state,
-    uint8_t* payload,
-    uint8_t* length) {
+static bool build_payload(const AppState* state, uint8_t* payload, uint8_t* length) {
     switch(state->type) {
     case BeaconTypeBthomeV2:
         *length = build_bthome(state, payload, true);
@@ -487,12 +479,8 @@ static void draw_down_triangle(Canvas* canvas, int x, int y) {
     canvas_draw_line(canvas, x + 8, y, x + 4, y + 4);
 }
 
-static void draw_side_button(
-    Canvas* canvas,
-    int x,
-    const char* label,
-    bool draw_up_arrow,
-    bool selected) {
+static void
+    draw_side_button(Canvas* canvas, int x, const char* label, bool draw_up_arrow, bool selected) {
     if(selected) {
         canvas_draw_box(canvas, x, 51, 38, 13);
         canvas_set_color(canvas, ColorWhite);
@@ -513,11 +501,8 @@ static void draw_side_button(
     }
 }
 
-static void draw_scrolled_text(
-    Canvas* canvas,
-    const char** lines,
-    uint8_t line_count,
-    uint8_t scroll) {
+static void
+    draw_scrolled_text(Canvas* canvas, const char** lines, uint8_t line_count, uint8_t scroll) {
     const int top_y = 16;
     const int bottom_y = 48;
     const int line_height = 10;
@@ -549,22 +534,18 @@ static void draw_splash_screen(Canvas* canvas) {
     const uint8_t text_center_x = 91;
 
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str_aligned(
-        canvas, text_center_x, 22, AlignCenter, AlignCenter, "BLE Beacon");
+    canvas_draw_str_aligned(canvas, text_center_x, 22, AlignCenter, AlignCenter, "BLE Beacon");
 
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str_aligned(
-        canvas, text_center_x, 36, AlignCenter, AlignCenter, "SIMULATOR");
+    canvas_draw_str_aligned(canvas, text_center_x, 36, AlignCenter, AlignCenter, "SIMULATOR");
 
-    canvas_draw_str_aligned(
-        canvas, text_center_x, 48, AlignCenter, AlignCenter, "V1.0");
+    canvas_draw_str_aligned(canvas, text_center_x, 48, AlignCenter, AlignCenter, "V1.0");
 }
 
 static void draw_main_screen(Canvas* canvas, BthomeApp* app) {
     char buffer[48];
-    bool icon_visible =
-        !app->state.broadcasting ||
-        (app->state.telemetry.advertising_count & 1) != 0;
+    bool icon_visible = !app->state.broadcasting ||
+                        (app->state.telemetry.advertising_count & 1) != 0;
 
     canvas_clear(canvas);
 
@@ -584,11 +565,7 @@ static void draw_main_screen(Canvas* canvas, BthomeApp* app) {
     canvas_draw_str(canvas, 2, 23, "<");
     canvas_draw_str(canvas, 121, 23, ">");
 
-    snprintf(
-        buffer,
-        sizeof(buffer),
-        "Type: %s",
-        beacon_type_names[app->state.type]);
+    snprintf(buffer, sizeof(buffer), "Type: %s", beacon_type_names[app->state.type]);
     canvas_draw_str_aligned(canvas, 64, 17, AlignCenter, AlignTop, buffer);
 
     snprintf(
@@ -605,27 +582,14 @@ static void draw_main_screen(Canvas* canvas, BthomeApp* app) {
             buffer,
             sizeof(buffer),
             "Hum: %lu.%02lu%% sim",
-            (unsigned long)(
-                app->state.telemetry.simulated_humidity_centi_percent / 100),
-            (unsigned long)(
-                app->state.telemetry.simulated_humidity_centi_percent % 100));
+            (unsigned long)(app->state.telemetry.simulated_humidity_centi_percent / 100),
+            (unsigned long)(app->state.telemetry.simulated_humidity_centi_percent % 100));
         canvas_draw_str_aligned(canvas, 64, 42, AlignCenter, AlignTop, buffer);
     } else {
-        canvas_draw_str_aligned(
-            canvas,
-            64,
-            42,
-            AlignCenter,
-            AlignTop,
-            "Unencrypted BLE beacon");
+        canvas_draw_str_aligned(canvas, 64, 42, AlignCenter, AlignTop, "Unencrypted BLE beacon");
     }
 
-    draw_side_button(
-        canvas,
-        2,
-        "Info",
-        true,
-        app->state.info_selected);
+    draw_side_button(canvas, 2, "Info", true, app->state.info_selected);
 
     if(app->state.broadcasting) {
         elements_button_center(canvas, "Stop");
@@ -633,12 +597,7 @@ static void draw_main_screen(Canvas* canvas, BthomeApp* app) {
         elements_button_center(canvas, "Start");
     }
 
-    draw_side_button(
-        canvas,
-        88,
-        "Help",
-        false,
-        app->state.help_selected);
+    draw_side_button(canvas, 88, "Help", false, app->state.help_selected);
 }
 
 static void draw_info_screen(Canvas* canvas, BthomeApp* app) {
@@ -692,20 +651,12 @@ static void draw_exit_splash_screen(Canvas* canvas) {
     canvas_draw_frame(canvas, 0, 0, 128, 64);
 
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str_aligned(
-        canvas, 64, 16, AlignCenter, AlignTop, "BLE Beacon");
+    canvas_draw_str_aligned(canvas, 64, 16, AlignCenter, AlignTop, "BLE Beacon");
 
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str_aligned(
-        canvas, 64, 30, AlignCenter, AlignTop, "Simulator v1.0");
+    canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignTop, "Simulator v1.0");
 
-    canvas_draw_str_aligned(
-        canvas,
-        64,
-        46,
-        AlignCenter,
-        AlignTop,
-        "LAB-66 (C) Siarhei Besarab");
+    canvas_draw_str_aligned(canvas, 64, 46, AlignCenter, AlignTop, "LAB-66 (C) Siarhei Besarab");
 }
 
 static void draw_callback(Canvas* canvas, void* context) {
@@ -762,14 +713,13 @@ static void handle_main_input(BthomeApp* app, const InputEvent* input) {
     }
 
     if(input->key == InputKeyLeft) {
-        app->state.type = (BeaconType)(
-            (app->state.type + BEACON_TYPE_COUNT - 1) % BEACON_TYPE_COUNT);
+        app->state.type =
+            (BeaconType)((app->state.type + BEACON_TYPE_COUNT - 1) % BEACON_TYPE_COUNT);
         app->state.info_selected = false;
         app->state.help_selected = false;
         restart_beacon(app);
     } else if(input->key == InputKeyRight) {
-        app->state.type =
-            (BeaconType)((app->state.type + 1) % BEACON_TYPE_COUNT);
+        app->state.type = (BeaconType)((app->state.type + 1) % BEACON_TYPE_COUNT);
         app->state.info_selected = false;
         app->state.help_selected = false;
         restart_beacon(app);
@@ -819,12 +769,9 @@ static void handle_info_input(BthomeApp* app, const InputEvent* input) {
 
     if(input->key == InputKeyUp && app->state.info_scroll > 0) {
         app->state.info_scroll--;
-    } else if(
-        input->key == InputKeyDown &&
-        app->state.info_scroll < scroll_limit) {
+    } else if(input->key == InputKeyDown && app->state.info_scroll < scroll_limit) {
         app->state.info_scroll++;
-    } else if(
-        input->key == InputKeyBack || input->key == InputKeyOk) {
+    } else if(input->key == InputKeyBack || input->key == InputKeyOk) {
         app->state.screen = ScreenMain;
     }
 }
@@ -839,12 +786,9 @@ static void handle_help_input(BthomeApp* app, const InputEvent* input) {
 
     if(input->key == InputKeyUp && app->state.help_scroll > 0) {
         app->state.help_scroll--;
-    } else if(
-        input->key == InputKeyDown &&
-        app->state.help_scroll < scroll_limit) {
+    } else if(input->key == InputKeyDown && app->state.help_scroll < scroll_limit) {
         app->state.help_scroll++;
-    } else if(
-        input->key == InputKeyBack || input->key == InputKeyOk) {
+    } else if(input->key == InputKeyBack || input->key == InputKeyOk) {
         app->state.screen = ScreenMain;
     }
 }
@@ -903,14 +847,10 @@ int32_t ble_beacon_app(void* p) {
     app->beacon_config.min_adv_interval_ms = 1000;
     app->beacon_config.max_adv_interval_ms = 1000;
 
-    app->update_timer = furi_timer_alloc(
-        timer_callback,
-        FuriTimerTypePeriodic,
-        app);
+    app->update_timer = furi_timer_alloc(timer_callback, FuriTimerTypePeriodic, app);
 
     furi_timer_start(
-        app->update_timer,
-        furi_kernel_get_tick_frequency() * BEACON_UPDATE_INTERVAL_MS / 1000);
+        app->update_timer, furi_kernel_get_tick_frequency() * BEACON_UPDATE_INTERVAL_MS / 1000);
 
     view_port_update(app->view_port);
     furi_delay_ms(INTRO_SPLASH_DURATION_MS);
@@ -922,10 +862,7 @@ int32_t ble_beacon_app(void* p) {
     bool running = true;
 
     while(running) {
-        if(furi_message_queue_get(
-               app->event_queue,
-               &event,
-               FuriWaitForever) != FuriStatusOk) {
+        if(furi_message_queue_get(app->event_queue, &event, FuriWaitForever) != FuriStatusOk) {
             continue;
         }
 
@@ -965,8 +902,7 @@ int32_t ble_beacon_app(void* p) {
                 break;
             }
         } else if(
-            event.type == EventTypeTick &&
-            app->state.broadcasting &&
+            event.type == EventTypeTick && app->state.broadcasting &&
             app->state.screen == ScreenMain) {
             restart_beacon(app);
         }

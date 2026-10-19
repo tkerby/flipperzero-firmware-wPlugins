@@ -4,9 +4,10 @@ App(
     apptype=FlipperAppType.EXTERNAL,
     entry_point="coach_watch_app",
     stack_size=3 * 1024,
-    fap_category="Tools",
-    fap_version="1.0",
     fap_icon="coach_watch.png",
-    fap_description="Coach stopwatch: start/stop/reset, splits, and session log on SD",
+    fap_category="Tools",
     fap_author="iz1poz",
+    fap_weburl="https://github.com/alaviation/flipper-coach-watch",
+    fap_version="1.0",
+    fap_description="Coach stopwatch: start/stop/reset, splits, and session log on SD",
 )

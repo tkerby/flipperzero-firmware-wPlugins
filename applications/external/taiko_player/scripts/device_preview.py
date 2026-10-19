@@ -60,7 +60,7 @@ def fields(data):
             result[key] = read()
         elif kind == 2:
             length = read()
-            result[key] = data[position:position + length]
+            result[key] = data[position : position + length]
             position += length
         else:
             raise ValueError(f"Unsupported protobuf wire type: {kind}")
@@ -94,7 +94,9 @@ def main():
     previous_raw = None
     first = last = None
     raw = None
-    with serial.Serial(args.port, timeout=min(1, args.seconds), write_timeout=3) as port:
+    with serial.Serial(
+        args.port, timeout=min(1, args.seconds), write_timeout=3
+    ) as port:
         port.write(b"\r")
         time.sleep(0.2)
         port.reset_input_buffer()
@@ -129,7 +131,9 @@ def main():
                 previous_raw = raw
                 second = int(last - first)
                 if second % 5 == 0 and second != saved_second:
-                    snapshot = args.output.with_name(f"{args.output.stem}-{second:02d}.png")
+                    snapshot = args.output.with_name(
+                        f"{args.output.stem}-{second:02d}.png"
+                    )
                     save_frame(raw, snapshot)
                     saved_second = second
         finally:
@@ -143,7 +147,9 @@ def main():
     fps = (count - 1) / (last - first) if count > 1 and last > first else 0
     print(f"USB framebuffer stream: {count} frames, {fps:.2f} FPS")
     changed_fps = (changed - 1) / (last - first) if count > 1 and last > first else 0
-    print(f"Changed frames: {changed}, {changed_fps:.2f} FPS (excludes identical refreshes)")
+    print(
+        f"Changed frames: {changed}, {changed_fps:.2f} FPS (excludes identical refreshes)"
+    )
     print(f"Saved {args.output}; stream rate does not measure LCD pixel response.")
 
 

@@ -11,10 +11,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define SAVE_DIR "/ext/apps_data/coach_watch"
+#define SAVE_DIR   "/ext/apps_data/coach_watch"
 #define MAX_SPLITS 40
-#define MAX_FILES 24
-#define NAME_LEN 32
+#define MAX_FILES  24
+#define NAME_LEN   32
 
 typedef enum {
     PageTimer,
@@ -69,7 +69,8 @@ static void fmt_ms(uint32_t ms, char* buf, size_t n) {
     if(h > 0) {
         snprintf(buf, n, "%lu:%02lu:%02lu", (unsigned long)h, (unsigned long)m, (unsigned long)s);
     } else {
-        snprintf(buf, n, "%02lu:%02lu.%02lu", (unsigned long)m, (unsigned long)s, (unsigned long)cs);
+        snprintf(
+            buf, n, "%02lu:%02lu.%02lu", (unsigned long)m, (unsigned long)s, (unsigned long)cs);
     }
 }
 
@@ -236,8 +237,10 @@ static void draw_time_big(Canvas* canvas, uint32_t ms) {
 
 static void draw_timer(Canvas* canvas, CoachWatch* app) {
     const char* st = "STOP";
-    if(app->run == Running) st = "RUN";
-    else if(app->run == Stopped) st = "PAUSE";
+    if(app->run == Running)
+        st = "RUN";
+    else if(app->run == Stopped)
+        st = "PAUSE";
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str(canvas, 2, 10, "Coach Watch");
     canvas_draw_str_aligned(canvas, 126, 10, AlignRight, AlignBottom, st);

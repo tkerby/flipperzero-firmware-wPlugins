@@ -11,10 +11,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define NB_OK 0
-#define NB_ERR_TIMEOUT (-1) /* no answer from the card */
-#define NB_ERR_AUTH (-2) /* MIFARE Classic authentication failed */
-#define NB_ERR_IO (-3) /* other failure */
+#define NB_OK              0
+#define NB_ERR_TIMEOUT     (-1) /* no answer from the card */
+#define NB_ERR_AUTH        (-2) /* MIFARE Classic authentication failed */
+#define NB_ERR_IO          (-3) /* other failure */
 #define NB_ERR_UNSUPPORTED (-4) /* backend cannot do this */
 
 #define NB_UID_MAX 10
@@ -70,7 +70,12 @@ typedef struct NbBackend {
      * backend re-authenticates as needed.  mfc_auth only verifies the key. */
     int (*mfc_auth)(void* ctx, uint8_t block, bool key_b, const uint8_t key[6]);
     int (*mfc_read)(void* ctx, uint8_t block, bool key_b, const uint8_t key[6], uint8_t out[16]);
-    int (*mfc_write)(void* ctx, uint8_t block, bool key_b, const uint8_t key[6], const uint8_t in[16]);
+    int (*mfc_write)(
+        void* ctx,
+        uint8_t block,
+        bool key_b,
+        const uint8_t key[6],
+        const uint8_t in[16]);
 
     /* MIFARE Ultralight / NTAG: 4-byte pages. read returns 4 pages (16 bytes). */
     int (*mful_read)(void* ctx, uint8_t page, uint8_t out[16]);

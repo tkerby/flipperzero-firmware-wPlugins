@@ -22,30 +22,64 @@ def prepare(source, output):
             print(f"Skipping missing effect: {original}")
             continue
         target = output / f"{name}.wav"
-        if not (target.exists() and target.stat().st_mtime >= original.stat().st_mtime
-                and valid_wav(target, 22050)):
-            with tempfile.NamedTemporaryFile(dir=output, suffix=".wav", delete=False) as temp:
+        if not (
+            target.exists()
+            and target.stat().st_mtime >= original.stat().st_mtime
+            and valid_wav(target, 22050)
+        ):
+            with tempfile.NamedTemporaryFile(
+                dir=output, suffix=".wav", delete=False
+            ) as temp:
                 temporary = Path(temp.name)
             try:
-                subprocess.run([
-                    "ffmpeg", "-nostdin", "-hide_banner", "-loglevel", "error", "-y",
-                    "-i", str(original), "-vn", "-ac", "1", "-ar", "22050",
-                    "-c:a", "pcm_u8", "-map_metadata", "-1", "-fflags", "+bitexact",
-                    "-flags:a", "+bitexact", "-f", "wav", str(temporary),
-                ], check=True)
+                subprocess.run(
+                    [
+                        "ffmpeg",
+                        "-nostdin",
+                        "-hide_banner",
+                        "-loglevel",
+                        "error",
+                        "-y",
+                        "-i",
+                        str(original),
+                        "-vn",
+                        "-ac",
+                        "1",
+                        "-ar",
+                        "22050",
+                        "-c:a",
+                        "pcm_u8",
+                        "-map_metadata",
+                        "-1",
+                        "-fflags",
+                        "+bitexact",
+                        "-flags:a",
+                        "+bitexact",
+                        "-f",
+                        "wav",
+                        str(temporary),
+                    ],
+                    check=True,
+                )
                 if not valid_wav(temporary, 22050):
                     raise ValueError(f"Unexpected WAV format: {original}")
                 with wave.open(str(temporary), "rb") as audio:
                     if audio.getnframes() > 32768:
-                        raise ValueError(f"Effect exceeds the device's 32768-sample limit: {original}")
+                        raise ValueError(
+                            f"Effect exceeds the device's 32768-sample limit: {original}"
+                        )
                 temporary.replace(target)
             finally:
                 temporary.unlink(missing_ok=True)
         with wave.open(str(target), "rb") as audio:
             if audio.getnframes() > 32768:
-                raise ValueError(f"Effect exceeds the device's 32768-sample limit: {target}")
-            print(f"{target}: {audio.getnframes() / audio.getframerate():.3f}s, "
-                  f"{audio.getnframes():,} PCM bytes")
+                raise ValueError(
+                    f"Effect exceeds the device's 32768-sample limit: {target}"
+                )
+            print(
+                f"{target}: {audio.getnframes() / audio.getframerate():.3f}s, "
+                f"{audio.getnframes():,} PCM bytes"
+            )
     # Keep upstream attribution with the converted sounds and USB uploads.
     for name in ("SFX-LICENSE.txt", "SFX-NOTICE.md"):
         notice = source / name
@@ -70,7 +104,9 @@ def test_song(output):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("source", nargs="?", type=Path, default=Path("assets"))
-    parser.add_argument("--output", type=Path, default=Path("sdcard/apps_data/taiko_player/sfx"))
+    parser.add_argument(
+        "--output", type=Path, default=Path("sdcard/apps_data/taiko_player/sfx")
+    )
     parser.add_argument("--test-song", action="store_true")
     args = parser.parse_args()
     prepare(args.source, args.output)

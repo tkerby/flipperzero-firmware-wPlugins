@@ -42,10 +42,10 @@ typedef enum {
     ModeCcid,
 } AppMode;
 
-#define FLAG_RX (1u << 0)
-#define FLAG_TX (1u << 1)
+#define FLAG_RX   (1u << 0)
+#define FLAG_TX   (1u << 1)
 #define FLAG_STOP (1u << 2)
-#define FLAG_ALL (FLAG_RX | FLAG_TX | FLAG_STOP)
+#define FLAG_ALL  (FLAG_RX | FLAG_TX | FLAG_STOP)
 
 typedef struct {
     Gui* gui;
@@ -79,7 +79,8 @@ static void cdc_rx_cb(void* ctx) {
 static void cdc_tx_cb(void* ctx) {
     furi_thread_flags_set(furi_thread_get_id(((App*)ctx)->worker), FLAG_TX);
 }
-static void cdc_state_cb(void* ctx, uint8_t state) { /* the firmware passes 1 = configured, 0 = not */
+static void
+    cdc_state_cb(void* ctx, uint8_t state) { /* the firmware passes 1 = configured, 0 = not */
     ((App*)ctx)->usb_up = (state != 0);
 }
 
@@ -223,13 +224,15 @@ static uint32_t clock_ms(void) {
 static void show_status(App* app) {
     widget_reset(app->status);
     const char* title = app->mode == ModePn532 ? "PN532 serial mode" : "PC/SC reader mode";
-    widget_add_string_multiline_element(app->status, 64, 4, AlignCenter, AlignTop, FontPrimary, title);
+    widget_add_string_multiline_element(
+        app->status, 64, 4, AlignCenter, AlignTop, FontPrimary, title);
 
     char text[112];
     if(app->virt) {
         const NbTag* t = nbv_tag(app->virt);
         char uid[2 * NB_UID_MAX + 1];
-        for(uint8_t i = 0; i < t->uid_len && i < NB_UID_MAX; i++) snprintf(uid + 2 * i, 3, "%02X", t->uid[i]);
+        for(uint8_t i = 0; i < t->uid_len && i < NB_UID_MAX; i++)
+            snprintf(uid + 2 * i, 3, "%02X", t->uid[i]);
         uid[2 * (t->uid_len < NB_UID_MAX ? t->uid_len : NB_UID_MAX)] = 0;
         bool in = nbv_present(app->virt);
         snprintf(
@@ -241,11 +244,18 @@ static void show_status(App* app) {
             in ? "IN" : "OUT",
             in ? "remove" : "insert");
     } else if(app->mode == ModePn532) {
-        snprintf(text, sizeof(text), "Use the 2nd COM port\n(\"Flipper\" CDC #2).\nlibnfc: pn532_uart\nBack = exit");
+        snprintf(
+            text,
+            sizeof(text),
+            "Use the 2nd COM port\n(\"Flipper\" CDC #2).\nlibnfc: pn532_uart\nBack = exit");
     } else {
-        snprintf(text, sizeof(text), "Shows up as a CCID\nsmart-card reader.\npcsc_scan to test\nBack = exit");
+        snprintf(
+            text,
+            sizeof(text),
+            "Shows up as a CCID\nsmart-card reader.\npcsc_scan to test\nBack = exit");
     }
-    widget_add_string_multiline_element(app->status, 64, 22, AlignCenter, AlignTop, FontSecondary, text);
+    widget_add_string_multiline_element(
+        app->status, 64, 22, AlignCenter, AlignTop, FontSecondary, text);
 }
 
 /* OK on the status screen takes the virtual card off the reader / puts it back, so the PC
@@ -363,7 +373,11 @@ static void rebuild_menu(App* app, uint32_t select) {
     submenu_add_item(app->menu, "PN532 serial (libnfc)", 0, menu_cb, app);
     submenu_add_item(app->menu, "PC/SC reader (CCID)", 1, menu_cb, app);
     submenu_add_item(
-        app->menu, app->virt ? "Unload file, use real NFC" : "Load dump / .nfc file", 2, menu_cb, app);
+        app->menu,
+        app->virt ? "Unload file, use real NFC" : "Load dump / .nfc file",
+        2,
+        menu_cb,
+        app);
     submenu_set_selected_item(app->menu, select);
 }
 

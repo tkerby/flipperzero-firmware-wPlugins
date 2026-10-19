@@ -54,13 +54,13 @@ typedef struct {
     JamMode mode;
     uint8_t freq_idx;
     OutSel out_sel;
-    int32_t mark; 
-    int32_t space; 
-    int32_t min_t; 
-    int32_t max_t; 
+    int32_t mark;
+    int32_t space;
+    int32_t min_t;
+    int32_t max_t;
     int8_t sweep_dir;
     uint8_t speed;
-    uint8_t power; 
+    uint8_t power;
 
     // runtime
     bool active;
@@ -240,9 +240,11 @@ static void perform_jamming(JamState* s) {
     case ModeRandom:
         if(now - s->last_update > 100) {
             uint16_t pat[30];
-            for(int i = 0; i < 30; i++) pat[i] = 5 + (furi_hal_random_get() % 995);
+            for(int i = 0; i < 30; i++)
+                pat[i] = 5 + (furi_hal_random_get() % 995);
             for(int i = 0; i < s->power / 2 + 1; i++) {
-                if((furi_hal_random_get() % 10) < 3) s->freq_idx = furi_hal_random_get() % FREQ_COUNT;
+                if((furi_hal_random_get() % 10) < 3)
+                    s->freq_idx = furi_hal_random_get() % FREQ_COUNT;
                 sw_send_raw(pin, pat, 30, FREQS[s->freq_idx]);
             }
             s->last_update = now;
@@ -440,7 +442,7 @@ static bool handle_input(JamState* s, InputEvent* e) {
         case InputKeyOk:
             if(e->type == InputTypeShort) {
                 if(!s->active) {
-                    update_output(s); 
+                    update_output(s);
                     s->active = true;
                     s->jam_count = 0;
                     s->run_secs = 0;
@@ -516,7 +518,7 @@ int32_t ir_jammer_app(void* p) {
 
     while(run) {
         InputEvent ev;
-        
+
         uint32_t timeout = s->active ? 5 : 100;
         if(furi_message_queue_get(queue, &ev, timeout) == FuriStatusOk) {
             run = handle_input(s, &ev);

@@ -3,6 +3,7 @@
 Flipper icons draw BLACK pixels and leave WHITE pixels transparent, so the picture is black on white.
 Run from this folder:  python3 generate_icon.py   (needs Pillow)
 """
+
 from pathlib import Path
 
 from PIL import Image

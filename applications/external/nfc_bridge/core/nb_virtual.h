@@ -27,9 +27,24 @@
 #pragma once
 #include "nb_backend.h"
 
-typedef enum { ModeUndecided, ModeFlipper, ModeHexText, ModeBinary } LoadMode;
-typedef enum { DevNone, DevMfc, DevUl, DevUid } DevType;
-typedef enum { KindEmpty, KindMfc, KindUl, KindUid } Kind;
+typedef enum {
+    ModeUndecided,
+    ModeFlipper,
+    ModeHexText,
+    ModeBinary
+} LoadMode;
+typedef enum {
+    DevNone,
+    DevMfc,
+    DevUl,
+    DevUid
+} DevType;
+typedef enum {
+    KindEmpty,
+    KindMfc,
+    KindUl,
+    KindUid
+} Kind;
 
 struct NbVirtual {
     NbBackend be;
@@ -75,7 +90,6 @@ typedef struct NbVirtual NbVirtual;
 
 NbVirtual* nbv_alloc(void);
 void nbv_free(NbVirtual* v);
-
 
 /* Millisecond clock the CCID engine uses to pace its card-presence polling. */
 void nbv_set_clock(NbVirtual* v, uint32_t (*now_ms)(void));

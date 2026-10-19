@@ -1,9 +1,0 @@
-.ufbt/
-.vscode/
-build/
-dist/
-*.fap
-*.elf
-*.bin
-*.tar.gz
-__pycache__/

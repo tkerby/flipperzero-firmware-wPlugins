@@ -9,9 +9,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define EP_OUT 0x01
-#define EP_IN 0x82
-#define EP_INT 0x83
+#define EP_OUT    0x01
+#define EP_IN     0x82
+#define EP_INT    0x83
 #define EP_INT_SZ 8
 
 struct CcidConfigDescriptor {
@@ -23,7 +23,9 @@ struct CcidConfigDescriptor {
     struct usb_endpoint_descriptor ep_int;
 } FURI_PACKED;
 
-_Static_assert(sizeof(struct usb_ccid_descriptor) == 0x36, "CCID class descriptor must be 54 bytes");
+_Static_assert(
+    sizeof(struct usb_ccid_descriptor) == 0x36,
+    "CCID class descriptor must be 54 bytes");
 
 static const struct usb_string_descriptor dev_manuf_desc = USB_STRING_DESC("Flipper Devices Inc.");
 
@@ -158,8 +160,10 @@ static struct usb_string_descriptor* make_string(const char* s, const char* pref
     struct usb_string_descriptor* d = malloc((pl + sl) * 2 + 2);
     d->bLength = (uint8_t)((pl + sl) * 2 + 2);
     d->bDescriptorType = USB_DTYPE_STRING;
-    for(size_t i = 0; i < pl; i++) d->wString[i] = (uint8_t)prefix[i];
-    for(size_t i = 0; i < sl; i++) d->wString[pl + i] = (uint8_t)s[i];
+    for(size_t i = 0; i < pl; i++)
+        d->wString[i] = (uint8_t)prefix[i];
+    for(size_t i = 0; i < sl; i++)
+        d->wString[pl + i] = (uint8_t)s[i];
     return d;
 }
 
@@ -232,7 +236,8 @@ static usbd_respond ccid_ep_config(usbd_device* dev, uint8_t cfg) {
 static usbd_respond ccid_control(usbd_device* dev, usbd_ctlreq* req, usbd_rqc_callback* callback) {
     UNUSED(dev);
     UNUSED(callback);
-    if(((USB_REQ_RECIPIENT | USB_REQ_TYPE) & req->bmRequestType) == (USB_REQ_INTERFACE | USB_REQ_CLASS) &&
+    if(((USB_REQ_RECIPIENT | USB_REQ_TYPE) & req->bmRequestType) ==
+           (USB_REQ_INTERFACE | USB_REQ_CLASS) &&
        req->wIndex == 0) {
         switch(req->bRequest) {
         case CCID_ABORT: /* we never have a long-running command to abort */

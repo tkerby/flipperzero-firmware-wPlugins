@@ -28,7 +28,7 @@ bool nbv_save_path(NbVirtual* v, const char* path) {
 }
 
 bool nbv_load_path(NbVirtual* v, const char* path) {
-// ... (rest of the file)
+    // ... (rest of the file)
 
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* file = storage_file_alloc(storage);

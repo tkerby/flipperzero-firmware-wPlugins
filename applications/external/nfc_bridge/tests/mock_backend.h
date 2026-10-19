@@ -1,7 +1,12 @@
 #pragma once
 #include "../core/nb_backend.h"
 
-typedef enum { MOCK_NONE = 0, MOCK_MFC1K, MOCK_UL, MOCK_ISO4A } MockCard;
+typedef enum {
+    MOCK_NONE = 0,
+    MOCK_MFC1K,
+    MOCK_UL,
+    MOCK_ISO4A
+} MockCard;
 
 extern NbBackend mock_be;
 void mock_reset(MockCard kind);

@@ -67,7 +67,11 @@ def data_block(b):
 
 
 def block0(uid4, sak=0x08, atqa=(0x04, 0x00)):
-    return bytes(uid4) + bytes([bcc(uid4), sak, atqa[0], atqa[1]]) + bytes(range(0xA0, 0xA8))
+    return (
+        bytes(uid4)
+        + bytes([bcc(uid4), sak, atqa[0], atqa[1]])
+        + bytes(range(0xA0, 0xA8))
+    )
 
 
 def mfc_image(nblocks, uid4=b"\xDE\xAD\xBE\xEF", trailers=None):
@@ -89,7 +93,16 @@ def fmt_hex(b, unk=None):
     return " ".join("??" if (unk and i in unk) else "%02X" % x for i, x in enumerate(b))
 
 
-def flipper_mfc(blocks, typ="1K", uid="DE AD BE EF", atqa="00 04", sak="08", unknown=(), newline="\n", extra=""):
+def flipper_mfc(
+    blocks,
+    typ="1K",
+    uid="DE AD BE EF",
+    atqa="00 04",
+    sak="08",
+    unknown=(),
+    newline="\n",
+    extra="",
+):
     """A Flipper .nfc file. `unknown` = block numbers written as all '??'; a block may also be
     given as (bytes, {byte indexes that are ??})."""
     out = [
@@ -133,7 +146,14 @@ def ul_pages(npages, uid7=bytes.fromhex("04AABBCCDDEEFF")):
     return pg
 
 
-def flipper_ul(pages, atqa="44 00", sak="00", uid="04 AA BB CC DD EE FF", dev="NTAG/Ultralight", total=None):
+def flipper_ul(
+    pages,
+    atqa="44 00",
+    sak="00",
+    uid="04 AA BB CC DD EE FF",
+    dev="NTAG/Ultralight",
+    total=None,
+):
     out = [
         "Filetype: Flipper NFC device",
         "Version: 4",
@@ -214,7 +234,9 @@ def test_flipper_classic_1k_through_pn532():
     must_load(flipper_mfc(img))
     assert lib.tv_name() == b"MIFARE Classic 1K"
     # ATQA "00 04" in the file -> card sends 04 00 -> PN532 reports 00 04
-    assert T.list_target() == bytes([0x01, 0x01, 0x00, 0x04, 0x08, 0x04, 0xDE, 0xAD, 0xBE, 0xEF])
+    assert T.list_target() == bytes(
+        [0x01, 0x01, 0x00, 0x04, 0x08, 0x04, 0xDE, 0xAD, 0xBE, 0xEF]
+    )
     assert read(1) == AUTH_ERR  # not authenticated
     assert auth(3, FF6) == AUTH_ERR  # wrong key
     assert auth(3, KEY_A) == OK
@@ -260,10 +282,14 @@ def test_unknown_blocks_and_keys_behave_like_a_card_you_have_no_key_for():
         unknown.add(b)
     must_load(flipper_mfc(img, unknown=unknown))
     T.list_target()
-    assert auth(8, KEY_A) == AUTH_ERR and auth(8, KEY_B, True) == AUTH_ERR  # nothing known about it
+    assert (
+        auth(8, KEY_A) == AUTH_ERR and auth(8, KEY_B, True) == AUTH_ERR
+    )  # nothing known about it
     assert auth(12, KEY_B, True) == AUTH_ERR  # key B unknown: cannot be verified
     assert auth(12, KEY_A) == OK
-    assert read(12)[0] != 0x00  # authenticates fine but the dump has no data for the block
+    assert (
+        read(12)[0] != 0x00
+    )  # authenticates fine but the dump has no data for the block
     assert read(14)[0] == 0x00  # a block it does have
     # unknown Key B bytes are not returned as zeros-that-authenticate
     assert auth(12, bytes(6), True) == AUTH_ERR
@@ -305,7 +331,9 @@ def test_access_bits_that_lock_the_trailer():
     T.list_target()
     assert auth(8, KEY_A) == OK
     assert read_ok(11) == bytes(6) + ac + bytes(6)  # B hidden
-    assert write(11, trailer(KEY_A2, ac, KEY_B)) != OK  # key A may not change key A here
+    assert (
+        write(11, trailer(KEY_A2, ac, KEY_B)) != OK
+    )  # key A may not change key A here
     assert auth(8, KEY_B, True) == OK
     assert write(11, trailer(KEY_A2, ac, KEY_B)) == OK
     assert auth(8, KEY_A2) == OK
@@ -328,7 +356,9 @@ def test_classic_4k_and_mini():
     img = mfc_image(256, trailers={32: trailer(KEY_A2, DEFAULT_AC, KEY_B2)})
     must_load(flipper_mfc(img, typ="4K", atqa="00 02", sak="18"))
     assert lib.tv_name() == b"MIFARE Classic 4K"
-    assert T.list_target() == bytes([0x01, 0x01, 0x00, 0x02, 0x18, 0x04, 0xDE, 0xAD, 0xBE, 0xEF])
+    assert T.list_target() == bytes(
+        [0x01, 0x01, 0x00, 0x02, 0x18, 0x04, 0xDE, 0xAD, 0xBE, 0xEF]
+    )
     assert auth(130, KEY_A2) == OK  # first 16-block sector
     assert read_ok(131) == data_block(131)
     assert read_ok(143) == bytes(6) + DEFAULT_AC + KEY_B2
@@ -346,10 +376,14 @@ def test_flipper_ntag215_through_pn532():
     pages = ul_pages(135)
     must_load(flipper_ul(pages))
     assert lib.tv_name() == b"NTAG215"
-    assert T.list_target() == bytes([0x01, 0x01, 0x00, 0x44, 0x00, 0x07]) + bytes.fromhex("04AABBCCDDEEFF")
+    assert T.list_target() == bytes(
+        [0x01, 0x01, 0x00, 0x44, 0x00, 0x07]
+    ) + bytes.fromhex("04AABBCCDDEEFF")
     assert T.dex([0x30, 0x00]) == OK + pages[0] + pages[1] + pages[2] + pages[3]
     assert T.dex([0x30, 0x04]) == OK + b"".join(pages[4:8])
-    assert T.dex([0x30, 0x86]) == OK + pages[134] + pages[0] + pages[1] + pages[2]  # rolls over
+    assert (
+        T.dex([0x30, 0x86]) == OK + pages[134] + pages[0] + pages[1] + pages[2]
+    )  # rolls over
     assert T.dex([0x30, 135])[0] != 0x00  # past the end: the tag NAKs
     assert T.dex([0xA2, 0x0A], bytes.fromhex("DEADBEEF")) == OK
     assert T.dex([0x30, 0x0A])[1:5] == bytes.fromhex("DEADBEEF")
@@ -391,11 +425,15 @@ def test_pcsc_sees_the_virtual_classic_card():
     r = T.ccid(0x65)
     assert r[0] == 0x81 and r[7] == 0x02  # nothing reported yet
     note = (C.c_ubyte * 2)()
-    assert lib.t_ccid_notify(note) == 2 and bytes(note) == bytes([0x50, 0x03])  # card inserted
+    assert lib.t_ccid_notify(note) == 2 and bytes(note) == bytes(
+        [0x50, 0x03]
+    )  # card inserted
     r = T.ccid(0x62)  # power on
     assert r[0] == 0x80 and r[7] == 0x00
-    atr = r[10:10 + (r[1] | r[2] << 8)]
-    assert atr.hex() == "3b8f8001804f0ca0000003060300010000000" "06a", atr.hex()  # "MIFARE Classic 1K"
+    atr = r[10 : 10 + (r[1] | r[2] << 8)]
+    assert (
+        atr.hex() == "3b8f8001804f0ca0000003060300010000000" "06a"
+    ), atr.hex()  # "MIFARE Classic 1K"
     assert T.apdu("FFCA000000") == bytes.fromhex("DEADBEEF9000")
     assert T.apdu("FF82000006" + KEY_A.hex()) == bytes.fromhex("9000")
     assert T.apdu("FF86000005" "0100006000") == bytes.fromhex("9000")
@@ -415,7 +453,7 @@ def test_ppss_request_is_echoed_so_libccid_can_connect():
     for pps in ("FF1111FF", "FF00FF", "FF119678"):  # what libccid sends after power-on
         r = T.ccid(0x6F, bytes.fromhex(pps))
         assert r[0] == 0x80 and r[7] == 0x00, r.hex()
-        assert r[10:10 + (r[1] | r[2] << 8)].hex() == pps.lower()
+        assert r[10 : 10 + (r[1] | r[2] << 8)].hex() == pps.lower()
     # the pseudo-APDUs next to it still work
     assert T.apdu("FFCA000000") == bytes.fromhex("DEADBEEF9000")
 
@@ -426,14 +464,16 @@ def test_pcsc_sees_the_virtual_ntag():
     note = (C.c_ubyte * 2)()
     assert lib.t_ccid_notify(note) == 2
     r = T.ccid(0x62)
-    atr = r[10:10 + (r[1] | r[2] << 8)]
+    atr = r[10 : 10 + (r[1] | r[2] << 8)]
     assert atr[12:16].hex() == "03000300", atr.hex()  # name 0003 = Ultralight/NTAG
     assert T.apdu("FFCA000000") == bytes.fromhex("04AABBCCDDEEFF9000")
     assert T.apdu("FFB0000410") == b"".join(pages[4:8]) + bytes.fromhex("9000")
     assert T.apdu("FFD6000504CAFEBABE") == bytes.fromhex("9000")
     assert T.apdu("FFB0000504") == bytes.fromhex("CAFEBABE9000")
     # libnfc over PC/SC (acr122_pcsc style): InListPassiveTarget through the escape
-    assert T.apdu("FF00000004" "D44A0100") == bytes.fromhex("D54B01010044" "00" "07" "04AABBCCDDEEFF" "9000")
+    assert T.apdu("FF00000004" "D44A0100") == bytes.fromhex(
+        "D54B01010044" "00" "07" "04AABBCCDDEEFF" "9000"
+    )
 
 
 def test_raw_binary_classic_dumps():
@@ -443,7 +483,9 @@ def test_raw_binary_classic_dumps():
     must_load(dump)
     assert lib.tv_name() == b"MIFARE Classic 1K"
     # UID, SAK and ATQA come from block 0 (04 00 on the air -> PN532 reports 00 04)
-    assert T.list_target() == bytes([0x01, 0x01, 0x00, 0x04, 0x08, 0x04, 0xDE, 0xAD, 0xBE, 0xEF])
+    assert T.list_target() == bytes(
+        [0x01, 0x01, 0x00, 0x04, 0x08, 0x04, 0xDE, 0xAD, 0xBE, 0xEF]
+    )
     assert auth(7, KEY_A) == OK and read_ok(6) == data_block(6)
     # chunked loading of a binary file
     must_load(dump, chunk=100)
@@ -470,7 +512,9 @@ def test_raw_binary_ntag_dump():
     assert len(dump) == 540
     must_load(dump)
     assert lib.tv_name() == b"NTAG215"
-    assert T.list_target() == bytes([0x01, 0x01, 0x00, 0x44, 0x00, 0x07]) + bytes.fromhex("04AABBCCDDEEFF")
+    assert T.list_target() == bytes(
+        [0x01, 0x01, 0x00, 0x44, 0x00, 0x07]
+    ) + bytes.fromhex("04AABBCCDDEEFF")
     assert T.dex([0x30, 0x04]) == OK + b"".join(pages[4:8])
     must_load(b"".join(ul_pages(16)))
     assert lib.tv_name() == b"MIFARE Ultralight"
@@ -524,7 +568,9 @@ def test_files_that_cannot_be_used_say_why():
     expect_fail(b"\x04" + bytes(5000), "too large")
     des = b"Filetype: Flipper NFC device\nVersion: 4\nDevice type: Mifare DESFire\nUID: 04 11 22 33 44 55 66\n"
     expect_fail(des, "Unsupported: Mifare DESFire")
-    expect_fail(b"Filetype: Something else\nDevice type: Mifare Classic\n", "not a Flipper")
+    expect_fail(
+        b"Filetype: Something else\nDevice type: Mifare Classic\n", "not a Flipper"
+    )
     expect_fail(b"Filetype: Flipper NFC device\nVersion: 4\n", "device type")
     # block outside the declared card size
     img = mfc_image(20)
@@ -547,7 +593,9 @@ def test_files_that_cannot_be_used_say_why():
 
 
 def test_comments_bom_and_unrelated_lines_are_ignored():
-    data = b"\xef\xbb\xbf" + flipper_mfc(mfc_image(64), extra="Some future field: whatever\n# comment")
+    data = b"\xef\xbb\xbf" + flipper_mfc(
+        mfc_image(64), extra="Some future field: whatever\n# comment"
+    )
     must_load(data)
     assert T.list_target()[:2] == bytes([0x01, 0x01])
     # a very long unrelated line is skipped, a long Block line is an error
@@ -591,14 +639,20 @@ def test_reloading_forgets_changes_made_through_the_bridge():
     data = flipper_mfc(mfc_image(64))
     must_load(data)
     T.list_target()
-    assert auth(0, KEY_A) == OK and write(1, bytes(16)) == OK and read_ok(1) == bytes(16)
+    assert (
+        auth(0, KEY_A) == OK and write(1, bytes(16)) == OK and read_ok(1) == bytes(16)
+    )
     must_load(data)
     T.list_target()
     assert auth(0, KEY_A) == OK and read_ok(1) == data_block(1)
 
 
 def main():
-    tests = [(n, f) for n, f in sorted(globals().items()) if n.startswith("test_") and callable(f)]
+    tests = [
+        (n, f)
+        for n, f in sorted(globals().items())
+        if n.startswith("test_") and callable(f)
+    ]
     failed = 0
     for name, fn in tests:
         try:
@@ -607,6 +661,7 @@ def main():
         except Exception as e:  # noqa
             failed += 1
             import traceback
+
             print("FAIL ", name, "-", repr(e))
             traceback.print_exc()
     print("\n%d tests, %d failed" % (len(tests), failed))

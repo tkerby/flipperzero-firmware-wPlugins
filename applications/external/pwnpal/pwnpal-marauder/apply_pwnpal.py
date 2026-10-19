@@ -87,16 +87,29 @@ def main():
     # firmware itself — the app compares it to the same value to nudge a reflash. app-only commits
     # leave it unchanged, so a current board never gets nagged.
     import subprocess
+
     try:
         commit = subprocess.check_output(
-            ["git", "-C", str(HERE), "log", "-1", "--abbrev=7", "--format=%h", "--", ":/pwnpal-marauder"],
-            text=True).strip()
+            [
+                "git",
+                "-C",
+                str(HERE),
+                "log",
+                "-1",
+                "--abbrev=7",
+                "--format=%h",
+                "--",
+                ":/pwnpal-marauder",
+            ],
+            text=True,
+        ).strip()
     except Exception:
         commit = "nogit"
     if not commit:
         commit = "nogit"
     (HERE / "pwnpal_commit.h").write_text(
-        '#pragma once\n#define PWNPAL_FW_COMMIT "%s"\n' % commit)
+        '#pragma once\n#define PWNPAL_FW_COMMIT "%s"\n' % commit
+    )
     print(f"  fw commit: {commit}")
 
     for name in ("Pwnpal.h", "Pwnpal.cpp", "pwnpal_frames.h", "pwnpal_commit.h"):
@@ -124,31 +137,40 @@ def main():
         "  Serial.setRxBufferSize(1024);  // pwnpal: hold the full advertise command\n",
         tag="Serial.setRxBufferSize(1024)",
     )
-    _write(p, t); steps += dbuf
+    _write(p, t)
+    steps += dbuf
 
     # 2. WiFiScan.h — scan-mode id + runner declaration.
     p = src / "WiFiScan.h"
     t = _read(p)
     t, d1 = insert_after(
-        t, "#define WIFI_SCAN_PWN ", "#define WIFI_SCAN_PWNPAL 111\n",
-        tag="WIFI_SCAN_PWNPAL")
+        t,
+        "#define WIFI_SCAN_PWN ",
+        "#define WIFI_SCAN_PWNPAL 111\n",
+        tag="WIFI_SCAN_PWNPAL",
+    )
     t, d2 = insert_after(
-        t, "void RunPwnScan(uint8_t scan_mode, uint16_t color);",
+        t,
+        "void RunPwnScan(uint8_t scan_mode, uint16_t color);",
         "    void RunPwnpalScan(uint8_t scan_mode, uint16_t color);\n",
-        tag="RunPwnpalScan")
-    _write(p, t); steps += d1 + d2
+        tag="RunPwnpalScan",
+    )
+    _write(p, t)
+    steps += d1 + d2
 
     # 3. WiFiScan.cpp — include, runner, dispatch, sniff-report, main() tick, sniffer guard.
     p = src / "WiFiScan.cpp"
     t = _read(p)
 
     t, d = insert_after(
-        t, '#include "WiFiScan.h"',
+        t,
+        '#include "WiFiScan.h"',
         '#include "Pwnpal.h"\nextern Pwnpal pwnpal_obj;\n',
-        tag="extern Pwnpal pwnpal_obj;")
+        tag="extern Pwnpal pwnpal_obj;",
+    )
     steps += d
 
-    runner = '''void WiFiScan::RunPwnpalScan(uint8_t scan_mode, uint16_t color) {
+    runner = """void WiFiScan::RunPwnpalScan(uint8_t scan_mode, uint16_t color) {
   (void)scan_mode; (void)color;
   // Real scan start: clear the per-session capture dedup tables here (NOT in
   // configureFromArgs, which the Flipper re-runs every ~15s to refresh the
@@ -182,10 +204,13 @@ def main():
   esp_wifi_set_max_tx_power(pwnpal_obj.saverLevel() ? 40 : 78);  // battery-saver TX cut
 }
 
-'''
+"""
     t, d = insert_before(
-        t, "void WiFiScan::RunPwnScan(uint8_t scan_mode, uint16_t color)",
-        runner, tag="RunPwnpalScan(uint8_t")
+        t,
+        "void WiFiScan::RunPwnScan(uint8_t scan_mode, uint16_t color)",
+        runner,
+        tag="RunPwnpalScan(uint8_t",
+    )
     steps += d
 
     t, d = insert_after(
@@ -193,7 +218,8 @@ def main():
         "    RunPwnScan(scan_mode, color);",
         "  else if (scan_mode == WIFI_SCAN_PWNPAL)\n"
         "    RunPwnpalScan(scan_mode, color);\n",
-        tag="RunPwnpalScan(scan_mode, color);")
+        tag="RunPwnpalScan(scan_mode, color);",
+    )
     steps += d
 
     # broadcast on every main() tick in pwnpal mode, skip the rest. also feed the GPS
@@ -225,7 +251,8 @@ def main():
         "    }\n"
         "    return;\n"
         "  }\n",
-        tag="pwnpal_obj.broadcast();")
+        tag="pwnpal_obj.broadcast();",
+    )
     steps += d
 
     # let the sniffer callback process our mode and branch to reportPeer.
@@ -234,7 +261,8 @@ def main():
         "      (wifi_scan_obj.currentScanMode == WIFI_SCAN_PWN)) {",
         "      (wifi_scan_obj.currentScanMode == WIFI_SCAN_PWN) ||\n"
         "      (wifi_scan_obj.currentScanMode == WIFI_SCAN_PWNPAL)) {",
-        tag="WIFI_SCAN_PWNPAL)) {")
+        tag="WIFI_SCAN_PWNPAL)) {",
+    )
     steps += d
 
     t, d = replace_once(
@@ -252,7 +280,8 @@ def main():
         "snifferPacket->rx_ctrl.rssi, snifferPacket->rx_ctrl.channel, pf_fix, pf_lat, pf_lon);\n"
         "          } else\n"
         "            wifi_scan_obj.processPwnagotchiBeacon(snifferPacket->payload, len);",
-        tag="pwnpal_obj.reportPeer(")
+        tag="pwnpal_obj.reportPeer(",
+    )
     steps += d
 
     # 3b. capture path: EAPOL/PMKID come as DATA frames; beaconSnifferCallback only handles
@@ -280,7 +309,8 @@ def main():
         "      buffer_obj.append(snifferPacket, len);\n"
         "    return;\n"
         "  }\n",
-        tag="pwnpal_obj.reportHandshake(")
+        tag="pwnpal_obj.reportHandshake(",
+    )
     steps += d
 
     # 3b2. de-cloak: a client's (re)assoc request (mgmt subtype 0x00/0x20) names a HIDDEN AP in
@@ -305,7 +335,8 @@ def main():
         "                                snifferPacket->rx_ctrl.channel,\n"
         "                                pf_fix, pf_lat, pf_lon);\n"
         "  }\n",
-        tag="pwnpal_obj.reportDecloak(")
+        tag="pwnpal_obj.reportDecloak(",
+    )
     steps += d
 
     # 3c. recon: dedup non-pwngrid beacons into PWNPAL_AP lines. sits inside
@@ -329,7 +360,8 @@ def main():
         "            buffer_obj.append(snifferPacket, len);\n"
         "          return;\n"
         "        }\n",
-        tag="pwnpal_obj.reportAP(")
+        tag="pwnpal_obj.reportAP(",
+    )
     steps += d
     _write(p, t)
 
@@ -347,10 +379,14 @@ def main():
                 "  // pwnpal: no per-boot $PSTMSRR reset -- restarting the GNSS engine every\n"
                 "  // boot discards a backup-powered hot start and slows TTFF (Teseo only; a\n"
                 "  // reset is only needed to *change* the mask, which SAVEPAR already persisted).",
-                tag="pwnpal: no per-boot $PSTMSRR")
-            _write(p, t); steps += d
+                tag="pwnpal: no per-boot $PSTMSRR",
+            )
+            _write(p, t)
+            steps += d
         except AnchorError:
-            print("  note: $PSTMSRR absent in GpsInterface.cpp; skipped GPS-reset patch")
+            print(
+                "  note: $PSTMSRR absent in GpsInterface.cpp; skipped GPS-reset patch"
+            )
 
         # the FEBERIS module is a CASIC 'URANUS' (AT6558-class), which ignores $PSTM and
         # defaults to GPS+BeiDou. enable GLONASS too (mask 7 = GPS+BDS+GLONASS) for more
@@ -362,8 +398,10 @@ def main():
                 '  MicroNMEA::sendSentence(Serial2, "$PSTMSAVEPAR");',
                 '  MicroNMEA::sendSentence(Serial2, "$PSTMSAVEPAR");\n'
                 '  MicroNMEA::sendSentence(Serial2, "$PCAS04,7");  // pwnpal: GPS+BDS+GLONASS (CASIC)',
-                tag='"$PCAS04,7"')
-            _write(p, t); steps += d
+                tag='"$PCAS04,7"',
+            )
+            _write(p, t)
+            steps += d
         except AnchorError:
             print("  note: $PSTMSAVEPAR absent; skipped CASIC constellation enable")
 
@@ -377,28 +415,37 @@ def main():
                 "  Serial2.begin(9600, SERIAL_8N1, GPS_TX, GPS_RX);",
                 "  Serial2.setRxBufferSize(4096);  // pwnpal: survive loop stalls during WiFi bursts\n"
                 "  Serial2.begin(9600, SERIAL_8N1, GPS_TX, GPS_RX);",
-                tag="Serial2.setRxBufferSize(4096)")
-            _write(p, t); steps += d
+                tag="Serial2.setRxBufferSize(4096)",
+            )
+            _write(p, t)
+            steps += d
         except AnchorError:
-            print("  note: Serial2.begin(9600 ...) not found; skipped GPS RX-buffer bump")
+            print(
+                "  note: Serial2.begin(9600 ...) not found; skipped GPS RX-buffer bump"
+            )
 
     # 4. CommandLine.h — the command string.
     p = src / "CommandLine.h"
     t = _read(p)
     t, d = insert_after(
-        t, 'const char PROGMEM SNIFF_PWN_CMD[] = "sniffpwn";',
+        t,
+        'const char PROGMEM SNIFF_PWN_CMD[] = "sniffpwn";',
         'const char PROGMEM PWNPAL_CMD[] = "pwnpal";\n',
-        tag="PWNPAL_CMD")
-    _write(p, t); steps += d
+        tag="PWNPAL_CMD",
+    )
+    _write(p, t)
+    steps += d
 
     # 5. CommandLine.cpp — include + command handler.
     p = src / "CommandLine.cpp"
     t = _read(p)
     t, d1 = insert_after(
-        t, '#include "CommandLine.h"',
+        t,
+        '#include "CommandLine.h"',
         '#include "Pwnpal.h"\nextern Pwnpal pwnpal_obj;\n',
-        tag="extern Pwnpal pwnpal_obj;")
-    handler = '''    else if (cmd_args.get(0) == PWNPAL_CMD) {
+        tag="extern Pwnpal pwnpal_obj;",
+    )
+    handler = """    else if (cmd_args.get(0) == PWNPAL_CMD) {
       if (!pwnpal_obj.configureFromArgs(&cmd_args)) {
         Serial.println(F("PWNPAL_ERR bad -id (need 64 hex)"));
       } else if (wifi_scan_obj.currentScanMode == WIFI_SCAN_PWNPAL) {
@@ -413,14 +460,18 @@ def main():
         wifi_scan_obj.StartScan(WIFI_SCAN_PWNPAL, TFT_MAGENTA);
       }
     }
-'''
+"""
     # Insert BEFORE the `if (!wifi_scan_obj.scanning())` guard so the handler is always processed,
     # even while a scan is running -- otherwise re-advertises (live persona/-ch/-target updates) are
     # dropped once WIFI_SCAN_PWNPAL starts, and only the launch command ever configures the ESP.
     t, d2 = insert_before(
-        t, "  if (!wifi_scan_obj.scanning()) {",
-        handler, tag="cmd_args.get(0) == PWNPAL_CMD")
-    _write(p, t); steps += d1 + d2
+        t,
+        "  if (!wifi_scan_obj.scanning()) {",
+        handler,
+        tag="cmd_args.get(0) == PWNPAL_CMD",
+    )
+    _write(p, t)
+    steps += d1 + d2
 
     print(f"done ({steps} insertion(s) applied; already-applied steps skipped)")
 

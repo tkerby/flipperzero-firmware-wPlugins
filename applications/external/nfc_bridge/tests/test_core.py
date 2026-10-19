@@ -49,7 +49,7 @@ def pn_raw(data, chunk=None):
     data = bytes(data)
     if chunk:
         for i in range(0, len(data), chunk):
-            lib.t_pn_feed(buf(data[i:i + chunk]), len(data[i:i + chunk]))
+            lib.t_pn_feed(buf(data[i : i + chunk]), len(data[i : i + chunk]))
     else:
         lib.t_pn_feed(buf(data), len(data))
     out = (C.c_ubyte * 4096)()
@@ -61,7 +61,10 @@ def split_frames(raw):
     """Split a PN532->host byte stream into ('ack'|'nack'|'err'|'resp', payload)."""
     i, res = 0, []
     while i < len(raw):
-        assert raw[i:i + 3] == b"\x00\x00\xff", "bad start code at %d: %s" % (i, raw[i:i + 8].hex())
+        assert raw[i : i + 3] == b"\x00\x00\xff", "bad start code at %d: %s" % (
+            i,
+            raw[i : i + 8].hex(),
+        )
         ln, lcs = raw[i + 3], raw[i + 4]
         if (ln, lcs) == (0x00, 0xFF):
             res.append(("ack", b""))
@@ -78,7 +81,7 @@ def split_frames(raw):
         else:
             assert (ln + lcs) & 0xFF == 0
             n, hdr = ln, 5
-        body = raw[i + hdr:i + hdr + n]
+        body = raw[i + hdr : i + hdr + n]
         dcs = raw[i + hdr + n]
         assert (sum(body) + dcs) & 0xFF == 0, "bad DCS"
         assert raw[i + hdr + n + 1] == 0x00
@@ -113,7 +116,26 @@ def dex(*parts):
 def test_pn532_startup_like_libnfc():
     reset(MFC1K)
     # wake-up preamble + SAMConfiguration(normal mode), exactly what libnfc sends first
-    wake = bytes([0x55, 0x55, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+    wake = bytes(
+        [
+            0x55,
+            0x55,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+        ]
+    )
     out = pn_raw(wake + frame([0x14, 0x01, 0x00, 0x00]))
     fr = split_frames(out)
     assert fr == [("ack", b""), ("resp", bytes([0x15]))], fr
@@ -136,17 +158,24 @@ def test_pn532_registers():
 def test_pn532_list_targets():
     reset(MFC1K)
     # ATQA comes back MSB first (card sends 04 00, PN532 reports 00 04)
-    assert list_target() == bytes([0x01, 0x01, 0x00, 0x04, 0x08, 0x04, 0xDE, 0xAD, 0xBE, 0xEF])
+    assert list_target() == bytes(
+        [0x01, 0x01, 0x00, 0x04, 0x08, 0x04, 0xDE, 0xAD, 0xBE, 0xEF]
+    )
     # selecting a specific UID
     assert pn([0x4A, 0x01, 0x00, 0xDE, 0xAD, 0xBE, 0xEF])[0] == 1
     assert pn([0x4A, 0x01, 0x00, 0x11, 0x22, 0x33, 0x44]) == bytes([0x00])
     # unsupported modulation (FeliCa 212k): nothing found
     assert pn([0x4A, 0x01, 0x01, 0x00, 0xFF, 0xFF, 0x00, 0x00]) == bytes([0x00])
     lib.t_set_card(UL)
-    assert list_target() == bytes([0x01, 0x01, 0x00, 0x44, 0x00, 0x07, 0x04, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66])
+    assert list_target() == bytes(
+        [0x01, 0x01, 0x00, 0x44, 0x00, 0x07, 0x04, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66]
+    )
     lib.t_set_card(ISO4A)
     ats = bytes.fromhex("0C7877B10280" "31C073C84000")
-    assert list_target() == bytes([0x01, 0x01, 0x03, 0x04, 0x20, 0x04, 0x08, 0xAA, 0xBB, 0xCC]) + ats
+    assert (
+        list_target()
+        == bytes([0x01, 0x01, 0x03, 0x04, 0x20, 0x04, 0x08, 0xAA, 0xBB, 0xCC]) + ats
+    )
     lib.t_set_card(NONE)
     assert list_target() == bytes([0x00])
 
@@ -197,10 +226,18 @@ def test_pn532_ultralight():
 def test_pn532_iso14443_4_is_stateful():
     reset(ISO4A)
     list_target()
-    assert dex([0x00, 0xB0, 0x00, 0x00]) == bytes([0x00, 0x69, 0x85])  # not selected yet
-    assert dex([0x00, 0xA4, 0x04, 0x00, 0x06], bytes.fromhex("F00102030405")) == bytes([0x00, 0x90, 0x00])
-    assert dex([0x00, 0xB0, 0x00, 0x00]) == bytes([0x00]) + b"HELO" + bytes([0x90, 0x00])
-    assert dex([0x00, 0xA4, 0x04, 0x00, 0x06], bytes.fromhex("112233445566")) == bytes([0x00, 0x6A, 0x82])
+    assert dex([0x00, 0xB0, 0x00, 0x00]) == bytes(
+        [0x00, 0x69, 0x85]
+    )  # not selected yet
+    assert dex([0x00, 0xA4, 0x04, 0x00, 0x06], bytes.fromhex("F00102030405")) == bytes(
+        [0x00, 0x90, 0x00]
+    )
+    assert dex([0x00, 0xB0, 0x00, 0x00]) == bytes([0x00]) + b"HELO" + bytes(
+        [0x90, 0x00]
+    )
+    assert dex([0x00, 0xA4, 0x04, 0x00, 0x06], bytes.fromhex("112233445566")) == bytes(
+        [0x00, 0x6A, 0x82]
+    )
 
 
 def test_pn532_extended_frames():
@@ -208,12 +245,17 @@ def test_pn532_extended_frames():
     list_target()
     # answer longer than 255 bytes -> the engine must answer with an extended frame
     raw = pn_raw(frame([0x40, 0x01, 0x00, 0xC0, 0x00, 0x00]))
-    assert raw[6:11] == b"\x00\x00\xff\xff\xff", raw[:12].hex()  # after the ACK: extended-frame header
+    assert raw[6:11] == b"\x00\x00\xff\xff\xff", raw[
+        :12
+    ].hex()  # after the ACK: extended-frame header
     fr = split_frames(raw)
     assert fr[0][0] == "ack" and fr[1][0] == "resp"
     data = fr[1][1]
     assert data[0] == 0x41 and data[1] == 0x00
-    assert data[2:260] == bytes(i & 0xFF for i in range(258)) and data[260:262] == b"\x90\x00"
+    assert (
+        data[2:260] == bytes(i & 0xFF for i in range(258))
+        and data[260:262] == b"\x90\x00"
+    )
     # a long command arriving as an extended frame
     long_apdu = bytes([0x00, 0xD6, 0x00, 0x00, 0xFF]) + bytes(255)
     fr = split_frames(pn_raw(frame([0x40, 0x01] + list(long_apdu))))
@@ -223,10 +265,14 @@ def test_pn532_extended_frames():
 def test_pn532_comm_thru_bit_framing_and_crc():
     reset(MFC1K)
     list_target()
-    pn([0x08, 0x63, 0x02, 0x00, 0x63, 0x03, 0x00, 0x63, 0x3D, 0x07])  # no CRC, 7-bit first byte
+    pn(
+        [0x08, 0x63, 0x02, 0x00, 0x63, 0x03, 0x00, 0x63, 0x3D, 0x07]
+    )  # no CRC, 7-bit first byte
     assert pn([0x42, 0x26]) == bytes([0x00, 0xD9])
     assert lib.t_stat(4) == 7 and lib.t_stat(5) == 0 and lib.t_stat(6) == 0
-    pn([0x08, 0x63, 0x02, 0x80, 0x63, 0x03, 0x80, 0x63, 0x3D, 0x00])  # CRC on, full bytes
+    pn(
+        [0x08, 0x63, 0x02, 0x80, 0x63, 0x03, 0x80, 0x63, 0x3D, 0x00]
+    )  # CRC on, full bytes
     pn([0x42, 0x30, 0x04])
     assert lib.t_stat(4) == 16 and lib.t_stat(5) == 1 and lib.t_stat(6) == 1
 
@@ -234,7 +280,10 @@ def test_pn532_comm_thru_bit_framing_and_crc():
 def test_pn532_framing_robustness():
     reset(MFC1K)
     # one byte at a time
-    assert split_frames(pn_raw(frame([0x02]), chunk=1)) == [("ack", b""), ("resp", bytes([0x03, 0x32, 0x01, 0x06, 0x07]))]
+    assert split_frames(pn_raw(frame([0x02]), chunk=1)) == [
+        ("ack", b""),
+        ("resp", bytes([0x03, 0x32, 0x01, 0x06, 0x07])),
+    ]
     # garbage in front
     fr = split_frames(pn_raw(bytes([0x12, 0x34, 0xAA]) + frame([0x02])))
     assert fr[-1] == ("resp", bytes([0x03, 0x32, 0x01, 0x06, 0x07]))
@@ -273,7 +322,10 @@ def test_ccid_basics():
     # truncated message / lying dwLength -> nothing sent
     out = (C.c_ubyte * 300)()
     assert lib.t_ccid(buf(b"\x62\x00"), 2, out, 300) == 0
-    assert lib.t_ccid(buf(bytes([0x6F, 0xFF, 0x00, 0, 0, 0, 0, 0, 0, 0])), 10, out, 300) == 0
+    assert (
+        lib.t_ccid(buf(bytes([0x6F, 0xFF, 0x00, 0, 0, 0, 0, 0, 0, 0])), 10, out, 300)
+        == 0
+    )
 
 
 def test_ccid_atr_and_power():
@@ -282,7 +334,7 @@ def test_ccid_atr_and_power():
     assert r[0] == 0x81 and r[7] == 0x02
     r = ccid(0x62)
     assert r[0] == 0x80 and r[7] == 0x00  # DataBlock, ICC active, command ok
-    atr = r[10:10 + (r[1] | r[2] << 8)]
+    atr = r[10 : 10 + (r[1] | r[2] << 8)]
     # the well-known PC/SC part 3 ATR for a MIFARE Classic 1K
     assert atr.hex() == "3b8f8001804f0ca0000003060300010000000" "06a", atr.hex()
     assert ccid(0x65)[7] == 0x00  # present and active
@@ -303,9 +355,13 @@ def test_ccid_atr_and_power():
         assert x == 0, "TCK wrong for %d: %s" % (kind, a.hex())
     out = (C.c_ubyte * 64)()
     n = lib.t_atr(ISO4A, out, 64)
-    assert bytes(out[:n]).hex().startswith("3b87800180" "31c073c84000"), bytes(out[:n]).hex()
+    assert bytes(out[:n]).hex().startswith("3b87800180" "31c073c84000"), bytes(
+        out[:n]
+    ).hex()
     n = lib.t_atr(UL, out, 64)
-    assert bytes(out[:n])[12:16].hex() == "03000300", bytes(out[:n]).hex()  # SS=03, name=0003 (Ultralight)
+    assert bytes(out[:n])[12:16].hex() == "03000300", bytes(
+        out[:n]
+    ).hex()  # SS=03, name=0003 (Ultralight)
 
 
 def test_ccid_pcsc_pseudo_apdus_classic():
@@ -332,7 +388,9 @@ def test_ccid_pcsc_pseudo_apdus_classic():
     assert apdu("FF86000005" "0100036001") == bytes.fromhex("6300")
     assert apdu("FFB0000310") == bytes.fromhex("6982")  # failed auth drops the old one
     assert apdu("FF99000000") == bytes.fromhex("6A81")  # unknown pseudo-APDU
-    assert apdu("00A4040000") == bytes.fromhex("6E00")  # real ISO7816 APDU, not an ISO-DEP card
+    assert apdu("00A4040000") == bytes.fromhex(
+        "6E00"
+    )  # real ISO7816 APDU, not an ISO-DEP card
 
 
 def test_ccid_pcsc_ultralight():
@@ -346,7 +404,9 @@ def test_ccid_pcsc_ultralight():
     lib.t_ul_page(5, pg)
     assert bytes(pg) == bytes.fromhex("DEADBEEF")
     assert apdu("FFD6000204" "00000000") == bytes.fromhex("6300")  # locked page
-    assert apdu("FFD600050" "3" "000000") == bytes.fromhex("6700")  # not a multiple of 4
+    assert apdu("FFD600050" "3" "000000") == bytes.fromhex(
+        "6700"
+    )  # not a multiple of 4
 
 
 def test_ccid_iso14443_4_passthrough():
@@ -355,24 +415,36 @@ def test_ccid_iso14443_4_passthrough():
     assert r[10:12] == b"\x3b\x87"
     assert apdu("00B00000") == bytes.fromhex("6985")
     assert apdu("00A4040006F00102030405") == bytes.fromhex("9000")
-    assert apdu("00B00000") == b"HELO" + bytes.fromhex("9000")  # applet state survives between messages
+    assert apdu("00B00000") == b"HELO" + bytes.fromhex(
+        "9000"
+    )  # applet state survives between messages
     assert apdu("FFCA000000") == bytes.fromhex("08AABBCC9000")
-    assert apdu("FFCA010000") == bytes.fromhex("80" "31C073C84000" "9000")  # historical bytes
+    assert apdu("FFCA010000") == bytes.fromhex(
+        "80" "31C073C84000" "9000"
+    )  # historical bytes
 
 
 def test_ccid_pn532_escape_for_libnfc_acr122_style_access():
     reset(MFC1K)
     ccid(0x62)
-    assert apdu("FF00000004" "D44A0100") == bytes.fromhex("D54B01010004" "08" "04" "DEADBEEF" "9000")
-    assert apdu("FF00000002D402") == bytes.fromhex("D503320106079000")  # GetFirmwareVersion
-    assert apdu("FF00000002" "D48C") == bytes.fromhex("6300")  # unsupported PN532 command
+    assert apdu("FF00000004" "D44A0100") == bytes.fromhex(
+        "D54B01010004" "08" "04" "DEADBEEF" "9000"
+    )
+    assert apdu("FF00000002D402") == bytes.fromhex(
+        "D503320106079000"
+    )  # GetFirmwareVersion
+    assert apdu("FF00000002" "D48C") == bytes.fromhex(
+        "6300"
+    )  # unsupported PN532 command
     assert apdu("FF00000002" "D502") == bytes.fromhex("6A81")  # must start with D4
 
 
 def test_ccid_slot_change_notifications():
     reset(MFC1K)
     note = (C.c_ubyte * 2)()
-    assert lib.t_ccid_notify(note) == 2 and bytes(note) == bytes([0x50, 0x03])  # card present at start
+    assert lib.t_ccid_notify(note) == 2 and bytes(note) == bytes(
+        [0x50, 0x03]
+    )  # card present at start
     assert lib.t_ccid_notify(note) == 0
     lib.t_set_card(NONE)
     lib.t_set_time(100)
@@ -411,7 +483,12 @@ _seq = [0]
 
 def ccid(mtype, data=b"", slot=0):
     _seq[0] = (_seq[0] + 1) & 0xFF
-    msg = bytes([mtype]) + len(data).to_bytes(4, "little") + bytes([slot, _seq[0], 0, 0, 0]) + data
+    msg = (
+        bytes([mtype])
+        + len(data).to_bytes(4, "little")
+        + bytes([slot, _seq[0], 0, 0, 0])
+        + data
+    )
     out = (C.c_ubyte * 300)()
     n = lib.t_ccid(buf(msg), len(msg), out, 300)
     r = bytes(out[:n])
@@ -432,7 +509,11 @@ def apdu(hexstr):
 
 
 def main():
-    tests = [(n, f) for n, f in sorted(globals().items()) if n.startswith("test_") and callable(f)]
+    tests = [
+        (n, f)
+        for n, f in sorted(globals().items())
+        if n.startswith("test_") and callable(f)
+    ]
     failed = 0
     for name, fn in tests:
         try:
@@ -441,6 +522,7 @@ def main():
         except Exception as e:  # noqa
             failed += 1
             import traceback
+
             print("FAIL ", name, "-", repr(e))
             traceback.print_exc()
     print("\n%d tests, %d failed" % (len(tests), failed))

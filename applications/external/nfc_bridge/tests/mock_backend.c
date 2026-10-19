@@ -37,7 +37,8 @@ void mock_reset(MockCard kind) {
             mock_mfc[b][9] = 0x69;
             memcpy(mock_mfc[b] + 10, KEY_B, 6);
         } else {
-            for(int i = 0; i < 16; i++) mock_mfc[b][i] = (uint8_t)(b * 16 + i);
+            for(int i = 0; i < 16; i++)
+                mock_mfc[b][i] = (uint8_t)(b * 16 + i);
         }
     }
     mock_mfc[0][0] = 0xDE;
@@ -46,7 +47,8 @@ void mock_reset(MockCard kind) {
     mock_mfc[0][3] = 0xEF;
     mock_mfc[0][4] = 0xDE ^ 0xAD ^ 0xBE ^ 0xEF;
     for(int p = 0; p < 16; p++)
-        for(int i = 0; i < 4; i++) mock_ul[p][i] = (uint8_t)(0x40 + p * 4 + i);
+        for(int i = 0; i < 4; i++)
+            mock_ul[p][i] = (uint8_t)(0x40 + p * 4 + i);
     mock_detect_calls = mock_release_calls = mock_apdu_calls = mock_raw_calls = 0;
     mock_last_raw_bits = 0;
     now_ms = 0;
@@ -75,7 +77,8 @@ static int m_detect(void* ctx, NbTag* t) {
         return 1;
     }
     case MOCK_ISO4A: {
-        static const uint8_t ats[12] = {0x0C, 0x78, 0x77, 0xB1, 0x02, 0x80, 0x31, 0xC0, 0x73, 0xC8, 0x40, 0x00};
+        static const uint8_t ats[12] = {
+            0x0C, 0x78, 0x77, 0xB1, 0x02, 0x80, 0x31, 0xC0, 0x73, 0xC8, 0x40, 0x00};
         t->atqa[0] = 0x04;
         t->atqa[1] = 0x03;
         t->sak = 0x20;
@@ -121,8 +124,10 @@ static int m_apdu(void* ctx, const uint8_t* tx, size_t n, uint8_t* rx, size_t ma
         rx[5] = 0x00;
         return 6;
     }
-    if(n >= 4 && tx[0] == 0x00 && tx[1] == 0xC0) { /* long answer: forces an extended PN532 frame */
-        for(int i = 0; i < 258; i++) rx[i] = (uint8_t)i;
+    if(n >= 4 && tx[0] == 0x00 &&
+       tx[1] == 0xC0) { /* long answer: forces an extended PN532 frame */
+        for(int i = 0; i < 258; i++)
+            rx[i] = (uint8_t)i;
         rx[258] = 0x90;
         rx[259] = 0x00;
         return 260;
@@ -172,7 +177,8 @@ static int m_mfc_read(void* ctx, uint8_t blk, bool b, const uint8_t key[6], uint
     return NB_OK;
 }
 
-static int m_mfc_write(void* ctx, uint8_t blk, bool b, const uint8_t key[6], const uint8_t in[16]) {
+static int
+    m_mfc_write(void* ctx, uint8_t blk, bool b, const uint8_t key[6], const uint8_t in[16]) {
     (void)ctx;
     if(!key_ok(blk, b, key)) return NB_ERR_AUTH;
     if(blk == 0) return NB_ERR_IO; /* like a real card: block 0 is read-only */
@@ -183,7 +189,8 @@ static int m_mfc_write(void* ctx, uint8_t blk, bool b, const uint8_t key[6], con
 static int m_mful_read(void* ctx, uint8_t page, uint8_t out[16]) {
     (void)ctx;
     if(card != MOCK_UL || page >= 16) return NB_ERR_IO;
-    for(int i = 0; i < 4; i++) memcpy(out + 4 * i, mock_ul[(page + i) % 16], 4); /* reads wrap around */
+    for(int i = 0; i < 4; i++)
+        memcpy(out + 4 * i, mock_ul[(page + i) % 16], 4); /* reads wrap around */
     return NB_OK;
 }
 

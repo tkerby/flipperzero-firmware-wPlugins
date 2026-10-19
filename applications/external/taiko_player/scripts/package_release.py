@@ -27,11 +27,13 @@ def fap_metadata(path):
         raise ValueError(f"Not a little-endian ELF32 FAP: {path}")
     offset = struct.unpack_from("<I", data, 32)[0]
     size, count, names_index = struct.unpack_from("<HHH", data, 46)
-    sections = [struct.unpack_from("<10I", data, offset + i * size) for i in range(count)]
+    sections = [
+        struct.unpack_from("<10I", data, offset + i * size) for i in range(count)
+    ]
     names_section = sections[names_index]
-    names = data[names_section[4]:names_section[4] + names_section[5]]
+    names = data[names_section[4] : names_section[4] + names_section[5]]
     for section in sections:
-        if names[section[0]:].split(b"\0", 1)[0] == b".fapmeta":
+        if names[section[0] :].split(b"\0", 1)[0] == b".fapmeta":
             magic, schema, api, hardware = struct.unpack_from("<IIIh", data, section[4])
             if (magic, schema, hardware) != (0x52474448, 1, 7):
                 raise ValueError(f"Unsupported FAP metadata: {path}")
@@ -82,7 +84,9 @@ python3 scripts/prepare_songs.py songs --output sdcard/apps_data/taiko_player/so
 
 
 def package(version, output):
-    commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+    commit = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+    ).strip()
     dirty = bool(subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT))
     sdk_homes = {
         "official": Path(os.environ.get("UFBT_HOME", Path.home() / ".ufbt")),
@@ -104,21 +108,29 @@ def package(version, output):
             sdk = json.loads((sdk_home / "current/components.json").read_text())["meta"]
             if sdk["hw_target"] != metadata["hardware_target"]:
                 raise ValueError(f"{firmware}: SDK hardware target mismatch")
-            metadata.update({
-                "firmware": firmware,
-                "sdk_version": sdk["version"],
-                "source_commit": commit,
-                "source_dirty": dirty,
-                "fap_sha256": hashlib.sha256(fap.read_bytes()).hexdigest(),
-            })
+            metadata.update(
+                {
+                    "firmware": firmware,
+                    "sdk_version": sdk["version"],
+                    "source_commit": commit,
+                    "source_dirty": dirty,
+                    "fap_sha256": hashlib.sha256(fap.read_bytes()).hexdigest(),
+                }
+            )
             files = {
                 "sdcard/apps/Media/taiko_player.fap": fap.read_bytes(),
                 "README.md": (ROOT / "README.md").read_bytes(),
                 "README.en.md": (ROOT / "README.en.md").read_bytes(),
                 "LICENSE": (ROOT / "LICENSE").read_bytes(),
-                "screenshots/playing.png": (ROOT / "screenshots/playing.png").read_bytes(),
-                "assets/taiko_player.svg": (ROOT / "assets/taiko_player.svg").read_bytes(),
-                "INSTALL.md": installation(version, firmware, sdk["version"], metadata["api"]).encode(),
+                "screenshots/playing.png": (
+                    ROOT / "screenshots/playing.png"
+                ).read_bytes(),
+                "assets/taiko_player.svg": (
+                    ROOT / "assets/taiko_player.svg"
+                ).read_bytes(),
+                "INSTALL.md": installation(
+                    version, firmware, sdk["version"], metadata["api"]
+                ).encode(),
                 "BUILD.json": (json.dumps(metadata, indent=2) + "\n").encode(),
             }
             for document in sorted((ROOT / "docs").rglob("*.md")):
@@ -126,7 +138,9 @@ def package(version, output):
             for name in ("SFX-LICENSE.txt", "SFX-NOTICE.md"):
                 files[f"assets/{name}"] = (ROOT / "assets" / name).read_bytes()
             for name in effect_files:
-                files[f"sdcard/apps_data/taiko_player/sfx/{name}"] = (effects / name).read_bytes()
+                files[f"sdcard/apps_data/taiko_player/sfx/{name}"] = (
+                    effects / name
+                ).read_bytes()
             for name in ("prepare_songs.py", "prepare_sfx.py"):
                 files[f"scripts/{name}"] = (ROOT / "scripts" / name).read_bytes()
             files["SHA256SUMS.txt"] = "".join(
@@ -135,7 +149,9 @@ def package(version, output):
             ).encode()
             output.mkdir(parents=True, exist_ok=True)
             archive = output / f"taiko-player-v{version}-{firmware}.zip"
-            with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as zipped:
+            with zipfile.ZipFile(
+                archive, "w", compression=zipfile.ZIP_DEFLATED
+            ) as zipped:
                 for directory in ("songs/", "sdcard/apps_data/taiko_player/songs/"):
                     zipped.writestr(directory, b"")
                 for name, data in sorted(files.items()):
@@ -144,9 +160,12 @@ def package(version, output):
                 assert zipped.testzip() is None
             artifacts.append(archive)
             print(f"{archive}: SDK {sdk['version']}, API {metadata['api']}")
-    (output / "SHA256SUMS.txt").write_text("".join(
-        f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}\n" for path in artifacts
-    ))
+    (output / "SHA256SUMS.txt").write_text(
+        "".join(
+            f"{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.name}\n"
+            for path in artifacts
+        )
+    )
 
 
 def main():
