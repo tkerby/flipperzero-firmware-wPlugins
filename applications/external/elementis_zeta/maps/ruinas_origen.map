@@ -1,0 +1,281 @@
+# Ruinas del Origen (D1, contract 68: Chapter 10), 13 x 14, a cave-like ruin (no bike) behind the sealed gate of the Meseta Cumbre. column = i, row = j. The way in is the door mat (7,13) <- Meseta Cumbre ((4,0) behind the sealed slab);
+# the hero arrives at (7,12) facing N. Look: the user's approved RUINAS scenes (tools/c10_mock.py): BIG light ancient slabs (2 x 2, `aslab_<i%2><j%2>`), EIGHT pedestals in a ring (they light up), the mural stele of Genesa and Arkegen
+# on the back wall, fallen columns. THE PUZZLE: the mural (7,2) tells the order in which the eight symbols were born (LUZ, MAR, TIERRA, FUEGO, VIENTO, VIDA, NOCHE, ECO); each pedestal is carved with one symbol (talking to it asks
+# "place a fragment?"); a correct pedestal lights (flags lit_1 .. lit_7, the 8th is ruins_solved), a wrong one puts every stone out again (the fragments are never consumed). The 8th correct stone sets ruins_solved: GENESA appears
+# at the ring's centre (7,7). ONE CHANCE: she asks YES / NO, the flag genesa_try is set BEFORE the battle (a faint or a flight cannot undo it), the legendary fight (`wild_set genesa 50 + 128`); afterwards genesa_gone hides her
+# for good. A save that already holds Genesa (the old Lin gift, flag genesa_given) gets the shrine without a battle (ruins_enter sets genesa_gone; `solved` hands a consolation).
+@map ruinas_origen
+@size 13 14
+@interior no
+@cave yes
+@area ruinas_origen
+@bg 0
+@fill aslab_00
+@spawn in 7 12 N
+@legend
+  a  tile=aslab_00
+  b  tile=aslab_10
+  c  tile=aslab_01
+  d  tile=aslab_11
+  K  tile=none object=wall_corner
+  w  tile=none object=wall_j
+  |  tile=none object=wall_i
+  M  tile=aslab_10 object=ostele interact=look script=mural
+  e  tile=aslab_11 object=fcol_i
+  g  tile=aslab_00 object=fcol_j
+  G  tile=aslab_11 npc=genesa_ow id=genesa face=S solid=yes script=genesa_talk show_flag=ruins_solved hide_flag=genesa_gone
+  m  tile=mat
+  1  tile=aslab_10 object=ped0 interact=look script=ped_luz npc=ped_lit id=p1 face=S show_flag=lit_1
+  2  tile=aslab_01 object=ped0 interact=look script=ped_mar npc=ped_lit id=p2 face=S show_flag=lit_2
+  3  tile=aslab_01 object=ped0 interact=look script=ped_tierra npc=ped_lit id=p3 face=S show_flag=lit_3
+  4  tile=aslab_10 object=ped0 interact=look script=ped_fuego npc=ped_lit id=p4 face=S show_flag=lit_4
+  5  tile=aslab_10 object=ped0 interact=look script=ped_viento npc=ped_lit id=p5 face=S show_flag=lit_5
+  6  tile=aslab_01 object=ped0 interact=look script=ped_vida npc=ped_lit id=p6 face=S show_flag=lit_6
+  7  tile=aslab_10 object=ped0 interact=look script=ped_noche npc=ped_lit id=p7 face=S show_flag=lit_7
+  8  tile=aslab_01 object=ped0 interact=look script=ped_eco npc=ped_lit id=p8 face=S show_flag=ruins_solved
+@grid
+  Kwwwwwwwwwwww
+  |dcdcdcdcdcdc
+  |bababaMababa
+  |dcecdcdcdcdc
+  |babababababg
+  |dcdcd3d6dcdc
+  |baba5aba1aba
+  |dcdcdcGcdcdc
+  |baba7aba4aba
+  |dcdcd2d8dcec
+  |bgbababababa
+  |dcdcdcdcdcdc
+  |babababababa
+  |dcdcdcmcdcdc
+@warp m -> meseta_cumbre spawn=ruins_door
+
+# The door of the ruins: a save that already holds Genesa (the old Lin gift) or that spent its one chance has no Genesa here (she is hidden at once: the map's NPC state is read from the flags).
+@script ruins_enter on_enter
+    jf genesa_try gone
+    jf genesa_given gone
+    end
+  gone:
+    setf genesa_gone
+@end
+
+# The mural: five pages that tell the order of the eight symbols (the pedestals' carvings); once the puzzle is solved the last words of the legend follow.
+@script mural interact
+    say ru.mural.1
+    say ru.mural.2
+    say ru.mural.3
+    say ru.mural.4
+    say ru.mural.5
+    jnf ruins_solved done
+    say ru.mural.end1
+    say ru.mural.end2
+  done:
+    end
+@end
+
+# Wrong order (or a stone out of turn): every light goes out again; the fragments stay in the bag.
+@script reset called
+    clrf lit_1
+    clrf lit_2
+    clrf lit_3
+    clrf lit_4
+    clrf lit_5
+    clrf lit_6
+    clrf lit_7
+    sfx cancel
+@end
+
+@script ped_luz called
+    jf lit_1 done
+    ask ru.p.luz
+    jv 0 1 yes
+    end
+  yes:
+    setf lit_1
+    sfx item
+    say ru.placed
+    end
+  done:
+    say ru.lit
+@end
+
+@script ped_mar called
+    jf lit_2 done
+    ask ru.p.mar
+    jv 0 1 yes
+    end
+  yes:
+    jnf lit_1 wrong
+    setf lit_2
+    sfx item
+    say ru.placed
+    end
+  wrong:
+    call reset
+    say ru.wrong
+    end
+  done:
+    say ru.lit
+@end
+
+@script ped_tierra called
+    jf lit_3 done
+    ask ru.p.tierra
+    jv 0 1 yes
+    end
+  yes:
+    jnf lit_2 wrong
+    setf lit_3
+    sfx item
+    say ru.placed
+    end
+  wrong:
+    call reset
+    say ru.wrong
+    end
+  done:
+    say ru.lit
+@end
+
+@script ped_fuego called
+    jf lit_4 done
+    ask ru.p.fuego
+    jv 0 1 yes
+    end
+  yes:
+    jnf lit_3 wrong
+    setf lit_4
+    sfx item
+    say ru.placed
+    end
+  wrong:
+    call reset
+    say ru.wrong
+    end
+  done:
+    say ru.lit
+@end
+
+@script ped_viento called
+    jf lit_5 done
+    ask ru.p.viento
+    jv 0 1 yes
+    end
+  yes:
+    jnf lit_4 wrong
+    setf lit_5
+    sfx item
+    say ru.placed
+    end
+  wrong:
+    call reset
+    say ru.wrong
+    end
+  done:
+    say ru.lit
+@end
+
+@script ped_vida called
+    jf lit_6 done
+    ask ru.p.vida
+    jv 0 1 yes
+    end
+  yes:
+    jnf lit_5 wrong
+    setf lit_6
+    sfx item
+    say ru.placed
+    end
+  wrong:
+    call reset
+    say ru.wrong
+    end
+  done:
+    say ru.lit
+@end
+
+@script ped_noche called
+    jf lit_7 done
+    ask ru.p.noche
+    jv 0 1 yes
+    end
+  yes:
+    jnf lit_6 wrong
+    setf lit_7
+    sfx item
+    say ru.placed
+    end
+  wrong:
+    call reset
+    say ru.wrong
+    end
+  done:
+    say ru.lit
+@end
+
+@script ped_eco called
+    jf ruins_solved done
+    ask ru.p.eco
+    jv 0 1 yes
+    end
+  yes:
+    jnf lit_7 wrong
+    call solved
+    end
+  wrong:
+    call reset
+    say ru.wrong
+    end
+  done:
+    say ru.lit
+@end
+
+# The eighth stone: the whole ring shines and Genesa appears at its centre (her NPC's show flag is ruins_solved). A save that already holds Genesa gets the shrine without a second battle and a consolation (5 Growth Seeds).
+@script solved called
+    setf ruins_solved
+    sfx evo_done
+    say ru.solved
+    jnf genesa_given appear
+    say ru.old1
+    give_item growth_seed 5
+    jv 0 0 old_full
+    say gl.d1.candies
+    say ru.old2
+    end
+  old_full:
+    say gl.found.full
+    end
+  appear:
+    sfx legend_cry
+    say ru.appear
+@end
+
+# Genesa. ONE chance: `genesa_try` is committed before the battle and read by ruins_enter, so a faint (the blackout cuts the script), a flight (the result 2) or a win (the foe faints) all end with her gone; a catch ends it too.
+# EXCEPT the result 4 (WILD_NOTOPEN, §72: the battle plugin / heap could not open, no fight took place): the chance is given back (`clrf genesa_try`), she stays and says the air trembles.
+# The fight is the legendary idiom of contract 52 written by hand (`wild_set` with level + 128, the music, the intro and the cry follow). Genesa L50 (is L30; this is the post-game).
+@script genesa_talk npc
+    npc_face_hero genesa
+    say ru.genesa.1
+    say ru.genesa.2
+    ask ru.genesa.ask
+    jv 0 1 go
+    say ru.genesa.wait
+    end
+  go:
+    setf genesa_try
+    sfx legend_cry
+    wild_set genesa 178
+    wild_go 0
+    jv 0 4 noopen
+    setf genesa_gone
+    jv 0 3 caught
+    say ru.genesa.gone
+    end
+  noopen:
+    clrf genesa_try
+    say ru.genesa.retry
+    end
+  caught:
+    say ru.genesa.got
+    say ru.mural.end2
+@end

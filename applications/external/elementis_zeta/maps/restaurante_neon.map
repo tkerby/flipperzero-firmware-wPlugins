@@ -1,0 +1,55 @@
+# Restaurante de Neon (C4b, contract 41), 12 x 8, interior. column = i, row = j. A small diner: a counter with stools, tables, a cook. A man at a table asks you to take the COIN PURSE
+# off his hands: `estuche`, flag 800, given once (a full bag: he keeps it for the next time).
+@map restaurante_neon
+@size 12 8
+@interior yes
+@bg 3
+@fill floor_wood
+@spawn door 5 6 N
+@flag case_given 800
+@legend
+  .  tile=floor_wood
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  tile=floor_wood npc=tendero id=cook face=SW text=diner.cook
+  f  tile=floor_wood object=counter
+  g  tile=floor_wood npc=vecino_m id=man face=E script=case_man
+  h  tile=floor_wood object=table
+  i  tile=floor_wood object=stool
+  j  tile=floor_wood npc=mama id=diner_girl face=N text=diner.npc.a
+  k  tile=floor_wood npc=vecino_m id=diner_guy face=NW text=diner.npc.b
+  l  tile=floor_wood object=planter
+  m  tile=mat
+@grid
+  abbbcbbbcbbb
+  d........e..
+  d......ffff.
+  dgh.h..iiii.
+  d...j.......
+  d.h.......k.
+  dl..........
+  d....mm.....
+@warp m -> metropolis_neon_2 spawn=diner_door
+
+# The man with the Coin Purse: he cannot use it any more; whoever listens gets it (once: flag 768; a full bag: next time).
+@script case_man npc
+    npc_face_hero man
+    jf case_given said
+    say diner.man.hi
+    say diner.man.t1
+    say diner.man.offer
+    give_item estuche 1
+    jv 0 0 full
+    item_var 0 estuche
+    say gl.gift
+    setf case_given
+    say diner.man.about
+    end
+  full:
+    say gl.found.full
+    end
+  said:
+    say diner.man.after
+@end

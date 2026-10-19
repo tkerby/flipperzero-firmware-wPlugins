@@ -1,0 +1,103 @@
+# Ruta 19 (Route 19: the sea south of Ciudad Ambar, C7, contract 53), 26 x 34. column = i, row = j. Ambar's sea (`mar_ambar`, its far wall is open now) arrives at the NORTH edge (spawn `north`); the open SEA
+# (foam, 2 frames) is crossed on the Hidrodeslizador. Two walls of sea rocks (rows 9 and 19) cross it; their gaps (10,9) / (18,19) are watched by two SWIMMERS on sandbars (11,9) / (19,19), who look along the wall: a rider
+# passing the free cell is next to them (sea tiles are solid for the sight rule, so a swimmer only sees at distance 1); two more swimmers on islets off the road (talk to them). Kelp beds (the water table rolls under them),
+# buoys and lone rocks. At the SOUTH end the ice ISLAND of the Islas Escarcha: big pale ice slabs, snow drifts and ice pillars, a sign and the cave MOUTH (12,27) -> Islas Escarcha floor 1 (east side). Wild water table + the three rods.
+@map ruta_19
+@size 26 34
+@interior no
+@area ruta_19
+@bg 0
+@nofollow yes                   # contract 69: the follower stays out of the ferry and the sea
+@surf yes
+@fill sea_o
+@encounters water rate=15
+  urchip 36 38 5
+  urchlord 36 40 45
+  gleamlet 36 39 20
+  clubrimp 36 40 15
+  lazatee 38 40 10
+  skipgoby 36 39 5
+@end
+@encounters fish_old
+  flopfin 5 5 100
+@end
+@encounters fish_good rate=128
+  glidefin 20 24 40
+  inkit 20 24 40
+  flopfin 15 15 20
+@end
+@encounters fish_super
+  inkit 28 34 30
+  glidefin 28 34 30
+  barnacub 30 34 20
+  urchip 30 34 20
+@end
+@spawn north 12 1 S
+@spawn island 12 28 S
+@legend
+  .  tile=sea_o
+  a  tile=sea_o object=sea_rock_b
+  b  tile=sea_o object=sea_rock_a
+  c  tile=sea_bl
+  d  tile=sea_tr
+  e  tile=ice_00
+  f  tile=ice_10
+  g  tile=ice_11
+  h  tile=ice_01
+  i  tile=sea_o object=kelp
+  j  tile=sea_o object=buoy
+  k  tile=sea_tl
+  l  tile=ice_01 object=snow_drift
+  m  tile=ice_11 object=ice_pillar
+  n  tile=ice_10 object=snow_drift
+  o  tile=sea_gate
+  p  tile=sea_tl object=sea_rock_a
+  q  tile=sea_o object=sandbar
+  r  tile=ice_00 object=snow_drift
+  s  tile=sea_gate
+  t  tile=sand_a after=tr.nadador_r19a.after face=N id=sw1 npc=nadador range=2 text=tr.nadador_r19a.pre trainer=nadador_r19a
+  u  tile=sand_a after=tr.nadador_r19c.after face=W id=sw3 npc=nadador range=3 text=tr.nadador_r19c.pre trainer=nadador_r19c
+  v  tile=sand_a after=tr.nadadora_r19b.after face=N id=sw2 npc=nadadora range=2 text=tr.nadadora_r19b.pre trainer=nadadora_r19b
+  w  tile=sand_a after=tr.nadadora_r19d.after face=E id=sw4 npc=nadadora range=3 text=tr.nadadora_r19d.pre trainer=nadadora_r19d
+  x  tile=ice_01 object=ice_mouth
+  y  tile=ice_01 object=ice_pillar
+  z  tile=ice_00 object=sign interact=look text=r19.sign
+  A  tile=sea_tl_tr
+  H  tile=ice_11 hidden=life_spark   # hidden (contract 80, hidden items)
+@grid
+  ............oo............
+  ............s.............
+  ...b......................
+  ........j.............a...
+  ....ii....................
+  ....................ii....
+  ........a.................
+  ..................j.......
+  ...........c..............
+  bababababa.tpababababababa
+  ...........d..............
+  ...j..............b.......
+  ........q............c....
+  ...............ii....uk...
+  ......ii.............d....
+  ...........a..............
+  ....b..................j..
+  ......................a...
+  ...................c......
+  bababababababababa.vpababa
+  ...................d......
+  ..........................
+  ....c.........b.......i...
+  ....wk...j................
+  ....d.........j...q.......
+  ..a.....cccccccccc...j....
+  ......ccefefefefefkc......
+  ......hglghmxmhglghHk...b.
+  ...ii.efefrfefefefenk.....
+  ......hmhghghglghgygk.....
+  ......rfenefzfenefefk.i...
+  .b....ddhghghghghgAd...a..
+  ........dddddddddd........
+  ..........................
+@warp o -> mar_ambar spawn=south
+@warp x -> islas_escarcha_1 spawn=east

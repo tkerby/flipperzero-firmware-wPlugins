@@ -1,0 +1,6 @@
+# Python dependencies of the asset pipeline (tools/build_assets.sh). Python >= 3.11 is required (the tools use `tomllib`).
+# Install:  python3 -m venv .venv && .venv/bin/pip install -r requirements.txt     (the scripts activate .venv by themselves when it exists)
+pillow==12.3.0
+
+# ufbt builds the .fap and the 7 .fal plugins (nucleo/). The SDK that matches the device's firmware API is installed by `ufbt update`, see README.md.
+ufbt==0.2.6

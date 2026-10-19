@@ -1,0 +1,34 @@
+title Torre Vertice - the corporate tower taken over: a stiff office march in G minor (a kick and a snare like a ticking clock), brass stabs that lean on the tritone, a siren, a fake-polite B flat major tune, an elevator ding and a chromatic climb (116 bpm)
+tempo 116
+vol 220
+meter 4/4
+inst bass v=255,170,140
+inst brass v=255,255,230,205,190
+inst lead v=255,255,225,195,180
+inst bell dec=3 sus=0.05 slow
+inst alarm arp=0,6 rate=4 lvl=0.8 slow
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+inst snr drum=a6 noise=25 seed=11 fall=12
+l8
+# --- 1-2: the clock (kick and snare, a pulse on G)
+@bass o3 [ !kick:g8 g8 !snr8 g8 !kick:g8 g8 !snr8 g8 ]2 |
+# --- 3-4: the march theme (G minor)
+@brass o4 !kick:g4 g8 g8 b-4 !snr:a4 |
+@brass o4 !kick:f4 f8 f8 a4 !snr:g4 |
+# --- 5-6: the stabs lean on the tritone (G against D flat, B flat against E)
+@brass o4 !kick:g8 r8 !snr:d-8 r8 !kick:g8 r8 !snr:d-4 |
+@brass o4 !kick:b-8 r8 !snr:e8 r8 !kick:b-8 r8 !snr:e4 |
+# --- 7-8: the siren
+@alarm o5 g2 d2 |
+@alarm o5 d-2 g2 |
+# --- 9-12: the polite tune (B flat major), a smile with nothing behind it, and a roll
+@lead o5 b-4. a8 g4 f4 |
+@lead o5 e-4. d8 c4 d4 |
+@lead o5 g4. f8 e-4 d4 |
+@lead o5 d4 r4 [ !snr16 ]8 |
+# --- 13-14: the lift arrives (ding), then the chromatic climb
+@bell o6 g2 d2 |
+@brass o4 g8 g+8 a8 b-8 b8 >c8 c+8 d8< |
+# --- 15-16: the march again, then it closes on the tritone
+@brass o4 !kick:g4 g8 g8 b-4 !snr:a4 |
+@brass o4 !kick:d-4 !snr:d-4 !kick:d4 !snr:d4 |

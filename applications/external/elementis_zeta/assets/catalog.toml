@@ -1,0 +1,872 @@
+# Sprite catalog (contract section 6). Read by tools/mapc.py and tools/spritec.py.
+#
+# sprite = [ {...} ]   one PHYSICAL sprite per entry
+#   name        unique id
+#   kind        "tile" | "object" | "actor"
+#   src         tile/object: path of the .lv.png (sibling .json has w,h,ax,ay)
+#               actor: folder with the PixelLab direction PNGs
+#   fw, fh      footprint in tiles (i by j). Tiles are 1x1.
+#   cflags      subset of solid grass water counter warp trigger ledge
+#               (tile = default flags of the tile; object = flags of each footprint cell)
+#   door_tiles  object-relative [i,j] cells of the footprint that are walkable doors
+#   ndirs, nframes   actors only (8 dirs, 1 frame for now)
+#   fill        tile: level 0..3 for the diamond under the art (omit = none)
+#               object: ground contact shadow drawn by render.c (omit = none): 1/2 = band of that level along
+#               the two front edges (also the floor AO next to walls), 3 = blob under a 1x1 object (trees, rocks)
+#   text        default text key for interactions on this sprite
+#
+# [alias]   LOGICAL name -> actual sprite (or list of sprites). Map files only ever use
+#           logical names, so swapping art never touches a .map file:
+#             house_player = "fb_house"        # fallback now
+#             # house_player = "house_player"  # real art later (or just delete the line)
+#           A list value ["a","b","c"] tiles a multi-cell logical object out of 1x1 sprites,
+#           row-major (j then i). Its length must equal fw*fh of the logical entry.
+# [variants]  group name -> list of tiles, picked per cell by hash(i,j); repeat to weight.
+#
+# Face convention: "_i" = the face whose normal is +i (screen down-right: left-wall column at
+# i=0, right fence column); "_j" = normal +j (screen down-left: back-wall row j=0, front fence row).
+# (TOML: top-level `sprite` comes first, the [alias] / [variants] tables after it.)
+
+sprite = [
+  # ---- tiles (assets/art/tiles/, from tools/gen_tiles.py) ----
+  { name = "grass_a",    kind = "tile", src = "assets/art/tiles/grass_a.lv.png",    cflags = [] },
+  { name = "grass_b",    kind = "tile", src = "assets/art/tiles/grass_b.lv.png",    cflags = [] },
+  { name = "grass_c",    kind = "tile", src = "assets/art/tiles/grass_c.lv.png",    cflags = [] },
+  { name = "flowers",    kind = "tile", src = "assets/art/tiles/flowers.lv.png",    cflags = [] },
+  # tall grass: the ONLY tile with C_GRASS (wild encounters, M3-B); the village's short grass is plain ground
+  { name = "tall_grass", kind = "tile", src = "assets/art/tiles/tall_grass.lv.png", cflags = ["grass"] },
+  # one-way ledges (C_LEDGE; the jump direction is the legend attribute `ledge=SW|SE|NE|NW`, which picks ledge_<dir>)
+  { name = "ledge_sw",   kind = "tile", src = "assets/art/tiles/ledge_sw.lv.png",   cflags = ["ledge"] },
+  { name = "ledge_se",   kind = "tile", src = "assets/art/tiles/ledge_se.lv.png",   cflags = ["ledge"] },
+  { name = "ledge_ne",   kind = "tile", src = "assets/art/tiles/ledge_ne.lv.png",   cflags = ["ledge"] },
+  { name = "ledge_nw",   kind = "tile", src = "assets/art/tiles/ledge_nw.lv.png",   cflags = ["ledge"] },
+  { name = "path_a",     kind = "tile", src = "assets/art/tiles/path_a.lv.png",     cflags = [] },
+  { name = "path_b",     kind = "tile", src = "assets/art/tiles/path_b.lv.png",     cflags = [] },
+  { name = "floor_wood", kind = "tile", src = "assets/art/tiles/floor_wood.lv.png", cflags = [], fill = 0 },
+  { name = "floor_lab",  kind = "tile", src = "assets/art/tiles/floor_lab.lv.png",  cflags = [], fill = 0 },
+  { name = "void_dark",  kind = "tile", src = "assets/art/tiles/void_dark.lv.png",  cflags = ["solid"] },   # M4-D: black solid diamond, the unseen depth of the forest
+  { name = "mat",        kind = "tile", src = "assets/art/tiles/mat.lv.png",        cflags = [], fill = 0 },
+
+  # ---- zone identity (M4 polish; drawn by tools/gen_tiles.py zone_pieces(), tools/zone_mock.py loads the same files) ----
+  # Pavers / flagstones (Ciudad Nodo, bg 0): no white opaque pixel -> no mask (105 B in a bank instead of 165 B)
+  { name = "pave_a",     kind = "tile", src = "assets/art/tiles/pave_a.lv.png",     cflags = [] },
+  { name = "pave_b",     kind = "tile", src = "assets/art/tiles/pave_b.lv.png",     cflags = [] },
+  { name = "plaza_a",    kind = "tile", src = "assets/art/tiles/plaza_a.lv.png",    cflags = [] },
+  { name = "plaza_b",    kind = "tile", src = "assets/art/tiles/plaza_b.lv.png",    cflags = [] },
+  # Bosque Umbrio (bg 3): the floor and the trail are opaque (white flecks / white earth) so they keep the mask
+  { name = "litter_a",   kind = "tile", src = "assets/art/tiles/litter_a.lv.png",   cflags = [] },
+  { name = "litter_b",   kind = "tile", src = "assets/art/tiles/litter_b.lv.png",   cflags = [] },
+  { name = "litter_c",   kind = "tile", src = "assets/art/tiles/litter_c.lv.png",   cflags = [] },
+  { name = "litter_d",   kind = "tile", src = "assets/art/tiles/litter_d.lv.png",   cflags = [] },
+  { name = "trail_a",    kind = "tile", src = "assets/art/tiles/trail_a.lv.png",    cflags = [] },
+  { name = "trail_b",    kind = "tile", src = "assets/art/tiles/trail_b.lv.png",    cflags = [] },
+  # Villa Aliso's pond: the engine only blocks C_SOLID | C_LEDGE, so the water tiles are ["water", "solid"]. mask = false: the white
+  # ripples are level 0 = transparent = the white outside colour of the village (bg 0), the same picture for 105 B instead of 165 B.
+  # Animated (contract 22): 2 frames, the ripples drift by 4 px; +105 B per tile in Villa Aliso (still well below Ciudad Nodo, the map
+  # the exploring guard measures).
+  { name = "water_tl_tr", kind = "tile", frames = ["assets/art/tiles/water_tl_tr_0.lv.png", "assets/art/tiles/water_tl_tr_1.lv.png"], cflags = ["water", "solid"], mask = false },
+  { name = "water_tr_br", kind = "tile", frames = ["assets/art/tiles/water_tr_br_0.lv.png", "assets/art/tiles/water_tr_br_1.lv.png"], cflags = ["water", "solid"], mask = false },
+  { name = "water_tl_bl", kind = "tile", frames = ["assets/art/tiles/water_tl_bl_0.lv.png", "assets/art/tiles/water_tl_bl_1.lv.png"], cflags = ["water", "solid"], mask = false },
+  { name = "water_br_bl", kind = "tile", frames = ["assets/art/tiles/water_br_bl_0.lv.png", "assets/art/tiles/water_br_bl_1.lv.png"], cflags = ["water", "solid"], mask = false },
+
+  # ---- M5-D: Pueblo Cantera (the quarry town) and the Rock gym (tools/gen_tiles.py cantera_pieces(); tools/town_mock.py loads the same files) ----
+  # Gravel / rails: the town is bg 0 (white outside), so the white dust is the background: mask = false saves a third of the bytes (105 B instead of 165 B per
+  # tile in a bank) and draws the same picture. Gym floor slabs (bg 3): fill = 0 draws the white diamond under the art, so the slab's own white needs no mask either.
+  { name = "gravel_a",   kind = "tile", src = "assets/art/tiles/gravel_a.lv.png",   cflags = [], mask = false },
+  { name = "gravel_b",   kind = "tile", src = "assets/art/tiles/gravel_b.lv.png",   cflags = [], mask = false },
+  { name = "gravel_c",   kind = "tile", src = "assets/art/tiles/gravel_c.lv.png",   cflags = [], mask = false },
+  { name = "rails_a",    kind = "tile", src = "assets/art/tiles/rails_a.lv.png",    cflags = [], mask = false },
+  # the gym floor: one big slab per 2 x 2 cells; slab_<i%2><j%2> = the tile of a cell by the parity of its coordinates (the map places them by character)
+  { name = "slab_00",    kind = "tile", src = "assets/art/tiles/slab_00.lv.png",    cflags = [], fill = 0, mask = false },
+  { name = "slab_01",    kind = "tile", src = "assets/art/tiles/slab_01.lv.png",    cflags = [], fill = 0, mask = false },
+  { name = "slab_10",    kind = "tile", src = "assets/art/tiles/slab_10.lv.png",    cflags = [], fill = 0, mask = false },
+  { name = "slab_11",    kind = "tile", src = "assets/art/tiles/slab_11.lv.png",    cflags = [], fill = 0, mask = false },
+
+  # ---- code-drawn objects (assets/art/tiles/, from tools/gen_tiles.py) ----
+  { name = "wall_j",     kind = "object", src = "assets/art/tiles/wall_j.lv.png",     fw = 1, fh = 1, cflags = ["solid"], fill = 2 },
+  { name = "wall_i",     kind = "object", src = "assets/art/tiles/wall_i.lv.png",     fw = 1, fh = 1, cflags = ["solid"], fill = 2 },
+  { name = "wall_corner",kind = "object", src = "assets/art/tiles/wall_corner.lv.png",fw = 1, fh = 1, cflags = ["solid"], fill = 2 },
+  { name = "wall_win_j", kind = "object", src = "assets/art/tiles/wall_win_j.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 2 },
+  { name = "wall_win_i", kind = "object", src = "assets/art/tiles/wall_win_i.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 2 },
+  { name = "fence_i",    kind = "object", src = "assets/art/tiles/fence_i.lv.png",    fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "fence_j",    kind = "object", src = "assets/art/tiles/fence_j.lv.png",    fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "sign",       kind = "object", src = "assets/art/tiles/sign.lv.png",       fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "skirt_i",    kind = "object", src = "assets/art/tiles/skirt_i.lv.png",    fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "skirt_j",    kind = "object", src = "assets/art/tiles/skirt_j.lv.png",    fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "tree_code",  kind = "object", src = "assets/art/tiles/tree_code.lv.png",  fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  { name = "rock_code",  kind = "object", src = "assets/art/tiles/rock_code.lv.png",  fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+
+  # ---- zone identity objects (M4 polish, tools/gen_tiles.py) ----
+  { name = "pine_a",      kind = "object", src = "assets/art/tiles/pine_a.lv.png",      fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  { name = "pine_b",      kind = "object", src = "assets/art/tiles/pine_b.lv.png",      fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  { name = "pine_dark_a", kind = "object", src = "assets/art/tiles/pine_dark_a.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  { name = "pine_dark_b", kind = "object", src = "assets/art/tiles/pine_dark_b.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  { name = "pine_dark_c", kind = "object", src = "assets/art/tiles/pine_dark_c.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  { name = "bush",        kind = "object", src = "assets/art/tiles/bush.lv.png",        fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  { name = "lamp",        kind = "object", src = "assets/art/tiles/lamp.lv.png",        fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "bench",       kind = "object", src = "assets/art/tiles/bench.lv.png",       fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "planter",     kind = "object", src = "assets/art/tiles/planter.lv.png",     fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  { name = "fountain",    kind = "object", src = "assets/art/tiles/fountain.lv.png",    fw = 2, fh = 2, cflags = ["solid"] },
+  { name = "picket_i",    kind = "object", src = "assets/art/tiles/picket_i.lv.png",    fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "picket_j",    kind = "object", src = "assets/art/tiles/picket_j.lv.png",    fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "mailbox",     kind = "object", src = "assets/art/tiles/mailbox.lv.png",     fw = 1, fh = 1, cflags = ["solid"] },
+  # flowerbed: the only level-0 pixels are the blossoms; without a mask they show the white grass under them (same picture, -72 B)
+  { name = "flowerbed",   kind = "object", src = "assets/art/tiles/flowerbed.lv.png",   fw = 1, fh = 1, cflags = ["solid"], mask = false },
+  { name = "log",         kind = "object", src = "assets/art/tiles/log.lv.png",         fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "stump",       kind = "object", src = "assets/art/tiles/stump.lv.png",       fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  # decoration the hero walks over / through: no cflags (the footprint stays free)
+  { name = "mushrooms",   kind = "object", src = "assets/art/tiles/mushrooms.lv.png",   fw = 1, fh = 1, cflags = [] },
+  # the wooden gateway across a 2-wide path (2 x 1 along i): the posts stand on the outer edges of the two path tiles, the hero walks between them
+  { name = "arch",        kind = "object", src = "assets/art/tiles/arch.lv.png",        fw = 2, fh = 1, cflags = [] },
+
+  # ---- M5-D objects (Pueblo Cantera, tools/gen_tiles.py): rock-wall cliffs ring the town, boulders, the sign, the cart (all solid); the stone houses are
+  # decorative (look-text), the gym has a walkable door like the Centro; stage / pillar are the gym's furniture ----
+  { name = "cliff_a",      kind = "object", src = "assets/art/tiles/cliff_a.lv.png",      fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "cliff_b",      kind = "object", src = "assets/art/tiles/cliff_b.lv.png",      fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "cliff_c",      kind = "object", src = "assets/art/tiles/cliff_c.lv.png",      fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "boulder",      kind = "object", src = "assets/art/tiles/boulder.lv.png",      fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  { name = "cart",         kind = "object", src = "assets/art/tiles/cart.lv.png",         fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "pickaxe_sign", kind = "object", src = "assets/art/tiles/pickaxe_sign.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "stone_house",  kind = "object", src = "assets/art/tiles/stone_house.lv.png",  fw = 2, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },
+  { name = "gym_cantera",  kind = "object", src = "assets/art/tiles/gym_cantera.lv.png",  fw = 3, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },
+  { name = "stage",        kind = "object", src = "assets/art/tiles/stage.lv.png",        fw = 2, fh = 2, cflags = ["solid", "counter"], fill = 2 },
+  { name = "pillar",       kind = "object", src = "assets/art/tiles/pillar.lv.png",       fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+
+  # ---- code-drawn fallback furniture / buildings (same folder) ----
+  { name = "fb_house",     kind = "object", src = "assets/art/tiles/fb_house.lv.png",     fw = 2, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },
+  { name = "fb_lab",       kind = "object", src = "assets/art/tiles/fb_lab.lv.png",       fw = 3, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },
+  { name = "fb_house_rival", kind = "object", src = "assets/art/tiles/fb_house_rival.lv.png", fw = 2, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },
+  { name = "fb_bed",       kind = "object", src = "assets/art/tiles/fb_bed.lv.png",       fw = 1, fh = 2, cflags = ["solid"], fill = 2 },
+  { name = "fb_table",     kind = "object", src = "assets/art/tiles/fb_table.lv.png",     fw = 1, fh = 1, cflags = ["solid", "counter"], fill = 2 },
+  { name = "fb_lab_table", kind = "object", src = "assets/art/tiles/fb_lab_table.lv.png", fw = 3, fh = 1, cflags = ["solid", "counter"], fill = 2 },
+  { name = "fb_lab_table_crystals", kind = "object", src = "assets/art/tiles/fb_lab_table_crystals.lv.png", fw = 3, fh = 1, cflags = ["solid", "counter"], fill = 2 },
+  { name = "fb_bookshelf", kind = "object", src = "assets/art/tiles/fb_bookshelf.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 2 },
+  { name = "fb_tv",        kind = "object", src = "assets/art/tiles/fb_tv.lv.png",        fw = 1, fh = 1, cflags = ["solid"], text = "obj.tv", fill = 2 },
+  { name = "fb_pc",        kind = "object", src = "assets/art/tiles/fb_pc.lv.png",        fw = 1, fh = 1, cflags = ["solid"], text = "obj.pc", fill = 2 },
+  { name = "fb_machine",   kind = "object", src = "assets/art/tiles/fb_machine.lv.png",   fw = 1, fh = 1, cflags = ["solid"], fill = 2 },
+  # M4-D (Ciudad Nodo, tools/gen_tiles.py): the Centro / tienda / closed gym buildings and the interior furniture
+  { name = "fb_center",    kind = "object", src = "assets/art/tiles/fb_center.lv.png",    fw = 3, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },
+  { name = "fb_shop",      kind = "object", src = "assets/art/tiles/fb_shop.lv.png",      fw = 2, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },
+  { name = "fb_gym",       kind = "object", src = "assets/art/tiles/fb_gym.lv.png",       fw = 3, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },   # C8 (contract 51): the gym of Ciudad Nodo is enterable now
+  { name = "fb_counter",   kind = "object", src = "assets/art/tiles/fb_counter.lv.png",   fw = 1, fh = 1, cflags = ["solid", "counter"], fill = 2 },
+  { name = "fb_shelf",     kind = "object", src = "assets/art/tiles/fb_shelf.lv.png",     fw = 1, fh = 1, cflags = ["solid"], fill = 2 },
+  { name = "fb_heal",      kind = "object", src = "assets/art/tiles/fb_heal.lv.png",      fw = 1, fh = 1, cflags = ["solid"], fill = 2 },
+
+  # ---- final objects (art TBD; assets/art/objects/) ----
+  { name = "house_player", kind = "object", src = "assets/art/objects/house_player.lv.png", fw = 2, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]] },
+  { name = "house_rival",  kind = "object", src = "assets/art/objects/house_rival.lv.png",  fw = 2, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]] },
+  { name = "lab",          kind = "object", src = "assets/art/objects/lab.lv.png",          fw = 3, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]] },
+  { name = "tree_a",       kind = "object", src = "assets/art/objects/tree_a.lv.png",       fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "tree_b",       kind = "object", src = "assets/art/objects/tree_b.lv.png",       fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "bed",          kind = "object", src = "assets/art/objects/bed.lv.png",          fw = 1, fh = 2, cflags = ["solid"] },
+  { name = "table",        kind = "object", src = "assets/art/objects/table.lv.png",        fw = 1, fh = 1, cflags = ["solid", "counter"] },
+  { name = "lab_table",    kind = "object", src = "assets/art/objects/lab_table.lv.png",    fw = 3, fh = 1, cflags = ["solid", "counter"] },
+  { name = "bookshelf",    kind = "object", src = "assets/art/objects/bookshelf.lv.png",    fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "tv",           kind = "object", src = "assets/art/objects/tv.lv.png",           fw = 1, fh = 1, cflags = ["solid"], text = "obj.tv" },
+  { name = "pc",           kind = "object", src = "assets/art/objects/pc.lv.png",           fw = 1, fh = 1, cflags = ["solid"], text = "obj.pc" },
+  { name = "machine",      kind = "object", src = "assets/art/objects/machine.lv.png",      fw = 1, fh = 1, cflags = ["solid"] },
+
+  # ---- actors (PixelLab direction PNGs in the folder) ----
+  # ay: spritec's default is the lowest opaque row over all frames (the E/W/NE/NW feet); the S frame's feet are
+  # 2 px higher, so ay = default-1 puts the S feet on the tile centre (0) and the others 1-2 px below it,
+  # like the hero (HERO_AY 31, ACTOR_FOOT_DY 1).
+  # mama / lin / vecino / rival: greyscale PixelLab v3 art -> levels = "adaptive" (dark_cut default 40; see tools/spritec.py, contract 6)
+  { name = "mama",   kind = "actor", src = "assets/art/npcs/mama/",   ndirs = 8, nframes = 1, ay = 32, levels = "adaptive" },
+  { name = "lin",    kind = "actor", src = "assets/art/npcs/lin/",    ndirs = 8, nframes = 1, ay = 32, levels = "adaptive" },
+  { name = "vecino", kind = "actor", src = "assets/art/npcs/vecino/", ndirs = 8, nframes = 1, ay = 30, levels = "adaptive" },
+  # the rival: 4 directions x (idle f0 + 4 walk frames) from the PixelLab walk set (S E N W of rival_walk; the odd facings
+  # round to them like every NPC). ay = S idle lowest row (31) + 1 (hero rule: S idle lands on the tile centre).
+  # adaptive_split: the back view (north) is cut by luminance quantiles, k-means lumps hair / jacket / pants into one level.
+  { name = "rival",  kind = "actor", src = "assets/art/npcs/rival_walk/", ndirs = 4, nframes = 5, ay = 32, levels = "adaptive", adaptive_split = { north = [0.50, 0.85] } },
+  # M4-D (PixelLab v3 greyscale, adaptive like lin / mama; W / NW / SW are the flipped E / NE / SE (mirror_west, folded in the bank)).
+  # ay = S idle lowest row - 1 (the rule of mama / lin / vecino / rival). nurse / tendero / guardia: static, 8 directions, 1 frame.
+  # vecino_m: the same art as `vecino` with W / NW / SW = the flipped E / NE / SE (folded: 1.2 KB instead of 2.0 KB in a map's bank);
+  # the Nodo / Ruta 2 townsfolk face E-side directions only, where it is identical
+  { name = "vecino_m", kind = "actor", src = "assets/art/npcs/vecino/", ndirs = 8, nframes = 1, ay = 30, levels = "adaptive", mirror_west = true },
+  { name = "nurse",   kind = "actor", src = "assets/art/npcs/nurse/",   ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "tendero", kind = "actor", src = "assets/art/npcs/tendero/", ndirs = 8, nframes = 1, ay = 30, levels = "adaptive", mirror_west = true },
+  { name = "guardia", kind = "actor", src = "assets/art/npcs/guardia/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  # the trainers: walk sets like `rival` (S E N W x idle + 4 walk frames; the odd facings round to them)
+  { name = "cazabichos", kind = "actor", src = "assets/art/npcs/cazabichos_walk/", ndirs = 4, nframes = 5, ay = 30, levels = "adaptive", mirror_west = true },
+  { name = "explorador", kind = "actor", src = "assets/art/npcs/explorador_walk/", ndirs = 4, nframes = 5, ay = 32, levels = "adaptive", mirror_west = true },
+  # M5-D (PixelLab v3 greyscale, adaptive like the other NPCs, W / NW / SW = the flipped E / NE / SE): Garrick (static, stands on his dais: ay 35 = the usual 32 + 3 of the
+  # dais top: his feet stand on the front half of his cell of the dais; the script cuts the camera to him, a full 6 would push his head off the top of the screen), the gym guide (static), the gym apprentice (4 directions x 5 frames, like explorador)
+  { name = "garrick",  kind = "actor", src = "assets/art/npcs/garrick/",       ndirs = 8, nframes = 1, ay = 35, levels = "adaptive", mirror_west = true },
+  { name = "guia",     kind = "actor", src = "assets/art/npcs/guia/",          ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "aprendiz", kind = "actor", src = "assets/art/npcs/aprendiz_walk/", ndirs = 4, nframes = 5, ay = 32, levels = "adaptive", mirror_west = true },
+  # C2 (PixelLab v3 greyscale, adaptive; W / NW / SW = the flipped E / NE / SE): the trainer classes with walk sets (4 directions x 5 frames like explorador) and the two static
+  # characters. ay = 32 like nurse / guardia (their S idle lowest row is 34: the feet land on the tile centre). nerea stands on the gym's far platform (see gimnasio_marea.map).
+  { name = "chica",      kind = "actor", src = "assets/art/npcs/chica_walk/",      ndirs = 4, nframes = 5, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "montanista", kind = "actor", src = "assets/art/npcs/montanista_walk/", ndirs = 4, nframes = 5, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "vertice",    kind = "actor", src = "assets/art/npcs/vertice_walk/",    ndirs = 4, nframes = 5, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "nadadora",   kind = "actor", src = "assets/art/npcs/nadadora_walk/",   ndirs = 4, nframes = 5, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "nerea",      kind = "actor", src = "assets/art/npcs/nerea/",           ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  # the two fossils of the Monte Eco dig (code-drawn by tools/gen_tiles.py fossil_actor: 1 direction, standing on the dig tiles; the player picks one)
+  { name = "fossil_tri",  kind = "actor", src = "assets/art/npcs/fossil_tri/",  ndirs = 1, nframes = 1 },
+  { name = "fossil_lily", kind = "actor", src = "assets/art/npcs/fossil_lily/", ndirs = 1, nframes = 1 },
+  { name = "teo",        kind = "actor", src = "assets/art/npcs/teo/",             ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  # Profesora Lin's Crystals (code-drawn by tools/gen_tiles.py): 1 direction, 1 frame, standing ON the lab bench
+  # (the NPC sits on a solid tile: legend `object=lab_table npc=crystal_fire ...`)
+  { name = "crystal_fire",  kind = "actor", src = "assets/art/npcs/crystal_fire/",  ndirs = 1, nframes = 1 },
+  { name = "crystal_water", kind = "actor", src = "assets/art/npcs/crystal_water/", ndirs = 1, nframes = 1 },
+  { name = "crystal_plant", kind = "actor", src = "assets/art/npcs/crystal_plant/", ndirs = 1, nframes = 1 },
+  # Flitter on Ruta 1 (code-drawn by tools/gen_tiles.py flitter_actor): 5 drawn directions (S SE E NE N), W / NW / SW are the flipped
+  # E / NE / SE (mirror_west, folded in the bank), 2 frames: 0 standing, 1 hop pose. hop = true (bank flag SPRF_HOP): the engine
+  # bobs it by a small arc on every walked step and shows frame 1 in the air (world.c npcs_pose, contract 13.5).
+  { name = "flitter_ow", kind = "actor", src = "assets/art/npcs/flitter_ow/", ndirs = 8, nframes = 2, mirror_west = true, hop = true },
+  # M4-C (code-drawn by tools/gen_tiles.py): the item lying on the ground (a pouch; legend `item=<item>`) and the "!" balloon above a
+  # trainer that saw the hero (mapc appends it as the LAST bank sprite of every map with a trainer and sets the header flag MAPF_BALLOON)
+  { name = "item_bag", kind = "actor", src = "assets/art/npcs/item_bag/", ndirs = 1, nframes = 1 },
+  # C3-A (contract 32): the cuttable bush (legend `cut=yes`): a solid NPC of 1 direction, 1 frame. art: the round leafy shrub of tools/gen_tiles.py cut_shrub() (C3).
+  { name = "cut_bush", kind = "actor", src = "assets/art/npcs/cut_bush/", ndirs = 1, nframes = 1 },
+  # C5 world systems (contract 42): the pushable rock (legend `boulder=yes`) and the pit it fills (legend `hole=FLAG`): actors of 1 direction, 1 frame. PLACEHOLDER art (copies of the objects
+  # `boulder` / `hole`), REPLACED in contract 58 by the approved PixelLab pictures (assets/art/objects_c5/push_boulder.png / floor_pit.png) through tools/empuje_ow.py: south.png, adaptive levels
+  # (the NPC anchor: the rock's foot = bottom centre; the pit's centre = ay 7 of its 15 rows).
+  { name = "boulder_rock", kind = "actor", src = "assets/art/npcs/boulder_rock/", ndirs = 1, nframes = 1, levels = "adaptive" },
+  { name = "hole_pit", kind = "actor", src = "assets/art/npcs/hole_pit/", ndirs = 1, nframes = 1, levels = "adaptive", ay = 7 },
+  { name = "emote_excl", kind = "object", src = "assets/art/tiles/emote_excl.lv.png", fw = 1, fh = 1 },
+
+  # ---- Chapter 2 (C2, contract 31; tools/gen_tiles.py c2_pieces(), tools/c2_mock.py loads the same files): the zones of Ruta 3 .. Rutas 24-25 ----
+  # Ruta 3 (dry earth, bg 0: level 0 is the background, so no mask)
+  { name = "earth_a", kind = "tile", src = "assets/art/tiles/earth_a.lv.png", cflags = [], mask = false },
+  { name = "earth_b", kind = "tile", src = "assets/art/tiles/earth_b.lv.png", cflags = [], mask = false },
+  { name = "earth_c", kind = "tile", src = "assets/art/tiles/earth_c.lv.png", cflags = [], mask = false },
+  { name = "earth_d", kind = "tile", src = "assets/art/tiles/earth_d.lv.png", cflags = [], mask = false },
+  { name = "mtrail_a", kind = "tile", src = "assets/art/tiles/mtrail_a.lv.png", cflags = [], mask = false },
+  { name = "mtrail_b", kind = "tile", src = "assets/art/tiles/mtrail_b.lv.png", cflags = [], mask = false },
+  { name = "trainer_spot", kind = "tile", src = "assets/art/tiles/trainer_spot.lv.png", cflags = [], mask = false },
+  { name = "scrub", kind = "tile", src = "assets/art/tiles/scrub.lv.png", cflags = ["grass"], mask = false },
+  { name = "slope_a", kind = "object", src = "assets/art/tiles/slope_a.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "slope_b", kind = "object", src = "assets/art/tiles/slope_b.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "slope_c", kind = "object", src = "assets/art/tiles/slope_c.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "rfence_i", kind = "object", src = "assets/art/tiles/rfence_i.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "rfence_j", kind = "object", src = "assets/art/tiles/rfence_j.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "dry_bush_a", kind = "object", src = "assets/art/tiles/dry_bush_a.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "dry_bush_b", kind = "object", src = "assets/art/tiles/dry_bush_b.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "cairn", kind = "object", src = "assets/art/tiles/cairn.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "scree", kind = "object", src = "assets/art/tiles/scree.lv.png", fw = 1, fh = 1, cflags = [] },
+  # Monte Eco (cave, bg 3: the floor keeps its mask; the walls glow in 2 frames)
+  { name = "cave_a", kind = "tile", src = "assets/art/tiles/cave_a.lv.png", cflags = [] },
+  { name = "cave_b", kind = "tile", src = "assets/art/tiles/cave_b.lv.png", cflags = [] },
+  { name = "cave_c", kind = "tile", src = "assets/art/tiles/cave_c.lv.png", cflags = [] },
+  { name = "fossil_dig", kind = "tile", src = "assets/art/tiles/fossil_dig.lv.png", cflags = [] },
+  { name = "moss", kind = "tile", src = "assets/art/tiles/moss.lv.png", cflags = ["grass"] },
+  { name = "cwall_a", kind = "object", frames = ["assets/art/tiles/cwall_a0.lv.png", "assets/art/tiles/cwall_a1.lv.png"], fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "cwall_b", kind = "object", frames = ["assets/art/tiles/cwall_b0.lv.png", "assets/art/tiles/cwall_b1.lv.png"], fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "cwall_p", kind = "object", src = "assets/art/tiles/cwall_p.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "stalag_a", kind = "object", src = "assets/art/tiles/stalag_a.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "stalag_b", kind = "object", src = "assets/art/tiles/stalag_b.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "stalag_s", kind = "object", src = "assets/art/tiles/stalag_s.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "crystal", kind = "object", frames = ["assets/art/tiles/crystal_0.lv.png", "assets/art/tiles/crystal_1.lv.png"], fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "vflag", kind = "object", frames = ["assets/art/tiles/vflag_0.lv.png", "assets/art/tiles/vflag_1.lv.png"], fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "rope_ladder", kind = "object", src = "assets/art/tiles/rope_ladder.lv.png", fw = 1, fh = 1, cflags = ["solid"], door_tiles = [[0, 0]] },
+  { name = "crate_v", kind = "object", src = "assets/art/tiles/crate_v.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "crate_plain", kind = "object", src = "assets/art/tiles/crate_plain.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "crate_stack", kind = "object", src = "assets/art/tiles/crate_stack.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "dig_tools", kind = "object", src = "assets/art/tiles/dig_tools.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "barrel", kind = "object", src = "assets/art/tiles/barrel.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  # coast: sand, sea (foam on the land sides, 2 frames), beach grass, rocks in the shallows, a sailboat, grassy cliffs, the Ruta 4 ledge pairs
+  { name = "sand_a", kind = "tile", src = "assets/art/tiles/sand_a.lv.png", cflags = [], mask = false },
+  { name = "sand_b", kind = "tile", src = "assets/art/tiles/sand_b.lv.png", cflags = [], mask = false },
+  { name = "sand_c", kind = "tile", src = "assets/art/tiles/sand_c.lv.png", cflags = [], mask = false },
+  { name = "sand_d", kind = "tile", src = "assets/art/tiles/sand_d.lv.png", cflags = [], mask = false },
+  { name = "sea_tl", kind = "tile", frames = ["assets/art/tiles/sea_tl_0.lv.png", "assets/art/tiles/sea_tl_1.lv.png"], cflags = ["solid", "water"] },
+  { name = "sea_tr", kind = "tile", frames = ["assets/art/tiles/sea_tr_0.lv.png", "assets/art/tiles/sea_tr_1.lv.png"], cflags = ["solid", "water"] },
+  { name = "sea_bl", kind = "tile", frames = ["assets/art/tiles/sea_bl_0.lv.png", "assets/art/tiles/sea_bl_1.lv.png"], cflags = ["solid", "water"] },
+  { name = "sea_tl_tr", kind = "tile", frames = ["assets/art/tiles/sea_tl_tr_0.lv.png", "assets/art/tiles/sea_tl_tr_1.lv.png"], cflags = ["solid", "water"] },
+  { name = "sea_o", kind = "tile", frames = ["assets/art/tiles/sea_o_0.lv.png", "assets/art/tiles/sea_o_1.lv.png"], cflags = ["solid", "water"] },
+  { name = "beach_grass_a", kind = "object", src = "assets/art/tiles/beach_grass_a.lv.png", fw = 1, fh = 1, cflags = [] },
+  { name = "beach_grass_b", kind = "object", src = "assets/art/tiles/beach_grass_b.lv.png", fw = 1, fh = 1, cflags = [] },
+  { name = "sea_rock_a", kind = "object", src = "assets/art/tiles/sea_rock_a.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "sea_rock_b", kind = "object", src = "assets/art/tiles/sea_rock_b.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "sailboat", kind = "object", frames = ["assets/art/tiles/sailboat_0.lv.png", "assets/art/tiles/sailboat_1.lv.png"], fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "cliff_grass_a", kind = "object", src = "assets/art/tiles/cliff_grass_a.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "cliff_grass_b", kind = "object", src = "assets/art/tiles/cliff_grass_b.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "cliff_grass_c", kind = "object", src = "assets/art/tiles/cliff_grass_c.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "ledge_lip_sw", kind = "tile", src = "assets/art/tiles/ledge_lip_sw.lv.png", cflags = ["ledge"], mask = false },
+  { name = "ledge_foot_sw", kind = "tile", src = "assets/art/tiles/ledge_foot_sw.lv.png", cflags = [], mask = false },
+  { name = "ledge_lip_se", kind = "tile", src = "assets/art/tiles/ledge_lip_se.lv.png", cflags = ["ledge"], mask = false },
+  { name = "ledge_foot_se", kind = "tile", src = "assets/art/tiles/ledge_foot_se.lv.png", cflags = [], mask = false },
+  # Ciudad Marea: wet cobbles, boardwalk, canal, moored boats, lamps, anchor, nets, traps
+  { name = "wet_a", kind = "tile", src = "assets/art/tiles/wet_a.lv.png", cflags = [], mask = false },
+  { name = "wet_b", kind = "tile", src = "assets/art/tiles/wet_b.lv.png", cflags = [], mask = false },
+  { name = "wet_c", kind = "tile", src = "assets/art/tiles/wet_c.lv.png", cflags = [], mask = false },
+  { name = "deck_bl_0", kind = "tile", src = "assets/art/tiles/deck_bl_0.lv.png", cflags = [], mask = false },
+  { name = "deck_bl_1", kind = "tile", src = "assets/art/tiles/deck_bl_1.lv.png", cflags = [], mask = false },
+  { name = "deck_tr_0", kind = "tile", src = "assets/art/tiles/deck_tr_0.lv.png", cflags = [], mask = false },
+  { name = "deck_tr_1", kind = "tile", src = "assets/art/tiles/deck_tr_1.lv.png", cflags = [], mask = false },
+  { name = "plank_tl_br", kind = "tile", src = "assets/art/tiles/plank_tl_br.lv.png", cflags = [], mask = false },
+  { name = "plank_tl", kind = "tile", src = "assets/art/tiles/plank_tl.lv.png", cflags = [], mask = false },
+  { name = "plank_br", kind = "tile", src = "assets/art/tiles/plank_br.lv.png", cflags = [], mask = false },
+  { name = "plank_o", kind = "tile", src = "assets/art/tiles/plank_o.lv.png", cflags = [], mask = false },
+  { name = "plank_bl", kind = "tile", src = "assets/art/tiles/plank_bl.lv.png", cflags = [], mask = false },
+  { name = "canal_tr", kind = "tile", frames = ["assets/art/tiles/canal_tr_0.lv.png", "assets/art/tiles/canal_tr_1.lv.png"], cflags = ["solid", "water"] },
+  { name = "canal_bl", kind = "tile", frames = ["assets/art/tiles/canal_bl_0.lv.png", "assets/art/tiles/canal_bl_1.lv.png"], cflags = ["solid", "water"] },
+  { name = "canal_tl_tr", kind = "tile", frames = ["assets/art/tiles/canal_tl_tr_0.lv.png", "assets/art/tiles/canal_tl_tr_1.lv.png"], cflags = ["solid", "water"] },
+  { name = "canal_o", kind = "tile", frames = ["assets/art/tiles/canal_o_0.lv.png", "assets/art/tiles/canal_o_1.lv.png"], cflags = ["solid", "water"] },
+  { name = "bridge_rails_i", kind = "object", src = "assets/art/tiles/bridge_rails_i.lv.png", fw = 1, fh = 1, cflags = [] },
+  { name = "bridge_rails_j", kind = "object", src = "assets/art/tiles/bridge_rails_j.lv.png", fw = 1, fh = 1, cflags = [] },
+  { name = "boat_s", kind = "object", src = "assets/art/tiles/boat_0.lv.png", fw = 2, fh = 1, cflags = ["solid"] },
+  { name = "lamp_s", kind = "object", src = "assets/art/tiles/lamp_h0.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "boat", kind = "object", frames = ["assets/art/tiles/boat_0.lv.png", "assets/art/tiles/boat_1.lv.png"], fw = 2, fh = 1, cflags = ["solid"] },
+  { name = "boat_j", kind = "object", frames = ["assets/art/tiles/boat_j0.lv.png", "assets/art/tiles/boat_j1.lv.png"], fw = 1, fh = 2, cflags = ["solid"] },
+  { name = "lamp_h", kind = "object", frames = ["assets/art/tiles/lamp_h0.lv.png", "assets/art/tiles/lamp_h1.lv.png"], fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "cottage", kind = "object", src = "assets/art/tiles/cottage_0.lv.png", fw = 2, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]] },
+  { name = "bollard", kind = "object", src = "assets/art/tiles/bollard.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "anchor", kind = "object", src = "assets/art/tiles/anchor.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "trap", kind = "object", src = "assets/art/tiles/trap.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "net_rack", kind = "object", src = "assets/art/tiles/net_rack.lv.png", fw = 2, fh = 1, cflags = ["solid"] },
+  # Gimnasio de Agua: pool deck (white underlay: no mask), pool water, walkways, lane ropes, buoys, diving board, lifeguard chair, wave walls
+  { name = "pool_a", kind = "tile", src = "assets/art/tiles/pool_a.lv.png", cflags = [], fill = 0, mask = false },
+  { name = "pool_b", kind = "tile", src = "assets/art/tiles/pool_b.lv.png", cflags = [], fill = 0, mask = false },
+  { name = "pool_w_tl", kind = "tile", frames = ["assets/art/tiles/pool_w_tl_0.lv.png", "assets/art/tiles/pool_w_tl_1.lv.png"], cflags = ["solid", "water"] },
+  { name = "pool_w_tr", kind = "tile", frames = ["assets/art/tiles/pool_w_tr_0.lv.png", "assets/art/tiles/pool_w_tr_1.lv.png"], cflags = ["solid", "water"] },
+  { name = "pool_w_tl_tr", kind = "tile", frames = ["assets/art/tiles/pool_w_tl_tr_0.lv.png", "assets/art/tiles/pool_w_tl_tr_1.lv.png"], cflags = ["solid", "water"] },
+  { name = "pool_w_o", kind = "tile", frames = ["assets/art/tiles/pool_w_o_0.lv.png", "assets/art/tiles/pool_w_o_1.lv.png"], cflags = ["solid", "water"] },
+  { name = "walk_o", kind = "tile", src = "assets/art/tiles/walk_o.lv.png", cflags = [], fill = 0, mask = false },
+  { name = "walk_tl", kind = "tile", src = "assets/art/tiles/walk_tl.lv.png", cflags = [], fill = 0, mask = false },
+  { name = "walk_tr", kind = "tile", src = "assets/art/tiles/walk_tr.lv.png", cflags = [], fill = 0, mask = false },
+  { name = "walk_tl_tr", kind = "tile", src = "assets/art/tiles/walk_tl_tr.lv.png", cflags = [], fill = 0, mask = false },
+  { name = "walk_br", kind = "tile", src = "assets/art/tiles/walk_br.lv.png", cflags = [], fill = 0, mask = false },
+  { name = "walk_tl_br", kind = "tile", src = "assets/art/tiles/walk_tl_br.lv.png", cflags = [], fill = 0, mask = false },
+  { name = "walk_tr_br", kind = "tile", src = "assets/art/tiles/walk_tr_br.lv.png", cflags = [], fill = 0, mask = false },
+  { name = "walk_tl_tr_br", kind = "tile", src = "assets/art/tiles/walk_tl_tr_br.lv.png", cflags = [], fill = 0, mask = false },
+  { name = "walk_bl", kind = "tile", src = "assets/art/tiles/walk_bl.lv.png", cflags = [], fill = 0, mask = false },
+  { name = "walk_tl_bl", kind = "tile", src = "assets/art/tiles/walk_tl_bl.lv.png", cflags = [], fill = 0, mask = false },
+  { name = "walk_tr_bl", kind = "tile", src = "assets/art/tiles/walk_tr_bl.lv.png", cflags = [], fill = 0, mask = false },
+  { name = "walk_tl_tr_bl", kind = "tile", src = "assets/art/tiles/walk_tl_tr_bl.lv.png", cflags = [], fill = 0, mask = false },
+  { name = "walk_br_bl", kind = "tile", src = "assets/art/tiles/walk_br_bl.lv.png", cflags = [], fill = 0, mask = false },
+  { name = "walk_tl_br_bl", kind = "tile", src = "assets/art/tiles/walk_tl_br_bl.lv.png", cflags = [], fill = 0, mask = false },
+  { name = "walk_tr_br_bl", kind = "tile", src = "assets/art/tiles/walk_tr_br_bl.lv.png", cflags = [], fill = 0, mask = false },
+  { name = "walk_tl_tr_br_bl", kind = "tile", src = "assets/art/tiles/walk_tl_tr_br_bl.lv.png", cflags = [], fill = 0, mask = false },
+  { name = "gym_marea", kind = "object", src = "assets/art/tiles/gym_marea_f.lv.png", fw = 3, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },
+  { name = "center_f", kind = "object", src = "assets/art/tiles/center_f.lv.png", fw = 3, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },
+  { name = "mart_f", kind = "object", src = "assets/art/tiles/mart_f.lv.png", fw = 2, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },
+  { name = "gym_wall_i", kind = "object", src = "assets/art/tiles/gym_wall_i.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "gym_wall_j", kind = "object", src = "assets/art/tiles/gym_wall_j.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "lane_rope_i", kind = "object", src = "assets/art/tiles/lane_rope_i.lv.png", fw = 1, fh = 1, cflags = [] },
+  { name = "lane_rope_j", kind = "object", src = "assets/art/tiles/lane_rope_j.lv.png", fw = 1, fh = 1, cflags = [] },
+  { name = "buoy", kind = "object", frames = ["assets/art/tiles/buoy_0.lv.png", "assets/art/tiles/buoy_1.lv.png"], fw = 1, fh = 1, cflags = [] },
+  { name = "diving_board", kind = "object", src = "assets/art/tiles/diving_board.lv.png", fw = 2, fh = 1, cflags = ["solid"] },
+  { name = "lifeguard_chair", kind = "object", src = "assets/art/tiles/lifeguard_chair.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+
+  # ---- Chapter 3 (C3, contract 34; tools/gen_tiles.py c3_pieces(), tools/c3_mock.py loads the same files): Ruta 5 .. Cueva Excavadora ----
+  # Ruta 5 / 6 (suburbs and the park, bg 0): the lawn and the sidewalk are white-based outdoor tiles (no mask: white is the background)
+  { name = "sidewalk_a", kind = "tile", src = "assets/art/tiles/sidewalk_a.lv.png", cflags = [], mask = false },
+  { name = "sidewalk_b", kind = "tile", src = "assets/art/tiles/sidewalk_b.lv.png", cflags = [], mask = false },
+  { name = "lawn_a", kind = "tile", src = "assets/art/tiles/lawn_a.lv.png", cflags = [], mask = false },
+  { name = "lawn_b", kind = "tile", src = "assets/art/tiles/lawn_b.lv.png", cflags = [], mask = false },
+  { name = "lawn_c", kind = "tile", src = "assets/art/tiles/lawn_c.lv.png", cflags = [], mask = false },
+  { name = "hedge_a", kind = "object", src = "assets/art/tiles/hedge_a.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "hedge_b", kind = "object", src = "assets/art/tiles/hedge_b.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "dc_sign", kind = "object", src = "assets/art/tiles/dc_sign.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "gatehouse", kind = "object", src = "assets/art/tiles/gatehouse_f.lv.png", fw = 2, fh = 2, cflags = ["solid"], fill = 2 },
+  { name = "kiosk", kind = "object", src = "assets/art/tiles/kiosk.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "lily", kind = "object", src = "assets/art/tiles/lily.lv.png", fw = 1, fh = 1, cflags = [] },
+  # the underground passage (bg 3): concrete, wall of small tiles, lights, grates
+  { name = "concrete_a", kind = "tile", src = "assets/art/tiles/concrete_a.lv.png", cflags = [] },
+  { name = "concrete_b", kind = "tile", src = "assets/art/tiles/concrete_b.lv.png", cflags = [] },
+  { name = "concrete_c", kind = "tile", src = "assets/art/tiles/concrete_c.lv.png", cflags = [] },
+  { name = "grate", kind = "tile", src = "assets/art/tiles/grate.lv.png", cflags = [] },
+  { name = "twall", kind = "object", src = "assets/art/tiles/twall.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "light_post", kind = "object", src = "assets/art/tiles/light_post.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  # Puerto Dinamo (bg 0): the quay (light concrete in big slabs, the painted safety line), containers, the crane, the lamp / crates / barrels / bollards are C2 pieces
+  { name = "quay_a", kind = "tile", src = "assets/art/tiles/quay_a.lv.png", cflags = [], mask = false },
+  { name = "quay_b", kind = "tile", src = "assets/art/tiles/quay_b.lv.png", cflags = [], mask = false },
+  { name = "quay_s", kind = "tile", src = "assets/art/tiles/quay_s.lv.png", cflags = [], mask = false },
+  { name = "container", kind = "object", src = "assets/art/tiles/container.lv.png", fw = 1, fh = 2, cflags = ["solid"] },
+  { name = "crane", kind = "object", src = "assets/art/tiles/crane_f.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  # the Ferry Albatros (the moored ferry and its gangway are ACTORS below: a flag hides them when the ferry departs): deck railings, lifebuoys, the funnel, cabin carpet, bunks, porthole walls
+  { name = "rail_i", kind = "object", src = "assets/art/tiles/rail_i.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "rail_j", kind = "object", src = "assets/art/tiles/rail_j.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "lifebuoy", kind = "object", src = "assets/art/tiles/lifebuoy.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "funnel", kind = "object", src = "assets/art/tiles/funnel.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "bunk", kind = "object", src = "assets/art/tiles/bunk.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "pwall", kind = "object", src = "assets/art/tiles/pwall.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "carpet", kind = "tile", src = "assets/art/tiles/carpet.lv.png", cflags = [], mask = false },
+  # Gimnasio Voltio (bg 3): BIG steel plates of 2 x 2 tiles (4 quarter tiles, placed by parity), cabinets, cable walls; the barrier is an actor
+  { name = "metal_00", kind = "tile", src = "assets/art/tiles/metal_00.lv.png", cflags = [] },
+  { name = "metal_01", kind = "tile", src = "assets/art/tiles/metal_01.lv.png", cflags = [] },
+  { name = "metal_10", kind = "tile", src = "assets/art/tiles/metal_10.lv.png", cflags = [] },
+  { name = "metal_11", kind = "tile", src = "assets/art/tiles/metal_11.lv.png", cflags = [] },
+  { name = "fuse_box", kind = "object", src = "assets/art/tiles/fuse_box.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "fuse_box_on", kind = "object", src = "assets/art/tiles/fuse_box_on.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "cable_wall_i", kind = "object", src = "assets/art/tiles/cable_wall_i.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "cable_wall_j", kind = "object", src = "assets/art/tiles/cable_wall_j.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  # Ruta 11 (the high-voltage line) and the Cueva Excavadora (bg 3: the loose earth keeps its mask)
+  { name = "pylon", kind = "object", src = "assets/art/tiles/pylon_f.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "cable_i", kind = "object", src = "assets/art/tiles/cable_i.lv.png", fw = 1, fh = 1, cflags = [] },
+  { name = "transformer", kind = "object", src = "assets/art/tiles/transformer.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "dirt_a", kind = "tile", src = "assets/art/tiles/dirt_a.lv.png", cflags = [] },
+  { name = "dirt_b", kind = "tile", src = "assets/art/tiles/dirt_b.lv.png", cflags = [] },
+  { name = "dirt_c", kind = "tile", src = "assets/art/tiles/dirt_c.lv.png", cflags = [] },
+  { name = "root_wall_a", kind = "object", src = "assets/art/tiles/root_wall_a.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "root_wall_b", kind = "object", src = "assets/art/tiles/root_wall_b.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "mound_a", kind = "object", src = "assets/art/tiles/mound_a.lv.png", fw = 1, fh = 1, cflags = [] },
+  { name = "mound_b", kind = "object", src = "assets/art/tiles/mound_b.lv.png", fw = 1, fh = 1, cflags = [] },
+  { name = "hole", kind = "object", src = "assets/art/tiles/hole.lv.png", fw = 1, fh = 1, cflags = [] },
+  { name = "blank", kind = "object", src = "assets/art/tiles/blank.lv.png", fw = 1, fh = 1, cflags = [], mask = false },
+  { name = "house_f", kind = "object", src = "assets/art/tiles/house_f.lv.png", fw = 2, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },
+  { name = "dig_patch", kind = "tile", src = "assets/art/tiles/dig_patch.lv.png", cflags = ["grass"] },
+  { name = "gym_dinamo", kind = "object", src = "assets/art/tiles/gym_dinamo.lv.png", fw = 3, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },
+  { name = "gym_neon", kind = "object", src = "assets/art/tiles/gym_neon.lv.png", fw = 3, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },   # C4a: the plant gym (gen_tiles gym_neon(), flat white)
+  # C3 actors drawn in code (tools/gen_tiles.py c3_actors()): the zapping barrier (4 facings = two arc drawings: the gym NPC is `behavior=turn`, so it flickers), the puzzle lamp,
+  # the moored ferry and its gangway (NPCs hidden by a flag when the ferry departs: objects cannot disappear)
+  # the barrier of the mock as an animated OBJECT (2 arc frames; spare: the gym uses the actor above, an object cannot disappear when the puzzle is solved)
+  { name = "barrier_zap", kind = "object", frames = ["assets/art/tiles/barrier_0.lv.png", "assets/art/tiles/barrier_1.lv.png"], fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "barrier", kind = "actor", src = "assets/art/npcs/barrier/", ndirs = 4, nframes = 1, mirror_west = true },
+  { name = "fuse_lamp", kind = "actor", src = "assets/art/npcs/fuse_lamp/", ndirs = 1, nframes = 1 },
+  { name = "ferry", kind = "actor", src = "assets/art/npcs/ferry/", ndirs = 1, nframes = 1 },
+  { name = "gangway", kind = "actor", src = "assets/art/npcs/gangway/", ndirs = 1, nframes = 1 },
+  # C3 characters (PixelLab v3 greyscale, adaptive; W / NW / SW = the flipped E / NE / SE): static ones have 8 directions, the trainer classes with walk sets 4 x 5 frames
+  { name = "ohm", kind = "actor", src = "assets/art/npcs/ohm/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "capitan", kind = "actor", src = "assets/art/npcs/capitan/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "cuidadora", kind = "actor", src = "assets/art/npcs/cuidadora/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "trueque", kind = "actor", src = "assets/art/npcs/trueque/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "marinero", kind = "actor", src = "assets/art/npcs/marinero_walk/", ndirs = 4, nframes = 5, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "mecanico", kind = "actor", src = "assets/art/npcs/mecanico_walk/", ndirs = 4, nframes = 5, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "pescador", kind = "actor", src = "assets/art/npcs/pescador_walk/", ndirs = 4, nframes = 5, ay = 32, levels = "adaptive", mirror_west = true },
+  # C4-A arrow floors (contract 35.3, villain hideout spinners): `slide = "<facing>"` is a TILE property (S SE E NE N NW W SW): the hero who steps on it is pushed one tile that way, without
+  # input, until a tile that does not push or a wall. C4b (contract 41): the art is the approved hideout plate look with a bold arrow (tools/gen_tiles.py arrow_plate; gen_arrow_tiles.py is locked out by the .lv.locked files), no fill / mask override.
+  # C5 (contract 42.6): a BIKE SLOPE (Autopista): `slide_bike = "<facing>"` is `slide` that pushes only a rider on the bicycle. C5a (contract 47): the road's own art, the Autopista's light pavement with a bold downhill chevron (gen_tiles road_slope); the eight facings are in the C5 block below.
+  { name = "arrow_s",  kind = "tile", src = "assets/art/tiles/arrow_s.lv.png",  cflags = [], slide = "S" },
+  { name = "arrow_se", kind = "tile", src = "assets/art/tiles/arrow_se.lv.png", cflags = [], slide = "SE" },
+  { name = "arrow_e",  kind = "tile", src = "assets/art/tiles/arrow_e.lv.png",  cflags = [], slide = "E" },
+  { name = "arrow_ne", kind = "tile", src = "assets/art/tiles/arrow_ne.lv.png", cflags = [], slide = "NE" },
+  { name = "arrow_n",  kind = "tile", src = "assets/art/tiles/arrow_n.lv.png",  cflags = [], slide = "N" },
+  { name = "arrow_nw", kind = "tile", src = "assets/art/tiles/arrow_nw.lv.png", cflags = [], slide = "NW" },
+  { name = "arrow_w",  kind = "tile", src = "assets/art/tiles/arrow_w.lv.png",  cflags = [], slide = "W" },
+  { name = "arrow_sw", kind = "tile", src = "assets/art/tiles/arrow_sw.lv.png", cflags = [], slide = "SW" },
+  # C6 (contract 46, tools/gen_tiles.py c6_pieces(), the look of tools/c6_mock.py): the teleport pad (legend `pad=yes` + a `@pad` line; an ANIMATED tile of 2 frames, the centre pulses) and the card-key
+  # door (legend `keydoor=<item>`: an actor of 1 direction, 1 frame, the locked look; the NPC vanishes when the key opens it).
+  { name = "pad", kind = "tile", frames = ["assets/art/tiles/pad_0.lv.png", "assets/art/tiles/pad_1.lv.png"], cflags = [] },
+  { name = "keydoor", kind = "actor", src = "assets/art/npcs/keydoor/", ndirs = 1, nframes = 1 },
+  # C6 content (contract 49; tools/gen_tiles.py c6_pieces(), the look of tools/c6_mock.py, which now loads the same files): Ciudad Cenit, the Torre Vertice, the Fighting dojo, the psychic gym and the C8 earth gym.
+  # The ground slabs are BIG (2 x 2 tiles: the four quarter tiles <name>_<i%2><j%2> follow the parity of the cell), white-based (bg 0): no mask. ring = Cenit's plaza / the psychic gym, carpet = the tower's offices,
+  # boards = the dojo.
+  { name = "ring_00", kind = "tile", src = "assets/art/tiles/ring_00.lv.png", cflags = [], mask = false },
+  { name = "ring_10", kind = "tile", src = "assets/art/tiles/ring_10.lv.png", cflags = [], mask = false },
+  { name = "ring_01", kind = "tile", src = "assets/art/tiles/ring_01.lv.png", cflags = [], mask = false },
+  { name = "ring_11", kind = "tile", src = "assets/art/tiles/ring_11.lv.png", cflags = [], mask = false },
+  { name = "carpet_00", kind = "tile", src = "assets/art/tiles/carpet_00.lv.png", cflags = [], mask = false },
+  { name = "carpet_10", kind = "tile", src = "assets/art/tiles/carpet_10.lv.png", cflags = [], mask = false },
+  { name = "carpet_01", kind = "tile", src = "assets/art/tiles/carpet_01.lv.png", cflags = [], mask = false },
+  { name = "carpet_11", kind = "tile", src = "assets/art/tiles/carpet_11.lv.png", cflags = [], mask = false },
+  { name = "boards_00", kind = "tile", src = "assets/art/tiles/boards_00.lv.png", cflags = [], mask = false },
+  { name = "boards_10", kind = "tile", src = "assets/art/tiles/boards_10.lv.png", cflags = [], mask = false },
+  { name = "boards_01", kind = "tile", src = "assets/art/tiles/boards_01.lv.png", cflags = [], mask = false },
+  { name = "boards_11", kind = "tile", src = "assets/art/tiles/boards_11.lv.png", cflags = [], mask = false },
+  { name = "glass_tower", kind = "object", src = "assets/art/tiles/glass_tower.lv.png", fw = 2, fh = 2, cflags = ["solid"], fill = 2 },
+  { name = "orb", kind = "object", frames = ["assets/art/tiles/orb_0.lv.png", "assets/art/tiles/orb_1.lv.png"], fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  { name = "orb_s", kind = "object", src = "assets/art/tiles/orb_0.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  { name = "desk", kind = "object", src = "assets/art/tiles/desk.lv.png", fw = 1, fh = 1, cflags = ["solid", "counter"], fill = 2 },
+  { name = "dummy", kind = "object", src = "assets/art/tiles/dummy.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  { name = "scroll_wall", kind = "object", src = "assets/art/tiles/scroll_wall.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 2 },
+  { name = "gym_mente", kind = "object", src = "assets/art/tiles/gym_mente.lv.png", fw = 3, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },      # C6: the psychic gym (gen_tiles gym_mente(), flat white, not in the mock)
+  { name = "dojo_puno", kind = "object", src = "assets/art/tiles/dojo_puno.lv.png", fw = 3, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },      # C6: the Fighting dojo (gen_tiles gym_dojo(plaque = "fist"), flat white)
+  { name = "torre_vertice", kind = "object", src = "assets/art/tiles/torre_vertice.lv.png", fw = 3, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },   # C6: a corporation's (gen_tiles torre_vertice, flat white)
+  # C6 characters (PixelLab v3 greyscale, adaptive; W / NW / SW = the flipped E / NE / SE): the psychic leader, the dojo master and the tower's president (static, 8 directions), the scientist / karateka / psychic
+  # trainer classes with walk sets (4 x 5 frames; their 8-direction STATIC art is `<name>_s`: a world-axis facing along a corridor or a room)
+  { name = "sena", kind = "actor", src = "assets/art/npcs/sena/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "maestro_dojo", kind = "actor", src = "assets/art/npcs/maestro_dojo/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "presidente", kind = "actor", src = "assets/art/npcs/presidente/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "cientifico", kind = "actor", src = "assets/art/npcs/cientifico_walk/", ndirs = 4, nframes = 5, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "karateka", kind = "actor", src = "assets/art/npcs/karateka_walk/", ndirs = 4, nframes = 5, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "psiquico", kind = "actor", src = "assets/art/npcs/psiquico_walk/", ndirs = 4, nframes = 5, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "vertice_s", kind = "actor", src = "assets/art/npcs/vertice/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "cientifico_s", kind = "actor", src = "assets/art/npcs/cientifico/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "karateka_s", kind = "actor", src = "assets/art/npcs/karateka/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "psiquico_s", kind = "actor", src = "assets/art/npcs/psiquico/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  # ---- Chapter 4 (C4a, contract 39; tools/gen_tiles.py c4_pieces(), tools/c4_mock.py loads the same files): Ruta 9 .. Metropolis Neon, and the C4b zones (casino, hideout, tower) ----
+  # Bruma flagstones / mall slabs / the gym soil: white-based outdoor or lit-interior tiles (bg 0): no mask. The BIG slabs are 2 x 2 tiles: the four quarter tiles <name>_<i%2><j%2> follow the parity of the cell.
+  { name = "oflag_00", kind = "tile", src = "assets/art/tiles/oflag_00.lv.png", cflags = [], mask = false },
+  { name = "oflag_10", kind = "tile", src = "assets/art/tiles/oflag_10.lv.png", cflags = [], mask = false },
+  { name = "oflag_01", kind = "tile", src = "assets/art/tiles/oflag_01.lv.png", cflags = [], mask = false },
+  { name = "oflag_11", kind = "tile", src = "assets/art/tiles/oflag_11.lv.png", cflags = [], mask = false },
+  { name = "polished_00", kind = "tile", src = "assets/art/tiles/polished_00.lv.png", cflags = [], mask = false },
+  { name = "polished_10", kind = "tile", src = "assets/art/tiles/polished_10.lv.png", cflags = [], mask = false },
+  { name = "polished_01", kind = "tile", src = "assets/art/tiles/polished_01.lv.png", cflags = [], mask = false },
+  { name = "polished_11", kind = "tile", src = "assets/art/tiles/polished_11.lv.png", cflags = [], mask = false },
+  # the tower floor (bg 3): old boards in big 2 x 2 slabs, the casino carpet
+  { name = "oplank_00", kind = "tile", src = "assets/art/tiles/oplank_00.lv.png", cflags = [] },
+  { name = "oplank_10", kind = "tile", src = "assets/art/tiles/oplank_10.lv.png", cflags = [] },
+  { name = "oplank_01", kind = "tile", src = "assets/art/tiles/oplank_01.lv.png", cflags = [] },
+  { name = "oplank_11", kind = "tile", src = "assets/art/tiles/oplank_11.lv.png", cflags = [] },
+  # C4b (contract 41): the tower's encounter boards (oplank + a patch of ghost dust, `grass` so the wild table of the tower floors rolls) and the casino's poster wall pieces (wall_j / wall_i + a Vertice poster)
+  { name = "oplank_d_00", kind = "tile", src = "assets/art/tiles/oplank_d_00.lv.png", cflags = ["grass"] },
+  { name = "oplank_d_10", kind = "tile", src = "assets/art/tiles/oplank_d_10.lv.png", cflags = ["grass"] },
+  { name = "oplank_d_01", kind = "tile", src = "assets/art/tiles/oplank_d_01.lv.png", cflags = ["grass"] },
+  { name = "oplank_d_11", kind = "tile", src = "assets/art/tiles/oplank_d_11.lv.png", cflags = ["grass"] },
+  { name = "wall_poster_j", kind = "object", src = "assets/art/tiles/wall_poster_j.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 2 },
+  { name = "wall_poster_i", kind = "object", src = "assets/art/tiles/wall_poster_i.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 2 },
+  { name = "ccarpet", kind = "tile", src = "assets/art/tiles/ccarpet.lv.png", cflags = [] },
+  { name = "asph_a", kind = "tile", src = "assets/art/tiles/asph_a.lv.png", cflags = [] },
+  { name = "asph_b", kind = "tile", src = "assets/art/tiles/asph_b.lv.png", cflags = [] },
+  { name = "soil_a", kind = "tile", src = "assets/art/tiles/soil_a.lv.png", cflags = [], mask = false },
+  { name = "soil_b", kind = "tile", src = "assets/art/tiles/soil_b.lv.png", cflags = [], mask = false },
+  # the hideout's arrow floors (C4b): big steel plates with a bold arrow in every tile, `slide` = the push facing (the world-axis ones: +i = SE, -i = NW, +j = SW, -j = NE)
+  { name = "arr_se_00", kind = "tile", src = "assets/art/tiles/arr_se_00.lv.png", cflags = [], slide = "SE" },
+  { name = "arr_se_10", kind = "tile", src = "assets/art/tiles/arr_se_10.lv.png", cflags = [], slide = "SE" },
+  { name = "arr_se_01", kind = "tile", src = "assets/art/tiles/arr_se_01.lv.png", cflags = [], slide = "SE" },
+  { name = "arr_se_11", kind = "tile", src = "assets/art/tiles/arr_se_11.lv.png", cflags = [], slide = "SE" },
+  { name = "arr_nw_00", kind = "tile", src = "assets/art/tiles/arr_nw_00.lv.png", cflags = [], slide = "NW" },
+  { name = "arr_nw_10", kind = "tile", src = "assets/art/tiles/arr_nw_10.lv.png", cflags = [], slide = "NW" },
+  { name = "arr_nw_01", kind = "tile", src = "assets/art/tiles/arr_nw_01.lv.png", cflags = [], slide = "NW" },
+  { name = "arr_nw_11", kind = "tile", src = "assets/art/tiles/arr_nw_11.lv.png", cflags = [], slide = "NW" },
+  { name = "arr_sw_00", kind = "tile", src = "assets/art/tiles/arr_sw_00.lv.png", cflags = [], slide = "SW" },
+  { name = "arr_sw_10", kind = "tile", src = "assets/art/tiles/arr_sw_10.lv.png", cflags = [], slide = "SW" },
+  { name = "arr_sw_01", kind = "tile", src = "assets/art/tiles/arr_sw_01.lv.png", cflags = [], slide = "SW" },
+  { name = "arr_sw_11", kind = "tile", src = "assets/art/tiles/arr_sw_11.lv.png", cflags = [], slide = "SW" },
+  { name = "arr_ne_00", kind = "tile", src = "assets/art/tiles/arr_ne_00.lv.png", cflags = [], slide = "NE" },
+  { name = "arr_ne_10", kind = "tile", src = "assets/art/tiles/arr_ne_10.lv.png", cflags = [], slide = "NE" },
+  { name = "arr_ne_01", kind = "tile", src = "assets/art/tiles/arr_ne_01.lv.png", cflags = [], slide = "NE" },
+  { name = "arr_ne_11", kind = "tile", src = "assets/art/tiles/arr_ne_11.lv.png", cflags = [], slide = "NE" },
+  # objects
+  { name = "stonewall_i_a", kind = "object", src = "assets/art/tiles/stonewall_i_a.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "stonewall_i_b", kind = "object", src = "assets/art/tiles/stonewall_i_b.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "chain_i", kind = "object", src = "assets/art/tiles/chain_i.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "glass_i", kind = "object", src = "assets/art/tiles/glass_i.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "stonewall_j_a", kind = "object", src = "assets/art/tiles/stonewall_j_a.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "stonewall_j_b", kind = "object", src = "assets/art/tiles/stonewall_j_b.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "chain_j", kind = "object", src = "assets/art/tiles/chain_j.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "glass_j", kind = "object", src = "assets/art/tiles/glass_j.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "tower_far", kind = "object", src = "assets/art/tiles/tower_far_f.lv.png", fw = 2, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },   # flat white (gen_tiles tower_far_f); tower_far.lv.png is the opaque original
+  { name = "stele_a", kind = "object", src = "assets/art/tiles/stele_a.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "stele_b", kind = "object", src = "assets/art/tiles/stele_b.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "candle", kind = "object", frames = ["assets/art/tiles/candle_0.lv.png", "assets/art/tiles/candle_1.lv.png"], fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "candle_s", kind = "object", src = "assets/art/tiles/candle_0.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "slot", kind = "object", frames = ["assets/art/tiles/slot_0.lv.png", "assets/art/tiles/slot_1.lv.png"], fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "slot_r", kind = "object", frames = ["assets/art/tiles/slot_1.lv.png", "assets/art/tiles/slot_0.lv.png"], fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "road_sign", kind = "object", src = "assets/art/tiles/road_sign.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  # the city blocks are the FLAT-WHITE drawings (nblock_f*, gen_tiles c4_pieces): block 0 blinks (2 frames), block 1 is a single frame; nblock_o0 / nblock_o1 are the opaque originals of the mock (spare)
+  { name = "nblock_0", kind = "object", frames = ["assets/art/tiles/nblock_f0_0.lv.png", "assets/art/tiles/nblock_f0_1.lv.png"], fw = 2, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },
+  { name = "nblock_1", kind = "object", src = "assets/art/tiles/nblock_f1_0.lv.png", fw = 2, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },
+  { name = "nblock_o0", kind = "object", frames = ["assets/art/tiles/nblock_0_0.lv.png", "assets/art/tiles/nblock_0_1.lv.png"], fw = 2, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },
+  { name = "nblock_o1", kind = "object", frames = ["assets/art/tiles/nblock_1_0.lv.png", "assets/art/tiles/nblock_1_1.lv.png"], fw = 2, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },
+  { name = "holo", kind = "object", frames = ["assets/art/tiles/holo_f_0.lv.png", "assets/art/tiles/holo_f_1.lv.png"], fw = 1, fh = 1, cflags = ["solid"] },   # flat white, 2 frames (the mock's holo_0..2 are the opaque originals)
+  { name = "car", kind = "object", src = "assets/art/tiles/car.lv.png", fw = 1, fh = 2, cflags = ["solid"] },
+  { name = "vitrina", kind = "object", src = "assets/art/tiles/vitrina.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "escalator", kind = "object", src = "assets/art/tiles/escalator.lv.png", fw = 1, fh = 2, cflags = ["solid"], door_tiles = [[0, 1]] },
+  { name = "stool", kind = "object", src = "assets/art/tiles/stool.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "console", kind = "object", src = "assets/art/tiles/console.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  # C4 characters (PixelLab v3 greyscale, adaptive; W / NW / SW = the flipped E / NE / SE): static ones have 8 directions, the trainer classes with walk sets 4 x 5 frames
+  { name = "ayudante", kind = "actor", src = "assets/art/npcs/ayudante/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "anciano", kind = "actor", src = "assets/art/npcs/anciano/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "flora", kind = "actor", src = "assets/art/npcs/flora/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "varo", kind = "actor", src = "assets/art/npcs/varo/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "croupier", kind = "actor", src = "assets/art/npcs/croupier/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "dependienta", kind = "actor", src = "assets/art/npcs/dependienta/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "medium", kind = "actor", src = "assets/art/npcs/medium_walk/", ndirs = 4, nframes = 5, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "jugador", kind = "actor", src = "assets/art/npcs/jugador_walk/", ndirs = 4, nframes = 5, ay = 32, levels = "adaptive", mirror_west = true },
+  # ---- Chapter 5 (C5a, contract 47; tools/gen_tiles.py c5_pieces(), tools/c5_mock.py loads the same files): Ruta 12 .. Ruta 15, Ciudad Ambar, the poison gym; C5b: the Autopista, Ruta 18, the Reserva, the sea ----
+  # white-based ground (bg 0): no mask. The tatami is BIG: 2 x 2 tiles, the four quarter tiles tatami_<i%2><j%2> follow the parity of the cell.
+  { name = "wildf_0", kind = "tile", src = "assets/art/tiles/wildf_0.lv.png", cflags = [], mask = false },
+  { name = "wildf_1", kind = "tile", src = "assets/art/tiles/wildf_1.lv.png", cflags = [], mask = false },
+  { name = "wildf_2", kind = "tile", src = "assets/art/tiles/wildf_2.lv.png", cflags = [], mask = false },
+  { name = "sav_0", kind = "tile", src = "assets/art/tiles/sav_0.lv.png", cflags = [], mask = false },
+  { name = "sav_1", kind = "tile", src = "assets/art/tiles/sav_1.lv.png", cflags = [], mask = false },
+  { name = "sav_2", kind = "tile", src = "assets/art/tiles/sav_2.lv.png", cflags = [], mask = false },
+  { name = "dgrass_0", kind = "tile", src = "assets/art/tiles/dgrass_0.lv.png", cflags = ["grass"] },
+  { name = "dgrass_1", kind = "tile", src = "assets/art/tiles/dgrass_1.lv.png", cflags = ["grass"] },
+  { name = "tatami_00", kind = "tile", src = "assets/art/tiles/tatami_00.lv.png", cflags = [], mask = false },
+  { name = "tatami_10", kind = "tile", src = "assets/art/tiles/tatami_10.lv.png", cflags = [], mask = false },
+  { name = "tatami_01", kind = "tile", src = "assets/art/tiles/tatami_01.lv.png", cflags = [], mask = false },
+  { name = "tatami_11", kind = "tile", src = "assets/art/tiles/tatami_11.lv.png", cflags = [], mask = false },
+  { name = "bwalk", kind = "tile", src = "assets/art/tiles/bwalk.lv.png", cflags = [], mask = false },
+  # the Autopista (bg 3: the road keeps its mask over the dark drop): light pavement, the dashed lane, a painted chevron (plain floor) and the bike slopes (`slide_bike` = the downhill facing)
+  { name = "roadl_0", kind = "tile", src = "assets/art/tiles/roadl_0.lv.png", cflags = [] },
+  { name = "roadl_1", kind = "tile", src = "assets/art/tiles/roadl_1.lv.png", cflags = [] },
+  { name = "road_lane", kind = "tile", src = "assets/art/tiles/road_lane.lv.png", cflags = [] },
+  { name = "road_arrow", kind = "tile", src = "assets/art/tiles/road_arrow.lv.png", cflags = [] },
+  { name = "slope_s",  kind = "tile", src = "assets/art/tiles/slope_s.lv.png",  cflags = [], slide_bike = "S" },
+  { name = "slope_se", kind = "tile", src = "assets/art/tiles/slope_se.lv.png", cflags = [], slide_bike = "SE" },
+  { name = "slope_e",  kind = "tile", src = "assets/art/tiles/slope_e.lv.png",  cflags = [], slide_bike = "E" },
+  { name = "slope_ne", kind = "tile", src = "assets/art/tiles/slope_ne.lv.png", cflags = [], slide_bike = "NE" },
+  { name = "slope_n",  kind = "tile", src = "assets/art/tiles/slope_n.lv.png",  cflags = [], slide_bike = "N" },
+  { name = "slope_nw", kind = "tile", src = "assets/art/tiles/slope_nw.lv.png", cflags = [], slide_bike = "NW" },
+  { name = "slope_w",  kind = "tile", src = "assets/art/tiles/slope_w.lv.png",  cflags = [], slide_bike = "W" },
+  { name = "slope_sw", kind = "tile", src = "assets/art/tiles/slope_sw.lv.png", cflags = [], slide_bike = "SW" },
+  # objects
+  { name = "windmill", kind = "object", frames = ["assets/art/tiles/windmill_0.lv.png", "assets/art/tiles/windmill_1.lv.png", "assets/art/tiles/windmill_2.lv.png"], fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "windmill_s", kind = "object", src = "assets/art/tiles/windmill_0.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "palm_0", kind = "object", src = "assets/art/tiles/palm_0.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  { name = "palm_1", kind = "object", src = "assets/art/tiles/palm_1.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  { name = "acacia_0", kind = "object", src = "assets/art/tiles/acacia_0.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  { name = "acacia_1", kind = "object", src = "assets/art/tiles/acacia_1.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  { name = "res_arch", kind = "object", src = "assets/art/tiles/res_arch.lv.png", fw = 2, fh = 1, cflags = ["solid"], door_tiles = [[0, 0], [1, 0]] },   # the Reserva's wooden arch (the old `arch` is Marea's gate)
+  { name = "shoji_i", kind = "object", src = "assets/art/tiles/shoji_i.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 2 },
+  { name = "shoji_j", kind = "object", src = "assets/art/tiles/shoji_j.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 2 },
+  { name = "graffiti_rail", kind = "object", src = "assets/art/tiles/graffiti_rail.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "guardrail", kind = "object", src = "assets/art/tiles/guardrail.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "downhill_sign", kind = "object", src = "assets/art/tiles/downhill_sign.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "gym_dojo", kind = "object", src = "assets/art/tiles/gym_dojo.lv.png", fw = 3, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },   # C5a: the poison gym's dojo (gen_tiles gym_dojo(), flat white, not in the mock)
+  # Chapter 8 (C8, contract 51; tools/gen_tiles.py c8_pieces(), tools/c6_mock.py TIERRA loads the same files): the Ground gym. BIG light sandstone slabs: the four quarter tiles sslab_<i%2><j%2> follow the parity of the cell (white-based, bg 0: no mask).
+  { name = "sslab_00", kind = "tile", src = "assets/art/tiles/sslab_00.lv.png", cflags = [], mask = false },
+  { name = "sslab_10", kind = "tile", src = "assets/art/tiles/sslab_10.lv.png", cflags = [], mask = false },
+  { name = "sslab_01", kind = "tile", src = "assets/art/tiles/sslab_01.lv.png", cflags = [], mask = false },
+  { name = "sslab_11", kind = "tile", src = "assets/art/tiles/sslab_11.lv.png", cflags = [], mask = false },
+  # C5 characters (PixelLab v3 greyscale, adaptive; W / NW / SW = the flipped E / NE / SE): the poison leader, the Reserva's warden, the fishing guru (static, `pescador` is the fisherman's walk set), the sleeping creature's map
+  # sprite (80 x 80, 8 directions: streamed from the card, so the map only pays the stream cache), and the two new trainer classes with walk sets (4 x 5 frames)
+  { name = "kai", kind = "actor", src = "assets/art/npcs/kai/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "guardian", kind = "actor", src = "assets/art/npcs/guardian/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "pescador_s", kind = "actor", src = "assets/art/npcs/pescador/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "slumberth", kind = "actor", src = "assets/art/npcs/slumberth/", ndirs = 8, nframes = 1, levels = "adaptive", mirror_west = true },
+  # C7 / C9 legendary birds (contract 52): the overworld bird of the legend= idiom (tools/legend_ow.py scales assets/art/elementis/<species>_c down to ~36 rows, 5 facings + the mirrored west ones). All three use the LIGHT
+  # typecast (dark_cut 25, split 0.35 / 0.75: the species' art_dark_cut / art_split): the default one turns Aurowl's navy wing feathers black, which reads as a hole in the ice at 36 rows.
+  { name = "aurowl_ow", kind = "actor", src = "assets/art/npcs/aurowl_ow/", ndirs = 8, nframes = 1, levels = "adaptive", dark_cut = 25, adaptive_split = { north = [0.35, 0.75], north-east = [0.35, 0.75], east = [0.35, 0.75], south-east = [0.35, 0.75], south = [0.35, 0.75] }, mirror_west = true },
+  { name = "fulgurion_ow", kind = "actor", src = "assets/art/npcs/fulgurion_ow/", ndirs = 8, nframes = 1, levels = "adaptive", dark_cut = 25, adaptive_split = { north = [0.35, 0.75], north-east = [0.35, 0.75], east = [0.35, 0.75], south-east = [0.35, 0.75], south = [0.35, 0.75] }, mirror_west = true },
+  { name = "ignicondor_ow", kind = "actor", src = "assets/art/npcs/ignicondor_ow/", ndirs = 8, nframes = 1, levels = "adaptive", dark_cut = 25, adaptive_split = { north = [0.35, 0.75], north-east = [0.35, 0.75], east = [0.35, 0.75], south-east = [0.35, 0.75], south = [0.35, 0.75] }, mirror_west = true },
+  # the poison gym's disciples look along the corridors of the maze (a world-axis facing: SE / SW / NE / NW), which a 4-direction walk set cannot do: the STATIC 8-direction art of three existing classes
+  { name = "aprendiz_s", kind = "actor", src = "assets/art/npcs/aprendiz/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "medium_s", kind = "actor", src = "assets/art/npcs/medium/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "cazabichos_s", kind = "actor", src = "assets/art/npcs/cazabichos/", ndirs = 8, nframes = 1, ay = 30, levels = "adaptive", mirror_west = true },
+  { name = "rider", kind = "actor", src = "assets/art/npcs/rider_walk/", ndirs = 4, nframes = 5, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "punk", kind = "actor", src = "assets/art/npcs/punk_walk/", ndirs = 4, nframes = 5, ay = 32, levels = "adaptive", mirror_west = true },
+  # C8 (contract 51): the Ground gym's disciples are STATIC 8-direction actors (like `aprendiz_s`): a walk set can only look along the screen diagonals, the lanes need world-axis sight (SW = +j). mapc warns they slide instead of walking.
+  { name = "montanista_s", kind = "actor", src = "assets/art/npcs/montanista/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "mecanico_s", kind = "actor", src = "assets/art/npcs/mecanico/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "explorador_s", kind = "actor", src = "assets/art/npcs/explorador/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "chica_s", kind = "actor", src = "assets/art/npcs/chica/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  # Chapter 7 (C7, contract 53; tools/gen_tiles.py c7_pieces, tools/c7_mock.py loads the same files): Routes 19 - 21, the Islas Escarcha, Isla Ceniza, the mansion, the fossil lab and the Power Plant.
+  # BIG light slabs: the four quarter tiles <name>_<i%2><j%2> follow the parity of the cell (white-based, bg 0: no mask). `ember_*` (the mansion's cinder patches) and `frost_tuft` (the ice cave's frost-grass) are the
+  # wild-encounter tiles of those two zones (C_GRASS); `current` is the ice cave's animated channel (water: surfable).
+  { name = "ice_00", kind = "tile", src = "assets/art/tiles/ice_00.lv.png", cflags = [], mask = false },
+  { name = "ice_10", kind = "tile", src = "assets/art/tiles/ice_10.lv.png", cflags = [], mask = false },
+  { name = "ice_01", kind = "tile", src = "assets/art/tiles/ice_01.lv.png", cflags = [], mask = false },
+  { name = "ice_11", kind = "tile", src = "assets/art/tiles/ice_11.lv.png", cflags = [], mask = false },
+  { name = "burnt_00", kind = "tile", src = "assets/art/tiles/burnt_00.lv.png", cflags = [], mask = false },
+  { name = "burnt_10", kind = "tile", src = "assets/art/tiles/burnt_10.lv.png", cflags = [], mask = false },
+  { name = "burnt_01", kind = "tile", src = "assets/art/tiles/burnt_01.lv.png", cflags = [], mask = false },
+  { name = "burnt_11", kind = "tile", src = "assets/art/tiles/burnt_11.lv.png", cflags = [], mask = false },
+  { name = "ember_00", kind = "tile", src = "assets/art/tiles/ember_00.lv.png", cflags = ["grass"], mask = false },
+  { name = "ember_10", kind = "tile", src = "assets/art/tiles/ember_10.lv.png", cflags = ["grass"], mask = false },
+  { name = "ember_01", kind = "tile", src = "assets/art/tiles/ember_01.lv.png", cflags = ["grass"], mask = false },
+  { name = "ember_11", kind = "tile", src = "assets/art/tiles/ember_11.lv.png", cflags = ["grass"], mask = false },
+  { name = "ash_0", kind = "tile", src = "assets/art/tiles/ash_0.lv.png", cflags = [], mask = false },
+  { name = "ash_1", kind = "tile", src = "assets/art/tiles/ash_1.lv.png", cflags = [], mask = false },
+  { name = "ash_2", kind = "tile", src = "assets/art/tiles/ash_2.lv.png", cflags = [], mask = false },
+  { name = "spark_00", kind = "tile", src = "assets/art/tiles/spark_00.lv.png", cflags = ["grass"] },
+  { name = "spark_10", kind = "tile", src = "assets/art/tiles/spark_10.lv.png", cflags = ["grass"] },
+  { name = "spark_01", kind = "tile", src = "assets/art/tiles/spark_01.lv.png", cflags = ["grass"] },
+  { name = "spark_11", kind = "tile", src = "assets/art/tiles/spark_11.lv.png", cflags = ["grass"] },
+  # the water cells of the sea maps' edges (the warp cells and spawns) and the channel's rapids cells: WATER but not SOLID (a warp / a spawn / an NPC needs a walkable tile); only a surfing hero can reach them (their neighbours are solid sea)
+  { name = "sea_gate", kind = "tile", frames = ["assets/art/tiles/sea_o_0.lv.png", "assets/art/tiles/sea_o_1.lv.png"], cflags = ["water"] },
+  { name = "current_gate", kind = "tile", frames = ["assets/art/tiles/current_0.lv.png", "assets/art/tiles/current_1.lv.png"], cflags = ["water"] },
+  { name = "air_0", kind = "tile", src = "assets/art/tiles/air_0.lv.png", cflags = ["solid"], mask = false },        # invisible solid cell on a white map (the front sides of the mansion / the gym)
+  { name = "air_3", kind = "tile", src = "assets/art/tiles/air_3.lv.png", cflags = ["solid"] },                      # invisible solid cell on a dark map (the power plant)
+  { name = "frost_tuft", kind = "tile", src = "assets/art/tiles/frost_tuft.lv.png", cflags = ["grass"], mask = false },
+  { name = "current", kind = "tile", frames = ["assets/art/tiles/current_0.lv.png", "assets/art/tiles/current_1.lv.png"], cflags = ["solid", "water"] },
+  # objects (the animated ones share one box per piece: gen_tiles unify_frames)
+  { name = "kelp", kind = "object", frames = ["assets/art/tiles/kelp_0.lv.png", "assets/art/tiles/kelp_1.lv.png"], fw = 1, fh = 1, cflags = [] },
+  { name = "sandbar", kind = "object", src = "assets/art/tiles/sandbar.lv.png", fw = 1, fh = 1, cflags = [] },
+  { name = "ice_pillar_a", kind = "object", src = "assets/art/tiles/ice_pillar_0.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  { name = "ice_pillar_b", kind = "object", src = "assets/art/tiles/ice_pillar_1.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  { name = "snow_drift", kind = "object", src = "assets/art/tiles/snow_drift.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  { name = "lava_rock_a", kind = "object", src = "assets/art/tiles/lava_rock_0.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  { name = "lava_rock_b", kind = "object", src = "assets/art/tiles/lava_rock_1.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  { name = "steam_vent", kind = "object", frames = ["assets/art/tiles/steam_vent_0.lv.png", "assets/art/tiles/steam_vent_1.lv.png", "assets/art/tiles/steam_vent_2.lv.png"], fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "volcano", kind = "object", src = "assets/art/tiles/volcano.lv.png", fw = 2, fh = 2, cflags = ["solid"], fill = 2 },
+  { name = "brazier", kind = "object", frames = ["assets/art/tiles/brazier_0.lv.png", "assets/art/tiles/brazier_1.lv.png"], fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  { name = "quiz_machine", kind = "object", src = "assets/art/tiles/quiz_machine.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 2 },
+  { name = "charwall", kind = "object", src = "assets/art/tiles/charwall.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 2 },
+  { name = "rubble_c7", kind = "object", src = "assets/art/tiles/rubble_c7.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 3 },
+  { name = "stairs", kind = "object", src = "assets/art/tiles/stairs.lv.png", fw = 1, fh = 1, cflags = ["solid"], door_tiles = [[0, 0]] },   # the mansion's stairs (a door cell between floors)
+  { name = "reviver", kind = "object", src = "assets/art/tiles/reviver.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 2 },
+  { name = "generator", kind = "object", frames = ["assets/art/tiles/generator_0.lv.png", "assets/art/tiles/generator_1.lv.png"], fw = 1, fh = 1, cflags = ["solid"], fill = 2 },
+  { name = "ice_mouth", kind = "object", src = "assets/art/tiles/ice_mouth.lv.png", fw = 1, fh = 1, cflags = [] },
+  { name = "gym_fuego", kind = "object", src = "assets/art/tiles/gym_fuego.lv.png", fw = 3, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },            # the fire gym (gen_tiles c7_gym_fuego(), flat white)
+  { name = "mansion_ruin", kind = "object", src = "assets/art/tiles/mansion_ruin.lv.png", fw = 3, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },    # the burnt mansion (flat white)
+  { name = "central_door", kind = "object", src = "assets/art/tiles/central_door.lv.png", fw = 1, fh = 1, cflags = [] },     # the power plant's service door on Ruta 10's lake (a walkable warp cell, flat)
+  { name = "statue_off", kind = "actor", src = "assets/art/npcs/statue_off/", ndirs = 1, nframes = 1 },    # the mansion's statue switches: solid NPCs, lever down / up
+  { name = "statue_on", kind = "actor", src = "assets/art/npcs/statue_on/", ndirs = 1, nframes = 1 },
+  { name = "bdoor", kind = "actor", src = "assets/art/npcs/bdoor/", ndirs = 1, nframes = 1 },             # the mansion's boarded doors: solid NPCs that vanish when a statue's switch opens them
+  { name = "rapids", kind = "actor", src = "assets/art/npcs/rapids/", ndirs = 1, nframes = 1 },       # the cave's rapids: a solid NPC that dissolves when the boulders plug its source
+  # C7 characters (PixelLab v3 greyscale, adaptive; W / NW / SW = the flipped E / NE / SE): the fire leader (static, 8 directions), the swimmer / burglar / fire-eater classes with walk sets (4 x 5 frames) and their
+  # static 8-direction twins `<name>_s` (a world-axis facing along a lane or a room: the swimmers of the sea walls, the quiz gym's toll trainers)
+  { name = "brasa", kind = "actor", src = "assets/art/npcs/brasa/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "nadador", kind = "actor", src = "assets/art/npcs/nadador_walk/", ndirs = 4, nframes = 5, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "ladron", kind = "actor", src = "assets/art/npcs/ladron_walk/", ndirs = 4, nframes = 5, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "comefuego", kind = "actor", src = "assets/art/npcs/comefuego_walk/", ndirs = 4, nframes = 5, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "nadador_s", kind = "actor", src = "assets/art/npcs/nadador/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "nadadora_s", kind = "actor", src = "assets/art/npcs/nadadora/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "ladron_s", kind = "actor", src = "assets/art/npcs/ladron/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "comefuego_s", kind = "actor", src = "assets/art/npcs/comefuego/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  # ---- Chapter 9 (C9, contract 56; tools/gen_tiles.py c9_pieces(), tools/c9_mock.py loads the same files): Ruta 23, the Senda de Campeones, the Meseta Cumbre, the five league rooms, the Cueva Secreta ----
+  # BIG light slabs: the four quarter tiles <name>_<i%2><j%2> follow the parity of the cell (white-based, bg 0: no mask). marb = the Meseta and the Dragon / Champion rooms, ringm = the Fighting ring, ghf = the Ghost room (with mist), iceslab = the Ice room.
+  { name = "marb_00", kind = "tile", src = "assets/art/tiles/marb_00.lv.png", cflags = [], mask = false },
+  { name = "marb_10", kind = "tile", src = "assets/art/tiles/marb_10.lv.png", cflags = [], mask = false },
+  { name = "marb_01", kind = "tile", src = "assets/art/tiles/marb_01.lv.png", cflags = [], mask = false },
+  { name = "marb_11", kind = "tile", src = "assets/art/tiles/marb_11.lv.png", cflags = [], mask = false },
+  { name = "ringm_00", kind = "tile", src = "assets/art/tiles/ringm_00.lv.png", cflags = [], mask = false },
+  { name = "ringm_10", kind = "tile", src = "assets/art/tiles/ringm_10.lv.png", cflags = [], mask = false },
+  { name = "ringm_01", kind = "tile", src = "assets/art/tiles/ringm_01.lv.png", cflags = [], mask = false },
+  { name = "ringm_11", kind = "tile", src = "assets/art/tiles/ringm_11.lv.png", cflags = [], mask = false },
+  { name = "ghf_00", kind = "tile", src = "assets/art/tiles/ghf_00.lv.png", cflags = [], mask = false },
+  { name = "ghf_10", kind = "tile", src = "assets/art/tiles/ghf_10.lv.png", cflags = [], mask = false },
+  { name = "ghf_01", kind = "tile", src = "assets/art/tiles/ghf_01.lv.png", cflags = [], mask = false },
+  { name = "ghf_11", kind = "tile", src = "assets/art/tiles/ghf_11.lv.png", cflags = [], mask = false },
+  { name = "iceslab_00", kind = "tile", src = "assets/art/tiles/iceslab_00.lv.png", cflags = [], mask = false },
+  { name = "iceslab_10", kind = "tile", src = "assets/art/tiles/iceslab_10.lv.png", cflags = [], mask = false },
+  { name = "iceslab_01", kind = "tile", src = "assets/art/tiles/iceslab_01.lv.png", cflags = [], mask = false },
+  { name = "iceslab_11", kind = "tile", src = "assets/art/tiles/iceslab_11.lv.png", cflags = [], mask = false },
+  # the Senda's worn rock floor (3 variants, group `rockf`) and the Cueva Secreta's glinting crystal rock (group `crys`)
+  { name = "rockf_0", kind = "tile", src = "assets/art/tiles/rockf_0.lv.png", cflags = [], mask = false },
+  { name = "rockf_1", kind = "tile", src = "assets/art/tiles/rockf_1.lv.png", cflags = [], mask = false },
+  { name = "rockf_2", kind = "tile", src = "assets/art/tiles/rockf_2.lv.png", cflags = [], mask = false },
+  { name = "crys_0", kind = "tile", src = "assets/art/tiles/crys_0.lv.png", cflags = [], mask = false },
+  { name = "crys_1", kind = "tile", src = "assets/art/tiles/crys_1.lv.png", cflags = [], mask = false },
+  { name = "crys_2", kind = "tile", src = "assets/art/tiles/crys_2.lv.png", cflags = [], mask = false },
+  # objects (1 x 1). bgate = Ruta 23's badge gate posts, torch / cand = animated, lstatue = the Meseta's emblem statue, ban_i / ban_j = the champion hall's banner walls (the two wall faces), gcry = crystal clusters (2 variants)
+  { name = "bgate", kind = "object", src = "assets/art/tiles/bgate.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "torch", kind = "object", frames = ["assets/art/tiles/torch_0.lv.png", "assets/art/tiles/torch_1.lv.png"], fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "torch_s", kind = "object", src = "assets/art/tiles/torch_0.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "cand", kind = "object", frames = ["assets/art/tiles/cand_0.lv.png", "assets/art/tiles/cand_1.lv.png"], fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "cand_s", kind = "object", src = "assets/art/tiles/cand_0.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "lstatue", kind = "object", src = "assets/art/tiles/lstatue.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "ringpost", kind = "object", src = "assets/art/tiles/ringpost.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "ban_i", kind = "object", src = "assets/art/tiles/ban_i.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 2 },
+  { name = "ban_j", kind = "object", src = "assets/art/tiles/ban_j.lv.png", fw = 1, fh = 1, cflags = ["solid"], fill = 2 },
+  { name = "gcry_0", kind = "object", src = "assets/art/tiles/gcry_0.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "gcry_1", kind = "object", src = "assets/art/tiles/gcry_1.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "snowdrift", kind = "object", src = "assets/art/tiles/snowdrift.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  # the PixelLab decor of the ice / dragon / champion rooms (assets/art/objects_c9/*.png, adaptive levels, scaled by gen_tiles c9_pieces())
+  { name = "icecr", kind = "object", src = "assets/art/tiles/icecr.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "dstat", kind = "object", src = "assets/art/tiles/dstat.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "cpil", kind = "object", src = "assets/art/tiles/cpil.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "troph", kind = "object", src = "assets/art/tiles/troph.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  # the League gatehouse of Ruta 22: the Autopista's gatehouse art with a door cell (the same flat-white drawing, `door_tiles`), and the Senda's boulder gate (an ACTOR: the NPC vanishes when its pit is filled)
+  { name = "gate_liga", kind = "object", src = "assets/art/tiles/gatehouse_f.lv.png", fw = 2, fh = 2, cflags = ["solid"], door_tiles = [[1, 1]], fill = 2 },
+  # the cave floors of the Senda / the Cueva Secreta are the ENCOUNTER ground (`grass` flag: caves roll a wild creature on every step; the Senda's `rockf` and the Cueva's `crys` without the flag mark the safe cells:
+  # entrances, the cell in front of a gate); the cave walls are the four crystal-vein cubes of the old Monte Eco walls drawn static (the mock's `cwall_a0 / b0 / a1 / b1`), group `swall`
+  { name = "rockg_0", kind = "tile", src = "assets/art/tiles/rockf_0.lv.png", cflags = ["grass"], mask = false },
+  { name = "rockg_1", kind = "tile", src = "assets/art/tiles/rockf_1.lv.png", cflags = ["grass"], mask = false },
+  { name = "rockg_2", kind = "tile", src = "assets/art/tiles/rockf_2.lv.png", cflags = ["grass"], mask = false },
+  { name = "crysg_0", kind = "tile", src = "assets/art/tiles/crys_0.lv.png", cflags = ["grass"], mask = false },
+  { name = "crysg_1", kind = "tile", src = "assets/art/tiles/crys_1.lv.png", cflags = ["grass"], mask = false },
+  { name = "crysg_2", kind = "tile", src = "assets/art/tiles/crys_2.lv.png", cflags = ["grass"], mask = false },
+  { name = "swall_a0", kind = "object", src = "assets/art/tiles/cwall_a0.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "swall_b0", kind = "object", src = "assets/art/tiles/cwall_b0.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "swall_a1", kind = "object", src = "assets/art/tiles/cwall_a1.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "swall_b1", kind = "object", src = "assets/art/tiles/cwall_b1.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "rock_gate", kind = "actor", src = "assets/art/npcs/rock_gate/", ndirs = 1, nframes = 1 },
+  # ---- Chapter 10 (D1, contract 68; tools/gen_tiles.py c10_pieces(), tools/c10_mock.py loads the same files): the Ruinas del Origen and the hidden Gruta del Eclipse ----
+  # the ruins' floor: BIG light ancient slabs, the four quarter tiles aslab_<i%2><j%2> follow the parity of the cell (white-based, bg 0: no mask); the cave's floor: dark rock with light veins (3 variants, group `vrock`; no encounters: the Gruta is a sanctuary)
+  { name = "aslab_00", kind = "tile", src = "assets/art/tiles/aslab_00.lv.png", cflags = [], mask = false },
+  { name = "aslab_10", kind = "tile", src = "assets/art/tiles/aslab_10.lv.png", cflags = [], mask = false },
+  { name = "aslab_01", kind = "tile", src = "assets/art/tiles/aslab_01.lv.png", cflags = [], mask = false },
+  { name = "aslab_11", kind = "tile", src = "assets/art/tiles/aslab_11.lv.png", cflags = [], mask = false },
+  { name = "vrock_0", kind = "tile", src = "assets/art/tiles/vrock_0.lv.png", cflags = [], mask = false },
+  { name = "vrock_1", kind = "tile", src = "assets/art/tiles/vrock_1.lv.png", cflags = [], mask = false },
+  { name = "vrock_2", kind = "tile", src = "assets/art/tiles/vrock_2.lv.png", cflags = [], mask = false },
+  # objects (1 x 1). ped0 = the empty fragment pedestal (its lit twin is the actor ped_lit laid over it), ostele = the mural stele of Genesa and Arkegen, fcol_i / fcol_j = the fallen columns, altar = the Eclipse altar (the stone is the actor estone),
+  # gmouth = the cave mouth of the islet (a walkable warp cell like ice_mouth). altar_stone is the MOCK's composite (altar + stone): in no map.
+  { name = "ped0", kind = "object", src = "assets/art/tiles/ped0.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "ostele", kind = "object", src = "assets/art/tiles/ostele.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "fcol_i", kind = "object", src = "assets/art/tiles/fcol_i.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "fcol_j", kind = "object", src = "assets/art/tiles/fcol_j.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "altar", kind = "object", src = "assets/art/tiles/altar.lv.png", fw = 1, fh = 1, cflags = ["solid"] },
+  { name = "gmouth", kind = "object", src = "assets/art/tiles/gmouth.lv.png", fw = 1, fh = 1, cflags = [] },
+  # actors (1 direction, 1 frame): ped_lit = the lit pedestal (shown by a flag over the empty one), seal = the sealed gate slab of the Meseta, lshaft = the light shaft, estone = the Piedra Eclipse on the altar
+  { name = "ped_lit", kind = "actor", src = "assets/art/npcs/ped_lit/", ndirs = 1, nframes = 1 },
+  { name = "seal", kind = "actor", src = "assets/art/npcs/seal/", ndirs = 1, nframes = 1 },
+  { name = "lshaft", kind = "actor", src = "assets/art/npcs/lshaft/", ndirs = 1, nframes = 1 },
+  { name = "estone", kind = "actor", src = "assets/art/npcs/estone/", ndirs = 1, nframes = 1 },
+  # the Cueva Secreta's legend (contract 52 / 56): tools/legend_ow.py scales assets/art/elementis/arkegen_c to 36 rows (5 facings + the mirrored west ones); the species' own typecast (art_dark_cut 45)
+  { name = "arkegen_ow", kind = "actor", src = "assets/art/npcs/arkegen_ow/", ndirs = 8, nframes = 1, levels = "adaptive", mirror_west = true },
+  # D1 (contract 68): Genesa of the Ruinas del Origen (tools/legend_ow.py, 39 x 36, the default typecast like Arkegen: both species use art_dark_cut 45)
+  { name = "genesa_ow", kind = "actor", src = "assets/art/npcs/genesa_ow/", ndirs = 8, nframes = 1, levels = "adaptive", mirror_west = true },
+  # C9 characters (PixelLab v3 greyscale, adaptive; W / NW / SW = the flipped E / NE / SE): the four members of the League four (static, 8 directions), the elite trainer class (a walk set + its static 8-direction art `elite_s`, which can look along
+  # the corridors of the Senda) and the rival with static art (`rival_s`: the road / the champion's room need world-axis sight; `rival` is the 4-direction walk set)
+  { name = "iver", kind = "actor", src = "assets/art/npcs/iver/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "tanko", kind = "actor", src = "assets/art/npcs/tanko/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "madame_velo", kind = "actor", src = "assets/art/npcs/madame_velo/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "arkan", kind = "actor", src = "assets/art/npcs/arkan/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "elite", kind = "actor", src = "assets/art/npcs/elite_walk/", ndirs = 4, nframes = 5, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "elite_s", kind = "actor", src = "assets/art/npcs/elite/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+  { name = "rival_s", kind = "actor", src = "assets/art/npcs/rival/", ndirs = 8, nframes = 1, ay = 32, levels = "adaptive", mirror_west = true },
+]
+
+[alias]
+house_player = "fb_house"
+house_rival  = "fb_house_rival"
+lab          = "fb_lab"
+tree         = "tree_code"
+rock         = "rock_code"
+bed          = "fb_bed"
+table        = "fb_table"
+lab_table    = "fb_lab_table_crystals"
+bookshelf    = "fb_bookshelf"
+tv           = "fb_tv"
+pc           = "fb_pc"
+machine      = "fb_machine"
+center       = "fb_center"
+mart         = "fb_shop"
+gym          = "fb_gym"
+counter      = "fb_counter"
+shelf        = "fb_shelf"
+healer       = "fb_heal"
+
+[variants]
+grass = ["grass_a", "grass_a", "grass_a", "grass_b", "grass_c"]
+path  = ["path_a", "path_a", "path_b"]
+grass_v = ["grass_a", "grass_a", "grass_b"]
+pave  = ["pave_a", "pave_a", "pave_b"]
+plaza = ["plaza_a", "plaza_b"]
+litter = ["litter_a", "litter_b", "litter_c", "litter_d"]
+trail = ["trail_a", "trail_b"]
+pine  = ["pine_a", "pine_b"]
+pine_dark = ["pine_dark_a", "pine_dark_b", "pine_dark_c"]
+gravel = ["gravel_a", "gravel_b", "gravel_c"]
+cliff = ["cliff_a", "cliff_b", "cliff_c"]
+# Chapter 2 variant groups (picked per cell by the usual hash)
+earth = ["earth_a", "earth_b", "earth_c", "earth_d", "earth_b", "earth_c"]
+mtrail = ["mtrail_a", "mtrail_b"]
+slope = ["slope_a", "slope_b", "slope_c"]
+dry_bush = ["dry_bush_a", "dry_bush_b"]
+cave = ["cave_a", "cave_b", "cave_c", "cave_a", "cave_b"]
+cwall = ["cwall_a"]
+stalag = ["stalag_a", "stalag_b"]
+sand = ["sand_a", "sand_b", "sand_c", "sand_d"]
+beach_grass = ["beach_grass_a", "beach_grass_b"]
+cliff_grass = ["cliff_grass_a", "cliff_grass_b"]
+wet = ["wet_a", "wet_b", "wet_c"]
+wet2 = ["wet_a", "wet_b"]
+quay_n = ["deck_bl_0", "deck_bl_1"]
+quay_s = ["deck_tr_0", "deck_tr_1"]
+rubble = ["boulder", "rock_code", "stalag_s", "rock_code"]
+pool = ["pool_a", "pool_b"]
+# Chapter 3 variant groups
+sidewalk = ["sidewalk_a", "sidewalk_b"]
+lawn = ["lawn_a", "lawn_b", "lawn_c"]
+hedge = ["hedge_a", "hedge_b"]
+concrete = ["concrete_a", "concrete_b", "concrete_c"]
+quay = ["quay_a", "quay_b"]
+dirt = ["dirt_a", "dirt_b", "dirt_c"]
+root_wall = ["root_wall_a", "root_wall_b"]
+mound = ["mound_a", "mound_b"]
+# Chapter 4 variant groups
+stonewall_i = ["stonewall_i_a", "stonewall_i_b"]
+stonewall_j = ["stonewall_j_a", "stonewall_j_b"]
+stele = ["stele_a", "stele_b"]
+soil = ["soil_a", "soil_b"]
+asph = ["asph_a", "asph_b"]
+# Chapter 5 variant groups
+wildf = ["wildf_0", "wildf_1", "wildf_2"]
+sav = ["sav_0", "sav_1", "sav_2"]
+dgrass = ["dgrass_0", "dgrass_1"]
+roadl = ["roadl_0", "roadl_1"]
+# Chapter 7 variant groups
+ash = ["ash_0", "ash_1", "ash_2", "ash_0", "ash_1"]
+ice_pillar = ["ice_pillar_a", "ice_pillar_b"]
+lava_rock = ["lava_rock_a", "lava_rock_b"]
+# Chapter 9 variant groups
+rockf = ["rockf_0", "rockf_1", "rockf_2"]
+crys = ["crys_0", "crys_1", "crys_2"]
+gcry = ["gcry_0", "gcry_1"]
+rockg = ["rockg_0", "rockg_1", "rockg_2"]
+crysg = ["crysg_0", "crysg_1", "crysg_2"]
+swall = ["swall_a0", "swall_b0", "swall_a1", "swall_b1"]
+# Chapter 10 variant groups
+vrock = ["vrock_0", "vrock_1", "vrock_2"]
+srubble = ["rock_code", "stalag_s", "rock_code", "cairn"]    # the low rock in front of the cave floors (no static boulders: the Senda's pushable ones are NPCs)
+mrubble = ["stalag_s", "gcry_0", "stalag_s", "gcry_1"]       # the Cueva Secreta's: stalagmites and crystal clusters

@@ -1,0 +1,345 @@
+# Profesora Lin's lab (interior). column = i, row = j; (0,0) = back corner.
+# Crystals: three NPC props (actors crystal_*) standing ON the three cells of the lab bench (legend `object=lab_table npc=...`).
+# The only way to the bench is the row j=2 in front of it (the cells beside it are shelves / machine).
+# Flow (scripts below): intro on the first visit -> inspect a Crystal (Elementi popup + YES/NO) -> Lin gives it, the rival
+# takes the Crystal that beats yours -> stepping on the door mat before choosing: Lin stops you; after choosing: the rival
+# challenges you on the mat (battle rival_lab), leaves, Lin congratulates; then the mat is a plain exit.
+@map villa_lab
+@size 10 8
+@interior yes
+@bg 3
+@fill floor_lab
+@spawn door 6 6 N
+@flag lab_intro 11
+@flag starter_chosen 12
+@flag orb_ember_gone 13
+@flag orb_puddle_gone 14
+@flag orb_sprout_gone 15
+@flag rival_gone 16
+@flag genesa_given 915      # C9 (contract 56): Lin handed Genesa over (the Registro was complete). D1 (contract 68): she no longer does; only the OLD saves have it (the ruins give them a shrine without a battle)
+@flag parcel_delivered 41   # M4-D: the Ciudad Nodo parcel was handed to Lin (set by the lin script below; read by the Nodo guard / shop)
+@var starter 2        # species the player is looking at / chose (1 embercub, 3 puddlet, 5 sprouton)
+@var rival_sp 3       # species the rival took
+@var result 4         # battle result (1 won)
+@var tier 5           # (contract 80): the Registro rating tier 0 .. 7 (script rate_reg)
+@var cnt 6            # scratch of the rating (caught_count)
+@var dp_ok 12         # F2 (contract 74): the diploma assistant: 1 = the Registro is complete
+@var dp_one 11        # contract 79: 1 = at most one species is missing (his singular line)
+@legend
+  .  tile=floor_lab
+  C  tile=none object=wall_corner
+  w  tile=none object=wall_j
+  y  tile=none object=wall_win_j
+  |  tile=none object=wall_i
+  q  tile=none object=wall_win_i
+  B  object=bookshelf interact=look text=obj.libros.lab
+  M  object=machine interact=look text=obj.maquina.lab
+  P  object=pc interact=look text=obj.pc.lab
+  a  object=lab_table npc=crystal_fire id=orb_ember script=orb_ember hide_flag=13
+  b  object=lab_table npc=crystal_water id=orb_puddle script=orb_puddle hide_flag=14
+  c  object=lab_table npc=crystal_plant id=orb_sprout script=orb_sprout hide_flag=15
+  N  npc=lin id=lin face=SE script=lin
+  A  npc=ayudante id=assistant face=W script=diploma   # F2 (contract 74): the lab assistant: the Registro diploma
+  R  npc=rival id=rival face=NW script=rival_talk hide_flag=16
+  m  tile=mat interact=step script=exit
+@grid
+  Cwywwwywww
+  |.BBabcMP.
+  |.........
+  q.......R.
+  |.N.......
+  |.........
+  |.......A.
+  |.....m...
+# ---------------------------------------------------------------------------------------------------------------
+@script intro on_enter if !lab_intro
+    setf lab_intro
+    cam_npc lin               # Lin is out of the view from the door: show her while she greets
+    wait 400
+    npc_face_hero lin
+    say lab.lin.intro
+    cam_npc orb_puddle        # the bench is against the back wall, off-screen from the door: show the three Crystals
+    wait 500                  # while she talks about them
+    say lab.lin.intro2
+    cam_hero
+@end
+
+@script lin npc
+    # M4-D hook: with the parcel in the bag Lin takes it and gives 5 Crystals (once). The Crystals
+    # are given FIRST: a full bag (var 0 = 0 after give_item) leaves the parcel with the player and says so.
+    jf parcel_delivered lin_main
+    has_item parcel result
+    jv result 0 lin_main
+    give_item crystal 5
+    jv 0 0 parcel_full
+    take_item parcel result
+    setf parcel_delivered
+    say lab.lin.parcel
+    say lab.lin.parcel.got
+    end
+  parcel_full:
+    say gl.found.full
+    end
+  lin_main:
+    jf starter_chosen done
+    cam_npc orb_puddle        # remind where they are
+    say lab.lin.intro2
+    cam_hero
+    end
+  done:
+    # (contract 80), rating your Registro: Lin rates the Registro by the number of species caught (script rate_reg: 8 tiers with their own comment); as often as the player likes.
+    ask gl.extra.rate.ask
+    jv 0 1 rate
+    say gl.extra.rate.no
+    jmp rated
+  rate:
+    call rate_reg
+  rated:
+    # D1 (contract 68; was C9's Genesa gift, contract 56): once every species but the mythical one is in the Registro (`caught_ge 0 full`) Lin tells the LEGEND and gives the FIRST Origin Fragment (flag frag_1), once.
+    # She no longer gives Genesa: Genesa waits in the Ruinas del Origen (one chance) for whoever gathers the eight fragments. A save that already got Genesa (flag genesa_given) hears the old-save version.
+    jf frag_1 frag_after
+    caught_ge 0 full
+    jv 0 1 frag
+    say lab.lin.already
+    end
+  frag:
+    call frag_gift
+    end
+  frag_after:
+    say lab.lin.frag_again
+@end
+
+# (contract 80): the rating. tier = how many of the thresholds 10, 25, 50, 75, 100, 125 and "the whole Registro" (every species but the mythical gift) the Registro reaches (0 .. 7); the text shows the exact count ({v2}, caught_count)
+# and the comment of the tier. The same texts (gl.extra.rate.*) are global so a PC row could show them too.
+@script rate_reg called
+    setv tier 0
+    caught_ge result 10
+    jv result 0 shown
+    setv tier 1
+    caught_ge result 25
+    jv result 0 shown
+    setv tier 2
+    caught_ge result 50
+    jv result 0 shown
+    setv tier 3
+    caught_ge result 75
+    jv result 0 shown
+    setv tier 4
+    caught_ge result 100
+    jv result 0 shown
+    setv tier 5
+    caught_ge result 125
+    jv result 0 shown
+    setv tier 6
+    caught_ge result full
+    jv result 0 shown
+    setv tier 7
+  shown:
+    caught_count cnt              # {v2} = the count
+    say gl.extra.rate.count
+    jv tier 0 t0
+    jv tier 1 t1
+    jv tier 2 t2
+    jv tier 3 t3
+    jv tier 4 t4
+    jv tier 5 t5
+    jv tier 6 t6
+    say gl.extra.rate.t7
+    end
+  t0:
+    say gl.extra.rate.t0
+    end
+  t1:
+    say gl.extra.rate.t1
+    end
+  t2:
+    say gl.extra.rate.t2
+    end
+  t3:
+    say gl.extra.rate.t3
+    end
+  t4:
+    say gl.extra.rate.t4
+    end
+  t5:
+    say gl.extra.rate.t5
+    end
+  t6:
+    say gl.extra.rate.t6
+@end
+
+# Lin's reward for a complete Registro (D1): the legend (a save that already holds Genesa hears that she is not the end of it), the fragment and the hints. A full bag keeps the flag clear and she hands it over at the next talk.
+@script frag_gift called
+    jf genesa_given old
+    say lab.lin.frag1
+    say lab.lin.frag2
+    jmp give
+  old:
+    say lab.lin.frag_old
+    say lab.lin.frag2
+  give:
+    give_item origin_shard 1
+    jv 0 0 fail
+    setf frag_1
+    setf legend_rumor
+    sfx item
+    say gl.d1.got
+    say lab.lin.frag3
+    end
+  fail:
+    say gl.found.full
+@end
+
+@script rival_talk npc
+    say lab.rival.idle
+@end
+
+# Inspecting a Crystal: popup with the Elementi's picture (it stays up during the question), YES / NO.
+@script orb_ember npc
+    jf starter_chosen taken
+    setv starter 1
+    name_var 0 starter        # {v0} = species name
+    mon_show starter
+    ask lab.orb.ember
+    jv 0 1 yes
+    end
+  yes:
+    give 1 5
+    setf orb_ember_gone
+    call chosen
+    end
+  taken:
+    say lab.orb.taken
+@end
+
+@script orb_puddle npc
+    jf starter_chosen taken
+    setv starter 3
+    name_var 0 starter
+    mon_show starter
+    ask lab.orb.puddle
+    jv 0 1 yes
+    end
+  yes:
+    give 3 5
+    setf orb_puddle_gone
+    call chosen
+    end
+  taken:
+    say lab.orb.taken
+@end
+
+@script orb_sprout npc
+    jf starter_chosen taken
+    setv starter 5
+    name_var 0 starter
+    mon_show starter
+    ask lab.orb.sprout
+    jv 0 1 yes
+    end
+  yes:
+    give 5 5
+    setf orb_sprout_gone
+    call chosen
+    end
+  taken:
+    say lab.orb.taken
+@end
+
+# After the player's choice ({v0} still holds the starter's name): the rival takes the Crystal that beats yours
+# (rival_pick: fire -> water -> plant -> fire) and walks to it along the row behind the player.
+@script chosen called
+    setf starter_chosen
+    say lab.lin.chosen
+    nick_prompt 255           # "Do you want to give a nickname to X?" -> YES / NO -> the keyboard ({v0} = the name afterwards)
+    hero_walk SW 1            # one step back from the bench (row 2 -> 3): the rival's row stays free
+    rival_pick starter rival_sp
+    npc_walk rival NE 1       # (8,3) -> (8,2)
+    jv rival_sp 1 to_ember
+    jv rival_sp 3 to_puddle
+    npc_walk rival NW 2       # sprouton's Crystal (6,1): stand on (6,2)
+    jmp there
+  to_ember:
+    npc_walk rival NW 4       # (4,2)
+    jmp there
+  to_puddle:
+    npc_walk rival NW 3       # (5,2)
+  there:
+    npc_face rival NE         # towards the bench
+    say lab.rival.pick
+    jv rival_sp 1 take_ember
+    jv rival_sp 3 take_puddle
+    setf orb_sprout_gone
+    end
+  take_ember:
+    setf orb_ember_gone
+    end
+  take_puddle:
+    setf orb_puddle_gone
+@end
+
+# The door mat is a step trigger (the only exit): before choosing Lin stops you; after choosing the rival
+# challenges you here (once); afterwards it takes you outside.
+@script exit step
+    jf rival_gone leave
+    jnf starter_chosen stop
+    cam_npc rival             # he is at the bench, out of the view from the door
+    wait 300
+    say lab.rival.challenge
+    jv rival_sp 5 c_go        # already in column 6
+    jv rival_sp 3 c_one
+    npc_walk rival SE 2
+    jmp c_go
+  c_one:
+    npc_walk rival SE 1
+  c_go:
+    npc_walk rival SW 4       # down column 6: stops in front of the hero
+    cam_hero
+    npc_face_hero rival
+    hero_face_npc rival
+    battle 1 result           # native 4 (battle task); the stub answers "won"
+    jv result 1 won
+    say lab.rival.lose_after
+    jmp after
+  won:
+    say lab.rival.win_after
+  after:
+    heal_party
+    say lab.rival.leave
+    hero_walk NW 1            # off the mat, the rival leaves through the door
+    npc_walk rival SW 1
+    wait 250
+    setf rival_gone           # hide_flag: gone for good
+    say lab.lin.after
+    end
+  stop:
+    cam_npc lin               # she is out of the view from the door
+    npc_face_hero lin
+    wait 300
+    say lab.lin.stop
+    cam_hero
+    hero_walk N 1
+    end
+  leave:
+    warp villa_aliso spawn=lab_door
+@end
+
+# F2 (contract 74): the lab's assistant. With every species of the game in the Registro (`caught_ge dp_ok full`, as Lin's reward) he shows the DIPLOMA
+# (`bond diploma`: a code-drawn frame with the player's name, casino plugin); with fewer he says how many are missing ({v2}). As often as the player likes.
+@script diploma npc
+    npc_face_hero assistant
+    say lab.dip.hi
+    caught_ge dp_one full-1   # 1 = at most one species is missing (the plural line says "1 species")
+    caught_ge dp_ok full      # ({v2} = how many are missing, for lab.dip.more)
+    jv dp_ok 1 yes
+    jv dp_one 1 one
+    say lab.dip.more
+    end
+  one:
+    say lab.dip.one
+    end
+  yes:
+    say lab.dip.ok
+    bond diploma
+    say lab.dip.done
+@end

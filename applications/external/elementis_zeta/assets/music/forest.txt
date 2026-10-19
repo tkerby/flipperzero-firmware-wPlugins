@@ -1,0 +1,27 @@
+title Bosque Umbrio - dense shady pines: sparse notes in E phrygian, every phrase answered by fading echoes, slow swells, a far woodpecker and a water drop
+tempo 72
+vol 215
+meter 4/4
+inst pl v=230,255,215,175,145,125
+inst ec1 v=150,125,95,70,55
+inst ec2 v=75,60,45,35
+inst swell att=22 vib=1 vdelay=14 vper=16 slow lvl=0.85
+inst knock drum=c7 v=150,70 d=0,-30
+inst drip drum=a7 v=140,100,60 d=0,-15,-40
+l4
+@pl
+# --- the creeping minor second (E F G B), and its echo
+o5 e f8 g8 b2 |
+@ec1 o5 b @ec2 b r2 |
+@pl o6 d4. c8 o5 b a |
+@swell o5 g2 r2 |
+# --- the dark chord next door (F), the echo, a far woodpecker
+@pl o5 f a o6 c4. d8 |
+@ec1 o6 d @ec2 d !knock16 !knock16 !knock8 r |
+@pl o6 c o5 b g e |
+@swell o5 e2 r2 |
+# --- the way back (Am, B), the last echo and a drop of water
+@pl o5 a o6 c e4. d8 |
+o5 f+ a b2 |
+@ec1 o5 b @ec2 b r2 |
+@swell o5 e2. r!drip |

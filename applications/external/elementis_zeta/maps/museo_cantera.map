@@ -1,0 +1,89 @@
+# Museo de Pueblo Cantera (contract 80; Museum: a fee at the door, then the hall of fossils and a scientist), 15 x 12, interior. column = i, row = j, (0,0) = back corner.
+# Zone identity: a museum: BIG light polished slabs (one slab = 2 x 2 cells, the tile of a cell is polished_<i%2><j%2>, never small tiles; the lab's floor), the back walls with tall windows, a row of glass cases along the back wall
+# (the Ancient Fossil, the Ancient Amber, the Winged Skeleton, the Fallen Rock: each reads its own plate), two fossil exhibits on the floor between stone stelae, a hall sign, planters and benches. The ENTRY FEE: the ticket
+# desk runs across the room (row 9) with a 2-cell gate (7..8, 9) of step triggers; with the fee unpaid the clerk asks for $50 (YES = paid, the gate is open for this visit; NO / no money = the hero is pushed back); every time the hero comes in
+# the paid flag is cleared again (script `enter`), like the usual per-visit fee. back-room Fossil Amber is NOT moved here: the Ancient Amber is still the Mansion Calcinada's (its flows are tested), the case only shows it.
+@map museo_cantera
+@size 15 12
+@interior yes
+@bg 0
+@fill polished_10
+@spawn door 7 10 N
+@flag museum_paid 226          # the fee was paid for THIS visit (cleared on entering)
+@var pay 5
+@legend
+  .  tile=polished_10
+  a  tile=polished_11
+  b  tile=polished_00
+  c  tile=polished_01
+  A  tile=none object=wall_corner
+  B  tile=none object=wall_j
+  C  tile=none object=wall_win_j
+  D  tile=none object=wall_i
+  E  tile=polished_11 object=planter
+  F  tile=polished_11 object=vitrina interact=look text=extra.mus.ex1
+  G  tile=polished_01 object=vitrina interact=look text=extra.mus.ex2
+  H  tile=polished_11 object=vitrina interact=look text=extra.mus.ex3
+  I  tile=polished_01 object=vitrina interact=look text=extra.mus.ex4
+  J  tile=polished_10 object=bookshelf interact=look text=casa.books
+  K  tile=polished_11 object=bookshelf interact=look text=casa.books
+  L  tile=polished_11 object=sign interact=look text=extra.mus.sign
+  M  tile=none object=wall_win_i
+  N  tile=polished_10 object=stele_a
+  O  tile=polished_00 npc=fossil_tri id=fossil_a face=SE text=extra.mus.ex1
+  P  tile=polished_00 npc=fossil_lily id=fossil_b face=SW text=extra.mus.ex2
+  Q  tile=polished_10 object=stele_b
+  R  tile=polished_01 npc=cientifico id=scientist face=S script=scientist
+  S  tile=polished_00 npc=vecino_m id=guest face=E text=extra.mus.guest
+  T  tile=polished_00 object=bench
+  U  tile=polished_10 object=planter
+  V  tile=polished_10 npc=tendero id=clerk face=S script=clerk
+  W  tile=polished_11 object=desk
+  X  tile=polished_01 object=desk
+  Y  tile=polished_11 interact=step script=pay
+  Z  tile=polished_01 interact=step script=pay
+  0  tile=mat
+@grid
+  ABBCBBBCBBBCBBB
+  DEcFcaGacHcaIac
+  DJb.b.b.b.b.b.b
+  DKcacacLcacacac
+  M.bNO.b.b.PQb.b
+  DacacacacacaRac
+  D.S.b.T.T.b.bUb
+  Dacacacacacacac
+  M.b.bVb.b.b.b.b
+  DWXWXWXYZWXWXWX
+  D.b.b.b.b.b.b.b
+  Dacacac00acacac
+@warp 0 -> pueblo_cantera spawn=museo_door
+# Each visit starts unpaid.
+@script enter on_enter
+    clrf museum_paid
+@end
+# The gate (row 9): a step onto it with the fee unpaid. The clerk asks for $50: YES = paid and thanked (the trigger stays quiet for the rest of the visit); NO or not enough money = his line and the hero is pushed one step back.
+@script pay step if !museum_paid
+    npc_face_hero clerk
+    ask extra.mus.ask
+    jv 0 1 yes
+    say extra.mus.no
+    hero_walk S 1
+    end
+  yes:
+    money_take 50 pay
+    jv pay 0 broke
+    setf museum_paid
+    say extra.mus.thanks
+    end
+  broke:
+    say extra.mus.broke
+    hero_walk S 1
+@end
+@script clerk npc
+    npc_face_hero clerk
+    say extra.mus.clerk
+@end
+@script scientist npc
+    npc_face_hero scientist
+    say extra.mus.sci
+@end

@@ -1,0 +1,29 @@
+title Dojo - the martial-arts hall: taiko on the beat, a stick click and a shout of toms, a plucked shamisen-like tune on the "in" scale (D, E flat, G, A, B flat), disciplined and square, a gong between the rounds (D, 90 bpm)
+tempo 90
+vol 235
+meter 4/4
+inst pluck v=255,150,100,70
+inst kick drum=d4 v=255,220,170,120 d=0,-30,-50,-70
+inst tom drum=g4 v=255,190,130 d=0,-35,-60
+inst rim drum=g7 v=210,90
+inst gong dec=3 sus=0.1 slow
+l8
+# --- 1-4: the drums alone (two bars, twice)
+[ !kick4 r4 !kick8 !kick8 !tom4 |
+  !kick4 r8 !rim8 !kick4 !tom8 !tom8 | ]2
+# --- 5-8: the tune, square and sparse
+@pluck o4 d8 d8 r8 e-8 d8 r8 a4 |
+@pluck o4 g8 a8 b-4 a8 g8 e-4 |
+@pluck o5 d8 d8 r8 e-8 d8 r8 b-4 |
+@pluck o5 a8 g8 e-8 d8 o4 b-4 a4 |
+# --- 9-10: the answer from the drums (the toms roll)
+!kick4 !rim4 !kick4 !rim4 |
+[ !tom16 ]8 !kick4 !kick4 |
+# --- 11-14: the tune again, an octave up, ending on the low D
+@pluck o5 d8 d8 r8 e-8 d8 r8 a4 |
+@pluck o5 g8 a8 b-4 a8 g8 e-4 |
+@pluck o5 d8 e-8 g8 a8 b-4 a4 |
+@pluck o4 g8 e-8 d8 e-8 d4 r4 |
+# --- 15-16: the gong
+@gong o3 d2 r2 |
+!kick4 !rim4 !kick4 !tom4 |

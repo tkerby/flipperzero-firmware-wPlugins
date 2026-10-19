@@ -1,0 +1,61 @@
+# Cueva Excavadora (C3, contract 34), 34 x 24, `@cave yes` (the Exit Wisp works). column = i, row = j. A long snake of 3-wide burrow tunnels from the east mouth (Ruta 11) west
+# along the top, south, east along the middle, south and west along the bottom to the west chamber, whose mouth leads to Ruta 2 near Ciudad Nodo (the exit there is closed by a cuttable bush).
+# Look (the user's mock "Cueva Excavadora"): loose light earth (3 variants), earthen root walls with hanging roots on the back sides (2 variants), black solid void on the open sides, dirt
+# mounds and burrow holes, patches of freshly turned burrow earth (the wild table: Drillroot mostly, Augeroot rare), a digger's tools at the entrance.
+@map cueva_excavadora
+@size 34 24
+@interior no
+@cave yes
+@area cueva_excavadora
+@bg 3
+@fill dirt
+@spawn ruta11 29 3 W            # coming in from Ruta 11
+@spawn ruta2 3 18 E             # coming in from Ruta 2 (the west mouth)
+@encounters grass rate=15      # Cave: the diggers, a creature rare
+  drillroot 15 19 95
+  augeroot 21 24 5
+@end
+# Roaming wild creatures (contract 55, rollout in 63): 2 creatures of this table wander the whole walkable floor (grass included); touching one starts that wild battle.
+@roam 2 table=grass area=.mop period=1800
+@legend
+  .  tile=dirt                     # loose earth (3 variants)
+  p  tile=dig_patch                # burrow earth: the tall grass of the cave (C_GRASS)
+  _  tile=none
+  W  tile=dirt object=root_wall_a  # earthen wall, hanging roots
+  V  tile=dirt object=root_wall_b
+  v  tile=void_dark                # the dark beyond the open sides (solid)
+  m  tile=dirt object=mound
+  o  tile=dirt object=hole
+  D  tile=dirt object=dig_tools
+  H  tile=dirt object=barrel
+  e  tile=dirt object=hole         # the east mouth (to Ruta 11)
+  x  tile=dirt object=hole         # the west mouth (to Ruta 2)
+  a  tile=dirt item=vigor_drop
+  I  tile=dig_patch hidden=vigor_drop   # hidden (contract 80, hidden items)
+@grid
+  __________________________________
+  _________VWVWVWVWVWVWVWVWVWVWVWVv_
+  _________Va...pppp........ppp.D.v_
+  _________V....pppp.o..m...ppp..ev_
+  _________V....pppp........ppH...v_
+  _________V.m.vvvvvvvvvvvvvvvvvvvv_
+  _________Vpppv____________________
+  _________Vpppv____________________
+  _________Vpppv____________________
+  _________V...v____________________
+  _________V.m.VWVWVWVWVWVWVv_______
+  _________V....ppppp.......v_______
+  _________V..o.ppmpp.......v_______
+  _________V....pppIp.....m.v_______
+  _________vvvvvvvvvvvvvWpppv_______
+  _VWVWVWv______________Wppov_______
+  _V.....v______________Wpppv_______
+  _V.opp.VWVWVWVWVWVWVWVW...v_______
+  _Vxppppppp.......ppppp..m.v_______
+  _V.pppppop...m...ppppp....v_______
+  _V..m.pppp.......ppppp....v_______
+  _V.....vvvvvvvvvvvvvvvvvvvv_______
+  _vvvvvvv__________________________
+  __________________________________
+@warp e -> ruta_11 spawn=cave
+@warp x -> ruta_2 spawn=cave

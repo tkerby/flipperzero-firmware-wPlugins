@@ -1,0 +1,88 @@
+# Lobby de la Liga (lobby: healing center, shop, PC and the way in, C9, contract 56), 13 x 10, interior. column = i, row = j. The nurse (heals and REMEMBERS this lobby as the respawn point), the PC (the box and, once the
+# hero is the champion, the Hall of Legacy), the clerk (`shop meseta_cumbre`) and the way to the first room: the doorway (6,0) behind the LEAGUE DOOR (6,1), a solid gate NPC with a badge reader: talking to it checks the EIGHT badges (80 .. 87); with
+# all of them it opens for good (flag liga_checked). The doorway is `@warp ... oneway` into liga_hielo (the first room shuts the door behind the hero, contract 50.2). Big light marble slabs under everything.
+@map liga_lobby
+@size 13 10
+@interior yes
+@bg 0
+@fill marb_00
+@spawn door 6 8 N
+@flag liga_checked 905                 # the badge reader opened the League door (the eight badges were checked)
+@legend
+  C  tile=none object=wall_corner
+  w  tile=none object=wall_j
+  y  tile=none object=wall_win_j
+  |  tile=none object=wall_i
+  q  tile=none object=wall_win_i
+  0  tile=marb_00 
+  1  tile=marb_11 object=bookshelf interact=look text=lb.books
+  2  tile=marb_01 object=healer
+  3  tile=marb_11 npc=nurse id=nurse face=SW script=nurse
+  4  tile=marb_01 
+  5  tile=marb_11 
+  6  tile=marb_01 npc=keydoor id=door face=S solid=yes gate=yes script=liga_door hide_flag=liga_checked
+  7  tile=marb_11 npc=tendero id=clerk face=SW script=clerk
+  8  tile=marb_11 object=pc interact=look script=pc_box
+  9  tile=marb_10 
+  a  tile=marb_00 object=counter
+  b  tile=marb_10 object=counter
+  c  tile=marb_00 
+  d  tile=marb_11 object=shelf
+  e  tile=marb_10 npc=vecino_m id=coach face=NE text=lb.coach
+  f  tile=mat
+  g  tile=mat
+@grid
+  Cwwyww0wwywww
+  |123456547484
+  |9aba9c9aba9c
+  |5454545454d4
+  q9c9c9c9c9c9c
+  |545454545454
+  |9cec9c9c9c9c
+  |545454545454
+  |9c9c9c9c9c9c
+  |54545fg45454
+@warp 0 -> liga_hielo spawn=in oneway
+@warp f -> meseta_cumbre spawn=lobby_door
+@warp g -> meseta_cumbre spawn=lobby_door
+# This lobby is where a blackout in the League sends the hero back to (the Centro rule, contract 50): entering it remembers it; the nurse does the same after healing.
+@script lobby on_enter
+    respawn door
+@end
+@script nurse npc
+    ask gl.center.ask
+    jv 0 1 yes
+    say gl.center.bye
+    end
+  yes:
+    fade_out
+    wait 1500
+    heal_party
+    respawn door
+    fade_in
+    say gl.center.done
+@end
+@script pc_box interact
+    pc
+@end
+@script clerk npc
+    shop meseta_cumbre
+@end
+# The League door (here at the way in): all eight badges (80 .. 87: Cantera, Marea, Voltio, Raiz, Toxina, Mente, Brasa, Nucleo) open it for good.
+@script liga_door npc
+    jnf badge_cantera lacking
+    jnf badge_marea lacking
+    jnf badge_voltio lacking
+    jnf badge_raiz lacking
+    jnf badge_toxina lacking
+    jnf badge_mente lacking
+    jnf 86 lacking
+    jnf badge_nucleo lacking
+    sfx door
+    setf liga_checked
+    npc_hide door
+    say lb.door.ok
+    end
+  lacking:
+    say lb.door.no
+@end

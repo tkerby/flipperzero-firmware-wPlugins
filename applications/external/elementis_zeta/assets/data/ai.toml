@@ -1,0 +1,115 @@
+# Trainer AI classes (contract 82). The trainer AI: one entry per
+# trainer class that has its own behaviour; assets/data/trainers.toml gives each trainer `ai = "<class>"`.
+#
+#   mods the move-choice modifiers: 1 = do not use a status-only move on a creature that has a status already (since contract 14),
+#           2 = from the enemy's second turn on, prefer stat and set-up moves, 3 = prefer a super effective move, avoid a not very effective one when a better move exists.
+#           nothing = the classes without modifiers (the move is picked at random).
+#   count how many times per creature the AI may act (reset when the creature is sent out)
+#   rules at most 2, tried in order, the first that fires wins; the AI acts INSTEAD of the creature's move:
+#           below the AI draws a random byte and the rule fires when it is below this (256 = no draw condition; N * 255 / 100 [+/- 1])
+#           hp_below N: only when the creature's HP is below max HP / N
+#           status     true: only when the creature has a status condition
+#           item       the item the trainer uses on the creature (heal: that many HP, restore: HP + status, cure, battle: +1 stage / Mist): items.toml keys
+#           switch true: the trainer withdraws the creature for the first other one that can fight (needs two that can)
+# The routine fields are in nucleo/files/ai.bin (8 B per class); the mods are in byte 0 of the trainer's record in trainers.bin.
+
+# ---- no routine: only the modifiers
+[plain]       # the simplest trainers: no modifier
+mods = []
+[basic]       # most trainers (the early rival and the villain team included): modifier 1
+mods = [1]
+[m13]         # trainers with modifiers 1 and 3
+mods = [1, 3]
+[m12]         # trainers with modifiers 1 and 2
+mods = [1, 2]
+
+# ---- with a routine
+[brawler]     # Brawler: 13 % to use an Attack Boost, twice
+mods = [1]
+count = 2
+rules = [{ below = 32, item = "pulso_atk" }]
+
+[switcher]    # Switcher: 25 % to switch
+mods = [1]
+count = 3
+rules = [{ below = 64, switch = true }]
+
+[veteran_m]   # Veteran M: 25 % Attack Boost, twice
+mods = [1, 3]
+count = 2
+rules = [{ below = 64, item = "pulso_atk" }]
+
+[veteran_f]   # Veteran F: Prime Salve below 1/10, else switch below 1/5 (see the comment)
+mods = [1, 3]
+count = 1
+rules = [{ hp_below = 10, item = "prime_salve" }, { hp_below = 5, switch = true }]
+
+[garrick]       # the Rock leader: a cure whenever his creature has a status, up to 5 times
+mods = [1]
+count = 5
+rules = [{ status = true, item = "panacea" }]
+
+[nerea]       # the Water leader: 25 % Defend Boost
+mods = [1, 3]
+count = 1
+rules = [{ below = 64, item = "pulso_def" }]
+
+[ohm]       # the Electric leader: 25 % Speed Boost
+mods = [1, 3]
+count = 1
+rules = [{ below = 64, item = "pulso_spd" }]
+
+[flora]       # the Grass leader: 50 % of the turns below 1/10 HP, a Rich Salve
+mods = [1, 3]
+count = 1
+rules = [{ below = 128, hp_below = 10, item = "rich_salve" }]
+
+[kai]        # the Poison leader: 25 % Attack Boost, twice
+mods = [1, 3]
+count = 2
+rules = [{ below = 64, item = "pulso_atk" }]
+
+[brasa]      # the Fire leader: 25 % Rich Salve (no HP condition), twice
+mods = [1, 3]
+count = 2
+rules = [{ below = 64, item = "rich_salve" }]
+
+[sena]     # the Psychic leader: 25 % of the turns below 1/10 HP, a Prime Salve
+mods = [1, 3]
+count = 1
+rules = [{ below = 64, hp_below = 10, item = "prime_salve" }]
+
+[jefe_vertice]    # the Ground leader / the boss of Team Vertice: 25 % Mist Veil
+mods = [1, 3]
+count = 1
+rules = [{ below = 64, item = "velo_bruma" }]
+
+[rival2]      # the rival's middle fights: 13 % of the turns below 1/5 HP, a Salve
+mods = [1, 3]
+count = 1
+rules = [{ below = 32, hp_below = 5, item = "salve" }]
+
+[rival3]      # the rival at the end (the champion): 13 % of the turns below 1/5 HP, a Vital Draught
+mods = [1, 3]
+count = 1
+rules = [{ below = 32, hp_below = 5, item = "vital_draught" }]
+
+[iver]     # League four 1: 50 % of the turns below 1/5 HP, a Rich Salve, twice
+mods = [1, 2, 3]
+count = 2
+rules = [{ below = 128, hp_below = 5, item = "rich_salve" }]
+
+[tanko]       # League four 2: 25 % Defend Boost, twice
+mods = [1]
+count = 2
+rules = [{ below = 64, item = "pulso_def" }]
+
+[velo]      # League four 3: 8 % switch, else 50 % of the turns below 1/4 HP a Rich Salve, twice
+mods = [1]
+count = 2
+rules = [{ below = 20, switch = true }, { below = 128, hp_below = 4, item = "rich_salve" }]
+
+[arkan]       # the Champion-side dragon master: 50 % of the turns below 1/5 HP, a Prime Salve
+mods = [1, 3]
+count = 1
+rules = [{ below = 128, hp_below = 5, item = "prime_salve" }]

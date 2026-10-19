@@ -1,0 +1,60 @@
+# Tienda de Bicicletas (C4a, contract 39), 10 x 8, interior, inside Ciudad Marea. column = i, row = j. The shopkeeper takes the BIKE COUPON (`cupon_bici`, from the fan club chairman) and
+# gives the BICYCLE (`bici`); flag 79 = it was exchanged. Bicycle stands (carts), a parts shelf, a table.
+@map tienda_bicis
+@size 10 8
+@interior yes
+@bg 3
+@fill floor_wood
+@spawn door 4 6 N
+@flag bici_given 79
+@var tmp 9
+@legend
+  .  tile=floor_wood
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  object=shelf
+  f  object=cart
+  g  npc=tendero id=shop face=SW script=bikeshop
+  h  object=counter
+  i  object=barrel
+  j  object=table
+  k  tile=mat
+@grid
+  abcbbbbcbb
+  deee...ff.
+  d...g.....
+  d.hhh...f.
+  di....j...
+  di........
+  d.........
+  d...kk....
+@warp k -> ciudad_marea spawn=bici_door
+# The shopkeeper: with the coupon he takes it and hands over the bicycle (once, flag 79); without it he explains how to get one at the Neon fan club.
+@script bikeshop npc
+    npc_face_hero shop
+    jf bici_given after
+    say bike.hi
+    has_item cupon_bici tmp
+    jv tmp 1 swap
+    say bike.novoucher
+    end
+  swap:
+    say bike.voucher
+    take_item cupon_bici tmp
+    give_item bici 1
+    jv 0 0 full
+    item_var 0 bici
+    say gl.gift
+    setf bici_given
+    say bike.how
+    say bike.how2
+    end
+  full:
+    give_item cupon_bici 1
+    say gl.found.full
+    end
+  after:
+    say bike.after
+@end

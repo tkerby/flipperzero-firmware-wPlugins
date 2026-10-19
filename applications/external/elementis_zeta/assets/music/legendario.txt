@@ -1,0 +1,43 @@
+title Legendario - a legendary creature (the three birds and the two psychic ones, contract 52): a mythic D minor (116 bpm). Timpani heartbeat and a low brass call (once), then the beast wakes: a galloping bass under kick and snare (Dm, B flat, C, A), a screech that glides up, the heroic anthem climbing in two steps, held notes, a chromatic run and a roll that crashes back into the gallop
+tempo 116
+vol 215
+meter 4/4
+inst bass v=255,170,140
+inst lead v=255,255,225,195,180
+inst hero v=255,255,240,225,210,200
+inst pow arp=-12,0,7 rate=1 lvl=0.9
+inst tim drum=d4 v=255,220,180,140 d=0,-25,-45,-60
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+inst snr drum=a6 noise=25 seed=17 fall=12
+inst cry v=255,255,255,240,225,210,195,180,165,150,135,120 d=0,8,16,24,32,40,48,56,64,72,80,88
+l4
+# --- the intro (once, 5 bars): the heartbeat, the low call, the low answer
+[ !tim4 r4 !tim4 r4 ]2 |
+@hero o3 d2 a2 |
+@hero o4 d2. c4 |
+@hero o3 b-2 a2 |
+@loop
+# --- 1-8 of the loop: the beast wakes, a galloping bass (Dm, B flat, C, A; two bars each)
+@bass o3 [ !kick:d8 d8 !snr:d8 >d8< ]4
+@bass o3 [ !kick:b-8 b-8 !snr:b-8 >b-8< ]4
+@bass o3 [ !kick:c8 c8 !snr:c8 >c8< ]4
+@bass o3 [ !kick:a8 a8 !snr:a8 >a8< ]4
+# --- 9-12: the anthem, first climb (Dm, B flat, C, A)
+@lead o5 d4. e8 f4 a4 |
+@lead o5 b-4. a8 g4 f4 |
+@lead o5 e4. f8 g4 >c4< |
+@lead o5 a4. g8 f4 e4 |
+# --- 13-16: the anthem a step higher, then a screech that glides up and the held line
+@lead o6 d4. e8 f4 a4 |
+@lead o6 d4. c8 o5 b-4 g4 |
+@lead o6 c4. d8 e4 g4 |
+@cry o5 a=60 @hero o6 e2 r=40 |
+# --- 17-20: the sky opens (power chords on G minor, B flat, C and A with a timpani stroke each); 21-24: the held heroes, the chromatic run, the roll
+@pow o4 g2. !tim4 |
+@pow o4 b-2. !tim4 |
+@pow o4 c2. !tim4 |
+@pow o4 a2. !tim4 |
+@hero o6 d2 c2 |
+@hero o5 b-2 a2 |
+@lead o5 a8 b-8 b8 >c8 c+8 d8 d+8 e8< |
+[ !snr16 ]16 |

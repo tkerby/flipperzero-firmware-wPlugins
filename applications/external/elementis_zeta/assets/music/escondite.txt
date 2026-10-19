@@ -1,0 +1,27 @@
+title El Escondite - the villains' hideout: a sneaking bass on the off-beats (C minor, never on the beat), a dry tick, stabs that lean on a tritone, a chromatic creep upward, and a held breath before it starts again
+tempo 108
+vol 225
+meter 4/4
+inst pizz v=255,150,90,50
+inst stab v=255,210,140,100
+inst creak v=200,200,200,200,200 d=0,8,16,24,32
+inst tick drum=e6 v=255,100 d=0,-25
+inst thud drum=c4 v=255,200,140,90 d=0,-30,-50,-70
+l8
+# --- 1-2: a dry tick, then the sneak (rests on the beat)
+@pizz o3 !tick8 c8 r8 c8 r8 e-8 r8 d8 |
+@pizz o3 r8 c8 r8 c8 r8 g8 r8 f+8 |
+# --- 3-4: it listens (a tick), a tritone stab, back to the sneak
+!tick8 r8 !tick8 r8 !tick8 r8 !thud4 |
+@stab o5 c4 f+4 r4 !tick4 |
+# --- 5-6: the chromatic creep up, one step per eighth, then a held note that bends
+@pizz o3 c8 c+8 d8 d+8 e8 f8 f+8 g8 |
+@creak o4 g2 r2 |
+# --- 7-8: the sneak a step down (B flat), the stab climbs, a thud
+@pizz o3 r8 b-8 r8 b-8 r8 d-8 r8 c8 |
+@stab o5 b-4 e4 r4 !tick4 |
+# --- 9-10: all together again (C), then two stabs and silence before the loop
+@pizz o3 r8 c8 r8 c8 r8 e-8 r8 d8 |
+@stab o5 g8 r8 g8 r8 a-4 !tick4 |
+r2 !thud4 !tick4 |
+r1 |

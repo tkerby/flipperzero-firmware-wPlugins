@@ -1,0 +1,77 @@
+# Monte Eco, floor 1 (C2, contract 31), 30 x 26. column = i, row = j. A CAVE (@cave yes: the Exit Wisp works): mid-light rock floor (never a black mass), glowing
+# crystal-vein walls on the back sides (north / west of the floor), low rubble and the dark on the front sides, stalagmites, crystal clusters, damp moss patches (the tall grass of the cave).
+# Two pockets separated by solid rock: the WEST pocket (entrance from Ruta 3 at the south edge, the entrance hall with a hiker, the passage, the ladder room with Disc 01 and a Vertice agent)
+# and the EAST pocket (reached only by the east ladder of floor 2: a Vertice the passage to the exit at the north edge = Ruta 4). The rope ladders go down to floor 2.
+# Look = the user's variant A of tools/c2_mock.py.
+@map monte_eco_1
+@size 30 26
+@interior no
+@cave yes
+@area monte_eco
+@bg 3
+@fill cave
+@spawn south 7 24 N             # arriving from Ruta 3
+@spawn ladder_w 6 5 S           # back from floor 2 (west ladder)
+@spawn ladder_e 24 18 W         # back from floor 2 (east ladder)
+@spawn north 24 1 S             # arriving from Ruta 4
+@encounters grass rate=14      # 1F: the cave bat, the rock, the moss snail, a rare moon creature
+  echolet 7 9 50
+  pebblump 7 9 25
+  shellfern 8 10 15
+  lunelle 8 8 5
+  muncrit 7 9 5
+@end
+# Roaming wild creatures (contract 55, rollout in 63): 2 creatures of this table wander the whole walkable floor (grass included); touching one starts that wild battle.
+@roam 2 table=grass area=.m period=1800
+@legend
+  .  tile=cave                     # mid-light cave floor (3 variants), white flecks and hairline cracks
+  m  tile=moss                     # damp moss patches with ferns: the tall grass of the cave (C_GRASS, wild table below)
+  W  tile=none object=cwall        # glowing crystal-vein walls (2 variants, 2 frames): the back walls (north / west of the floor)
+  w  tile=none object=cwall_p      # plain rock behind them
+  r  tile=none object=rubble       # low rubble in front (south / east of the floor): the cave drops away into the dark
+  _  tile=none
+  a  tile=cave object=stalag
+  s  tile=cave object=stalag_s
+  c  tile=cave object=crystal      # crystal cluster (the glint blinks)
+  L  tile=cave door=rope_ladder     # rope ladder down (west pocket)
+  U  tile=cave door=rope_ladder     # rope ladder down (east pocket)
+  n  tile=cave
+  x  tile=cave
+  p  tile=cave item=salve
+  q  tile=cave item=rich_salve
+  d  tile=cave item=disc_01
+  1  tile=cave npc=montanista id=hiker face=W trainer=montanista_eco range=3 text=tr.montanista_eco.pre after=tr.montanista_eco.after
+  2  tile=cave npc=vertice id=agent1 face=W trainer=vertice_eco1 range=3 text=tr.vertice_eco1.pre after=tr.vertice_eco1.after
+  3  tile=cave npc=vertice id=agent3 face=E trainer=vertice_eco3 range=3 text=tr.vertice_eco3.pre after=tr.vertice_eco3.after
+  H  tile=cave hidden=savia   # hidden (contract 80, hidden items)
+@grid
+  _____________________wWxxxr___
+  ___wwwwwwwwwww_______wW...r___
+  __wWWWWWWWWWWWr______wW..sr___
+  __wW....s.a..dr______wW...r___
+  __wW.cL.......r______wWmmmr___
+  __wW...mmm....r______wWmmmr___
+  __wWs..mmm2...r______wWmmmr___
+  __wW..........r______wW..ar___
+  __wW..s.......r______wW3..r___
+  ___rrrW...rrrrr_wwwwwwW...rw__
+  _____wWmmmr____wWWWWWWWa..WWr_
+  _____wWmmmr____wW...........r_
+  __wwwwWa..rwww_wW.c.......q.r_
+  _wWWWWW...WWWWrwW...........r_
+  _wW...a...a.H.rwW..mmmm...c.r_
+  _wW.p.......c.rwWa.mmmm.....r_
+  _wW...........rwW..mmmm....sr_
+  _wW..mmm..1..srwW...........r_
+  _wW..mmm......rwW........U..r_
+  _wW..mmm......rwW...........r_
+  _wW.......mmm.rwW...a..a....r_
+  _wW.......mmmar_rrrrrrrrrrrrr_
+  _wW.c.....mmm.r_______________
+  _wW..........sr_______________
+  _wW..a.....s..r_______________
+  __rrrrrnnrrrrrr_______________
+@warp n -> ruta_3 spawn=north
+@warp x -> ruta_4 spawn=west
+@warp L -> monte_eco_2 spawn=from_w
+@warp U -> monte_eco_2 spawn=from_e

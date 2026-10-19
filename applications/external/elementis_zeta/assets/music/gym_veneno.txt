@@ -1,0 +1,23 @@
+title Gimnasio Veneno - the poison gym (a variant of the gym theme): the same growing pulse but it tiptoes, a ninja's creep on E in the in-sen scale (E F A B D: the flat second is the poison in the air), a dry tick like a shuriken, bubbles that rise and a last hiss before it starts again
+tempo 112
+vol 235
+meter 4/4
+inst p1 v=100,60,40
+inst p2 v=150,100,70
+inst p3 v=200,140,100
+inst p4 v=255,190,140
+inst thud drum=c4 v=255,200,140,90 d=0,-30,-50,-70
+inst tick drum=e6 v=255,100 d=0,-25
+inst bub drum=c6 v=200,180,150,110,70 d=0,20,45,75,110
+inst shu drum=b7 v=200,100 d=0,-40
+l8
+# --- 1-2: the pulse alone, on tiptoe (rests between the steps)
+@p1 o4 [ e8 r8 e8 r8 ]4 |
+# --- 3-4: a soft thud on the beat, then the dry tick
+@p2 [ !thud:e8 r8 e8 r8 ]2 [ !thud:e8 r8 e8 !tick8 ]2 |
+# --- 5-6: the flat second creeps in (F), a tick, and a leap to A
+@p3 [ !thud:e8 e8 f8 e8 !tick:e8 r8 a8 e8 ]2 |
+# --- 7: the climb up the in-sen scale, then down
+@p4 e8 f8 a8 b8 >d8 e8 d8 b8< |
+# --- 8: the bubbles rise, shuriken ticks, and it starts again
+!bub8 r8 !bub8 r8 !bub8 !bub8 !shu16 !shu16 !shu16 !shu16 |

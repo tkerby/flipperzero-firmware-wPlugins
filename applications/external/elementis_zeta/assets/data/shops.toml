@@ -1,0 +1,79 @@
+# Nucleo shops (Marts). Shop id = position in this file (1-based; 0 = none). The script native `shop ID` (id 12, mapc
+# `shop ID`) opens the shop with that id. Compiled by tools/shopc.py into nucleo/files/shops.bin (format: contract 17.1).
+# items = item names of assets/data/items.toml, in the order the BUY list shows them (at most 16; key items and items without a
+# price are refused). The sell price of ANY item the player owns is half its items.toml price; price 0 / key items are
+# never bought nor sold.
+
+# Ciudad Nodo: Cristal, Pocion and the status cures
+[ciudad_nodo]
+items = ["crystal", "salve", "antidote", "limb_balm", "cool_gel"]
+
+# Pueblo Cantera: Cristal, Pocion, Antidoto, Antiquemar, Despertar, Antiparalizador (M5-D; shop id 2)
+[pueblo_cantera]
+items = ["crystal", "salve", "antidote", "cool_gel", "wake_salts", "limb_balm"]
+
+# Ciudad Marea (shop id 3): the Crystal Plus and Rich Salve, the cures, and Ward Spray and Exit Wisp
+[ciudad_marea]
+items = ["crystal", "crystal_plus", "salve", "rich_salve", "antidote", "wake_salts", "limb_balm", "cool_gel", "ward_spray", "exit_wisp"]
+
+# Puerto Dinamo (shop id 4): the Crystal Plus and Rich Salve, the status cures and the Ward Spray
+[puerto_dinamo]
+items = ["crystal", "crystal_plus", "salve", "rich_salve", "antidote", "wake_salts", "limb_balm", "cool_gel", "ward_spray", "descongelar"]
+
+# C4-C (contract 37): the casino's PRIZE COUNTER, priced in COINS. `coins = true` + `prizes`: a creature (species, level) or a disc (item), price in coins
+# (1..9999), at most 8. Opened by the casino native (`prizes`, shop id = this table's position), not by `shop`. PLACEHOLDER species/levels (... tiers):
+# C4b (contract 41): the real ones (counters 180 500 1,200, a creature 2,800; the discs 3,300 - 5,500): dozelf, lunelle, quillix and the rare Gleamlet (a trainers-only species).
+[sala_premios]
+coins = true
+prizes = [
+    { species = "dozelf", level = 9, price = 180 },
+    { species = "lunelle", level = 8, price = 500 },
+    { species = "quillix", level = 17, price = 1200 },
+    { species = "gleamlet", level = 18, price = 2800 },
+    { item = "disc_05", price = 3300 },
+    { item = "disc_04", price = 5500 },
+    { species = "pixelix", level = 26, price = 6500 },     # C6 (contract 49): (6,500 coins, L26)
+    { item = "disc_22", price = 5500 },                    # contract 64: a disc Beam (5,500 coins); the counter now holds the 8 entries it can
+]
+
+# ---- C4a (contract 39; shop ids = position in this file, so these come AFTER the casino prize counter `sala_premios` (id 5): 6..11). Pueblo Bruma's mart and Metropolis Neon's department store
+# (2F salves and Crystal Plus, 2F discs, 5F stones and vitamins, the roof's drink machine). The Lunar Gem is never sold (price 0).
+# Pueblo Bruma: the Crystal Plus and Rich Salve, the cures and the Ward Spray
+[pueblo_bruma]
+items = ["crystal", "crystal_plus", "salve", "rich_salve", "life_spark", "antidote", "wake_salts", "limb_balm", "cool_gel", "ward_spray", "strong_ward", "exit_wisp", "descongelar"]   # contract 64: Pueblo Bruma mart also sold Life Spark, Strong Ward and the Exit Wisp
+
+# Centro comercial, 1F: the balls, the salves up to the Prime Salve, the cures, the Ward Spray and the Exit Wisp
+[comercial_a]
+items = ["crystal", "crystal_plus", "salve", "rich_salve", "prime_salve", "life_spark", "antidote", "wake_salts", "limb_balm", "cool_gel", "ward_spray", "strong_ward", "exit_wisp", "descongelar"]   # contract 64: + Life Spark, Strong Ward (2F)
+
+# Centro comercial, 1F: the technique discs for sale (2F disc counter: Mirage, Reflect, Cyclone, Auger Horn, Shell Bomb, Haymaker, Mega Kick, Rush, Submission; contract 64)
+[comercial_discos]
+items = ["disc_01", "disc_02", "disc_03", "disc_35", "disc_11", "disc_15", "disc_39", "disc_14", "disc_17", "disc_24"]
+
+# Centro comercial, 2F: the Flame / Tide / Spark / Frond gems (2,100); the Lunar Gem is not for sale
+[comercial_piedras]
+items = ["fuego", "agua", "trueno", "hoja", "peluche_fuga"]   # F2 (contract 74): + the Peluche Fuga LAST
+
+# Centro comercial, 2F: the vitamins (price 9,800; never sold them) and, contract 73, the battle items of 5F counter (the boost items, Mist Veil, Crit Focus)
+[comercial_tonicos]
+items = ["vit_hp", "vit_atk", "vit_def", "vit_spd", "vit_spc", "pulso_atk", "pulso_def", "pulso_spd", "pulso_spc", "pulso_acc", "velo_bruma", "foco_critico"]
+
+# Centro comercial: the drink machine
+[comercial_bebidas]
+items = ["spring_water", "fizzy_pop", "citrus_cooler"]
+
+# ---- C5a (contract 47; shop id 12): Ciudad Ambar's mart: the Ultra Cristal (never the Reserva's `cristal_reserva`, 43.1) and the usual stock of this point of the game
+[ciudad_ambar]
+items = ["crystal", "crystal_plus", "ultra_cristal", "salve", "rich_salve", "prime_salve", "life_spark", "antidote", "wake_salts", "limb_balm", "cool_gel", "ward_spray", "strong_ward", "exit_wisp", "disc_29", "panacea"]   # contract 64: + Life Spark, Strong Ward and Disc 29 (the dragons of the Reserva's town)
+
+# ---- C6 (contract 49; shop id 13): Ciudad Cenit's mart: the Great and Ultra crystals, the Prime Salve, the cures, Ward Spray and the Exit Wisp
+[ciudad_cenit]
+items = ["crystal_plus", "ultra_cristal", "rich_salve", "prime_salve", "life_spark", "antidote", "wake_salts", "limb_balm", "cool_gel", "ward_spray", "grand_ward", "exit_wisp", "disc_50", "panacea"]   # contract 64: + Life Spark, Grand Ward and Disc 50 
+
+# ---- C7 (contract 53; shop id 14): Isla Ceniza's mart: the Great and Ultra crystals, the Prime Salve, the cures, Ward Spray and the Exit Wisp
+[isla_ceniza]
+items = ["crystal_plus", "ultra_cristal", "rich_salve", "prime_salve", "total_salve", "life_spark", "antidote", "wake_salts", "limb_balm", "cool_gel", "ward_spray", "grand_ward", "exit_wisp", "panacea"]   # contract 64: + Life Spark, Grand Ward
+
+# ---- C9 (contract 56): the League lobby's mart on the Meseta Cumbre
+[meseta_cumbre]
+items = ["crystal_plus", "ultra_cristal", "rich_salve", "prime_salve", "total_salve", "vital_draught", "life_spark", "antidote", "wake_salts", "limb_balm", "cool_gel", "ward_spray", "grand_ward", "exit_wisp", "panacea"]   # contract 64: + Vital Draught, Life Spark, Grand Ward

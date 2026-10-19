@@ -1,0 +1,79 @@
+# Torre Vertice, 3F (a corporation 5F: the Access Chip, C6, contract 49), 16 x 12, interior. column = i, row = j. The stairs up (13,2) are in an ALCOVE (11..15,1..3) shut by the first CARD-KEY DOOR (12,4) (flag 843,
+# `keydoor=chip_acceso`). The Access Chip is in a closed room in the bottom right (11..15,7..11) that only a PAD reaches ((4,8) <-> (12,9)): a captive employee (script `worker`, flag 842) gives it. A scientist, a grunt and
+# a scientist on the open floor.
+@map torre_vertice_3
+@size 16 12
+@interior yes
+@area torre_vertice
+@flag key_given 842   # the employee gave the Access Chip (a full bag keeps it clear)
+@flag kd1 843   # card-key door 1 (3F alcove) opened
+@bg 0
+@fill carpet_00
+@spawn down 2 3 S
+@spawn up 13 3 S
+@legend
+  .  tile=carpet_11
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  tile=carpet_01 object=escalator
+  f  tile=carpet_01
+  g  tile=carpet_11 object=escalator
+  h  tile=carpet_10
+  i  tile=carpet_00 door=escalator
+  j  tile=carpet_00
+  k  tile=carpet_00 object=planter
+  l  tile=carpet_10 door=escalator
+  m  tile=carpet_01 npc=vertice id=t3b face=S trainer=vertice_t3a range=4 text=tr.vertice_t3a.pre after=tr.vertice_t3a.after
+  n  tile=carpet_10 npc=cientifico id=t3c face=E trainer=cientifico_t3b range=4 text=tr.cientifico_t3b.pre after=tr.cientifico_t3b.after
+  o  tile=carpet_00 keydoor=chip_acceso hide_flag=kd1
+  p  tile=carpet_10 object=desk
+  q  tile=carpet_00 object=desk
+  r  tile=pad pad=yes
+  s  tile=carpet_00 npc=cientifico id=t3a face=E trainer=cientifico_t3a range=4 text=tr.cientifico_t3a.pre after=tr.cientifico_t3a.after
+  t  tile=carpet_00 npc=cientifico_s id=worker face=S script=worker
+  u  tile=carpet_11 object=desk
+  v  tile=carpet_01 object=desk
+  w  tile=carpet_10 object=planter
+  x  tile=carpet_01 item=life_blaze
+  H  tile=carpet_00 hidden=trozo_oro   # hidden (contract 80, hidden items)
+@grid
+  abbbcbbbbcbbbcbb
+  d.e.f.f.f.d.fgf.
+  dhihjhkhjhdhjljh
+  d.f.f.f.m.d.f.f.
+  dhjhjnjhjhbbobbb
+  d.f.f.f.f.f.f.x.
+  dhjpqhjhkhbbbbbb
+  d.f.f.f.f.d.f.f.
+  dhjhrhshjhdhthkh
+  d.f.f.fuv.d.r.f.
+  dwjhjhHhjhdhjhjh
+  d.f.f.f.f.d.f.f.
+@warp i -> torre_vertice_2 spawn=up
+@warp l -> torre_vertice_4 spawn=down
+@pad 4 8 -> 12 9 face=NW
+@pad 12 9 -> 4 8 face=SE
+# The captive employee: the first talk gives it (flag 842); a full bag keeps the flag clear and he hands it over at the next talk.
+@script worker npc
+    npc_face_hero worker
+    jf key_given said
+    say vtx.worker.hi
+    call key_gift
+    end
+  said:
+    say vtx.worker.after
+@end
+@script key_gift called
+    say vtx.worker.key
+    give_item chip_acceso 1
+    jv 0 0 full
+    item_var 0 chip_acceso
+    say gl.gift
+    setf key_given
+    say vtx.worker.about
+    end
+  full:
+    say gl.found.full
+@end

@@ -1,0 +1,28 @@
+title Laboratorio - the fossil lab: a curious, techy sequencer in C that shifts its notes like a machine thinking (four against three), bleeps, a hat and a kick, and a question mark of a tune that never lands (125 bpm)
+tempo 125
+vol 220
+meter 4/4
+inst seq v=255,210,160,120
+inst lead v=255,255,225,195,180
+inst blip v=255,0
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+inst hat drum=c8 v=110,60
+l16
+# --- 1-4: the sequencer, four notes a beat (Cmaj7, Am, F, G)
+@seq o4 [ c e g >c< ]4 |
+@seq o4 [ a >c e c< ]4 |
+@seq o4 [ f a >c a< ]4 |
+@seq o4 [ g b >d b< ]4 |
+# --- 5-8: the phasing: three notes against the bar of four, so the pattern shifts
+@seq o4 [ c e g ]5 c |
+@seq o4 [ a >c e< ]5 a |
+@seq o4 [ f a >c< ]5 f |
+@seq o4 [ g b >d< ]5 g |
+# --- 9-12: the question-mark tune, a hat and a kick
+@lead o5 !kick:c8 e8 !hat:g8 e8 >c4< g4 |
+@lead o5 !kick:a8 >c8< !hat:e8 c8 a4 e4 |
+@lead o5 !kick:f8 a8 >!hat:c8< a8 f4 >c4< |
+@lead o5 !kick:g8 b8 >!hat:d8 f8< g4 r4 |
+# --- 13-14: the data burst (blips) and the machine ticks on
+@blip o6 [ g16 g16 r16 ]5 r16 |
+@blip o5 [ !hat=6 c16 ]16 |

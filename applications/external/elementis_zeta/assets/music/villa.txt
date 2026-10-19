@@ -1,0 +1,29 @@
+title Villa Aliso - warm, slow, nostalgic: a plucked lullaby in G major; the round ends on a shimmering chord and starts again (16 bars)
+tempo 88
+vol 235
+meter 4/4
+inst soft v=200,255,235,215,200,190,180
+inst held att=2 vib=1 vdelay=10 vper=16 slow lvl=0.9
+inst chime arp=0,4,7 rate=2 lvl=0.8
+inst drop drum=g7 v=170,140,95,50 d=0,-10,-26,-50
+l4
+@soft
+# --- A: the lullaby (G Em C D, G Em Am D)
+o5 g b o6 d e8 d8 |
+o5 b4. a8 g4 e4 |
+o5 e g o6 c d8 c8 |
+o5 b a f+ r!drop |
+o5 g b o6 d g |
+o6 e4. d8 o5 b4 g4 |
+o5 a o6 c e d |
+o5 b a @held g2 @soft |
+# --- B: the same tune looks up (C G Am D)
+o6 c e g e |
+o5 b o6 d @held g2 @soft |
+o5 a o6 c e c |
+o6 d c o5 b a |
+# --- A again, and the last chord shimmers
+o5 g b o6 d e8 d8 |
+o5 b4. a8 g4 e4 |
+o5 a o6 c e d |
+o5 b a @chime g2 @soft |

@@ -1,0 +1,109 @@
+# Bosque Umbrio: a dense dark-pine maze, 30 x 40 (the walls are 2 pines deep, behind them a solid void drawn as a dense canopy; gray leaf-litter floor, light trail on the paths, stumps in the walls, mushrooms beside the trail), column = i, row = j. The entrance is the south edge (j = 39, from Ruta 2),
+# the north edge (j = 0) is the road to Pueblo Cantera (M5-D: a two-way warp, spawn north). 2-wide corridors winding
+# through three tall-grass clearings; two bug collectors stand at the top-left corner of the two clearings and look diagonally across
+# (range 4), so a beaten collector never blocks a corridor; three pouches (antidote, salve, crystal) at the ends of the dead-end
+# branches. Corridors are screen-diagonal in the world axes: the cardinal D-pad keys walk the (+-1,+-1) steps.
+@map bosque_umbrio
+@size 30 40
+@interior no
+@area bosque_umbrio
+@bg 2
+@fill litter
+@spawn south 14 38 N           # arriving from Ruta 2
+@spawn north 14 1 S            # arriving from Pueblo Cantera
+@encounters grass rate=12      # a thick forest: table (bugs, and a rare spark mouse)
+  grubbit 3 5 30
+  stingle 3 5 30
+  grubshell 4 6 15
+  stinglet 5 6 15
+  zaphid 3 5 5
+@end
+# Open ground (contract 63, forest route): a step onto plain ground (not tall grass, water, a door, a ledge, an arrow floor) rolls this table when rand8 < 4 (4/256 per step).
+@open_rate 4
+# Roaming wild creatures (contract 55, rollout in 63): 2 creatures of this table wander the whole walkable floor (grass included); touching one starts that wild battle.
+@roam 2 table=grass area==gm period=1800
+@var nt 4                          # D1 (contract 68): the night script's result
+@legend
+  .  tile=litter                   # gray leaf litter (base level 1), 4 variants
+  =  tile=trail                    # the light trail (packed earth)
+  g  tile=tall_grass
+  T  object=pine_dark              # dark pines (3 variants): the walls of the forest
+  s  tile=litter object=stump      # a stump in the wall beside a corridor (solid, like the pine it replaced)
+  m  tile=trail object=mushrooms   # mushrooms at the foot of the wall (decoration, walkable: no flags)
+  _  tile=void_dark                # the unseen depth of the maze (solid; redrawn as a dense dark canopy, no flat black)
+  d  tile=trail
+  S  tile=trail object=sign interact=look text=bosque.sign
+  n  tile=trail                                                # the north exit: the road to Pueblo Cantera (warp)
+  i  tile=trail item=antidote
+  j  tile=trail item=salve
+  k  tile=trail item=crystal
+  x  tile=trail npc=cazabichos id=bug1 face=S trainer=cazabichos_1 range=4 text=tr.cazabichos_1.pre after=tr.cazabichos_1.after
+  y  tile=trail npc=cazabichos id=bug2 face=S trainer=cazabichos_2 range=4 text=tr.cazabichos_2.pre after=tr.cazabichos_2.after
+  a  tile=trail item=vigor_drop
+  F  tile=trail object=stump interact=look script=find_night   # D1 (contract 68): the stump whose hollow glows at night (the fifth Origin Fragment)
+  H  tile=tall_grass hidden=salve   # hidden (contract 80, hidden items)
+  I  tile=trail hidden=antidote   # hidden (contract 80, hidden items)
+@grid
+  ___________TTTnnTT____________
+  ___________TTTggTTTTT_________
+  ___________TT=ggTTTTTTTTTTT___
+  ___________TTTgggT=TTTsTsTTT__
+  ___________TTTggg========TTT__
+  ___________TTggg=========mTT__
+  ___________TTTTTTTT=sTs=gTTTT_
+  ___________TTTTTTTTTygggggTTT_
+  _________________TTTgggggggTT_
+  __________________TTggggggsTT_
+  _____________TTTTTTTggggg==TT_
+  _____________TTTTTTTggggg=TTT_
+  _____________TTIggg==gggggTTT_
+  _____________TT=ggg==gggggTT__
+  _____________TT==TTTgTTTTTTT__
+  ____________TTT====ggg=ggmsT__
+  ____________TTTg====g===kTTT__
+  __TTTTTTTTTTTTgggTTTTasTTTTT__
+  __TTTTTTTTTTTTTg==sTTTTTTTT___
+  __TTx==ggg=TsTTHgTTTTTTT______
+  __TT=ggggggg==gggTTT__________
+  __TTggggggggg=ggg=TT__________
+  __TTggggg=mTTTTTTTTT__________
+  __TTggggggTTTTTTTTTT__________
+  __TTggggggTTTT________________
+  TTTTTTggTggTTTT_______________
+  TTTTTTggggggTTT_______________
+  TTgTTTg==ggggTT_______________
+  Tj=gggggTTTTTTT_______________
+  TFggggggTTTTTTT_______________
+  TTTgTgggTTTTTTTTTT____________
+  TTTTTTgggTTT=TTTTT____________
+  _TTTTT=ggg=g=gggTT____________
+  ____TT==g=ggggggTT____________
+  ____TTg=TTTgTgggTTT___________
+  ____TTggTTTTTT==TTT___________
+  ____TTggTTTTTS==mTT___________
+  ____TTigTT__TT==TTT___________
+  ____TTTTTT__TT==TTT___________
+  ____TTTTTT__TTddTT____________
+@warp d -> ruta_2 spawn=north
+@warp n -> pueblo_cantera spawn=south
+# D1 (contract 68): the fifth Origin Fragment: a shard in the hollow of a stump that only shows at NIGHT (20:00 .. 05:59 by the Flipper's clock: `clock night`, read in the casino plugin).
+@script find_night interact
+    jf frag_5 empty
+    clock night nt
+    jv nt 1 night
+    say d1.stump.day
+    end
+  night:
+    say d1.stump.night
+    give_item origin_shard 1
+    jv 0 0 full
+    setf frag_5
+    sfx item
+    say gl.d1.got
+    end
+  full:
+    say gl.found.full
+    end
+  empty:
+    say d1.stump.empty
+@end

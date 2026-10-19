@@ -1,0 +1,30 @@
+# Casa de descanso (C5b, contract 48), 9 x 7, interior. column = i, row = j. A rest house of the Reserva Salvaje (Reserva Salvaje rest houses: a place to sit and a hint): two visitors (the old man's teeth are in area 3;
+# Lambalm and the bait), a shelf of books on the habits of Elementis, a bed and a table. Wooden floor.
+@map casa_descanso_1
+@size 9 7
+@interior yes
+@bg 3
+@fill floor_wood
+@spawn door 4 5 N
+@legend
+  .  tile=floor_wood
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  object=bed
+  f  object=bookshelf text=rest.books interact=look
+  h  object=table
+  i  npc=explorador id=v1 face=SE text=rest.a
+  l  npc=chica id=v2 face=W text=rest.b
+  j  object=candle_s
+  k  tile=mat
+@grid
+  abbcbbcbb
+  de.f...f.
+  de.......
+  d..h.i...
+  d.j...l..
+  d........
+  d...kk...
+@warp k -> reserva_2 spawn=rest_door

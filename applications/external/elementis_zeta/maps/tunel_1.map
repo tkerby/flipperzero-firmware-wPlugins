@@ -1,0 +1,75 @@
+# Tunel Oscuro, floor 1 (C4a, contract 39), 28 x 22. `@dark yes` (without the Linterna module only a diamond round the hero is lit; every tile is passable in the dark) and
+# `@cave yes` (the Exit Wisp works). column = i, row = j. TWO POCKETS separated by solid rock: the NORTH pocket (the north mouth (24,2) from Ruta 10; the ladder A (5,7) down to floor 2) and the SOUTH
+# pocket (the ladder B (22,14) comes up from floor 2; the south mouth (3,20) leads to Ruta 10's south half). The only way between the pockets is floor 2. Look: mid-light rock floor (3 variants), plain rock walls on the back
+# sides, rubble and boulders on the front sides, stalagmites, damp moss patches (the tall grass of the cave); three trainers, items.
+@map tunel_1
+@size 28 22
+@interior no
+@cave yes
+@dark yes
+@area tunel_oscuro
+@bg 3
+@fill cave
+@spawn north 24 3 S
+@spawn south 3 19 N
+@spawn ladder_a 5 8 S
+@spawn ladder_b 22 15 S
+@encounters grass rate=14
+  echolet 19 23 35               # C9 (contract 56): weight lowered to make room for the fill-in (the table still adds up to 100)
+  pebblump 19 23 30
+  ramplet 19 23 25
+  boulderback 22 24 5
+  cragodile 22 24 5               # C9 (contract 56): the fill-in of the design notes
+@end
+# Roaming wild creatures (contract 55, rollout in 63): 2 creatures of this table wander the whole walkable floor (grass included); touching one starts that wild battle.
+@roam 2 table=grass area=.f period=1800
+@legend
+  .  tile=cave
+  a  tile=none
+  b  tile=none object=cwall_p
+  c  tile=none object=rubble
+  d  object=hole
+  e  npc=chica id=t2 face=S trainer=chica_t1 range=3 text=tr.chica_t1.pre after=tr.chica_t1.after
+  f  tile=moss
+  g  object=stalag_s
+  h  object=sign text=tunel.sign interact=look
+  i  object=stalag
+  j  item=salve
+  k  object=rock
+  l  npc=montanista id=t1 face=S trainer=montanista_t1 range=3 text=tr.montanista_t1.pre after=tr.montanista_t1.after
+  m  door=rope_ladder
+  n  object=boulder
+  o  item=rich_salve
+  p  item=exit_wisp
+  q  door=rope_ladder
+  r  npc=explorador id=t3 face=E trainer=explorador_t1 range=3 text=tr.explorador_t1.pre after=tr.explorador_t1.after
+  s  object=hole
+  t  tile=cave item=life_spark
+  H  tile=moss hidden=savia   # hidden (contract 80, hidden items)
+@grid
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  aaaaaaaaaaaaaaaaaaaaaaabbcaa
+  aabbbbbbbbbbbbbbbbbbbbbbdbbc
+  aab.....e.fffHg........h...c
+  aab....i..ffff..i........j.c
+  aab.......ffff........k....c
+  aab.......k....l...........c
+  aab..m.............n.......c
+  aab.........g........ffffg.c
+  aabti................ffff..c
+  aacccccccccccccccccccccccccc
+  abbbbbbbbbbbbbbbbbbbbbbbbbca
+  ab.o...............p......ca
+  ab............g...........ca
+  ab....i...............q...ca
+  ab................i.......ca
+  ab..kffff...r.............ca
+  ab...ffff.n.....ffff....i.ca
+  ab...ffff.......ffff......ca
+  ab......g....n..ffffk.....ca
+  ab.s......................ca
+  acccccccccccccccccccccccccca
+@warp d -> ruta_10 spawn=tunnel_n
+@warp m -> tunel_2 spawn=ladder_a
+@warp q -> tunel_2 spawn=ladder_b
+@warp s -> ruta_10 spawn=tunnel_s

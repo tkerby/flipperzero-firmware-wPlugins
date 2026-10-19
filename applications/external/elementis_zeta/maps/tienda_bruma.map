@@ -1,0 +1,29 @@
+# Tienda de Pueblo Bruma (C4a, contract 39, interior, Pueblo Bruma Mart): the shopkeeper behind the counter; the shop opens at once: `shop pueblo_bruma`. Same layout as the Dinamo tienda.
+@map tienda_bruma
+@size 9 7
+@interior yes
+@bg 3
+@fill floor_wood
+@spawn door 4 5 N
+@legend
+  .  tile=floor_wood
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  object=shelf
+  f  npc=tendero id=clerk face=SW script=clerk
+  g  object=counter
+  h  tile=mat
+@grid
+  abcbbbcbb
+  d.eee.ee.
+  d...f....
+  d.ggg....
+  d.......e
+  d........
+  d...hh...
+@warp h -> pueblo_bruma spawn=tienda_door
+@script clerk npc
+    shop pueblo_bruma
+@end

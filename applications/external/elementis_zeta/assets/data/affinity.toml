@@ -1,0 +1,68 @@
+# Solar / Lunar AFFINITY (contract 66): our two-version split, inside one game. The player picks Solar or Lunar at the start (UI plugin, PartyState.aff; 0 = not chosen yet) and the wild
+# creatures he meets follow it. Each [[pair]] is a pair of COUNTERPARTS: the wild tables of maps/*.map name only the SOLAR form (`solar`); a Lunar player meets its `lunar` counterpart in the very same
+# slot (same levels, same weight). tools/regc.py compiles the pairs into files/aff.bin (the LUNAR view: for each species id the species a Lunar player meets instead, itself when it has no counterpart); the battle
+# plugin applies it when a wild battle opens (nucleo/affinity.h aff_wild). Nothing else changes: gifts, trainers, in-game trades, fossils, the casino and the evolutions are the same for both.
+#
+# Rules (checked by regc.py and tools/species_sources_check.py, which also reports what needs a cross-affinity trade):
+#  * a species is in at most one pair, as `solar` OR `lunar`; the two members are never the same species;
+#  * the map tables list the SOLAR form only (a map that lists a `lunar` form is an error: put its counterpart there);
+#  * a pair member has no source but the wild table (no gift / give_box / legend / sleeper / in-game trade / casino prize / starter / fossil), and the `wild` event scripts never name it;
+#  * the counterparts keep the habitat: the pair lives in the same zones.
+# A pair whose members are the two stages of one line is listed per stage (the evolutions of an exclusive species are exclusive too: a Solar player only gets the Lunar line by trade).
+# `wild = false` marks a pair whose members never appear in a wild table (a final form that only comes by evolution): it documents the counterpart and is not part of the wild remap.
+
+# the dry-ground snake and the sand lizard, routes 4, 9, 10, 11
+[[pair]]
+solar = "coilisp"
+lunar = "dunedil"
+
+[[pair]]
+solar = "hoodcoil"
+lunar = "dunedrake"
+
+# the mossy bulb and the sundew sprout (a creature) and their second stages; the stone finals only come by the stone
+[[pair]]
+solar = "mossbud"
+lunar = "droselet"
+
+[[pair]]
+solar = "mossbloom"
+lunar = "drosaura"
+
+[[pair]]
+solar = "bloomoss"
+lunar = "droserath"
+wild = false
+
+# the fighting kid and the thieving cat (a creature) and their second stages
+[[pair]]
+solar = "ramplet"
+lunar = "glintail"
+
+[[pair]]
+solar = "ibexer"
+lunar = "lustrel"
+
+# the desert sentinel and the fire-stone fox (a creature) and their finals
+[[pair]]
+solar = "cindermeer"
+lunar = "flarechick"
+
+[[pair]]
+solar = "pyromeer"
+lunar = "pyreacock"
+
+# the Reserva's blade-armed insect and horned beetle (a creature)
+[[pair]]
+solar = "razorfly"
+lunar = "pitlion"
+
+# the emblems (the design notes section 2): the Solar scarab and the Lunar tortoise, found in Ruta 11's dry earth
+[[pair]]
+solar = "scarabeam"
+lunar = "lunashell"
+
+[[pair]]
+solar = "kheprion"
+lunar = "selentor"
+wild = false

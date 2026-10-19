@@ -1,0 +1,73 @@
+# Casa del Ingeniero Teo (C2, contract 31), 10 x 8, interior. column = i, row = j; (0,0) = back corner. Teo, the inventor of the PC box system, sits at his radio console
+# with huge headphones and does not hear you (no transformation gag: he is stuck in the loop of his own test broadcast). The big knob on the console (the machine, interact)
+# stops the loop: he jumps up, thanks you, hands over the FERRY PASS (a key item, chapter C3) and says his PC is yours. His PC works (native `pc`). Flags 48 teo_knob, 49 teo_helped.
+@map casa_teo
+@size 10 8
+@interior yes
+@bg 3
+@fill floor_wood
+@spawn door 4 6 N
+@flag teo_knob 48               # the knob was turned
+@flag teo_helped 49             # Teo thanked the player (the pass was given)
+@legend
+  .  tile=floor_wood
+  C  tile=none object=wall_corner
+  w  tile=none object=wall_j
+  y  tile=none object=wall_win_j
+  |  tile=none object=wall_i
+  q  tile=none object=wall_win_i
+  B  object=bookshelf interact=look text=teo.books
+  P  object=pc interact=look script=pc_box
+  M  object=machine interact=look script=knob
+  V  object=tv interact=look text=teo.tv
+  T  object=table
+  t  npc=teo id=teo face=SW script=teo
+  m  tile=mat
+@grid
+  Cwywwwywww
+  |.B..PM.V.
+  |..t.....B
+  |.........
+  q....T....
+  |.........
+  |.........
+  |...mm....
+@warp m -> ruta_25 spawn=cottage_door
+# The PC terminal: the box screen of the PC plugin.
+@script pc_box interact
+    pc
+@end
+# The console's big knob (the machine): the first time it stops the loop in Teo's headphones; afterwards a remark.
+@script knob interact
+    jf teo_knob again
+    say teo.knob.turn
+    setf teo_knob
+    npc_face_hero teo
+    say teo.knob.react
+    end
+  again:
+    say teo.knob.again
+@end
+# Teo. Before the knob: he does not hear you. After it: his thanks, the Ferry Pass (a full bag keeps teo_helped clear), his PC speech; afterwards a last line.
+@script teo npc
+    jf teo_helped done
+    jf teo_knob talk
+    say teo.deaf
+    end
+  talk:
+    npc_face_hero teo
+    say teo.thanks
+    give_item ferry_pass 1
+    jv 0 0 full
+    item_var 0 ferry_pass
+    say gl.gift
+    setf teo_helped
+    say teo.pc
+    end
+  full:
+    say gl.found.full
+    end
+  done:
+    npc_face_hero teo
+    say teo.after
+@end

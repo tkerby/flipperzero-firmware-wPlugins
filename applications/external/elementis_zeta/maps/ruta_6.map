@@ -1,0 +1,129 @@
+# Ruta 6 (C3, contract 34), 22 x 32. column = i, row = j. The south hut of the underground passage (door at (4,6)) is in the north-west; the CLOSED GATE of Ciudad Cenit
+# (the gatehouse with its guard and a sign) closes the north end of the road; the road (2 wide) leads south to Puerto Dinamo (south edge). Look: a PARK: mowed lawn and sidewalk, a pond with
+# lily pads (animated pool water), a kiosk, benches, flowerbeds, street lamps, hedges and trees on the border. FOUR trainers watch the road from the lawn (west ones look E, east ones look W),
+# tall grass patches hold the wild table.
+@map ruta_6
+@size 22 32
+@interior no
+@area ruta_6
+@flag cenit_gates 837   # a guard got a drink: every gate of Ciudad Cenit is open (contract 49)
+@bg 0
+@fill lawn
+@spawn hut_door 4 7 S           # in front of the passage hut's door
+@spawn north 10 29 N            # arriving from Puerto Dinamo (the south edge)
+@encounters grass rate=20      # Route 6: the city cat and the first Fighting line again, sprouts and songbirds
+  ramplet 13 17 45
+  mossbud 13 16 20
+  flitter 12 15 15
+  muncrit 12 15 10
+  mothmist 13 16 10   # C6 (contract 49): around Ciudad Cenit
+@end
+# Open ground (contract 63, normal route): a step onto plain ground (not tall grass, water, a door, a ledge, an arrow floor) rolls this table when rand8 < 4 (4/256 per step).
+@open_rate 4
+# Roaming wild creatures (contract 55, rollout in 63): 3 creatures of this table wander the open ground (not the tall grass); touching one starts that wild battle.
+@roam 3 table=grass period=1800
+@spawn cenit 11 2 SW
+@legend
+  .  tile=lawn
+  =  tile=sidewalk
+  g  tile=tall_grass
+  H  tile=lawn object=hedge
+  T  tile=lawn object=tree
+  n  tile=sidewalk
+  w  tile=pool_w_o                 # the pond (animated pool water, 2 frames)
+  y  tile=pool_w_o object=lily
+  K  tile=lawn object=kiosk interact=look text=ruta6.kiosk
+  B  tile=lawn object=bench
+  x  tile=lawn object=flowerbed
+  l  tile=lawn object=lamp
+  S  tile=lawn object=sign interact=look text=ruta6.sign
+  s  tile=lawn object=sign interact=look text=ruta6.gate.sign
+  Z  tile=lawn object=house_f         # the passage hut
+  z  tile=lawn door=house_f
+  G  tile=sidewalk object=gatehouse   # the closed gate to Ciudad Cenit
+  q  tile=lawn npc=guardia id=guard2 face=NW script=gate_guard2 show_flag=cenit_gates   # the guard's friend, aside once the gates are open
+  1  tile=lawn npc=explorador id=t1 face=W trainer=explorador_r6 range=3 text=tr.explorador_r6.pre after=tr.explorador_r6.after
+  2  tile=lawn npc=chica id=t2 face=E trainer=chica_r6 range=3 text=tr.chica_r6.pre after=tr.chica_r6.after
+  3  tile=lawn npc=cazabichos id=t3 face=W trainer=cazabichos_r6 range=3 text=tr.cazabichos_r6.pre after=tr.cazabichos_r6.after
+  4  tile=lawn npc=pescador id=t4 face=W trainer=pescador_r6 range=3 text=tr.pescador_r6.pre after=tr.pescador_r6.after
+  X  tile=sidewalk object=chain_i   # the checkpoint fence beside the open lane
+  W  tile=sidewalk                    # the lane into Ciudad Cenit (south gate)
+  u  tile=sidewalk npc=guardia id=guard face=SW script=gate_guard hide_flag=cenit_gates gate=yes   # the thirsty guard
+  I  tile=lawn hidden=strong_ward   # hidden (contract 80, hidden items)
+@grid
+  HTTTTTTTTTTTTTTTTTTTTH
+  HHTHHHHHGGXWHHTHHHHHHH
+  THHHHHTHGGX=HHHHHHTHHH
+  H........s=uq........T
+  H........l==S..ggggg.H
+  T..ZZ.....==...ggggg.H
+  H..Zz.....==...ggggg.T
+  H...=.....==...ggggg.H
+  T...=.....==l........H
+  H...========.1.......T
+  H.........==......x..H
+  T..x..x...==.B.......H
+  H.........==.........T
+  H.......K.==..wwwwB..H
+  T.ggggg..l==.4wwyw...H
+  H.gggggT..==..wyww..TT
+  H.ggggg...==.......I.H
+  T.ggggg.2.==B........H
+  H.ggggg...==.......x.T
+  H.ggggg...==.T.......H
+  T......T..==l..ggggg.H
+  H.....x...==...ggggg.T
+  H.........==...ggggg.H
+  T.........==.3.ggggg.H
+  H.gggg....==...ggggg.T
+  H.gggg....==...ggggg.H
+  T.gggg.T.l==.........H
+  H.gggg....==..T......T
+  H.gggg....==l........H
+  T.........==.........H
+  H.........==.........T
+  HHHHHHHHHHnnHHHHHHHHHH
+@warp n -> puerto_dinamo spawn=north
+@warp z -> pasadizo_s spawn=door
+@warp W -> ciudad_cenit_sur spawn=south
+# The thirsty guard: ANY drink of the Neon store opens all the gates (flag 837); he walks aside and his friend (show_flag) greets the hero.
+@script gate_guard npc
+    npc_face_hero guard
+    jnf badge_toxina nobadge
+    say cenit.guard.thirsty
+    has_item spring_water 0
+    jv 0 1 d_water
+    has_item fizzy_pop 0
+    jv 0 1 d_soda
+    has_item citrus_cooler 0
+    jv 0 1 d_lemon
+    say cenit.guard.none
+    end
+  d_water:
+    item_var 0 spring_water
+    take_item spring_water 1
+    jmp thanks
+  d_soda:
+    item_var 0 fizzy_pop
+    take_item fizzy_pop 1
+    jmp thanks
+  d_lemon:
+    item_var 0 citrus_cooler
+    take_item citrus_cooler 1
+  thanks:
+    sfx item
+    say cenit.guard.give
+    say cenit.guard.open
+    npc_walk guard SE 1
+    npc_face guard NW
+    setf cenit_gates
+    end
+  nobadge:
+    say cenit.guard.badge
+    end
+@end
+@script gate_guard2 npc
+    npc_face_hero guard2
+    say cenit.guard.after
+@end
+

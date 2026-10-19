@@ -1,0 +1,64 @@
+# Ruta 14 (C5a, contract 47), 34 x 16. column = i, row = j. Ruta 13 arrives at the EAST edge (i = 33, rows 7..8), Ruta 15 is the WEST edge (i = 0, rows 1..2).
+# Look (the user's mock "Rutas 13-14", the other axis: the fences run NORTH - SOUTH): five columns of low fences (`rfence_j`) with the gaps alternately at the north and at the south end make the road zig-zag west through
+# six wildflower strips; tall-grass patches in the strips, hedges (cuttable-less bushes) and boulders in the corners (its own touch), five trainers (bird keepers, bikers, a punk and a lass).
+@map ruta_14
+@size 34 16
+@interior no
+@area ruta_14
+@bg 0
+@fill wildf
+@spawn east 32 7 W
+@spawn west 1 1 E
+@encounters grass rate=20
+  mossbud 30 32 25
+  flitwing 30 32 20
+  shellfern 30 32 15
+  jabhawk 31 33 20
+  lanternmoth 30 32 10
+  mossbloom 30 32 10
+  foldling 30 32 5
+@end
+# Open ground (contract 63, normal route): a step onto plain ground (not tall grass, water, a door, a ledge, an arrow floor) rolls this table when rand8 < 4 (4/256 per step).
+@open_rate 4
+# Roaming wild creatures (contract 55, rollout in 63): 3 creatures of this table wander the open ground (not the tall grass); touching one starts that wild battle.
+@roam 3 table=grass period=1800
+@legend
+  .  tile=wildf
+  a  object=tree
+  b  object=rfence_j
+  c  tile=tall_grass
+  d  npc=explorador id=t1 face=S trainer=explorador_r14 range=3 text=tr.explorador_r14.pre after=tr.explorador_r14.after
+  e  object=bush
+  f  object=boulder
+  g  object=flowerbed
+  h  object=sign text=ruta14.sign interact=look
+  i  object=sign text=ruta14.sign2 interact=look
+  j  item=antidote
+  k  item=rich_salve
+  l  npc=mama id=npc_a face=SW text=ruta14.npc
+  m  npc=rider id=t2 face=N trainer=rider_r14a range=3 text=tr.rider_r14a.pre after=tr.rider_r14a.after
+  n  npc=punk id=t3 face=S trainer=punk_r14 range=3 text=tr.punk_r14.pre after=tr.punk_r14.after
+  o  npc=chica id=t4 face=N trainer=chica_r14 range=3 text=tr.chica_r14.pre after=tr.chica_r14.after
+  p  npc=rider id=t5 face=S trainer=rider_r14b range=3 text=tr.rider_r14b.pre after=tr.rider_r14b.after
+  q  tile=wildf
+  r  tile=wildf
+  H  tile=wildf hidden=growth_seed   # F2 (contract 74): a hidden item
+@grid
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  r.........b.f........jb..........a
+  r.........b...........b.f........a
+  a...b.....bcccc.b..e..b.....bcccca
+  a..ib..e..bcccc.b.....b..l..bcdcca
+  a...b.p...bcccc.b..n..bcccc.bcccca
+  a...b.....bcccc.b.....bcccc.b..h.a
+  a...b.....b.....bcccc.bcccc.b....q
+  a...bcccc.b.....bcccc.bcccc.b..e.q
+  a...bcccc.b..e..bcccc.b.....b....a
+  a...bcccc.b.....bcccc.b..m..bcccca
+  a...bcccc.b..o..b.....b...g.bcccca
+  a.e.b.....b...g.b.....b..e..bcccca
+  a.H.b...........b.f.........b....a
+  a...b.f..k......b...........b.f..a
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+@warp q -> ruta_13 spawn=west
+@warp r -> ruta_15 spawn=east

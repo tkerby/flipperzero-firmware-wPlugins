@@ -1,0 +1,26 @@
+title Gimnasio Mente - the psychic gym: the gym's growing pulse, but eerie (whole-tone shimmer, a tritone that never settles, a bell that rings from nowhere), a whole-tone climb and a snare roll; C (112 bpm)
+tempo 112
+vol 220
+meter 4/4
+inst p1 v=120,80,60
+inst p2 v=170,120,90
+inst p3 v=220,160,120
+inst p4 v=255,200,150
+inst shim arp=0,4,8 rate=2 att=4 lvl=0.7 slow
+inst ping dec=3 sus=0.05 slow
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+inst snr drum=a6 noise=25 seed=12 fall=12
+l8
+# --- 1-2: the shimmer (an augmented chord on C, then on D)
+@shim o5 c1 |
+@shim o5 d1 |
+# --- 3-6: the pulse wakes (alone, with the kick, with the tritone F sharp, the tritone on the off-beat)
+@p1 o4 [ c8 >c8< ]4 |
+@p2 o4 [ !kick:c8 c8 f+8 c8 ]2 |
+@p3 o4 [ !kick:c8 c8 f+8 c8 ]2 |
+@p3 o4 [ !kick:c8 f+8 c8 f+8 ]2 |
+# --- 7: a bell from nowhere (G sharp, E, C, G sharp)
+@ping o6 g+4 e4 c4 g+4 |
+# --- 8-9: the whole-tone climb and the snare roll
+@p4 o4 c8 d8 e8 f+8 g+8 a+8 >c8 d8< |
+[ !snr16 ]16 |

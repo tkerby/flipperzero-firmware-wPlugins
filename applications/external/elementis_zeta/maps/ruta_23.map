@@ -1,0 +1,105 @@
+# Ruta 23 (C9, contract 56), 16 x 46. column = i, row = j. The League gate house arrives at the SOUTH end (7..8, 45); the road runs north between two lines of trees to the Senda de Campeones (the cave mouth at the north edge,
+# 7..8, 0). EIGHT BADGE GATES across it (rows 40, 36, 32, 28, 24, then 13, 9, 5): two stone posts and a GUARD on the centre column, fences on both sides; guard k stands there until the hero owns badge k (80 .. 87 in order: one guard per
+# badge): the guard NPC has `hide_flag` = the badge flag, so with the badge the gate is open (a map load reads the flags afresh: the badge comes before the map is entered). A RIVER (rows 16..19) crosses the road between the fifth and the sixth gate:
+# it needs the Hidrodeslizador (Surf, `@surf yes` for mapc's reachability), like the usual Route 23. Look: the badge road: grass and a 3-wide path, stone gate posts with the badge emblem, fences, league banners; trees on both sides.
+@map ruta_23
+@size 16 46
+@interior no
+@area ruta_23
+@bg 0
+@fill grass
+@surf yes
+@spawn south 7 44 N
+@spawn north 7 1 S
+@encounters grass rate=18
+  dashkip 40 44 5
+  dashmark 40 44 20
+  jabhawk 42 46 20
+  hoodcoil 41 46 40
+  skyrrow 44 47 5
+  tuskid 40 43 5
+  tuskmash 40 43 5
+  foldling 41 45 5
+@end
+# Open ground (contract 63, normal route): a step onto plain ground (not tall grass, water, a door, a ledge, an arrow floor) rolls this table when rand8 < 4 (4/256 per step).
+@open_rate 4
+# Roaming wild creatures (contract 55, rollout in 63): 3 creatures of this table wander the open ground (not the tall grass); touching one starts that wild battle.
+@roam 3 table=grass period=1800
+@encounters water rate=15
+  smashrimp 40 45 40
+  urchlord 40 45 40
+  gobrawl 42 46 20
+@end
+@legend
+  .  tile=grass
+  =  tile=path
+  g  tile=tall_grass
+  _  tile=none
+  y  object=tree
+  ~  tile=sea_o
+  F  tile=grass object=fence_j
+  b  tile=path object=bgate
+  f  tile=grass object=vflag
+  s  tile=grass object=road_sign text=r23.sign interact=look
+  X  tile=path
+  N  tile=path
+  i  item=prime_salve
+  j  item=ultra_cristal
+  1  tile=path npc=guardia id=guard1 face=S text=r23.g1 hide_flag=badge_cantera gate=yes
+  2  tile=path npc=guardia id=guard2 face=S text=r23.g2 hide_flag=badge_marea gate=yes
+  3  tile=path npc=guardia id=guard3 face=S text=r23.g3 hide_flag=badge_voltio gate=yes
+  4  tile=path npc=guardia id=guard4 face=S text=r23.g4 hide_flag=badge_raiz gate=yes
+  5  tile=path npc=guardia id=guard5 face=S text=r23.g5 hide_flag=badge_toxina gate=yes
+  6  tile=path npc=guardia id=guard6 face=S text=r23.g6 hide_flag=badge_mente gate=yes
+  7  tile=path npc=guardia id=guard7 face=S text=r23.g7 hide_flag=86 gate=yes
+  8  tile=path npc=guardia id=guard8 face=S text=r23.g8 hide_flag=badge_nucleo gate=yes
+  H  tile=grass hidden=vigor_flask   # F2 (contract 74): a hidden item
+@grid
+  ____y.=NN..y____
+  ____yg===..y____
+  ____yg===..y____
+  ____yg===..y____
+  ____yH===..y____
+  ____yFb8bFFy____
+  ____yg===ggy____
+  ____yf===gfy____
+  ____yg===ggy____
+  ____yFb7bFFy____
+  ____yg===..y____
+  ____yf===.fy____
+  ____yg===..y____
+  ____yFb6bFFy____
+  ____y.===ggy____
+  ____y.===ggy____
+  ____y~~~~~~y____
+  ____y~~~~~~y____
+  ____y~~~~~~y____
+  ____y~~~~~~y____
+  ____yg===ggy____
+  ____yg===ggy____
+  ____yg===ggy____
+  ____yg===ggy____
+  ____yFb5bFFy____
+  ____y.===ggy____
+  ____yf===gfy____
+  ____y.===ggy____
+  ____yFb4bFFy____
+  ____yg===..y____
+  ____yg===.iy____
+  ____yg===..y____
+  ____yFb3bFFy____
+  ____y.===ggy____
+  ____yf===gfy____
+  ____y.===ggy____
+  ____yFb2bFFy____
+  ____yg===..y____
+  ____yf===.fy____
+  ____yg===..y____
+  ____yFb1bFFy____
+  ____y.===ggy____
+  ____y.===ggy____
+  ____ys===ggy____
+  ____y.===..y____
+  ____y.=XX..y____
+@warp X -> puerta_liga spawn=north
+@warp N -> senda_1 spawn=south

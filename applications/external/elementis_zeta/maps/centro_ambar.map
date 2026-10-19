@@ -1,0 +1,84 @@
+# Centro de Ciudad Ambar (C5a, contract 47): a copy of centro_dinamo.map (nurse, PC, respawn point). column = i, row = j; (0,0) = back corner.
+@map centro_ambar
+@size 10 8
+@interior yes
+@bg 3
+@fill floor_lab
+@var club_sel 4
+@var club_res 5
+@var club_res2 7
+@spawn door 4 6 N
+@legend
+  .  tile=floor_lab
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  object=bookshelf text=centro.books interact=look
+  f  object=healer
+  g  npc=nurse id=nurse face=SW script=nurse
+  h  object=pc interact=look script=pc_box
+  i  object=counter
+  j  tile=mat
+  X  tile=floor_lab npc=cientifico_s id=club face=SW script=club
+@grid
+  abcbbbcbbb
+  d.e.fg..Xh
+  d..iiii...
+  d.........
+  d.........
+  d.........
+  d.........
+  d...jj....
+@warp j -> ciudad_ambar spawn=centro_door
+@script nurse npc
+    ask gl.center.ask
+    jv 0 1 yes
+    say gl.center.bye
+    end
+  yes:
+    fade_out
+    wait 1500
+    bond heal 0       # contract 65: +1 friendship for every creature that needs the healing (before it is healed)
+    heal_party
+    respawn door
+    fade_in
+    say gl.center.done
+@end
+# The PC terminal (M5-C, contract 25.3): the box screen of the PC plugin.
+@script pc_box interact
+    pc
+@end
+# The Club de Enlace attendant (contract 61; Club de Enlace receptionist): the IR link's front door. Warns it is experimental, then a four-row menu: trade / battle (the exhibition,
+# trainer `amigo`) / the IR self-test / leave. After a cancelled or failed attempt the menu comes back (the link scene already told what happened).
+@script club npc
+    npc_face_hero club
+    say gl.club.hello
+  menu:
+    elevator club_sel gl.club.trade gl.club.battle gl.club.test gl.club.exit
+    jv club_sel 0 trade
+    jv club_sel 1 battle
+    jv club_sel 2 test
+    end
+  trade:
+    link trade club_res
+    jv club_res 0 fail
+    jv club_res 1 out
+    jmp menu
+  battle:
+    link battle club_res amigo
+    jv club_res 0 fail
+    jv club_res 1 fight
+    jmp menu
+  fight:
+    battle amigo club_res2
+    say gl.club.thanks
+  out:
+    end
+  test:
+    link selftest club_res
+    jv club_res 0 fail
+    jmp menu
+  fail:
+    say gl.club.fail
+@end

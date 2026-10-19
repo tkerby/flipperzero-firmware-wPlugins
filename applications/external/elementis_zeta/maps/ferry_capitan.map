@@ -1,0 +1,53 @@
+# Ferry Albatros, captain's cabin (C3, contract 34), 9 x 7, interior. column = i, row = j. The CAPTAIN (`capitan`) is seasick: he stands by his bunk, green and swaying.
+# Talk to him: he asks for a hand (rub his back: YES / NO); after YES he feels better and gives the CORTADOR (bracelet module, flag 88, `setf mod_cortador`); flag 52 = the gift was given.
+# Afterwards the ferry is ready to sail: leaving the ship (the deck mats) sets flag 53 and the ferry departs.
+@map ferry_capitan
+@size 9 7
+@interior yes
+@bg 3
+@nofollow yes                   # contract 69: the follower stays out of the ferry and the sea
+@fill carpet
+@spawn door 4 5 N
+@flag captain_done 52
+@legend
+  .  tile=carpet
+  W  tile=carpet object=pwall
+  I  tile=carpet object=pwall
+  b  tile=carpet object=bunk
+  T  tile=carpet object=table
+  l  tile=carpet object=lamp
+  N  tile=carpet object=barrel
+  C  tile=carpet npc=capitan id=captain face=S script=captain
+  m  tile=mat
+@grid
+  WWWWWWWWW
+  I.lT..b..
+  I.....b..
+  I...C....
+  I.N......
+  I........
+  I...mm...
+@warp m -> ferry_camarotes spawn=captain
+@script captain npc
+    npc_face_hero captain
+    jf captain_done after
+    say ferry.captain.sick
+    ask ferry.captain.ask
+    jv 0 1 rub
+    say ferry.captain.no
+    end
+  rub:
+    sfx confirm
+    wait 400
+    sfx confirm
+    wait 400
+    say ferry.captain.better
+    setf mod_cortador
+    sfx item
+    say ferry.captain.got
+    say ferry.captain.about
+    setf captain_done
+    end
+  after:
+    say ferry.captain.after
+@end

@@ -1,0 +1,30 @@
+title Camino de la Victoria - the champions' road: a determined climb in B flat major (132 bpm), a drive of kick and snare on a bass that steps up (B flat, C, D, E flat) while the tune climbs a step each time, power chords, a chromatic run to the top and a roll into the loop
+tempo 132
+vol 225
+meter 4/4
+inst drive v=255,170,140
+inst lead v=255,255,225,195,180
+inst hero v=255,255,240,225,210,200
+inst pow arp=-12,0,7 rate=1 lvl=0.9
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+inst snr drum=a6 noise=25 seed=14 fall=12
+l8
+# --- 1-8: the road climbs a step at a time (each bar of drive, then the tune a step higher)
+@drive o3 [ !kick:b-8 b-8 !snr8 b-8 ]2 |
+@lead o5 b-8 b-8 c4 d4 f4 |
+@drive o3 [ !kick:c8 c8 !snr8 c8 ]2 |
+@lead o5 c8 c8 d4 e-4 g4 |
+@drive o3 [ !kick:d8 d8 !snr8 d8 ]2 |
+@lead o5 d8 d8 e-4 f4 a4 |
+@drive o3 [ !kick:e-8 e-8 !snr8 e-8 ]2 |
+@lead o6 e-4 d4 c4 o5 b-4 |
+# --- 9-12: the summit comes in sight (power chords, a long singing line)
+@pow o4 b-2 f2 |
+@hero o5 f4. g8 a4 b-4 |
+@pow o4 e-2 b-2 |
+@hero o6 c4 d4 e-4 f4 |
+# --- 13-16: the last climb (the scale to the top), a high held note, a roll
+@pow o4 g2 d2 |
+@lead o5 b-8 >c8 d8 e-8 f8 g8 a8 b-8< |
+@hero o6 d2 d2 |
+[ !snr16 ]16 |

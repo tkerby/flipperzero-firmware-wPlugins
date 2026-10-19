@@ -1,0 +1,44 @@
+# Mansion de Neon, ground floor (C4a, contract 39), 12 x 9, interior. column = i, row = j. A rich old house inside the neon city: big polished 2 x 2 white slabs (@bg 0: light floor) (polished_<i%2><j%2>, never small tiles), pillars, bookshelves, display cases, a dining table;
+# a resident, a butler and a maid; the STAIRS (the escalator piece, door cell (10,3)) lead to the top floor (`mansion_neon_2`), where the owner gives the Mimbara.
+@map mansion_neon
+@size 12 9
+@interior yes
+@bg 0
+@fill polished_00
+@spawn door 5 7 N
+@spawn stairs 10 4 N
+@legend
+  y  tile=polished_11
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  object=bookshelf text=mansion.books interact=look tile=polished_01
+  f  object=vitrina tile=polished_01
+  g  object=escalator tile=polished_00
+  h  tile=none object=wall_win_i
+  i  object=pillar tile=polished_11
+  j  npc=nurse id=maid face=SW text=mansion.maid tile=polished_11
+  k  door=escalator tile=polished_01
+  l  object=table tile=polished_00
+  m  npc=guardia id=butler face=E text=mansion.butler tile=polished_11
+  n  npc=vecino_m id=resident face=NW text=mansion.resident tile=polished_00
+  o  tile=mat
+  p  object=bookshelf text=mansion.books interact=look tile=polished_11
+  x  tile=polished_01
+  w  tile=polished_10
+  .  tile=polished_00
+  t  object=table tile=polished_10
+  u  object=pillar tile=polished_10
+@grid
+  abbcbbcbbbbb
+  dyepxyfyfyxy
+  dw.w.w.w.wgw
+  hixyxyxjxyky
+  dw.wltlw.w.w
+  dyxmxyxyxyxy
+  du.w.w.wnu.w
+  dyxyxyxyxyxy
+  dw.w.oow.w.w
+@warp k -> mansion_neon_2 spawn=stairs
+@warp o -> metropolis_neon_2 spawn=mansion_door

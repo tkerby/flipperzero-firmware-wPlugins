@@ -1,0 +1,83 @@
+# Torre de los Recuerdos, 2F (ghost tower 2F: the rival, C4b, contract 41), 14 x 12, interior. The first ghost floor (`@ghosts yes`, no wild table: the wild ghosts start on 3F). The way runs from the stairs down (top left, door
+# (2,2)) to the stairs up (top right, door (11,2)); THE RIVAL ambushes the hero at the step triggers of column 6 (flag 813 shows him, 806 = beaten and gone): `music rival` plays while he walks up, then the battle (trainer rival_torre:
+# the stage-2 counter of the player's starter L25, Flitwing 25, Cindermeer 23, Trancelf 20).
+@map torre_2
+@size 14 12
+@interior yes
+@fog yes
+@ghosts yes
+@area torre_recuerdos
+@bg 3
+@fill oplank_00
+@spawn down 2 3 S
+@spawn up 11 3 S
+@flag rival_torre_here 813
+@flag rival_torre_gone 806
+@legend
+  .  tile=oplank_00
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  tile=oplank_11
+  f  tile=oplank_01 object=escalator
+  g  tile=oplank_01
+  h  tile=oplank_11 object=escalator
+  i  tile=oplank_10
+  j  tile=oplank_00 door=escalator
+  k  tile=oplank_10 door=escalator
+  l  tile=oplank_01 interact=step script=rival_ambush
+  m  tile=none object=wall_win_i
+  n  tile=oplank_00 object=candle
+  o  tile=oplank_00 interact=step script=rival_ambush
+  p  tile=oplank_11 object=stele_a
+  q  tile=oplank_11 object=stele_a interact=look text=torre.stele.c
+  r  tile=oplank_00 object=stele_a
+  s  tile=oplank_01 npc=rival id=rival face=SE script=rival_talk show_flag=813 hide_flag=806
+  t  tile=oplank_01 npc=vecino_m id=old face=NW text=torre.npc.c
+  u  tile=oplank_10 object=stele_b
+  v  tile=oplank_01 object=candle
+  w  tile=oplank_01 object=stele_b
+@grid
+  abbbcbbbcbbbcb
+  defegegegeghge
+  diji.i.i.i.k.i
+  degegelegegege
+  mi.inioini.i.i
+  degpgelegqgege
+  di.i.ioi.i.iri
+  dpgeselegetege
+  mi.u.ioi.u.i.i
+  devegelegegewe
+  di.irioi.ini.i
+  degegelegegege
+@warp j -> torre_1 spawn=up
+@warp k -> torre_3 spawn=down
+# The rival: when the hero crosses column 6 the first time his theme plays (`music rival`), he appears, walks up, talks and
+# fights (trainer rival_torre: slot 0 is the stage-2 counter of the player's starter at 25, Flitwing 25, Cindermeer 23, Trancelf 20); a win = two speeches and he leaves for good (flag 806); a loss is the blackout.
+@script rival_ambush step if !rival_torre_gone
+    setf rival_torre_here
+    music rival
+    cam_npc rival
+    wait 300
+    npc_walk rival SE 2
+    npc_face_hero rival
+    say torre.rival.hey
+    cam_hero
+    call rival_fight
+@end
+@script rival_talk npc
+    npc_face_hero rival
+    say torre.rival.again
+    call rival_fight
+@end
+@script rival_fight called
+    battle 92 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    say torre.rival.lose
+    say torre.rival.next
+    setf rival_torre_gone
+@end

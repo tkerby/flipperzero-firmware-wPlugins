@@ -1,0 +1,91 @@
+# Senda de Campeones, floor 2 (C9, contract 56), 28 x 22, a cave. The ladder from floor 1 arrives in the SE hall (down ladder (24,19), spawn from_1); the boulder (16,17) is pushed west along row 17 (the 1-wide
+# connector) into the pit (9,17) (7 pushes); that opens the GATE OF ROCKS (5,8) in the corridor north of the west chamber (the step trigger (5,9)); the top hall holds the ladder up (23,3), an elite and an item. A psychic trainer waits in the
+# west chamber, a karateka in the arrival hall.
+@map senda_2
+@size 28 22
+@interior no
+@cave yes
+@area senda_campeones
+@bg 0
+@fill rockg
+@spawn from_1 23 19 W
+@spawn from_3 22 3 S
+@flag senda_pit2 907                  # the pit of floor 2 (a boulder filled it)
+@flag senda2_open 910                  # the gate of floor 2 opened (set by the step trigger once the pit is filled)
+@flag beaten_psiquico_s2a 918
+@flag beaten_elite_s2b 919
+@flag beaten_karateka_s2c 920
+@encounters grass rate=14
+  tuskid 40 44 5
+  tuskmash 43 46 15
+  cragodile 40 44 10
+  echowing 42 46 20
+  rockroll 42 46 5
+  dashmark 43 46 10
+  bouldrum 44 47 25
+  kickaroo 42 45 5
+  jabadillo 42 45 5
+@end
+# Open ground (contract 63, wild zone): a step onto plain ground (not tall grass, water, a door, a ledge, an arrow floor) rolls this table when rand8 < 8 (8/256 per step).
+@open_rate 8
+# Roaming wild creatures (contract 55, rollout in 63): 3 creatures of this table wander the whole walkable floor (grass included); touching one starts that wild battle.
+@roam 3 table=grass area=,. period=1800
+@legend
+  .  tile=rockg
+  ,  tile=rockf
+  W  tile=none object=swall
+  r  tile=none object=srubble
+  _  tile=none
+  f  tile=rockg object=torch
+  a  tile=rockg object=stalag_a
+  b  tile=rockg boulder=yes
+  h  tile=rockg hole=senda_pit2
+  G  tile=rockg npc=rock_gate id=gate2 face=S solid=yes gate=yes hide_flag=senda2_open text=sd.gate
+  t  tile=rockf interact=step script=gate2_check
+  L  tile=rockf door=rope_ladder
+  n  tile=rockf
+  i  item=prime_salve
+  j  item=ultra_cristal
+  k  item=ward_spray
+  l  item=vit_spc
+  A  tile=rockg npc=psiquico_s id=psiquico_s2a face=SW trainer=psiquico_s2a range=3 text=tr.psiquico_s2a.pre after=tr.psiquico_s2a.after beaten_flag=beaten_psiquico_s2a
+  B  tile=rockg npc=karateka_s id=karateka_s2c face=SW trainer=karateka_s2c range=3 text=tr.karateka_s2c.pre after=tr.karateka_s2c.after beaten_flag=beaten_karateka_s2c
+  C  tile=rockg npc=elite_s id=elite_s2b face=SW trainer=elite_s2b range=3 text=tr.elite_s2b.pre after=tr.elite_s2b.after beaten_flag=beaten_elite_s2b
+  U  tile=rockf door=rope_ladder
+  c  tile=rockf item=growth_seed
+  H  tile=rockg hidden=life_blaze   # hidden (contract 80, hidden items)
+@grid
+  ____________________________
+  __WWWWWWWWWWWWWWWWWWWWWWWW__
+  __Wf...........l.........fr_
+  __W....................U..r_
+  __W........Ca.............r_
+  __W.......................r_
+  __W.....................j.r_
+  ___rW.rrrrrrrrrrrrrrrrrrrr__
+  ____WGr_____________________
+  ____Wtr_____________________
+  __WWW,WWW___________________
+  __Wf.,..cr__________________
+  __WH.....r__________________
+  __W......r___WWWWWWWWWWWWW__
+  __W....A.r___Wf..a.......fr_
+  __W......r___W......B.....r_
+  __W......WWWWW............r_
+  __W......h......b.........r_
+  __W......rrrrW.........,..r_
+  __W.i....r___W........,,L.r_
+  __W.....ar___W......a.....r_
+  ___rrrrrr_____rrrrrrrrrrrr__
+@warp L -> senda_1 spawn=from_2
+@warp U -> senda_3 spawn=from_2
+# The gate of floor 2 (the Senda's switch, Senda de Campeones boulder switches): a boulder pushed onto the pit fills it (flag senda_pit2, engine); the step trigger in front of the gate opens it the moment the hero
+# stands there (a wall of rocks that crumbles); the gate's own hide flag keeps it open for good.
+@script gate2_check step if senda_pit2
+    jf senda2_open done
+    sfx door
+    npc_hide gate2
+    setf senda2_open
+  done:
+    end
+@end

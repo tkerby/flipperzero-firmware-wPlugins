@@ -1,0 +1,126 @@
+# Monte Eco, floor 2 (the fossil floor, B2F, C2, contract 31), 30 x 26. column = i, row = j. West chamber (arrival from the west ladder, a Vertice agent), a corridor, the big
+# FOSSIL CHAMBER (the Vertice dig: a trench with two fossils, crates with the V, a banner, tools; their scientist guards it: beat him, then take ONE fossil; the Super Nerd takes the other),
+# a corridor south and the east chamber with the east ladder (up to the exit pocket of floor 1). @cave yes. Look = the user's variant A of tools/c2_mock.py.
+@map monte_eco_2
+@size 30 26
+@interior no
+@cave yes
+@area monte_eco
+@bg 3
+@fill cave
+@spawn from_w 5 5 S             # arriving by the west ladder
+@spawn from_e 25 23 W           # arriving by the east ladder
+@flag sci_beaten 43             # the scientist at the fossils lost
+@flag fossil_taken 44           # a fossil was taken: both fossils and the scientist are gone
+@encounters grass rate=14      # B1F / B2F: bats, the moss snail, rocks, the rare moon creature
+  echolet 8 11 45
+  shellfern 9 11 25
+  pebblump 8 10 20
+  lunelle 9 10 5
+  muncrit 8 10 5
+@end
+# Roaming wild creatures (contract 55, rollout in 63): 1 creature of this table (one only: with 2 the map would cost more heap than Ciudad Marea, the dearest town, contract 63.4) wanders the whole walkable floor (grass included); touching one starts that wild battle.
+@roam 1 table=grass area=.Dm period=1800
+@legend
+  .  tile=cave                     # mid-light cave floor (3 variants), white flecks and hairline cracks
+  m  tile=moss                     # damp moss patches with ferns: the tall grass of the cave (C_GRASS, wild table below)
+  W  tile=none object=cwall        # glowing crystal-vein walls (2 variants, 2 frames): the back walls (north / west of the floor)
+  w  tile=none object=cwall_p      # plain rock behind them
+  r  tile=none object=rubble       # low rubble in front (south / east of the floor): the cave drops away into the dark
+  _  tile=none
+  a  tile=cave object=stalag
+  s  tile=cave object=stalag_s
+  c  tile=cave object=crystal      # crystal cluster (the glint blinks)
+  L  tile=cave door=rope_ladder     # rope ladder up (west chamber): back to floor 1, west pocket
+  U  tile=cave door=rope_ladder     # rope ladder up (east chamber): to the exit pocket of floor 1
+  D  tile=fossil_dig               # the Vertice excavation trench
+  f  tile=fossil_dig npc=fossil_tri id=fossil_t script=fossil_t hide_flag=44
+  g  tile=fossil_dig npc=fossil_lily id=fossil_s script=fossil_s hide_flag=44
+  y  tile=cave object=crate_plain
+  k  tile=cave object=crate_stack  # the big crate with the V stencil
+  x  tile=cave object=crate_v
+  o  tile=cave object=barrel
+  v  tile=cave object=vflag        # the Vertice banner (waves, 2 frames)
+  z  tile=cave object=dig_tools
+  e  tile=cave item=exit_wisp
+  q  tile=cave item=ward_spray
+  1  tile=cave npc=vertice id=agent2 face=S trainer=vertice_eco2 range=3 text=tr.vertice_eco2.pre after=tr.vertice_eco2.after
+  S  tile=cave npc=vertice id=sci face=N trainer=cientifico_eco range=3 text=eco.sci.pre after=eco.sci.after beaten_flag=43 hide_flag=44
+  b  tile=cave item=life_spark
+  H  tile=cave hidden=luna   # hidden (contract 80, hidden items)
+@grid
+  ______________________________
+  __wwwwwwwww___________________
+  _wWWWWWWWWWr__________________
+  _wW...s.c..r_wwwwwwwwwwww_____
+  _wW.L.....arwWWWWWWWWWWWWr____
+  _wW........rwW.oykx..H..br____
+  _wW......1.WWW.....zDDDDvr____
+  _wW........mma......DfgD.r____
+  _wW..mmm...mm............r____
+  _wW..mmm...mm...........or____
+  _wWe.s.a..srrWa.....S....r____
+  __rrrrrrrrrrwW..........ar____
+  ____________wW.mmmmm.....r____
+  ____________wWammmmm....sr____
+  ____________wW.mmmmm.....r____
+  ____________wWc.........cr____
+  ____________wW.q.s.s.....r____
+  _____________rrrrrrrrW..ar____
+  ____________________wWmmmr____
+  __________________wwwWmmmrww__
+  _________________wWWWWs.aWWWr_
+  _________________wW.s.....c.r_
+  _________________wW.mmmm....r_
+  _________________wWsmmmm..U.r_
+  _________________wW....s....r_
+  __________________rrrrrrrrrrr_
+@warp L -> monte_eco_1 spawn=ladder_w
+@warp U -> monte_eco_1 spawn=ladder_e
+# The fossils. The scientist must lose first (flag 43); then each fossil asks; YES = the key item, the scientist takes the other
+# one and runs off; flag 44 hides both fossils and him for good (also after a map reload).
+@script fossil_t npc
+    jf sci_beaten ok
+    say eco.fossil.guard
+    end
+  ok:
+    ask eco.fossil.t.ask
+    jv 0 1 yes
+    say eco.fossil.no
+    end
+  yes:
+    give_item fossil_trilobite 1
+    jv 0 0 full
+    item_var 0 fossil_trilobite
+    say gl.found
+    call take_other
+    end
+  full:
+    say gl.found.full
+@end
+@script fossil_s npc
+    jf sci_beaten ok
+    say eco.fossil.guard
+    end
+  ok:
+    ask eco.fossil.s.ask
+    jv 0 1 yes
+    say eco.fossil.no
+    end
+  yes:
+    give_item fossil_sealily 1
+    jv 0 0 full
+    item_var 0 fossil_sealily
+    say gl.found
+    call take_other
+    end
+  full:
+    say gl.found.full
+@end
+@script take_other called
+    npc_face_hero sci
+    say eco.fossil.sci.take
+    npc_walk sci NW 4
+    setf fossil_taken
+    say eco.fossil.sci.gone
+@end

@@ -1,0 +1,38 @@
+# Puerta de la Liga (C9, contract 56), 10 x 8, interior. column = i, row = j. The Ruta 22 mat (4..5, 7) is the way in; the doorway in the back wall (7,0) leads to Ruta 23.
+# A plain gatekeeper's room: the keeper behind the counter (a hint), a traveller and a poster. The badge checks themselves stand on Ruta 23 (eight guards, one per badge).
+@map puerta_liga
+@size 10 8
+@interior yes
+@bg 3
+@fill floor_wood
+@spawn door 4 6 N
+@spawn north 7 1 S
+@legend
+  .  tile=floor_wood
+  C  tile=none object=wall_corner
+  w  tile=none object=wall_j
+  y  tile=none object=wall_win_j
+  |  tile=none object=wall_i
+  x  tile=floor_wood
+  K  object=counter
+  N  npc=guardia id=keeper face=SW script=keeper
+  B  object=bookshelf interact=look text=pl.books
+  T  object=table
+  a  npc=vecino_m id=trav face=NW text=pl.trav
+  P  object=sign interact=look text=pl.poster
+  m  tile=mat
+@grid
+  Cwywwywxww
+  |B........
+  |..N....T.
+  |.KKK.P...
+  |.........
+  |.......a.
+  |.........
+  ....mm....
+@warp x -> ruta_23 spawn=south
+@warp m -> ruta_22 spawn=gate_door
+@script keeper npc
+    npc_face_hero keeper
+    say pl.keeper
+@end

@@ -1,0 +1,86 @@
+# Ciudad Cenit, south half (C6, contract 49), 34 x 16. column = i, row = j. The SOUTH half of the city (see `ciudad_cenit` for the split): the Fighting dojo (door (6,4)), the psychic gym (door (26,4), open from the start),
+# the mime trader's house (door (15,10): a creature trade), the EAST gate (33,7..8) from Ruta 8 and the SOUTH gate (16..17,15) from Ruta 6; the gap (16..17,0) leads back to the north half. Same look.
+@map ciudad_cenit_sur
+@size 34 16
+@interior no
+@area ciudad_cenit
+@bg 0
+@fill ring_00
+@spawn north 16 1 S
+@spawn south 16 14 N
+@spawn east 32 7 W
+@spawn dojo_door 6 5 S
+@spawn gym_door 26 5 S
+@spawn mimo_door 15 11 S
+@legend
+  .  tile=ring_00
+  a  tile=ring_00 object=glass_tower
+  b  tile=ring_10 object=glass_tower
+  c  tile=ring_00 object=rail_j
+  d  tile=ring_10 object=rail_j
+  e  tile=ring_00
+  f  tile=ring_10
+  g  tile=ring_01 object=glass_tower
+  h  tile=ring_11 object=glass_tower
+  i  tile=ring_01
+  j  tile=ring_11
+  k  tile=ring_11 object=rail_i
+  l  tile=ring_10 object=lamp_h
+  m  tile=ring_10
+  n  tile=ring_10 object=rail_i
+  o  tile=ring_11 object=dojo_puno
+  p  tile=ring_01 object=dojo_puno
+  q  tile=ring_11 object=gym_mente
+  r  tile=ring_01 object=gym_mente
+  s  tile=ring_10 object=dojo_puno
+  t  tile=ring_00 door=dojo_puno
+  u  tile=ring_00 object=lamp_h
+  v  tile=ring_10 object=gym_mente
+  w  tile=ring_00 door=gym_mente
+  x  tile=ring_11 object=sign text=cenit.sign.dojo interact=look
+  y  tile=ring_11 object=sign text=cenit.sign.gym interact=look
+  z  tile=ring_10 object=bench
+  A  tile=ring_00 npc=psiquico_s id=c1 face=NE text=cenit.npc.c
+  B  tile=ring_01 object=planter
+  C  tile=ring_01 object=orb
+  D  tile=ring_11 object=orb
+  E  tile=ring_11
+  F  tile=ring_10
+  G  tile=ring_11 npc=vecino_m id=c2 face=SE text=cenit.npc.d
+  H  tile=ring_01 object=house_f
+  I  tile=ring_11 object=house_f
+  J  tile=ring_00 object=house_f
+  K  tile=ring_10 door=house_f
+  L  tile=ring_00 object=orb
+  M  tile=ring_11 object=lamp_h
+  N  tile=ring_10 object=orb
+  O  tile=ring_01 object=rail_j
+  P  tile=ring_11 object=rail_j
+  Q  tile=ring_01
+  R  tile=ring_11
+@grid
+  abcdcdcdcdcdcdcdefcdcdcdcdcdcdcdcd
+  ghijijijijijijijijijijijijijijijik
+  ab.l.m.m.m.m.m.m.m.m.m.m.m.m.m.m.n
+  ghijiopoijijijijijijijijiqrqijijik
+  ab.m.sts.m.mum.m.m.mum.m.vwv.m.l.n
+  ghijijijixijijijijijijiyijijijijik
+  ab.m.m.m.m.m.z.mAm.m.m.m.m.m.m.m.n
+  ghijBjijBjCjijijijijiDijBjijBjijiE
+  ab.m.m.m.m.m.m.m.m.z.m.m.m.m.m.m.F
+  ghijijijijiGijHIijijijijijijijijik
+  ab.m.m.m.m.m.mJK.m.m.mab.m.mLm.m.n
+  ghijijijijiMijijijBjijghijijijijik
+  ab.m.m.m.N.m.m.m.m.m.m.m.m.m.mum.n
+  ghijijijijijijijijijijijijijijijik
+  ab.m.m.m.m.m.m.m.m.m.m.m.m.m.m.m.n
+  ghOPOPOPOPOPOPOPQROPOPOPOPOPOPOPOP
+@warp e -> ciudad_cenit spawn=south
+@warp f -> ciudad_cenit spawn=south
+@warp t -> dojo_puno spawn=door
+@warp w -> gimnasio_mente spawn=door
+@warp E -> ruta_8 spawn=cenit
+@warp F -> ruta_8 spawn=cenit
+@warp K -> casa_mimo spawn=door
+@warp Q -> ruta_6 spawn=cenit
+@warp R -> ruta_6 spawn=cenit

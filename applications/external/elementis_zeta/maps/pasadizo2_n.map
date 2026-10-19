@@ -1,0 +1,33 @@
+# Pasadizo 2, north hut (C4a, contract 39), 8 x 7, interior. column = i, row = j. The second underground passage (Ruta 8 -> Ruta 7). A copy of the C3 hut (pasadizo_n) with its own contents: a keeper, a maintenance
+# console, crates; the floor ladder (2,1) goes down to the tunnel.
+@map pasadizo2_n
+@size 8 7
+@interior yes
+@bg 3
+@fill floor_wood
+@spawn door 3 5 N
+@spawn ladder 2 2 S
+@legend
+  .  tile=floor_wood
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  door=rope_ladder
+  f  object=lamp
+  g  object=crate_plain
+  h  object=table
+  i  object=barrel
+  j  npc=guardia id=keeper face=N text=pasadizo2.keeper.n
+  k  object=bench
+  l  tile=mat
+@grid
+  abbbbcbb
+  d.ef..gg
+  d..h...i
+  d....j..
+  d.......
+  dk......
+  d..ll...
+@warp e -> pasadizo2 spawn=north
+@warp l -> ruta_8 spawn=hut_door

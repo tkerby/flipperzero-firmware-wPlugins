@@ -1,0 +1,28 @@
+title Gimnasio Fuego - the fire gym: the gym's growing pulse, but it gallops (kick, then two quick notes) in A phrygian, flames that flicker on a half step, a hot lick, a chromatic climb up two octaves and a roll of crackles (150 bpm)
+tempo 150
+vol 230
+meter 4/4
+inst p1 v=120,80,60
+inst p2 v=170,120,90
+inst p3 v=220,160,120
+inst p4 v=255,200,150
+inst lead v=255,255,225,195,180
+inst flick arp=0,1 rate=1 lvl=0.9
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+inst crk drum=e7 noise=60 seed=5 fall=6
+l16
+# --- 1-2: the gallop alone, then with the kick
+@p1 o3 [ a8 a a ]4 |
+@p2 o3 [ !kick:a8 a a ]4 |
+# --- 3-4: it leans on the B flat (phrygian)
+@p3 o3 [ !kick:a8 a a ]3 !kick:a8 a b- |
+@p3 o3 [ !kick:a8 b- b- ]4 |
+# --- 5-6: the hot lick
+@lead o5 a8 b-8 >c+4< b-8 a8 g4 |
+@lead o5 f8 g8 a4 g8 f8 e4 |
+# --- 7: the flames flicker
+@flick o5 a1 |
+# --- 8: the climb, chromatic, up two octaves
+@p4 o3 a b- b >c c+ d d+ e f f+ g g+ a a+ b >c<< |
+# --- 9: the roll of crackles
+[ !crk16 ]16 |

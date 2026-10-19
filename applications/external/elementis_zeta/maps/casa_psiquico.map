@@ -1,0 +1,85 @@
+# Casa del Vidente (C6, contract 49), 9 x 7, interior. An old fortune-teller among his orbs and books: the first talk gives DISC 08 (a disc = our Mindstorm), flag 841; a full bag keeps the flag clear and he hands it over at the next talk.
+@map casa_psiquico
+@size 9 7
+@interior yes
+@flag psi_disc 841   # the fortune-teller's Disc 08 was handed over
+@flag psit_done 930   # F2 (contract 74): the mothmist-for-dewlash trade was done
+@var psit_res 12
+@var psit_want 10
+@var psit_give 11
+@bg 3
+@fill floor_wood
+@spawn door 4 5 N
+@legend
+  .  tile=floor_wood
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  tile=floor_wood object=bookshelf text=casa.books interact=look
+  f  tile=floor_wood object=bookshelf text=psi.books interact=look
+  g  tile=floor_wood npc=anciano id=seer face=SW script=seer
+  h  tile=floor_wood object=table
+  i  tile=floor_wood object=orb
+  j  tile=mat
+  k  tile=floor_wood npc=chica id=apprentice face=NW script=apprentice
+@grid
+  abbcbbcbb
+  d.e....f.
+  d...g...k
+  d.....h..
+  d.i...i..
+  d........
+  d...jj...
+@warp j -> ciudad_cenit spawn=psi_door
+@script seer npc
+    npc_face_hero seer
+    jf psi_disc said
+    say psi.hi
+    call seer_gift
+    end
+  said:
+    say psi.after
+@end
+@script seer_gift called
+    give_item disc_08 1
+    jv 0 0 full
+    item_var 0 disc_08
+    say gl.gift
+    setf psi_disc
+    say psi.about
+    end
+  full:
+    say gl.found.full
+@end
+
+# F2 (contract 74): an in-game trade (mothmist -> dewlash, for a creature), nickname = the fixed ASCII text `tr_psi.nick` (the same in all four languages, contract 32.5). Flag 930 = it was done.
+@script apprentice npc
+    npc_face_hero apprentice
+    setv psit_want sp:mothmist
+    setv psit_give sp:dewlash
+    name_var 0 psit_want
+    name_var 1 psit_give
+    jf psit_done after
+    say tr_psi.hello
+    ask trueque.ask
+    jv 0 1 go
+    say trueque.no
+    end
+  go:
+    trade mothmist dewlash tr_psi.nick psit_res
+    jv psit_res 1 done
+    jv psit_res 255 cancel
+    say trueque.wrong
+    end
+  cancel:
+    say trueque.no
+    end
+  done:
+    setf psit_done
+    say trueque.done
+    end
+  after:
+    name_var 0 psit_give
+    say trueque.after
+@end

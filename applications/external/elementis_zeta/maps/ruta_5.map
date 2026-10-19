@@ -1,0 +1,128 @@
+# Ruta 5 (C3, contract 34), 24 x 29. column = i, row = j. Ciudad Marea's SOUTH exit arrives at the north end (j = 0); the road (a sidewalk, 2 wide) runs south
+# through the SUBURBS: mowed lawn, trimmed hedges along both edges, picket fences, mailboxes and flowerbeds, street lamps. The DAY CARE (a house with its fenced front yard and the
+# heart sign) is on the west side, the NORTH HUT of the underground passage on the east side, and the road ends at the CLOSED GATE to Ciudad Cenit (the gatehouse; its guard says the
+# city is closed: Cenit opens in C6). The way on to Ruta 6 is the passage. Tall grass patches hold the wild table.
+@map ruta_5
+@size 24 29
+@interior no
+@area ruta_5
+@flag cenit_gates 837   # a guard got a drink: every gate of Ciudad Cenit is open (contract 49)
+@bg 0
+@fill lawn
+@spawn north 11 1 S             # arriving from Ciudad Marea
+@spawn dc_door 5 10 S           # in front of the day-care door
+@spawn hut_door 17 17 S         # in front of the passage hut's door
+@encounters grass rate=20      # Route 5: the city cat, the sprouts, the songbird, the rodents (+ the first Fighting line)
+  ramplet 13 16 40
+  mossbud 13 16 20
+  flitter 12 15 20
+  muncrit 12 15 10
+  mothmist 13 16 10   # C6 (contract 49): around Ciudad Cenit
+@end
+# Open ground (contract 63, normal route): a step onto plain ground (not tall grass, water, a door, a ledge, an arrow floor) rolls this table when rand8 < 4 (4/256 per step).
+@open_rate 4
+# Roaming wild creatures (contract 55, rollout in 63): 3 creatures of this table wander the open ground (not the tall grass); touching one starts that wild battle.
+@roam 3 table=grass period=1800
+@spawn cenit 11 26 NE
+@legend
+  .  tile=lawn                      # mowed lawn (3 variants)
+  =  tile=sidewalk                  # the road and the walks (2 variants)
+  g  tile=tall_grass
+  H  tile=lawn object=hedge         # trimmed hedge (2 variants): the border of the route
+  T  tile=lawn object=tree
+  F  tile=lawn object=picket_i
+  f  tile=lawn object=picket_j
+  M  tile=lawn object=mailbox
+  w  tile=lawn object=flowerbed
+  l  tile=lawn object=lamp
+  n  tile=sidewalk
+  S  tile=lawn object=sign interact=look text=ruta5.sign
+  s  tile=lawn object=sign interact=look text=ruta5.gate.sign
+  D  tile=lawn object=dc_sign interact=look text=ruta5.dc.sign
+  Y  tile=lawn object=fb_house_rival  # the day-care house
+  y  tile=lawn door=fb_house_rival
+  Z  tile=lawn object=fb_house        # the passage hut
+  z  tile=lawn door=fb_house
+  G  tile=sidewalk object=gatehouse   # the closed gate to Ciudad Cenit
+  a  tile=lawn npc=vecino_m id=npc_a face=E text=ruta5.npc.a
+  b  tile=lawn npc=vecino_m id=npc_b face=SW text=ruta5.npc.b
+  q  tile=lawn npc=guardia id=guard2 face=SE script=gate_guard2 show_flag=cenit_gates   # the guard's friend, aside once the gates are open
+  X  tile=sidewalk object=chain_i   # the checkpoint fence beside the open lane
+  W  tile=sidewalk                    # the lane into Ciudad Cenit (north gate)
+  u  tile=sidewalk npc=guardia id=guard face=NE script=gate_guard hide_flag=cenit_gates gate=yes   # the thirsty guard
+  I  tile=lawn hidden=life_spark   # F2 (contract 74): a hidden item
+@grid
+  HHHHHHHHHHHnnHHHHHHHHHHH
+  H..........==..........H
+  H.........S==..........H
+  HT.........==....ggggg.H
+  H..........==.T..ggggg.H
+  H.........l==....gggggTH
+  H.fffffff..==....ggggg.H
+  H.Fw...wF..==....ggggg.H
+  H.F.YY..F..==.b........H
+  HTF.Yy..F..==..........H
+  H.Fw.=.wF..==..........H
+  H.F..=..F..==l........TH
+  H.fff=fffM.==..T.......H
+  H....========..........H
+  H.I...D....==..........H
+  HT......a..==...ZZ.....H
+  H.........l==...Zz.....H
+  H.gggg.....=======.w..TH
+  H.gggg.....==..w..M....H
+  H.ggggTggg.==..........H
+  H.gggg.ggg.==.....gggggH
+  HTgggg.ggg.==.....gggggH
+  H......ggg.==l....gggggH
+  H.gggg.....==.....gggggH
+  H.gggg.....==s....gggggH
+  HTgggg....qu=..........H
+  HHHHHHHHHHH=XGGHHHHHHHHH
+  HHHHHHHHHHHWXGGHHHHHHHHH
+  HHHHHHHHHHHHHHHHHHHHHHHH
+@warp n -> ciudad_marea spawn=south
+@warp y -> guarderia spawn=door
+@warp z -> pasadizo_n spawn=door
+@warp W -> ciudad_cenit spawn=north
+# The thirsty guard: ANY drink of the Neon store opens all the gates (flag 837); he walks aside and his friend (show_flag) greets the hero.
+@script gate_guard npc
+    npc_face_hero guard
+    jnf badge_toxina nobadge
+    say cenit.guard.thirsty
+    has_item spring_water 0
+    jv 0 1 d_water
+    has_item fizzy_pop 0
+    jv 0 1 d_soda
+    has_item citrus_cooler 0
+    jv 0 1 d_lemon
+    say cenit.guard.none
+    end
+  d_water:
+    item_var 0 spring_water
+    take_item spring_water 1
+    jmp thanks
+  d_soda:
+    item_var 0 fizzy_pop
+    take_item fizzy_pop 1
+    jmp thanks
+  d_lemon:
+    item_var 0 citrus_cooler
+    take_item citrus_cooler 1
+  thanks:
+    sfx item
+    say cenit.guard.give
+    say cenit.guard.open
+    npc_walk guard NW 1
+    npc_face guard SE
+    setf cenit_gates
+    end
+  nobadge:
+    say cenit.guard.badge
+    end
+@end
+@script gate_guard2 npc
+    npc_face_hero guard2
+    say cenit.guard.after
+@end
+

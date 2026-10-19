@@ -1,0 +1,36 @@
+# TEST FIXTURE (id 223): the C9 systems (contract section 50): the lobby of a two-room mini league (maps/test_c9sys_b.map = 224) with the PC terminal (the Hall of Legacy entry of its menu) and the way
+# in. Not part of the game: reached only by the host harness (tools/host_world, `make c9sys`). Entering the lobby remembers it as the respawn point (`respawn door`, what a Centro's nurse does), so a blackout in
+# the rooms comes back here.
+@map test_c9sys
+@size 14 10
+@interior no
+@bg 0
+@fill dirt_a
+@spawn start 6 7 NE
+@spawn door 6 7 NE
+@legend
+  .  tile=dirt_a
+  W  tile=dirt_a solid=yes
+  P  tile=dirt_a object=pc interact=look script=pc_box
+  N  tile=dirt_a npc=vecino text=c9sys.person face=S
+  e  tile=dirt_a
+@warp e -> test_c9sys_b spawn=enter1 oneway
+@grid
+  WWWWWWeWWWWWWW
+  W............W
+  W............W
+  W............W
+  W...........PW
+  W............W
+  W.....N......W
+  W............W
+  W............W
+  WWWWWWWWWWWWWW
+# the Centro's rule: this lobby is where a blackout sends the hero back to
+@script lobby on_enter
+    respawn door
+@end
+# The PC terminal: the box screen of the PC plugin, then the Hall of Legacy browser when its menu asked for it (mapc's `pc` does both, contract 50.4).
+@script pc_box interact
+    pc
+@end

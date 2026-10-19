@@ -1,0 +1,1472 @@
+# Nucleo moves. Name text key = gl.mv.<id>. Move id = position in this file (1-based; 0 = none).
+#
+# type      type id from types.toml
+# power     0 = status move
+# acc       percent 1..100 (stored 0..255: pct*255/100, so 100 -> 255)
+# pp        base PP
+# effect    none | stat_tgt | stat_self | status_tgt | focus | screen
+#             stat_tgt/stat_self: stat = atk|def|spd|spc|acc|eva, stages = signed delta
+#             status_tgt: status = sleep|poison|burn|freeze|paralysis|confusion
+#             screen: screen = reflect|light_screen
+#             flinch (secondary effect on the target): effect = "flinch"
+# chance    percent for the effect (omit = always; secondary effects of damaging moves use e.g. 10)
+# priority  -6..+6 (default 0)
+# high_crit / never_miss  booleans
+# Contract 64 effects (multi fixed ohko recoil drain heal suicide charge lock flee stat_reset mist leech counter store_dmg substitute move_call): `arg0` / `arg1` bytes, documented at the block that
+# starts with "Contract 64" below.
+
+[bump]
+type = "normal"
+power = 40
+acc = 100
+pp = 35
+
+[claw]
+type = "normal"
+power = 40
+acc = 100
+pp = 35
+
+[growl]
+type = "normal"
+power = 0
+acc = 100
+pp = 40
+effect = "stat_tgt"
+stat = "atk"
+stages = -1
+
+[wag]
+type = "normal"
+power = 0
+acc = 100
+pp = 30
+effect = "stat_tgt"
+stat = "def"
+stages = -1
+
+[ember]
+type = "fire"
+power = 40
+acc = 100
+pp = 25
+effect = "status_tgt"
+status = "burn"
+chance = 10
+
+[jet]
+type = "water"
+power = 40
+acc = 100
+pp = 25
+
+[lash]
+type = "grass"
+power = 45
+acc = 100
+pp = 25
+
+# goes first
+[quick]
+type = "normal"
+power = 40
+acc = 100
+pp = 30
+priority = 1
+
+# high critical-hit ratio
+[slash]
+type = "normal"
+power = 55
+acc = 100
+pp = 25
+high_crit = true
+
+[spore]
+type = "grass"
+power = 0
+acc = 75
+pp = 15
+effect = "status_tgt"
+status = "sleep"
+
+[venomdust]
+type = "poison"
+power = 0
+acc = 75
+pp = 35
+effect = "status_tgt"
+status = "poison"
+
+# own Defense +1
+[harden]
+type = "normal"
+power = 0
+acc = 100
+pp = 30
+effect = "stat_self"
+stat = "def"
+stages = 1
+
+# may make the target flinch
+[bite]
+type = "normal"
+power = 60
+acc = 100
+pp = 25
+effect = "flinch"
+chance = 10
+
+# water bubbles: 33% to lower the target's Speed one stage (secondary effect, value 85)
+[bubble]
+type = "water"
+power = 20
+acc = 100
+pp = 30
+effect = "stat_tgt"
+stat = "spd"
+stages = -1
+chance = 33
+
+# (Gust: 40 power, 35 PP): the Flying move of the Route 1 songbird. Physical (the first 8 types are).
+[flap]
+type = "flying"
+power = 40
+acc = 100
+pp = 35
+
+# lowers the target's accuracy one stage
+[dustkick]
+type = "normal"
+power = 0
+acc = 100
+pp = 15
+effect = "stat_tgt"
+stat = "acc"
+stages = -1
+
+# ======================================================================================================================
+# M4-E moves (appended: ids 17+; never reorder, saves store move ids). Every one uses an effect the engine already had.
+# ======================================================================================================================
+
+# lowers the target's Speed one stage
+[silkshot]
+type = "bug"
+power = 0
+acc = 95
+pp = 40
+effect = "stat_tgt"
+stat = "spd"
+stages = -1
+
+# 20% poison (chance 51/256 in)
+[needle]
+type = "poison"
+power = 15
+acc = 100
+pp = 35
+effect = "status_tgt"
+status = "poison"
+chance = 20
+
+# (one hit of 50 instead of two of 25): 20% poison
+[lance]
+type = "bug"
+power = 50
+acc = 100
+pp = 20
+effect = "status_tgt"
+status = "poison"
+chance = 20
+
+# (PP 30; fixed here: crit rate x4)
+[focus]
+type = "normal"
+power = 0
+acc = 100
+pp = 30
+effect = "focus"
+
+# 10% paralysis
+[zap]
+type = "electric"
+power = 40
+acc = 100
+pp = 30
+effect = "status_tgt"
+status = "paralysis"
+chance = 10
+
+# paralysis
+[numb]
+type = "electric"
+power = 0
+acc = 100
+pp = 20
+effect = "status_tgt"
+status = "paralysis"
+
+# 10% paralysis
+[arc]
+type = "electric"
+power = 90
+acc = 100
+pp = 15
+effect = "status_tgt"
+status = "paralysis"
+chance = 10
+
+# own Speed +2
+[sprint]
+type = "normal"
+power = 0
+acc = 100
+pp = 30
+effect = "stat_self"
+stat = "spd"
+stages = 2
+
+# (a stronger flyer than flap)
+[swoop]
+type = "flying"
+power = 60
+acc = 100
+pp = 20
+
+# heavy bite, 10% flinch
+[chomp]
+type = "normal"
+power = 80
+acc = 90
+pp = 15
+effect = "flinch"
+chance = 10
+
+# own Defense +1
+[curl]
+type = "normal"
+power = 0
+acc = 100
+pp = 40
+effect = "stat_self"
+stat = "def"
+stages = 1
+
+# (accuracy was 65; 90 here so Route 3 wilds are not a coin flip)
+[pebble]
+type = "rock"
+power = 50
+acc = 90
+pp = 15
+
+# (Ground is physical)
+[rumble]
+type = "ground"
+power = 100
+acc = 100
+pp = 10
+
+# heavy normal hit
+[flatten]
+type = "normal"
+power = 80
+acc = 85
+pp = 20
+
+# the stone mace-tail of the gym boss: rock hit
+[mace]
+type = "rock"
+power = 65
+acc = 90
+pp = 15
+
+# paralysis powder
+[pollen]
+type = "grass"
+power = 0
+acc = 75
+pp = 30
+effect = "status_tgt"
+status = "paralysis"
+
+# (Grass special instead of Psychic): 10% confusion
+[glimmer]
+type = "grass"
+power = 55
+acc = 100
+pp = 20
+effect = "status_tgt"
+status = "confusion"
+chance = 10
+
+# high critical-hit ratio
+[rack]
+type = "grass"
+power = 55
+acc = 95
+pp = 25
+high_crit = true
+
+# antler bloom-class heavy grass hit of the final stag
+[bloom]
+type = "grass"
+power = 100
+acc = 100
+pp = 10
+
+# 10% burn
+[mane]
+type = "fire"
+power = 95
+acc = 100
+pp = 15
+effect = "status_tgt"
+status = "burn"
+chance = 10
+
+# surf-class heavy water hit of the final turtle
+[wavewall]
+type = "water"
+power = 90
+acc = 100
+pp = 15
+
+# ======================================================================================================================
+# C2-S1 moves (appended: ids 38+): the targets of the first technique discs (contract 29).
+# ======================================================================================================================
+[haymaker]
+type = "normal"
+power = 80
+acc = 85
+pp = 20
+
+# own Evasion +1 (a disc; PP 15)
+[mirage]
+type = "normal"
+power = 0
+acc = 100
+pp = 15
+effect = "stat_self"
+stat = "eva"
+stages = 1
+
+# ======================================================================================================================
+# C2 moves (appended: ids 40+): what the Chapter 2 learnsets need (contract 31). Every one uses an effect the engine already had.
+# ======================================================================================================================
+# confuses (accuracy 55)
+[sonar]
+type = "normal"
+power = 0
+acc = 55
+pp = 20
+effect = "status_tgt"
+status = "confusion"
+
+# puts the target to sleep (accuracy 55)
+[lullaby]
+type = "normal"
+power = 0
+acc = 55
+pp = 15
+effect = "status_tgt"
+status = "sleep"
+
+[peck]
+type = "flying"
+power = 35
+acc = 100
+pp = 35
+
+# Psychic 50, 10% confusion (Confusion: 25 PP)
+[reverb]
+type = "psychic"
+power = 50
+acc = 100
+pp = 25
+effect = "status_tgt"
+status = "confusion"
+chance = 10
+
+# paralysis (30 PP)
+[coldeye]
+type = "normal"
+power = 0
+acc = 75
+pp = 30
+effect = "status_tgt"
+status = "paralysis"
+
+# Poison 40, 33% to lower the target's Defense one stage
+[sourspit]
+type = "poison"
+power = 40
+acc = 100
+pp = 30
+effect = "stat_tgt"
+stat = "def"
+stages = -1
+chance = 33
+
+# Normal 65 (the quill hedgehog's charge)
+[spikeram]
+type = "normal"
+power = 65
+acc = 100
+pp = 25
+
+# without the trap: Normal 35, 90% (Wrap 15 / 85% but it held the target)
+[squeeze]
+type = "normal"
+power = 35
+acc = 90
+pp = 20
+
+# the target's Defense -2 (40 PP)
+[shrill]
+type = "normal"
+power = 0
+acc = 85
+pp = 40
+effect = "stat_tgt"
+stat = "def"
+stages = -2
+
+# without the drain
+[sapbite]
+type = "bug"
+power = 40
+acc = 100
+pp = 15
+
+# Flying 80
+[spearpeck]
+type = "flying"
+power = 80
+acc = 100
+pp = 20
+
+# Water 65, 33% Speed -1
+[glassbeam]
+type = "water"
+power = 65
+acc = 100
+pp = 20
+effect = "stat_tgt"
+stat = "spd"
+stages = -1
+chance = 33
+
+# Psychic 65, 10% confusion
+[dreamray]
+type = "psychic"
+power = 65
+acc = 100
+pp = 20
+effect = "status_tgt"
+status = "confusion"
+chance = 10
+
+# Psychic 90, 33% Special -1 (one Special stat)
+[mindstorm]
+type = "psychic"
+power = 90
+acc = 100
+pp = 10
+effect = "stat_tgt"
+stat = "spc"
+stages = -1
+chance = 33
+
+# ======================================================================================================================
+# C3 moves (appended: ids 54+): what the Chapter 3 learnsets need (contract 34). Every one uses an effect the engine already had.
+# ======================================================================================================================
+# the first Fighting move
+[chop]
+type = "fighting"
+power = 50
+acc = 100
+pp = 25
+high_crit = true
+
+[trip]
+type = "fighting"
+power = 50
+acc = 90
+pp = 20
+effect = "flinch"
+chance = 30
+
+[clinch]
+type = "fighting"
+power = 80
+acc = 80
+pp = 25
+effect = "recoil"
+arg0 = 4
+
+[ramhead]
+type = "normal"
+power = 70
+acc = 100
+pp = 15
+effect = "flinch"
+chance = 30
+
+# (contract 82): Dig is the Fly effect: it digs in on the first turn (EV_MSG 25, "dug a hole!"), nothing but a never-miss move (Swift) reaches it, and it strikes on the second
+[burrow]
+type = "ground"
+power = 100
+acc = 100
+pp = 10
+effect = "charge"
+arg0 = 1
+arg1 = 25
+
+# never misses
+[streak]
+type = "normal"
+power = 60
+acc = 100
+pp = 20
+never_miss = true
+
+# halves the special damage the user's side takes (Light Veil: Psychic, 30 PP)
+[veil]
+type = "psychic"
+power = 0
+acc = 100
+pp = 30
+effect = "screen"
+screen = "light_screen"
+
+# own Attack +2 (PP 30)
+[sharpen]
+type = "normal"
+power = 0
+acc = 100
+pp = 30
+effect = "stat_self"
+stat = "atk"
+stages = 2
+
+# (contract 82): coins scatter at every hit, 2 x the user's level, paid to the player at the end of a won battle
+[pilfer]
+type = "normal"
+power = 40
+acc = 100
+pp = 20
+effect = "coin_hit"
+
+# ----------------------------------------------------------------------------------------------------------------------
+# C4 moves (appended: ids 63+; contract 39). The first Ghost moves (the sheet ghosts), a second Fire move, the Stone Sling of the eggshell bird, Smog and the grass Disc 05's move
+# (no drain effect in the engine: plain damage, like Pilfer without the coins and Shade without its fixed damage).
+# ----------------------------------------------------------------------------------------------------------------------
+# 30 % paralysis
+[wisplick]
+type = "ghost"
+power = 30
+acc = 100
+pp = 30
+effect = "status_tgt"
+status = "paralysis"
+chance = 30
+
+[hollowgaze]
+type = "ghost"
+power = 0
+acc = 100
+pp = 10
+effect = "status_tgt"
+status = "confusion"
+
+# (damage = the user's level since contract 64)
+[shade]
+type = "ghost"
+power = 1
+acc = 100
+pp = 15
+effect = "fixed"
+arg0 = 0
+
+[drowse]
+type = "psychic"
+power = 0
+acc = 60
+pp = 20
+effect = "status_tgt"
+status = "sleep"
+
+[cinderspin]
+type = "fire"
+power = 15
+acc = 70
+pp = 15
+effect = "lock"
+arg0 = 1
+
+# 10 % flinch
+[slingstone]
+type = "ground"
+power = 65
+acc = 85
+pp = 20
+effect = "flinch"
+chance = 10
+
+# 40 % poison
+[fumes]
+type = "poison"
+power = 20
+acc = 70
+pp = 20
+effect = "status_tgt"
+status = "poison"
+chance = 40
+
+# (Disc 05; heals half the damage dealt since contract 64)
+[siphon]
+type = "grass"
+power = 40
+acc = 100
+pp = 15
+effect = "drain"
+arg0 = 2
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# C5a (contract 47): the moves of the C5 species., without the effects the engine lacks (Mega Beam's recharge, Wyrm Rage's fixed damage, Toxic's escalating poison).
+# ----------------------------------------------------------------------------------------------------------------------
+# does nothing
+[flop]
+type = "normal"
+power = 0
+acc = 100
+pp = 40
+
+[torrent]
+type = "water"
+power = 120
+acc = 80
+pp = 5
+
+[clubsmash]
+type = "water"
+power = 90
+acc = 85
+pp = 10
+high_crit = true
+
+[pincer]
+type = "normal"
+power = 55
+acc = 100
+pp = 30
+
+# 30 % poison
+[ooze]
+type = "poison"
+power = 65
+acc = 100
+pp = 20
+effect = "status_tgt"
+status = "poison"
+chance = 30
+
+[acidveil]
+type = "poison"
+power = 0
+acc = 100
+pp = 40
+effect = "stat_self"
+stat = "def"
+stages = 2
+
+# (Disc 06): since contract 73 a poison that grows every turn (N / 16 of the max HP, N = 1, 2, 3 ...; `toxic = true` -> arg1 1)
+[toxin]
+type = "poison"
+power = 0
+acc = 85
+pp = 10
+effect = "status_tgt"
+status = "poison"
+toxic = true
+
+[daydream]
+type = "psychic"
+power = 0
+acc = 100
+pp = 20
+effect = "stat_self"
+stat = "spc"
+stages = 2
+
+# 30 % paralysis
+[heavyslam]
+type = "normal"
+power = 85
+acc = 100
+pp = 15
+effect = "status_tgt"
+status = "paralysis"
+chance = 30
+
+# 150 power, and since contract 73 the user must recharge the next turn (unless it KOs the target or breaks its decoy)
+[megabeam]
+type = "normal"
+power = 150
+acc = 90
+pp = 5
+effect = "recharge"
+
+# 40 fixed damage since contract 64 (the first Dragon move)
+[wyrmrage]
+type = "dragon"
+power = 1
+acc = 100
+pp = 10
+effect = "fixed"
+arg0 = 40
+
+# ----------------------------------------------------------------------------------------------------------------------
+# C6 (contract 49): the first Ice moves, the Fighting dojo's kicks and punches, a Psychic wave (Disc 07). Ids 82 .. 91 (positions).
+# ----------------------------------------------------------------------------------------------------------------------
+# 10 % freeze
+[frostbeam]
+type = "ice"
+power = 95
+acc = 100
+pp = 10
+effect = "status_tgt"
+status = "freeze"
+chance = 10
+
+# 30 % flinch
+[rollkick]
+type = "fighting"
+power = 60
+acc = 85
+pp = 15
+effect = "flinch"
+chance = 30
+
+# a miss (or an immune target) costs the user 1 HP (contract 73)
+[jumpkick]
+type = "fighting"
+power = 70
+acc = 95
+pp = 25
+effect = "crash"
+
+# a miss (or an immune target) costs the user 1 HP (contract 73)
+[highkick]
+type = "fighting"
+power = 85
+acc = 90
+pp = 20
+effect = "crash"
+
+[megakick]
+type = "normal"
+power = 120
+acc = 75
+pp = 5
+
+# Attack +1
+[meditate]
+type = "normal"
+power = 0
+acc = 100
+pp = 40
+effect = "stat_self"
+stat = "atk"
+stages = 1
+
+# 10 % burn
+[firefist]
+type = "fire"
+power = 75
+acc = 100
+pp = 15
+effect = "status_tgt"
+status = "burn"
+chance = 10
+
+# 10 % freeze
+[icefist]
+type = "ice"
+power = 75
+acc = 100
+pp = 15
+effect = "status_tgt"
+status = "freeze"
+chance = 10
+
+# 10 % paralysis
+[bolfist]
+type = "electric"
+power = 75
+acc = 100
+pp = 15
+effect = "status_tgt"
+status = "paralysis"
+chance = 10
+
+# (contract 82): random damage, 1 .. 1.5 x the user's level (a foe may do 0); `fixed` arg0 254; the type immunity stays. Disc 07
+[mindwave]
+type = "psychic"
+power = 1
+acc = 80
+pp = 15
+effect = "fixed"
+arg0 = 254
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# C7 (contract 53): the ice / water / fire / electric moves of Routes 19 - 21, Islas Escarcha, Isla Ceniza and the Power Plant.
+# ----------------------------------------------------------------------------------------------------------------------
+# Snow Puff
+[snowpuff]
+type = "ice"
+power = 40
+acc = 100
+pp = 25
+effect = "status_tgt"
+status = "freeze"
+chance = 10
+
+# Aurora Ray
+[auroraray]
+type = "ice"
+power = 65
+acc = 100
+pp = 20
+effect = "stat_tgt"
+stat = "atk"
+stages = -1
+chance = 33
+
+# Blizzard
+[whiteout]
+type = "ice"
+power = 120
+acc = 90
+pp = 5
+effect = "status_tgt"
+status = "freeze"
+chance = 10
+
+# Waterfall
+[cascade]
+type = "water"
+power = 80
+acc = 100
+pp = 15
+effect = "flinch"
+chance = 20
+
+# Inferno (Disc 10)
+[inferno]
+type = "fire"
+power = 120
+acc = 85
+pp = 5
+effect = "status_tgt"
+status = "burn"
+chance = 30
+
+# Thunder
+[stormbolt]
+type = "electric"
+power = 110
+acc = 70
+pp = 10
+effect = "status_tgt"
+status = "paralysis"
+chance = 30
+
+# ======================================================================================================================
+# Contract 64: the missing moves, ids 98 .. 163 (positions).
+# New engine effects (battle plugin only; arg0 / arg1 are the generic move-record bytes, EF_* in reg_gen.h):
+#   multi arg0 = hits (0 = 2 .. 5: 37.5 / 37.5 / 12.5 / 12.5 %); power per hit, one accuracy check, one damage roll
+#   fixed arg0 = damage (0 = the user's level, 255 = half the target's current HP, 254 = Mind Wave: random 1 .. 1.5 x the level, contract 82); power must be non-zero (the damage path runs: type immunity, then the fixed number)
+#   coin_hit     contract 82: a plain damaging move; every hit scatters 2 x the user's level in coins (EV_MSG 26), paid to the player at the end of a battle won or caught
+#   ohko one-hit KO: misses when the user is slower than the target; the accuracy is the 30 % of the table
+#   recoil arg0 = divisor: the user loses damage / arg0 (min 1) after a hit (Rush / Reckless / Submission: 4)
+#   drain arg0 = divisor: the user heals damage / arg0 (min 1); arg1 = 1: only against a sleeping target (Dream Feast)
+#   heal arg0 = 0: half the maximum HP (Recover / Hearty Broth), arg0 = 1: Rest (full HP, cures, sleeps 2 turns)
+#   suicide the user faints after the move (Blow Up / Explosion; the target's Defense counts half)
+#   charge     two turns: the first only charges, the second hits; arg0 bit 0 = invulnerable meanwhile (Fly); arg1 = the EV_MSG index of the charging line
+#   lock arg0 = 0: Rampage / Petal Waltz (2 .. 3 turns, then the user is confused); arg0 = 1: Bind / Wrap / Clamp / Cinder Spin (2 .. 5 turns, the target cannot act)
+#   flee       Teleport / Roar / Whirlwind: a wild battle ends; fails against a trainer
+#   stat_reset, mist, leech (Sap Seed), counter (twice the last Normal / Fighting damage taken this turn), store_dmg (2 .. 3 turns, then twice the damage taken),
+#   substitute (a quarter of the max HP becomes a decoy that takes the hits), move_call (arg0 = 0: a random move, 1: the target's last move)
+# ======================================================================================================================
+[snip]
+type = "normal"
+power = 50
+acc = 95
+pp = 30
+
+# 30 % flinch
+[trample]
+type = "normal"
+power = 65
+acc = 100
+pp = 20
+effect = "flinch"
+chance = 30
+
+# the target's Defense -1
+[scowl]
+type = "normal"
+power = 0
+acc = 100
+pp = 30
+effect = "stat_tgt"
+stat = "def"
+stages = -1
+
+[heave]
+type = "normal"
+power = 80
+acc = 100
+pp = 15
+
+# own Special +1
+[swell]
+type = "normal"
+power = 0
+acc = 100
+pp = 40
+effect = "stat_self"
+stat = "spc"
+stages = 1
+
+# own Defense +1
+[retreat]
+type = "water"
+power = 0
+acc = 100
+pp = 40
+effect = "stat_self"
+stat = "def"
+stages = 1
+
+# own Defense +2
+[wardwall]
+type = "psychic"
+power = 0
+acc = 100
+pp = 30
+effect = "stat_self"
+stat = "def"
+stages = 2
+
+# own Evasion +1
+[shrink]
+type = "normal"
+power = 0
+acc = 100
+pp = 20
+effect = "stat_self"
+stat = "eva"
+stages = 1
+
+# the target's accuracy -1
+[soot]
+type = "normal"
+power = 0
+acc = 100
+pp = 20
+effect = "stat_tgt"
+stat = "acc"
+stages = -1
+
+[warpgaze]
+type = "psychic"
+power = 0
+acc = 80
+pp = 15
+effect = "stat_tgt"
+stat = "acc"
+stages = -1
+
+[glint]
+type = "normal"
+power = 0
+acc = 70
+pp = 20
+effect = "stat_tgt"
+stat = "acc"
+stages = -1
+
+# 33 % Speed -1
+[tendril]
+type = "normal"
+power = 10
+acc = 100
+pp = 35
+effect = "stat_tgt"
+stat = "spd"
+stages = -1
+chance = 33
+
+[toxcloud]
+type = "poison"
+power = 0
+acc = 55
+pp = 40
+effect = "status_tgt"
+status = "poison"
+
+[sweetkiss]
+type = "normal"
+power = 0
+acc = 75
+pp = 10
+effect = "status_tgt"
+status = "sleep"
+
+# (the 100 % one; `spore` is Drowsy Dust)
+[sporecloud]
+type = "grass"
+power = 0
+acc = 100
+pp = 15
+effect = "status_tgt"
+status = "sleep"
+
+[wobblefist]
+type = "normal"
+power = 70
+acc = 100
+pp = 10
+
+[landslide]
+type = "rock"
+power = 75
+acc = 90
+pp = 10
+
+[trinity]
+type = "normal"
+power = 80
+acc = 100
+pp = 10
+
+[mirrorwall]
+type = "psychic"
+power = 0
+acc = 100
+pp = 20
+effect = "screen"
+screen = "reflect"
+
+[shellbomb]
+type = "normal"
+power = 100
+acc = 75
+pp = 10
+
+# (contract 73): once used the creature is locked into it (no menu, no PP) and its Attack rises by one stage each time it is hit
+[fury]
+type = "normal"
+power = 20
+acc = 100
+pp = 20
+effect = "rage"
+
+# 20 fixed damage
+[shockpulse]
+type = "normal"
+power = 1
+acc = 90
+pp = 20
+effect = "fixed"
+arg0 = 20
+
+# damage = the user's level
+[leveltoss]
+type = "fighting"
+power = 1
+acc = 100
+pp = 20
+effect = "fixed"
+arg0 = 0
+
+# half the target's current HP
+[fangbreak]
+type = "normal"
+power = 1
+acc = 90
+pp = 10
+effect = "fixed"
+arg0 = 255
+
+# one-hit KO
+[shear]
+type = "normal"
+power = 1
+acc = 30
+pp = 5
+effect = "ohko"
+
+[augerhorn]
+type = "normal"
+power = 1
+acc = 30
+pp = 5
+effect = "ohko"
+
+[chasm]
+type = "ground"
+power = 1
+acc = 30
+pp = 5
+effect = "ohko"
+
+# 2 .. 5 hits
+[twinslap]
+type = "normal"
+power = 15
+acc = 85
+pp = 10
+effect = "multi"
+
+[meteorfist]
+type = "normal"
+power = 18
+acc = 85
+pp = 15
+effect = "multi"
+
+[pecking]
+type = "normal"
+power = 15
+acc = 85
+pp = 20
+effect = "multi"
+
+[needlevolley]
+type = "bug"
+power = 14
+acc = 85
+pp = 20
+effect = "multi"
+
+[quillshot]
+type = "normal"
+power = 20
+acc = 100
+pp = 15
+effect = "multi"
+
+[pelt]
+type = "normal"
+power = 15
+acc = 85
+pp = 20
+effect = "multi"
+
+[rakeswipe]
+type = "normal"
+power = 18
+acc = 80
+pp = 15
+effect = "multi"
+
+# exactly 2 hits
+[twinkick]
+type = "fighting"
+power = 30
+acc = 100
+pp = 30
+effect = "multi"
+arg0 = 2
+
+# exactly 2 hits
+[bonespin]
+type = "ground"
+power = 50
+acc = 90
+pp = 10
+effect = "multi"
+arg0 = 2
+
+# recoil 1/4
+[slamrush]
+type = "normal"
+power = 90
+acc = 85
+pp = 20
+effect = "recoil"
+arg0 = 4
+
+# recoil 1/4
+[reckless]
+type = "normal"
+power = 100
+acc = 100
+pp = 15
+effect = "recoil"
+arg0 = 4
+
+# charges one turn (EV_MSG 2)
+[cyclone]
+type = "normal"
+power = 80
+acc = 75
+pp = 10
+effect = "charge"
+arg1 = 2
+
+# charges high in the air (EV_MSG 3), cannot be hit meanwhile
+[skyleap]
+type = "flying"
+power = 70
+acc = 95
+pp = 15
+effect = "charge"
+arg0 = 1
+arg1 = 3
+
+# (EV_MSG 4)
+[headlong]
+type = "normal"
+power = 100
+acc = 100
+pp = 15
+effect = "charge"
+arg1 = 4
+
+# (EV_MSG 5)
+[zenithdive]
+type = "flying"
+power = 140
+acc = 90
+pp = 5
+effect = "charge"
+arg1 = 5
+
+# 2 .. 3 turns, then confused
+[rampage]
+type = "normal"
+power = 90
+acc = 100
+pp = 20
+effect = "lock"
+arg0 = 0
+
+[petalwaltz]
+type = "grass"
+power = 70
+acc = 100
+pp = 20
+effect = "lock"
+arg0 = 0
+
+# 2 .. 5 turns, the target cannot act
+[cinch]
+type = "normal"
+power = 15
+acc = 75
+pp = 20
+effect = "lock"
+arg0 = 1
+
+[coil]
+type = "normal"
+power = 15
+acc = 85
+pp = 20
+effect = "lock"
+arg0 = 1
+
+[snapshell]
+type = "water"
+power = 35
+acc = 75
+pp = 10
+effect = "lock"
+arg0 = 1
+
+# stores the damage taken for 2 .. 3 turns, then returns twice as much
+[brood]
+type = "normal"
+power = 0
+acc = 100
+pp = 10
+effect = "store_dmg"
+
+# heals half the damage dealt
+[sip]
+type = "grass"
+power = 20
+acc = 100
+pp = 20
+effect = "drain"
+arg0 = 2
+
+# only against a sleeping target
+[nightmeal]
+type = "psychic"
+power = 100
+acc = 100
+pp = 15
+effect = "drain"
+arg0 = 2
+arg1 = 1
+
+[seedleech]
+type = "grass"
+power = 0
+acc = 90
+pp = 10
+effect = "leech"
+
+# half the maximum HP
+[mend]
+type = "normal"
+power = 0
+acc = 100
+pp = 20
+effect = "heal"
+arg0 = 0
+
+[hearty]
+type = "normal"
+power = 0
+acc = 100
+pp = 10
+effect = "heal"
+arg0 = 0
+
+# full HP and cured, but asleep for 2 turns
+[nap]
+type = "psychic"
+power = 0
+acc = 100
+pp = 10
+effect = "heal"
+arg0 = 1
+
+[blowup]
+type = "normal"
+power = 130
+acc = 100
+pp = 5
+effect = "suicide"
+
+[detonate]
+type = "normal"
+power = 170
+acc = 100
+pp = 5
+effect = "suicide"
+
+[blink]
+type = "psychic"
+power = 0
+acc = 100
+pp = 20
+effect = "flee"
+
+[bellow]
+type = "normal"
+power = 0
+acc = 100
+pp = 20
+effect = "flee"
+
+[gale]
+type = "normal"
+power = 0
+acc = 85
+pp = 20
+effect = "flee"
+
+# every stat change of both sides is undone
+[whiteveil]
+type = "ice"
+power = 0
+acc = 100
+pp = 30
+effect = "stat_reset"
+
+# the user's stats cannot be lowered by the foe
+[frostmist]
+type = "ice"
+power = 0
+acc = 100
+pp = 30
+effect = "mist"
+
+# goes last, returns twice the Normal / Fighting damage taken this turn
+[retort]
+type = "fighting"
+power = 1
+acc = 100
+pp = 20
+priority = -1
+effect = "counter"
+
+# a random move
+[wildcard]
+type = "normal"
+power = 0
+acc = 100
+pp = 10
+effect = "move_call"
+arg0 = 0
+
+# the target's last move
+[parrot]
+type = "flying"
+power = 0
+acc = 100
+pp = 20
+effect = "move_call"
+arg0 = 1
+
+# (contract 73): the player picks one of the target's moves in a menu (the foe takes one at random); it replaces Echoing in its slot until the battle ends (the PP stay)
+[echoing]
+type = "normal"
+power = 0
+acc = 100
+pp = 10
+effect = "move_call"
+arg0 = 2
+
+[decoy]
+type = "normal"
+power = 0
+acc = 100
+pp = 10
+effect = "substitute"
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Contract 73: the three moves the engine could not do before. Ids 164 .. 166.
+# ----------------------------------------------------------------------------------------------------------------------
+# a random move of the target cannot be used for 1 .. 8 of its turns (fails when it has one disabled already)
+[lockout]
+type = "normal"
+power = 0
+acc = 55
+pp = 20
+effect = "disable"
+
+# the user copies the target's picture, types, four moves (5 PP each), Atk / Def / Spd / Spc and stat stages until it is switched out (only Foldling and Genesa learn it)
+[refold]
+type = "normal"
+power = 0
+acc = 100
+pp = 10
+effect = "transform"
+
+# the user takes the target's types (fails against a creature out of reach)
+[typecast]
+type = "normal"
+power = 0
+acc = 100
+pp = 30
+effect = "convert"

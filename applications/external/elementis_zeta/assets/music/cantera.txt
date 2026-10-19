@@ -1,0 +1,25 @@
+title Pueblo Cantera - quarry town: three hammer strikes and a leap (D dorian), a rail chug between, a brass-like call; metal and rock hits on every beat
+tempo 108
+vol 215
+meter 4/4
+inst block v=255,255,210,150
+inst chug v=255,200,140,100,80
+inst brass att=1 vib=1 vdelay=6 vper=16 slow lvl=0.9
+inst clang drum=a6 v=255,200 d=0,-6
+inst rock drum=g5 v=255,170,90 d=0,-35,-70
+l8
+@block o5
+# --- A: the hammer tune (Dm C Dm G), twice
+[ !clang:d d !rock:d a !clang:f f !rock:f o6 c o5 |
+  !clang:c c !rock:c g !clang:e e !rock:e o6 c o5 |
+  !clang:d d !rock:d a !clang:f f !rock:f o6 c o5 |
+  !clang:g g !rock:g o6 d o5 !clang:b b !rock:b o6 g o5 | ]2
+# --- the rails
+@chug [ !clang:d d !rock:d d ]4 |
+# --- the call
+@brass d2 f4 a4 |
+o6 c2 o5 g4 e4 |
+d4. f8 a4 o6 d4 |
+o5 b2 a4 g4 |
+# --- the rails again, then the hammer tune
+@chug [ !clang:d d !rock:d d ]4 |

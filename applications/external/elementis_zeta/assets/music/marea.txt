@@ -1,0 +1,28 @@
+title Ciudad Marea - the harbour: a lilting hornpipe in B flat (dotted pairs that sway like a deck), a ship's bell that rings twice, a rope slap on the beat
+tempo 108
+vol 225
+meter 4/4
+inst brass v=255,255,235,210,195
+inst oom v=255,220,170,130
+inst bell drum=g7 v=255,210,165,125,90,60,38,22 d=0,0,0,0,0,0,0,0 slow
+inst rope drum=c6 v=200,110 d=0,-30
+l4
+@brass
+# --- A: the hornpipe (B flat, E flat, F, B flat), an arch up to F and down home
+o5 b-4 b-8. o6 c16 d4 f4 |
+o6 e-4 e-8. d16 c4 o5 b-4 |
+o5 a4 a8. b-16 o6 c4 e-4 |
+o6 d2 !rope:c4 o5 !rope:b-4 |
+o5 b-4 b-8. o6 c16 d4 f4 |
+o6 e-4 e-8. f16 g4 e-4 |
+o6 d4 f8. e-16 d4 c4 |
+@oom o4 b-4 !bell8 !bell8 r4 r8 !rope8 @brass |
+# --- B: the same swing a step up (G minor, E flat, C, F), the bell rings the loop
+o5 g4 g8. a16 b-4 o6 d4 |
+o6 e-4 d8. c16 d4 o5 b-4 |
+o6 c4 c8. d16 e-4 f4 |
+o6 f2. d4 |
+o6 d4 c8. o5 b-16 o6 c4 o5 a4 |
+o5 b-4 o6 c8. d16 e-4 d4 |
+o6 c4 o5 a4 f4 a4 |
+o5 b-2 !bell8 !bell8 r4 |
