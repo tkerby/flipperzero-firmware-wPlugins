@@ -50,6 +50,7 @@
 
 #define LFRFID_APP_RAW_ASK_EXTENSION ".ask.raw"
 #define LFRFID_APP_RAW_PSK_EXTENSION ".psk.raw"
+#define LFRFID_APP_RAW_ASK134_EXTENSION ".ask134.raw"
 
 #define SCREEN_WIDTH         (128)
 #define SCREEN_HEIGHT        (64)
@@ -66,6 +67,7 @@ enum LfRfidCustomEvent {
     LfRfidEventReadSenseCardEnd,
     LfRfidEventReadStartASK,
     LfRfidEventReadStartPSK,
+    LfRfidEventReadStartASK134,
     LfRfidEventReadDone,
     LfRfidEventReadOverrun,
     LfRfidEventReadError,

@@ -252,6 +252,19 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Ham Scanner v1.1 (By Clawzman)](https://github.com/Clawzman/Flipper-HAM-Scanner)
 - Updated: [Ghost ESP v1.8.3 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 - Updated: [PC Monitor USB v2.0 (By DonJulve & TheSainEyereg)](https://github.com/TheSainEyereg/flipper-pc-monitor) `Req: [Backend](https://github.com/DonJulve/Flipper-Zero-PC-Monitor-USB-Backend)`
+- Added: [Key Wizard v1.3 (By vazgen3201)](https://github.com/vazgen3201/flipper-key-wizard)
+- Added: [Taiko Player v0.4 (By ZeroNinx)](https://github.com/ZeroNinx/flipper-zero-taiko-player)
+- Added: [Kota v0.2 (By cobanov)](https://github.com/cobanov/kota)
+- Added: [Coach Watch v1.0 (By alaviation)](https://github.com/alaviation/flipper-coach-watch)
+- Added: [Elementis Zeta v1.0 (By jahziel1)](https://github.com/jahziel1/Elementis-Zeta)
+- Added: [Telink SWS v0.1 (By ngxson)](https://github.com/ngxson/flipper-telink) `Req: Telink device`
+- Added: [IR Jammer v1.0 (By Clawzman)](https://github.com/Clawzman/flipper-ir-jammer)
+- Added: [Motion Lab v1.0 (By thecoolguy2001)](https://github.com/thecoolguy2001/flipper-motion-lab) `Req: VGM`
+- Added: [PwnPal v3.0 (By mrq1911)](https://github.com/mrq1911/pwnpal) `Req: ESP32`
+- Added: [NFC USB Bridge v0.2 (By Space-Raler)](https://github.com/Space-Raler/nfc_bridge)
+- Added: [Tricorder v0.3 (By rseufert)](https://github.com/rseufert/tricorder)
+- Added: [BLE Beacon v1.0 (By steanlab)](https://github.com/steanlab/BLE-Beacon)
+- RFID: [Better FDX-B (animal chips / implants) reading - Read now also tries 134kHz, the frequency these chips are made for, and weak signals are decoded more reliably. Also available separately in Extra Actions -> `Read FDX-B (Animals)` (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/525dcce0e461d4f4b852a32cc6e3b4d075b50f17)
 
 <a name="release"></a>
 
@@ -420,6 +433,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Drifter v0.2 (By jean-edouard)](https://github.com/jean-edouard/drifter)
 - [DVD Bounce (By schaene)](https://github.com/schaene/Flipper-DVD-Bounce)
 - [DVD Screensaver v1.1 (By shantih19)](https://github.com/shantih19/flipper_dvd_screensaver)
+- [Elementis Zeta v1.0 (By jahziel1)](https://github.com/jahziel1/Elementis-Zeta)
 - [Etch-A-Sketch (By SimplyMinimal)](https://github.com/SimplyMinimal/FlipperZero-Etch-A-Sketch)
 - [Executor Keychain v0.1 (By EstebanFuentealba)](https://github.com/EstebanFuentealba/Flipper-Keyller)
 - [Fart Sound Generator v0.2 (By fgreil)](https://github.com/fgreil/mitzi-windbreak)
@@ -598,6 +612,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Big Clock v1.3 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
 - [BioVault v0.1 (By flamebarke)](https://github.com/flamebarke/biovault-flipper)
 - [BlackJack Counter v1.0 (By grugnoymeme)](https://github.com/grugnoymeme/flipperzero-blackjack_counter-fap)
+- [BLE Beacon v1.0 (By steanlab)](https://github.com/steanlab/BLE-Beacon)
 - [BLE Clicker v1.0 (By random1st)](https://github.com/random1st/flipper-ble-clicker)
 - [BLE Killer v1.1 (By H4lo)](https://github.com/H4lo/flipper_zero_ble_killer) `Req: ESP32`
 - [BLE Scanner v1.0 (By barkandbite)](https://github.com/barkandbite/flipper_suite) `Req: ESP32`
@@ -647,6 +662,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Clock v1.2 (By kowalski7cc)](https://github.com/kowalski7cc/flipperzero-firmware/tree/clock-v1)
 - [Clock-o-Dial v1.1 (By ManeFunction)](https://github.com/ManeFunction/clock-o-dial--fz)
 - [CO2 Logger v0.4 (By harryob2)](https://github.com/harryob2/co2_logger) `Req: MH-Z19`
+- [Coach Watch v1.0 (By alaviation)](https://github.com/alaviation/flipper-coach-watch)
 - [Cocktail Book v0.4 (By resu95)](https://github.com/resu95/flipper_cocktail_book)
 - [Coffee-EEPROM (By wh00hw)](https://github.com/wh00hw/Coffee-EEPROM-FAP) For ethical pentest only.
 - [COGS MyKey v1.1 (By lupettohf)](https://github.com/lupettohf/mykey)
@@ -840,6 +856,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [IR Builder v3.2 (By sanoobis)](https://github.com/sanoobis/IR-Builder)
 - [IR Decoder v1.0 (By prplecake)](https://github.com/prplecake/f0/tree/master/infrared/apps/ir_decoder)
 - [IR Intervalometer v2.2 (By Nitepone)](https://github.com/Nitepone/flipper-intervalometer)
+- [IR Jammer v1.0 (By Clawzman)](https://github.com/Clawzman/flipper-ir-jammer)
 - [IR Pad v1.0 (By tbelbek)](https://github.com/tbelbek/flipper-ir-pad)
 - [IR Remote v1.1 (By Hong5489)](https://github.com/Hong5489/ir_remote)
 - [IR Scope v1.4 (By kallanreed)](https://github.com/kallanreed/unleashed-firmware/tree/dev/applications/external/ir_scope)
@@ -856,8 +873,10 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Kelon AC v1.0 (By xMasterX)](https://github.com/xMasterX/all-the-plugins/tree/213baa6e872d1db597a25d2c16e81406e9634440/non_catalog_apps/kelon_ac_remote)
 - [Kelvinator AC v1.0 (By xMasterX)](https://github.com/xMasterX/all-the-plugins/tree/213baa6e872d1db597a25d2c16e81406e9634440/non_catalog_apps/kelvinator_ac_remote)
 - [Key Copier v1.5 (By zinongli)](https://github.com/zinongli/KeyCopier)
+- [Key Wizard v1.3 (By vazgen3201)](https://github.com/vazgen3201/flipper-key-wizard)
 - [Kindle Click v0.3 (By zuyan9)](https://github.com/zuyan9/Flipper-Zero-Kindle-Click)
 - [KneeFlip Rehab v0.1 (By daryalok)](https://github.com/daryalok/KneeFlip-Rehab)
+- [Kota v0.2 (By cobanov)](https://github.com/cobanov/kota)
 - [KyberWrite v0.1 (By spandox2)](https://github.com/spandox2/KyberWrite)
 - [Lab401/DigiLab v1.1.1 (By lab-401 & tixlegeek)](https://github.com/lab-401/fzDigiLab)
 - [Lab401/Light MESSENGER v1.4.1 (By tixlegeek)](https://github.com/lab-401/fzLightMessenger/tree/main/401lightMessengerApp)
@@ -927,6 +946,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Moon Phases v1.0 (By w84death)](https://github.com/w84death/flipper-zero-apps)
 - [Morse Code v1.3 (By wh00hw)](https://github.com/wh00hw/MorseCodeFAP)
 - [Morse Flipper v0.3.0 (By yo3gnd)](https://github.com/yo3gnd/morse-flipper)
+- [Motion Lab v1.0 (By thecoolguy2001)](https://github.com/thecoolguy2001/flipper-motion-lab) `Req: VGM`
 - [Mouse Jacker for MS Mouse v1.2 (Remixed By coded-with-claws)](https://github.com/coded-with-claws/flipperzero-tools/tree/main/applications_user/mousejacker_ms) `Req: NRF24`
 - [Mouse Jacker v1.2 (By mothball187)](https://github.com/mothball187/flipperzero-nrf24/tree/main/mousejacker) [Pin Out from nocomp/Frog/UberGuidoZ](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/mousejacker) `Req: NRF24`
 - [Mouse Jiggler v1.2 (By Jacob-Tate & ozgunawesome)](https://github.com/Jacob-Tate/flipperzero-firmware/blob/dev/applications/mouse_jiggler/mouse_jiggler.c)
@@ -969,6 +989,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [NFC Stock Manager v0.1.7 (By Endika)](https://github.com/Endika/flipper-nfc-stock)
 - [NFC Tools v1.3 (By wakdev)](https://github.com/wakdev/nfctools-fz)
 - [NFC URL v1.0 (By y-dejong)](https://github.com/y-dejong/nfcurl)
+- [NFC USB Bridge v0.2 (By Space-Raler)](https://github.com/Space-Raler/nfc_bridge)
 - [NFC/RFID Detector v1.4 (By Skorpionm)](https://github.com/flipperdevices/flipperzero-firmware/pull/2795)
 - [Nice O-Code v2.0 (By zero-mega & xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/e6ded9b108454b30a3e710295e6d2b7fd146e188)
 - [Nickname Generator v0.2 (By disaxq)](https://github.com/disaxq/Nickname-Generator)
@@ -1024,6 +1045,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [ProtoPirate v4.1 (By RocketGod-git)](https://protopirate.net/ProtoPirate/ProtoPirate)
 - [ProtoView v1.3 (By antirez)](https://github.com/antirez/protoview)
 - [Pulse BPM v1.0 (By alaviation)](https://github.com/alaviation/flipper-pulse)
+- [PwnPal v3.0 (By mrq1911)](https://github.com/mrq1911/pwnpal) `Req: ESP32`
 - [QR Code v2.1.4 (By bmatcuk)](https://github.com/bmatcuk/flipperzero-qrcode)
 - [QRCode Generator v0.1 (By qw3rtty)](https://github.com/qw3rtty/flipperzero-qrcode-generator)
 - [Quac! v0.10.0 (By rdefeo)](https://github.com/rdefeo/quac)
@@ -1115,10 +1137,12 @@ This software is for experimental purposes only and is not meant for any illegal
 - [T5577 Multiwriter v0.2 (By Leptopt1los)](https://github.com/Leptopt1los/t5577_multiwriter)
 - [T5577 Raw Writer v1.1 (By zinongli)](https://github.com/zinongli/T5577_Raw_Writer)
 - [TagTinker v2.1 (By i12bp8)](https://github.com/i12bp8/TagTinker)
+- [Taiko Player v0.4 (By ZeroNinx)](https://github.com/ZeroNinx/flipper-zero-taiko-player)
 - [TamaConnect v1.0 (By s2013p)](https://github.com/s2013p/TamaConnect)
 - [Tasks v1.3 (By MadLadSquad)](https://github.com/MadLadSquad/FlipperTasks)
 - [TCL AC v1.0 (By xMasterX)](https://github.com/xMasterX/flipper_ac)
 - [Telemeter v1.1 (By alaviation)](https://github.com/alaviation/flipper-telemeter)
+- [Telink SWS v0.1 (By ngxson)](https://github.com/ngxson/flipper-telink) `Req: Telink device`
 - [Temp Sensors Reader 2.1 (By quen0n)](https://github.com/quen0n/Unitemp-Flipper-Zero-Plugin) Req: [See App Readme For Supported Modules](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/applications/external/unitemp/README.md)
 - [Tesla Mod v2.17.0b1 (By hypery11)](https://github.com/hypery11/flipper-tesla-fsd)
 - [Text To SAM v1.5 (By RoundPi)](https://github.com/Round-Pi/flipperzero-text2sam)
@@ -1135,6 +1159,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [TPMS Bridge v1.1 (By VishovVladimir)](https://github.com/VishovVladimir/flipper-zero-tpms)
 - [TPMS Reader v1.0 (By wosk)](https://github.com/wosk/flipperzero-tpms)
 - [Tree Identification v0.0.5 (By fgreil)](https://github.com/fgreil/mitzi-tree-ident)
+- [Tricorder v0.3 (By rseufert)](https://github.com/rseufert/tricorder)
 - [Trident v1.1 (By at0m-b0mb)](https://github.com/at0m-b0mb/Trident-FlipperZero) `Req: 3-in-1 ESP32 + NRF24 + CC1101`
 - [TuLlave v0.1 (By zqu4rtz)](https://github.com/zqu4rtz/FlipperApp-TuLlave)
 - [Tuning Fork v2.0 (By besya)](https://github.com/besya/flipperzero-tuning-fork)
