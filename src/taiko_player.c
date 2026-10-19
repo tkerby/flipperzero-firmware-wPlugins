@@ -321,7 +321,11 @@ static bool play_song(TaikoPlayer* app, const char* path) {
         }
 
         InputEvent event;
-        if(furi_message_queue_get(app->input, &event, furi_ms_to_ticks(2)) == FuriStatusOk) {
+        /* Pausing has already stopped audio and drained GPIO timers. Keep the
+         * static view until input changes it instead of polling/redrawing it.
+         * Every visible input change schedules an immediate frame below. */
+        const uint32_t input_wait = paused ? FuriWaitForever : furi_ms_to_ticks(2);
+        if(furi_message_queue_get(app->input, &event, input_wait) == FuriStatusOk) {
             if(event.key == InputKeyBack && event.type == InputTypeLong) break;
             if(!app->menu.open && (event.key == InputKeyUp || event.key == InputKeyDown)) {
                 if(event.key == InputKeyUp && app->volume < TAIKO_MASTER_VOLUME_MAX)
