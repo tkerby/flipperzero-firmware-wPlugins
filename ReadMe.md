@@ -245,7 +245,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [5Ghost Wifi Lab v2.8.0 (By pingequalab)](https://github.com/pingequalab/5ghost-wifi-lab) `Req: BW15` (Version Only)
 - Updated: [UHF Expansion v1.7 (By mtoolstec)](https://github.com/mtoolstec/fz-uhf-expansion)
 - Updated: [IRONWYRM v1.0.1 (By Atompunk78)](https://github.com/Atompunk78/IRONWYRM)
-- SubGHz: [Nice O-Code - the certificate frame index now changes from press to press as a real remote's does, instead of repeating the same value (By xMasterX)](https://github.com/xMasterX/all-the-plugins/commit/3c6d6fa34f0be567d49a61a4c4c04dc2eb98f2d7)
+- SubGHz: [Nice O-Code - the certificate frame index now changes from press to press as a real remote's does, instead of repeating the same value (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/3c6d6fa34f0be567d49a61a4c4c04dc2eb98f2d7)
 
 <a name="release"></a>
 
