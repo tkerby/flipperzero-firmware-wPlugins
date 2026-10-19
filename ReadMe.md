@@ -242,13 +242,13 @@ This software is for experimental purposes only and is not meant for any illegal
 - SubGHz Remote: [Highlight the sending button and show the last signal's protocol, frequency/modulation, key/serial and counter details (By xMasterX)](https://github.com/DarkFlippers/SubGHz_Remote/commit/df6334cdde0c88e22ab09ba16b12222cfccf834a)
 - SubGHz Remote: [Support hold-to-transmit, full RAW-file clicks and held RAW repeats; remove forced Repeat=200 and correct custom-button/counter cleanup (By xMasterX)](https://github.com/DarkFlippers/SubGHz_Remote/commit/6674983c3e94622bc17f1985c18a2c30ab838861)
 - SubGHz WarDriving: [Resume RX after TX and prevent received/history signals from overwriting an unrelated saved file; reset FAAC programming state (By xMasterX)](https://github.com/xMasterX/all-the-plugins/commit/1aa52e2a30efaf3f16d59abce9803d9b0f769972)
-- Updated: [5Ghost Wifi Lab v2.8.0 (By pingequalab)](https://github.com/pingequalab/5ghost-wifi-lab) `Req: BW15` (Version Only)
 - Updated: [UHF Expansion v1.7 (By mtoolstec)](https://github.com/mtoolstec/fz-uhf-expansion)
 - Updated: [IRONWYRM v1.0.1 (By Atompunk78)](https://github.com/Atompunk78/IRONWYRM)
 - SubGHz: [Nice O-Code - the certificate frame index now changes from press to press as a real remote's does, instead of repeating the same value (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/3c6d6fa34f0be567d49a61a4c4c04dc2eb98f2d7)
 - Updated: [NFC QR Presenter v1.1 (By RogerF5-Security)](https://github.com/RogerF5-Security/NFC_QR_Presenter)
 - Updated: [UID Brute Smarter v1.1 (By fbettag)](https://github.com/fbettag/uid_brute_smarter)
 - Updated: [MTP WIP v1.0 (By Alex4386)](https://github.com/Alex4386/f0-mtp)
+- Updated: [5Ghost Wifi Lab v2.8.1 (By pingequalab)](https://github.com/pingequalab/5ghost-wifi-lab) `Req: BW15` (Version Only)
 
 <a name="release"></a>
 
@@ -552,7 +552,7 @@ This software is for experimental purposes only and is not meant for any illegal
 ## Apps / Plugins
 
 - [24Cxx Programmer v2.1 (By kamylwnb)](https://github.com/kamylwnb/24cxxprog)
-- [5Ghost Wifi Lab v2.8.0 (By pingequalab)](https://github.com/pingequalab/5ghost-wifi-lab) `Req: BW15`
+- [5Ghost Wifi Lab v2.8.1 (By pingequalab)](https://github.com/pingequalab/5ghost-wifi-lab) `Req: BW15`
 - [AC Detector v1.0 (By xMasterX)](https://github.com/xMasterX/all-the-plugins/tree/213baa6e872d1db597a25d2c16e81406e9634440/non_catalog_apps/ac_detector)
 - [AC Fujitsu General Remote v1.0 (By j-stud-res)](https://github.com/j-stud-res/flipper-ac-fujitsu-general-remote)
 - [Access Audit v1.13 (By matthewkayne)](https://github.com/matthewkayne/flipper-access-audit)
