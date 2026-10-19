@@ -27,10 +27,10 @@ This software is for experimental purposes only and is not meant for any illegal
 
 <a name="latest"></a>
 
-## Latest Updates - [PATREON: Latest Release RM1013-0207-28360c1b-Patreon](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
+## Latest Updates - [PATREON: Latest Release RM1019-1847-10035a97-Patreon](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-10-17 21:40 EST`
-- Last Synced/Checked CFW, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-10-17 21:40 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-10-19 18:47 EST`
+- Last Synced/Checked CFW, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-10-19 18:47 EST`
 - Updated: [Maze 3D v7.2 (By k20120509)](https://github.com/k20120509/flipper-release)
 - Updated: [DFC v1.1.1 (By cindersocket)](https://github.com/cindersocket/dfc-flipper)
 - OFW: [Fixes of various valid issues found by code scan #4456 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4456)
