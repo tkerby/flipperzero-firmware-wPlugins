@@ -40,9 +40,12 @@ static inline bool pwnpal_rsn_requires_pmf(const uint8_t* f, int len) {
 static inline bool pwnpal_assoc_pmkid(const uint8_t* f, int len, uint8_t pmkid[16]) {
     if(len < 30) return false;
     int sub = f[0] & 0xf0, ie;
-    if(sub == 0x00) ie = 28;      // assoc-req:   24 hdr + capability(2) + listen interval(2)
-    else if(sub == 0x20) ie = 34; // reassoc-req: + current-AP address(6)
-    else return false;
+    if(sub == 0x00)
+        ie = 28; // assoc-req:   24 hdr + capability(2) + listen interval(2)
+    else if(sub == 0x20)
+        ie = 34; // reassoc-req: + current-AP address(6)
+    else
+        return false;
     int p = ie;
     while(p + 2 <= len) {
         int id = f[p], l = f[p + 1];
@@ -64,7 +67,8 @@ static inline bool pwnpal_assoc_pmkid(const uint8_t* f, int len, uint8_t pmkid[1
                 int so = off + 2 + 4 * a;
                 if(so + 4 > l) break;
                 if(r[so] == 0x00 && r[so + 1] == 0x0f && r[so + 2] == 0xac &&
-                   (r[so + 3] == 2 || r[so + 3] == 4 || r[so + 3] == 6)) { // PSK, FT-PSK, PSK-SHA256
+                   (r[so + 3] == 2 || r[so + 3] == 4 ||
+                    r[so + 3] == 6)) { // PSK, FT-PSK, PSK-SHA256
                     psk = true;
                     break;
                 }
@@ -120,16 +124,20 @@ typedef struct {
 static inline bool pwnpal_eapol_key(const uint8_t* f, int len, int eo, PwnpalEapolKey* out) {
     if(eo < 0 || eo + 6 >= len) return false; // need at least through key_info
     if(f[eo + 1] != 0x03) return false; // 802.1X type must be Key (0x03)
-    for(int i = 0; i < 32; i++) out->nonce[i] = 0;
-    for(int i = 0; i < 8; i++) out->replay[i] = 0;
-    for(int i = 0; i < 16; i++) out->pmkid[i] = 0;
+    for(int i = 0; i < 32; i++)
+        out->nonce[i] = 0;
+    for(int i = 0; i < 8; i++)
+        out->replay[i] = 0;
+    for(int i = 0; i < 16; i++)
+        out->pmkid[i] = 0;
     uint16_t ki = (uint16_t)((f[eo + 5] << 8) | f[eo + 6]);
     out->kdv = (uint8_t)(ki & 0x07); // 1=WPA/RC4 2=WPA2/AES 3=CMAC; 0=SAE etc (not PSK-crackable)
     out->key_ack = (ki & (1 << 7)) != 0;
     out->key_mic = (ki & (1 << 8)) != 0;
     out->secure = (ki & (1 << 9)) != 0;
     out->install = (ki & (1 << 6)) != 0;
-    for(int b = 0; b < 8 && eo + 9 + b < len; b++) out->replay[b] = f[eo + 9 + b];
+    for(int b = 0; b < 8 && eo + 9 + b < len; b++)
+        out->replay[b] = f[eo + 9 + b];
     out->nonce_nz = false;
     for(int b = 0; b < 32 && eo + 17 + b < len; b++) {
         out->nonce[b] = f[eo + 17 + b];
@@ -168,13 +176,17 @@ static inline const uint8_t* pwnpal_ds_bssid(const uint8_t* f, int len, const ui
     bool tods = (f[1] & 0x01) != 0;
     bool fromds = (f[1] & 0x02) != 0;
     if(fromds && !tods) {
-        bssid = f + 10; cli = f + 4; // AP->STA: Addr2=BSSID, Addr1=STA
+        bssid = f + 10;
+        cli = f + 4; // AP->STA: Addr2=BSSID, Addr1=STA
     } else if(!fromds && tods) {
-        bssid = f + 4; cli = f + 10; // STA->AP: Addr1=BSSID, Addr2=STA
+        bssid = f + 4;
+        cli = f + 10; // STA->AP: Addr1=BSSID, Addr2=STA
     } else if(!fromds && !tods) {
-        bssid = f + 16; cli = f + 10; // IBSS: Addr3=BSSID
+        bssid = f + 16;
+        cli = f + 10; // IBSS: Addr3=BSSID
     } else {
-        bssid = f + 10; cli = f + 4; // WDS: fallback
+        bssid = f + 10;
+        cli = f + 4; // WDS: fallback
     }
     if(client) *client = cli;
     return bssid;
@@ -183,10 +195,10 @@ static inline const uint8_t* pwnpal_ds_bssid(const uint8_t* f, int len, const ui
 // Classify a parsed EAPOL-Key as which 4-way message it is: 1/2/3, or 0 for M4 / not a handshake
 // message. Shared so the firmware (loose count) and the app (strict crackable) agree byte-for-byte.
 static inline int pwnpal_eapol_msg(const PwnpalEapolKey* k) {
-    if(k->key_ack && !k->key_mic) return 1;               // M1 (ANonce; may carry a PMKID)
+    if(k->key_ack && !k->key_mic) return 1; // M1 (ANonce; may carry a PMKID)
     if(!k->key_ack && k->key_mic && !k->secure) return 2; // M2 (SNonce + MIC)
-    if(k->key_ack && k->key_mic && k->secure) return 3;   // M3 (ANonce again, replay = M1 + 1)
-    return 0;                                             // M4 (nonce ~zero) or not a 4-way message
+    if(k->key_ack && k->key_mic && k->secure) return 3; // M3 (ANonce again, replay = M1 + 1)
+    return 0; // M4 (nonce ~zero) or not a 4-way message
 }
 
 // --- per-client 4-way tracking (Phase B, two verdicts) --------------------------------------
@@ -201,7 +213,12 @@ static inline int pwnpal_eapol_msg(const PwnpalEapolKey* k) {
 // recent M2 half per (AP, client), plus a sticky "seen" bitmask, and re-check on every frame.
 // Keeping one half of each kind (not every half) can miss a strict pair only under rare
 // same-kind interleavings before the opposite kind arrives; loose is unaffected (sticky bits).
-enum { PWNPAL_M1 = 1, PWNPAL_M2 = 2, PWNPAL_M3 = 4, PWNPAL_PMKID = 8 };
+enum {
+    PWNPAL_M1 = 1,
+    PWNPAL_M2 = 2,
+    PWNPAL_M3 = 4,
+    PWNPAL_PMKID = 8
+};
 
 typedef struct {
     bool used; // slot occupied
@@ -231,7 +248,11 @@ static inline bool pwnpal_rc_dec(const uint8_t* in, uint8_t* out) {
     int borrow = 1;
     for(int i = 7; i >= 0; i--) {
         int v = (int)in[i] - borrow;
-        if(v < 0) { v += 256; borrow = 1; } else borrow = 0;
+        if(v < 0) {
+            v += 256;
+            borrow = 1;
+        } else
+            borrow = 0;
         out[i] = (uint8_t)v;
     }
     return borrow == 0;
@@ -243,16 +264,30 @@ static inline bool pwnpal_rc_dec(const uint8_t* in, uint8_t* out) {
 // which hashcat can't crack -> excluded from strict, but still counted loose); replay is the
 // frame's EAPOL replay counter. Pure + host-tested.
 static inline PwnpalHsVerdict pwnpal_hs_note(
-    PwnpalHs* t, int n, uint8_t ap_idx, const uint8_t* client,
-    int msg, bool pmkid, uint8_t kdv, const uint8_t* replay, uint32_t now, uint32_t window) {
-    PwnpalHsVerdict v = { false, false };
+    PwnpalHs* t,
+    int n,
+    uint8_t ap_idx,
+    const uint8_t* client,
+    int msg,
+    bool pmkid,
+    uint8_t kdv,
+    const uint8_t* replay,
+    uint32_t now,
+    uint32_t window) {
+    PwnpalHsVerdict v = {false, false};
     // find the (ap, client) slot, else a free one, else evict the oldest.
     int slot = -1;
     for(int i = 0; i < n; i++)
-        if(t[i].used && t[i].ap_idx == ap_idx && memcmp(t[i].client, client, 6) == 0) { slot = i; break; }
+        if(t[i].used && t[i].ap_idx == ap_idx && memcmp(t[i].client, client, 6) == 0) {
+            slot = i;
+            break;
+        }
     if(slot < 0)
         for(int i = 0; i < n; i++)
-            if(!t[i].used) { slot = i; break; }
+            if(!t[i].used) {
+                slot = i;
+                break;
+            }
     if(slot < 0) {
         slot = 0;
         for(int i = 1; i < n; i++)

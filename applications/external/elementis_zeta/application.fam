@@ -173,7 +173,8 @@ App(
     name="Elementis Zeta",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="nucleo_app",
-    stack_size=3 * 1024,  # = MAIN_STACK in config.h (the flip loop thread; measured on the overlay as T)
+    stack_size=3 * 1024,
+    # = MAIN_STACK in config.h (the flip loop thread; measured on the overlay as T)
     fap_icon="icon.png",  # 10x10, 1 bit: the Flipper Apps Catalog bundler requires it
     targets=["f7"],
     fap_file_assets="files",

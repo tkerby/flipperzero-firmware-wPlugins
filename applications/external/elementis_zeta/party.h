@@ -11,10 +11,10 @@
 #include "battle_core.h"
 #include "font.h" // tchar
 
-#define PARTY_STATE_VER 5 
-    // 2 (M3-C): + money, the bag and the Registro bits (appended; the v1 prefix is unchanged); 3 (task K): + the names / nicknames as Unicode; 
-    // 4 (C3, contract 33): + the day care (one creature, appended; the v3 prefix is unchanged);                                              
-    // 5 (C4-C, contract 37): + the casino coins (appended; the v4 prefix is unchanged)
+#define PARTY_STATE_VER 5
+// 2 (M3-C): + money, the bag and the Registro bits (appended; the v1 prefix is unchanged); 3 (task K): + the names / nicknames as Unicode;
+// 4 (C3, contract 33): + the day care (one creature, appended; the v3 prefix is unchanged);
+// 5 (C4-C, contract 37): + the casino coins (appended; the v4 prefix is unchanged)
 #define PARTY_STATE_V2_SIZE \
     388 // sizeof(PartyState) at version 2 (the save.bin of format 1 holds exactly that; its prefix is unchanged in v3 and v4)
 #define PARTY_STATE_V3_SIZE \
@@ -65,7 +65,7 @@ typedef struct {
     Party party; // the player's party (Mon = battle_core.h)
     uint8_t
         name_player; // v1/v2: index 0..3 of the chosen preset (gl.name.p0..p3); v3: that index when a suggested name was picked, PARTY_NAME_CUSTOM
-        // when typed, PARTY_NAME_NONE = not chosen (the text is in name_u either way)
+    // when typed, PARTY_NAME_NONE = not chosen (the text is in name_u either way)
     uint8_t name_rival; // same for gl.name.r0..r3
     uint8_t starter; // species of the player's starter (0 none)
     uint8_t rival_starter; // species the rival took (0 none)
@@ -91,7 +91,7 @@ typedef struct {
     uint16_t nick_u
         [BC_MAX_PARTY]
         [PARTY_NICK_CAP]; // per party slot (swapped with the creature); slots >= party.count are empty. Stored creatures
-        // (PC boxes, later) carry the same uint16_t[PARTY_NICK_CAP] field.
+    // (PC boxes, later) carry the same uint16_t[PARTY_NICK_CAP] field.
     // ---- v4 (C3, contract 33): the day care
     DayCare dc;
     // ---- v5 (C4-C, contract 37): the casino coins (0..COINS_MAX; only held with the Coin Purse, casino.h)

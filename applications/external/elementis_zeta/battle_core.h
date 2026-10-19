@@ -54,10 +54,10 @@ typedef struct {
 typedef struct {
     uint8_t
         kind; // IK_CATCH (arg = BALL_*), IK_HEAL (arg = HP restored, 255 = all), IK_CURE (arg = SK_* status it cures),
-        // IK_KEY (arg 0; never usable), C2-S1: IK_REPEL (arg = steps), IK_ROPE (arg 0), IK_DISC (arg = the move it teaches;
-        // the three are used from the bag outside battle only, never in battle), C4-B (contract 36): IK_STONE (arg = ST_* index),
-        // IK_VITAMIN (arg = the Mon.statexp[] index it raises): also bag-only; 0 = none. Contract 64: IK_REVIVE (arg 255 = full HP, 0 = half; a FAINTED target; bag and battle),
-        // IK_RESTORE (Vital Draught: full HP + status cured; bag and battle), IK_CANDY (Growth Seed, bag only), IK_ELIXIR (arg = PP to every move, 255 = all; bag only)
+    // IK_KEY (arg 0; never usable), C2-S1: IK_REPEL (arg = steps), IK_ROPE (arg 0), IK_DISC (arg = the move it teaches;
+    // the three are used from the bag outside battle only, never in battle), C4-B (contract 36): IK_STONE (arg = ST_* index),
+    // IK_VITAMIN (arg = the Mon.statexp[] index it raises): also bag-only; 0 = none. Contract 64: IK_REVIVE (arg 255 = full HP, 0 = half; a FAINTED target; bag and battle),
+    // IK_RESTORE (Vital Draught: full HP + status cured; bag and battle), IK_CANDY (Growth Seed, bag only), IK_ELIXIR (arg = PP to every move, 255 = all; bag only)
     uint8_t arg;
 } ItemDef; // 2 B per item (contract 64: 103 items): the shop price is NOT kept, the shop reads it from items.bin (the u16 at byte 4 of the record; bc_item_price() for the host tests)
 

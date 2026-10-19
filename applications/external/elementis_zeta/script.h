@@ -61,7 +61,7 @@ enum {
     NAT_MON_SHOW = 8, // a = var holding a species: picture popup during the next say / ask
     NAT_MAX =
         24 // table size = the last native id + 1 (ids 1..23: 9..23 are in natives.h / natives_shop.h). The device's table is a const array of NAT_MAX pointers in natives.c
-        // (g_natives, no registration code and no RAM copy: C3-A memory trim): adding a native past it is a compile error until NAT_MAX grows
+    // (g_natives, no registration code and no RAM copy: C3-A memory trim): adding a native past it is a compile error until NAT_MAX grows
 };
 
 // A hook returns NATIVE_DONE (continue now) or NATIVE_YIELD (it pushed a scene: the script resumes

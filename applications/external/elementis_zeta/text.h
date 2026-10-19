@@ -110,6 +110,6 @@ typedef struct {
     int16_t max_px; // widest allowed line in px (TB_W - 2 * text_x)
     int16_t more_x,
         more_y; // top-left of the "more" arrow glyph's cell (GLYPH_MORE): the cell ends
-        // TB_MORE_RIGHT px from the right edge, its top is TB_MORE_MARGIN above the box bottom
+    // TB_MORE_RIGHT px from the right edge, its top is TB_MORE_MARGIN above the box bottom
 } TbGeom;
 const TbGeom* tb_geom(void);

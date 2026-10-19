@@ -48,8 +48,8 @@
 #define LFRFID_APP_FILENAME_EXTENSION        ".rfid"
 #define LFRFID_APP_SHADOW_FILENAME_EXTENSION ".shd"
 
-#define LFRFID_APP_RAW_ASK_EXTENSION ".ask.raw"
-#define LFRFID_APP_RAW_PSK_EXTENSION ".psk.raw"
+#define LFRFID_APP_RAW_ASK_EXTENSION    ".ask.raw"
+#define LFRFID_APP_RAW_PSK_EXTENSION    ".psk.raw"
 #define LFRFID_APP_RAW_ASK134_EXTENSION ".ask134.raw"
 
 #define SCREEN_WIDTH         (128)

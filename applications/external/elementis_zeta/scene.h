@@ -50,7 +50,7 @@ typedef struct SceneCtx {
         stone_to; // C4-B (contract 36): a stone was used from the bag on a creature that evolves with it: the species it becomes (checked by scene_party.c) ...
     uint16_t
         stone_evo; // ... and the hand-over: bits 15..8 the item (given back if the scene cannot open), 7 = 1, 2..0 the party slot; scene_menu.c's update opens the evolution scene
-        // once the bag and party screens are gone (stone_to + stone_evo fit in the padding after `held`: SceneCtx does not grow)
+    // once the bag and party screens are gone (stone_to + stone_evo fit in the padding after `held`: SceneCtx does not grow)
     uint32_t wake_ms; // min ms until a scene wants another update (SCENE_NO_WAKE = none)
     Game* game;
     Frame* frame;

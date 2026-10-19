@@ -22,7 +22,7 @@
 #include "../include/wardrive.h"
 // pure 802.11 parsers shared with the firmware; here they run over the frames we actually save to
 // the pcap, so "crackable" means the saved file will crack (see pwnpal_note_crackable).
-#include "../pwnpal-marauder/pwnpal_frames.h"
+#include "../pwnpal_marauder/pwnpal_frames.h"
 #include "pwnpal_geo.h" // pure geo/identity helpers
 #include "qrcodegen.h"
 #include <storage/storage.h>

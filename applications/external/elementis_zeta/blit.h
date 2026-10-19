@@ -13,7 +13,7 @@ typedef struct {
     uint8_t mbpr; // (w+7)/8
     uint8_t
         flip; // 1: drawn mirrored left <-> right (source column w-1-k lands on destination column k); the top-left
-        // stays where it would be unmirrored. Set by bank_view / hero_view for the folded directions.
+    // stays where it would be unmirrored. Set by bank_view / hero_view for the folded directions.
 } Blit;
 
 // Level (0..3) of source pixel (sx, sy) of a sprite view.
