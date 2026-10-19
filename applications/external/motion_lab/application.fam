@@ -1,0 +1,21 @@
+App(
+    appid="motion_lab",
+    name="Motion Lab",
+    fap_version="1.0",
+    fap_description="Measure motion with the Video Game Module: peak g-force, rotation rate and swing tempo, plus a CSV logger",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="motion_lab_app",
+    stack_size=8 * 1024,
+    fap_icon="motion_lab_10x10.png",
+    fap_category="Tools",
+    fap_author="Monte Walker",
+    fap_weburl="https://github.com/thecoolguy2001/flipper-motion-lab",
+    # Pinned explicitly: ufbt's default source glob is RECURSIVE, so a test/
+    # directory with its own main() would otherwise be compiled into the FAP.
+    sources=[
+        "motion_lab.c",
+        "capture.c",
+        "motion_sensor.c",
+        "sensors/ICM42688P.c",
+    ],
+)
