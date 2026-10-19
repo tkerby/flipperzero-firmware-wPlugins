@@ -1,0 +1,225 @@
+# Build Marauder firmware that includes the `pwnpal` command, for every ESP32
+# board you can hang off a Flipper. Each build is a COMPLETE Marauder image with the
+# extra command added — flash once, get the Marauder GUI + pwnpal both.
+#
+# It clones the Marauder fork, runs pwnpal-marauder/apply_pwnpal.py, and builds
+# with arduino-cli. On a `v*` tag it also builds the Flipper .fap and publishes a
+# GitHub Release with every board image + the fap attached.
+#
+# Board matrix (all defines live in the Feberis fork's configs.h):
+#   feberis-pro / feberis  -> classic ESP32   (VERIFIED on hardware: Feberis Pro)
+#   flipper-devboard       -> official Flipper WiFi devboard, ESP32-S2   (best-effort)
+#   multiboard-s3          -> ESP32-S3 multiboard                        (best-effort)
+#   devboard-pro           -> Marauder Dev Board Pro (Flipper hat), S3   (best-effort)
+# fail-fast is off, so an unsupported board never blocks the others.
+
+name: build-pwnpal
+
+on:
+  workflow_dispatch:
+    inputs:
+      marauder_repo:
+        description: Marauder fork to build (owner/name)
+        default: bpmcircuits/ESP32Marauder_FEBERIS
+      marauder_ref:
+        description: git ref of that fork
+        default: feberis
+  push:
+    # Tags drive releases. No `paths:` here — a tag push has no reliable path diff,
+    # so a path filter would silently build nothing. Use workflow_dispatch for
+    # ad-hoc/test builds off a branch.
+    tags: ["v*"]
+
+env:
+  ESP32_CORE_VER: "2.0.11"
+  ARDUINO_DIRECTORIES_USER: ${{ github.workspace }}/sketchbook
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # best-effort boards (experimental) may fail without failing the run; verified boards must build.
+    continue-on-error: ${{ matrix.board.experimental || false }}
+    strategy:
+      fail-fast: false
+      matrix:
+        board:
+          - name: feberis-pro
+            flag: BPMCIRCUITS_FEBERIS_PRO
+            chip: esp32
+            fqbn: "esp32:esp32:esp32:PartitionScheme=min_spiffs,FlashSize=4M"
+            boot_addr: "0x1000"
+          - name: feberis
+            flag: BPMCIRCUITS_FEBERIS
+            chip: esp32
+            fqbn: "esp32:esp32:esp32:PartitionScheme=min_spiffs,FlashSize=4M"
+            boot_addr: "0x1000"
+          - name: flipper-devboard
+            flag: MARAUDER_FLIPPER
+            chip: esp32s2
+            fqbn: "esp32:esp32:esp32s2:PartitionScheme=min_spiffs,FlashSize=4M"
+            boot_addr: "0x1000"
+            experimental: true
+          - name: multiboard-s3
+            flag: MARAUDER_MULTIBOARD_S3
+            chip: esp32s3
+            fqbn: "esp32:esp32:esp32s3:PartitionScheme=min_spiffs,FlashSize=8M"
+            boot_addr: "0x0"
+            experimental: true
+          - name: devboard-pro
+            flag: MARAUDER_DEV_BOARD_PRO
+            chip: esp32s3
+            fqbn: "esp32:esp32:esp32s3:PartitionScheme=min_spiffs,FlashSize=8M"
+            boot_addr: "0x0"
+            experimental: true
+    steps:
+      - name: Checkout pwnpal (this repo)
+        uses: actions/checkout@v4
+        with: { path: pwnpal }
+
+      - name: Checkout Marauder fork
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.inputs.marauder_repo || 'bpmcircuits/ESP32Marauder_FEBERIS' }}
+          ref: ${{ github.event.inputs.marauder_ref || 'feberis' }}
+          path: marauder
+
+      - name: Add the pwnpal command
+        run: python3 pwnpal/pwnpal-marauder/apply_pwnpal.py marauder
+
+      # Pinned libraries, straight into the sketchbook so arduino-cli finds them.
+      - uses: actions/checkout@v4
+        with: { repository: marian-craciunescu/ESP32Ping, ref: "1.6", path: sketchbook/libraries/ESP32Ping }
+      - uses: actions/checkout@v4
+        with: { repository: ESP32Async/AsyncTCP, ref: v3.4.8, path: sketchbook/libraries/AsyncTCP }
+      - uses: actions/checkout@v4
+        with: { repository: stevemarple/MicroNMEA, ref: v2.0.6, path: sketchbook/libraries/MicroNMEA }
+      - uses: actions/checkout@v4
+        with: { repository: ESP32Async/ESPAsyncWebServer, ref: v3.8.1, path: sketchbook/libraries/ESPAsyncWebServer }
+      - uses: actions/checkout@v4
+        with: { repository: Bodmer/TFT_eSPI, ref: V2.5.34, path: sketchbook/libraries/TFT_eSPI }
+      - uses: actions/checkout@v4
+        with: { repository: PaulStoffregen/XPT2046_Touchscreen, ref: v1.4, path: sketchbook/libraries/XPT2046_Touchscreen }
+      - uses: actions/checkout@v4
+        with: { repository: lvgl/lv_arduino, ref: 3.0.0, path: sketchbook/libraries/lv_arduino }
+      - uses: actions/checkout@v4
+        with: { repository: Bodmer/JPEGDecoder, ref: 1.8.0, path: sketchbook/libraries/JPEGDecoder }
+      - uses: actions/checkout@v4
+        with: { repository: h2zero/NimBLE-Arduino, ref: "1.3.8", path: sketchbook/libraries/NimBLE-Arduino }
+      - uses: actions/checkout@v4
+        with: { repository: adafruit/Adafruit_NeoPixel, ref: 1.12.0, path: sketchbook/libraries/Adafruit_NeoPixel }
+      - uses: actions/checkout@v4
+        with: { repository: bblanchon/ArduinoJson, ref: v6.18.2, path: sketchbook/libraries/ArduinoJson }
+      - uses: actions/checkout@v4
+        with: { repository: ivanseidel/LinkedList, ref: v1.3.3, path: sketchbook/libraries/LinkedList }
+      - uses: actions/checkout@v4
+        with: { repository: plerup/espsoftwareserial, ref: 8.1.0, path: sketchbook/libraries/EspSoftwareSerial }
+      - uses: actions/checkout@v4
+        with: { repository: adafruit/Adafruit_BusIO, ref: 1.15.0, path: sketchbook/libraries/Adafruit_BusIO }
+      - uses: actions/checkout@v4
+        with: { repository: adafruit/Adafruit_MAX1704X, ref: 1.0.2, path: sketchbook/libraries/Adafruit_MAX1704X }
+
+      - name: Install arduino-cli + ESP32 core
+        run: |
+          mkdir -p "$HOME/bin"
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR="$HOME/bin" sh
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/bin:$PATH"
+          arduino-cli config init --overwrite
+          arduino-cli config add board_manager.additional_urls \
+            https://github.com/espressif/arduino-esp32/releases/download/${ESP32_CORE_VER}/package_esp32_dev_index.json
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32@${ESP32_CORE_VER}
+          pip install --quiet esptool pyserial
+
+      - name: Work around Marauder multiple-definition link error
+        run: |
+          for f in $(find ~/.arduino15/packages/esp32/hardware/esp32 -name platform.txt); do
+            sed -i 's/compiler.c.elf.libs.${{ matrix.board.chip }}=/compiler.c.elf.libs.${{ matrix.board.chip }}=-zmuldefs /' "$f" || true
+          done
+
+      - name: Compile
+        run: |
+          export PATH="$HOME/bin:$PATH"
+          arduino-cli compile \
+            --fqbn "${{ matrix.board.fqbn }}" \
+            --libraries "${ARDUINO_DIRECTORIES_USER}/libraries" \
+            --build-property "compiler.cpp.extra_flags=-D${{ matrix.board.flag }}" \
+            --export-binaries \
+            --warnings none \
+            marauder/esp32_marauder
+
+      - name: Merge into a single flashable image
+        run: |
+          export PATH="$HOME/bin:$PATH"
+          BUILD=$(find marauder/esp32_marauder/build -maxdepth 1 -type d -name "esp32.esp32.*" | head -1)
+          echo "build dir: $BUILD"
+          BOOT_APP0=$(find ~/.arduino15/packages/esp32/hardware/esp32/${ESP32_CORE_VER}/tools/partitions -name boot_app0.bin | head -1)
+          mkdir -p out
+          esptool --chip ${{ matrix.board.chip }} merge_bin -o out/pwnpal-${{ matrix.board.name }}.bin \
+            ${{ matrix.board.boot_addr }} "$BUILD/esp32_marauder.ino.bootloader.bin" \
+            0x8000 "$BUILD/esp32_marauder.ino.partitions.bin" \
+            0xe000 "$BOOT_APP0" \
+            0x10000 "$BUILD/esp32_marauder.ino.bin"
+          ls -la out
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: pwnpal-${{ matrix.board.name }}
+          path: out/*.bin
+          if-no-files-found: error
+
+  # Build the Flipper app so releases carry the .fap alongside the firmwares.
+  fap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Build pwnpal.fap (ufbt / Unleashed SDK)
+        run: |
+          pip install --quiet ufbt
+          cd pwnpal
+          sh gen_version.sh
+          ufbt update --index-url https://up.unleashedflip.com/directory.json --channel dev
+          ufbt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pwnpal-fap
+          path: pwnpal/dist/pwnpal.fap
+          if-no-files-found: error
+
+  # On a v* tag: gather every board image + the fap into a GitHub Release.
+  release:
+    needs: [build, fap]
+    # Publish on any v* tag even if a best-effort board leg failed (fail-fast is off),
+    # as long as the run wasn't cancelled — the verified boards + fap still ship.
+    if: ${{ !cancelled() && startsWith(github.ref, 'refs/tags/v') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: artifacts }
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true
+          append_body: true
+          body: |
+            **A full pwnagotchi on your Flipper Zero + ESP32 WiFi board** — a social pwngrid peer that
+            captures WPA/WPA2 handshakes & PMKIDs, GPS-wardrives, de-cloaks hidden SSIDs, and grows a
+            persona, all from a native Flipper app. One flash = full Marauder GUI + the `pwnpal` command.
+
+            ### Highlights
+            - **Social pwngrid peer** — broadcasts a pwnagotchi-compatible beacon; nearby units say hi and befriend it.
+            - **Real capture** — 4-way handshakes + PMKID (incl. passively harvested from roaming clients' (re)assoc frames), per-BSSID `.pcap` for hashcat `-m 22000`.
+            - **Crackable check** — flags which captures will actually crack (replay-matched pair or PMKID, WPA2-PSK) on-device, plus a **Verify captures** pass over existing loot.
+            - **De-cloak** hidden ESSIDs · **GPS wardrive** (WiGLE `wardrive.csv`) · **modes** Wardrive/Roam/Siege/Auto · **Flock Safety camera** detection (opt-in) · battery saver · offline web-export.
+
+            ### Install
+            1. Flash your board's `pwnpal-<board>.bin` with [**ESP Flasher**](https://github.com/0xchocolate/flipperzero-esp-flasher) → Custom slot @ `0x0`. Reference board: **Feberis Pro** (classic ESP32).
+            2. Copy `pwnpal.fap` to `/ext/apps/GPIO/`, launch **Apps → GPIO → Pwnpal**.
+
+            Full install guide: [README → Install](https://github.com/mrq1911/pwnpal#install).

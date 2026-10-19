@@ -1,0 +1,16 @@
+# Fast host unit tests for the pure logic (802.11 frame parsers, etc.). Runs on every
+# push/PR — no toolchain, just g++ — so a broken parser is caught before it ever ships
+# in a firmware/fap build. A failing test fails the workflow.
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  host-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run host unit tests
+        run: bash tests/run.sh

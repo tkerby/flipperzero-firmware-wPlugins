@@ -1,0 +1,40 @@
+# Publish the pwnpal export tool to GitHub Pages.
+# The site is a single static page (tools/web/pwnpal-export.html served as
+# index.html) — pull captures from the Flipper, convert to hashcat 22000 + WiGLE,
+# all in the browser.
+name: pages
+
+on:
+  push:
+    branches: [pwnpal, main]
+    paths:
+      - tools/web/**
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble site
+        run: |
+          mkdir -p _site
+          cp tools/web/pwnpal-export.html _site/index.html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
