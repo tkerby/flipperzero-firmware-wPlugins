@@ -90,11 +90,6 @@ bool subghz_protocol_faac_slh_create_data(
     SubGhzRadioPreset* preset);
 
 /**
- * Reset FAAC SLH programming mode state, call after TX of a FAAC SLH remote is finished
- */
-void faac_slh_reset_prog_mode(void);
-
-/**
  * Key generation from simple data.
  * @param context Pointer to a SubGhzProtocolEncoderAlutech_at_4n instance
  * @param flipper_format Pointer to a FlipperFormat instance
@@ -334,8 +329,9 @@ void subghz_protocol_decoder_bin_raw_data_input_rssi(
  */
 bool subghz_protocol_secplus_v1_check_fixed(uint32_t fixed);
 
-// Reset prog mode vars
-// TODO: Remake in proper way
+/**
+ * Reset FAAC SLH programming mode state, call after TX of a FAAC SLH remote is finished
+ */
 void faac_slh_reset_prog_mode(void);
 
 /**

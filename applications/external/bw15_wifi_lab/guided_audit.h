@@ -6,11 +6,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define G5_SESSION_ID_MAX 32
+#define G5_SESSION_ID_MAX     32
 #define G5_AUDIT_BASENAME_MAX 64
-#define G5_SSID_SLUG_MAX 16
-#define G5_CAPTURE_SCHEMA "5ghost.capture.v1"
-#define G5_AUDIT_SCHEMA "5ghost.audit.v1"
+#define G5_SSID_SLUG_MAX      16
+#define G5_CAPTURE_SCHEMA     "5ghost.capture.v1"
+#define G5_AUDIT_SCHEMA       "5ghost.audit.v1"
 
 typedef enum {
     G5AuditFileCapturePcap = 0,
@@ -88,11 +88,7 @@ size_t g5_session_format_id(
     unsigned second,
     uint32_t tick);
 
-size_t g5_audit_basename(
-    G5AuditFileKind kind,
-    const char* session_id,
-    char* out,
-    size_t cap);
+size_t g5_audit_basename(G5AuditFileKind kind, const char* session_id, char* out, size_t cap);
 
 // Filename slug: ASCII letters and digits, other bytes become '_', repeats and
 // edges collapsed, capped at G5_SSID_SLUG_MAX. Empty when nothing safe remains.
@@ -110,11 +106,7 @@ size_t g5_audit_capture_basename(
 // Type folder under the app data dir: "handshakes", "pmkid", or "audits".
 const char* g5_audit_kind_subdir(G5AuditFileKind kind);
 
-size_t g5_audit_join_path(
-    const char* dir,
-    const char* basename,
-    char* out,
-    size_t cap);
+size_t g5_audit_join_path(const char* dir, const char* basename, char* out, size_t cap);
 
 const char* g5_audit_path_name(G5AuditPath path);
 const char* g5_audit_result_name(G5AuditResult result);
@@ -150,8 +142,5 @@ const char* g5_audit_next_name(G5AuditNext next);
 const char* g5_audit_result_label(G5AuditResult result);
 const char* g5_audit_tx_verb(G5AuditNext next);
 G5AuditResult g5_audit_map_hs(bool quality_valid, bool have_pcap, bool have_json);
-G5AuditResult g5_audit_map_pmkid(
-    G5PmkidState state,
-    const char* reason,
-    bool have_22000,
-    bool have_json);
+G5AuditResult
+    g5_audit_map_pmkid(G5PmkidState state, const char* reason, bool have_22000, bool have_json);

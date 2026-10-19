@@ -249,6 +249,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [UID Brute Smarter v1.1 (By fbettag)](https://github.com/fbettag/uid_brute_smarter)
 - Updated: [MTP WIP v1.0 (By Alex4386)](https://github.com/Alex4386/f0-mtp)
 - Updated: [5Ghost Wifi Lab v2.8.1 (By pingequalab)](https://github.com/pingequalab/5ghost-wifi-lab) `Req: BW15` (Version Only)
+- Updated: [Ham Scanner v1.1 (By Clawzman)](https://github.com/Clawzman/Flipper-HAM-Scanner)
 
 <a name="release"></a>
 

@@ -13,8 +13,7 @@ static bool json_field_safe(const char* s) {
 }
 
 static bool session_char_ok(unsigned char c) {
-    return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
-           c == '_';
+    return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_';
 }
 
 bool g5_session_id_valid(const char* session_id) {
@@ -60,11 +59,7 @@ size_t g5_session_format_id(
     return (size_t)n;
 }
 
-size_t g5_audit_basename(
-    G5AuditFileKind kind,
-    const char* session_id,
-    char* out,
-    size_t cap) {
+size_t g5_audit_basename(G5AuditFileKind kind, const char* session_id, char* out, size_t cap) {
     if(!out || cap == 0) return 0;
     out[0] = '\0';
     if(!g5_session_id_valid(session_id)) return 0;
@@ -114,7 +109,8 @@ size_t g5_ssid_filename_slug(const char* ssid, char* out, size_t cap) {
             prev_us = true;
         }
     }
-    while(j > 0 && out[j - 1] == '_') j--;
+    while(j > 0 && out[j - 1] == '_')
+        j--;
     out[j] = '\0';
     return j;
 }
@@ -197,11 +193,7 @@ static bool fill_artifact_name(
     return g5_audit_capture_basename(kind, session_id, ssid, storage, cap) > 0;
 }
 
-size_t g5_audit_join_path(
-    const char* dir,
-    const char* basename,
-    char* out,
-    size_t cap) {
+size_t g5_audit_join_path(const char* dir, const char* basename, char* out, size_t cap) {
     if(!out || cap == 0) return 0;
     out[0] = '\0';
     if(!dir || dir[0] == '\0' || !basename || basename[0] == '\0') return 0;
@@ -248,11 +240,8 @@ static const char* or_empty(const char* s) {
     return s ? s : "";
 }
 
-static bool escape_or_fail(
-    const char* input,
-    char* output,
-    size_t output_capacity,
-    size_t* output_length) {
+static bool
+    escape_or_fail(const char* input, char* output, size_t output_capacity, size_t* output_length) {
     return g5_evidence_json_escape(or_empty(input), output, output_capacity, output_length);
 }
 
@@ -271,12 +260,9 @@ size_t g5_audit_build_pmkid_json(const G5PmkidJsonIn* in, char* out, size_t cap)
     char escaped_fw[48];
     char escaped_caps[32];
     size_t escaped_length = 0;
-    if(!escape_or_fail(in->ssid, escaped_ssid, sizeof(escaped_ssid), &escaped_length))
-        return 0;
-    if(!escape_or_fail(in->fw_version, escaped_fw, sizeof(escaped_fw), &escaped_length))
-        return 0;
-    if(!escape_or_fail(in->fw_caps, escaped_caps, sizeof(escaped_caps), &escaped_length))
-        return 0;
+    if(!escape_or_fail(in->ssid, escaped_ssid, sizeof(escaped_ssid), &escaped_length)) return 0;
+    if(!escape_or_fail(in->fw_version, escaped_fw, sizeof(escaped_fw), &escaped_length)) return 0;
+    if(!escape_or_fail(in->fw_caps, escaped_caps, sizeof(escaped_caps), &escaped_length)) return 0;
 
     char hc_name[G5_AUDIT_BASENAME_MAX];
     hc_name[0] = '\0';
@@ -336,12 +322,9 @@ size_t g5_audit_build_audit_json(const G5AuditJsonIn* in, char* out, size_t cap)
     char escaped_fw[48];
     char escaped_caps[32];
     size_t escaped_length = 0;
-    if(!escape_or_fail(in->ssid, escaped_ssid, sizeof(escaped_ssid), &escaped_length))
-        return 0;
-    if(!escape_or_fail(in->fw_version, escaped_fw, sizeof(escaped_fw), &escaped_length))
-        return 0;
-    if(!escape_or_fail(in->fw_caps, escaped_caps, sizeof(escaped_caps), &escaped_length))
-        return 0;
+    if(!escape_or_fail(in->ssid, escaped_ssid, sizeof(escaped_ssid), &escaped_length)) return 0;
+    if(!escape_or_fail(in->fw_version, escaped_fw, sizeof(escaped_fw), &escaped_length)) return 0;
+    if(!escape_or_fail(in->fw_caps, escaped_caps, sizeof(escaped_caps), &escaped_length)) return 0;
 
     char capture_pcap[G5_AUDIT_BASENAME_MAX];
     char capture_json[G5_AUDIT_BASENAME_MAX];
@@ -356,41 +339,37 @@ size_t g5_audit_build_audit_json(const G5AuditJsonIn* in, char* out, size_t cap)
            in->session_id,
            in->ssid))
         return 0;
-    if(in->have_capture_pcap &&
-       !fill_artifact_name(
-           capture_pcap,
-           sizeof(capture_pcap),
-           in->artifact_pcap,
-           G5AuditFileCapturePcap,
-           in->session_id,
-           in->ssid))
+    if(in->have_capture_pcap && !fill_artifact_name(
+                                    capture_pcap,
+                                    sizeof(capture_pcap),
+                                    in->artifact_pcap,
+                                    G5AuditFileCapturePcap,
+                                    in->session_id,
+                                    in->ssid))
         return 0;
-    if(in->have_capture_json &&
-       !fill_artifact_name(
-           capture_json,
-           sizeof(capture_json),
-           in->artifact_capture_json,
-           G5AuditFileCaptureJson,
-           in->session_id,
-           in->ssid))
+    if(in->have_capture_json && !fill_artifact_name(
+                                    capture_json,
+                                    sizeof(capture_json),
+                                    in->artifact_capture_json,
+                                    G5AuditFileCaptureJson,
+                                    in->session_id,
+                                    in->ssid))
         return 0;
-    if(in->have_pmkid_22000 &&
-       !fill_artifact_name(
-           pmkid_22000,
-           sizeof(pmkid_22000),
-           in->artifact_hc22000,
-           G5AuditFilePmkid22000,
-           in->session_id,
-           in->ssid))
+    if(in->have_pmkid_22000 && !fill_artifact_name(
+                                   pmkid_22000,
+                                   sizeof(pmkid_22000),
+                                   in->artifact_hc22000,
+                                   G5AuditFilePmkid22000,
+                                   in->session_id,
+                                   in->ssid))
         return 0;
-    if(in->have_pmkid_json &&
-       !fill_artifact_name(
-           pmkid_json,
-           sizeof(pmkid_json),
-           in->artifact_pmkid_json,
-           G5AuditFilePmkidJson,
-           in->session_id,
-           in->ssid))
+    if(in->have_pmkid_json && !fill_artifact_name(
+                                  pmkid_json,
+                                  sizeof(pmkid_json),
+                                  in->artifact_pmkid_json,
+                                  G5AuditFilePmkidJson,
+                                  in->session_id,
+                                  in->ssid))
         return 0;
 
     const int n = snprintf(
@@ -438,9 +417,8 @@ size_t g5_audit_build_audit_json(const G5AuditJsonIn* in, char* out, size_t cap)
 }
 
 /* Must match firmware/5ghost-fw/src/core/channels.h g5_ch_tx[] (22 entries, no DFS). */
-static const uint8_t g5_audit_ch_tx[] = {
-    1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13,
-    36, 40, 44, 48, 149, 153, 157, 161, 165};
+static const uint8_t g5_audit_ch_tx[] = {1,  2,  3,  4,  5,  6,  7,   8,   9,   10,  11,
+                                         12, 13, 36, 40, 44, 48, 149, 153, 157, 161, 165};
 
 bool g5_audit_valid_tx_ch(int ch) {
     if(ch < 0 || ch > 255) return false;
@@ -540,11 +518,8 @@ G5AuditResult g5_audit_map_hs(bool quality_valid, bool have_pcap, bool have_json
     return G5AuditResultTimeout;
 }
 
-G5AuditResult g5_audit_map_pmkid(
-    G5PmkidState state,
-    const char* reason,
-    bool have_22000,
-    bool have_json) {
+G5AuditResult
+    g5_audit_map_pmkid(G5PmkidState state, const char* reason, bool have_22000, bool have_json) {
     if(state == G5PmkidValid) {
         if(have_22000 && have_json) return G5AuditResultComplete;
         if(have_json) return G5AuditResultPartial;
