@@ -1,0 +1,16 @@
+App(
+    appid="nfc_usb_bridge",
+    name="NFC USB Bridge",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="nfc_bridge_app",
+    requires=["gui", "dialogs", "storage"],
+    stack_size=6 * 1024,
+    # fbt's "*.c" already searches sub-folders (so core/ is included); listing "core/*.c" as well built
+    # it twice -> "multiple definition" at link time. tests/ and pc/ are PC-only and must stay out.
+    sources=["*.c", "!tests", "!pc"],
+    fap_category="NFC",
+    fap_icon="icon.png",
+    fap_author="Space-Raler",
+    fap_version="0.2",
+    fap_description="Use the Flipper as a USB NFC reader (PN532 serial / PC/SC) for a real card or a loaded dump / .nfc file",
+)
