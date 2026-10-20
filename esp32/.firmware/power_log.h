@@ -91,8 +91,10 @@ void power_log_init(void);
  * @param last_rx_ms  millis() of the last CAN frame (0 until the first one)
  * @param seen_any    whether any frame has ever arrived (0 is a legal clock
  *                    value, so last_rx_ms alone cannot say)
+ * @param filtered    a hardware acceptance filter is on some bus (a capture):
+ *                    nothing is judged or written (fsd_pwr_judge_quiet)
  */
-void power_log_tick(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any);
+void power_log_tick(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any, bool filtered);
 
 /**
  * Note that the board is about to deep-sleep on a quiet bus (LilyGO). Records
@@ -100,7 +102,8 @@ void power_log_tick(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any);
  * the sleep, and flushes the quiet checkpoint if it has not already been
  * committed. Call right before esp_deep_sleep_start(); the bus is quiet there.
  */
-void power_log_note_deep_sleep(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any);
+void power_log_note_deep_sleep(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any,
+                               bool filtered);
 
 /** The verdict as it stands (live/deep-sleep outranks the boot reading). */
 FsdPwrVerdict power_log_verdict(void);

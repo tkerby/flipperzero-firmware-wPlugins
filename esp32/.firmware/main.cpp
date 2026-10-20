@@ -416,6 +416,11 @@ static const char *hw_to_str(TeslaHWVersion hw) {
     }
 }
 
+// A capture's hardware acceptance filter is on some bus, as of the last
+// sync: most frames never reach process_frame(), so the power log must not
+// read the gaps as a quiet bus.
+static bool g_can_filtered = false;
+
 static void sync_http_can_stream_filter_if_needed() {
     static CanCaptureFilterSync sync;
     uint32_t ids[CAN_CAPTURE_MAX_IDS] = {};
@@ -426,10 +431,15 @@ static void sync_http_can_stream_filter_if_needed() {
     sync.update(g_can, g_can_ok, CAN_ACTIVE_BUS_COUNT, state_snapshot().op_mode,
                 active, ids, count, scoped, bus);
     // Report actual driver state after programming, including failed changes.
+    // "unknown": a filter change failed part-way, so one may be on.
     const char *modes[CAN_BUS_COUNT] = {"down", "down"};
+    bool filtered = false;
     for (uint8_t i = 0; i < CAN_ACTIVE_BUS_COUNT; i++) {
         if (g_can_ok[i] && g_can[i]) modes[i] = g_can[i]->acceptanceFilterMode();
+        filtered |= strcmp(modes[i], "exact") == 0 || strcmp(modes[i], "prefilter") == 0 ||
+                    strcmp(modes[i], "unknown") == 0;
     }
+    g_can_filtered = filtered;
     http_can_stream_note_filters(CAN_ACTIVE_BUS_COUNT, modes);
 }
 
@@ -1693,7 +1703,7 @@ static NOINLINE void sleep_tick(uint32_t now) {
         // before powering down: a deep-sleep wake then proves the feed is
         // always-on, while a switched feed cuts power mid-sleep and boots as
         // POWERON with the checkpoint already in flash (#218). Bus is quiet here.
-        power_log_note_deep_sleep(now, g_power_last_rx_ms, g_power_seen_any);
+        power_log_note_deep_sleep(now, g_power_last_rx_ms, g_power_seen_any, g_can_filtered);
         can_dump_stop();
         sd_syslog_close();
         led_set(LED_SLEEP);
@@ -2139,8 +2149,9 @@ void loop() {
     // 12V-feed / reset log (#218). Commits one NVS record per quiet episode,
     // only once the bus has been silent past the checkpoint window, and one
     // correcting record at the first frame after it (the car waking), so a
-    // power cut mid-drive does not read as a switched feed.
-    power_log_tick(now, g_power_last_rx_ms, g_power_seen_any);
+    // power cut mid-drive does not read as a switched feed. Nothing while a
+    // capture filter hides most of the bus.
+    power_log_tick(now, g_power_last_rx_ms, g_power_seen_any, g_can_filtered);
 
 #if defined(BOARD_LILYGO)
     sleep_tick(now);

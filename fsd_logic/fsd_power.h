@@ -147,6 +147,29 @@ FsdPwrVerdict fsd_pwr_live_verdict(uint32_t quiet_ms);
 uint32_t fsd_pwr_quiet_ms(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any);
 
 /**
+ * Whether the bus can be judged at all, and how long it has been quiet.
+ *
+ * A hardware acceptance filter (a single- or multi-ID capture) hides most of
+ * the bus: with it on a rare id, a busy bus looks silent. So while a filter is
+ * installed on any bus nothing is judged -- no checkpoint, no correction, no
+ * live verdict. When it comes off, the quiet time counts from that moment, not
+ * from the last frame seen through the filter, until a frame arrives again;
+ * and the bus is not judged until that count reaches FSD_PWR_QUIET_MS either,
+ * since a few silent seconds after the clear prove neither quiet nor traffic.
+ *
+ * Returns false when the bus cannot be judged now; otherwise true with
+ * *quiet_ms as fsd_pwr_quiet_ms() gives it.
+ */
+typedef struct {
+    bool     filtered;  /* a filter was on at the last call */
+    bool     restarted; /* it came off, no frame since: quiet counts from since_ms */
+    uint32_t since_ms;  /* when it came off */
+} FsdPwrFilterGate;
+
+bool fsd_pwr_judge_quiet(FsdPwrFilterGate* g, uint32_t now_ms, uint32_t last_rx_ms,
+                         bool seen_any, bool filtered, uint32_t* quiet_ms);
+
+/**
  * Flash-checkpoint scheduler. Pure so the shim's write cadence is host-tested.
  *
  * Fed the current quiet duration each tick, it returns true exactly when the

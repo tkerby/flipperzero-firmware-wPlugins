@@ -3639,7 +3639,7 @@ static void test_power_quiet_ms(void) {
     CHECK(fsd_pwr_quiet_ms(0xFFFFFFFEu, 3u, true) == 0u,
           "frame stamped just after the wrap, now just before it -> not quiet");
     {
-        FsdPwrCheckpoint cp = {false, 0};
+        FsdPwrCheckpoint cp = {false, 0, false};
         CHECK(!fsd_pwr_checkpoint_due(&cp, fsd_pwr_quiet_ms(60000u, 60004u, true)),
               "a stamp ahead of now never commits a checkpoint");
         CHECK(fsd_pwr_live_verdict(fsd_pwr_quiet_ms(60000u, 60004u, true)) == FSD_PWR_UNKNOWN,
@@ -3664,7 +3664,7 @@ static void test_power_quiet_ms(void) {
 // ─────────────────────────────────────────────────────────────────────────────
 static void test_power_checkpoint(void) {
     printf("\n-- power: flash-checkpoint schedule --\n");
-    FsdPwrCheckpoint cp = {false, 0};
+    FsdPwrCheckpoint cp = {false, 0, false};
 
     // Bus active: never written here, and it re-arms the next episode.
     CHECK(!fsd_pwr_checkpoint_due(&cp, 0u), "bus active -> no commit");
@@ -3689,7 +3689,7 @@ static void test_power_checkpoint(void) {
     CHECK(cp.writes == 2, "two episodes -> two writes");
 
     // The per-session cap bounds writes no matter how the bus flaps.
-    FsdPwrCheckpoint cap = {false, 0};
+    FsdPwrCheckpoint cap = {false, 0, false};
     unsigned commits = 0;
     for (int episode = 0; episode < (int)FSD_PWR_MAX_CHECKPOINTS + 5; episode++) {
         fsd_pwr_checkpoint_due(&cap, 0u);                 // bus busy (re-arm)
@@ -3756,6 +3756,59 @@ static void test_power_correction(void) {
     CHECK(corrections == checkpoints, "one correction per checkpoint, got %u", corrections);
 
     CHECK(!fsd_pwr_correction_due(NULL, 0u), "NULL checkpoint -> no correction");
+}
+
+static void test_power_filter_gate(void) {
+    printf("\n-- power: no judgement while a capture filter is on --\n");
+    FsdPwrFilterGate g = {false, false, 0};
+    FsdPwrCheckpoint cp = {false, 0, false};
+    uint32_t q = 0xDEADu;
+
+    // No filter: what fsd_pwr_quiet_ms says.
+    CHECK(fsd_pwr_judge_quiet(&g, 100000u, 99990u, true, false, &q) && q == 0u, "busy, no filter");
+    CHECK(fsd_pwr_judge_quiet(&g, 100000u, 50000u, true, false, &q) && q == 50000u,
+          "quiet 50 s, no filter, got %u", q);
+
+    // A checkpoint is on flash, then a single-ID capture starts: the filter
+    // hides the bus. Long silences through it judge nothing: no checkpoint,
+    // no correction, however long.
+    CHECK(pwr_tick(&cp, FSD_PWR_CHECKPOINT_MS) == 2, "checkpoint before the capture");
+    unsigned judged = 0;
+    for (uint32_t t = 200000u; t < 800000u; t += 10u)
+        if (fsd_pwr_judge_quiet(&g, t, 200000u, true, true, &q)) judged++;
+    CHECK(judged == 0u, "filtered: never judged, got %u", judged);
+    CHECK(cp.quiet_on_flash, "the checkpoint is not corrected by the capture");
+
+    // Filter off at 800 s, bus still silent: the quiet time restarts there,
+    // and until it reaches FSD_PWR_QUIET_MS the bus is not judged (no
+    // correction from "no frame for a moment").
+    CHECK(!fsd_pwr_judge_quiet(&g, 800000u, 200000u, true, false, &q), "just cleared -> not judged");
+    CHECK(!fsd_pwr_judge_quiet(&g, 800000u + FSD_PWR_QUIET_MS - 1u, 200000u, true, false, &q),
+          "under the quiet threshold since the clear -> not judged");
+    CHECK(fsd_pwr_judge_quiet(&g, 800000u + FSD_PWR_QUIET_MS, 200000u, true, false, &q) &&
+              q == FSD_PWR_QUIET_MS,
+          "quiet counts from the clear, got %u", q);
+    CHECK(fsd_pwr_judge_quiet(&g, 800000u + FSD_PWR_CHECKPOINT_MS, 200000u, true, false, &q) &&
+              q == FSD_PWR_CHECKPOINT_MS,
+          "checkpoint window counted from the clear, got %u", q);
+
+    // A frame after the clear: normal judging again, and real traffic may
+    // correct the checkpoint.
+    FsdPwrFilterGate h = {false, false, 0};
+    CHECK(!fsd_pwr_judge_quiet(&h, 1000u, 900u, true, true, &q), "filtered");
+    CHECK(!fsd_pwr_judge_quiet(&h, 2000u, 900u, true, false, &q), "cleared, nothing since");
+    CHECK(fsd_pwr_judge_quiet(&h, 2500u, 2400u, true, false, &q) && q == 0u, "frame after clear -> busy");
+    CHECK(pwr_tick(&cp, q) == 1, "real traffic after the capture -> the correction");
+    // A frame stamped just ahead of now is traffic too.
+    FsdPwrFilterGate k = {false, false, 0};
+    fsd_pwr_judge_quiet(&k, 1000u, 900u, true, true, &q);
+    fsd_pwr_judge_quiet(&k, 2000u, 900u, true, false, &q);
+    CHECK(fsd_pwr_judge_quiet(&k, 2001u, 2003u, true, false, &q) && q == 0u, "stamp ahead -> busy");
+    // Never heard a frame: the normal "not quiet", filter or not.
+    FsdPwrFilterGate n = {false, false, 0};
+    fsd_pwr_judge_quiet(&n, 1000u, 0u, false, true, &q);
+    CHECK(fsd_pwr_judge_quiet(&n, 60000u, 0u, false, false, &q) && q == 0u, "no frame ever -> 0");
+    CHECK(!fsd_pwr_judge_quiet(NULL, 0u, 0u, true, false, &q), "NULL gate");
 }
 
 static void test_power_deepsleep_usb(void) {
@@ -3885,6 +3938,7 @@ int main(void) {
     test_power_quiet_ms();
     test_power_checkpoint();
     test_power_correction();
+    test_power_filter_gate();
     test_power_deepsleep_usb();
     test_power_restart_count();
 

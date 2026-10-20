@@ -26,6 +26,35 @@ uint32_t fsd_pwr_quiet_ms(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any) {
     return gap;
 }
 
+bool fsd_pwr_judge_quiet(FsdPwrFilterGate* g, uint32_t now_ms, uint32_t last_rx_ms,
+                         bool seen_any, bool filtered, uint32_t* quiet_ms) {
+    if(!g || !quiet_ms) return false;
+    if(filtered) {
+        g->filtered = true;
+        return false;
+    }
+    if(g->filtered) {
+        g->filtered = false;
+        g->restarted = true;
+        g->since_ms = now_ms;
+    }
+    if(g->restarted) {
+        /* A frame after the clear (signed: the stamp may be a few ms ahead of
+         * now): the bus speaks for itself again. Never heard one at all: the
+         * normal path says "not quiet" for that. */
+        if(!seen_any || (int32_t)(last_rx_ms - g->since_ms) > 0) {
+            g->restarted = false;
+        } else {
+            uint32_t q = fsd_pwr_quiet_ms(now_ms, g->since_ms, true);
+            if(q == 0u) return false;
+            *quiet_ms = q;
+            return true;
+        }
+    }
+    *quiet_ms = fsd_pwr_quiet_ms(now_ms, last_rx_ms, seen_any);
+    return true;
+}
+
 FsdPwrVerdict fsd_pwr_verdict(FsdPwrReset reset, const FsdPwrRecord* prev) {
     /* A host on the USB port reset us, so USB is connected and feeds the
      * board: whatever the record says, this boot cannot speak for the 12V. */

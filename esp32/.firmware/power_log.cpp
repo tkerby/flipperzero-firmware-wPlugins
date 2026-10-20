@@ -20,7 +20,8 @@ static bool g_ok = false;
 
 static FsdPwrVerdict g_boot_verdict = FSD_PWR_UNKNOWN;
 static FsdPwrVerdict g_live_verdict = FSD_PWR_UNKNOWN;
-static FsdPwrCheckpoint g_cp = {false, 0};
+static FsdPwrCheckpoint g_cp = {false, 0, false};
+static FsdPwrFilterGate g_gate = {false, false, 0};
 static int g_reset_code = PWR_RST_UNKNOWN;
 static int g_rtc_reason = 0;  // the chip's own reset reason, for an unknown one
 
@@ -175,10 +176,13 @@ static __attribute__((noinline)) void power_log_commit(uint32_t now_ms, uint32_t
         Serial.println("[PWR] bus active again: record corrected (no longer quiet)");
 }
 
-void power_log_tick(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any) {
+void power_log_tick(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any, bool filtered) {
     if (!g_ok) return;
 
-    uint32_t quiet = fsd_pwr_quiet_ms(now_ms, last_rx_ms, seen_any);
+    // A capture's hardware filter hides most of the bus: no verdict and no
+    // write while it is on, nor until the bus can be judged again after it.
+    uint32_t quiet;
+    if (!fsd_pwr_judge_quiet(&g_gate, now_ms, last_rx_ms, seen_any, filtered, &quiet)) return;
 
     // Live verdict: a board that never sleeps and is still running long after
     // the bus went quiet is on an always-on feed (unless USB is masking it).
@@ -199,9 +203,11 @@ void power_log_tick(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any) {
         power_log_commit(now_ms, quiet);
 }
 
-void power_log_note_deep_sleep(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any) {
+void power_log_note_deep_sleep(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any,
+                               bool filtered) {
     if (!g_ok) return;
-    uint32_t quiet = fsd_pwr_quiet_ms(now_ms, last_rx_ms, seen_any);
+    uint32_t quiet;
+    if (!fsd_pwr_judge_quiet(&g_gate, now_ms, last_rx_ms, seen_any, filtered, &quiet)) quiet = 0;
 
     // Remember we slept on a quiet bus, so a deep-sleep wake can tell the feed
     // held through the sleep. RTC RAM survives the sleep; a switched feed that
