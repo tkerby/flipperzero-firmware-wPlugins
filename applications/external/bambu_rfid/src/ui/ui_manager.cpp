@@ -1,12 +1,15 @@
 #include "ui_manager.h"
 #include "../bambu_storage.h"
+#include "../bambu_dictionary.h"
 #include "../bambu_tag.h"
 
 #include <gui/canvas.h>
 #include <gui/elements.h>
 #include <input/input.h>
+#include <notification/notification_messages.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 namespace {
@@ -14,11 +17,36 @@ struct BrViewModel {
     BrUiManager* ui;
 };
 
-const char* MainMenuItems[] = {"Scan tag", "Browse scans", "About"};
+struct BrDictionaryJob {
+    ViewDispatcher* dispatcher;
+    uint32_t done_event;
+    size_t uid_count;
+    uint8_t uids[BR_MAX_SAVED][BR_UID_SIZE];
+};
+
+// notification_message() is asynchronous, so the RGB messages must outlive
+// the input callback that queues them. One Bambu RFID app instance owns these
+// values at a time.
+NotificationMessage BrLedRedMessage{};
+NotificationMessage BrLedGreenMessage{};
+NotificationMessage BrLedBlueMessage{};
+const NotificationSequence BrTagLedSequence = {
+    &BrLedRedMessage,
+    &BrLedGreenMessage,
+    &BrLedBlueMessage,
+    &message_do_not_reset,
+    nullptr,
+};
+
+const char* MainMenuItems[] = {"Scan tag", "Browse scans", "Advanced", "About"};
+const char* AdvancedMenuItems[] = {"Wipe Bambu magic tag"};
 const char* AboutItems[] = {
     "Bambu RFID " BR_APP_VERSION,
     "Reads Bambu Lab filament RFID tags using UID-derived A and B sector keys.",
     "Each scan saves BIN, JSON, key BIN, NFC, and README files in a UID folder.",
+    "Saved dumps can be written to blank magic MIFARE 1K tags with UID rewrite verification.",
+    "Advanced can wipe a Bambu-programmed magic tag back to the canonical empty magic 1K image.",
+    "Permanent locks are attempted only for documented tag families after exact block-0 verification.",
     "The browser also accepts legacy flat .nfc and 1024-byte .bin dumps.",
     "Use Up/Down to scroll and Back to return.",
 };
@@ -58,8 +86,7 @@ bool next_wrapped_line(
     if(!text || !offset || !out || out_size < 2) return false;
 
     size_t begin = *offset;
-    while(text[begin] == ' ')
-        ++begin;
+    while(text[begin] == ' ') ++begin;
     if(text[begin] == '\0') {
         *offset = begin;
         return false;
@@ -100,15 +127,13 @@ bool next_wrapped_line(
 
     if(!width_exceeded && end == begin && text[begin] != '\0') end = begin + 1;
 
-    while(end > begin && text[end - 1] == ' ')
-        --end;
+    while(end > begin && text[end - 1] == ' ') --end;
     const size_t line_len = end - begin;
     memcpy(out, text + begin, line_len);
     out[line_len] = '\0';
 
     size_t next = width_exceeded ? (last_space > begin ? last_space + 1 : end) : cursor;
-    while(text[next] == ' ')
-        ++next;
+    while(text[next] == ' ') ++next;
     if(text[next] == '\n') ++next;
     if(next <= begin) next = begin + 1;
     *offset = next;
@@ -126,12 +151,34 @@ uint8_t draw_wrapped_text(
     size_t offset = 0;
     uint8_t lines = 0;
     char line[WrappedLineBuffer];
-    while(lines < max_lines &&
-          next_wrapped_line(canvas, text, &offset, max_width, line, sizeof(line))) {
+    while(lines < max_lines && next_wrapped_line(canvas, text, &offset, max_width, line, sizeof(line))) {
         canvas_draw_str(canvas, x, y + lines * line_height, line);
         ++lines;
     }
     return lines;
+}
+
+uint16_t draw_wrapped_text_scrolled(
+    Canvas* canvas,
+    int32_t x,
+    int32_t y,
+    uint16_t max_width,
+    uint8_t line_height,
+    const char* text,
+    uint16_t line_offset,
+    uint8_t max_lines) {
+    size_t offset = 0;
+    uint16_t line_index = 0;
+    uint8_t drawn = 0;
+    char line[WrappedLineBuffer];
+    while(next_wrapped_line(canvas, text, &offset, max_width, line, sizeof(line))) {
+        if(line_index >= line_offset && drawn < max_lines) {
+            canvas_draw_str(canvas, x, y + drawn * line_height, line);
+            ++drawn;
+        }
+        ++line_index;
+    }
+    return line_index;
 }
 
 void format_fixed_2(char* out, size_t out_size, float value, const char* unit) {
@@ -157,35 +204,70 @@ void format_fixed_1(char* out, size_t out_size, float value, const char* unit) {
 }
 } // namespace
 
-BrUiManager::BrUiManager(BrApp& app)
-    : app_(app)
-    , dispatcher_(nullptr)
-    , view_(nullptr)
-    , stack_{}
-    , depth_(0)
-    , menu_index_(0)
-    , browse_index_(0)
-    , detail_offset_(0)
-    , about_offset_(0)
-    , saved_{}
-    , saved_count_(0)
-    , current_info_{}
-    , current_source_{}
-    , scan_thread_(nullptr)
-    , scan_cancel_(false)
-    , scan_context_{}
-    , scan_result_{}
-    , scan_running_(false) {
+BrUiManager::BrUiManager(BrApp& app) :
+    app_(app),
+    dispatcher_(nullptr),
+    view_(nullptr),
+    notification_(nullptr),
+    stack_{},
+    depth_(0),
+    menu_index_(0),
+    advanced_index_(0),
+    browse_index_(0),
+    detail_offset_(0),
+    about_offset_(0),
+    write_offset_(0),
+    write_scroll_max_(0),
+    wipe_offset_(0),
+    wipe_scroll_max_(0),
+    saved_{},
+    saved_count_(0),
+    current_info_{},
+    current_source_{},
+    scan_thread_(nullptr),
+    scan_cancel_(false),
+    scan_context_{},
+    scan_result_{},
+    scan_running_(false),
+    write_thread_(nullptr),
+    write_cancel_(false),
+    write_context_{},
+    write_result_{},
+    write_running_(false),
+    write_confirmed_(false),
+    wipe_thread_(nullptr),
+    wipe_cancel_(false),
+    wipe_context_{},
+    wipe_result_{},
+    wipe_running_(false),
+    wipe_confirmed_(false),
+    dictionary_thread_(nullptr),
+    dictionary_pending_uids_{},
+    dictionary_pending_count_(0),
+    dictionary_seen_uids_{},
+    dictionary_seen_count_(0) {
 }
 
 BrUiManager::~BrUiManager() {
+    stopWipe();
+    stopWrite();
     stopScan();
+    stopDictionarySync();
+    resetTagLed();
+    if(notification_) {
+        furi_record_close(RECORD_NOTIFICATION);
+        notification_ = nullptr;
+    }
     if(dispatcher_ && view_) view_dispatcher_remove_view(dispatcher_, 0);
     if(view_) view_free(view_);
     if(dispatcher_) view_dispatcher_free(dispatcher_);
 }
 
 bool BrUiManager::init() {
+    BrLedRedMessage.type = NotificationMessageTypeLedRed;
+    BrLedGreenMessage.type = NotificationMessageTypeLedGreen;
+    BrLedBlueMessage.type = NotificationMessageTypeLedBlue;
+    notification_ = static_cast<NotificationApp*>(furi_record_open(RECORD_NOTIFICATION));
     dispatcher_ = view_dispatcher_alloc();
     view_ = view_alloc();
     if(!dispatcher_ || !view_) return false;
@@ -230,14 +312,20 @@ bool BrUiManager::push(Screen next) {
 
 bool BrUiManager::pop() {
     if(depth_ == 0) return false;
+    if(screen() == Screen::Write && write_running_) return true;
+    if(screen() == Screen::Wipe && wipe_running_) return true;
     if(screen() == Screen::Scan) stopScan();
+    if(screen() == Screen::Write) stopWrite();
+    if(screen() == Screen::Wipe) stopWipe();
 
     --depth_;
     if(depth_ == 0) {
+        resetTagLed();
         view_dispatcher_stop(dispatcher_);
         return true;
     }
 
+    updateTagLed();
     refresh();
     return true;
 }
@@ -249,9 +337,23 @@ void BrUiManager::enterScreen(Screen next) {
         reloadSaved();
     } else if(next == Screen::Detail) {
         detail_offset_ = 0;
+    } else if(next == Screen::Write) {
+        stopWrite();
+        memset(&write_result_, 0, sizeof(write_result_));
+        write_confirmed_ = false;
+        write_offset_ = 0;
+        write_scroll_max_ = 0;
+    } else if(next == Screen::Wipe) {
+        stopWipe();
+        memset(&wipe_result_, 0, sizeof(wipe_result_));
+        wipe_confirmed_ = false;
+        wipe_offset_ = 0;
+        wipe_scroll_max_ = 0;
     } else if(next == Screen::About) {
         about_offset_ = 0;
     }
+
+    updateTagLed();
 }
 
 void BrUiManager::refresh() {
@@ -274,8 +376,7 @@ void BrUiManager::startScan() {
 
     scan_thread_ = furi_thread_alloc_ex("BambuScan", 4096, br_scan_worker, &scan_context_);
     if(!scan_thread_) {
-        snprintf(
-            scan_result_.message, sizeof(scan_result_.message), "Could not start scan thread");
+        snprintf(scan_result_.message, sizeof(scan_result_.message), "Could not start scan thread");
         return;
     }
     scan_running_ = true;
@@ -309,12 +410,224 @@ void BrUiManager::finishScan() {
     }
 }
 
+void BrUiManager::startWrite() {
+    stopWrite();
+    memset(&write_result_, 0, sizeof(write_result_));
+    write_confirmed_ = true;
+    write_cancel_ = false;
+    write_offset_ = 0;
+    write_scroll_max_ = 0;
+
+    char full_path[BR_PATH_MAX];
+    if(!br_saved_path(current_source_, full_path, sizeof(full_path))) {
+        snprintf(write_result_.message, sizeof(write_result_.message), "Saved dump path is invalid");
+        return;
+    }
+
+    memset(&write_context_, 0, sizeof(write_context_));
+    write_context_.storage = app_.storage;
+    write_context_.dispatcher = dispatcher_;
+    write_context_.cancel = &write_cancel_;
+    write_context_.done_event = WriteDone;
+    write_context_.progress_event = WriteProgress;
+    write_context_.result = &write_result_;
+    snprintf(write_context_.source_path, sizeof(write_context_.source_path), "%s", full_path);
+
+    write_thread_ = furi_thread_alloc_ex("BambuWrite", 8192, br_write_worker, &write_context_);
+    if(!write_thread_) {
+        snprintf(write_result_.message, sizeof(write_result_.message), "Could not start write thread");
+        return;
+    }
+    write_running_ = true;
+    furi_thread_start(write_thread_);
+}
+
+void BrUiManager::stopWrite() {
+    if(!write_thread_) return;
+    write_cancel_ = true;
+    furi_thread_join(write_thread_);
+    furi_thread_free(write_thread_);
+    write_thread_ = nullptr;
+    write_running_ = false;
+}
+
+void BrUiManager::finishWrite() {
+    if(write_thread_) {
+        furi_thread_join(write_thread_);
+        furi_thread_free(write_thread_);
+        write_thread_ = nullptr;
+    }
+    write_running_ = false;
+}
+
+void BrUiManager::startWipe() {
+    stopWipe();
+    memset(&wipe_result_, 0, sizeof(wipe_result_));
+    wipe_confirmed_ = true;
+    wipe_cancel_ = false;
+    wipe_offset_ = 0;
+    wipe_scroll_max_ = 0;
+
+    memset(&wipe_context_, 0, sizeof(wipe_context_));
+    wipe_context_.dispatcher = dispatcher_;
+    wipe_context_.cancel = &wipe_cancel_;
+    wipe_context_.done_event = WipeDone;
+    wipe_context_.progress_event = WipeProgress;
+    wipe_context_.result = &wipe_result_;
+
+    wipe_thread_ = furi_thread_alloc_ex("BambuWipe", 8192, br_wipe_worker, &wipe_context_);
+    if(!wipe_thread_) {
+        snprintf(wipe_result_.message, sizeof(wipe_result_.message), "Could not start wipe thread");
+        return;
+    }
+    wipe_running_ = true;
+    furi_thread_start(wipe_thread_);
+}
+
+void BrUiManager::stopWipe() {
+    if(!wipe_thread_) return;
+    wipe_cancel_ = true;
+    furi_thread_join(wipe_thread_);
+    furi_thread_free(wipe_thread_);
+    wipe_thread_ = nullptr;
+    wipe_running_ = false;
+}
+
+void BrUiManager::finishWipe() {
+    if(wipe_thread_) {
+        furi_thread_join(wipe_thread_);
+        furi_thread_free(wipe_thread_);
+        wipe_thread_ = nullptr;
+    }
+    wipe_running_ = false;
+}
+
 void BrUiManager::reloadSaved() {
     saved_count_ = br_saved_scan(app_.storage, saved_, BR_MAX_SAVED);
-    if(saved_count_ == 0)
-        browse_index_ = 0;
-    else if(browse_index_ >= saved_count_)
-        browse_index_ = saved_count_ - 1;
+    if(saved_count_ == 0) browse_index_ = 0;
+    else if(browse_index_ >= saved_count_) browse_index_ = saved_count_ - 1;
+
+    // br_saved_scan() has already collected the metadata we need. Do not open
+    // every dump again just to recover keys: Bambu keys are deterministic from
+    // the 4-byte UID. Queue only UIDs, then do one dictionary batch off the UI
+    // thread after the saved-tag scan has completed.
+    queueSavedUidsForDictionary();
+}
+
+void BrUiManager::queueDictionaryUid(const uint8_t uid[BR_UID_SIZE]) {
+    if(!uid) return;
+
+    for(size_t i = 0; i < dictionary_seen_count_; ++i) {
+        if(memcmp(dictionary_seen_uids_[i], uid, BR_UID_SIZE) == 0) return;
+    }
+    for(size_t i = 0; i < dictionary_pending_count_; ++i) {
+        if(memcmp(dictionary_pending_uids_[i], uid, BR_UID_SIZE) == 0) return;
+    }
+
+    if(dictionary_pending_count_ >= BR_MAX_SAVED) return;
+    memcpy(dictionary_pending_uids_[dictionary_pending_count_], uid, BR_UID_SIZE);
+    ++dictionary_pending_count_;
+}
+
+void BrUiManager::queueSavedUidsForDictionary() {
+    for(uint16_t index = 0; index < saved_count_; ++index) {
+        if(saved_[index].info.valid) queueDictionaryUid(saved_[index].info.uid);
+    }
+    startPendingDictionarySync();
+}
+
+void BrUiManager::startPendingDictionarySync() {
+    if(dictionary_thread_ || dictionary_pending_count_ == 0) return;
+
+    BrDictionaryJob* job = static_cast<BrDictionaryJob*>(malloc(sizeof(BrDictionaryJob)));
+    if(!job) return;
+    memset(job, 0, sizeof(*job));
+    job->dispatcher = dispatcher_;
+    job->done_event = DictionaryDone;
+    job->uid_count = dictionary_pending_count_;
+    memcpy(
+        job->uids,
+        dictionary_pending_uids_,
+        dictionary_pending_count_ * BR_UID_SIZE);
+    dictionary_pending_count_ = 0;
+
+    dictionary_thread_ = furi_thread_alloc_ex(
+        "BambuDict", 4096, BrUiManager::dictionaryWorker, job);
+    if(!dictionary_thread_) {
+        memcpy(
+            dictionary_pending_uids_,
+            job->uids,
+            job->uid_count * BR_UID_SIZE);
+        dictionary_pending_count_ = job->uid_count;
+        free(job);
+        return;
+    }
+
+    for(size_t i = 0; i < job->uid_count && dictionary_seen_count_ < BR_MAX_SAVED; ++i) {
+        memcpy(dictionary_seen_uids_[dictionary_seen_count_], job->uids[i], BR_UID_SIZE);
+        ++dictionary_seen_count_;
+    }
+    furi_thread_start(dictionary_thread_);
+}
+
+int32_t BrUiManager::dictionaryWorker(void* context) {
+    BrDictionaryJob* job = static_cast<BrDictionaryJob*>(context);
+    if(!job) return 0;
+
+    br_add_uid_batch_to_user_dictionary(job->uids, job->uid_count);
+    ViewDispatcher* dispatcher = job->dispatcher;
+    const uint32_t done_event = job->done_event;
+    free(job);
+
+    if(dispatcher) view_dispatcher_send_custom_event(dispatcher, done_event);
+    return 0;
+}
+
+void BrUiManager::finishDictionarySync() {
+    if(dictionary_thread_) {
+        furi_thread_join(dictionary_thread_);
+        furi_thread_free(dictionary_thread_);
+        dictionary_thread_ = nullptr;
+    }
+    startPendingDictionarySync();
+}
+
+void BrUiManager::stopDictionarySync() {
+    if(dictionary_thread_) {
+        furi_thread_join(dictionary_thread_);
+        furi_thread_free(dictionary_thread_);
+        dictionary_thread_ = nullptr;
+    }
+    dictionary_pending_count_ = 0;
+    dictionary_seen_count_ = 0;
+}
+
+void BrUiManager::setTagLed(const BrTagInfo& info) {
+    if(!notification_ || !info.valid) {
+        resetTagLed();
+        return;
+    }
+
+    BrLedRedMessage.data.led.value = info.color_rgba[0];
+    BrLedGreenMessage.data.led.value = info.color_rgba[1];
+    BrLedBlueMessage.data.led.value = info.color_rgba[2];
+
+    // Never block the ViewDispatcher/input thread on the notification service.
+    notification_message(notification_, &BrTagLedSequence);
+}
+
+void BrUiManager::resetTagLed() {
+    if(notification_) notification_message(notification_, &sequence_reset_rgb);
+}
+
+void BrUiManager::updateTagLed() {
+    if(screen() == Screen::Browse && saved_count_ && browse_index_ < saved_count_) {
+        setTagLed(saved_[browse_index_].info);
+    } else if(screen() == Screen::Detail) {
+        setTagLed(current_info_);
+    } else {
+        resetTagLed();
+    }
 }
 
 bool BrUiManager::openSaved(uint16_t index) {
@@ -335,10 +648,18 @@ void BrUiManager::drawMainMenu(Canvas* canvas) const {
     drawHeader(canvas, BR_APP_NAME);
     for(size_t i = 0; i < COUNT_OF(MainMenuItems); ++i) {
         draw_menu_row(
+            canvas, static_cast<uint8_t>(i), MainMenuItems[i], i == static_cast<size_t>(menu_index_));
+    }
+}
+
+void BrUiManager::drawAdvanced(Canvas* canvas) const {
+    drawHeader(canvas, "Advanced");
+    for(size_t i = 0; i < COUNT_OF(AdvancedMenuItems); ++i) {
+        draw_menu_row(
             canvas,
             static_cast<uint8_t>(i),
-            MainMenuItems[i],
-            i == static_cast<size_t>(menu_index_));
+            AdvancedMenuItems[i],
+            i == static_cast<size_t>(advanced_index_));
     }
 }
 
@@ -412,21 +733,11 @@ uint16_t BrUiManager::detailCount() const {
 void BrUiManager::detailLine(uint16_t index, char* out, size_t out_size) const {
     const BrTagInfo& t = current_info_;
     switch(index) {
-    case 0:
-        snprintf(out, out_size, "UID: %s", t.uid_hex);
-        break;
-    case 1:
-        snprintf(out, out_size, "Type: %s", t.filament_type);
-        break;
-    case 2:
-        snprintf(out, out_size, "Detail: %s", t.detailed_filament_type);
-        break;
-    case 3:
-        snprintf(out, out_size, "Material: %s", t.material_id);
-        break;
-    case 4:
-        snprintf(out, out_size, "Variant: %s", t.variant_id);
-        break;
+    case 0: snprintf(out, out_size, "UID: %s", t.uid_hex); break;
+    case 1: snprintf(out, out_size, "Type: %s", t.filament_type); break;
+    case 2: snprintf(out, out_size, "Detail: %s", t.detailed_filament_type); break;
+    case 3: snprintf(out, out_size, "Material: %s", t.material_id); break;
+    case 4: snprintf(out, out_size, "Variant: %s", t.variant_id); break;
     case 5:
         snprintf(
             out,
@@ -436,52 +747,36 @@ void BrUiManager::detailLine(uint16_t index, char* out, size_t out_size) const {
             t.color_count == 2 ? " / " : "",
             t.color_count == 2 ? t.second_color_hex : "");
         break;
-    case 6:
-        snprintf(out, out_size, "Weight: %u g", t.spool_weight_g);
-        break;
+    case 6: snprintf(out, out_size, "Weight: %u g", t.spool_weight_g); break;
     case 7:
         snprintf(out, out_size, "Diameter: ");
         format_fixed_2(out + strlen(out), out_size - strlen(out), t.filament_diameter_mm, "mm");
         break;
-    case 8:
-        snprintf(out, out_size, "Length: %u m", t.filament_length_m);
-        break;
+    case 8: snprintf(out, out_size, "Length: %u m", t.filament_length_m); break;
     case 9:
         snprintf(out, out_size, "Spool width: ");
         format_fixed_2(out + strlen(out), out_size - strlen(out), t.spool_width_mm, "mm");
         break;
-    case 10:
-        snprintf(out, out_size, "Hotend: %u-%u C", t.hotend_min_c, t.hotend_max_c);
-        break;
-    case 11:
-        snprintf(out, out_size, "Bed: %u C (type %u)", t.bed_temp_c, t.bed_temp_type);
-        break;
-    case 12:
-        snprintf(out, out_size, "Dry: %u C / %u h", t.drying_temp_c, t.drying_time_h);
-        break;
+    case 10: snprintf(out, out_size, "Hotend: %u-%u C", t.hotend_min_c, t.hotend_max_c); break;
+    case 11: snprintf(out, out_size, "Bed: %u C (type %u)", t.bed_temp_c, t.bed_temp_type); break;
+    case 12: snprintf(out, out_size, "Dry: %u C / %u h", t.drying_temp_c, t.drying_time_h); break;
     case 13:
         snprintf(out, out_size, "Nozzle: ");
         format_fixed_1(out + strlen(out), out_size - strlen(out), t.nozzle_diameter_mm, "mm");
         break;
-    case 14:
-        snprintf(out, out_size, "Made: %s", t.production_date);
-        break;
-    case 15:
-        snprintf(out, out_size, "Short date: %s", t.short_date);
-        break;
-    case 16:
-        snprintf(out, out_size, "Tray UID: %s", t.tray_uid_hex);
-        break;
-    case 17:
-        snprintf(out, out_size, "XCam: %s", t.xcam_hex);
-        break;
+    case 14: snprintf(out, out_size, "Made: %s", t.production_date); break;
+    case 15: snprintf(out, out_size, "Short date: %s", t.short_date); break;
+    case 16: snprintf(out, out_size, "Tray UID: %s", t.tray_uid_hex); break;
+    case 17: snprintf(out, out_size, "XCam: %s", t.xcam_hex); break;
     case 18:
         snprintf(
-            out, out_size, "Block17: %s  %s", t.block17_hex, t.complete ? "complete" : "partial");
+            out,
+            out_size,
+            "Block17: %s  %s",
+            t.block17_hex,
+            t.complete ? "complete" : "partial");
         break;
-    default:
-        out[0] = '\0';
-        break;
+    default: out[0] = '\0'; break;
     }
 }
 
@@ -491,17 +786,107 @@ void BrUiManager::drawDetail(Canvas* canvas) const {
     char text[96];
     uint16_t item = detail_offset_;
     uint8_t y = TextFirstBaseline;
-    while(item < detailCount() && y <= 62) {
+    while(item < detailCount() && y <= 50) {
         detailLine(item, text, sizeof(text));
-        const uint8_t available_lines = static_cast<uint8_t>((62 - y) / TextLineHeight + 1);
-        const uint8_t used =
-            draw_wrapped_text(canvas, 4, y, ContentWidth, TextLineHeight, text, available_lines);
+        const uint8_t available_lines = static_cast<uint8_t>((50 - y) / TextLineHeight + 1);
+        const uint8_t used = draw_wrapped_text(
+            canvas, 4, y, ContentWidth, TextLineHeight, text, available_lines);
         if(used == 0) break;
         y = static_cast<uint8_t>(y + used * TextLineHeight);
         ++item;
     }
 
-    draw_scrollbar(canvas, detail_offset_, detailCount(), 14, 47);
+    draw_scrollbar(canvas, detail_offset_, detailCount(), 14, 35);
+    elements_button_center(canvas, "Write");
+}
+
+void BrUiManager::drawWrite(Canvas* canvas) const {
+    drawHeader(canvas, "Write magic tag");
+
+    char text[320];
+    bool show_button = false;
+    if(!write_confirmed_) {
+        snprintf(
+            text,
+            sizeof(text),
+            "Write %s to a blank magic MIFARE 1K tag. Locking requires live UID/SAK/ATQA, the full dump, and all 16 bytes of block 0 to match. Hold OK to begin.",
+            current_info_.uid_hex);
+        show_button = true;
+    } else if(write_result_.family_name[0]) {
+        snprintf(
+            text,
+            sizeof(text),
+            "%s\n%s",
+            write_result_.family_name,
+            write_result_.message[0] ? write_result_.message : "Working...");
+        show_button = !write_running_;
+    } else {
+        snprintf(
+            text,
+            sizeof(text),
+            "%s",
+            write_result_.message[0] ? write_result_.message : "Starting writer...");
+        show_button = !write_running_;
+    }
+
+    const uint8_t visible_lines = show_button ? 3U : 4U;
+    const uint16_t total_lines = draw_wrapped_text_scrolled(
+        canvas,
+        4,
+        TextFirstBaseline,
+        ContentWidth,
+        TextLineHeight,
+        text,
+        write_offset_,
+        visible_lines);
+    write_scroll_max_ = total_lines > visible_lines ? total_lines - visible_lines : 0;
+    draw_scrollbar(canvas, write_offset_, write_scroll_max_ + 1U, 14, show_button ? 31 : 43);
+
+    if(show_button) elements_button_center(canvas, write_confirmed_ ? "Back" : "Hold OK");
+}
+
+void BrUiManager::drawWipe(Canvas* canvas) const {
+    drawHeader(canvas, "Wipe Bambu tag");
+
+    char text[320];
+    bool show_button = false;
+    if(!wipe_confirmed_) {
+        snprintf(
+            text,
+            sizeof(text),
+            "Destructive: read the live UID, derive its Bambu A/B keys, then reset all 64 blocks to the canonical empty magic MIFARE 1K image, including default FFFFFFFFFFFF keys. Hold OK to begin.");
+        show_button = true;
+    } else if(wipe_result_.family_name[0]) {
+        snprintf(
+            text,
+            sizeof(text),
+            "%s\n%s",
+            wipe_result_.family_name,
+            wipe_result_.message[0] ? wipe_result_.message : "Working...");
+        show_button = !wipe_running_;
+    } else {
+        snprintf(
+            text,
+            sizeof(text),
+            "%s",
+            wipe_result_.message[0] ? wipe_result_.message : "Starting wipe...");
+        show_button = !wipe_running_;
+    }
+
+    const uint8_t visible_lines = show_button ? 3U : 4U;
+    const uint16_t total_lines = draw_wrapped_text_scrolled(
+        canvas,
+        4,
+        TextFirstBaseline,
+        ContentWidth,
+        TextLineHeight,
+        text,
+        wipe_offset_,
+        visible_lines);
+    wipe_scroll_max_ = total_lines > visible_lines ? total_lines - visible_lines : 0;
+    draw_scrollbar(canvas, wipe_offset_, wipe_scroll_max_ + 1U, 14, show_button ? 31 : 43);
+
+    if(show_button) elements_button_center(canvas, wipe_confirmed_ ? "Back" : "Hold OK");
 }
 
 void BrUiManager::drawAbout(Canvas* canvas) const {
@@ -525,70 +910,90 @@ void BrUiManager::draw(Canvas* canvas) {
     canvas_clear(canvas);
     canvas_set_color(canvas, ColorBlack);
     switch(screen()) {
-    case Screen::MainMenu:
-        drawMainMenu(canvas);
-        break;
-    case Screen::Scan:
-        drawScan(canvas);
-        break;
-    case Screen::Browse:
-        drawBrowse(canvas);
-        break;
-    case Screen::Detail:
-        drawDetail(canvas);
-        break;
-    case Screen::About:
-        drawAbout(canvas);
-        break;
+    case Screen::MainMenu: drawMainMenu(canvas); break;
+    case Screen::Advanced: drawAdvanced(canvas); break;
+    case Screen::Scan: drawScan(canvas); break;
+    case Screen::Browse: drawBrowse(canvas); break;
+    case Screen::Detail: drawDetail(canvas); break;
+    case Screen::Write: drawWrite(canvas); break;
+    case Screen::Wipe: drawWipe(canvas); break;
+    case Screen::About: drawAbout(canvas); break;
     }
 }
 
 bool BrUiManager::input(InputEvent* event) {
-    if(event->type != InputTypeShort && event->type != InputTypeRepeat) return false;
+    if(event->type != InputTypeShort && event->type != InputTypeRepeat && event->type != InputTypeLong)
+        return false;
     if(event->key == InputKeyBack && event->type == InputTypeShort) return back();
 
     switch(screen()) {
     case Screen::MainMenu:
-        if(event->key == InputKeyUp && menu_index_ > 0)
-            --menu_index_;
+        if(event->key == InputKeyUp && menu_index_ > 0) --menu_index_;
         else if(
             event->key == InputKeyDown &&
             static_cast<size_t>(menu_index_) + 1U < COUNT_OF(MainMenuItems))
             ++menu_index_;
         else if(event->key == InputKeyOk && event->type == InputTypeShort) {
-            if(menu_index_ == 0)
-                push(Screen::Scan);
-            else if(menu_index_ == 1)
-                push(Screen::Browse);
-            else
-                push(Screen::About);
+            if(menu_index_ == 0) push(Screen::Scan);
+            else if(menu_index_ == 1) push(Screen::Browse);
+            else if(menu_index_ == 2) push(Screen::Advanced);
+            else push(Screen::About);
+        }
+        break;
+    case Screen::Advanced:
+        if(event->key == InputKeyUp && advanced_index_ > 0) --advanced_index_;
+        else if(
+            event->key == InputKeyDown &&
+            static_cast<size_t>(advanced_index_) + 1U < COUNT_OF(AdvancedMenuItems))
+            ++advanced_index_;
+        else if(event->key == InputKeyOk && event->type == InputTypeShort) {
+            if(advanced_index_ == 0) push(Screen::Wipe);
         }
         break;
     case Screen::Scan:
         if(event->key == InputKeyOk && event->type == InputTypeShort && !scan_running_) {
-            if(scan_result_.ok)
-                push(Screen::Detail);
-            else
-                startScan();
+            if(scan_result_.ok) push(Screen::Detail);
+            else startScan();
         }
         break;
     case Screen::Browse:
-        if(saved_count_ && event->key == InputKeyUp && browse_index_ > 0)
+        if(saved_count_ && event->key == InputKeyUp && browse_index_ > 0) {
             --browse_index_;
-        else if(saved_count_ && event->key == InputKeyDown && browse_index_ + 1 < saved_count_)
+            updateTagLed();
+        } else if(saved_count_ && event->key == InputKeyDown && browse_index_ + 1 < saved_count_) {
             ++browse_index_;
-        else if(saved_count_ && event->key == InputKeyOk && event->type == InputTypeShort)
+            updateTagLed();
+        } else if(saved_count_ && event->key == InputKeyOk && event->type == InputTypeShort) {
             openSaved(browse_index_);
+        }
         break;
     case Screen::Detail:
-        if(event->key == InputKeyUp && detail_offset_ > 0)
-            --detail_offset_;
-        else if(event->key == InputKeyDown && detail_offset_ + 1 < detailCount())
-            ++detail_offset_;
+        if(event->key == InputKeyUp && detail_offset_ > 0) --detail_offset_;
+        else if(event->key == InputKeyDown && detail_offset_ + 1 < detailCount()) ++detail_offset_;
+        else if(event->key == InputKeyOk && event->type == InputTypeShort) push(Screen::Write);
+        break;
+    case Screen::Write:
+        if(event->key == InputKeyUp && write_offset_ > 0) --write_offset_;
+        else if(event->key == InputKeyDown && write_offset_ < write_scroll_max_) ++write_offset_;
+        else if(!write_confirmed_ && event->key == InputKeyOk && event->type == InputTypeLong) {
+            startWrite();
+        } else if(write_confirmed_ && !write_running_ && event->key == InputKeyOk &&
+                  event->type == InputTypeShort) {
+            pop();
+        }
+        break;
+    case Screen::Wipe:
+        if(event->key == InputKeyUp && wipe_offset_ > 0) --wipe_offset_;
+        else if(event->key == InputKeyDown && wipe_offset_ < wipe_scroll_max_) ++wipe_offset_;
+        else if(!wipe_confirmed_ && event->key == InputKeyOk && event->type == InputTypeLong) {
+            startWipe();
+        } else if(wipe_confirmed_ && !wipe_running_ && event->key == InputKeyOk &&
+                  event->type == InputTypeShort) {
+            pop();
+        }
         break;
     case Screen::About:
-        if(event->key == InputKeyUp && about_offset_ > 0)
-            --about_offset_;
+        if(event->key == InputKeyUp && about_offset_ > 0) --about_offset_;
         else if(
             event->key == InputKeyDown &&
             static_cast<size_t>(about_offset_) + 1U < COUNT_OF(AboutItems))
@@ -606,13 +1011,45 @@ bool BrUiManager::custom(uint32_t event) {
     }
     if(event == ScanDone) {
         finishScan();
+        if(scan_result_.ok && scan_result_.info.valid) {
+            queueDictionaryUid(scan_result_.info.uid);
+            startPendingDictionarySync();
+        }
         refresh();
+        return true;
+    }
+    if(event == WriteProgress) {
+        write_offset_ = 0;
+        refresh();
+        return true;
+    }
+    if(event == WriteDone) {
+        finishWrite();
+        write_offset_ = 0;
+        refresh();
+        return true;
+    }
+    if(event == WipeProgress) {
+        wipe_offset_ = 0;
+        refresh();
+        return true;
+    }
+    if(event == WipeDone) {
+        finishWipe();
+        wipe_offset_ = 0;
+        refresh();
+        return true;
+    }
+    if(event == DictionaryDone) {
+        finishDictionarySync();
         return true;
     }
     return false;
 }
 
 bool BrUiManager::back() {
+    if(screen() == Screen::Write && write_running_) return true;
+    if(screen() == Screen::Wipe && wipe_running_) return true;
     return pop();
 }
 

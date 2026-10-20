@@ -271,6 +271,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [NFC Magic v2.3 (By gornekich)](https://github.com/flipperdevices/flipperzero-firmware/pull/1966) Use per-UID cached keys before dictionary attacks and for Gen2 probing; retain RM ISO15693 support. [NFC Magic: accept Gen 4 config dumps of 30 and 31 bytes (By mishamyte)](https://github.com/xMasterX/all-the-plugins/pull/274)
 - Added: [Flipper Lotto v1.0 (By molykima)](https://github.com/molykima/Flipper-Lottery-Number-Generator)
 - Added: [Subscriber Counter v1.0 (By TheProductAgency)](https://github.com/TheProductAgency/flipper-subscriber-counter)
+- Updated: [Bambu RFID v0.3 (By DanTheMan827)](https://github.com/DanTheMan827/bambu-rfid-flipper)
 
 <a name="release"></a>
 
@@ -610,7 +611,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [BadUSB Pro v1.0 (By barkandbite)](https://github.com/barkandbite/flipper_suite)
 - [BadUSB wPlaceholders v1.0 (By whitewhidow)](https://github.com/whitewhidow/flipper-badusb-ph)
 - [Ballu AC v1.0 (By xMasterX)](https://github.com/xMasterX/flipper_ac)
-- [Bambu RID v0.2 (By DanTheMan827)](https://github.com/DanTheMan827/bambu-rfid-flipper)
+- [Bambu RFID v0.3 (By DanTheMan827)](https://github.com/DanTheMan827/bambu-rfid-flipper)
 - [Barcode App v1.5 (By Kingal1337)](https://github.com/Kingal1337/flipper-barcode-generator)
 - [BarCode Scanner Emulator v0.5 (By polarikus)](https://github.com/polarikus/flipper-zero_bc_scanner_emulator) `Uses: COM-port`
 - [Battery Checker v0.2 (By Programistich)](https://github.com/Programistich/battery_checker)
