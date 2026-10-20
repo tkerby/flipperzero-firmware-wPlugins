@@ -72,7 +72,10 @@ bool fsd_ap_first_allows(const FSDState *state, uint32_t now_ms);
 #define SIGNAL_MAP_DAS_MISS_MS 3000u
 
 /** Apply configurable signal mapping (#122): extract DAS/steering from the
- *  user-configured positions when cfg_*_id is set, and stamp the freshness clock. */
+ *  user-configured positions when cfg_*_id is set, and stamp the freshness clock.
+ *  Steering: cfg_steer_id 0x129 is decoded as SCCM_steeringAngleSensor
+ *  (fsd_steer_update(), validity-aware), any other id as a signed 16-bit angle
+ *  at bytes cfg_steer_hi / cfg_steer_lo, 0.1 deg per bit (hi == lo: not mapped). */
 void fsd_apply_signal_config(FSDState *state, const CanFrame *frame, uint32_t now_ms);
 /** True if the DAS context is fresh (auto mode always true; configured requires
  *  a cfg-DAS frame within NAG_CTX_FRESH_MS). */

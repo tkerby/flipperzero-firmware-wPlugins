@@ -10,8 +10,9 @@
  * Pure RX / read-only: this module never transmits. It only reads the same RX
  * frames process_frame() already handles. An id counts as "present" once it has
  * been seen >= CAP_MIN_FRAMES times in the window (ignores a single spurious
- * frame). A check runs automatically when the dashboard connects and on demand
- * via the "capability_recheck" WS command.
+ * frame); for Soft Engage, that many 0x129 frames must carry a valid angle. A
+ * check runs automatically when the dashboard connects and on demand via the
+ * "capability_recheck" WS command.
  *
  * Single-threaded counters: capability_record() is called only from the CAN
  * path; capability_status_json() reads from the web task. Counters are small and

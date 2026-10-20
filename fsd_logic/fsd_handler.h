@@ -133,7 +133,10 @@ bool fsd_handle_isa_speed_chime(CANFRAME* frame);
 /** Apply the configurable signal mapping (#122): if cfg_das_id / cfg_steer_id are
  *  set and this frame matches, extract das_ap_state / das_hands_on_state /
  *  steering_angle_deg from the configured positions and stamp the freshness clock.
- *  No-op when the corresponding id is 0 (auto mode). Call from the RX path. */
+ *  No-op when the corresponding id is 0 (auto mode). Call from the RX path.
+ *  Steering: cfg_steer_id 0x129 is decoded as SCCM_steeringAngleSensor
+ *  (fsd_steer_update(), validity-aware), any other id as a signed 16-bit angle
+ *  at bytes cfg_steer_hi / cfg_steer_lo, 0.1 deg per bit (hi == lo: not mapped). */
 void fsd_apply_signal_config(FSDState* state, const CANFRAME* frame, uint32_t now_ms);
 
 /** True if the DAS context is fresh enough to inject: always true in auto mode
