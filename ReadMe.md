@@ -101,7 +101,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Nice O-Code v1.0 (By zero-mega & xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/e6ded9b108454b30a3e710295e6d2b7fd146e188)
 - Added: [Security+ PIN v1.0 (By zero-mega & xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/e6ded9b108454b30a3e710295e6d2b7fd146e188)
 - Build: [Fix embedded plugin asset dependencies on repeated builds, including ProtoPirate 3.8 (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins)
-- Updated: [NFC Magic v2.2 (By gornekich)](https://github.com/flipperdevices/flipperzero-firmware/pull/1966) - Use per-UID cached keys before dictionary attacks and for Gen2 probing; retain RM ISO15693 support.
 - Updated: [Video Game Module Tool v1.4 (By gsurkov)](https://github.com/flipperdevices/flipperzero-good-faps/pull/127) - Make both SWDIO direction changes atomic.
 - Updated: [Daikin AC v1.0 (By xMasterX)](https://github.com/xMasterX/flipper_ac) - Add seven additional AC protocol formats and model names.
 - Updated: [Haier AC v1.0 (By xMasterX)](https://github.com/xMasterX/flipper_ac) - Add HSU07, AC160 and AC176 protocol support.
@@ -269,6 +268,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - ESP Flasher: [Comes with Marauder v1.19.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.19.0) (Version Only)
 - Updated: [Taiko Player v0.5 (By ZeroNinx)](https://github.com/ZeroNinx/flipper-zero-taiko-player)
 - Updated: [Tesla Mod v2.17.0b3 (By hypery11)](https://github.com/hypery11/flipper-tesla-fsd)
+- Updated: [NFC Magic v2.3 (By gornekich)](https://github.com/flipperdevices/flipperzero-firmware/pull/1966) Use per-UID cached keys before dictionary attacks and for Gen2 probing; retain RM ISO15693 support. [NFC Magic: accept Gen 4 config dumps of 30 and 31 bytes (By mishamyte)](https://github.com/xMasterX/all-the-plugins/pull/274)
 
 <a name="release"></a>
 
@@ -983,7 +983,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [NFC Fuzzer v1.0 (By barkandbite)](https://github.com/barkandbite/flipper_suite)
 - [NFC Keyboard v1.0 (By Patrick762)](https://github.com/Patrick762/flipper-nfc-keyboard)
 - [NFC Login v1.1.3 (By Play2BReal)](https://github.com/Play2BReal/NFC-Login)
-- [NFC Magic v2.2 (By gornekich)](https://github.com/flipperdevices/flipperzero-firmware/pull/1966)
+- [NFC Magic v2.3 (By gornekich)](https://github.com/flipperdevices/flipperzero-firmware/pull/1966)
 - [NFC Maker v2.1 (by WillyJL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/343cb39d08f60b75b537e1a31100707935cf6e9d)
 - [NFC Playlist v3.5 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Playlist/tree/main)
 - [NFC QR Presenter v1.1 (By RogerF5-Security)](https://github.com/RogerF5-Security/NFC_QR_Presenter)

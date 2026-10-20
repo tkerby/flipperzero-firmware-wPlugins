@@ -1,50 +1,65 @@
 # Changelog
 
-## 2.1
-
-Adds magic **ISO15693 / NfcV** support. Detect an ISO15693 tag, show its Info, and
-**clone / wipe** a magic ISO15693 card the same way the app handles its other magic types.
-
-The magic write frames are an exact port of proxmark3's `SetTag15693Uid` (gen1) and
-`SetTag15693Uid_v2` (gen2).
+## 2.3
 
 ### Added
-- **Detection** — any ISO15693 tag that activates is treated as a magic candidate and routed to a
-  dedicated menu (Write / Wipe / Write UID / Info), mirroring the other magic types.
-- **Info** — UID, manufacturer, chip type, GET SYSTEM INFO (memory / DSFID / AFI / IC ref), and the
-  full block data (scrollable, `*` marks a locked block). Chip decode tells NXP **SLI / SLIX / SLIX2**
-  (and the -S / -L variants) apart via the UID type-indicator bits.
-- **Clone from a saved `.nfc`** — writes the UID (magic backdoor), all data blocks, and the source's
-  identity (IC ref / block geometry / AFI / DSFID) so the copy advertises the same chip. gen2 sets
-  UID + geometry via the `0xE0` magic command; a gen1 card falls back to the block-write backdoor.
-- **Wipe** — zero every writable data block; the UID is left unchanged.
-- **Write UID** — manual magic backdoor UID write with a confirmation screen.
 
-### Behaviour
-- **Writes every source block and reports only real data loss.** WRITE BLOCK on these cards is gated
-  by physical memory, not the advertised block count (verified on hardware), so the clone attempts
-  every block: a non-empty block that won't write is reported as **Partial** (named); an empty block
-  past the card's real capacity loses nothing, so it stays a **Success** — but one flagged with a
-  note that the card now advertises more blocks than it physically holds (a reader probing the top
-  blocks sees them error/zero, and real data can't be stored there). A card that advertises a larger
-  geometry than it physically holds (fake-flash) clones faithfully for the blocks that fit.
-- **gen1 fidelity is surfaced.** The gen1 backdoor stores the UID in data blocks 56/57/62/63, so a
-  gen1 clone can't reproduce a source that uses them. If the source has data there, the confirm warns
-  before the write; if the clone actually fell back to gen1, it reports the Partial clone status and
-  flags those blocks.
-- **Verifies after an RF field power-cycle** (`NfcCommandReset`), so a card that only latches the new
-  UID after a reset is not misreported as a failure.
-- The potentially destructive **gen1 fallback only runs if the gen2 write left the UID unchanged**,
-  so a gen2 card is never clobbered by gen1.
-- Non-magic / removed-card outcomes show dedicated **"Not a magic tag"** / **"Card removed"** messages
-  instead of a generic error, and detect / write popups **time out** instead of hanging.
+- **Gen 4 cards whose configuration dump is 30 or 31 bytes are now detected.** The dump length is
+  firmware specific: alongside the 32-byte variant the app knew, Ultimate Magic Cards exist that
+  answer the backdoor config command with 30 or 31 bytes, and Proxmark3 has accepted 30 or 32
+  since 2022. Anything other than 32 was rejected as **not a magic card**, which also made the
+  card unwritable, because writing is only offered once detection succeeds. All three lengths are
+  now accepted, the length the card returned is remembered, and the configuration is written back
+  at that same length rather than always 32. A dump of any other length is still rejected, but it
+  is now logged with its byte count so an unknown variant can be told apart from a card that
+  simply is not a Gen 4. The Gen 4 info screen reports the length it read.
 
-### Validation
-- The **gen2** path is validated end-to-end on hardware: byte-identical clones across chip types and
-  geometries (28 / 56 / 64 / 70 blocks), confirmed by both the stock NFC read-back and a Proxmark3
-  cross-read; wipe and the honest over-capacity reporting confirmed too.
-- The **gen1** path is a faithful proxmark port but is **not yet hardware-validated** (no gen1 magic
-  ISO15693 card was available to test against).
+### Fixed
+
+- **The configuration write no longer sends uninitialized memory to the card.** The write path
+  filled 28 bytes of a 32-byte configuration buffer from its template and the remaining documented
+  fields by hand, but the two undocumented trailing bytes were never assigned, and the poller
+  allocates its state without zeroing it. Those two bytes were transmitted and stored as part of
+  the card configuration on every Gen 4 write, differing between runs. The card's own trailing
+  bytes are now read back and carried over unchanged, and zeroed if they cannot be read.
+
+- **The Gen 4 poller no longer dispatches on an uninitialized state.** Its state field was never
+  set to the idle state at allocation, so the first card callback indexed the state handler table
+  with whatever the heap held. It worked while the allocator happened to return zeroed memory,
+  which stops being true the second time a Gen 4 screen is opened in one session.
+
+## 2.2
+
+### Changed
+
+- **Gen2 detection now tries the per-UID key cache for sector 0.** Confirming a CUID means
+  authenticating to sector 0 before block 0 can be probed, and the probe only ever knew the
+  default FF..FF key, so a clone with a personalised sector 0 and no recognised ATS came back as
+  **Magic Not Confirmed**. The sector-0 key A and key B the NFC app recorded for that UID in
+  `/ext/nfc/.cache/<UID>.keys` are now offered first, ahead of FF..FF, so such a card can be
+  confirmed as Gen 2 / CUID and still gets its static-nonce classification. The cache is read once
+  per card per scan, a card with no entry behaves exactly as before, and a cached key that doesn't
+  fit costs one more RF session and nothing else: the probe itself is unchanged, still only the
+  first phase of the write, so block 0 is never modified.
+
+## 2.1
+
+### Added
+
+- **MIFARE Classic key cache phase** - the dictionary attack now tries the NFC app's per-UID key
+  cache (`/ext/nfc/.cache/<UID>.keys`) before the user and system dictionaries, for both **Write**
+  and **Wipe**. A magic clone carries the original card's UID, so keys the NFC app recovered when
+  the original was saved are already on the SD card under the clone's own name. They are fed to
+  the poller as a dictionary, so each one is still authenticated against the card in front of you;
+  a stale entry costs a few failed auths and nothing more. When the cache alone finishes the card,
+  the two dictionary phases are skipped instead of being run for nothing. A card with no cache
+  entry runs exactly as before.
+
+### Fixed
+
+- **Wiping a Gen2 clone of a static-encrypted-nonce card (FM11RF08S)** dead-ended at
+  **"No keys found"**. Those keys only ever reach the per-UID dictionary, so neither shared
+  dictionary has them; the key cache phase now does.
 
 ## 2.0
 
