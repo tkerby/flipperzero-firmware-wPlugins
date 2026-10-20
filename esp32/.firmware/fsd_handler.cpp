@@ -16,7 +16,7 @@
 #include "../../fsd_logic/fsd_ota.h"       // shared 0x318 OTA-install detection (flag vs rolling counter)
 #include "../../fsd_logic/fsd_cp_status.h" // shared 0x25D CP_status decode + EU rewrite predicate (#228)
 #include "../../fsd_logic/fsd_steer.h"     // shared 0x129 steering-angle decode + freshness
-#include "../../fsd_logic/fsd_bms.h"       // shared 0x312 pack-temperature gate, 0x33A car SOC
+#include "../../fsd_logic/fsd_bms.h"       // shared 0x292 SOC, 0x312 pack-temperature gate, 0x33A car SOC
 #include <string.h>
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
@@ -963,15 +963,10 @@ void fsd_handle_bms_hv(FSDState *state, const CanFrame *frame) {
     state->bms_seen = true;
 }
 
+// SOC: BMS_socUI, bit 10|10, 0.1 %, refused above 100 (fsd_logic/fsd_bms.h,
+// shared with the Flipper). Not the car's screen figure: that is 0x33A below.
 void fsd_handle_bms_soc(FSDState *state, const CanFrame *frame) {
-    if (frame->dlc < 3) return;
-    // Car display SOC: SOCUI292, bit10|10, LSB = 0.1 %.
-    uint16_t raw =
-        (((uint16_t)frame->data[SIG_BMS_SOC_UI_HIGH_BYTE] << (8 - SIG_BMS_SOC_UI_LOW_SHIFT)) |
-         (frame->data[SIG_BMS_SOC_UI_LOW_BYTE] >> SIG_BMS_SOC_UI_LOW_SHIFT)) &
-        SIG_BMS_SOC_UI_MASK;
-    state->soc_percent = raw * SIG_BMS_SOC_SCALE;
-    state->bms_seen = true;
+    fsd_bms_soc_update(state, frame->data, frame->dlc);
 }
 
 // Car-displayed SOC (0x33A UI_range, bit 20, 7 bits, #251): read-only, kept apart

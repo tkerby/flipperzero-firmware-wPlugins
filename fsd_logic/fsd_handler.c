@@ -61,11 +61,9 @@ void fsd_handle_bms_hv(FSDState* state, const CANFRAME* frame) {
     state->bms_seen = true;
 }
 
+// SOC: BMS_socUI, bit 10|10 (fsd_bms.h, shared with the ESP32).
 void fsd_handle_bms_soc(FSDState* state, const CANFRAME* frame) {
-    if(frame->data_lenght < 2) return;
-    uint16_t raw = ((uint16_t)(frame->buffer[1] & 0x03) << 8) | frame->buffer[0];
-    state->soc_percent = raw * 0.1f;
-    state->bms_seen = true;
+    fsd_bms_soc_update(state, frame->buffer, frame->data_lenght);
 }
 
 // Pack temperature: layout unconfirmed, plausibility-gated (fsd_bms.h).

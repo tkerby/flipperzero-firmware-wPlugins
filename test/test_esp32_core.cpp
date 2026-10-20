@@ -585,7 +585,7 @@ static void test_autopark_176(void) {
 
 // ── Signal Map hardening (#100): mask-0 ignored + configured-but-absent flag ──
 // ── 0x33A car SOC beside 0x292 through the ESP32 handlers (#251) ─────────────
-// One #211 Model Y pair, same capture: 0x292 81.8 %, 0x33A 80 % (bit 27 set).
+// One #211 Model Y pair, same capture: 0x292 socUI 81.8 %, 0x33A 80 % (bit 27 set).
 static void test_ui_soc(void) {
     FSDState s;
     memset(&s, 0, sizeof(s));
@@ -603,6 +603,9 @@ static void test_ui_soc(void) {
     f.data[2] = 0xF0; f.data[3] = 0x07;                            // 127: refused
     fsd_handle_ui_range(&s, &f);
     CHECK(s.ui_soc == 80, "0x33A above 100 refused, last value kept");
+    f.id = CAN_ID_BMS_SOC; memset(f.data, 0, 8); f.data[1] = 0xFC; f.data[2] = 0x0F;
+    fsd_handle_bms_soc(&s, &f);                                    // socUI 102.3: refused
+    CHECK(s.soc_percent > 81.75f && s.soc_percent < 81.85f, "0x292 above 100 refused, last value kept");
 }
 
 // ── 0x312 pack temperature through the ESP32 handler (fsd_bms.h) ─────────────

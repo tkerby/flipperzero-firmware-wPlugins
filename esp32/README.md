@@ -287,7 +287,7 @@ Most IDs are common. The AP/DAS status and ISA-speed meaning depends on the dete
 | `0x082` | TRIP_PLANNING | Battery precondition trigger |
 | `0x132` | BMS_HV_BUS | Battery voltage / current |
 | `0x219` | VCSEC_TPMS | Tyre pressures (read-only) |
-| `0x292` | BMS_SOC | Battery state of charge |
+| `0x292` | BMS_SOC | Battery state of charge (`BMS_socUI`, bit 10, 0.1 %) |
 | `0x312` | BMS_THERMAL | Battery temperature |
 | `0x318` | GTW_CAR_STATE | Vehicle state (OTA detection) |
 | `0x370` | EPAS_STATUS | EPAS status (NAG killer target) |

@@ -948,6 +948,55 @@ static void test_ui_soc(void) {
     CHECK(fsd_bms_decode_ui_soc(UISOC[0].d, 4, &pct) && pct == 84, "DLC 4 enough");
 }
 
+// ── 0x292 BMS_socStatus (fsd_bms.h) ──────────────────────────────────────────
+// The #211 Model Y frame (tesla_can_20261010_162400.txt, 0x33A read 80 % in the
+// same dump). The Flipper used to read bits 0-9 (socMin, 82.9 %).
+static void test_bms_soc(void) {
+    const uint8_t d211[8] = {0x3D, 0xCB, 0x5C, 0xB4, 0xD0, 0x01, 0x00, 0x00};
+    CHECK(fsd_bms_soc_field(d211, FSD_BMS_SOC_MIN_BIT) == 829 &&
+          fsd_bms_soc_field(d211, FSD_BMS_SOC_UI_BIT) == 818 &&
+          fsd_bms_soc_field(d211, FSD_BMS_SOC_MAX_BIT) == 837 &&
+          fsd_bms_soc_field(d211, FSD_BMS_SOC_AVG_BIT) == 834,
+          "#211 0x292: min 82.9 / UI 81.8 / max 83.7 / avg 83.4");
+
+    // Each field alone at full scale reads back in its own place only.
+    static const unsigned bits[4] = {FSD_BMS_SOC_MIN_BIT, FSD_BMS_SOC_UI_BIT,
+                                     FSD_BMS_SOC_MAX_BIT, FSD_BMS_SOC_AVG_BIT};
+    bool apart = true;
+    for (int i = 0; i < 4; i++) {
+        uint8_t d[8] = {0};
+        uint64_t w = (uint64_t)0x3FFu << bits[i];
+        for (int k = 0; k < 8; k++) d[k] = (uint8_t)(w >> (8 * k));
+        for (int j = 0; j < 4; j++)
+            apart &= fsd_bms_soc_field(d, bits[j]) == (i == j ? 0x3FFu : 0u);
+    }
+    CHECK(apart, "the four 10-bit fields do not overlap");
+
+    FSDState s;
+    CANFRAME f;
+    memset(&s, 0, sizeof(s));
+    zero(&f); f.canId = CAN_ID_BMS_SOC; f.data_lenght = 8; memcpy(f.buffer, d211, 8);
+    fsd_handle_bms_soc(&s, &f);
+    CHECK(s.bms_seen && s.soc_percent > 81.75f && s.soc_percent < 81.85f,
+          "Flipper handler: socUI 81.8 %% (got %.2f)", (double)s.soc_percent);
+
+    uint8_t d[8] = {0, 0xA0, 0x0F, 0, 0, 0, 0, 0};                // socUI 1000
+    uint16_t x10 = 0;
+    CHECK(fsd_bms_decode_soc(d, 3, &x10) && x10 == 1000, "100.0 %% decodes, DLC 3 enough");
+    d[1] = 0xA4;                                                   // 1001
+    x10 = 7;
+    CHECK(!fsd_bms_decode_soc(d, 8, &x10) && x10 == 7, "100.1 %% refused, caller value kept");
+    d[1] = 0xFC; d[2] = 0x0F;                                      // 1023 (all ones)
+    CHECK(!fsd_bms_decode_soc(d, 8, &x10), "1023 refused");
+    CHECK(!fsd_bms_decode_soc(d211, 2, &x10), "DLC 2 refused");
+    memcpy(f.buffer, d, 8);
+    fsd_handle_bms_soc(&s, &f);
+    CHECK(s.soc_percent > 81.75f && s.soc_percent < 81.85f, "refused frame keeps the last SOC");
+    memset(&s, 0, sizeof(s));
+    fsd_handle_bms_soc(&s, &f);
+    CHECK(!s.bms_seen && s.soc_percent == 0.0f, "only refused frames: BMS not seen");
+}
+
 // ── 0x129 SCCM_steeringAngleSensor (fsd_steer.h) ─────────────────────────────
 // Real frames from the #176 (HW3 Model 3) and #211 (HW4 Model Y) records. The
 // pre-fix int16 read of bytes 0-1 gave the angle in the trailing comment.
@@ -3729,6 +3778,7 @@ int main(void) {
     test_steering_angle();
     test_bms_thermal();
     test_ui_soc();
+    test_bms_soc();
     test_nag_burst_cap();
     test_signal_config();
     test_abort_guard();

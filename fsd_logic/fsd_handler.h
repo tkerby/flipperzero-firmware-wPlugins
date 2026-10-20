@@ -156,7 +156,7 @@ bool fsd_can_transmit(const FSDState* state);
 /** Parse a BMS HV bus frame (0x132) and update voltage/current/power. */
 void fsd_handle_bms_hv(FSDState* state, const CANFRAME* frame);
 
-/** Parse a BMS SoC frame (0x292) and update soc_percent. */
+/** Parse a BMS SoC frame (0x292) and update soc_percent from BMS_socUI (fsd_bms.h). */
 void fsd_handle_bms_soc(FSDState* state, const CANFRAME* frame);
 
 /** Parse a BMS thermal frame (0x312) and update battery temp min/max when the
