@@ -77,7 +77,9 @@ void blackbox_note_ap_state(uint8_t ap_state, uint32_t now_ms);
 
 // Arm a capture from an abort/bus-off detected on the CAN path. `snap` is a
 // snapshot of FSDState at trigger time (toggles, hw, evt_last_*). Ignored when
-// disabled or a capture is already in flight.
+// disabled or inside the window of a capture already armed. One trigger during
+// a save waits and is armed when the save is over; another during the same
+// save is missed unless it falls in the waiting one's window (blackbox_flush.h).
 void blackbox_arm(BBTrigger trig, const FSDState* snap, uint32_t now_ms);
 
 // Inject a bus-off / manual mark through the event-core (applies the cooldown)

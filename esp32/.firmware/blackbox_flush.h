@@ -10,6 +10,14 @@
  * meanwhile. Only the frames the save has not written yet are protected: with
  * the ring full and the oldest frame being the next one to write, a new frame
  * is dropped instead of evicting it.
+ *
+ * A trigger while an event is armed: up to the end of that event's post-roll
+ * it is inside the window being recorded, and part of that event. After that
+ * the event is being saved; the first trigger then waits, and is armed with
+ * its own window when the save is over. Its pre-roll is whatever the ring
+ * still holds of it by then. A further trigger during the same save is part
+ * of the waiting event when it falls inside that event's post-roll, and is
+ * missed otherwise.
  */
 
 #include <stdint.h>
@@ -65,4 +73,26 @@ static inline BBWindow bb_find_window(uint32_t n, uint32_t lo_ms, uint32_t hi_ms
 // Frames written in this pass.
 static inline uint32_t bb_slice(uint32_t left, uint32_t per_pass) {
     return left < per_pass ? left : per_pass;
+}
+
+// What a new trigger does (see the top of this file).
+enum BBArmAction : uint8_t {
+    BB_ARM_NOW = 0,     // nothing armed: arm it
+    BB_ARM_IN_WINDOW,   // inside the armed or the waiting event's window
+    BB_ARM_QUEUE,       // the armed event is being saved: wait for it
+    BB_ARM_MISSED,      // one is already waiting, and this is outside its window
+};
+
+// True while `now_ms` is at most `post_ms` after `trig_ms` (millis() wrap-safe).
+static inline bool bb_in_post_roll(uint32_t trig_ms, uint32_t post_ms, uint32_t now_ms) {
+    return (int32_t)(now_ms - trig_ms - post_ms) <= 0;
+}
+
+static inline BBArmAction bb_arm_action(bool armed, uint32_t trig_ms, bool queued,
+                                        uint32_t queued_ms, uint32_t post_ms,
+                                        uint32_t now_ms) {
+    if (!armed) return BB_ARM_NOW;
+    if (bb_in_post_roll(trig_ms, post_ms, now_ms)) return BB_ARM_IN_WINDOW;
+    if (!queued) return BB_ARM_QUEUE;
+    return bb_in_post_roll(queued_ms, post_ms, now_ms) ? BB_ARM_IN_WINDOW : BB_ARM_MISSED;
 }

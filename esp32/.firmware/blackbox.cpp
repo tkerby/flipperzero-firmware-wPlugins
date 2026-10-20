@@ -92,6 +92,13 @@ static BBTrigger g_trig = BB_TRIG_ABORT;
 static uint32_t  g_trig_ms = 0;
 static uint32_t  g_flush_at_ms = 0;
 static FSDState  g_snap;            // FSDState at trigger time (toggles/hw/evt_last_*)
+// A trigger that came while the armed event was being saved; armed when that
+// save is over (blackbox_flush.h).
+static bool      g_queued = false;
+static BBTrigger g_q_trig = BB_TRIG_ABORT;
+static uint32_t  g_q_ms = 0;
+static FSDState  g_q_snap;
+static uint32_t  g_missed = 0;      // triggers neither saved nor inside a saved window
 static uint32_t  g_captures = 0;    // monotonic count since boot (badge source)
 static uint32_t  g_next_seq = 1;    // number of the next event (blackbox_name.h)
 
@@ -555,6 +562,7 @@ static void blackbox_free_ring() {
     g_cap = 0;
     g_head = g_tail = 0;
     g_armed = false;
+    g_queued = false;
 }
 
 void blackbox_init(FSDState* state, portMUX_TYPE* state_mux) {
@@ -624,7 +632,26 @@ void blackbox_note_ap_state(uint8_t ap_state, uint32_t now_ms) {
 
 void blackbox_arm(BBTrigger trig, const FSDState* snap, uint32_t now_ms) {
     if (g_cap == 0 || g_state == nullptr || !g_state->blackbox_enabled) return;
-    if (g_armed) return;  // already capturing; ignore until the post-roll flushes
+    switch (bb_arm_action(g_armed, g_trig_ms, g_queued, g_q_ms, BLACKBOX_POST_MS, now_ms)) {
+    case BB_ARM_IN_WINDOW:  // already in the window of an armed or waiting event
+        return;
+    case BB_ARM_QUEUE:      // the armed event is being saved: this one is next
+        g_queued = true;
+        g_q_trig = trig;
+        g_q_ms = now_ms;
+        if (snap) g_q_snap = *snap; else g_q_snap = *g_state;
+        Serial.printf("[BB] %s @ %lums waits for the save in progress\n",
+                      trig_name_uc(trig), (unsigned long)now_ms);
+        return;
+    case BB_ARM_MISSED:     // one already waits, and this is past its window
+        g_missed++;
+        Serial.printf("[BB] %s @ %lums not recorded: a save is running and another "
+                      "event waits\n", trig_name_uc(trig), (unsigned long)now_ms);
+        return;
+    case BB_ARM_NOW:
+    default:
+        break;
+    }
     g_armed = true;
     g_trig = trig;
     g_trig_ms = now_ms;
@@ -878,8 +905,22 @@ static bool do_flush(uint32_t now_ms) {
 void blackbox_tick(uint32_t now_ms) {
     if (!g_armed) return;
     if ((int32_t)(now_ms - g_flush_at_ms) < 0) return;  // post-roll, or between save steps
-    if (do_flush(now_ms)) g_armed = false;
-    else g_flush_at_ms = now_ms + BLACKBOX_FLUSH_GAP_MS;
+    if (!do_flush(now_ms)) {
+        g_flush_at_ms = now_ms + BLACKBOX_FLUSH_GAP_MS;
+        return;
+    }
+    g_armed = false;
+    if (!g_queued) return;
+    // The trigger that came during the save: its window, its snapshot. With its
+    // post-roll already over, its save starts on the next call.
+    g_queued = false;
+    g_armed = true;
+    g_trig = g_q_trig;
+    g_trig_ms = g_q_ms;
+    g_flush_at_ms = g_q_ms + BLACKBOX_POST_MS;
+    g_snap = g_q_snap;
+    Serial.printf("[BB] armed by %s @ %lums, after the save\n",
+                  trig_name_uc(g_trig), (unsigned long)g_trig_ms);
 }
 
 void blackbox_set_enabled(bool enabled) {
@@ -921,6 +962,8 @@ String blackbox_status_json() {
     j += "\"psram\":";    j += g_ring_psram ? "true" : "false"; j += ',';
     j += "\"cap\":";      j += g_cap; j += ',';
     j += "\"armed\":";    j += g_armed ? "true" : "false"; j += ',';
+    j += "\"queued\":";   j += g_queued ? "true" : "false"; j += ',';
+    j += "\"missed\":";   j += g_missed; j += ',';
     j += "\"events\":";   j += backend_count(); j += ',';
     j += "\"captures\":"; j += g_captures;
     j += '}';
