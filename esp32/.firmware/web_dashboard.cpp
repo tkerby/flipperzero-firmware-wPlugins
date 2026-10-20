@@ -2442,12 +2442,13 @@ static String build_json() {
         (state.hw_version == TeslaHW_HW3) ? "HW3: DAS 0x399" :
         (state.hw_version == TeslaHW_Legacy) ? "Legacy: DAS 0x399" :
         "Waiting for HW detection";
-    // Core payload runs ~2.3-2.5 KB of scalar fields plus small bms/perf/tpms/
-    // ota/http_can_stream objects (and ~0.2 KB of can_buses on two-bus boards),
-    // now that the heavy blackbox/capability/profile blocks fetch from
-    // /api/aux (#124). Past the reserve the String reallocs every 16 bytes,
-    // and build_json() runs on every WS push.
-    j.reserve(3072);
+    // About 3.1 KB on a T-2CAN in use: the scalar fields, the bms/perf/tpms/
+    // ota/http_can_stream/loop objects, can_buses and mcp_rx_task. The heavy
+    // blackbox/capability/profile blocks come from /api/aux (#124). With every
+    // counter at 4294967295 and both SSIDs at 32 escaped characters it is
+    // 3.9 KB (3.7 KB on the TTGO). Past the reserve the String reallocs every
+    // 16 bytes, and build_json() runs on every WS push.
+    j.reserve(4096);
     j  = "{";
     j += "\"fsd_enabled\":";   j += state.fsd_enabled                 ? "true" : "false"; j += ',';
     j += "\"ap_active\":";     j += state.ap_active                   ? "true" : "false"; j += ',';
