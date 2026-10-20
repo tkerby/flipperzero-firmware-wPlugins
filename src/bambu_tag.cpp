@@ -171,28 +171,31 @@ bool br_parse_mf(const MfClassicData* data, BrTagInfo* info) {
     return br_dump_from_mf(data, &dump) && br_parse_dump(&dump, info);
 }
 
-bool br_load_tag_file(Storage* storage, const char* path, BrTagInfo* info) {
-    if(!storage || !path || !info) return false;
+bool br_load_tag_dump(Storage* storage, const char* path, BrTagDump* dump, BrTagInfo* info) {
+    if(!storage || !path || !dump) return false;
 
+    bool ok = false;
     if(has_nfc_extension(path)) {
         NfcDevice* device = nfc_device_alloc();
         if(!device) return false;
-        bool ok = nfc_device_load(device, path);
+        ok = nfc_device_load(device, path);
         if(ok && nfc_device_get_protocol(device) == NfcProtocolMfClassic) {
             const MfClassicData* data =
                 static_cast<const MfClassicData*>(nfc_device_get_data(device, NfcProtocolMfClassic));
-            ok = br_parse_mf(data, info);
+            ok = br_dump_from_mf(data, dump);
         } else {
             ok = false;
         }
         nfc_device_free(device);
-        return ok;
+    } else if(has_bin_extension(path)) {
+        ok = load_raw_bin(storage, path, dump);
     }
 
-    if(has_bin_extension(path)) {
-        BrTagDump dump;
-        return load_raw_bin(storage, path, &dump) && br_parse_dump(&dump, info);
-    }
+    if(ok && info) ok = br_parse_dump(dump, info);
+    return ok;
+}
 
-    return false;
+bool br_load_tag_file(Storage* storage, const char* path, BrTagInfo* info) {
+    BrTagDump dump;
+    return info && br_load_tag_dump(storage, path, &dump, info);
 }

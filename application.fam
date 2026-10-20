@@ -10,6 +10,6 @@ App(
     fap_description="Read, save, browse, and inspect Bambu Lab filament RFID tags.",
     fap_author="DanTheMan827",
     fap_icon="icon.png",
-    sources=["src/*.cpp", "src/ui/*.cpp"],
+    sources=["src/*.cpp", "src/ui/*.cpp", "src/magic/*.cpp"],
     fap_libs=["mbedtls"],
 )
