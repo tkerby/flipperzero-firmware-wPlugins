@@ -74,7 +74,7 @@
 - 拟真扭力变化 — 在 1.00-1.80 Nm 之间用 xorshift32 PRNG 随机游走，每 5-9 秒有一次握力脉冲。自 v2.16-beta.11 起所有 nag 路径都有 ±1.8 Nm 上限，所以握力脉冲最高 1.80 Nm（[#122](https://github.com/hypery11/flipper-tesla-fsd/issues/122)）
 - **按需握力脉冲（v2.15+）** — 当 `handsOnLevel` 升到提醒需求状态（0 即将 / 3 升级）时，立即发出一次握力脉冲并重置周期排程。补上 v2.14 及更早版本在排程脉冲之间可能出现的 2 秒黄色升级空窗
 - 在 `0x370` 做 EPAS counter+1 回应，并抑制 level 0（提醒即将出现）与 level 3（升级警报）
-- **请接 Party CAN（X179 pin 2/3）给 nag killer。** `0x370` 在 Party CAN — 不在 Vehicle CAN（9/10），而 Chassis CAN 上的副本（部分线束的 13/14）会触发 2026.14.x preflight。已在 HW4 2026.20 上以接 2/3 确认可用（[#100](https://github.com/hypery11/flipper-tesla-fsd/issues/100)）。接错线对的单 CAN 板子没有东西可回应 — 这是「nag killer 在 HW4 上没反应」最常见的原因。用车上的 **Service Mode → CAN Port** 页面确认你这条线束上哪一对是 Party；见 [HARDWARE.md](HARDWARE.md)。
+- **请接 Party CAN（X179 pin 2/3）给 nag killer。** `0x370` 在 Party CAN — 不在 Vehicle CAN（9/10），而 Chassis CAN 上的副本（部分线束的 13/14）会触发 2026.14.x preflight。已在 HW4 2026.20 上以接 2/3 确认可用（[#100](https://github.com/hypery11/flipper-tesla-fsd/issues/100)）。接错线对的单 CAN 板子没有东西可回应 — 这是「nag killer 在 HW4 上没反应」最常见的原因。对照车辆的接线图（车上有 **Service Mode → CAN Port** 页面的也可在那里查看）确认你这条线束上哪一对是 Party；见 [HARDWARE.md](HARDWARE.md)。
 
 ### AP-First 模式（v2.14+，给 2026.14.x 固件）
 - Tesla 2026.14.x 新增了 preflight 检查，若 CAN 注入已在进行就挡下 AP/TACC 接管
@@ -213,7 +213,7 @@ ESP32 固件会依检测到的硬件版本对应 AP/DAS 状态来源：
 ### 接点
 
 - **OBD-II** — Party CAN。2019+ Model 3／2020 至 2024 年 4 月的 Model Y 位于后中控台区域，需要 Tesla 专用转接线；2024+ Juniper／较新的 Highland 在那里改用 DoIP（以太网），不是 CAN。部分 Model 3/Y 车款在 Drive 挡可能静默。
-- **X179**（后中控台后方）— 建议使用。引脚与总线的对应依线束而异，接线前请先看车上的 **Service Mode → CAN Port** 页面。20-pin 与 26-pin 引脚见 [`HARDWARE.md`](HARDWARE.md)。
+- **X179**（后中控台后方）— 建议使用。引脚与总线的对应依线束而异，接线前请先对照车辆的接线图（车上有 **Service Mode → CAN Port** 页面的也可在那里查看）。20-pin 与 26-pin 引脚以及 Tesla 电路参考资料的链接见 [`HARDWARE.md`](HARDWARE.md)。
 
 <p align="center">
   <img src="images/wiring_diagram.png" alt="接线图" width="700">
@@ -228,7 +228,10 @@ ESP32 固件会依检测到的硬件版本对应 AP/DAS 状态来源：
 第一次接触、不太懂技术？选你的硬件 — 两条路径都不用命令行：
 
 **Flipper Zero**
-1. 打开 [Releases](https://github.com/hypery11/flipper-tesla-fsd/releases)，从最新版本下载 `tesla_mod.fap`。
+
+最简单的方式是 Flipper 官方应用目录：在 Flipper 手机 app 里打开 **Apps** 搜索 **Tesla Mod**，或者从 [lab.flipper.net/apps/tesla_mod](https://lab.flipper.net/apps/tesla_mod) 安装。目录里的版本跟随稳定版发布，可能落后于测试版；想用测试版，请自己复制 Releases 里的 `.fap`：
+
+1. 打开 [Releases](https://github.com/hypery11/flipper-tesla-fsd/releases)，下载你要的版本的 `tesla_mod.fap`（测试版标为 Pre-release）。
 2. 接上 Flipper，打开 [qFlipper](https://flipperzero.one/update)（官方桌面 app）。
 3. 把 `tesla_mod.fap` 复制到 SD 卡的 `apps/GPIO/`。
 4. 在 Flipper 上：**Apps → GPIO → Tesla Mod**。
@@ -270,7 +273,7 @@ pio run -e m5stack-atom    # 或：esp32-lilygo、waveshare-s3-can、esp32-mcp25
 ## 使用方式
 
 1. 把 CAN Add-On 插上 Flipper Zero（或烧录 ESP32）
-2. 用 CAN-H/CAN-L 通过 OBD-II 或 X179 接到车辆（X179 哪几脚是哪条总线，看 Service Mode → CAN Port）
+2. 用 CAN-H/CAN-L 通过 OBD-II 或 X179 接到车辆（X179 哪几脚是哪条总线，看车辆的接线图；车上有 Service Mode → CAN Port 的也可在那里查看）
 3. 打开 app：`Apps > GPIO > Tesla Mod`
 4. 选 **「Auto Detect & Start」**（或手动 Force HW3/HW4/Legacy）
 5. 等待检测（最多 8 秒）— Palladium S/X 会自动从 Legacy 升级到 HW3
@@ -335,7 +338,7 @@ pio run -e m5stack-atom    # 或：esp32-lilygo、waveshare-s3-can、esp32-mcp25
 | `0x312` | `BMS_thermalStatus` | RX | 电池温度（部分车型的字段位置未确认，不合理的读数会隐藏） |
 | `0x33A` | `UI_range` | RX | 车上屏幕显示的电量（ESP32 电池卡片） |
 
-完整 42 个 handler 清单（18 TX、24 RX）见 [`fsd_logic/fsd_handler.h`](fsd_logic/fsd_handler.h)。
+完整 40 个 handler 清单（17 TX、23 RX）见 [`fsd_logic/fsd_handler.h`](fsd_logic/fsd_handler.h)。
 
 ---
 
@@ -376,7 +379,7 @@ ESP32 更便宜（$14 vs $200+），有 WiFi 仪表板、NVS 保存与深度睡�
 - [ElectronicCats/flipper-MCP2515-CANBUS](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) — Flipper 用 MCP2515 驱动
 - 社区贡献者 — 本项目赖以运作的实车测试、抓包与研究：
   - **协议、nag killer 与 2026.14.x：** @jewelrylin（T-2CAN 双总线抓包、frame-content preflight 测试、X179 Service Mode 针脚图）、@DrStrangeglovebox（`0x370` 参考抓包 + HW4 双 CAN 数据 + 安全发现）、@ssw0209-sys（Mode-C 转向扭力参考 + HW4 14.x 测试）、@0xAccretion（HW4 Highland 中规 MIC DAS 布局发现，#116/#117）、@dunckencn（国行 HW3 start-after-AP 验证、steer-jerk 与 bus-off 报告）、@kristopf007（HW4 14.x 实车测试）、@anoblekman（Highland HW4 DAS 解码 + 车内自动泊车安全发现，#177/#180）、@SkyRaax（在 Party CAN 2/3 上跑 nag killer，HW4 2026.20，#100）、@LonelyCheese09（有标注的 HW3 2026.14.6 nag 抓包，促成 EPAS-faithful 修正，#122）、@jim608（有标注的 HW3 2026.14.6 nag 抓包，促成 EPAS-faithful 修正，#121/#122）、@weigibbor（2026.20 中规 MIC 抓包 + 区域锁层级 TX 测试，#117）、@7hf6cfqzkb-png（激活延迟报告，促成 Instant Engage，#129）、@cquanu（第一个 2026.14.2 不兼容报告，#52）、@deftdawg（按需握力脉冲的测试与集成，#70；TTGO T-Display 测试报告）、@zdenekbouresh（DAS 感知 nag 门控，移植自 ev-open-can-tools PR #5）
-  - **功能、抓包与 PR：** @JakNo（ScrollPress AP / `0x3C2`）、@vrs11（Continuous AP；T-2CAN 多 ID 抓包过滤，#210）、@sqladm1n（RTC 抓包日志 PR + 总线/接线排查）、@DmitroPanteliuk（全速率 `0x229` 抓包）、@se7en7777777（`0x485` / Highland / 校验和分析）、@RoyRakete（TLSSC 封禁车组合）、@mamixsystem（post-SOP10 连接器参考;frame 级 14.x FSD-engage 决定性调查，#163）、@p0sixturtle（Summon / tier-selector 线索，#139）、@dahua910（RHD 需求，#66）、@HamzaObaidat（剧院模式 `0x118` 研究，#149）、@fboulegue（EU / 新线束 Juniper 报告，#143/#109/#110）、@densen2014（ESP32 HW 选择器建议 #110、TLSSC bit38 开关 PR #159、Summon 行驶中安全防护建议 #160）、@Tesla234987234sdf（Palladium OTA 误锁报告 + 抓包，#183/#175；`0x25D` 欧规充电口类型的发现与实车验证，#228）、@tommybsb-lab（ATOM Lite / Juniper 实测报告，促成 Signal Map 修正，#100）、@sb1089（HW3 2026.26 nag 抓包，#122）、@ukinora（独立的 `0x318` 循环计数器分析；来自其 fork 的 `0x3C2` 总线提示、`canstat`、12 V／重启原因判断逻辑与 TPMS 基础，#218/#237）、@adrianpadure99（网页烧录器“can't fetch”报告，#176）、@danpadure（市区 Autopark 暂停误触报告，#176；HW3 FSD 速度偏移报告，#209）、@Jclevy-CN（HW4 speed profile 清掉 bit 63 的 bug + 实车 A/B，#59；ESP32 加固思路来自其 fork）、@siksndavis（ESP32 缺少 Precondition 开关的报告，#192）、@maslyankov（M5Stack ATOM Matrix + GPIO 39 按键，PR #46）、@BenjaminFaal（Juniper 上的 `0x485` 换挡 frame，#43）、@jangshik（ESP32 Wi-Fi AP+STA 需求 #101、T-2CAN 配置 #96）、@TzCoMe（Telemetry Off 背后的遥测关闭研究）、@0n3-70uch（用示波器测出 2024 年 4 月后 26-pin 接头的引脚，#52）、@TianzeWang（Tesla SOP8/SOP9 电路参考资料，#52）、@Tikernel（Model Y Juniper HW4 2026.2.11 中国正向兼容性数据）、@LeeSSXX（Momentum / Xtreme 编译错误报告，#17）、@nobless（Acceleration Mode 需求，#211；captive portal 报告 + fork 可靠性线索，#218/#219；beta.38 仪表盘 / Wi-Fi 回归问题报告，以及在 T-2CAN 上用 macOS 与 iOS 确认 beta.40，#223/#225；2024-07 Fremont Model Y 18/19 抓包，#211；TPMS 与 hostname 需求，并提供 T-2CAN FD 板测试，#237/#225/#206）、@olschmalz-cyber（beta.38 Wi-Fi 反复断线报告、用四台设备测试确认问题出在板子上，并在两块板子上确认 beta.40 修复，#230）、@pirozhkov095-ctrl（修复后第一条实机 stack／heap 读数，#230）、@vanyasvl（最早的 Boost 需求，#63）、@ColinM-sys（tesla-can-boost，Acceleration Mode 的 pedal map 构想来源）、@i520e3e4（zh-Hans + zh-Hant 网页仪表盘翻译，#205；T-2CAN FD 需求，#206）、@mxkr303（2020 Model 3 SOP4 X120 Party CAN 接线记录，#191）
+  - **功能、抓包与 PR：** @JakNo（ScrollPress AP / `0x3C2`）、@vrs11（Continuous AP；T-2CAN 多 ID 抓包过滤，#210）、@sqladm1n（RTC 抓包日志 PR + 总线/接线排查）、@DmitroPanteliuk（全速率 `0x229` 抓包）、@se7en7777777（`0x485` / Highland / 校验和分析）、@RoyRakete（TLSSC 封禁车组合）、@mamixsystem（post-SOP10 连接器参考;frame 级 14.x FSD-engage 决定性调查，#163）、@p0sixturtle（Summon / tier-selector 线索，#139）、@dahua910（RHD 需求，#66）、@HamzaObaidat（剧院模式 `0x118` 研究，#149）、@fboulegue（EU / 新线束 Juniper 报告，#143/#109/#110）、@densen2014（ESP32 HW 选择器建议 #110、TLSSC bit38 开关 PR #159、Summon 行驶中安全防护建议 #160）、@Tesla234987234sdf（Palladium OTA 误锁报告 + 抓包，#183/#175；`0x25D` 欧规充电口类型的发现与实车验证，#228）、@tommybsb-lab（ATOM Lite / Juniper 实测报告，促成 Signal Map 修正，#100）、@sb1089（HW3 2026.26 nag 抓包，#122）、@ukinora（独立的 `0x318` 循环计数器分析；来自其 fork 的 `0x3C2` 总线提示、`canstat`、12 V／重启原因判断逻辑、TPMS 基础、`0x33A` 车上 SOC 解码、车速 SNA 防护与时钟回绕修正，#218/#237/#251）、@adrianpadure99（网页烧录器“can't fetch”报告，#176）、@danpadure（市区 Autopark 暂停误触报告，以及找出 `0x129` 转向角与走走停停 Autopark 问题的黑匣子记录，#176；HW3 FSD 速度偏移报告，#209）、@Jclevy-CN（HW4 speed profile 清掉 bit 63 的 bug + 实车 A/B，#59；ESP32 加固思路来自其 fork）、@siksndavis（ESP32 缺少 Precondition 开关的报告，#192）、@maslyankov（M5Stack ATOM Matrix + GPIO 39 按键，PR #46）、@BenjaminFaal（Juniper 上的 `0x485` 换挡 frame，#43）、@jangshik（ESP32 Wi-Fi AP+STA 需求 #101、T-2CAN 配置 #96）、@TzCoMe（Telemetry Off 背后的遥测关闭研究）、@0n3-70uch（用示波器测出 2024 年 4 月后 26-pin 接头的引脚，#52）、@TianzeWang（Tesla SOP8/SOP9 电路参考资料，#52）、@Tikernel（Model Y Juniper HW4 2026.2.11 中国正向兼容性数据）、@LeeSSXX（Momentum / Xtreme 编译错误报告，#17）、@nobless（Acceleration Mode 需求，#211；captive portal 报告 + fork 可靠性线索，#218/#219；beta.38 仪表盘 / Wi-Fi 回归问题报告，以及在 T-2CAN 上用 macOS 与 iOS 确认 beta.40，#223/#225；2024-07 Fremont Model Y 18/19 抓包，以及促成 `0x129` 转向角修正的日志与黑匣子记录，#211；TPMS、hostname、CAN Bus 卡片与电池相关需求，#237/#225/#251–#254；提供 T-2CAN FD 板并完成第一次 FD 测试，#206；拍下车上胎压画面，确定了 TPMS 的车轮顺序，#237）、@olschmalz-cyber（beta.38 Wi-Fi 反复断线报告、用四台设备测试确认问题出在板子上，并在两块板子上确认 beta.40 修复，#230）、@pirozhkov095-ctrl（修复后第一条实机 stack／heap 读数，#230）、@vanyasvl（最早的 Boost 需求，#63）、@ColinM-sys（tesla-can-boost，Acceleration Mode 的 pedal map 构想来源）、@i520e3e4（zh-Hans + zh-Hant 网页仪表盘翻译，#205；T-2CAN FD 需求，#206）、@mxkr303（2020 Model 3 SOP4 X120 Party CAN 接线记录，#191）
   - **封禁研究、平台测试、ESP32、bug 修复：** @THER4iN、@MiniCS、@kp43h8、@gauner1986、@dmagyar、@ViPiMP、@marcobellinoroci-source、@danpadure、@bruvv、@Symness、@hkloudou、@nagotti、@patatman、@JordanzhaoD
 - `Starmixcraft/tesla-fsd-can-mod` — 原始 CanFeather FSD 研究（GitLab repo 已被移除；镜像在 [Karolynaz/waymo-fsd-can-mod](https://github.com/Karolynaz/waymo-fsd-can-mod)）
 
