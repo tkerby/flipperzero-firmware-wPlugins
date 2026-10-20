@@ -85,6 +85,7 @@ static uint32_t  g_head = 0;        // next write slot
 static uint32_t  g_tail = 0;        // oldest frame
 static bool      g_ring_psram = false;
 static bool      g_want_psram = false;  // size decision from init; alloc is lazy
+static FSDBlackboxThin g_thin[CAN_BUS_COUNT];  // 0x257 thinning, internal-RAM ring
 
 static bool      g_armed = false;
 static BBTrigger g_trig = BB_TRIG_ABORT;
@@ -587,6 +588,10 @@ static void bb_record(CanBusId bus, const CanFrame& frame, uint32_t now_ms, uint
     // the 10 s pre / 5 s post window; the filter drops the stored rate ~15x so
     // the whole window survives. Define BLACKBOX_CAPTURE_ALL to keep every frame.
     if (!fsd_blackbox_should_record(frame.id)) return;
+    // The internal-RAM ring keeps 0x257 at 10 Hz per bus; PSRAM keeps every frame.
+    if (!g_ring_psram &&
+        !fsd_blackbox_thin_keep(frame.id, now_ms, &g_thin[bus < CAN_BUS_COUNT ? bus : 0]))
+        return;
     uint32_t slot;
     // Evicts the oldest frame, or drops this one if that is still to be saved.
     if (!bb_ring_push(g_cap, g_head, g_tail, bb_keep_slot(), &slot)) return;

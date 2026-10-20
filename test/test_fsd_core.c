@@ -3361,6 +3361,28 @@ static void test_blackbox_filter(void) {
     CHECK(fsd_blackbox_should_record(CAN_ID_DAS_STATUS2),     "0x389 ACC limit in set");
     CHECK(fsd_blackbox_should_record(CAN_ID_DAS_CONTROL),     "0x2B9 DAS_control in set");
     CHECK(fsd_blackbox_should_record(CAN_ID_DI_SYS_STATUS),   "0x118 state in set");
+    // Speed / Acceleration Mode / battery questions (#176, #211, #251).
+    CHECK(fsd_blackbox_should_record(CAN_ID_DI_SPEED),        "0x257 speed in set");
+    CHECK(fsd_blackbox_should_record(0x334u),                "0x334 pedal map in set");
+    CHECK(fsd_blackbox_should_record(CAN_ID_BMS_THERMAL),     "0x312 pack temp in set");
+    CHECK(fsd_blackbox_should_record(CAN_ID_BMS_SOC),         "0x292 pack SOC in set");
+    CHECK(fsd_blackbox_should_record(0x33Au),                "0x33A car SOC in set");
+
+    // 0x257 thinned to one frame per FSD_BLACKBOX_THIN_MS per bus; other ids untouched.
+    FSDBlackboxThin th;
+    memset(&th, 0, sizeof(th));
+    int kept = 0;
+    for (uint32_t t = 1000u; t < 2000u; t += 20u)             // 50 Hz for 1 s
+        if (fsd_blackbox_thin_keep(CAN_ID_DI_SPEED, t, &th)) kept++;
+    CHECK(kept == 10, "0x257 at 50 Hz thinned to 10 per second (kept %d)", kept);
+    CHECK(fsd_blackbox_thin_keep(CAN_ID_DI_SPEED, 2080u, &th), "0x257 100 ms after the last kept: stored");
+    CHECK(!fsd_blackbox_thin_keep(CAN_ID_DI_SPEED, 2179u, &th), "0x257 99 ms after: dropped");
+    int other = 0;
+    for (uint32_t t = 1000u; t < 2000u; t += 10u)
+        if (fsd_blackbox_thin_keep(CAN_ID_STEER_ANGLE, t, &th)) other++;
+    CHECK(other == 100, "0x129 not thinned (kept %d/100)", other);
+    memset(&th, 0, sizeof(th));
+    CHECK(fsd_blackbox_thin_keep(CAN_ID_DI_SPEED, 0u, &th), "first 0x257 at t=0 stored");
 
     // Chatty non-diagnostic frames are dropped (the ~15x rate cut).
     CHECK(!fsd_blackbox_should_record(CAN_ID_BMS_HV_BUS),  "0x132 BMS dropped");
