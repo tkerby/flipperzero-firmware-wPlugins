@@ -1,6 +1,7 @@
 #include "../tesla_fsd_app.h"
 #include "../scenes_config/app_scene_functions.h"
 #include "../fsd_logic/fsd_capture.h"  // shared candump-ASCII formatter
+#include "../fsd_logic/fsd_bms.h"      // 0x312 pack-temperature freshness
 #include <stdio.h>
 
 #define FSD_DISPLAY_REFRESH_MS 250
@@ -89,9 +90,15 @@ static void fsd_update_display(TeslaFSDApp* app, uint32_t uptime_ms) {
         snprintf(line4, sizeof(line4), "!14.x: TX may stop AP");
     } else if(state.bms_seen) {
         float kw = state.pack_voltage_v * state.pack_current_a / 1000.0f;
-        snprintf(line4, sizeof(line4), "SoC:%.0f%% %.0fkW %d-%dC",
-            (double)state.soc_percent, (double)kw,
-            state.batt_temp_min_c, state.batt_temp_max_c);
+        // Pack temp only from a fresh, plausible 0x312 reading (fsd_bms.h).
+        if(fsd_bms_temp_fresh(&state, furi_get_tick())) {
+            snprintf(line4, sizeof(line4), "SoC:%.0f%% %.0fkW %d-%dC",
+                (double)state.soc_percent, (double)kw,
+                state.batt_temp_min_c, state.batt_temp_max_c);
+        } else {
+            snprintf(line4, sizeof(line4), "SoC:%.0f%% %.0fkW",
+                (double)state.soc_percent, (double)kw);
+        }
     } else {
         snprintf(line4, sizeof(line4), "%s%s%s%s%s%s",
             state.force_fsd ? "FORCE " : "",
@@ -342,7 +349,7 @@ static int32_t fsd_running_worker(void* context) {
                     fsd_handle_bms_soc(&state, &frame);
                 }
                 else if(frame.canId == CAN_ID_BMS_THERMAL) {
-                    fsd_handle_bms_thermal(&state, &frame);
+                    fsd_handle_bms_thermal(&state, &frame, now);
                 }
                 // Extras: read-only vehicle state parsers (mode-independent)
                 else if(frame.canId == CAN_ID_DI_SYS_STATUS) {

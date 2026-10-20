@@ -19,6 +19,7 @@
 #include "fsd_checksum.h" // tesla_additive_checksum (0x334 / 0x118 vectors)
 #include "fsd_cp_status.h" // 0x25D CP_status decode + plug guard + rewrite predicate (#228)
 #include "fsd_steer.h"     // 0x129 steering-angle decode + freshness
+#include "fsd_bms.h"       // 0x312 pack-temperature gate
 #include "blackbox_flush.h" // black-box ring push, window search, save slices
 #include "blackbox_name.h"  // black-box event names and their order across reboots
 #include "gear_tx_route.h" // Continuous AP 0x229 press bus choice
@@ -583,6 +584,30 @@ static void test_autopark_176(void) {
 }
 
 // ── Signal Map hardening (#100): mask-0 ignored + configured-but-absent flag ──
+// ── 0x312 pack temperature through the ESP32 handler (fsd_bms.h) ─────────────
+static void bms312_feed(FSDState* s, uint8_t b4, uint8_t b5, uint32_t now) {
+    CanFrame f;
+    memset(&f, 0, sizeof(f));
+    f.id = CAN_ID_BMS_THERMAL; f.dlc = 8;
+    f.data[4] = b4; f.data[5] = b5;
+    fsd_handle_bms_thermal(s, &f, now);
+}
+static void test_bms_thermal(void) {
+    FSDState s;
+    memset(&s, 0, sizeof(s));
+    bms312_feed(&s, 0xF6, 0x30, 1000u);                         // 206~8 (shown as -50~8)
+    CHECK(s.bms_seen && !s.batt_temp_ok && s.batt_temp_rejected == 1, "206~8 C rejected");
+    bms312_feed(&s, 0x40, 0x8D, 1100u);                         // #211 dump 24~101
+    CHECK(!s.batt_temp_ok && s.batt_temp_rejected == 2, "24~101 C rejected");
+    bms312_feed(&s, 0x3A, 0x3D, 1200u);                         // 18~21
+    CHECK(fsd_bms_temp_fresh(&s, 1200u) && s.batt_temp_min_c == 18 && s.batt_temp_max_c == 21,
+          "18~21 C stored (%d~%d)", s.batt_temp_min_c, s.batt_temp_max_c);
+    bms312_feed(&s, 0xF5, 0x08, 1300u);                         // 205~-32 (shown as -51~-32)
+    CHECK(s.batt_temp_min_c == 18 && s.batt_temp_ms == 1200u && s.batt_temp_rejected == 3,
+          "205~-32 C rejected, last plausible kept");
+    CHECK(!fsd_bms_temp_fresh(&s, 1201u + FSD_BMS_TEMP_STALE_MS), "stale after FSD_BMS_TEMP_STALE_MS");
+}
+
 // ── 0x129 steering angle: decode, Soft Engage, EPAS-faithful direction ───────
 // Same #176 / #211 frames as test_steering_angle in test_fsd_core.c, through
 // the ESP32 handlers.
@@ -1754,6 +1779,7 @@ int main() {
     test_autopark_176();
     test_signal_map();
     test_steering_angle();
+    test_bms_thermal();
     test_di_speed();
     test_cp_type_decode();
     test_cp_type_rewrite();

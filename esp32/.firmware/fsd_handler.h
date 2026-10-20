@@ -191,8 +191,9 @@ void fsd_handle_bms_hv(FSDState *state, const CanFrame *frame);
 /** Parse BMS_socStatus (0x292) — updates soc_percent. */
 void fsd_handle_bms_soc(FSDState *state, const CanFrame *frame);
 
-/** Parse BMS_thermalStatus (0x312) — updates batt_temp_min/max_c. */
-void fsd_handle_bms_thermal(FSDState *state, const CanFrame *frame);
+/** Parse BMS_thermalStatus (0x312) — updates batt_temp_min/max_c when plausible
+ *  (fsd_logic/fsd_bms.h); now_ms stamps batt_temp_ms. */
+void fsd_handle_bms_thermal(FSDState *state, const CanFrame *frame, uint32_t now_ms);
 
 /** Parse ESP_wheelSpeeds (0x175, Party CAN) — updates the four wheel_speed_*_kph
  *  (read-only, feeds the dashboard wheel-slip read-out). */

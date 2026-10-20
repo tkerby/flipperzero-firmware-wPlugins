@@ -159,8 +159,9 @@ void fsd_handle_bms_hv(FSDState* state, const CANFRAME* frame);
 /** Parse a BMS SoC frame (0x292) and update soc_percent. */
 void fsd_handle_bms_soc(FSDState* state, const CANFRAME* frame);
 
-/** Parse a BMS thermal frame (0x312) and update battery temp min/max. */
-void fsd_handle_bms_thermal(FSDState* state, const CANFRAME* frame);
+/** Parse a BMS thermal frame (0x312) and update battery temp min/max when the
+ *  reading is plausible (fsd_bms.h); now_ms stamps its age. */
+void fsd_handle_bms_thermal(FSDState* state, const CANFRAME* frame, uint32_t now_ms);
 
 /** Build a UI_tripPlanning frame (0x082) to trigger precondition heating. */
 void fsd_build_precondition_frame(CANFRAME* frame);

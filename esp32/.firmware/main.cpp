@@ -1234,7 +1234,7 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
     // ── BMS sniff (read-only, always) ─────────────────────────────────────────
     if (frame.id == CAN_ID_BMS_HV_BUS)  { state_enter(); fsd_handle_bms_hv(&g_state, &frame);      state_exit(); return; }
     if (frame.id == CAN_ID_BMS_SOC)     { state_enter(); fsd_handle_bms_soc(&g_state, &frame);     state_exit(); return; }
-    if (frame.id == CAN_ID_BMS_THERMAL) { state_enter(); fsd_handle_bms_thermal(&g_state, &frame); state_exit(); return; }
+    if (frame.id == CAN_ID_BMS_THERMAL) { state_enter(); fsd_handle_bms_thermal(&g_state, &frame, now); state_exit(); return; }
 
     // ── DAS status (read-only, always) — gating for NAG killer ───────────────
     // Skipped when a custom DAS source is configured (#122) — config owns it.

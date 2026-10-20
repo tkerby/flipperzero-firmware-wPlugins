@@ -2,6 +2,7 @@
 #include "fsd_checksum.h"
 #include "fsd_can_ops.h"
 #include "fsd_ota.h"
+#include "fsd_bms.h"
 #include "fsd_steer.h"
 #include <string.h>
 
@@ -67,11 +68,9 @@ void fsd_handle_bms_soc(FSDState* state, const CANFRAME* frame) {
     state->bms_seen = true;
 }
 
-void fsd_handle_bms_thermal(FSDState* state, const CANFRAME* frame) {
-    if(frame->data_lenght < 6) return;
-    state->batt_temp_min_c = (int8_t)(frame->buffer[4] - 40);
-    state->batt_temp_max_c = (int8_t)(frame->buffer[5] - 40);
-    state->bms_seen = true;
+// Pack temperature: layout unconfirmed, plausibility-gated (fsd_bms.h).
+void fsd_handle_bms_thermal(FSDState* state, const CANFRAME* frame, uint32_t now_ms) {
+    fsd_bms_thermal_update(state, frame->buffer, frame->data_lenght, now_ms);
 }
 
 // --- Precondition trigger ---

@@ -20,6 +20,7 @@
 
 #include "fsd_can_ops.h"
 #include "fsd_blackbox_filter.h"
+#include "fsd_bms.h"
 #include "fsd_blackbox_summary.h"
 #include "fsd_capability.h"
 #include "fsd_capture.h"
@@ -851,6 +852,61 @@ static void test_nag_killer_faithful(void) {
     CHECK(hands_set3 == 0, "faithful state3: handsOnLevel still left at 0 (%d violations)", hands_set3);
 }
 #undef RAWABS
+
+// ── 0x312 pack temperature plausibility gate (fsd_bms.h) ─────────────────────
+// byte4/byte5 - 40 is not from any DBC and the frame is multiplexed on newer
+// firmware. Rejected: the #211 dump's one 0x312 (24~101 C) and the two readings
+// the tester's Performance card showed (206~8 and 205~-32 C, displayed wrapped
+// to int8 as -50~8 and -51~-32).
+static void bms312(CANFRAME* f, uint8_t b4, uint8_t b5) {
+    zero(f);
+    f->canId = CAN_ID_BMS_THERMAL;
+    f->data_lenght = 8;
+    f->buffer[4] = b4;
+    f->buffer[5] = b5;
+}
+static void test_bms_thermal(void) {
+    FSDState s;
+    CANFRAME f;
+    memset(&s, 0, sizeof(s));
+    bms312(&f, 0x3A, 0x3D);                                    // 18~21 C
+    fsd_handle_bms_thermal(&s, &f, 1000u);
+    CHECK(s.bms_seen && s.batt_temp_ok, "18~21 C: plausible, stored");
+    CHECK(s.batt_temp_min_c == 18 && s.batt_temp_max_c == 21, "18~21 C: got %d~%d",
+          s.batt_temp_min_c, s.batt_temp_max_c);
+    CHECK(fsd_bms_temp_fresh(&s, 1000u + FSD_BMS_TEMP_STALE_MS), "fresh at the stale edge");
+    CHECK(!fsd_bms_temp_fresh(&s, 1001u + FSD_BMS_TEMP_STALE_MS), "stale after FSD_BMS_TEMP_STALE_MS");
+
+    const uint8_t dump[8] = {0xC9, 0x21, 0x48, 0x17, 0x40, 0x8D, 0x00, 0x00};  // #211 dump
+    zero(&f); f.canId = CAN_ID_BMS_THERMAL; f.data_lenght = 8; memcpy(f.buffer, dump, 8);
+    fsd_handle_bms_thermal(&s, &f, 2000u);
+    CHECK(s.batt_temp_rejected == 1, "#211 dump 24~101 C rejected");
+    CHECK(s.batt_temp_min_c == 18 && s.batt_temp_max_c == 21 && s.batt_temp_ms == 1000u,
+          "rejected frame keeps the last plausible reading and its age");
+    bms312(&f, 0xF6, 0x30); fsd_handle_bms_thermal(&s, &f, 2100u);   // 206~8
+    bms312(&f, 0xF5, 0x08); fsd_handle_bms_thermal(&s, &f, 2200u);   // 205~-32
+    CHECK(s.batt_temp_rejected == 3, "tester's -50~8 / -51~-32 readings rejected");
+
+    // Bounds: -40 / +70 inclusive, min <= max, spread <= 20.
+    CHECK(fsd_bms_temp_plausible(-40, -25), "-40~-25 plausible");
+    CHECK(!fsd_bms_temp_plausible(-41, -30), "below -40 rejected");
+    CHECK(fsd_bms_temp_plausible(55, 70), "55~70 plausible");
+    CHECK(!fsd_bms_temp_plausible(55, 71), "above 70 rejected");
+    CHECK(!fsd_bms_temp_plausible(21, 18), "min > max rejected");
+    CHECK(fsd_bms_temp_plausible(10, 30), "spread 20 plausible");
+    CHECK(!fsd_bms_temp_plausible(10, 31), "spread 21 rejected");
+
+    // Never plausible: no reading at all; short frame ignored.
+    memset(&s, 0, sizeof(s));
+    bms312(&f, 0xF6, 0x30);
+    fsd_handle_bms_thermal(&s, &f, 1000u);
+    CHECK(s.bms_seen && !s.batt_temp_ok && !fsd_bms_temp_fresh(&s, 1000u),
+          "only implausible frames: no reading");
+    memset(&s, 0, sizeof(s));
+    bms312(&f, 0x3A, 0x3D); f.data_lenght = 5;
+    fsd_handle_bms_thermal(&s, &f, 1000u);
+    CHECK(!s.bms_seen && !s.batt_temp_ok, "DLC 5 ignored");
+}
 
 // ── 0x129 SCCM_steeringAngleSensor (fsd_steer.h) ─────────────────────────────
 // Real frames from the #176 (HW3 Model 3) and #211 (HW4 Model Y) records. The
@@ -3641,6 +3697,7 @@ int main(void) {
     test_nag_killer();
     test_nag_killer_faithful();
     test_steering_angle();
+    test_bms_thermal();
     test_nag_burst_cap();
     test_signal_config();
     test_abort_guard();

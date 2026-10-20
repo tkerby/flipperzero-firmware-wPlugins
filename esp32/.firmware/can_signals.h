@@ -119,9 +119,7 @@
 #define SIG_BMS_SOC_UI_LOW_SHIFT            2
 #define SIG_BMS_SOC_UI_MASK              0x03FFu
 #define SIG_BMS_SOC_SCALE                 0.1f
-#define SIG_BMS_TEMP_MIN_BYTE               4
-#define SIG_BMS_TEMP_MAX_BYTE               5
-#define SIG_BMS_TEMP_OFFSET                40
+// 0x312 pack temperature: fsd_logic/fsd_bms.h (shared, plausibility-gated).
 
 // ESP_wheelSpeeds (0x175) — four 13-bit LE wheel speeds, factor 0.04 km/h,
 // offset 0 (opendbc tesla_model3_party BO_373). Bit positions in the 64-bit LE

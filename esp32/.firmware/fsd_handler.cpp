@@ -16,6 +16,7 @@
 #include "../../fsd_logic/fsd_ota.h"       // shared 0x318 OTA-install detection (flag vs rolling counter)
 #include "../../fsd_logic/fsd_cp_status.h" // shared 0x25D CP_status decode + EU rewrite predicate (#228)
 #include "../../fsd_logic/fsd_steer.h"     // shared 0x129 steering-angle decode + freshness
+#include "../../fsd_logic/fsd_bms.h"       // shared 0x312 pack-temperature gate
 #include <string.h>
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
@@ -966,14 +967,10 @@ void fsd_handle_bms_soc(FSDState *state, const CanFrame *frame) {
     state->bms_seen = true;
 }
 
-void fsd_handle_bms_thermal(FSDState *state, const CanFrame *frame) {
-    if (frame->dlc < 6) return;
-    // Temperatures: raw byte − 40 = °C
-    state->batt_temp_min_c = (int8_t)((int)frame->data[SIG_BMS_TEMP_MIN_BYTE] -
-                                      SIG_BMS_TEMP_OFFSET);
-    state->batt_temp_max_c = (int8_t)((int)frame->data[SIG_BMS_TEMP_MAX_BYTE] -
-                                      SIG_BMS_TEMP_OFFSET);
-    state->bms_seen = true;
+// Pack temperature: byte4/byte5 − 40 °C, layout unconfirmed, plausibility-gated
+// (fsd_logic/fsd_bms.h, shared with the Flipper).
+void fsd_handle_bms_thermal(FSDState *state, const CanFrame *frame, uint32_t now_ms) {
+    fsd_bms_thermal_update(state, frame->data, frame->dlc, now_ms);
 }
 
 // ── Wheel-speeds read-only parser (0x175 ESP_wheelSpeeds, Party CAN) ──────────

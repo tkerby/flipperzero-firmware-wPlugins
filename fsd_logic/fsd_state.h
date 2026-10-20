@@ -71,8 +71,11 @@ typedef struct FSDState {
     float pack_voltage_v;
     float pack_current_a;
     float soc_percent;
-    int8_t batt_temp_min_c;
+    int8_t batt_temp_min_c;      // last plausible 0x312 reading (fsd_bms.h)
     int8_t batt_temp_max_c;
+    bool batt_temp_ok;           // a plausible reading has been stored
+    uint32_t batt_temp_ms;       // ms clock of that reading (fsd_bms_temp_fresh)
+    uint32_t batt_temp_rejected; // 0x312 frames whose temps failed the plausibility gate
 
     // live wheel speeds (read-only sniff, 0x175 ESP_wheelSpeeds — Party CAN)
     bool wheel_speed_seen;
