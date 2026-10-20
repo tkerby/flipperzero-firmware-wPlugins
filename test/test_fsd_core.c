@@ -1386,6 +1386,9 @@ static void test_blackbox_summary(void) {
     n = fsd_blackbox_format_json(out, sizeof(out), &s);
     CHECK(n > 0, "manual summary non-empty");
     CHECK(strstr(out, "\"transition\":\"2->2\"") != NULL, "manual transition 2->2");
+    CHECK(strstr(out, "\"detail\":\"MANUAL AP state 2 @ t=0.000s\"") != NULL,
+          "manual detail names the AP state once");
+    CHECK(strstr(out, "MANUAL 2->2") == NULL, "manual detail has no fake transition");
     CHECK(strstr(out, "\"ap_timeline\":[]") != NULL, "empty timeline");
     CHECK(out[strlen(out) - 1] == '}', "well-terminated JSON");
 

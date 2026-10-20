@@ -1182,8 +1182,11 @@ function bbRefreshList(){
     var h='';
     a.forEach(function(ev){
       var s=ev.summary||{},nm=encodeURIComponent(ev.name);
+      // Events saved by older firmware name a manual mark as a transition that
+      // did not happen ("MANUAL 2->2 @ t=..."): show the state once.
+      var det=String(s.detail||s.trigger||'event').replace(/^(\S+) (\d+)->\2 @/,'$1 AP state $2 @');
       h+='<div style="border-top:1px solid var(--border);padding:8px 0">';
-      h+='<div style="font-size:.8em;color:var(--text);font-family:monospace">'+bbEsc(s.detail||s.trigger||'event')+'</div>';
+      h+='<div style="font-size:.8em;color:var(--text);font-family:monospace">'+bbEsc(det)+'</div>';
       h+='<div style="font-size:.72em;color:var(--text3);margin:2px 0">'+bbEsc(s.hw||'')+' · '+(s.frames||0)+' frames · '+bbEsc((s.buses&&s.buses.dual_can)?'dual-CAN':'single')+'</div>';
       h+='<div style="display:flex;gap:6px;margin-top:4px">';
       h+='<a class="btn-main btn-blue" style="padding:4px 10px;font-size:.7em;flex:0" href="/blackbox/get?name='+nm+'&type=log" onclick="bbSeen()">.log</a>';
