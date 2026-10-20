@@ -61,8 +61,18 @@
 // in between. On LittleFS every 4 KB written also erases a flash sector (tens
 // of ms with the cache, and so the CAN interrupt, off); written back to back
 // that is most of the time, with the gap under a third of it, at ~24 KB/s.
-#define BLACKBOX_FLUSH_SLICE  32u    // .log lines per step
-#define BLACKBOX_FLUSH_GAP_MS 50u
+// A slice also ends once BLACKBOX_FLUSH_BUDGET_US has gone, and the gap after
+// it shrinks to match (bb_slice_gap_ms()), so the save keeps its pace. The
+// MCP2515 holds two received frames. On ukinora's bench (fork commit fc7da9cb:
+// ~2000 frames/s into the T-2CAN's MCP2515, a slice every loop pass) a 32-line
+// slice took ~10 ms and the board kept about two frames a slice; ending slices
+// at 600 us doubled what it received during a save. A flash erase inside a
+// slice still runs to the end.
+#define BLACKBOX_FLUSH_SLICE  32u    // .log lines per step, at most
+#define BLACKBOX_FLUSH_GAP_MS 50u    // after a full slice or a file operation
+#ifndef BLACKBOX_FLUSH_BUDGET_US
+#define BLACKBOX_FLUSH_BUDGET_US 600u
+#endif
 #define BLACKBOX_TL_MAX      16      // das_ap_state timeline depth
 #define BLACKBOX_TL_EMIT     12      // timeline entries written to the summary
 
@@ -755,10 +765,10 @@ static void bb_event_json(char* json, int json_sz, uint32_t count, uint32_t wind
 #if defined(BLACKBOX_BACKEND_LITTLEFS) || defined(BLACKBOX_BACKEND_SD)
 // One step of saving the armed event; true once the save is over. Each step
 // is one file operation or one slice of .log lines, and blackbox_tick() runs
-// them BLACKBOX_FLUSH_GAP_MS apart, so the loop never waits for a whole event
-// to reach the disk. The ring keeps recording; bb_keep_slot() protects the
+// the next one *gap_ms later, so the loop never waits for a whole event to
+// reach the disk. The ring keeps recording; bb_keep_slot() protects the
 // frames not written yet.
-static bool do_flush(uint32_t now_ms) {
+static bool do_flush(uint32_t now_ms, uint32_t* gap_ms) {
     char p[64];
     switch (g_save.step) {
     case BB_SAVE_IDLE: {
@@ -810,7 +820,10 @@ static bool do_flush(uint32_t now_ms) {
             return false;
         }
         char line[72];
-        for (uint32_t n = bb_slice(g_save.left, BLACKBOX_FLUSH_SLICE); n > 0; n--) {
+        const uint32_t n = bb_slice(g_save.left, BLACKBOX_FLUSH_SLICE);
+        const uint32_t t_us = micros();
+        uint32_t lines = 0;
+        do {
             const BBFrame& fr = g_ring[g_save.next];
             int len = tesla_format_candump_line(line, sizeof(line), fr.ts_ms - g_save.window_start,
                                                 bb_iface_name(fr), fr.id, fr.data, fr.dlc);
@@ -819,7 +832,9 @@ static bool do_flush(uint32_t now_ms) {
             if (fr.bus == CAN_BUS_SECONDARY) g_save.bus1++; else g_save.bus0++;
             g_save.next = ring_next(g_save.next);
             g_save.left--;
-        }
+            lines++;
+        } while (!bb_slice_over(lines, n, micros() - t_us, BLACKBOX_FLUSH_BUDGET_US));
+        *gap_ms = bb_slice_gap_ms(lines, BLACKBOX_FLUSH_SLICE, BLACKBOX_FLUSH_GAP_MS);
         return false;
     }
     case BB_SAVE_JSON: {
@@ -853,7 +868,8 @@ static bool do_flush(uint32_t now_ms) {
 #else
 // RAM: freeze the windowed frames into a contiguous buffer for download, in
 // one step (a copy, no file).
-static bool do_flush(uint32_t now_ms) {
+static bool do_flush(uint32_t now_ms, uint32_t* gap_ms) {
+    (void)gap_ms;
     uint32_t lo = (g_trig_ms >= BLACKBOX_PRE_MS) ? g_trig_ms - BLACKBOX_PRE_MS : 0u;
     uint32_t hi = g_trig_ms + BLACKBOX_POST_MS;
 
@@ -905,8 +921,9 @@ static bool do_flush(uint32_t now_ms) {
 void blackbox_tick(uint32_t now_ms) {
     if (!g_armed) return;
     if ((int32_t)(now_ms - g_flush_at_ms) < 0) return;  // post-roll, or between save steps
-    if (!do_flush(now_ms)) {
-        g_flush_at_ms = now_ms + BLACKBOX_FLUSH_GAP_MS;
+    uint32_t gap_ms = BLACKBOX_FLUSH_GAP_MS;
+    if (!do_flush(now_ms, &gap_ms)) {
+        g_flush_at_ms = now_ms + gap_ms;
         return;
     }
     g_armed = false;

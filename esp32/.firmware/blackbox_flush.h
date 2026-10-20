@@ -11,6 +11,10 @@
  * the ring full and the oldest frame being the next one to write, a new frame
  * is dropped instead of evicting it.
  *
+ * A slice ends after a fixed number of lines or once a time budget has gone,
+ * whichever comes first, and the wait before the next step shrinks with the
+ * lines written, so a short slice does not slow the save down.
+ *
  * A trigger while an event is armed: up to the end of that event's post-roll
  * it is inside the window being recorded, and part of that event. After that
  * the event is being saved; the first trigger then waits, and is armed with
@@ -73,6 +77,22 @@ static inline BBWindow bb_find_window(uint32_t n, uint32_t lo_ms, uint32_t hi_ms
 // Frames written in this pass.
 static inline uint32_t bb_slice(uint32_t left, uint32_t per_pass) {
     return left < per_pass ? left : per_pass;
+}
+
+// Whether a slice that has written `lines` of its `n` (bb_slice()) ends here:
+// all written, or `budget_us` gone. Asked after each line, so one always goes.
+static inline bool bb_slice_over(uint32_t lines, uint32_t n, uint32_t elapsed_us,
+                                 uint32_t budget_us) {
+    return lines >= n || elapsed_us >= budget_us;
+}
+
+// Wait after a slice of `lines`: `gap_ms` for `per_pass` lines, the same share
+// (rounded up, at least 1 ms) for fewer, so lines go out no faster than
+// per_pass per gap_ms however the budget cuts the slices.
+static inline uint32_t bb_slice_gap_ms(uint32_t lines, uint32_t per_pass, uint32_t gap_ms) {
+    if (lines >= per_pass) return gap_ms;
+    uint32_t g = (gap_ms * lines + per_pass - 1u) / per_pass;
+    return g ? g : 1u;
 }
 
 // What a new trigger does (see the top of this file).

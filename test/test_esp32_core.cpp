@@ -1716,6 +1716,49 @@ static void test_blackbox_save_slices(void) {
     CHECK(ok, "slices cover the window in ceil(count / per_pass) passes");
 }
 
+// Slices cut by the time budget (BLACKBOX_FLUSH_BUDGET_US) and the gap after them.
+static void test_blackbox_slice_budget(void) {
+    CHECK(!bb_slice_over(1u, 32u, 0u, 600u), "one line, time left: go on");
+    CHECK(bb_slice_over(1u, 32u, 600u, 600u), "budget gone after one line: stop");
+    CHECK(bb_slice_over(32u, 32u, 10u, 600u) && bb_slice_over(5u, 5u, 0u, 600u),
+          "all the slice's lines written: stop");
+    CHECK(bb_slice_gap_ms(32u, 32u, 50u) == 50u && bb_slice_gap_ms(16u, 32u, 50u) == 25u &&
+              bb_slice_gap_ms(15u, 32u, 50u) == 24u && bb_slice_gap_ms(1u, 32u, 50u) == 2u &&
+              bb_slice_gap_ms(0u, 32u, 50u) == 1u,
+          "gap: full after 32 lines, the share rounded up after fewer");
+
+    // Whatever the slices, lines go out no faster than 32 per 50 ms.
+    uint32_t seed = 0xB1ACB0Fu;
+    bool pace = true;
+    for (int trial = 0; trial < 500; trial++) {
+        uint32_t lines = 0, ms = 0;
+        for (int k = 0; k < 200; k++) {
+            uint32_t n = 1u + xorshift32(&seed) % 32u;
+            lines += n;
+            ms += bb_slice_gap_ms(n, 32u, 50u);
+        }
+        pace &= (uint64_t)ms * 32u >= (uint64_t)lines * 50u;
+    }
+    CHECK(pace, "budget-cut slices never outpace 32 lines per 50 ms");
+
+    // A 1501-line save with lines of 40 us: 15 lines a slice instead of 32, each
+    // ending at the budget, the save about as long as with 32-line slices.
+    const uint32_t LINE_US = 40u, BUDGET = 600u, TOTAL = 1501u;
+    uint32_t left = TOTAL, slices = 0, ms = 0, longest = 0;
+    while (left) {
+        uint32_t n = bb_slice(left, 32u), lines = 0, us = 0;
+        do { lines++; us += LINE_US; left--; } while (!bb_slice_over(lines, n, us, BUDGET));
+        if (us > longest) longest = us;
+        slices++;
+        ms += bb_slice_gap_ms(lines, 32u, 50u);
+    }
+    const uint32_t fixed_ms = ((TOTAL + 31u) / 32u) * 50u;    // 47 slices of 32
+    CHECK(slices == 101u && longest == 600u, "15-line slices of 600 us (%u slices, %u us)",
+          (unsigned)slices, (unsigned)longest);
+    CHECK(ms >= fixed_ms && ms <= fixed_ms + fixed_ms / 10u,
+          "save takes %u ms against %u ms with 32-line slices", (unsigned)ms, (unsigned)fixed_ms);
+}
+
 // A trigger while an event is armed (blackbox_arm()).
 static void test_blackbox_arm_action(void) {
     const uint32_t POST = 5000u;
@@ -1968,6 +2011,7 @@ int main() {
     test_blackbox_window();
     test_blackbox_ring_push();
     test_blackbox_save_slices();
+    test_blackbox_slice_budget();
     test_blackbox_arm_action();
     test_blackbox_trigger_during_save();
     test_blackbox_names();
