@@ -926,6 +926,13 @@ void fsd_handle_di_speed(FSDState *state, const CanFrame *frame) {
     state->speed_seen = true;
 }
 
+// Performance read-out: feed the timers and est. G only a valid speed. SNA (raw
+// 4095) decodes to 287.6 km/h and would lock 0-50 / 0-60 mph / 0-100 at once.
+void fsd_perf_on_speed(FSDState *state, uint32_t now_ms) {
+    if (state->di_speed_raw > SIG_DI_SPEED_RAW_MAX_VALID) return;
+    fsd_perf_update(&state->perf, state->vehicle_speed_kph, now_ms);
+}
+
 // SCCM_steeringAngleSensor (0x129): SCCM_steeringAngle 16|14 (0.1, -819.2) deg,
 // used only while SCCM_steeringAngleValidity (30|2) is VALID — fsd_steer.h.
 void fsd_handle_steering_angle(FSDState *state, const CanFrame *frame, uint32_t now_ms) {

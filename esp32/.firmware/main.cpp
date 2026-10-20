@@ -1358,8 +1358,8 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
         fsd_handle_di_speed(&g_state, &frame);
         g_state.last_speed_tick_ms = now_ms;   // freshness for fsd_autopark_update
         // Read-only performance read-out: accel/brake timers + est. G from the
-        // speed we just parsed (transmits nothing; dashboard "Performance" card).
-        fsd_perf_update(&g_state.perf, g_state.vehicle_speed_kph, now_ms);
+        // speed we just parsed, SNA skipped (transmits nothing; "Performance" card).
+        fsd_perf_on_speed(&g_state, now_ms);
         // Safety guard (#193): Palladium S/X don't broadcast 0x229 on Party, so
         // the gear-lever Summon disable can't fire there. Auto-disable Summon EU
         // Unlock on clear vehicle motion instead — platform-independent. Fresh,

@@ -76,6 +76,14 @@ static inline bool fsd_das_state_engaged(uint8_t s) {
     return s >= FSD_DAS_ENGAGED_MIN && s <= FSD_DAS_ENGAGED_MAX;
 }
 
+// Fresh, valid vehicle speed: a 0x257 within FSD_AUTOPARK_SPEED_FRESH_MS that is
+// not SNA (raw 4095 = 287.6 kph) or above max valid.
+static inline bool fsd_speed_valid(const FSDState* s, uint32_t now_ms) {
+    return s->speed_seen &&
+           (uint32_t)(now_ms - s->last_speed_tick_ms) <= FSD_AUTOPARK_SPEED_FRESH_MS &&
+           s->vehicle_speed_kph <= FSD_DI_SPEED_MAX_VALID_KPH;
+}
+
 // Parse the three autopark bits from a DAS_status byte3 (same positions on
 // 0x39B and 0x399) into FSDState. Called from both DAS parsers.
 static inline void fsd_autopark_parse(FSDState* s, uint8_t byte3) {
@@ -126,9 +134,7 @@ static inline void fsd_autopark_update(FSDState* s, uint32_t now_ms) {
                            (uint32_t)(now_ms - s->autopark_maneuver_last_ms) <= FSD_AUTOPARK_BIT_RECENT_MS;
 
     // SNA (raw 4095 = 287.6 kph) and above-max readings are unknown speed.
-    bool speed_valid = s->speed_seen &&
-                       (uint32_t)(now_ms - s->last_speed_tick_ms) <= FSD_AUTOPARK_SPEED_FRESH_MS &&
-                       s->vehicle_speed_kph <= FSD_DI_SPEED_MAX_VALID_KPH;
+    bool speed_valid = fsd_speed_valid(s, now_ms);
     bool moving  = speed_valid && s->vehicle_speed_kph > FSD_AUTOPARK_ENTRY_MAX_KPH;
 
     if (cur == FSD_DAS_ACTIVE_FSD) {

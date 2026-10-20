@@ -109,6 +109,10 @@ bool fsd_abort_guard_allows(const FSDState *state);
 /** Parse DI_speed (0x257) -> vehicle_speed_kph / di_speed_raw / ui_speed / speed_seen (#180). */
 void fsd_handle_di_speed(FSDState *state, const CanFrame *frame);
 
+/** Feed the just-parsed 0x257 speed to the Performance read-out (fsd_perf.h),
+ *  skipping SNA / above-max-valid raw values. */
+void fsd_perf_on_speed(FSDState *state, uint32_t now_ms);
+
 /** Parse SCCM_steeringAngleSensor (0x129) -> steering_angle_deg + validity/freshness
  *  (fsd_logic/fsd_steer.h). */
 void fsd_handle_steering_angle(FSDState *state, const CanFrame *frame, uint32_t now_ms);

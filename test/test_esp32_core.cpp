@@ -761,6 +761,40 @@ static void test_di_speed(void) {
     CHECK(s.ui_speed == 0x42 && s.speed_seen, "di_speed ui_speed + speed_seen");
 }
 
+// Performance read-out vs DI_vehicleSpeed SNA: raw 4095 decodes to 287.6 km/h and
+// used to lock every acceleration timer and spike the est. G. Fed the way the
+// main.cpp 0x257 path does: parse, stamp, fsd_perf_on_speed().
+static void perf_speed(FSDState* s, uint16_t raw, uint32_t now) {
+    CanFrame f;
+    memset(&f, 0, sizeof(f));
+    f.id = 0x257u; f.dlc = 8;
+    f.data[1] = (uint8_t)((raw & 0x0Fu) << 4); f.data[2] = (uint8_t)(raw >> 4);
+    fsd_handle_di_speed(s, &f);
+    s->last_speed_tick_ms = now;
+    fsd_perf_on_speed(s, now);
+}
+static void test_perf_speed_sna(void) {
+    FSDState s;
+    memset(&s, 0, sizeof(s));
+    perf_speed(&s, 500, 0);                // 0 km/h
+    perf_speed(&s, 500, 100);
+    perf_speed(&s, 4095, 200);             // SNA right at standstill
+    CHECK(!s.perf.accel_armed && !s.perf.lock_0_50 && !s.perf.lock_0_100,
+          "SNA at standstill: no run, no lock");
+    CHECK(s.perf.g_peak < 0.1f, "SNA: no G spike (peak %.2f)", (double)s.perf.g_peak);
+    CHECK(!fsd_speed_valid(&s, 200), "SNA: speed not valid for the card");
+    perf_speed(&s, 563, 300);              // 5.04 km/h -> armed from the 100 ms sample
+    CHECK(s.perf.accel_armed && s.perf.accel_start_ms == 100, "valid 5 km/h arms the run");
+    perf_speed(&s, 4095, 400);             // SNA mid-run
+    perf_speed(&s, 4063, 500);             // above max valid
+    CHECK(!s.perf.lock_0_50 && s.perf.best_0_50_ms == 0, "SNA / 4063 mid-run: no lock, no best");
+    perf_speed(&s, 1188, 4100);            // 55.04 km/h -> 0-50 locks at 4000 ms
+    CHECK(s.perf.lock_0_50 && s.perf.t_0_50_ms == 4000u, "valid 55 km/h locks 0-50 (%lu ms)",
+          (unsigned long)s.perf.t_0_50_ms);
+    CHECK(fsd_speed_valid(&s, 4100) && !fsd_speed_valid(&s, 4100 + FSD_AUTOPARK_SPEED_FRESH_MS + 1),
+          "card speed valid while fresh, not once stale");
+}
+
 // ── state init ────────────────────────────────────────────────────────────────
 static void test_state_init(void) {
     FSDState s;
@@ -1803,6 +1837,7 @@ int main() {
     test_bms_thermal();
     test_ui_soc();
     test_di_speed();
+    test_perf_speed_sna();
     test_cp_type_decode();
     test_cp_type_rewrite();
     test_cp_type_stale();

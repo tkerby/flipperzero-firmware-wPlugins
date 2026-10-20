@@ -1075,7 +1075,7 @@ function setTxt(id,t){var e=document.getElementById(id);if(e)e.textContent=t;}
 function renderPerf(d){
   if(!perfShow||!d.perf)return;
   var p=d.perf;
-  setTxt('pfSpeed',(p.speed||0).toFixed(1)+' km/h');
+  setTxt('pfSpeed',p.speed_ok?(p.speed||0).toFixed(1)+' km/h':'--');
   // Timers: locked result if present, else the live run time while armed.
   function cell(id,bid,t,best){
     var e=document.getElementById(id);
@@ -2305,13 +2305,13 @@ static String build_json() {
             fsd_perf_wheel_slip_pct(state.wheel_speed_fl_kph, state.wheel_speed_fr_kph,
                                     state.wheel_speed_rl_kph, state.wheel_speed_rr_kph, &slip);
         snprintf(perf, sizeof(perf),
-            "{\"speed\":%.1f,\"armed\":%s,\"run_ms\":%lu,"
+            "{\"speed\":%.1f,\"speed_ok\":%s,\"armed\":%s,\"run_ms\":%lu,"
             "\"t50\":%lu,\"t60mph\":%lu,\"t100\":%lu,"
             "\"best50\":%lu,\"best60mph\":%lu,\"best100\":%lu,"
             "\"brake_armed\":%s,\"t1000\":%lu,\"best1000\":%lu,"
             "\"g\":%.2f,\"gpk\":%.2f,\"gpkb\":%.2f,"
             "\"wheel_seen\":%s,\"slip_ok\":%s,\"slip\":%.1f}",
-            state.vehicle_speed_kph,
+            state.vehicle_speed_kph, fsd_speed_valid(&state, millis()) ? "true" : "false",
             p->accel_armed ? "true" : "false", (unsigned long)run_ms,
             (unsigned long)p->t_0_50_ms, (unsigned long)p->t_0_60mph_ms, (unsigned long)p->t_0_100_ms,
             (unsigned long)p->best_0_50_ms, (unsigned long)p->best_0_60mph_ms, (unsigned long)p->best_0_100_ms,
