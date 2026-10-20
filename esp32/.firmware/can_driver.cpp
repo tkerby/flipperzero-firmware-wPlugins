@@ -12,6 +12,7 @@
 
 #include "can_driver.h"
 #include "can_capture_filter.h"
+#include "can_counters.h"
 #include "config.h"
 #include "../../fsd_logic/fsd_can_ops.h"  // TESLA_CAN_MAX_DLC / tesla_can_tx_valid
 #include <Arduino.h>
@@ -24,6 +25,22 @@
 #if defined(CAN_DRIVER_TWAI) || defined(CAN_DRIVER_T2CAN_DUAL)
 
 #include "driver/twai.h"
+
+// RX queue, in frames. The ISR fills it and the loop drains it, so it is how
+// long the loop may stall before frames are lost: a Model Y Vehicle bus ran at
+// 2,300 frames/s (#228), where the old 64 lasted 28 ms. 13 bytes a frame:
+// 512 is 6.7 KB of heap (220 ms there) on the classic ESP32, 1024 is 13 KB
+// (440 ms) on the S3 with its larger SRAM. Taken on every install; when the
+// heap cannot give that much, install_and_start() halves it down to
+// TWAI_RX_QUEUE_MIN rather than leave the bus down.
+#ifndef TWAI_RX_QUEUE_LEN
+#if defined(CONFIG_IDF_TARGET_ESP32S3)
+#define TWAI_RX_QUEUE_LEN 1024u
+#else
+#define TWAI_RX_QUEUE_LEN 512u
+#endif
+#endif
+#define TWAI_RX_QUEUE_MIN 64u
 
 class TwaiDriver : public CanDriver {
     const char *label_;
@@ -38,6 +55,20 @@ class TwaiDriver : public CanDriver {
     bool     recovering_    = false;  // true while a bus-off recovery is in flight
     bool     busoff_event_  = false;  // consume-on-read edge: recovery just started
     uint32_t rx_rejected_   = 0;      // DLC>8 frames dropped
+    uint32_t rx_queue_len_  = 0;      // RX queue of the current install
+    // The status counters restart with each install; these keep them cumulative.
+    CanCarryCount rx_missed_, rx_overrun_, bus_errors_, tx_failed_;
+
+    // Fold the current install's status counters in. False when the driver
+    // is not installed (the totals are then the carried ones).
+    bool read_status(twai_status_info_t &info) {
+        if (!installed_ || twai_get_status_info(&info) != ESP_OK) return false;
+        rx_missed_.total(info.rx_missed_count);
+        rx_overrun_.total(info.rx_overrun_count);
+        bus_errors_.total(info.bus_error_count);
+        tx_failed_.total(info.tx_failed_count);
+        return true;
+    }
 
     bool install_and_start(bool listen_only) {
 #ifdef SNIFFER_ONLY
@@ -50,9 +81,7 @@ class TwaiDriver : public CanDriver {
             (gpio_num_t)tx_pin_,
             (gpio_num_t)rx_pin_,
             listen_only ? TWAI_MODE_LISTEN_ONLY : TWAI_MODE_NORMAL);
-        // Queue depths: 64 RX (busy Vehicle CAN can deliver thousands of
-        // frames/s; a deeper queue cuts controller-level drops), 5 TX.
-        g.rx_queue_len = 64;
+        g.rx_queue_len = TWAI_RX_QUEUE_LEN;
         g.tx_queue_len = 5;
 
         twai_timing_config_t t = TWAI_TIMING_CONFIG_500KBITS();
@@ -71,11 +100,21 @@ class TwaiDriver : public CanDriver {
             f = TWAI_FILTER_CONFIG_ACCEPT_ALL();
         }
 
-        if (twai_driver_install(&g, &t, &f) != ESP_OK) return false;
+        esp_err_t err = twai_driver_install(&g, &t, &f);
+        while (err == ESP_ERR_NO_MEM && g.rx_queue_len > TWAI_RX_QUEUE_MIN) {
+            g.rx_queue_len /= 2;
+            err = twai_driver_install(&g, &t, &f);
+        }
+        if (err != ESP_OK) return false;
+        if (g.rx_queue_len != TWAI_RX_QUEUE_LEN) {
+            Serial.printf("[CAN] %s TWAI RX queue %lu frames (heap too low for %lu)\n", label_,
+                          (unsigned long)g.rx_queue_len, (unsigned long)TWAI_RX_QUEUE_LEN);
+        }
         if (twai_start() != ESP_OK) {
             twai_driver_uninstall();
             return false;
         }
+        rx_queue_len_ = g.rx_queue_len;
         installed_    = true;
         listen_only_  = listen_only;
         recovering_   = false;  // fresh controller, no recovery pending
@@ -85,6 +124,12 @@ class TwaiDriver : public CanDriver {
     void stop_and_uninstall() {
         if (!installed_) return;
         twai_stop();
+        twai_status_info_t info;
+        read_status(info);  // the last counts of this install
+        rx_missed_.restart();
+        rx_overrun_.restart();
+        bus_errors_.restart();
+        tx_failed_.restart();
         twai_driver_uninstall();
         installed_ = false;
         recovering_ = false;
@@ -141,8 +186,8 @@ public:
 
     uint32_t errorCount() override {
         twai_status_info_t info;
-        if (twai_get_status_info(&info) != ESP_OK) return 0;
-        return info.rx_missed_count + info.bus_error_count + info.tx_failed_count;
+        read_status(info);
+        return rx_missed_.value() + bus_errors_.value() + tx_failed_.value();
     }
 
     // Bus-off auto-recovery. Without this, once TX errors push the TWAI TEC past
@@ -184,43 +229,49 @@ public:
 
     uint32_t rxRejectedCount() override { return rx_rejected_; }
 
+    // Cumulative across reinstalls (mode switch, capture filter): the status
+    // counters of earlier installs are carried (read_status()).
     uint32_t rxMissedCount() override {
         twai_status_info_t info;
-        if (twai_get_status_info(&info) != ESP_OK) return 0;
-        return info.rx_missed_count;
+        read_status(info);
+        return rx_missed_.value();
     }
 
     uint32_t busErrorCount() override {
         twai_status_info_t info;
-        if (twai_get_status_info(&info) != ESP_OK) return 0;
-        return info.bus_error_count;
+        read_status(info);
+        return bus_errors_.value();
     }
 
     uint32_t txFailedCount() override {
         twai_status_info_t info;
-        if (twai_get_status_info(&info) != ESP_OK) return 0;
-        return info.tx_failed_count;
+        read_status(info);
+        return tx_failed_.value();
     }
 
     // rx_overrun (the controller's own FIFO overflowing while the ISR is held
     // off, e.g. during a flash write) is not part of errorCount(). tx_queued
     // counts frames not yet sent; on a bus where nothing ACKs they stay there.
+    // rx_queued: frames waiting for the loop, out of the queue's length.
     void describeState(char *out, size_t n) override {
         static const char *const kState[] = {"stopped", "running", "bus-off", "recovering"};
         twai_status_info_t info;
-        if (!installed_ || twai_get_status_info(&info) != ESP_OK) {
+        if (!read_status(info)) {
             snprintf(out, n, "TWAI not installed");
             return;
         }
         snprintf(out, n,
                  "TWAI %s %s TEC=%lu REC=%lu rx_missed=%lu rx_overrun=%lu bus_err=%lu "
-                 "tx_fail=%lu tx_queued=%lu",
+                 "tx_fail=%lu tx_queued=%lu rx_queued=%lu/%lu",
                  listen_only_ ? "Listen-Only" : "Normal",
                  info.state <= TWAI_STATE_RECOVERING ? kState[info.state] : "?",
                  (unsigned long)info.tx_error_counter, (unsigned long)info.rx_error_counter,
-                 (unsigned long)info.rx_missed_count, (unsigned long)info.rx_overrun_count,
-                 (unsigned long)info.bus_error_count, (unsigned long)info.tx_failed_count,
-                 (unsigned long)info.msgs_to_tx);
+                 (unsigned long)rx_missed_.value(),
+                 (unsigned long)rx_overrun_.value(),
+                 (unsigned long)bus_errors_.value(),
+                 (unsigned long)tx_failed_.value(),
+                 (unsigned long)info.msgs_to_tx, (unsigned long)info.msgs_to_rx,
+                 (unsigned long)rx_queue_len_);
     }
 
     void setListenOnly(bool enable) override {

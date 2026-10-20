@@ -51,8 +51,10 @@ public:
 
     /** Cumulative count of frames the CONTROLLER dropped because its RX queue
      *  overflowed (silent decimation of a busy bus). TWAI: twai_status_info_t
-     *  .rx_missed_count. MCP2518FD: RX FIFO overflow events, each one or more
-     *  frames. Drivers without the metric return 0. */
+     *  .rx_missed_count, carried across the driver reinstalls of a mode switch
+     *  or a capture filter change, as are bus errors and failed sends.
+     *  MCP2518FD: RX FIFO overflow events, each one or more frames. Drivers
+     *  without the metric return 0. */
     virtual uint32_t rxMissedCount() { return 0; }
 
     /** Cumulative bus errors (bit/stuff/form/CRC/ACK) the controller saw on
