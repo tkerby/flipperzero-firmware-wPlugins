@@ -26,6 +26,7 @@
 #include "web_cmd.h"
 #include "web_origin.h"
 #include "../../fsd_logic/fsd_cp_status.h"  // CP_status stale read-out (#228)
+#include "../../fsd_logic/fsd_bms.h"        // 0x312 pack-temperature freshness
 #include <WebServer.h>
 #include <WebSocketsServer.h>
 #include <WiFi.h>
@@ -460,7 +461,7 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
       </svg>
       <div class="soc-val">
         <span class="soc-num" id="bSoc">--</span>
-        <span class="soc-lbl">SOC</span>
+        <span class="soc-lbl">Pack SOC</span>
       </div>
     </div>
     <div class="hg">
@@ -468,6 +469,10 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
       <div><div class="hv" id="bCurr">--</div><div class="hl">Current</div></div>
       <div><div class="hv" id="bTemp">--</div><div class="hl">Pack temp min~max</div></div>
     </div>
+  </div>
+  <div class="row" id="rowCarSoc" style="display:none">
+    <span class="lbl">Car SOC<br><small style="color:var(--muted)">the % on the car's screen (0x33A)</small></span>
+    <span id="bCarSoc" style="font-variant-numeric:tabular-nums">--</span>
   </div>
 </div>
 
@@ -529,7 +534,7 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
       <div class="sb"><div class="sv" id="pfG">--</div><div class="sl">Est. long. G</div><div class="sl" id="pfGpk">peak --</div></div>
       <div class="sb"><div class="sv" id="pfSlip">--</div><div class="sl">Wheel slip</div></div>
       <div class="sb"><div class="sv" id="pfPow">--</div><div class="sl">Power</div></div>
-      <div class="sb"><div class="sv" id="pfTemp">--</div><div class="sl">Pack temp</div></div>
+      <div class="sb"><div class="sv" id="pfTemp">--</div><div class="sl">Pack temp</div><div class="sl">unconfirmed on some cars</div></div>
     </div>
     <div class="row"><span class="lbl">Battery advisory</span><span id="pfAdv" style="font-size:.8em;color:var(--text2)">--</span></div>
     <div class="log-info" style="margin-top:8px;font-size:.76em">
@@ -1070,7 +1075,7 @@ function setTxt(id,t){var e=document.getElementById(id);if(e)e.textContent=t;}
 function renderPerf(d){
   if(!perfShow||!d.perf)return;
   var p=d.perf;
-  setTxt('pfSpeed',(p.speed||0).toFixed(1)+' km/h');
+  setTxt('pfSpeed',p.speed_ok?(p.speed||0).toFixed(1)+' km/h':'--');
   // Timers: locked result if present, else the live run time while armed.
   function cell(id,bid,t,best){
     var e=document.getElementById(id);
@@ -1103,13 +1108,19 @@ function renderPerf(d){
   // Power + pack temp (BMS, Vehicle-CAN tap).
   if(d.bms&&d.bms.seen){
     setTxt('pfPow',(d.bms.voltage*d.bms.current/1000).toFixed(1)+' kW');
-    var tmax=d.bms.temp_max,tmin=d.bms.temp_min;
+    // Pack temp + advisory only from a fresh, plausible 0x312 reading (temp_ok).
     var te=document.getElementById('pfTemp');
-    if(te){
-      te.textContent=tmin+'~'+tmax+'°C';
-      te.style.color=tmax>=45?'var(--red)':tmax>=35?'var(--yellow)':tmin<=5?'var(--yellow)':'var(--accent)';
+    if(d.bms.temp_ok){
+      var tmax=d.bms.temp_max,tmin=d.bms.temp_min;
+      if(te){
+        te.textContent=tmin+'~'+tmax+'°C';
+        te.style.color=tmax>=45?'var(--red)':tmax>=35?'var(--yellow)':tmin<=5?'var(--yellow)':'var(--accent)';
+      }
+      setTxt('pfAdv',tmin<=5?'Cold pack — reduced regen and power until warmed':tmax>=45?'Hot pack — power may be limited':'Normal');
+    }else{
+      if(te){te.textContent='--';te.style.color='';}
+      setTxt('pfAdv','--');
     }
-    setTxt('pfAdv',tmin<=5?'Cold pack — reduced regen and power until warmed':tmax>=45?'Hot pack — power may be limited':'Normal');
   }else{
     setTxt('pfPow','--');setTxt('pfTemp','--');setTxt('pfAdv','No BMS frames (needs Vehicle-CAN tap)');
   }
@@ -1506,6 +1517,11 @@ function updCan(d){
 }
 function updBattery(d){
   // Battery
+  // Car-displayed SOC (0x33A) can arrive without the BMS frames; shown when decoded.
+  var cs=d.bms&&d.bms.car_soc!=null?d.bms.car_soc:null;
+  var cr=document.getElementById('rowCarSoc');
+  if(cr) cr.style.display=cs==null?'none':'';
+  setTxt('bCarSoc',cs==null?'--':cs+'%');
   if(d.bms && d.bms.seen){
     var sn=document.getElementById('bSoc');
     if(sn){
@@ -1519,7 +1535,7 @@ function updBattery(d){
       ce.textContent=(d.bms.current>=0?'+':'')+d.bms.current.toFixed(1)+'A';
       ce.style.color=d.bms.current>=0?'var(--accent)':'var(--red)';
     }
-    if(document.getElementById('bTemp')) document.getElementById('bTemp').textContent=d.bms.temp_min+'~'+d.bms.temp_max+'\u00b0C';
+    if(document.getElementById('bTemp')) document.getElementById('bTemp').textContent=d.bms.temp_ok?d.bms.temp_min+'~'+d.bms.temp_max+'\u00b0C':'--';
   }
 }
 // Tyre pressure (read-only, 0x219). Columns are named as corners when every
@@ -2246,19 +2262,34 @@ static String build_json() {
         can_vehicle_detected = (millis() - g_last_can_seen_ms) <= CAN_VEHICLE_ALIVE_MS;
     }
 
-    // BMS sub-object
-    char bms[128];
+    // BMS sub-object. Pack temperature only from a fresh, plausible 0x312
+    // reading (fsd_bms.h): temp_ok false -> null, the dashboard shows "--" and
+    // no advisory. temp_bad counts the 0x312 frames the plausibility gate refused.
+    // car_soc: the % on the car's screen (0x33A, #251), null until decoded; it can
+    // arrive without the BMS frames.
+    char bms[208];
+    char car_soc[8];
+    if (state.ui_soc_seen) snprintf(car_soc, sizeof(car_soc), "%u", (unsigned)state.ui_soc);
+    else strcpy(car_soc, "null");
     if (state.bms_seen) {
+        bool temp_ok = fsd_bms_temp_fresh(&state, millis());
+        char temp[64];
+        if (temp_ok)
+            snprintf(temp, sizeof(temp), "\"temp_min\":%d,\"temp_max\":%d,\"temp_age_s\":%lu",
+                     (int)state.batt_temp_min_c, (int)state.batt_temp_max_c,
+                     (unsigned long)((millis() - state.batt_temp_ms) / 1000u));
+        else
+            strcpy(temp, "\"temp_min\":null,\"temp_max\":null");
         snprintf(bms, sizeof(bms),
             "{\"seen\":true,\"voltage\":%.1f,\"current\":%.1f,"
-            "\"soc\":%.1f,\"temp_min\":%d,\"temp_max\":%d}",
+            "\"soc\":%.1f,\"car_soc\":%s,\"temp_ok\":%s,%s,\"temp_bad\":%lu}",
             state.pack_voltage_v,
             state.pack_current_a,
             state.soc_percent,
-            (int)state.batt_temp_min_c,
-            (int)state.batt_temp_max_c);
+            car_soc, temp_ok ? "true" : "false", temp,
+            (unsigned long)state.batt_temp_rejected);
     } else {
-        strcpy(bms, "{\"seen\":false}");
+        snprintf(bms, sizeof(bms), "{\"seen\":false,\"car_soc\":%s}", car_soc);
     }
 
     // Performance read-out sub-object (read-only; see fsd_logic/fsd_perf.h).
@@ -2274,13 +2305,13 @@ static String build_json() {
             fsd_perf_wheel_slip_pct(state.wheel_speed_fl_kph, state.wheel_speed_fr_kph,
                                     state.wheel_speed_rl_kph, state.wheel_speed_rr_kph, &slip);
         snprintf(perf, sizeof(perf),
-            "{\"speed\":%.1f,\"armed\":%s,\"run_ms\":%lu,"
+            "{\"speed\":%.1f,\"speed_ok\":%s,\"armed\":%s,\"run_ms\":%lu,"
             "\"t50\":%lu,\"t60mph\":%lu,\"t100\":%lu,"
             "\"best50\":%lu,\"best60mph\":%lu,\"best100\":%lu,"
             "\"brake_armed\":%s,\"t1000\":%lu,\"best1000\":%lu,"
             "\"g\":%.2f,\"gpk\":%.2f,\"gpkb\":%.2f,"
             "\"wheel_seen\":%s,\"slip_ok\":%s,\"slip\":%.1f}",
-            state.vehicle_speed_kph,
+            state.vehicle_speed_kph, fsd_speed_valid(&state, millis()) ? "true" : "false",
             p->accel_armed ? "true" : "false", (unsigned long)run_ms,
             (unsigned long)p->t_0_50_ms, (unsigned long)p->t_0_60mph_ms, (unsigned long)p->t_0_100_ms,
             (unsigned long)p->best_0_50_ms, (unsigned long)p->best_0_60mph_ms, (unsigned long)p->best_0_100_ms,

@@ -54,6 +54,8 @@ typedef struct FSDState {
                                // scheme (no handsOnLevel flip; torque centred at
                                // 0 Nm with live variance) to pass the 2026.14.x
                                // content preflight. Default off — see #100.
+    int8_t nag_torque_dir;     // EPAS-faithful torque direction -1/+1, 0 = none yet
+                               // (+1); held near centre — fsd_steer_nag_dir()
     uint32_t nag_echo_count;
     bool nag_demand_active;    // true while handsOnLevel == 0 or 3 — edge-detect source for on-demand grip pulse
     bool continuous_ap;         // re-enable AP after AP drops while turn signal is active
@@ -68,9 +70,14 @@ typedef struct FSDState {
     bool bms_seen;
     float pack_voltage_v;
     float pack_current_a;
-    float soc_percent;
-    int8_t batt_temp_min_c;
+    float soc_percent;           // 0x292 BMS figure
+    uint8_t ui_soc;              // 0x33A: the SOC on the car's own screen, 0..100 (fsd_bms.h)
+    bool ui_soc_seen;            // a 0x33A has decoded
+    int8_t batt_temp_min_c;      // last plausible 0x312 reading (fsd_bms.h)
     int8_t batt_temp_max_c;
+    bool batt_temp_ok;           // a plausible reading has been stored
+    uint32_t batt_temp_ms;       // ms clock of that reading (fsd_bms_temp_fresh)
+    uint32_t batt_temp_rejected; // 0x312 frames whose temps failed the plausibility gate
 
     // live wheel speeds (read-only sniff, 0x175 ESP_wheelSpeeds — Party CAN)
     bool wheel_speed_seen;
@@ -233,6 +240,7 @@ typedef struct FSDState {
     uint32_t autopark_maneuver_last_ms; // ms clock a maneuver bit (autoParked / waitingForBrake) was last seen set
     uint8_t autopark_prev_ap_state;  // das_ap_state at the previous fsd_autopark_update
     bool autopark_episode;           // inside a detected Autopark episode (state 6)
+    bool autopark_evidence;          // this episode has seen a maneuver bit (20 vs 12 km/h release)
     bool autopark_tx_block;          // episode AND not confirmed driving -> pause every TX
 
     // --- GTW autopilot tier (from 0x7FF mux=2 on mixed bus) ---
@@ -298,8 +306,11 @@ typedef struct FSDState {
     bool ui_high_beam;
     bool ui_warning_seen;
 
-    // --- steering angle (0x129) ---
-    float steering_angle_deg;
+    // --- steering angle (0x129 SCCM_steeringAngleSensor, fsd_steer.h) ---
+    float steering_angle_deg;    // last valid angle; read only while fsd_steer_known()
+    bool steering_angle_seen;    // a 0x129 (or the Signal Map steering id) has been parsed
+    bool steering_angle_valid;   // the last one carried a valid angle
+    uint32_t steering_angle_ms;  // ms clock of the last valid angle
 
     // --- DAS_steeringControl (0x488) ---
     float das_steer_angle_req;   // DAS requested angle
@@ -332,10 +343,6 @@ typedef struct FSDState {
     // it does NOT touch Vehicle-bus ECU log-upload frames and does NOT guarantee
     // reduced detection. See the omission notes in fsd_handler.c.
     bool assist_telemetry_off;
-
-    // --- energy consumption (0x33A, read-only) ---
-    float energy_wh_per_km;
-    bool energy_seen;
 
     // --- Charge-port type (0x25D CP_status, Vehicle CAN; #228) ---
     // Read-only decode is always on (even Listen-Only); the rewrite is opt-in.

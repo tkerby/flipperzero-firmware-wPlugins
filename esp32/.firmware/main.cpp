@@ -1234,7 +1234,8 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
     // ── BMS sniff (read-only, always) ─────────────────────────────────────────
     if (frame.id == CAN_ID_BMS_HV_BUS)  { state_enter(); fsd_handle_bms_hv(&g_state, &frame);      state_exit(); return; }
     if (frame.id == CAN_ID_BMS_SOC)     { state_enter(); fsd_handle_bms_soc(&g_state, &frame);     state_exit(); return; }
-    if (frame.id == CAN_ID_BMS_THERMAL) { state_enter(); fsd_handle_bms_thermal(&g_state, &frame); state_exit(); return; }
+    if (frame.id == CAN_ID_UI_RANGE)    { state_enter(); fsd_handle_ui_range(&g_state, &frame);    state_exit(); return; }
+    if (frame.id == CAN_ID_BMS_THERMAL) { state_enter(); fsd_handle_bms_thermal(&g_state, &frame, now); state_exit(); return; }
 
     // ── DAS status (read-only, always) — gating for NAG killer ───────────────
     // Skipped when a custom DAS source is configured (#122) — config owns it.
@@ -1357,8 +1358,8 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
         fsd_handle_di_speed(&g_state, &frame);
         g_state.last_speed_tick_ms = now_ms;   // freshness for fsd_autopark_update
         // Read-only performance read-out: accel/brake timers + est. G from the
-        // speed we just parsed (transmits nothing; dashboard "Performance" card).
-        fsd_perf_update(&g_state.perf, g_state.vehicle_speed_kph, now_ms);
+        // speed we just parsed, SNA skipped (transmits nothing; "Performance" card).
+        fsd_perf_on_speed(&g_state, now_ms);
         // Safety guard (#193): Palladium S/X don't broadcast 0x229 on Party, so
         // the gear-lever Summon disable can't fire there. Auto-disable Summon EU
         // Unlock on clear vehicle motion instead — platform-independent. Fresh,
@@ -1423,7 +1424,7 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
     // Steering angle (0x129) — read-only, feeds the Soft Engage gate (#108).
     if (!steer_cfg && frame.id == CAN_ID_STEER_ANGLE) {
         state_enter();
-        fsd_handle_steering_angle(&g_state, &frame);
+        fsd_handle_steering_angle(&g_state, &frame, now);
         state_exit();
         return;
     }
@@ -1455,7 +1456,7 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
     // AP-First (#100/#108): when enabled, hold AP/FSD/nag injection until AP is
     // engaged and stable. Gates 0x3FD / 0x3EE / 0x370 below; off by default.
     bool ap_ok = fsd_ap_first_allows(&g_state, millis()) &&
-                 fsd_soft_engage_allows(&g_state) &&   // Soft Engage holds until wheel centred (#108)
+                 fsd_soft_engage_allows(&g_state, millis()) &&   // Soft Engage holds until wheel centred (#108)
                  fsd_abort_guard_allows(&g_state);     // Abort Guard cuts injection on an abort (#108)
     state_exit();
 

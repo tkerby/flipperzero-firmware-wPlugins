@@ -20,6 +20,7 @@
 
 #include "fsd_can_ops.h"
 #include "fsd_blackbox_filter.h"
+#include "fsd_bms.h"
 #include "fsd_blackbox_summary.h"
 #include "fsd_capability.h"
 #include "fsd_capture.h"
@@ -29,6 +30,7 @@
 #include "fsd_power.h"
 #include "fsd_profile.h"
 #include "fsd_profile_db.h"
+#include "fsd_steer.h"
 #include "fsd_tpms.h"
 
 static int g_pass = 0;
@@ -851,6 +853,214 @@ static void test_nag_killer_faithful(void) {
 }
 #undef RAWABS
 
+// ── 0x312 pack temperature plausibility gate (fsd_bms.h) ─────────────────────
+// byte4/byte5 - 40 is not from any DBC and the frame is multiplexed on newer
+// firmware. Rejected: the #211 dump's one 0x312 (24~101 C) and the two readings
+// the tester's Performance card showed (206~8 and 205~-32 C, displayed wrapped
+// to int8 as -50~8 and -51~-32).
+static void bms312(CANFRAME* f, uint8_t b4, uint8_t b5) {
+    zero(f);
+    f->canId = CAN_ID_BMS_THERMAL;
+    f->data_lenght = 8;
+    f->buffer[4] = b4;
+    f->buffer[5] = b5;
+}
+static void test_bms_thermal(void) {
+    FSDState s;
+    CANFRAME f;
+    memset(&s, 0, sizeof(s));
+    bms312(&f, 0x3A, 0x3D);                                    // 18~21 C
+    fsd_handle_bms_thermal(&s, &f, 1000u);
+    CHECK(s.bms_seen && s.batt_temp_ok, "18~21 C: plausible, stored");
+    CHECK(s.batt_temp_min_c == 18 && s.batt_temp_max_c == 21, "18~21 C: got %d~%d",
+          s.batt_temp_min_c, s.batt_temp_max_c);
+    CHECK(fsd_bms_temp_fresh(&s, 1000u + FSD_BMS_TEMP_STALE_MS), "fresh at the stale edge");
+    CHECK(!fsd_bms_temp_fresh(&s, 1001u + FSD_BMS_TEMP_STALE_MS), "stale after FSD_BMS_TEMP_STALE_MS");
+
+    const uint8_t dump[8] = {0xC9, 0x21, 0x48, 0x17, 0x40, 0x8D, 0x00, 0x00};  // #211 dump
+    zero(&f); f.canId = CAN_ID_BMS_THERMAL; f.data_lenght = 8; memcpy(f.buffer, dump, 8);
+    fsd_handle_bms_thermal(&s, &f, 2000u);
+    CHECK(s.batt_temp_rejected == 1, "#211 dump 24~101 C rejected");
+    CHECK(s.batt_temp_min_c == 18 && s.batt_temp_max_c == 21 && s.batt_temp_ms == 1000u,
+          "rejected frame keeps the last plausible reading and its age");
+    bms312(&f, 0xF6, 0x30); fsd_handle_bms_thermal(&s, &f, 2100u);   // 206~8
+    bms312(&f, 0xF5, 0x08); fsd_handle_bms_thermal(&s, &f, 2200u);   // 205~-32
+    CHECK(s.batt_temp_rejected == 3, "tester's -50~8 / -51~-32 readings rejected");
+
+    // Bounds: -40 / +70 inclusive, min <= max, spread <= 20.
+    CHECK(fsd_bms_temp_plausible(-40, -25), "-40~-25 plausible");
+    CHECK(!fsd_bms_temp_plausible(-41, -30), "below -40 rejected");
+    CHECK(fsd_bms_temp_plausible(55, 70), "55~70 plausible");
+    CHECK(!fsd_bms_temp_plausible(55, 71), "above 70 rejected");
+    CHECK(!fsd_bms_temp_plausible(21, 18), "min > max rejected");
+    CHECK(fsd_bms_temp_plausible(10, 30), "spread 20 plausible");
+    CHECK(!fsd_bms_temp_plausible(10, 31), "spread 21 rejected");
+
+    // Never plausible: no reading at all; short frame ignored.
+    memset(&s, 0, sizeof(s));
+    bms312(&f, 0xF6, 0x30);
+    fsd_handle_bms_thermal(&s, &f, 1000u);
+    CHECK(s.bms_seen && !s.batt_temp_ok && !fsd_bms_temp_fresh(&s, 1000u),
+          "only implausible frames: no reading");
+    memset(&s, 0, sizeof(s));
+    bms312(&f, 0x3A, 0x3D); f.data_lenght = 5;
+    fsd_handle_bms_thermal(&s, &f, 1000u);
+    CHECK(!s.bms_seen && !s.batt_temp_ok, "DLC 5 ignored");
+}
+
+// ── 0x33A car-displayed SOC (fsd_bms.h, #251) ────────────────────────────────
+// Five frames from ukinora's fork (their car, screen photographed at 22 %) and
+// one from the #211 Model Y. wide = what an 8-bit mask would report: bit 27 is
+// set on some frames.
+static const struct {
+    uint8_t d[8];
+    uint8_t pct;
+    uint8_t wide;
+} UISOC[] = {
+    {{0xF8, 0x70, 0x43, 0xA5, 0xFE, 0xFF, 0xCF, 0x64}, 84, 84},
+    {{0xCC, 0x70, 0x53, 0x2C, 0xFE, 0xFF, 0xCF, 0x64}, 69, 197},
+    {{0xAD, 0x70, 0xB3, 0xDB, 0xFD, 0xFF, 0xCF, 0x64}, 59, 187},
+    {{0x9D, 0x70, 0x53, 0xAB, 0xFD, 0xFF, 0xCF, 0x64}, 53, 181},
+    {{0x41, 0x70, 0x63, 0xB1, 0xFC, 0xFF, 0xCF, 0x64}, 22, 22},
+    {{0xD2, 0x34, 0x04, 0x7D, 0xFE, 0xFF, 0x13, 0x63}, 80, 208},   // #211, 0x292 read 81.8 %
+};
+static void test_ui_soc(void) {
+    for (size_t i = 0; i < sizeof(UISOC) / sizeof(UISOC[0]); i++) {
+        uint8_t pct = 0xFF;
+        CHECK(fsd_bms_decode_ui_soc(UISOC[i].d, 8, &pct) && pct == UISOC[i].pct,
+              "0x33A frame %u: %u %% exp %u (8-bit mask would say %u)", (unsigned)i,
+              (unsigned)pct, (unsigned)UISOC[i].pct, (unsigned)UISOC[i].wide);
+        FSDState s;
+        memset(&s, 0, sizeof(s));
+        fsd_bms_ui_soc_update(&s, UISOC[i].d, 8);
+        CHECK(s.ui_soc_seen && s.ui_soc == UISOC[i].pct && s.soc_percent == 0.0f && !s.bms_seen,
+              "0x33A frame %u: ui_soc only, BMS fields untouched", (unsigned)i);
+    }
+    uint8_t d[8] = {0, 0, 0x40, 0x06, 0, 0, 0, 0};                // 100
+    uint8_t pct = 0xFF;
+    CHECK(fsd_bms_decode_ui_soc(d, 8, &pct) && pct == 100, "100 %% decodes");
+    d[2] = 0x50;                                                   // 101
+    pct = 33;
+    CHECK(!fsd_bms_decode_ui_soc(d, 8, &pct) && pct == 33, "101 refused, caller value kept");
+    d[2] = 0xF0; d[3] = 0x07;                                      // 127 (all ones)
+    CHECK(!fsd_bms_decode_ui_soc(d, 8, &pct), "127 refused");
+    CHECK(!fsd_bms_decode_ui_soc(UISOC[0].d, 3, &pct), "DLC 3 refused");
+    CHECK(fsd_bms_decode_ui_soc(UISOC[0].d, 4, &pct) && pct == 84, "DLC 4 enough");
+}
+
+// ── 0x129 SCCM_steeringAngleSensor (fsd_steer.h) ─────────────────────────────
+// Real frames from the #176 (HW3 Model 3) and #211 (HW4 Model Y) records. The
+// pre-fix int16 read of bytes 0-1 gave the angle in the trailing comment.
+static const struct {
+    uint8_t d[8];
+    bool valid;
+    float deg;
+    const char* where;
+} STEER129[] = {
+    {{0xDA, 0x25, 0xF4, 0x5F, 0x00, 0x20, 0xFF, 0x3F}, true, -1.2f, "#176 evt_557853"},  // 969.0
+    {{0x63, 0x2B, 0x99, 0x61, 0x0C, 0x20, 0xFF, 0x3F}, true, 40.9f, "#176 evt_974427"},  // 1110.7
+    {{0x01, 0x26, 0xDF, 0x5F, 0xFE, 0x1F, 0xFF, 0x3F}, true, -3.3f, "#176 evt_2116601"}, // 972.9
+    {{0xFD, 0x2F, 0x28, 0x60, 0x00, 0x20, 0xFF, 0x3F}, true, 4.0f, "#211 ev000001"},     // 1228.5
+    {{0x0E, 0x27, 0xD8, 0x60, 0xFF, 0x1F, 0xFF, 0x3F}, true, 21.6f, "#211 ev000002"},    // 999.8
+    {{0xC9, 0x21, 0xC5, 0x5F, 0xFF, 0x1F, 0xFF, 0x3F}, true, -5.9f, "#211 ev000003"},    // 864.9
+    // Parked dump, SCCM_steeringAngleValidity INVALID (raw angle -357.5).
+    {{0xC4, 0x27, 0x09, 0x12, 0xFF, 0x1F, 0xFF, 0x3F}, false, 0.0f, "#211 parked"},      // 1018.0
+};
+
+static void steer_frame(CANFRAME* f, const uint8_t d[8]) {
+    zero(f);
+    f->canId = CAN_ID_STEER_ANGLE;
+    f->data_lenght = 8;
+    memcpy(f->buffer, d, 8);
+}
+
+static int modec_raw(const CANFRAME* out) {
+    return ((out->buffer[2] & 0x0F) << 8) | out->buffer[3];
+}
+
+static void test_steering_angle(void) {
+    FSDState s;
+    CANFRAME f;
+    for (size_t i = 0; i < sizeof(STEER129) / sizeof(STEER129[0]); i++) {
+        memset(&s, 0, sizeof(s));
+        steer_frame(&f, STEER129[i].d);
+        fsd_handle_steering_angle(&s, &f, 1000u);
+        CHECK(s.steering_angle_seen, "%s: 0x129 seen", STEER129[i].where);
+        CHECK(s.steering_angle_valid == STEER129[i].valid, "%s: valid %d exp %d",
+              STEER129[i].where, s.steering_angle_valid, STEER129[i].valid);
+        CHECK(fsd_steer_known(&s, 1000u) == STEER129[i].valid, "%s: known", STEER129[i].where);
+        if (STEER129[i].valid)
+            CHECK(fabs(s.steering_angle_deg - STEER129[i].deg) < 0.05f, "%s: %.2f deg exp %.1f",
+                  STEER129[i].where, (double)s.steering_angle_deg, (double)STEER129[i].deg);
+    }
+
+    // Freshness: known for FSD_STEER_FRESH_MS, then unknown.
+    memset(&s, 0, sizeof(s));
+    steer_frame(&f, STEER129[1].d);
+    fsd_handle_steering_angle(&s, &f, 1000u);
+    CHECK(fsd_steer_known(&s, 1000u + FSD_STEER_FRESH_MS), "angle known at the freshness edge");
+    CHECK(!fsd_steer_known(&s, 1001u + FSD_STEER_FRESH_MS), "angle unknown once stale");
+
+    // A non-VALID frame after a valid one: unknown; the stored value is kept.
+    steer_frame(&f, STEER129[6].d);
+    fsd_handle_steering_angle(&s, &f, 1010u);
+    CHECK(!fsd_steer_known(&s, 1010u) && s.steering_angle_seen, "INVALID after valid -> unknown");
+    CHECK(fabs(s.steering_angle_deg - 40.9f) < 0.05f, "INVALID leaves the last valid angle stored");
+
+    // Validity INIT / SNA, sensor status ERROR, short DLC.
+    uint8_t d[8];
+    memcpy(d, STEER129[0].d, 8);
+    d[3] = (uint8_t)((d[3] & 0x3Fu) | (2u << 6));                 // validity INIT
+    memset(&s, 0, sizeof(s)); steer_frame(&f, d); fsd_handle_steering_angle(&s, &f, 1000u);
+    CHECK(!s.steering_angle_valid, "validity INIT -> unknown");
+    d[3] = (uint8_t)((d[3] & 0x3Fu) | (3u << 6));                 // validity SNA
+    memset(&s, 0, sizeof(s)); steer_frame(&f, d); fsd_handle_steering_angle(&s, &f, 1000u);
+    CHECK(!s.steering_angle_valid, "validity SNA -> unknown");
+    memcpy(d, STEER129[0].d, 8);
+    d[1] = (uint8_t)((d[1] & 0x3Fu) | (2u << 6));                 // sensor status ERROR
+    memset(&s, 0, sizeof(s)); steer_frame(&f, d); fsd_handle_steering_angle(&s, &f, 1000u);
+    CHECK(!s.steering_angle_valid, "sensor status ERROR -> unknown");
+    memset(&s, 0, sizeof(s)); steer_frame(&f, STEER129[0].d); f.data_lenght = 3;
+    fsd_handle_steering_angle(&s, &f, 1000u);
+    CHECK(!s.steering_angle_seen, "DLC 3 ignored");
+
+    // EPAS-faithful torque direction (#100): opposite the wheel, held within
+    // ±FSD_STEER_NAG_HOLD_DEG and while the angle is unknown. Before the fix the
+    // 819..1228 deg reading made it -1 (-1.8 Nm in the #176 records) on every frame.
+    memset(&s, 0, sizeof(s));
+    s.nag_killer = true;
+    s.nag_epas_faithful = true;
+    s.das_ap_state = 3;
+    CANFRAME in, out;
+    zero(&in);
+    in.data_lenght = 8;
+    uint32_t t = 200000u;
+    s.das_hands_on_state = 0;
+    fsd_handle_nag_killer(&s, &in, &out, t);                       // reset demand memory
+    s.das_hands_on_state = 3;
+    fsd_handle_nag_killer(&s, &in, &out, t);                       // strong demand, 1 s pause
+    zero(&out);
+    CHECK(fsd_handle_nag_killer(&s, &in, &out, t + 1600u) && modec_raw(&out) > 2048,
+          "faithful dir: no angle yet -> + (raw %d)", modec_raw(&out));
+    steer_frame(&f, STEER129[1].d);                                // +40.9 deg
+    fsd_handle_steering_angle(&s, &f, t + 1700u);
+    zero(&out);
+    CHECK(fsd_handle_nag_killer(&s, &in, &out, t + 1700u) && modec_raw(&out) < 2048,
+          "faithful dir: +40.9 deg -> - (raw %d)", modec_raw(&out));
+    fsd_steer_set(&s, -2.0f, t + 1800u);                           // inside the hold band
+    zero(&out);
+    CHECK(fsd_handle_nag_killer(&s, &in, &out, t + 1800u) && modec_raw(&out) < 2048,
+          "faithful dir: -2.0 deg holds - (raw %d)", modec_raw(&out));
+    steer_frame(&f, STEER129[5].d);                                // -5.9 deg
+    fsd_handle_steering_angle(&s, &f, t + 1900u);
+    zero(&out);
+    CHECK(fsd_handle_nag_killer(&s, &in, &out, t + 1900u) && modec_raw(&out) > 2048,
+          "faithful dir: -5.9 deg -> + (raw %d)", modec_raw(&out));
+    zero(&out);                                                    // angle stale by now
+    CHECK(fsd_handle_nag_killer(&s, &in, &out, t + 1900u + FSD_STEER_FRESH_MS + 1u) &&
+          modec_raw(&out) > 2048, "faithful dir: stale angle holds + (raw %d)", modec_raw(&out));
+}
+
 // ── configurable signal mapping + freshness (#122) ───────────────────────────
 static void test_signal_config(void) {
     FSDState s;
@@ -887,6 +1097,7 @@ static void test_signal_config(void) {
     fsd_apply_signal_config(&s, &h, 12000u);
     CHECK(s.steering_angle_deg > 29.0f && s.steering_angle_deg < 31.0f,
           "cfg: steering = %.1f deg (expect ~30)", (double)s.steering_angle_deg);
+    CHECK(fsd_steer_known(&s, 12000u), "cfg: steering angle known (fresh)");
 
     // Nag killer no-ops when the configured DAS source goes stale.
     FSDState n;
@@ -1772,18 +1983,42 @@ static void test_legacy(void) {
     // fsd_soft_engage_allows() — steer-jerk soft engage (#108)
     FSDState se;
     memset(&se, 0, sizeof(se));
-    se.steering_angle_deg = 90.0f;                  // hard turn
-    CHECK(fsd_soft_engage_allows(&se) == true, "soft_engage off -> always allowed");
+    fsd_steer_set(&se, 90.0f, 1000u);               // hard turn
+    CHECK(fsd_soft_engage_allows(&se, 1000u) == true, "soft_engage off -> always allowed");
     se.soft_engage = true;
-    CHECK(fsd_soft_engage_allows(&se) == false, "soft_engage on + turning -> hold");
+    CHECK(fsd_soft_engage_allows(&se, 1000u) == false, "soft_engage on + turning -> hold");
     CHECK(se.soft_engage_latched == false, "soft_engage: turning does not latch");
-    se.steering_angle_deg = -3.0f;                  // within +/-5 deg of centre
-    CHECK(fsd_soft_engage_allows(&se) == true, "soft_engage: centred -> allow + latch");
+    fsd_steer_set(&se, -3.0f, 1100u);               // within +/-5 deg of centre
+    CHECK(fsd_soft_engage_allows(&se, 1100u) == true, "soft_engage: centred -> allow + latch");
     CHECK(se.soft_engage_latched == true, "soft_engage: latched once centred");
-    se.steering_angle_deg = 120.0f;                 // now turning, but already latched
-    CHECK(fsd_soft_engage_allows(&se) == true, "soft_engage: stays allowed once latched (mid-drive turns OK)");
+    fsd_steer_set(&se, 120.0f, 1200u);              // now turning, but already latched
+    CHECK(fsd_soft_engage_allows(&se, 1200u) == true, "soft_engage: stays allowed once latched (mid-drive turns OK)");
     se.soft_engage_latched = false;                 // AP drop resets the latch
-    CHECK(fsd_soft_engage_allows(&se) == false, "soft_engage: re-holds after latch reset while turning");
+    CHECK(fsd_soft_engage_allows(&se, 1200u) == false, "soft_engage: re-holds after latch reset while turning");
+
+    // Unknown angle with 0x129 on the tap: hold, never latch. A centred reading
+    // gone stale, then the #211 parked frame (validity INVALID).
+    fsd_steer_set(&se, 0.0f, 2000u);
+    CHECK(fsd_soft_engage_allows(&se, 2000u + FSD_STEER_FRESH_MS + 1u) == false,
+          "soft_engage: stale centred angle -> hold");
+    CHECK(!se.soft_engage_latched, "soft_engage: stale angle does not latch");
+    const uint8_t parked[8] = {0xC4, 0x27, 0x09, 0x12, 0xFF, 0x1F, 0xFF, 0x3F};
+    fsd_steer_update(&se, parked, 8, 3000u);
+    CHECK(fsd_soft_engage_allows(&se, 3000u) == false && !se.soft_engage_latched,
+          "soft_engage: INVALID 0x129 -> hold, no latch");
+    // The pre-fix decode read 0x129 bytes 0-1: 819..1228 deg on every frame, so
+    // Soft Engage never latched on a car with 0x129. #176 frame DA25F45F0020FF3F
+    // is -1.2 deg: centred, latches.
+    const uint8_t centred[8] = {0xDA, 0x25, 0xF4, 0x5F, 0x00, 0x20, 0xFF, 0x3F};
+    fsd_steer_update(&se, centred, 8, 3010u);
+    CHECK(fsd_soft_engage_allows(&se, 3010u) == true && se.soft_engage_latched,
+          "soft_engage: #176 -1.2 deg frame -> latch");
+
+    // No 0x129 on this tap at all: degrade to AP-First-only (latch at once).
+    memset(&se, 0, sizeof(se));
+    se.soft_engage = true;
+    CHECK(fsd_soft_engage_allows(&se, 5000u) == true && se.soft_engage_latched,
+          "soft_engage: no 0x129 ever -> AP-First-only");
 }
 
 // ── 0x145 ESP_status brake ────────────────────────────────────────────────────
@@ -2013,8 +2248,8 @@ static void test_autopark(void) {
     CHECK(!s.autopark_episode && !s.autopark_tx_block, "FSD 2->3->6 no bits: never blocks");
     CHECK(fsd_can_transmit(&s), "FSD engaged at 6: TX allowed");
 
-    // ── 2->6 with a MISSED 3 at 0 km/h: blocks, then fresh speed > 20 ENDS the
-    // episode; slowing back down in the same state 6 does not re-block (#176).
+    // ── 2->6 with a MISSED 3 at 0 km/h: blocks, then fresh speed past the release
+    // speed ENDS the episode; slowing back down in the same 6 does not re-block (#176).
     memset(&s, 0, sizeof(s));
     s.op_mode = OpMode_Active;
     s.speed_seen = true; s.last_speed_tick_ms = 100; s.vehicle_speed_kph = 0.0f;
@@ -2027,8 +2262,8 @@ static void test_autopark(void) {
     CHECK(s.autopark_tx_block, "stale speed keeps block (fail safe)");
 
     s.vehicle_speed_kph = 25.0f; s.last_speed_tick_ms = 1900;
-    ap_update(&s, 6, 2000);                                 // fresh speed 25 > 20
-    CHECK(!s.autopark_episode && !s.autopark_tx_block, "fresh speed >20 ends the false episode");
+    ap_update(&s, 6, 2000);                                 // fresh speed 25 km/h
+    CHECK(!s.autopark_episode && !s.autopark_tx_block, "fresh 25 km/h ends the false episode");
     CHECK(fsd_can_transmit(&s), "released by speed: TX allowed");
     s.vehicle_speed_kph = 5.0f; s.last_speed_tick_ms = 2900;
     ap_update(&s, 6, 3000);                                 // back to 5 km/h, still in 6
@@ -2037,8 +2272,8 @@ static void test_autopark(void) {
     CHECK(!s.autopark_tx_block, "stale speed after release: episode stays ended");
 
     // ── SNA speed must NOT release. DI_vehicleSpeed raw 0xFFF (4095) is SNA and
-    // decodes to 287.6 kph; only a fresh VALID reading > 20 releases (ending the
-    // episode, so a later SNA reading cannot re-open it, #176).
+    // decodes to 287.6 kph; only a fresh VALID reading past the release speed
+    // releases (ending the episode, so a later SNA reading cannot re-open it, #176).
     memset(&s, 0, sizeof(s));
     s.op_mode = OpMode_Active;
     s.autopark_ready = true;
@@ -2191,18 +2426,21 @@ static void test_autopark_176(void) {
     ap_das(&s, 0x06, 0xE0, 200);
     CHECK(!s.autopark_tx_block, "2->6 at 8.08 km/h (> ENTRY_MAX): no episode");
 
-    // ── 2->6 at 0 km/h: blocked; > 20 km/h ends the episode; back to 5 km/h in
-    // the same 6 is NOT blocked again. A maneuver bit re-opens it.
+    // ── 2->6 at 0 km/h with no maneuver bit (FSD engaged from a standstill in
+    // stop-and-go, #176): blocked; 12 km/h keeps it; > 12 km/h ends it; back to
+    // 5 km/h in the same 6 is NOT blocked again. A maneuver bit re-opens it, and
+    // an episode with maneuver evidence keeps the 20 km/h rule.
     memset(&s, 0, sizeof(s));
     s.op_mode = OpMode_Active;
     ap_kph(&s, 0.0f, 100);
     ap_das(&s, 0x02, 0xE0, 150);
     ap_das(&s, 0x06, 0xE0, 200);
     CHECK(s.autopark_episode && s.autopark_tx_block, "2->6 at 0 km/h: blocked");
+    CHECK(!s.autopark_evidence, "2->6 at 0 km/h, no maneuver bit: no evidence");
     ap_kph(&s, 12.0f, 300);
-    CHECK(s.autopark_tx_block, "12 km/h (<= 20) keeps the block");
-    ap_kph(&s, 25.0f, 400);
-    CHECK(!s.autopark_episode && !s.autopark_tx_block, "> 20 km/h ends the episode");
+    CHECK(s.autopark_tx_block, "no maneuver bit: 12 km/h keeps the block");
+    ap_kph(&s, 12.5f, 400);
+    CHECK(!s.autopark_episode && !s.autopark_tx_block, "no maneuver bit: > 12 km/h ends the episode");
     ap_kph(&s, 5.0f, 500);
     ap_das(&s, 0x06, 0xE1, 550);
     CHECK(!s.autopark_tx_block && fsd_can_transmit(&s),
@@ -2211,6 +2449,10 @@ static void test_autopark_176(void) {
     CHECK(s.autopark_episode && s.autopark_tx_block, "waitingForBrake mid-6 after release: blocked");
     ap_das(&s, 0x06, 0xE0, 700);
     CHECK(s.autopark_tx_block, "maneuver episode holds after the bit clears (still slow)");
+    ap_kph(&s, 15.0f, 750);
+    CHECK(s.autopark_tx_block && s.autopark_evidence, "maneuver evidence: 15 km/h keeps the block");
+    ap_kph(&s, 20.0f, 760);
+    CHECK(s.autopark_tx_block, "maneuver evidence: 20 km/h keeps the block");
     ap_kph(&s, 25.0f, 800);
     CHECK(!s.autopark_tx_block, "> 20 km/h ends the maneuver episode too");
     ap_kph(&s, 3.0f, 900);
@@ -2240,6 +2482,61 @@ static void test_autopark_176(void) {
     ap_das(&s, 0x01, 0xE0, 150);
     ap_das(&s, 0x06, 0xE0, 200);
     CHECK(s.autopark_tx_block, "1->6, SNA speed: blocked");
+    // Same for the lower no-evidence release: SNA or stale speed never ends it.
+    ap_speed(&s, 0xF0, 0xFF, 300);                          // SNA again, fresh
+    CHECK(s.autopark_tx_block, "no evidence, fresh SNA: still blocked");
+    ap_kph(&s, 30.0f, 400);
+    CHECK(!s.autopark_tx_block, "no evidence, fresh 30 km/h: released");
+    memset(&s, 0, sizeof(s));
+    s.op_mode = OpMode_Active;
+    ap_kph(&s, 0.0f, 100);
+    ap_das(&s, 0x02, 0xE0, 150);
+    ap_das(&s, 0x06, 0xE0, 200);
+    s.vehicle_speed_kph = 30.0f;                            // a reading, but 1.2 s old
+    s.last_speed_tick_ms = 300;
+    ap_das(&s, 0x06, 0xE0, 1500);
+    CHECK(s.autopark_tx_block, "no evidence, stale 30 km/h: still blocked");
+
+    // ── #176 stop-and-go: FSD engaged at a standstill (2->6, no bits), creeping
+    // 0..10 km/h for 20 s, then away at 15 km/h and back to stop-and-go. Blocked
+    // only until the first fresh reading over 12 km/h.
+    memset(&s, 0, sizeof(s));
+    s.op_mode = OpMode_Active;
+    ap_kph(&s, 0.0f, 100);
+    ap_das(&s, 0x02, 0xE0, 150);
+    ap_das(&s, 0x06, 0xE0, 200);
+    blocked = 0;
+    for(uint32_t i = 0; i < 200; i++) {
+        uint32_t t = 300 + i * 100;
+        ap_kph(&s, (float)(i % 11), t);
+        ap_das(&s, 0x06, 0xE0, t + 10);
+        if(s.autopark_tx_block) blocked++;
+    }
+    CHECK(blocked == 200, "stop-and-go below 12 km/h: blocked %d/200", blocked);
+    ap_kph(&s, 15.0f, 20400);
+    CHECK(!s.autopark_tx_block && fsd_can_transmit(&s), "stop-and-go: 15 km/h releases");
+    blocked = 0;
+    for(uint32_t i = 0; i < 200; i++) {
+        uint32_t t = 20500 + i * 100;
+        ap_kph(&s, (float)(i % 11), t);
+        ap_das(&s, 0x06, ((i / 7) & 1u) ? 0xE1 : 0xE0, t + 10);
+        if(s.autopark_tx_block || !fsd_can_transmit(&s)) blocked++;
+    }
+    CHECK(blocked == 0, "stop-and-go after release, same 6: %d blocked frames", blocked);
+
+    // ── An episode opened by its maneuver bit (1->6 on byte3 0xE5, the #180
+    // entry) has evidence from the start: 15 km/h keeps the block, > 20 ends it.
+    memset(&s, 0, sizeof(s));
+    s.op_mode = OpMode_Active;
+    ap_kph(&s, 0.0f, 100);
+    ap_frame(&s, k_das_parked, 150);
+    ap_frame(&s, k_das_autopark, 200);
+    CHECK(s.autopark_tx_block && s.autopark_evidence, "1->6 with waitingForBrake: evidence");
+    ap_kph(&s, 15.0f, 300);
+    ap_frame(&s, k_das_autopark, 310);
+    CHECK(s.autopark_tx_block, "maneuver-opened episode: 15 km/h keeps the block");
+    ap_kph(&s, 21.0f, 400);
+    CHECK(!s.autopark_tx_block, "maneuver-opened episode: > 20 km/h releases");
 
     // ── Real in-car Autopark (#180 trace): parked, autoparkReady rises (byte3
     // 0xE1), ~1.1 s later 1->6 on 06 0A DF E5 B0 08 21 4B at 0..5 km/h, held
@@ -2698,15 +2995,6 @@ static void test_readonly_parsers(void) {
     fsd_handle_das_settings(&s, &f);
     CHECK(s.das_autosteer_on, "das_settings autosteer on");
 
-    // SCCM_steeringAngle (0x129): int16 LE byte0-1 * 0.1
-    memset(&s, 0, sizeof(s));
-    zero(&f);
-    f.data_lenght = 4;
-    f.buffer[0] = 0x64;
-    f.buffer[1] = 0x00; // raw = 100 -> 10.0 deg
-    fsd_handle_steering_angle(&s, &f);
-    CHECK(fabs(s.steering_angle_deg - 10.0f) < 0.05f, "steer angle got %.2f",
-          (double)s.steering_angle_deg);
 
     // DAS_steeringControl (0x488): type = byte2[7:6]; angle = ((byte0&0x7F)<<8|byte1)*0.1-1638.35
     memset(&s, 0, sizeof(s));
@@ -2719,16 +3007,6 @@ static void test_readonly_parsers(void) {
     CHECK(s.das_steer_type == 3, "das_steer type got %u", s.das_steer_type);
     CHECK(fabs(s.das_steer_angle_req - 0.05f) < 0.1f, "das_steer angle got %.2f",
           (double)s.das_steer_angle_req);
-
-    // UI_ratedConsumption (0x33A): raw = byte1<<8|byte0, * 0.1
-    memset(&s, 0, sizeof(s));
-    zero(&f);
-    f.data_lenght = 4;
-    f.buffer[0] = 0x10;
-    f.buffer[1] = 0x00; // raw = 16 -> 1.6
-    fsd_handle_energy_consumption(&s, &f);
-    CHECK(fabs(s.energy_wh_per_km - 1.6f) < 0.05f, "energy got %.2f", (double)s.energy_wh_per_km);
-    CHECK(s.energy_seen, "energy seen");
 }
 
 // ── tyre pressures, 0x219 (fsd_tpms.h) ───────────────────────────────────────
@@ -3169,6 +3447,28 @@ static void test_blackbox_filter(void) {
     CHECK(fsd_blackbox_should_record(CAN_ID_DAS_STATUS2),     "0x389 ACC limit in set");
     CHECK(fsd_blackbox_should_record(CAN_ID_DAS_CONTROL),     "0x2B9 DAS_control in set");
     CHECK(fsd_blackbox_should_record(CAN_ID_DI_SYS_STATUS),   "0x118 state in set");
+    // Speed / Acceleration Mode / battery questions (#176, #211, #251).
+    CHECK(fsd_blackbox_should_record(CAN_ID_DI_SPEED),        "0x257 speed in set");
+    CHECK(fsd_blackbox_should_record(0x334u),                "0x334 pedal map in set");
+    CHECK(fsd_blackbox_should_record(CAN_ID_BMS_THERMAL),     "0x312 pack temp in set");
+    CHECK(fsd_blackbox_should_record(CAN_ID_BMS_SOC),         "0x292 pack SOC in set");
+    CHECK(fsd_blackbox_should_record(CAN_ID_UI_RANGE),        "0x33A car SOC in set");
+
+    // 0x257 thinned to one frame per FSD_BLACKBOX_THIN_MS per bus; other ids untouched.
+    FSDBlackboxThin th;
+    memset(&th, 0, sizeof(th));
+    int kept = 0;
+    for (uint32_t t = 1000u; t < 2000u; t += 20u)             // 50 Hz for 1 s
+        if (fsd_blackbox_thin_keep(CAN_ID_DI_SPEED, t, &th)) kept++;
+    CHECK(kept == 10, "0x257 at 50 Hz thinned to 10 per second (kept %d)", kept);
+    CHECK(fsd_blackbox_thin_keep(CAN_ID_DI_SPEED, 2080u, &th), "0x257 100 ms after the last kept: stored");
+    CHECK(!fsd_blackbox_thin_keep(CAN_ID_DI_SPEED, 2179u, &th), "0x257 99 ms after: dropped");
+    int other = 0;
+    for (uint32_t t = 1000u; t < 2000u; t += 10u)
+        if (fsd_blackbox_thin_keep(CAN_ID_STEER_ANGLE, t, &th)) other++;
+    CHECK(other == 100, "0x129 not thinned (kept %d/100)", other);
+    memset(&th, 0, sizeof(th));
+    CHECK(fsd_blackbox_thin_keep(CAN_ID_DI_SPEED, 0u, &th), "first 0x257 at t=0 stored");
 
     // Chatty non-diagnostic frames are dropped (the ~15x rate cut).
     CHECK(!fsd_blackbox_should_record(CAN_ID_BMS_HV_BUS),  "0x132 BMS dropped");
@@ -3426,6 +3726,9 @@ int main(void) {
     test_sccm_crc();
     test_nag_killer();
     test_nag_killer_faithful();
+    test_steering_angle();
+    test_bms_thermal();
+    test_ui_soc();
     test_nag_burst_cap();
     test_signal_config();
     test_abort_guard();

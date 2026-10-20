@@ -89,7 +89,7 @@
 - **「2026.14.x / .20 / .26.x 還能解鎖 FSD 嗎？」** 簡短答案：不行——啟用 preflight 加上鏈外區域鎖擋住了,但 nag killer / TLSSC / Summon EU / 擷取仍可用。完整說明見 [FSD-on-14.x FAQ (#168)](https://github.com/hypery11/flipper-tesla-fsd/discussions/168),frame 級證明見 [#163](https://github.com/hypery11/flipper-tesla-fsd/discussions/163)。
 
 ### 診斷（唯讀，不需要 FSD）
-- BMS 即時儀表板：電池組電壓、電流、SoC、溫度範圍、**能耗（Wh/km）**
+- BMS 即時儀表板：電池組電壓、電流、SoC（`0x292` 的電池組數值，ESP32 另有 `0x33A` 的車上顯示數值）、溫度範圍
 - **效能面板（ESP32 網頁儀表板，唯讀，需手動開啟）：** 加速 / 煞車計時（0-50、0-60 mph、0-100、100-0 km/h，並記錄本次工作階段最佳成績）、估算縱向 G（由車速 dv/dt 得出，無 IMU）、輪胎滑移率、電池組溫度 / 功率。車速與估算 G 在任何有 `0x257` 的匯流排上都可用；輪胎滑移需要 Party CAN（`0x175`）；溫度與功率需要在 Vehicle CAN 上接到 BMS 幀。不發送任何內容
 - 車速、方向盤角度、馬達扭力、煞車狀態
 - DAS 狀態：autopilot 狀態、手扶提醒等級、變換車道狀態、盲點警示、FCW、視覺限速
@@ -332,8 +332,8 @@ pio run -e m5stack-atom    # 或：esp32-lilygo、waveshare-s3-can、esp32-mcp25
 | `0x39B` | `DAS_status` | RX | HW4 + Highland HW3 — AP 狀態（byte0 低 4 位，給 AP-First）、自動停車旗標（Autopark 暫停）、nag 等級、變換車道、盲點 |
 | `0x132` | `BMS_hvBusStatus` | RX | 電池組電壓／電流 |
 | `0x292` | `BMS_socStatus` | RX | 充電狀態 |
-| `0x312` | `BMS_thermalStatus` | RX | 電池溫度 |
-| `0x33A` | `UI_ratedConsumption` | RX | 能耗（Wh/km） |
+| `0x312` | `BMS_thermalStatus` | RX | 電池溫度（部分車型的欄位位置未確認，不合理的讀數會隱藏） |
+| `0x33A` | `UI_range` | RX | 車上螢幕顯示的電量（ESP32 電池卡片） |
 
 完整 42 個 handler 清單（18 TX、24 RX）見 [`fsd_logic/fsd_handler.h`](fsd_logic/fsd_handler.h)。
 
