@@ -64,6 +64,86 @@ static void test_bus_errors() {
     assert(mcp2518fd_bdiag0_errors(0xFFFFFFFFu) == 4 * 255);
 }
 
+static void test_readback() {
+    const uint32_t con_reset = 0x04980760u;  // CiCON after RESET: Configuration mode
+    const uint32_t osc_reset = 0x00000060u;  // OSC after RESET, before OSCRDY
+    const uint32_t osc_up    = 0x00000460u;  // ... and once the oscillator is stable
+    assert(mcp2518fd_opmod(con_reset) == MCP2518FD_OPMOD_CONFIG);
+    assert(mcp2518fd_opmod(0x0) == 0 && mcp2518fd_opmod(0xFFFFFFFFu) == 7);
+    // CiCON byte 3 as the library requests Configuration mode.
+    assert(MCP2518FD_CON_REQ_CONFIG == 0x0C);
+
+    // The start-up wait: OSCRDY in a word that can be OSC. A MISO floating
+    // high has OSCRDY set too and must not end the wait.
+    assert(mcp2518fd_osc_ready(osc_up) && mcp2518fd_osc_ready(0x00001460u));
+    assert(!mcp2518fd_osc_ready(osc_reset) && !mcp2518fd_osc_ready(0));
+    assert(!mcp2518fd_osc_ready(0xFFFFFFFFu) && !mcp2518fd_osc_ready(0x00010460u));
+
+    // Nothing on MISO: all ones or all zeros, in any mix.
+    for (uint32_t con : {0u, 0xFFFFFFFFu}) {
+        for (uint32_t osc : {0u, 0xFFFFFFFFu}) {
+            assert(mcp2518fd_spi_state(con, osc) == MCP2518FD_SPI_SILENT);
+        }
+    }
+    // Something answers, but OSC has unimplemented bits set or CiCON is stuck.
+    assert(mcp2518fd_spi_state(0x12345678u, 0xABCD0460u) == MCP2518FD_SPI_GARBLED);
+    assert(mcp2518fd_spi_state(con_reset, 0xFFFFFFFFu) == MCP2518FD_SPI_GARBLED);
+    assert(mcp2518fd_spi_state(0xFFFFFFFFu, osc_up) == MCP2518FD_SPI_GARBLED);
+    assert(mcp2518fd_spi_state(0, osc_reset) == MCP2518FD_SPI_GARBLED);
+    // The chip answers: OSCRDY decides. CiCON in any mode counts.
+    assert(mcp2518fd_spi_state(con_reset, osc_reset) == MCP2518FD_SPI_NO_CLOCK);
+    assert(mcp2518fd_spi_state(con_reset, 0) == MCP2518FD_SPI_NO_CLOCK);
+    assert(mcp2518fd_spi_state(con_reset, 0x00000064u) == MCP2518FD_SPI_NO_CLOCK);  // OSCDIS: sleep
+    assert(mcp2518fd_spi_state(con_reset, osc_up) == MCP2518FD_SPI_CLOCK_OK);
+    assert(mcp2518fd_spi_state(0x03780760u, 0x00001470u) == MCP2518FD_SPI_CLOCK_OK);  // Listen-Only, SYSCLK/2
+
+    // An MCP2515 is asked for only when no MCP2518FD answered.
+    assert(mcp2518fd_probe_mcp2515(MCP2518FD_SPI_SILENT) && mcp2518fd_probe_mcp2515(MCP2518FD_SPI_GARBLED));
+    assert(!mcp2518fd_probe_mcp2515(MCP2518FD_SPI_NO_CLOCK) && !mcp2518fd_probe_mcp2515(MCP2518FD_SPI_CLOCK_OK));
+
+    // MCP2515 after RESET: CANSTAT 0x80, CANCTRL 0x87 (REQOP reads 100 or 111).
+    assert(mcp2515_reset_signature(0x80, 0x87) && mcp2515_reset_signature(0x80, 0xE7));
+    assert(mcp2515_reset_signature(0x8E, 0x8F));  // ICOD and OSM ignored
+    assert(!mcp2515_reset_signature(0xFF, 0xFF) && !mcp2515_reset_signature(0, 0));
+    assert(!mcp2515_reset_signature(0x80, 0xFF) && !mcp2515_reset_signature(0x00, 0x87));
+    assert(!mcp2515_reset_signature(0x60, 0x67));  // listen-only: not just reset
+    assert(!mcp2515_reset_signature(0x80, 0x83) && !mcp2515_reset_signature(0x80, 0x97));
+
+    // One text per case, the MCP2515 one ahead of the rest.
+    const Mcp2518fdReadback cases[] = {
+        {0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, false},
+        {0x12345678u, 0xABCD0460u, 0, false},
+        {con_reset, osc_reset, 0, false},
+        {con_reset, osc_up, 0x14, false},
+        {0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, true},
+    };
+    const size_t n = sizeof(cases) / sizeof(cases[0]);
+    for (size_t i = 0; i < n; i++) {
+        const char *text = mcp2518fd_readback_text(cases[i]);
+        assert(text && text[0]);
+        for (size_t j = 0; j < i; j++) assert(strcmp(text, mcp2518fd_readback_text(cases[j])) != 0);
+    }
+    assert(strstr(mcp2518fd_readback_text(cases[4]), "lilygo-t2can"));
+    assert(strstr(mcp2518fd_readback_text(cases[0]), "nothing answers"));
+    assert(strstr(mcp2518fd_readback_text(cases[2]), "oscillator is not running"));
+    assert(strstr(mcp2518fd_readback_text(cases[3]), "start sequence failed"));
+
+    // A retry prints the long line again only when something changed.
+    Mcp2518fdReadback a = cases[0], b = cases[0];
+    assert(mcp2518fd_readback_same(a, b));
+    b.mcp2515 = true;
+    assert(!mcp2518fd_readback_same(a, b));
+    b = a;
+    b.devid = 0;
+    assert(!mcp2518fd_readback_same(a, b));
+    b = a;
+    b.osc = osc_up;
+    assert(!mcp2518fd_readback_same(a, b));
+    b = a;
+    b.con = con_reset;
+    assert(!mcp2518fd_readback_same(a, b));
+}
+
 static void test_timing() {
     // What the library picks for 500 kbit/s from a 20 MHz SYSCLK (40 MHz
     // crystal divided by two, or a 20 MHz crystal) and from 40 MHz.
@@ -189,9 +269,11 @@ static void test_tx() {
 int main() {
     test_osc();
     test_bus_errors();
+    test_readback();
     test_timing();
     test_filters();
     test_rx();
     test_tx();
-    puts("MCP2518FD tests passed: crystal check, error counters, bit timing, filters, classic-only RX/TX");
+    puts("MCP2518FD tests passed: crystal check, error counters, not-detected readback, bit timing, "
+         "filters, classic-only RX/TX");
 }
