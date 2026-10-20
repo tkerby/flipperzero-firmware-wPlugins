@@ -5,7 +5,7 @@ MOMENTUM_SDK := https://github.com/Next-Flip/Momentum-Firmware/releases/download
 MOMENTUM_012_HOME := $(CURDIR)/.ufbt/momentum-012
 MOMENTUM_012_SDK := https://github.com/Next-Flip/Momentum-Firmware/releases/download/mntm-012/flipper-z-f7-sdk-mntm-012.zip
 FIRMWARE ?= official
-VERSION ?= 0.4
+VERSION ?= 0.5
 TOOLCHAIN_HOME := $(HOME)/.ufbt
 ifeq ($(FIRMWARE),official)
 SDK_HOME := $(TOOLCHAIN_HOME)
@@ -46,6 +46,7 @@ package: build songs sfx
 release: test
 	$(MAKE) build FIRMWARE=official
 	$(MAKE) build FIRMWARE=momentum
+	$(MAKE) build FIRMWARE=momentum-012
 	$(PYTHON) scripts/package_release.py --version $(VERSION)
 
 test:

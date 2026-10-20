@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.5
+
+- Raise app master volume to 200%, retaining the 70% default and independent system volume; boosted peaks are clipped to the PCM range.
+- Give Don and Ka one voice each: same-sound hits replace the previous tail with a short fade. Normal Don, drumrolls, and balloons share the Don voice.
+- Preserve drum-sound pitch and natural duration across playback speeds while hit timing follows the chart.
+- Add saved GPIO pulse widths from 25 to 100 ms in 5 ms steps, defaulting to 70 ms, under GPIO Setting.
+- Wait for input while paused instead of repeatedly recalculating and redrawing the static chart.
+- Add a separate Momentum mntm-012 build for API 87.1, confirmed working by the author on Momentum CN v1.1.6; retain official and mntm-009 builds.
+
 ## v0.4
 
 - Add a saved target display frame rate from 15 to 60 FPS in 1 FPS steps, defaulting to 50 FPS.

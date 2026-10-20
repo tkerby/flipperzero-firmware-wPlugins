@@ -19,6 +19,7 @@ jobs:
     env:
       OFFICIAL_SDK: https://update.flipperzero.one/builds/firmware/1.5.1/flipper-z-f7-sdk-1.5.1.zip
       MOMENTUM_SDK: https://github.com/Next-Flip/Momentum-Firmware/releases/download/mntm-009/flipper-z-f7-sdk-mntm-009.zip
+      MOMENTUM_012_SDK: https://github.com/Next-Flip/Momentum-Firmware/releases/download/mntm-012/flipper-z-f7-sdk-mntm-012.zip
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -34,7 +35,8 @@ jobs:
         run: |
           .venv/bin/ufbt update --hw-target=f7 --url="$OFFICIAL_SDK"
           make momentum-sdk
-      - name: Test, build and package both firmware variants
+          make momentum-012-sdk
+      - name: Test, build and package all three firmware variants
         env:
           RELEASE_TAG: ${{ github.ref_name }}
         run: make release VERSION="${RELEASE_TAG#v}"

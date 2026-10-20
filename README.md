@@ -14,13 +14,13 @@
 - 按谱面自动混入咚／咔音效，显示左右鼓面指示。
 - 支持选难度、暂停、前后跳转，以及播放速度、流速、刷新率和音量调节。
 - 可自定义四路 GPIO 输出，默认关闭；常用设置自动保存。
-- 提供官方固件和 Momentum 两种安装包。
+- 提供官方固件及新旧 Momentum 安装包。
 
 这是谱面播放器，暂不提供打击判定；OGG 需要先在电脑上转换为 PCM WAV。
 
 ## 快速开始
 
-1. 从 [GitHub Releases](https://github.com/ZeroNinx/flipper-zero-taiko-player/releases) 下载与设备固件兼容的安装包。v0.3 分别使用官方 1.5.1（API 88.2）和 Momentum mntm-009（API 79.2）构建。
+1. 从 [GitHub Releases](https://github.com/ZeroNinx/flipper-zero-taiko-player/releases) 下载与设备固件兼容的安装包。固件 SDK 与 API 对应关系见[使用指南](docs/usage.md#安装与升级)。
 2. 解压，将 `sdcard/` 内的内容复制到 SD 卡根目录。包内含应用、鼓声音效和转码脚本，不含歌曲及个人设置。
 3. 在电脑上安装 Python 3 和 FFmpeg。把自己的 TJA 与配套音频放入解压目录的 `songs/`，保留谱面 `WAVE:` 指定的文件名，然后在解压目录运行：
 
