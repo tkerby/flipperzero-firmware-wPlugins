@@ -142,7 +142,8 @@ static const char WEB_HTML[] PROGMEM = R"rawliteral(
   --bg:#0a0a1a;--card:#111827;--card2:#1a1f35;
   --accent:#00d4aa;--accent2:#00b894;
   --red:#ff6b6b;--yellow:#ffd93d;--blue:#4dabf7;
-  --border:#1e293b;--text:#e2e8f0;--text2:#94a3b8;--text3:#475569
+  --border:#1e293b;--text:#e2e8f0;--text2:#94a3b8;--text3:#475569;
+  --muted:#7d8ba1  /* hint text: between text2 and text3, 4.7:1 on card2 */
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   background:var(--bg);color:var(--text);min-height:100vh}
