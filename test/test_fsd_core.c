@@ -2152,8 +2152,8 @@ static void test_autopark(void) {
     CHECK(!s.autopark_episode && !s.autopark_tx_block, "FSD 2->3->6 no bits: never blocks");
     CHECK(fsd_can_transmit(&s), "FSD engaged at 6: TX allowed");
 
-    // ── 2->6 with a MISSED 3 at 0 km/h: blocks, then fresh speed > 20 ENDS the
-    // episode; slowing back down in the same state 6 does not re-block (#176).
+    // ── 2->6 with a MISSED 3 at 0 km/h: blocks, then fresh speed past the release
+    // speed ENDS the episode; slowing back down in the same 6 does not re-block (#176).
     memset(&s, 0, sizeof(s));
     s.op_mode = OpMode_Active;
     s.speed_seen = true; s.last_speed_tick_ms = 100; s.vehicle_speed_kph = 0.0f;
@@ -2166,8 +2166,8 @@ static void test_autopark(void) {
     CHECK(s.autopark_tx_block, "stale speed keeps block (fail safe)");
 
     s.vehicle_speed_kph = 25.0f; s.last_speed_tick_ms = 1900;
-    ap_update(&s, 6, 2000);                                 // fresh speed 25 > 20
-    CHECK(!s.autopark_episode && !s.autopark_tx_block, "fresh speed >20 ends the false episode");
+    ap_update(&s, 6, 2000);                                 // fresh speed 25 km/h
+    CHECK(!s.autopark_episode && !s.autopark_tx_block, "fresh 25 km/h ends the false episode");
     CHECK(fsd_can_transmit(&s), "released by speed: TX allowed");
     s.vehicle_speed_kph = 5.0f; s.last_speed_tick_ms = 2900;
     ap_update(&s, 6, 3000);                                 // back to 5 km/h, still in 6
@@ -2176,8 +2176,8 @@ static void test_autopark(void) {
     CHECK(!s.autopark_tx_block, "stale speed after release: episode stays ended");
 
     // ── SNA speed must NOT release. DI_vehicleSpeed raw 0xFFF (4095) is SNA and
-    // decodes to 287.6 kph; only a fresh VALID reading > 20 releases (ending the
-    // episode, so a later SNA reading cannot re-open it, #176).
+    // decodes to 287.6 kph; only a fresh VALID reading past the release speed
+    // releases (ending the episode, so a later SNA reading cannot re-open it, #176).
     memset(&s, 0, sizeof(s));
     s.op_mode = OpMode_Active;
     s.autopark_ready = true;
@@ -2330,18 +2330,21 @@ static void test_autopark_176(void) {
     ap_das(&s, 0x06, 0xE0, 200);
     CHECK(!s.autopark_tx_block, "2->6 at 8.08 km/h (> ENTRY_MAX): no episode");
 
-    // ── 2->6 at 0 km/h: blocked; > 20 km/h ends the episode; back to 5 km/h in
-    // the same 6 is NOT blocked again. A maneuver bit re-opens it.
+    // ── 2->6 at 0 km/h with no maneuver bit (FSD engaged from a standstill in
+    // stop-and-go, #176): blocked; 12 km/h keeps it; > 12 km/h ends it; back to
+    // 5 km/h in the same 6 is NOT blocked again. A maneuver bit re-opens it, and
+    // an episode with maneuver evidence keeps the 20 km/h rule.
     memset(&s, 0, sizeof(s));
     s.op_mode = OpMode_Active;
     ap_kph(&s, 0.0f, 100);
     ap_das(&s, 0x02, 0xE0, 150);
     ap_das(&s, 0x06, 0xE0, 200);
     CHECK(s.autopark_episode && s.autopark_tx_block, "2->6 at 0 km/h: blocked");
+    CHECK(!s.autopark_evidence, "2->6 at 0 km/h, no maneuver bit: no evidence");
     ap_kph(&s, 12.0f, 300);
-    CHECK(s.autopark_tx_block, "12 km/h (<= 20) keeps the block");
-    ap_kph(&s, 25.0f, 400);
-    CHECK(!s.autopark_episode && !s.autopark_tx_block, "> 20 km/h ends the episode");
+    CHECK(s.autopark_tx_block, "no maneuver bit: 12 km/h keeps the block");
+    ap_kph(&s, 12.5f, 400);
+    CHECK(!s.autopark_episode && !s.autopark_tx_block, "no maneuver bit: > 12 km/h ends the episode");
     ap_kph(&s, 5.0f, 500);
     ap_das(&s, 0x06, 0xE1, 550);
     CHECK(!s.autopark_tx_block && fsd_can_transmit(&s),
@@ -2350,6 +2353,10 @@ static void test_autopark_176(void) {
     CHECK(s.autopark_episode && s.autopark_tx_block, "waitingForBrake mid-6 after release: blocked");
     ap_das(&s, 0x06, 0xE0, 700);
     CHECK(s.autopark_tx_block, "maneuver episode holds after the bit clears (still slow)");
+    ap_kph(&s, 15.0f, 750);
+    CHECK(s.autopark_tx_block && s.autopark_evidence, "maneuver evidence: 15 km/h keeps the block");
+    ap_kph(&s, 20.0f, 760);
+    CHECK(s.autopark_tx_block, "maneuver evidence: 20 km/h keeps the block");
     ap_kph(&s, 25.0f, 800);
     CHECK(!s.autopark_tx_block, "> 20 km/h ends the maneuver episode too");
     ap_kph(&s, 3.0f, 900);
@@ -2379,6 +2386,61 @@ static void test_autopark_176(void) {
     ap_das(&s, 0x01, 0xE0, 150);
     ap_das(&s, 0x06, 0xE0, 200);
     CHECK(s.autopark_tx_block, "1->6, SNA speed: blocked");
+    // Same for the lower no-evidence release: SNA or stale speed never ends it.
+    ap_speed(&s, 0xF0, 0xFF, 300);                          // SNA again, fresh
+    CHECK(s.autopark_tx_block, "no evidence, fresh SNA: still blocked");
+    ap_kph(&s, 30.0f, 400);
+    CHECK(!s.autopark_tx_block, "no evidence, fresh 30 km/h: released");
+    memset(&s, 0, sizeof(s));
+    s.op_mode = OpMode_Active;
+    ap_kph(&s, 0.0f, 100);
+    ap_das(&s, 0x02, 0xE0, 150);
+    ap_das(&s, 0x06, 0xE0, 200);
+    s.vehicle_speed_kph = 30.0f;                            // a reading, but 1.2 s old
+    s.last_speed_tick_ms = 300;
+    ap_das(&s, 0x06, 0xE0, 1500);
+    CHECK(s.autopark_tx_block, "no evidence, stale 30 km/h: still blocked");
+
+    // ── #176 stop-and-go: FSD engaged at a standstill (2->6, no bits), creeping
+    // 0..10 km/h for 20 s, then away at 15 km/h and back to stop-and-go. Blocked
+    // only until the first fresh reading over 12 km/h.
+    memset(&s, 0, sizeof(s));
+    s.op_mode = OpMode_Active;
+    ap_kph(&s, 0.0f, 100);
+    ap_das(&s, 0x02, 0xE0, 150);
+    ap_das(&s, 0x06, 0xE0, 200);
+    blocked = 0;
+    for(uint32_t i = 0; i < 200; i++) {
+        uint32_t t = 300 + i * 100;
+        ap_kph(&s, (float)(i % 11), t);
+        ap_das(&s, 0x06, 0xE0, t + 10);
+        if(s.autopark_tx_block) blocked++;
+    }
+    CHECK(blocked == 200, "stop-and-go below 12 km/h: blocked %d/200", blocked);
+    ap_kph(&s, 15.0f, 20400);
+    CHECK(!s.autopark_tx_block && fsd_can_transmit(&s), "stop-and-go: 15 km/h releases");
+    blocked = 0;
+    for(uint32_t i = 0; i < 200; i++) {
+        uint32_t t = 20500 + i * 100;
+        ap_kph(&s, (float)(i % 11), t);
+        ap_das(&s, 0x06, ((i / 7) & 1u) ? 0xE1 : 0xE0, t + 10);
+        if(s.autopark_tx_block || !fsd_can_transmit(&s)) blocked++;
+    }
+    CHECK(blocked == 0, "stop-and-go after release, same 6: %d blocked frames", blocked);
+
+    // ── An episode opened by its maneuver bit (1->6 on byte3 0xE5, the #180
+    // entry) has evidence from the start: 15 km/h keeps the block, > 20 ends it.
+    memset(&s, 0, sizeof(s));
+    s.op_mode = OpMode_Active;
+    ap_kph(&s, 0.0f, 100);
+    ap_frame(&s, k_das_parked, 150);
+    ap_frame(&s, k_das_autopark, 200);
+    CHECK(s.autopark_tx_block && s.autopark_evidence, "1->6 with waitingForBrake: evidence");
+    ap_kph(&s, 15.0f, 300);
+    ap_frame(&s, k_das_autopark, 310);
+    CHECK(s.autopark_tx_block, "maneuver-opened episode: 15 km/h keeps the block");
+    ap_kph(&s, 21.0f, 400);
+    CHECK(!s.autopark_tx_block, "maneuver-opened episode: > 20 km/h releases");
 
     // ── Real in-car Autopark (#180 trace): parked, autoparkReady rises (byte3
     // 0xE1), ~1.1 s later 1->6 on 06 0A DF E5 B0 08 21 4B at 0..5 km/h, held

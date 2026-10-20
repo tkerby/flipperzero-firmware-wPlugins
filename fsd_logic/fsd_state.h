@@ -235,6 +235,7 @@ typedef struct FSDState {
     uint32_t autopark_maneuver_last_ms; // ms clock a maneuver bit (autoParked / waitingForBrake) was last seen set
     uint8_t autopark_prev_ap_state;  // das_ap_state at the previous fsd_autopark_update
     bool autopark_episode;           // inside a detected Autopark episode (state 6)
+    bool autopark_evidence;          // this episode has seen a maneuver bit (20 vs 12 km/h release)
     bool autopark_tx_block;          // episode AND not confirmed driving -> pause every TX
 
     // --- GTW autopilot tier (from 0x7FF mux=2 on mixed bus) ---

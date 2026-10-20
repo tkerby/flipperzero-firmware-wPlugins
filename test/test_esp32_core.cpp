@@ -308,8 +308,9 @@ static void test_autopark(void) {
     ap_update(&s, 2, 100); ap_update(&s, 3, 200); ap_update(&s, 6, 300);
     CHECK(!s.autopark_tx_block && fsd_can_transmit(&s), "FSD 2->3->6: no block");
 
-    // 2->6 (missed 3) at 0 km/h blocks; stale keeps block; fresh speed >20 ENDS
-    // the episode, so slowing back down in the same 6 does not re-block (#176).
+    // 2->6 (missed 3) at 0 km/h blocks; stale keeps block; fresh speed past the
+    // release speed ENDS the episode, so slowing back down in the same 6 does not
+    // re-block (#176).
     memset(&s, 0, sizeof(s));
     s.op_mode = OpMode_Active;
     s.speed_seen = true; s.last_speed_tick_ms = 100; s.vehicle_speed_kph = 0.0f;
@@ -319,7 +320,7 @@ static void test_autopark(void) {
     CHECK(s.autopark_tx_block, "stale speed keeps block (fail safe)");
     s.vehicle_speed_kph = 25.0f; s.last_speed_tick_ms = 1900;
     ap_update(&s, 6, 2000);
-    CHECK(!s.autopark_episode && !s.autopark_tx_block, "fresh speed >20 ends the episode");
+    CHECK(!s.autopark_episode && !s.autopark_tx_block, "fresh 25 km/h ends the episode");
     s.vehicle_speed_kph = 5.0f; s.last_speed_tick_ms = 2900;
     ap_update(&s, 6, 3000);
     CHECK(!s.autopark_tx_block && fsd_can_transmit(&s), "5 km/h after release, same 6: no block");
@@ -466,16 +467,18 @@ static void test_autopark_176(void) {
     ap_kph(&s, 8.08f, 100); ap_das(&s, 0x02, 0xE0, 150); ap_das(&s, 0x06, 0xE0, 200);
     CHECK(!s.autopark_tx_block, "2->6 at 8.08 km/h (> ENTRY_MAX): no episode");
 
-    // 2->6 at 0 km/h: blocked; > 20 ends it; 5 km/h in the same 6 stays released;
-    // a maneuver bit re-opens it; leaving 6 resets.
+    // 2->6 at 0 km/h, no maneuver bit (#176 stop-and-go): blocked; 12 km/h keeps
+    // it; > 12 ends it; 5 km/h in the same 6 stays released; a maneuver bit
+    // re-opens it and that episode needs > 20; leaving 6 resets.
     memset(&s, 0, sizeof(s));
     s.op_mode = OpMode_Active;
     ap_kph(&s, 0.0f, 100); ap_das(&s, 0x02, 0xE0, 150); ap_das(&s, 0x06, 0xE0, 200);
     CHECK(s.autopark_episode && s.autopark_tx_block, "2->6 at 0 km/h: blocked");
+    CHECK(!s.autopark_evidence, "2->6 at 0 km/h, no maneuver bit: no evidence");
     ap_kph(&s, 12.0f, 300);
-    CHECK(s.autopark_tx_block, "12 km/h (<= 20) keeps the block");
-    ap_kph(&s, 25.0f, 400);
-    CHECK(!s.autopark_episode && !s.autopark_tx_block, "> 20 km/h ends the episode");
+    CHECK(s.autopark_tx_block, "no maneuver bit: 12 km/h keeps the block");
+    ap_kph(&s, 12.5f, 400);
+    CHECK(!s.autopark_episode && !s.autopark_tx_block, "no maneuver bit: > 12 km/h ends the episode");
     ap_kph(&s, 5.0f, 500); ap_das(&s, 0x06, 0xE1, 550);
     CHECK(!s.autopark_tx_block && fsd_can_transmit(&s),
           "back to 5 km/h + autoparkReady in the same 6: not re-blocked");
@@ -483,6 +486,10 @@ static void test_autopark_176(void) {
     CHECK(s.autopark_episode && s.autopark_tx_block, "waitingForBrake mid-6 after release: blocked");
     ap_das(&s, 0x06, 0xE0, 700);
     CHECK(s.autopark_tx_block, "maneuver episode holds after the bit clears (still slow)");
+    ap_kph(&s, 15.0f, 750);
+    CHECK(s.autopark_tx_block && s.autopark_evidence, "maneuver evidence: 15 km/h keeps the block");
+    ap_kph(&s, 20.0f, 760);
+    CHECK(s.autopark_tx_block, "maneuver evidence: 20 km/h keeps the block");
     ap_kph(&s, 25.0f, 800);
     CHECK(!s.autopark_tx_block, "> 20 km/h ends the maneuver episode too");
     ap_kph(&s, 3.0f, 900); ap_das(&s, 0x06, 0xE2, 950);
@@ -505,6 +512,50 @@ static void test_autopark_176(void) {
     s.op_mode = OpMode_Active;
     ap_speed(&s, 0xF0, 0xFF, 100); ap_das(&s, 0x01, 0xE0, 150); ap_das(&s, 0x06, 0xE0, 200);
     CHECK(s.autopark_tx_block, "1->6, SNA speed: blocked");
+    ap_speed(&s, 0xF0, 0xFF, 300);
+    CHECK(s.autopark_tx_block, "no evidence, fresh SNA: still blocked");
+    ap_kph(&s, 30.0f, 400);
+    CHECK(!s.autopark_tx_block, "no evidence, fresh 30 km/h: released");
+    memset(&s, 0, sizeof(s));
+    s.op_mode = OpMode_Active;
+    ap_kph(&s, 0.0f, 100); ap_das(&s, 0x02, 0xE0, 150); ap_das(&s, 0x06, 0xE0, 200);
+    s.vehicle_speed_kph = 30.0f; s.last_speed_tick_ms = 300;   // 1.2 s old below
+    ap_das(&s, 0x06, 0xE0, 1500);
+    CHECK(s.autopark_tx_block, "no evidence, stale 30 km/h: still blocked");
+
+    // #176 stop-and-go: blocked only until the first fresh reading over 12 km/h.
+    memset(&s, 0, sizeof(s));
+    s.op_mode = OpMode_Active;
+    ap_kph(&s, 0.0f, 100); ap_das(&s, 0x02, 0xE0, 150); ap_das(&s, 0x06, 0xE0, 200);
+    blocked = 0;
+    for (uint32_t i = 0; i < 200; i++) {
+        uint32_t t = 300 + i * 100;
+        ap_kph(&s, (float)(i % 11), t);
+        ap_das(&s, 0x06, 0xE0, t + 10);
+        if (s.autopark_tx_block) blocked++;
+    }
+    CHECK(blocked == 200, "stop-and-go below 12 km/h: blocked %d/200", blocked);
+    ap_kph(&s, 15.0f, 20400);
+    CHECK(!s.autopark_tx_block && fsd_can_transmit(&s), "stop-and-go: 15 km/h releases");
+    blocked = 0;
+    for (uint32_t i = 0; i < 200; i++) {
+        uint32_t t = 20500 + i * 100;
+        ap_kph(&s, (float)(i % 11), t);
+        ap_das(&s, 0x06, ((i / 7) & 1u) ? 0xE1 : 0xE0, t + 10);
+        if (s.autopark_tx_block || !fsd_can_transmit(&s)) blocked++;
+    }
+    CHECK(blocked == 0, "stop-and-go after release, same 6: %d blocked frames", blocked);
+
+    // An episode opened by its maneuver bit (#180 entry, byte3 0xE5) has
+    // evidence from the start: 15 km/h keeps the block, > 20 ends it.
+    memset(&s, 0, sizeof(s));
+    s.op_mode = OpMode_Active;
+    ap_kph(&s, 0.0f, 100); ap_frame(&s, k_das_parked, 150); ap_frame(&s, k_das_autopark, 200);
+    CHECK(s.autopark_tx_block && s.autopark_evidence, "1->6 with waitingForBrake: evidence");
+    ap_kph(&s, 15.0f, 300); ap_frame(&s, k_das_autopark, 310);
+    CHECK(s.autopark_tx_block, "maneuver-opened episode: 15 km/h keeps the block");
+    ap_kph(&s, 21.0f, 400);
+    CHECK(!s.autopark_tx_block, "maneuver-opened episode: > 20 km/h releases");
 
     // Real in-car Autopark (#180 trace): parked, autoparkReady rises, ~1.1 s
     // later 1->6 on 06 0A DF E5 B0 08 21 4B at 0..5 km/h held 20 s, then 6->1.
