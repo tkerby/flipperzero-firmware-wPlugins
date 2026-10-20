@@ -1691,6 +1691,14 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
 #if defined(BOARD_LILYGO)
 // ── Deep-sleep watchdog (Lilygo only) ────────────────────────────────────────
 static NOINLINE void sleep_tick(uint32_t now) {
+    // A capture's hardware filter on a rare id makes a busy bus look silent:
+    // that is not a sleeping car. Hold the idle timer at zero while it is on,
+    // so it starts over when the filter comes off.
+    if (g_can_filtered) {
+        g_last_can_rx_ms = now;
+        g_sleep_warned   = false;
+        return;
+    }
     if (now < g_last_can_rx_ms) return;
     uint32_t idle_ms = now - g_last_can_rx_ms;
     FSDState s = state_snapshot();
