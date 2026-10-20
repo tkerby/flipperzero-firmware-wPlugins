@@ -86,9 +86,11 @@ bool fsd_ap_first_allows(const FSDState* state, uint32_t now_ms);
 
 /** Soft-Engage gate. Returns true if injection may proceed: soft_engage off, or
  *  already latched this engagement, or the wheel is within SOFT_ENGAGE_ANGLE_DEG
- *  of centre (which latches it on). Mutates soft_engage_latched. Reset the latch
+ *  of centre (which latches it on), or no 0x129 was ever seen (latches; degrades
+ *  to AP-First-only). Holds while 0x129 is present but no fresh valid angle is
+ *  known (fsd_steer_known). Mutates soft_engage_latched. Reset the latch
  *  (soft_engage_latched=false) when AP drops (das_ap_state < DAS_APSTATE_ENGAGED). */
-bool fsd_soft_engage_allows(FSDState* state);
+bool fsd_soft_engage_allows(FSDState* state, uint32_t now_ms);
 
 // Abort Guard (#108): DAS_autopilotState values that mean the car is aborting an
 // engage — the moment linked to the steer-jerk in dunckencn's logs.
@@ -305,8 +307,9 @@ void fsd_handle_di_torque(FSDState* state, const CANFRAME* frame);
 /** Parse UI_warning (0x311) — blinker, door, buckle, high beam status. */
 void fsd_handle_ui_warning(FSDState* state, const CANFRAME* frame);
 
-/** Parse SCCM_steeringAngleSensor (0x129) — steering wheel angle. */
-void fsd_handle_steering_angle(FSDState* state, const CANFRAME* frame);
+/** Parse SCCM_steeringAngleSensor (0x129) — steering wheel angle (fsd_steer.h);
+ *  now_ms stamps the angle's freshness. */
+void fsd_handle_steering_angle(FSDState* state, const CANFRAME* frame, uint32_t now_ms);
 
 /** Parse DAS_steeringControl (0x488) — DAS steering request type + angle. */
 void fsd_handle_das_steering(FSDState* state, const CANFRAME* frame);

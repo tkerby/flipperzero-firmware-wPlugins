@@ -1423,7 +1423,7 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
     // Steering angle (0x129) — read-only, feeds the Soft Engage gate (#108).
     if (!steer_cfg && frame.id == CAN_ID_STEER_ANGLE) {
         state_enter();
-        fsd_handle_steering_angle(&g_state, &frame);
+        fsd_handle_steering_angle(&g_state, &frame, now);
         state_exit();
         return;
     }
@@ -1455,7 +1455,7 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
     // AP-First (#100/#108): when enabled, hold AP/FSD/nag injection until AP is
     // engaged and stable. Gates 0x3FD / 0x3EE / 0x370 below; off by default.
     bool ap_ok = fsd_ap_first_allows(&g_state, millis()) &&
-                 fsd_soft_engage_allows(&g_state) &&   // Soft Engage holds until wheel centred (#108)
+                 fsd_soft_engage_allows(&g_state, millis()) &&   // Soft Engage holds until wheel centred (#108)
                  fsd_abort_guard_allows(&g_state);     // Abort Guard cuts injection on an abort (#108)
     state_exit();
 

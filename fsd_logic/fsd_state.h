@@ -54,6 +54,8 @@ typedef struct FSDState {
                                // scheme (no handsOnLevel flip; torque centred at
                                // 0 Nm with live variance) to pass the 2026.14.x
                                // content preflight. Default off — see #100.
+    int8_t nag_torque_dir;     // EPAS-faithful torque direction -1/+1, 0 = none yet
+                               // (+1); held near centre — fsd_steer_nag_dir()
     uint32_t nag_echo_count;
     bool nag_demand_active;    // true while handsOnLevel == 0 or 3 — edge-detect source for on-demand grip pulse
     bool continuous_ap;         // re-enable AP after AP drops while turn signal is active
@@ -298,8 +300,11 @@ typedef struct FSDState {
     bool ui_high_beam;
     bool ui_warning_seen;
 
-    // --- steering angle (0x129) ---
-    float steering_angle_deg;
+    // --- steering angle (0x129 SCCM_steeringAngleSensor, fsd_steer.h) ---
+    float steering_angle_deg;    // last valid angle; read only while fsd_steer_known()
+    bool steering_angle_seen;    // a 0x129 (or the Signal Map steering id) has been parsed
+    bool steering_angle_valid;   // the last one carried a valid angle
+    uint32_t steering_angle_ms;  // ms clock of the last valid angle
 
     // --- DAS_steeringControl (0x488) ---
     float das_steer_angle_req;   // DAS requested angle

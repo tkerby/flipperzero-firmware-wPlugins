@@ -15,6 +15,7 @@
 #include "../../fsd_logic/fsd_can_ops.h"   // shared stateless frame primitives (set_bit / mux / fsd-selected)
 #include "../../fsd_logic/fsd_ota.h"       // shared 0x318 OTA-install detection (flag vs rolling counter)
 #include "../../fsd_logic/fsd_cp_status.h" // shared 0x25D CP_status decode + EU rewrite predicate (#228)
+#include "../../fsd_logic/fsd_steer.h"     // shared 0x129 steering-angle decode + freshness
 #include <string.h>
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
@@ -620,7 +621,8 @@ static uint32_t nag_xorshift32() {
 
 // EPAS-faithful (Mode-C) path — mirror of the Flipper fsd_handler.c logic (#100):
 // demand-state-driven torque, handsOnLevel derived from torque magnitude, direction
-// opposite steering. Raw 2048 = 0 Nm, raw = 2048 + Nm*100.
+// opposite steering (held near centre / while unknown, fsd_steer_nag_dir). Raw
+// 2048 = 0 Nm, raw = 2048 + Nm*100.
 static uint8_t nag_hands_level_from_raw(int16_t raw) {
     int16_t a = (raw >= 2048) ? (raw - 2048) : (2048 - raw);
     if (a >= 200) return 2;
@@ -668,7 +670,7 @@ void fsd_apply_signal_config(FSDState *state, const CanFrame *frame, uint32_t no
             frame->dlc > state->cfg_steer_hi && frame->dlc > state->cfg_steer_lo) {
             int16_t raw = (int16_t)(((uint16_t)frame->data[state->cfg_steer_hi] << 8) |
                                     frame->data[state->cfg_steer_lo]);
-            state->steering_angle_deg = (float)raw * 0.1f;
+            fsd_steer_set(state, (float)raw * 0.1f, now_ms);
             state->steer_ctx_seen_ms = now_ms;
         }
     }
@@ -710,7 +712,7 @@ static bool nag_faithful_modec(FSDState *state, const CanFrame *frame,
         return false;
     }
 
-    int dir = (state->steering_angle_deg > 0.0f) ? -1 : 1;
+    int dir = fsd_steer_nag_dir(state, now_ms);
     int16_t torque;
     uint8_t level;
 
@@ -877,10 +879,17 @@ void fsd_handle_epas_status(FSDState *state, const CanFrame *frame) {
     state->torsion_bar_torque_seen = true;
 }
 
-// Soft-Engage gate — mirror of the Flipper fsd_soft_engage_allows (#108).
-bool fsd_soft_engage_allows(FSDState *state) {
+// Soft-Engage gate — mirror of the Flipper fsd_soft_engage_allows (#108). No
+// 0x129 on this tap: latch (AP-First-only). 0x129 present but no fresh valid
+// angle: hold.
+bool fsd_soft_engage_allows(FSDState *state, uint32_t now_ms) {
     if (!state->soft_engage) return true;
     if (state->soft_engage_latched) return true;
+    if (!state->steering_angle_seen) {
+        state->soft_engage_latched = true;
+        return true;
+    }
+    if (!fsd_steer_known(state, now_ms)) return false;
     float a = state->steering_angle_deg;
     if (a < 0.0f) a = -a;
     if (a > SOFT_ENGAGE_ANGLE_DEG) return false;   // turning — hold activation
@@ -916,11 +925,10 @@ void fsd_handle_di_speed(FSDState *state, const CanFrame *frame) {
     state->speed_seen = true;
 }
 
-// SCCM_steeringAngleSensor (0x129): 16-bit signed LE at byte0-1, factor 0.1 deg.
-void fsd_handle_steering_angle(FSDState *state, const CanFrame *frame) {
-    if (frame->dlc < 4) return;
-    int16_t raw = (int16_t)(((uint16_t)frame->data[1] << 8) | frame->data[0]);
-    state->steering_angle_deg = (float)raw * 0.1f;
+// SCCM_steeringAngleSensor (0x129): SCCM_steeringAngle 16|14 (0.1, -819.2) deg,
+// used only while SCCM_steeringAngleValidity (30|2) is VALID — fsd_steer.h.
+void fsd_handle_steering_angle(FSDState *state, const CanFrame *frame, uint32_t now_ms) {
+    fsd_steer_update(state, frame->data, frame->dlc, now_ms);
 }
 
 void fsd_handle_esp_status(FSDState *state, const CanFrame *frame) {

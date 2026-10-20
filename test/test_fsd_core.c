@@ -29,6 +29,7 @@
 #include "fsd_power.h"
 #include "fsd_profile.h"
 #include "fsd_profile_db.h"
+#include "fsd_steer.h"
 #include "fsd_tpms.h"
 
 static int g_pass = 0;
@@ -851,6 +852,119 @@ static void test_nag_killer_faithful(void) {
 }
 #undef RAWABS
 
+// ── 0x129 SCCM_steeringAngleSensor (fsd_steer.h) ─────────────────────────────
+// Real frames from the #176 (HW3 Model 3) and #211 (HW4 Model Y) records. The
+// pre-fix int16 read of bytes 0-1 gave the angle in the trailing comment.
+static const struct {
+    uint8_t d[8];
+    bool valid;
+    float deg;
+    const char* where;
+} STEER129[] = {
+    {{0xDA, 0x25, 0xF4, 0x5F, 0x00, 0x20, 0xFF, 0x3F}, true, -1.2f, "#176 evt_557853"},  // 969.0
+    {{0x63, 0x2B, 0x99, 0x61, 0x0C, 0x20, 0xFF, 0x3F}, true, 40.9f, "#176 evt_974427"},  // 1110.7
+    {{0x01, 0x26, 0xDF, 0x5F, 0xFE, 0x1F, 0xFF, 0x3F}, true, -3.3f, "#176 evt_2116601"}, // 972.9
+    {{0xFD, 0x2F, 0x28, 0x60, 0x00, 0x20, 0xFF, 0x3F}, true, 4.0f, "#211 ev000001"},     // 1228.5
+    {{0x0E, 0x27, 0xD8, 0x60, 0xFF, 0x1F, 0xFF, 0x3F}, true, 21.6f, "#211 ev000002"},    // 999.8
+    {{0xC9, 0x21, 0xC5, 0x5F, 0xFF, 0x1F, 0xFF, 0x3F}, true, -5.9f, "#211 ev000003"},    // 864.9
+    // Parked dump, SCCM_steeringAngleValidity INVALID (raw angle -357.5).
+    {{0xC4, 0x27, 0x09, 0x12, 0xFF, 0x1F, 0xFF, 0x3F}, false, 0.0f, "#211 parked"},      // 1018.0
+};
+
+static void steer_frame(CANFRAME* f, const uint8_t d[8]) {
+    zero(f);
+    f->canId = CAN_ID_STEER_ANGLE;
+    f->data_lenght = 8;
+    memcpy(f->buffer, d, 8);
+}
+
+static int modec_raw(const CANFRAME* out) {
+    return ((out->buffer[2] & 0x0F) << 8) | out->buffer[3];
+}
+
+static void test_steering_angle(void) {
+    FSDState s;
+    CANFRAME f;
+    for (size_t i = 0; i < sizeof(STEER129) / sizeof(STEER129[0]); i++) {
+        memset(&s, 0, sizeof(s));
+        steer_frame(&f, STEER129[i].d);
+        fsd_handle_steering_angle(&s, &f, 1000u);
+        CHECK(s.steering_angle_seen, "%s: 0x129 seen", STEER129[i].where);
+        CHECK(s.steering_angle_valid == STEER129[i].valid, "%s: valid %d exp %d",
+              STEER129[i].where, s.steering_angle_valid, STEER129[i].valid);
+        CHECK(fsd_steer_known(&s, 1000u) == STEER129[i].valid, "%s: known", STEER129[i].where);
+        if (STEER129[i].valid)
+            CHECK(fabs(s.steering_angle_deg - STEER129[i].deg) < 0.05f, "%s: %.2f deg exp %.1f",
+                  STEER129[i].where, (double)s.steering_angle_deg, (double)STEER129[i].deg);
+    }
+
+    // Freshness: known for FSD_STEER_FRESH_MS, then unknown.
+    memset(&s, 0, sizeof(s));
+    steer_frame(&f, STEER129[1].d);
+    fsd_handle_steering_angle(&s, &f, 1000u);
+    CHECK(fsd_steer_known(&s, 1000u + FSD_STEER_FRESH_MS), "angle known at the freshness edge");
+    CHECK(!fsd_steer_known(&s, 1001u + FSD_STEER_FRESH_MS), "angle unknown once stale");
+
+    // A non-VALID frame after a valid one: unknown; the stored value is kept.
+    steer_frame(&f, STEER129[6].d);
+    fsd_handle_steering_angle(&s, &f, 1010u);
+    CHECK(!fsd_steer_known(&s, 1010u) && s.steering_angle_seen, "INVALID after valid -> unknown");
+    CHECK(fabs(s.steering_angle_deg - 40.9f) < 0.05f, "INVALID leaves the last valid angle stored");
+
+    // Validity INIT / SNA, sensor status ERROR, short DLC.
+    uint8_t d[8];
+    memcpy(d, STEER129[0].d, 8);
+    d[3] = (uint8_t)((d[3] & 0x3Fu) | (2u << 6));                 // validity INIT
+    memset(&s, 0, sizeof(s)); steer_frame(&f, d); fsd_handle_steering_angle(&s, &f, 1000u);
+    CHECK(!s.steering_angle_valid, "validity INIT -> unknown");
+    d[3] = (uint8_t)((d[3] & 0x3Fu) | (3u << 6));                 // validity SNA
+    memset(&s, 0, sizeof(s)); steer_frame(&f, d); fsd_handle_steering_angle(&s, &f, 1000u);
+    CHECK(!s.steering_angle_valid, "validity SNA -> unknown");
+    memcpy(d, STEER129[0].d, 8);
+    d[1] = (uint8_t)((d[1] & 0x3Fu) | (2u << 6));                 // sensor status ERROR
+    memset(&s, 0, sizeof(s)); steer_frame(&f, d); fsd_handle_steering_angle(&s, &f, 1000u);
+    CHECK(!s.steering_angle_valid, "sensor status ERROR -> unknown");
+    memset(&s, 0, sizeof(s)); steer_frame(&f, STEER129[0].d); f.data_lenght = 3;
+    fsd_handle_steering_angle(&s, &f, 1000u);
+    CHECK(!s.steering_angle_seen, "DLC 3 ignored");
+
+    // EPAS-faithful torque direction (#100): opposite the wheel, held within
+    // ±FSD_STEER_NAG_HOLD_DEG and while the angle is unknown. Before the fix the
+    // 819..1228 deg reading made it -1 (-1.8 Nm in the #176 records) on every frame.
+    memset(&s, 0, sizeof(s));
+    s.nag_killer = true;
+    s.nag_epas_faithful = true;
+    s.das_ap_state = 3;
+    CANFRAME in, out;
+    zero(&in);
+    in.data_lenght = 8;
+    uint32_t t = 200000u;
+    s.das_hands_on_state = 0;
+    fsd_handle_nag_killer(&s, &in, &out, t);                       // reset demand memory
+    s.das_hands_on_state = 3;
+    fsd_handle_nag_killer(&s, &in, &out, t);                       // strong demand, 1 s pause
+    zero(&out);
+    CHECK(fsd_handle_nag_killer(&s, &in, &out, t + 1600u) && modec_raw(&out) > 2048,
+          "faithful dir: no angle yet -> + (raw %d)", modec_raw(&out));
+    steer_frame(&f, STEER129[1].d);                                // +40.9 deg
+    fsd_handle_steering_angle(&s, &f, t + 1700u);
+    zero(&out);
+    CHECK(fsd_handle_nag_killer(&s, &in, &out, t + 1700u) && modec_raw(&out) < 2048,
+          "faithful dir: +40.9 deg -> - (raw %d)", modec_raw(&out));
+    fsd_steer_set(&s, -2.0f, t + 1800u);                           // inside the hold band
+    zero(&out);
+    CHECK(fsd_handle_nag_killer(&s, &in, &out, t + 1800u) && modec_raw(&out) < 2048,
+          "faithful dir: -2.0 deg holds - (raw %d)", modec_raw(&out));
+    steer_frame(&f, STEER129[5].d);                                // -5.9 deg
+    fsd_handle_steering_angle(&s, &f, t + 1900u);
+    zero(&out);
+    CHECK(fsd_handle_nag_killer(&s, &in, &out, t + 1900u) && modec_raw(&out) > 2048,
+          "faithful dir: -5.9 deg -> + (raw %d)", modec_raw(&out));
+    zero(&out);                                                    // angle stale by now
+    CHECK(fsd_handle_nag_killer(&s, &in, &out, t + 1900u + FSD_STEER_FRESH_MS + 1u) &&
+          modec_raw(&out) > 2048, "faithful dir: stale angle holds + (raw %d)", modec_raw(&out));
+}
+
 // ── configurable signal mapping + freshness (#122) ───────────────────────────
 static void test_signal_config(void) {
     FSDState s;
@@ -887,6 +1001,7 @@ static void test_signal_config(void) {
     fsd_apply_signal_config(&s, &h, 12000u);
     CHECK(s.steering_angle_deg > 29.0f && s.steering_angle_deg < 31.0f,
           "cfg: steering = %.1f deg (expect ~30)", (double)s.steering_angle_deg);
+    CHECK(fsd_steer_known(&s, 12000u), "cfg: steering angle known (fresh)");
 
     // Nag killer no-ops when the configured DAS source goes stale.
     FSDState n;
@@ -1772,18 +1887,42 @@ static void test_legacy(void) {
     // fsd_soft_engage_allows() — steer-jerk soft engage (#108)
     FSDState se;
     memset(&se, 0, sizeof(se));
-    se.steering_angle_deg = 90.0f;                  // hard turn
-    CHECK(fsd_soft_engage_allows(&se) == true, "soft_engage off -> always allowed");
+    fsd_steer_set(&se, 90.0f, 1000u);               // hard turn
+    CHECK(fsd_soft_engage_allows(&se, 1000u) == true, "soft_engage off -> always allowed");
     se.soft_engage = true;
-    CHECK(fsd_soft_engage_allows(&se) == false, "soft_engage on + turning -> hold");
+    CHECK(fsd_soft_engage_allows(&se, 1000u) == false, "soft_engage on + turning -> hold");
     CHECK(se.soft_engage_latched == false, "soft_engage: turning does not latch");
-    se.steering_angle_deg = -3.0f;                  // within +/-5 deg of centre
-    CHECK(fsd_soft_engage_allows(&se) == true, "soft_engage: centred -> allow + latch");
+    fsd_steer_set(&se, -3.0f, 1100u);               // within +/-5 deg of centre
+    CHECK(fsd_soft_engage_allows(&se, 1100u) == true, "soft_engage: centred -> allow + latch");
     CHECK(se.soft_engage_latched == true, "soft_engage: latched once centred");
-    se.steering_angle_deg = 120.0f;                 // now turning, but already latched
-    CHECK(fsd_soft_engage_allows(&se) == true, "soft_engage: stays allowed once latched (mid-drive turns OK)");
+    fsd_steer_set(&se, 120.0f, 1200u);              // now turning, but already latched
+    CHECK(fsd_soft_engage_allows(&se, 1200u) == true, "soft_engage: stays allowed once latched (mid-drive turns OK)");
     se.soft_engage_latched = false;                 // AP drop resets the latch
-    CHECK(fsd_soft_engage_allows(&se) == false, "soft_engage: re-holds after latch reset while turning");
+    CHECK(fsd_soft_engage_allows(&se, 1200u) == false, "soft_engage: re-holds after latch reset while turning");
+
+    // Unknown angle with 0x129 on the tap: hold, never latch. A centred reading
+    // gone stale, then the #211 parked frame (validity INVALID).
+    fsd_steer_set(&se, 0.0f, 2000u);
+    CHECK(fsd_soft_engage_allows(&se, 2000u + FSD_STEER_FRESH_MS + 1u) == false,
+          "soft_engage: stale centred angle -> hold");
+    CHECK(!se.soft_engage_latched, "soft_engage: stale angle does not latch");
+    const uint8_t parked[8] = {0xC4, 0x27, 0x09, 0x12, 0xFF, 0x1F, 0xFF, 0x3F};
+    fsd_steer_update(&se, parked, 8, 3000u);
+    CHECK(fsd_soft_engage_allows(&se, 3000u) == false && !se.soft_engage_latched,
+          "soft_engage: INVALID 0x129 -> hold, no latch");
+    // The pre-fix decode read 0x129 bytes 0-1: 819..1228 deg on every frame, so
+    // Soft Engage never latched on a car with 0x129. #176 frame DA25F45F0020FF3F
+    // is -1.2 deg: centred, latches.
+    const uint8_t centred[8] = {0xDA, 0x25, 0xF4, 0x5F, 0x00, 0x20, 0xFF, 0x3F};
+    fsd_steer_update(&se, centred, 8, 3010u);
+    CHECK(fsd_soft_engage_allows(&se, 3010u) == true && se.soft_engage_latched,
+          "soft_engage: #176 -1.2 deg frame -> latch");
+
+    // No 0x129 on this tap at all: degrade to AP-First-only (latch at once).
+    memset(&se, 0, sizeof(se));
+    se.soft_engage = true;
+    CHECK(fsd_soft_engage_allows(&se, 5000u) == true && se.soft_engage_latched,
+          "soft_engage: no 0x129 ever -> AP-First-only");
 }
 
 // ── 0x145 ESP_status brake ────────────────────────────────────────────────────
@@ -2698,15 +2837,6 @@ static void test_readonly_parsers(void) {
     fsd_handle_das_settings(&s, &f);
     CHECK(s.das_autosteer_on, "das_settings autosteer on");
 
-    // SCCM_steeringAngle (0x129): int16 LE byte0-1 * 0.1
-    memset(&s, 0, sizeof(s));
-    zero(&f);
-    f.data_lenght = 4;
-    f.buffer[0] = 0x64;
-    f.buffer[1] = 0x00; // raw = 100 -> 10.0 deg
-    fsd_handle_steering_angle(&s, &f);
-    CHECK(fabs(s.steering_angle_deg - 10.0f) < 0.05f, "steer angle got %.2f",
-          (double)s.steering_angle_deg);
 
     // DAS_steeringControl (0x488): type = byte2[7:6]; angle = ((byte0&0x7F)<<8|byte1)*0.1-1638.35
     memset(&s, 0, sizeof(s));
@@ -3426,6 +3556,7 @@ int main(void) {
     test_sccm_crc();
     test_nag_killer();
     test_nag_killer_faithful();
+    test_steering_angle();
     test_nag_burst_cap();
     test_signal_config();
     test_abort_guard();

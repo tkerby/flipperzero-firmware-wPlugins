@@ -83,9 +83,11 @@ bool fsd_das_ctx_fresh(const FSDState *state, uint32_t now_ms);
 bool fsd_signal_map_das_missing(const FSDState *state, uint32_t now_ms);
 
 /** Soft-Engage gate (steer-jerk mitigation, #108). Returns true if injection may
- *  proceed: soft_engage off, already latched, or wheel within SOFT_ENGAGE_ANGLE_DEG
- *  of centre (latches it on). Mutates soft_engage_latched; reset it when AP drops. */
-bool fsd_soft_engage_allows(FSDState *state);
+ *  proceed: soft_engage off, already latched, wheel within SOFT_ENGAGE_ANGLE_DEG
+ *  of centre, or no 0x129 ever seen (the last two latch it on). Holds while 0x129
+ *  is present but no fresh valid angle is known. Mutates soft_engage_latched;
+ *  reset it when AP drops. */
+bool fsd_soft_engage_allows(FSDState *state, uint32_t now_ms);
 
 // DAS_autopilotState: 2 = AVAILABLE (offered, not engaged), 3 = first genuinely
 // engaged state. AP-First gates injection at >= ENGAGED so it never fires while
@@ -107,8 +109,9 @@ bool fsd_abort_guard_allows(const FSDState *state);
 /** Parse DI_speed (0x257) -> vehicle_speed_kph / di_speed_raw / ui_speed / speed_seen (#180). */
 void fsd_handle_di_speed(FSDState *state, const CanFrame *frame);
 
-/** Parse SCCM_steeringAngleSensor (0x129) -> steering_angle_deg. */
-void fsd_handle_steering_angle(FSDState *state, const CanFrame *frame);
+/** Parse SCCM_steeringAngleSensor (0x129) -> steering_angle_deg + validity/freshness
+ *  (fsd_logic/fsd_steer.h). */
+void fsd_handle_steering_angle(FSDState *state, const CanFrame *frame, uint32_t now_ms);
 
 /** Read GTW_carConfig (0x398) to detect HW version.
  *  Returns TeslaHW_Unknown if frame is not 0x398 or version unrecognised. */

@@ -409,7 +409,7 @@ static int32_t fsd_running_worker(void* context) {
                     fsd_handle_ui_warning(&state, &frame);
                 }
                 else if(frame.canId == CAN_ID_STEER_ANGLE) {
-                    fsd_handle_steering_angle(&state, &frame);
+                    fsd_handle_steering_angle(&state, &frame, now);
                 }
                 else if(frame.canId == CAN_ID_DAS_STEER) {
                     fsd_handle_das_steering(&state, &frame);

@@ -18,6 +18,7 @@
 #include "fsd_can_ops.h"  // tesla_can_rx_accept / tesla_can_tx_valid (driver RX/TX filter)
 #include "fsd_checksum.h" // tesla_additive_checksum (0x334 / 0x118 vectors)
 #include "fsd_cp_status.h" // 0x25D CP_status decode + plug guard + rewrite predicate (#228)
+#include "fsd_steer.h"     // 0x129 steering-angle decode + freshness
 #include "blackbox_flush.h" // black-box ring push, window search, save slices
 #include "blackbox_name.h"  // black-box event names and their order across reboots
 #include "gear_tx_route.h" // Continuous AP 0x229 press bus choice
@@ -531,6 +532,89 @@ static void test_autopark_176(void) {
 }
 
 // ── Signal Map hardening (#100): mask-0 ignored + configured-but-absent flag ──
+// ── 0x129 steering angle: decode, Soft Engage, EPAS-faithful direction ───────
+// Same #176 / #211 frames as test_steering_angle in test_fsd_core.c, through
+// the ESP32 handlers.
+static const uint8_t k_steer_hw3_m1_2[8]  = {0xDA, 0x25, 0xF4, 0x5F, 0x00, 0x20, 0xFF, 0x3F};
+static const uint8_t k_steer_hw3_p40_9[8] = {0x63, 0x2B, 0x99, 0x61, 0x0C, 0x20, 0xFF, 0x3F};
+static const uint8_t k_steer_my_p21_6[8]  = {0x0E, 0x27, 0xD8, 0x60, 0xFF, 0x1F, 0xFF, 0x3F};
+static const uint8_t k_steer_my_m5_9[8]   = {0xC9, 0x21, 0xC5, 0x5F, 0xFF, 0x1F, 0xFF, 0x3F};
+static const uint8_t k_steer_my_parked[8] = {0xC4, 0x27, 0x09, 0x12, 0xFF, 0x1F, 0xFF, 0x3F};
+static void steer_feed(FSDState* s, const uint8_t d[8], uint32_t now) {
+    CanFrame f;
+    memset(&f, 0, sizeof(f));
+    f.id = CAN_ID_STEER_ANGLE; f.dlc = 8;
+    memcpy(f.data, d, 8);
+    fsd_handle_steering_angle(s, &f, now);
+}
+static int modec_raw(const CanFrame* out) {
+    return ((out->data[2] & 0x0F) << 8) | out->data[3];
+}
+static void test_steering_angle(void) {
+    FSDState s;
+    const struct { const uint8_t* d; bool valid; float deg; const char* where; } v[] = {
+        {k_steer_hw3_m1_2, true, -1.2f, "#176 -1.2"},
+        {k_steer_hw3_p40_9, true, 40.9f, "#176 +40.9"},
+        {k_steer_my_p21_6, true, 21.6f, "#211 +21.6"},
+        {k_steer_my_m5_9, true, -5.9f, "#211 -5.9"},
+        {k_steer_my_parked, false, 0.0f, "#211 parked INVALID"},
+    };
+    for (size_t i = 0; i < sizeof(v) / sizeof(v[0]); i++) {
+        memset(&s, 0, sizeof(s));
+        steer_feed(&s, v[i].d, 1000u);
+        CHECK(s.steering_angle_seen && s.steering_angle_valid == v[i].valid, "%s: seen/valid",
+              v[i].where);
+        if (v[i].valid)
+            CHECK(s.steering_angle_deg > v[i].deg - 0.05f && s.steering_angle_deg < v[i].deg + 0.05f,
+                  "%s: got %.2f", v[i].where, (double)s.steering_angle_deg);
+    }
+
+    // Soft Engage: no 0x129 ever -> AP-First-only; INVALID / stale -> hold; a
+    // fresh centred angle latches; a turn holds.
+    memset(&s, 0, sizeof(s));
+    s.soft_engage = true;
+    CHECK(fsd_soft_engage_allows(&s, 100u) && s.soft_engage_latched, "soft: no 0x129 -> latch");
+    memset(&s, 0, sizeof(s));
+    s.soft_engage = true;
+    steer_feed(&s, k_steer_my_parked, 1000u);
+    CHECK(!fsd_soft_engage_allows(&s, 1000u) && !s.soft_engage_latched, "soft: INVALID -> hold");
+    steer_feed(&s, k_steer_hw3_p40_9, 1010u);
+    CHECK(!fsd_soft_engage_allows(&s, 1010u) && !s.soft_engage_latched, "soft: +40.9 -> hold");
+    steer_feed(&s, k_steer_hw3_m1_2, 1020u);
+    CHECK(!fsd_soft_engage_allows(&s, 1020u + FSD_STEER_FRESH_MS + 1u), "soft: stale centred -> hold");
+    CHECK(fsd_soft_engage_allows(&s, 1020u) && s.soft_engage_latched, "soft: -1.2 fresh -> latch");
+
+    // EPAS-faithful direction: opposite the wheel, held near centre and while
+    // unknown. Strong demand (3) after its 1 s pause, phase past the ramp.
+    memset(&s, 0, sizeof(s));
+    s.nag_killer = true; s.nag_epas_faithful = true; s.das_ap_state = 3;
+    CanFrame in, out;
+    memset(&in, 0, sizeof(in));
+    in.id = CAN_ID_EPAS_STATUS; in.dlc = 8;
+    uint32_t t = 300000u;
+    s.das_hands_on_state = 0; fsd_handle_nag_killer(&s, &in, &out, t);
+    s.das_hands_on_state = 3; fsd_handle_nag_killer(&s, &in, &out, t);
+    memset(&out, 0, sizeof(out));
+    CHECK(fsd_handle_nag_killer(&s, &in, &out, t + 1600u) && modec_raw(&out) > 2048,
+          "faithful dir: no angle -> + (raw %d)", modec_raw(&out));
+    steer_feed(&s, k_steer_my_p21_6, t + 1700u);
+    memset(&out, 0, sizeof(out));
+    CHECK(fsd_handle_nag_killer(&s, &in, &out, t + 1700u) && modec_raw(&out) < 2048,
+          "faithful dir: +21.6 -> - (raw %d)", modec_raw(&out));
+    steer_feed(&s, k_steer_hw3_m1_2, t + 1800u);                 // inside the hold band
+    memset(&out, 0, sizeof(out));
+    CHECK(fsd_handle_nag_killer(&s, &in, &out, t + 1800u) && modec_raw(&out) < 2048,
+          "faithful dir: -1.2 holds - (raw %d)", modec_raw(&out));
+    steer_feed(&s, k_steer_my_m5_9, t + 1900u);
+    memset(&out, 0, sizeof(out));
+    CHECK(fsd_handle_nag_killer(&s, &in, &out, t + 1900u) && modec_raw(&out) > 2048,
+          "faithful dir: -5.9 -> + (raw %d)", modec_raw(&out));
+    steer_feed(&s, k_steer_my_parked, t + 2000u);                // INVALID -> unknown
+    memset(&out, 0, sizeof(out));
+    CHECK(fsd_handle_nag_killer(&s, &in, &out, t + 2000u) && modec_raw(&out) > 2048,
+          "faithful dir: INVALID holds + (raw %d)", modec_raw(&out));
+}
+
 static void test_signal_map(void) {
     FSDState s;
 
@@ -1618,6 +1702,7 @@ int main() {
     test_autopark();
     test_autopark_176();
     test_signal_map();
+    test_steering_angle();
     test_di_speed();
     test_cp_type_decode();
     test_cp_type_rewrite();
