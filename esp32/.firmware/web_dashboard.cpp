@@ -544,10 +544,10 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
     <div class="sg">
       <div class="sb"><div class="sv" id="pfG">--</div><div class="sl">Est. long. G</div><div class="sl"><span>peak</span> <span id="pfGpk">--</span></div></div>
       <div class="sb"><div class="sv" id="pfSlip">--</div><div class="sl">Wheel slip</div></div>
-      <div class="sb"><div class="sv" id="pfPow">--</div><div class="sl">Power</div></div>
+      <div class="sb"><div class="sv" id="pfPow">--</div><div class="sl">Pack power</div></div>
       <div class="sb"><div class="sv" id="pfTemp">--</div><div class="sl">Pack temp</div><div class="sl">unconfirmed on some cars</div></div>
     </div>
-    <div class="row"><span class="lbl">Battery advisory</span><span id="pfAdv" style="font-size:.8em;color:var(--text2)">--</span></div>
+    <div class="row" style="gap:12px"><span class="lbl" style="white-space:nowrap">Battery advisory</span><span id="pfAdv" style="font-size:.8em;color:var(--text2);text-align:right">--</span></div>
     <div class="log-info" style="margin-top:8px;font-size:.76em">
       G is estimated from dv/dt of vehicle speed (no IMU). Timers auto-arm leaving a
       standstill, lock at the target, and reset at the next standstill; best time is
