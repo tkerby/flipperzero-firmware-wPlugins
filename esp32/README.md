@@ -60,12 +60,15 @@ Most CAN protocol handling from hypery11's Flipper Zero implementation (`fsd_han
   - Wheel slip % (rear avg − front avg) from the four wheel speeds `0x175` (Party CAN)
   - Pack temperature with normal / warm / hot banding plus cold and hot advisory lines, and instantaneous power (kW) — from the BMS frames (needs a Vehicle-CAN tap)
   - Speed and est. G work on any tap carrying `0x257`; wheel slip needs Party CAN (`0x175`); temperature and power need the BMS frames on a Vehicle-CAN tap. Motor / inverter / stator temperature is **not** shown — it is not broadcast on CAN in a verified DBC (the drive-inverter temperature frames are on the car's internal Ethernet)
-- **Tyre Pressure (read-only)** — the four pressures in bar and psi from `0x219` VCSEC_TPMSData, decoded on whichever bus carries it, in every mode, Listen-Only included; nothing is ever sent because of it ([#237](https://github.com/hypery11/flipper-tesla-fsd/issues/237), idea from [ukinora's fork](https://github.com/ukinora/flipper-tesla-fsd)):
-  - Only on a tap that carries `0x219`. It was seen on the Vehicle CAN pair of a 2024 Model Y; Party CAN most likely does not carry it. The card stays hidden until the frame shows up, shows `--` until it holds a value, and marks the values **Stale** when no reading has arrived for 30 s (car asleep, or a single-ID capture that leaves `0x219` out)
+- **Tyre Pressure (read-only)** — the four pressures, in bar or psi, from `0x219` VCSEC_TPMSData, decoded on whichever bus carries it, in every mode, Listen-Only included; nothing is ever sent because of it ([#237](https://github.com/hypery11/flipper-tesla-fsd/issues/237), idea from [ukinora's fork](https://github.com/ukinora/flipper-tesla-fsd)):
+  - Only on a tap that carries `0x219`. It was seen on the Vehicle CAN pair of a 2024 Model Y; Party CAN most likely does not carry it. The card stays hidden until the frame shows up, shows `--` until it holds a value, says how long ago the last reading arrived, and marks the values **Stale** when no reading has arrived for 30 s (car asleep, or a single-ID capture that leaves `0x219` out)
   - Two forms of the frame are known. Newer cars send 7 bytes in six kinds: kind 5 carries all four pressures (0.025 bar each) and kind 4 the car's target pair (2.90 bar / 42 psi on a Model Y). Their four per-sensor kinds read `80 FF FF FF` when parked, and the byte the DBC calls pressure stayed at `0x80` through a drive, so they are not decoded. The 5-byte form from the public Model 3 DBC (one sensor per frame, with temperature and the wheel it sits on) is decoded as the DBC describes it, but no capture of it exists yet
-  - **The wheel order of the 7-byte form is not confirmed.** The dashboard shows the four values in the order the car sends them, numbered 1-4, and says so; wheel names (FL / FR / RL / RR) appear only when 5-byte frames give each sensor its own corner. If you can, note what the car's own tyre screen shows for each wheel next to a `/stream?ids=219` capture, ideally once with one tyre clearly different from the others
+  - **Wheel order.** In the 7-byte form, bytes 2..5 of kind 5 are FL, FR, RL, RR: a photo of the car's own tyre screen next to the dashboard, with one tyre let down, matched them one to one on a 2024 Model Y ([#237](https://github.com/hypery11/flipper-tesla-fsd/issues/237)). That is one car so far. The 5-byte form names each sensor's wheel from its own location field; when a sensor has none, the columns stay in the order the car sends them, numbered 1-4
+  - A switch in the card's header folds it, and a Unit row picks bar or psi; both are kept per browser, like the Performance card's switch
   - `GET /api/status` carries it under `tpms`: `seen`, `src` (0 none, 1 per-sensor frames, 2 the kind-5 frame), `dlc` (length of the last `0x219`), `age_s`, `stale`, and per slot `mbar`, `temp` (°C) and `pos` (0 FL, 1 FR, 2 RL, 3 RR), plus `target` (mbar); `null` = not known
-- **CAN Bus Stats** — RX frame count, TX modified count, CAN errors, frames/second
+- **CAN Bus Stats** — RX and TX frame counts, CAN errors (RX missed / bus / TX fail), frames/second
+  - **Reset** zeroes them without a reboot, after a confirm. The device keeps the baseline, so every open dashboard shows the same reset; the counters the black box, capture metadata, Tap Check and `canstat` read are left alone
+  - On T-2CAN and T-2CAN FD the card adds the same numbers per bus (`can0` TWAI, `can1` MCP2515 / MCP2518FD), or "not detected" when that controller is not running
 - **HTTP CAN Log Stream** — phone-friendly candump collection via dashboard button; device streams CAN frames over HTTP on port 82 and the browser saves the collected `.dump` file on Stop
 - **Web Controls** — toggle buttons and selectors for:
   - Activate / Stop (Listen-Only ↔ Active; TX on or off)
@@ -87,7 +90,7 @@ Most CAN protocol handling from hypery11's Flipper Zero implementation (`fsd_han
   - Telemetry Off (experimental) (clears reachable telemetry-enable flags on `0x3F8` / `0x3FD` mux1)
   - AP Branch/Tier selector (experimental apmv3 — Live / Stage / Dev / Stage2 / EAP / Demo, or Off)
   - Track Mode (experimental) (adjustable rotation / stability / cooling via `0x313`)
-  - Acceleration Mode (experimental) (Off / Chill / Sport / Performance pedal map on `0x334`, switches at standstill; shows the car's map and what goes out)
+  - Acceleration Mode (experimental) (Off / Chill / Standard / Performance pedal map on `0x334`, switches at standstill; shows the car's map and what goes out)
   - EU Charge-Port Type (experimental) (read-only charge-port type read-out always on; opt-in rewrite re-sends `0x25D` with `CP_type` = IEC CCS so EU Superchargers show in nav, behind a plug guard)
   - Hardware override selector (Auto-detect / Force HW4 / Force HW3 / Force Legacy)
 - **OTA Warning Banner** — pulsing red alert when vehicle OTA update is detected (same banner style for the in-car Autopark TX pause)
@@ -143,7 +146,7 @@ Auto-detect picks the source. If it's wrong, pin the car with the Hardware selec
 | **TLSSC Restore** | `0x331` | Recovers stop sign / traffic light control on VIN-banned cars |
 | **Continuous AP** | `0x229` | HW3/Legacy, off by default: after AP drops during a turn-signal lane change, re-engages it with a right-stalk double press (brake or full stalk-up cancels), sent only on a bus that carries the car's own `0x229` |
 | **BMS Dashboard** | `0x132`/`0x292`/`0x312` | Model 3/Y frames; wrong values on S/X, not yet confirmed on the ESP32 |
-| **Tyre Pressure** | `0x219` | Read-only: four pressures (bar / psi), wheel order of the 7-byte form not confirmed; needs a tap carrying `0x219` (Vehicle CAN) |
+| **Tyre Pressure** | `0x219` | Read-only: four pressures per wheel (bar or psi); needs a tap carrying `0x219` (Vehicle CAN) |
 | **OTA Protection** | `0x318` | Auto-stops TX when OTA update detected unless Ignore OTA is enabled |
 | **HW Auto-Detect** | `0x398` | Reads GTW_carConfig for HW version |
 | **Listen-Only Mode** | — | Default on first boot, passive monitoring only; the chosen mode is saved and restored on the next boot |
@@ -229,7 +232,7 @@ LILYGO's physical connector names are easy to confuse with this project's `can0`
 
 Pins shown are for one harness (`1933903-XX`). Confirm yours on **Service Mode → CAN Port** before wiring.
 
-The dashboard's **Tap Check** card adds a **Bus hint** per bus from `0x3C2`: seen there, the pair is likely Vehicle CAN; body frames without it point to the subset the gateway forwards. `0x3C2` showing only on Vehicle CAN is what contributors report and what the public DBCs say, not something confirmed on every car, so treat it as a hint and let the CAN Port page decide.
+The dashboard's **Tap Check** card adds a **Bus hint** per bus from `0x3C2`: seen there, the pair is likely Vehicle CAN; body frames without it point to the subset the gateway forwards. `0x3C2` showing only on Vehicle CAN is what contributors report and what the public DBCs say, not something confirmed on every car, so treat it as a hint and let the car's wiring diagram decide (or the CAN Port page, where the car has one).
 
 > [!IMPORTANT]
 > The official LILYGO T-2CAN V1.0 labels physical `CANA` as MCP2515/SPI and physical `CANB` as native TWAI.

@@ -34,7 +34,8 @@ typedef enum {
 } FSDCapVerdict;
 
 // Best-guess bus-family hint (NEVER authoritative — pin<->bus varies by harness,
-// confirm in Service Mode -> CAN Port). Derived from which ids were seen.
+// confirm with the car's wiring diagram, or Service Mode -> CAN Port where the
+// car has that page). Derived from which ids were seen.
 typedef enum {
     CAP_HINT_NONE = 0,  // not enough to guess
     CAP_HINT_PARTY,     // 0x370 + DAS present -> looks Party-like

@@ -14,10 +14,14 @@
  *
  *  7 bytes, captured on a 2024 Model Y (#211, #237) and on the car behind
  *  the ukinora fork: kinds 0..5, one every 100 ms.
- *     kind 5   bytes 2..5 = the four pressures, 0.025 bar each. On the fork's
- *              car they matched a gauge and moved between days, and letting
- *              air out of the driver's tyre moved byte 2 only. Which wheel the
- *              other three bytes are is not known.
+ *     kind 5   bytes 2..5 = the four pressures, 0.025 bar each, in the order
+ *              FL, FR, RL, RR. On the fork's car they matched a gauge and
+ *              moved between days, and letting air out of the driver's tyre
+ *              moved byte 2 only. The order is from #237: a photo of the car's
+ *              own tyre screen (2026-10-15) read FL 2.2, FR 2.7, RL 1.6,
+ *              RR 2.3 bar while the dashboard showed bytes 2..5 as 2.15,
+ *              2.68, 1.55, 2.25 bar: four different values, in that order.
+ *              One car so far, a 2024 Model Y.
  *     kind 4   bytes 1..2 = 0x74 0x74 (2.90 bar) on both cars, unchanged over
  *              days: the car's target pair, presumably front / rear.
  *     kind 0-3 bytes 1..4 read 80 FF FF FF parked, and byte 1 stayed 0x80
@@ -145,6 +149,15 @@ static inline FSDTpmsRx fsd_tpms_sensor(FSDTpms* t, uint8_t slot, const uint8_t*
     return FSD_TPMS_RX_READING;
 }
 
+// Slots for kind 5: byte 2..5 = FL, FR, RL, RR, empty until a reading lands.
+static inline void fsd_tpms_all_slots(FSDTpms* t) {
+    fsd_tpms_clear_slots(t, FSD_TPMS_SRC_ALL);
+    t->pos[0] = FSD_TPMS_POS_FL;
+    t->pos[1] = FSD_TPMS_POS_FR;
+    t->pos[2] = FSD_TPMS_POS_RL;
+    t->pos[3] = FSD_TPMS_POS_RR;
+}
+
 // 7-byte form, kind 5.
 static inline FSDTpmsRx fsd_tpms_all(FSDTpms* t, const uint8_t* d, uint32_t now_ms) {
     uint8_t v[4];
@@ -156,13 +169,13 @@ static inline FSDTpmsRx fsd_tpms_all(FSDTpms* t, const uint8_t* d, uint32_t now_
         if (v[i] != FSD_TPMS_NA) any = true;
     }
     if (!any) {
-        if (t->source == FSD_TPMS_SRC_ALL) fsd_tpms_clear_slots(t, FSD_TPMS_SRC_ALL);
+        if (t->source == FSD_TPMS_SRC_ALL) fsd_tpms_all_slots(t);
         return FSD_TPMS_RX_EMPTY;
     }
     if (t->source == FSD_TPMS_SRC_SENSOR && fsd_tpms_has_reading(t) &&
         !fsd_tpms_stale(t, now_ms))
         return FSD_TPMS_RX_IGNORED;
-    fsd_tpms_clear_slots(t, FSD_TPMS_SRC_ALL);
+    fsd_tpms_all_slots(t);
     for (unsigned i = 0; i < 4u; i++) t->pressure[i] = v[i];
     t->last_ms = now_ms;
     return FSD_TPMS_RX_READING;

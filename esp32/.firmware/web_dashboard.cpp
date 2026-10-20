@@ -50,6 +50,17 @@ static uint32_t g_last_can_seen_ms = 0;
 static float    g_fps         = 0.0f;
 static bool     g_debug       = false;  // serial `debug`: per-push JSON size
 
+// CAN Bus card reset (#252). The card shows each counter minus its value at
+// the last reset; the counters themselves stay cumulative for everything else
+// that reads them (black box, capture meta, Tap Check, power log, canstat).
+struct CanCounts {
+    uint32_t rx, tx, rx_missed, bus_error, tx_failed;
+};
+static CanCounts g_can_base[CAN_BUS_COUNT] = {};  // each driver at the reset
+static uint32_t  g_rx_base      = 0;               // FSDState rx_count at the reset
+static bool      g_can_reset    = false;
+static uint32_t  g_can_reset_ms = 0;
+
 #define CAN_VEHICLE_ALIVE_MS 3000u
 #define OTA_ESP32_IMAGE_MAGIC 0xE9u
 #define OTA_AUTH_USER "admin"
@@ -209,7 +220,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 .row+.row{border-top:1px solid rgba(255,255,255,.04)}
 .lbl{color:var(--text2);font-size:.85em}
 .hint{display:block;color:var(--text2);opacity:.62;font-size:.82em;line-height:1.35;margin-top:2px;max-width:20em}
-details select{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:4px 6px;border-radius:4px;font-size:.85em;flex:none}
+details select,select.sel{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:4px 6px;border-radius:4px;font-size:.85em;flex:none}
 details input{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:4px;border-radius:4px;text-align:right;width:60px}
 details input.cgn{width:38px;margin-left:4px}
 
@@ -248,6 +259,9 @@ details input.cgn{width:38px;margin-left:4px}
 .tg .tu,.tg .th{color:var(--text3);font-size:.72em}
 .tg .tu{text-align:left}
 .tg.stale{color:var(--text3)}
+.btn-mini{background:var(--card2);border:1px solid var(--border);color:var(--text2);
+  padding:4px 10px;border-radius:6px;font-size:.72em;font-weight:600;cursor:pointer}
+.btn-mini:active{opacity:.75}
 
 /* ── Controls ── */
 .btn-main{width:100%;padding:14px;border:none;border-radius:12px;
@@ -452,28 +466,43 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
     <div class="hg">
       <div><div class="hv" id="bVolt">--</div><div class="hl">Voltage</div></div>
       <div><div class="hv" id="bCurr">--</div><div class="hl">Current</div></div>
-      <div><div class="hv" id="bTemp">--</div><div class="hl">Temp</div></div>
+      <div><div class="hv" id="bTemp">--</div><div class="hl">Pack temp min~max</div></div>
     </div>
   </div>
 </div>
 
-<!-- Tyre pressure (read-only, 0x219); shown once the frame reaches this tap -->
+<!-- Tyre pressure (read-only, 0x219); shown once the frame reaches this tap.
+     The switch folds it, per browser like Performance (#237). -->
 <div class="card" id="tpmsCard" style="display:none">
   <div class="card-head"><div class="icon ic-b">T</div><h2>Tyre Pressure</h2>
     <span class="pill off" id="tpmsSt" style="margin-left:auto"><span class="pd"></span>--</span>
+    <label class="sw"><input type="checkbox" id="swTpms" onchange="tpToggle(this.checked)"><span class="sl2"></span></label>
   </div>
-  <div class="tg" id="tpGrid"></div>
-  <div class="row" id="rowTpAge" style="display:none">
-    <span class="lbl">Since last reading</span>
-    <span id="tpAge" style="font-variant-numeric:tabular-nums">--</span>
+  <div id="tpOff" class="log-info" style="display:none;margin-bottom:0">
+    Read-only read-out of the tyre pressures the car sends on 0x219 &mdash; it transmits
+    nothing. Turn on to show them.
   </div>
-  <div class="row" id="rowTpTgt" style="display:none">
-    <span class="lbl">Car's target</span>
-    <span id="tpTgt" style="font-size:.8em;color:var(--text2)">--</span>
+  <div id="tpBody">
+    <div class="tg" id="tpGrid"></div>
+    <div class="row" id="rowTpAge" style="display:none">
+      <span class="lbl">Since last reading</span>
+      <span id="tpAge" style="font-variant-numeric:tabular-nums">--</span>
+    </div>
+    <div class="row" id="rowTpTgt" style="display:none">
+      <span class="lbl">Car's target</span>
+      <span id="tpTgt" style="font-size:.8em;color:var(--text2)">--</span>
+    </div>
+    <div class="row">
+      <span class="lbl">Unit</span>
+      <select id="selTpUnit" class="sel" onchange="tpSetUnit(this.value)">
+        <option value="bar">bar</option>
+        <option value="psi">psi</option>
+      </select>
+    </div>
+    <div class="log-info" id="tpOrder" style="display:none">Columns follow the order the car sends them. Which wheel each one belongs to is not confirmed yet.</div>
+    <div class="log-info" id="tpNone" style="display:none">0x219 is arriving on this tap, but the car is not reporting a pressure in it.</div>
+    <div class="log-info" id="tpForm" style="display:none">This 0x219 has a length this firmware does not read yet. A capture of it would help.</div>
   </div>
-  <div class="log-info" id="tpOrder" style="display:none">Columns follow the order the car sends them. Which wheel each one belongs to is not confirmed yet.</div>
-  <div class="log-info" id="tpNone" style="display:none">0x219 is arriving on this tap, but the car is not reporting a pressure in it.</div>
-  <div class="log-info" id="tpForm" style="display:none">This 0x219 has a length this firmware does not read yet. A capture of it would help.</div>
 </div>
 
 <!-- Performance (read-only, opt-in) -->
@@ -513,12 +542,20 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
 
 <!-- CAN Stats -->
 <div class="card">
-  <div class="card-head"><div class="icon ic-d">C</div><h2>CAN Bus</h2></div>
+  <div class="card-head"><div class="icon ic-d">C</div><h2>CAN Bus</h2>
+    <button type="button" class="btn-mini" style="margin-left:auto" onclick="canReset()">Reset</button>
+  </div>
   <div class="sg">
     <div class="sb"><div class="sv" id="rxCnt">0</div><div class="sl">RX Frames</div></div>
     <div class="sb"><div class="sv" id="txCnt">0</div><div class="sl">TX Frames</div></div>
-    <div class="sb"><div class="sv" id="crcErr">0</div><div class="sl">CAN Errors</div><div class="sl" id="crcSplit">RX&nbsp;missed&nbsp;0 &middot; bus&nbsp;0 &middot; TX&nbsp;fail&nbsp;0</div></div>
+    <div class="sb"><div class="sv" id="crcErr">0</div><div class="sl">CAN Errors</div><div class="sl" id="crcSplit"><span style="white-space:nowrap">RX missed</span>&nbsp;0 &middot; <span style="white-space:nowrap">bus</span>&nbsp;0 &middot; <span style="white-space:nowrap">TX fail</span>&nbsp;0</div></div>
     <div class="sb"><div class="sv" id="fps">0.0</div><div class="sl">Frames/s</div></div>
+  </div>
+  <!-- Per bus, on boards with two controllers (#253) -->
+  <div class="tg" id="canBuses" style="display:none;margin-top:12px"></div>
+  <div class="row" style="padding-bottom:0;margin-top:4px">
+    <span class="lbl" id="canSinceL">Since boot</span>
+    <span id="canSince" style="font-size:.8em;color:var(--text2);font-variant-numeric:tabular-nums">--</span>
   </div>
 </div>
 
@@ -587,7 +624,7 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
     <label class="sw"><input type="checkbox" id="swAbrt" onchange="cmd('abort_guard',this.checked)"><span class="sl2"></span></label>
   </div>
   <div class="row">
-    <span class="lbl">BMS Display</span>
+    <span class="lbl">BMS Display<span class="hint">Prints voltage, current, power, SoC and pack temperature to the USB serial log once a second. The dashboard shows them either way.</span></span>
     <label class="sw"><input type="checkbox" id="swBms" onchange="cmd('bms',this.checked)"><span class="sl2"></span></label>
   </div>
   <div class="row">
@@ -648,7 +685,7 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
       <select id="selAccel" onchange="cmd('accel_mode',parseInt(this.value,10))">
         <option value="0">Off</option>
         <option value="1">Chill</option>
-        <option value="2">Sport</option>
+        <option value="2">Standard</option>
         <option value="3">Performance</option>
       </select>
     </div>
@@ -1110,7 +1147,7 @@ function updateControlsSummary(d){
   if(d.tlssc_restore)items.push('TLSSC');
   if(d.precondition)items.push('Precond');
   if(d.assist_tlssc_bit38)items.push('TLSSC bit38');
-  if(d.accel_mode>0)items.push('Accel '+(['','Chill','Sport','Performance'][d.accel_mode]||'?'));
+  if(d.accel_mode>0)items.push('Accel '+(['','Chill','Standard','Performance'][d.accel_mode]||'?'));
   if(d.cp_type_eu_rewrite)items.push('EU CP Type');
   if(d.display_enabled)items.push('Display');
   if(d.can_dump)items.push('CAN Dump');
@@ -1145,8 +1182,11 @@ function bbRefreshList(){
     var h='';
     a.forEach(function(ev){
       var s=ev.summary||{},nm=encodeURIComponent(ev.name);
+      // Events saved by older firmware name a manual mark as a transition that
+      // did not happen ("MANUAL 2->2 @ t=..."): show the state once.
+      var det=String(s.detail||s.trigger||'event').replace(/^(\S+) (\d+)->\2 @/,'$1 AP state $2 @');
       h+='<div style="border-top:1px solid var(--border);padding:8px 0">';
-      h+='<div style="font-size:.8em;color:var(--text);font-family:monospace">'+bbEsc(s.detail||s.trigger||'event')+'</div>';
+      h+='<div style="font-size:.8em;color:var(--text);font-family:monospace">'+bbEsc(det)+'</div>';
       h+='<div style="font-size:.72em;color:var(--text3);margin:2px 0">'+bbEsc(s.hw||'')+' · '+(s.frames||0)+' frames · '+bbEsc((s.buses&&s.buses.dual_can)?'dual-CAN':'single')+'</div>';
       h+='<div style="display:flex;gap:6px;margin-top:4px">';
       h+='<a class="btn-main btn-blue" style="padding:4px 10px;font-size:.7em;flex:0" href="/blackbox/get?name='+nm+'&type=log" onclick="bbSeen()">.log</a>';
@@ -1224,7 +1264,7 @@ function capSync(d){
       if(seen.length)h+='<div style="font-size:.7em;color:var(--text3);padding-top:3px">Reachable frames: '+seen.join(', ')+' (presence only — not proof injection actuates them).</div>';
     }
     if(typeof b.vehicle_hint==='number')h+=capHintRow('Bus hint',b.vehicle_hint);
-    var hint=b.hint?('Best guess: '+bbEsc(b.hint)+' — confirm in Service Mode → CAN Port'):'';
+    var hint=b.hint?('Best guess: '+bbEsc(b.hint)+" — confirm with your car's wiring diagram (Service Mode → CAN Port where available)"):'';
     if(hint)h+='<div style="font-size:.7em;color:var(--text3);padding-top:5px">'+hint+'</div>';
     if(b.hw_unconfirmed)h+='<div style="font-size:.7em;color:var(--yellow);padding-top:3px">HW unconfirmed — 0x399 reading assumed; verdict may change once HW is detected.</div>';
     h+='</div>';
@@ -1343,18 +1383,23 @@ function updControls(d){
   if(document.getElementById('swTelOff')) document.getElementById('swTelOff').checked=d.assist_telemetry_off;
   var apmv3Sel=document.getElementById('selApmv3');
   if(apmv3Sel && d.apmv3_branch!==undefined && document.activeElement!==apmv3Sel) apmv3Sel.value=String(d.apmv3_branch);
-  // Acceleration Mode (#211): setting + car map -> map going out
+  // Acceleration Mode (#211): setting + car map -> map going out. Mode names as
+  // the car's own UI has them: pedal map 1 is Standard (SPORT in older signal
+  // lists). The fixed words sit in spans of their own for the i18n layer.
   var acSel=document.getElementById('selAccel');
   if(acSel && d.accel_mode!==undefined && document.activeElement!==acSel) acSel.value=String(d.accel_mode);
   var acSt=document.getElementById('accelSt');
   if(acSt && d.accel_car_map!==undefined){
-    var ACM=['CHILL','SPORT','PERFORMANCE'], at;
+    var ACM=['CHILL','STANDARD','PERFORMANCE'], at;
+    var sp=function(t){return '<span>'+t+'</span>';};
     if(d.accel_car_map<0) at=d.accel_bad>0?'0x334 not recognised ('+d.accel_bad+' rejected)':'no 0x334 on this bus yet';
-    else if(d.accel_sent_map===d.accel_car_map) at='Car '+ACM[d.accel_car_map]+' \u00b7 pass-through';
-    else at='Car '+ACM[d.accel_car_map]+' \u2192 sent '+ACM[d.accel_sent_map];
-    if(d.accel_pending) at+=' \u00b7 waiting for standstill';
-    else if(d.accel_mode>0 && !d.tx_allowed) at+=' \u00b7 TX off';
-    acSt.textContent=at;
+    else if(d.accel_sent_map===d.accel_car_map) at=sp('Car')+' '+ACM[d.accel_car_map]+' \u00b7 '+sp('pass-through');
+    else at=sp('Car')+' '+ACM[d.accel_car_map]+' \u2192 '+sp('sent')+' '+ACM[d.accel_sent_map];
+    // A new mode waits for standstill while the latched one keeps going out:
+    // name the waiting mode, so it is not read as the one being sent.
+    if(d.accel_pending) at+=' \u00b7 '+(ACM[d.accel_mode-1]||'?')+' '+sp('pending, applies at standstill');
+    else if(d.accel_mode>0 && !d.tx_allowed) at+=' \u00b7 '+sp('TX off');
+    acSt.innerHTML=at;
   }
   // EU Charge-Port Type (0x25D, #228): toggle + what the car reports and whether
   // the rewrite is active or held off (and by which guard).
@@ -1395,13 +1440,51 @@ function updControls(d){
   updateControlsSummary(d);
   pill('dumpSt',d.can_dump,d.can_dump?'Recording':'Idle');
 }
-function updCan(d){
-  // CAN stats
+// CAN Bus card. The counts are since the last reset (#252); the device keeps
+// the baseline, so every open dashboard shows the same reset.
+var canLast=null;
+function canStats(d){
   if(document.getElementById('rxCnt')) document.getElementById('rxCnt').textContent=(d.rx_count||0).toLocaleString();
   if(document.getElementById('txCnt')) document.getElementById('txCnt').textContent=(d.tx_count||0).toLocaleString();
   if(document.getElementById('crcErr')) document.getElementById('crcErr').textContent=d.crc_errors||0;
-  if(document.getElementById('crcSplit')) document.getElementById('crcSplit').textContent='RX\u00a0missed\u00a0'+(d.rx_missed_count||0)+' · bus\u00a0'+(d.bus_error_count||0)+' · TX\u00a0fail\u00a0'+(d.tx_failed_count||0);
+  // One span per label, so each one translates on its own (and stays whole).
+  var cs=document.getElementById('crcSplit'),nw=function(t){return '<span style="white-space:nowrap">'+t+'</span>';};
+  if(cs) cs.innerHTML=nw('RX missed')+'\u00a0'+(d.rx_missed_count||0)+' · '+nw('bus')+'\u00a0'+(d.bus_error_count||0)+' · '+nw('TX fail')+'\u00a0'+(d.tx_failed_count||0);
   if(document.getElementById('fps')) document.getElementById('fps').textContent=(d.fps||0.0).toFixed(1);
+  var rs=d.can_reset_s;
+  setTxt('canSinceL',rs>=0?'Since reset':'Since boot');
+  setTxt('canSince',fmt(rs>=0?rs:(d.uptime_s||0)));
+  // Per bus (#253): only boards with two controllers send can_buses.
+  var g=document.getElementById('canBuses'),b=d.can_buses;
+  if(!g)return;
+  if(!b||b.length<2){g.style.display='none';return;}
+  var n=function(x,k){return x.up?(x[k]||0).toLocaleString():'--';};
+  var rows=[['RX Frames','rx'],['TX Frames','tx'],['RX missed','rx_missed'],['Bus errors','bus_error'],['TX fail','tx_failed']];
+  var h='<span></span>';
+  b.forEach(function(x){
+    h+='<span class="th">'+bbEsc(x.name)+' · '+bbEsc(x.drv)
+      +(x.up?'':'<br><span style="color:var(--yellow)">not detected</span>')+'</span>';
+  });
+  rows.forEach(function(r){
+    h+='<span class="tu">'+r[0]+'</span>';
+    b.forEach(function(x){h+='<span>'+n(x,r[1])+'</span>';});
+  });
+  g.style.gridTemplateColumns='auto repeat('+b.length+',1fr)';
+  g.innerHTML=h;
+  g.style.display='';
+}
+function canReset(){
+  uiConfirm('Reset the CAN Bus counters?\nRX, TX, the error counts and frames/s start again from zero on every open dashboard. Black-box, CAN captures and Tap Check keep their own counts.',function(){
+    cmd('can_counters_reset',true);
+    // Pushes are held for a moment after a command: show the zeros now.
+    if(canLast)canStats({can_reset_s:0,can_buses:(canLast.can_buses||[]).map(function(x){
+      return {name:x.name,drv:x.drv,up:x.up};
+    })});
+  });
+}
+function updCan(d){
+  canLast=d;
+  canStats(d);
   httpLogAllowed=true; // capture works in both modes — needed to log through an Activate (#108)
   if(!httpLogRunning)setHttpLogUi(false);
   if(!httpLogRunning){
@@ -1439,14 +1522,40 @@ function updBattery(d){
     if(document.getElementById('bTemp')) document.getElementById('bTemp').textContent=d.bms.temp_min+'~'+d.bms.temp_max+'\u00b0C';
   }
 }
-// Tyre pressure (read-only, 0x219). Columns stay in the order the car sends
-// them; they are named as corners only when the car gives each its own corner.
+// Tyre pressure (read-only, 0x219). Columns are named as corners when every
+// slot has its own: the 5-byte form's location field, or the 7-byte form's
+// fixed FL, FR, RL, RR (#237). Otherwise they stay in the order the car sends.
+// The card shows up once 0x219 has been seen; its switch and the unit are kept
+// per browser, as the Performance card's switch is (#237).
 var TPOS=['FL','FR','RL','RR'];
+var tpShow=true,tpUnit='bar',tpLast=null;
+try{tpShow=localStorage.getItem('tpmsShow')!=='0';tpUnit=localStorage.getItem('tpmsUnit')==='psi'?'psi':'bar';}catch(e){}
+function tpToggle(on){
+  tpShow=!!on;
+  try{localStorage.setItem('tpmsShow',tpShow?'1':'0')}catch(e){}
+  var b=document.getElementById('tpBody'),o=document.getElementById('tpOff');
+  if(b)b.style.display=tpShow?'':'none';
+  if(o)o.style.display=tpShow?'none':'';
+}
+function tpSetUnit(u){
+  tpUnit=u==='psi'?'psi':'bar';
+  try{localStorage.setItem('tpmsUnit',tpUnit)}catch(e){}
+  if(tpLast)updTpms(tpLast);
+}
+function tpInit(){
+  var sw=document.getElementById('swTpms'),su=document.getElementById('selTpUnit');
+  if(sw)sw.checked=tpShow;
+  if(su)su.value=tpUnit;
+  tpToggle(tpShow);
+}
+// Age of a reading: seconds, then minutes, then h:mm:ss.
+function ageTxt(s){s=Math.max(0,Math.floor(s||0));return s<60?s+' s':s<3600?Math.floor(s/60)+' min':fmt(s);}
 function updTpms(d){
   var c=document.getElementById('tpmsCard'),t=d.tpms,i;
   if(!c)return;
   if(!t||!t.seen){c.style.display='none';return;}
   c.style.display='';
+  tpLast=d;
   var mb=t.mbar||[],tc=t.temp||[],ps=t.pos||[],have=false,anyT=false;
   for(i=0;i<4;i++){if(mb[i]!=null)have=true;if(tc[i]!=null)anyT=true;}
   var known=t.dlc===5||t.dlc===7,stale=have&&!!t.stale;
@@ -1457,23 +1566,24 @@ function updTpms(d){
   if(!named)ord=[0,1,2,3];
   var bar=function(m){return m==null?'--':(Math.round(m/10)/100).toFixed(2);};
   var psi=function(m){return m==null?'--':(m*0.0145038).toFixed(1);};
-  var h='<span></span>',rb='<span class="tu">bar</span>',rp='<span class="tu">psi</span>',rt='<span class="tu">\u00b0C</span>';
+  var u=tpUnit==='psi'?psi:bar;
+  var h='<span></span>',ru='<span class="tu">'+tpUnit+'</span>',rt='<span class="tu">\u00b0C</span>';
   ord.forEach(function(k,n){
     h+='<span class="th">'+(named?TPOS[n]:String(n+1))+'</span>';
-    rb+='<span>'+bar(mb[k])+'</span>';
-    rp+='<span>'+psi(mb[k])+'</span>';
+    ru+='<span>'+u(mb[k])+'</span>';
     rt+='<span>'+(tc[k]==null?'--':tc[k])+'</span>';
   });
   var g=document.getElementById('tpGrid');
-  if(g){g.innerHTML=h+rb+rp+(anyT?rt:'');g.className='tg'+(stale?' stale':'');}
-  var ar=document.getElementById('rowTpAge');
-  if(ar)ar.style.display=stale?'flex':'none';
-  if(stale)setTxt('tpAge',fmt(t.age_s||0));
+  if(g){g.innerHTML=h+ru+(anyT?rt:'');g.className='tg'+(stale?' stale':'');}
+  // When the shown values were last updated, yellow once they count as stale.
+  var ar=document.getElementById('rowTpAge'),ae=document.getElementById('tpAge');
+  if(ar)ar.style.display=have?'flex':'none';
+  if(have&&ae){ae.textContent=ageTxt(t.age_s);ae.style.color=stale?'var(--yellow)':'';}
   var tg=(t.target||[]).filter(function(v){return v!=null;});
   if(tg.length===2&&tg[0]===tg[1])tg=[tg[0]];
   var tr=document.getElementById('rowTpTgt');
   if(tr)tr.style.display=tg.length?'flex':'none';
-  if(tg.length)setTxt('tpTgt',tg.map(bar).join(' / ')+' bar \u00b7 '+tg.map(psi).join(' / ')+' psi');
+  if(tg.length)setTxt('tpTgt',tg.map(u).join(' / ')+' '+tpUnit);
   var show=function(id,on){var e=document.getElementById(id);if(e)e.style.display=on?'':'none';};
   show('tpOrder',have&&!named);
   show('tpNone',!have&&known);
@@ -2035,6 +2145,7 @@ function conn(){
   ws.onerror=function(){ ws.close(); };
 }
 perfInit();
+tpInit();
 conn();
 statusPoll();
 setInterval(statusPoll,2000);
@@ -2055,6 +2166,73 @@ static String json_escape(const char *s) {
         else                 out += *s;
     }
     return out;
+}
+
+// ── CAN counters since the last reset (#252, #253) ────────────────────────────
+// Controller behind each bus, as can_driver_create(CanBusId) picks it.
+static const char *can_driver_kind(uint8_t index) {
+#if defined(CAN_DRIVER_T2CAN_DUAL) && defined(BOARD_LILYGO_T2CAN_FD)
+    return index == 1 ? "MCP2518FD" : "TWAI";
+#elif defined(CAN_DRIVER_T2CAN_DUAL)
+    return index == 1 ? "MCP2515" : "TWAI";
+#elif defined(CAN_DRIVER_MCP2515)
+    (void)index;
+    return "MCP2515";
+#else
+    (void)index;
+    return "TWAI";
+#endif
+}
+
+// Up = the chip answered and begin() got it running ("down" is what every
+// driver reports for its filter mode while it is not installed).
+static bool can_driver_up(CanDriver *d) {
+    return d && d->hardwarePresent() && strcmp(d->acceptanceFilterMode(), "down") != 0;
+}
+
+static CanCounts can_counts(CanDriver *d) {
+    CanCounts c = {};
+    if (!d) return c;
+    c.rx        = d->rxCount();
+    c.tx        = d->txCount();
+    c.rx_missed = d->rxMissedCount();
+    c.bus_error = d->busErrorCount();
+    c.tx_failed = d->txFailedCount();
+    return c;
+}
+
+// A counter below its baseline has restarted since the reset (TWAI's status
+// counters do when the driver is reinstalled for a mode switch or a capture
+// filter): everything it holds is newer than the reset.
+static uint32_t since_reset(uint32_t now, uint32_t &base) {
+    if (now < base) base = 0;
+    return now - base;
+}
+
+static CanCounts can_counts_since_reset(uint8_t i) {
+    CanCounts c = can_counts(g_can_buses[i]);
+    CanCounts &b = g_can_base[i];
+    c.rx        = since_reset(c.rx, b.rx);
+    c.tx        = since_reset(c.tx, b.tx);
+    c.rx_missed = since_reset(c.rx_missed, b.rx_missed);
+    c.bus_error = since_reset(c.bus_error, b.bus_error);
+    c.tx_failed = since_reset(c.tx_failed, b.tx_failed);
+    return c;
+}
+
+static void can_counters_reset() {
+    for (uint8_t i = 0; i < g_can_count && i < CAN_BUS_COUNT; i++)
+        g_can_base[i] = can_counts(g_can_buses[i]);
+    state_enter();
+    uint32_t rx = g_state->rx_count;
+    state_exit();
+    g_rx_base = rx;
+    // Frames/s is a one-second rate: start its window again.
+    g_last_rx     = rx;
+    g_last_fps_ms = millis();
+    g_fps         = 0.0f;
+    g_can_reset    = true;
+    g_can_reset_ms = millis();
 }
 
 // ── JSON builder ──────────────────────────────────────────────────────────────
@@ -2129,11 +2307,20 @@ static String build_json() {
     char fps_s[12];
     snprintf(fps_s, sizeof(fps_s), "%.1f", g_fps);
 
-    // Combined CAN error count (legacy crc_errors key) and its per-cause split,
-    // taken from one read so the dashboard tile always equals its breakdown.
-    // On a busy bus it is mostly rx_missed (controller RX-queue drops).
-    CanErrorSplit err = can_error_split(g_can_buses, g_can_count);
-    uint32_t err_total = err.rx_missed_count + err.bus_error_count + err.tx_failed_count;
+    // CAN counters since the last reset (#252), per bus and summed. The
+    // combined error count (legacy crc_errors key) and its per-cause split come
+    // from one read, so the dashboard tile always equals its breakdown. On a
+    // busy bus it is mostly rx_missed (controller RX-queue drops).
+    CanCounts bus[CAN_BUS_COUNT] = {};
+    CanCounts sum = {};
+    for (uint8_t i = 0; i < g_can_count && i < CAN_BUS_COUNT; i++) {
+        bus[i] = can_counts_since_reset(i);
+        sum.tx        += bus[i].tx;
+        sum.rx_missed += bus[i].rx_missed;
+        sum.bus_error += bus[i].bus_error;
+        sum.tx_failed += bus[i].tx_failed;
+    }
+    uint32_t err_total = sum.rx_missed + sum.bus_error + sum.tx_failed;
 
     String j;
     bool isa_speed_enabled = state.hw_version == TeslaHW_HW4;
@@ -2143,9 +2330,10 @@ static String build_json() {
         (state.hw_version == TeslaHW_Legacy) ? "Legacy: DAS 0x399" :
         "Waiting for HW detection";
     // Core payload runs ~2.3-2.5 KB of scalar fields plus small bms/perf/tpms/
-    // ota/http_can_stream objects, now that the heavy blackbox/capability/
-    // profile blocks fetch from /api/aux (#124). Past the reserve the String
-    // reallocs every 16 bytes, and build_json() runs on every WS push.
+    // ota/http_can_stream objects (and ~0.2 KB of can_buses on two-bus boards),
+    // now that the heavy blackbox/capability/profile blocks fetch from
+    // /api/aux (#124). Past the reserve the String reallocs every 16 bytes,
+    // and build_json() runs on every WS push.
     j.reserve(3072);
     j  = "{";
     j += "\"fsd_enabled\":";   j += state.fsd_enabled                 ? "true" : "false"; j += ',';
@@ -2234,14 +2422,33 @@ static String build_json() {
     j += "\"bms_hv_seen\":";   j += state.seen_bms_hv;                 j += ',';
     j += "\"bms_soc_seen\":";  j += state.seen_bms_soc;                j += ',';
     j += "\"bms_thermal_seen\":"; j += state.seen_bms_thermal;          j += ',';
-    j += "\"rx_count\":";      j += state.rx_count;                    j += ',';
-    j += "\"tx_count\":";      j += state.tx_count;                    j += ',';
+    j += "\"rx_count\":";      j += since_reset(state.rx_count, g_rx_base); j += ',';
+    j += "\"tx_count\":";      j += sum.tx;                            j += ',';
     j += "\"tx_modified\":";   j += state.frames_modified;             j += ',';
     j += "\"crc_errors\":";    j += err_total;                         j += ',';
-    j += "\"rx_missed_count\":"; j += err.rx_missed_count;             j += ',';
-    j += "\"bus_error_count\":"; j += err.bus_error_count;             j += ',';
-    j += "\"tx_failed_count\":"; j += err.tx_failed_count;             j += ',';
+    j += "\"rx_missed_count\":"; j += sum.rx_missed;                   j += ',';
+    j += "\"bus_error_count\":"; j += sum.bus_error;                   j += ',';
+    j += "\"tx_failed_count\":"; j += sum.tx_failed;                   j += ',';
     j += "\"fps\":";           j += fps_s;                             j += ',';
+    // Seconds since the CAN Bus card was reset, -1 = counting since boot.
+    j += "\"can_reset_s\":";   j += g_can_reset ? (long)((millis() - g_can_reset_ms) / 1000u) : -1L; j += ',';
+    // Per bus (#253), on boards with two controllers; same counts as above.
+    if (g_can_count > 1) {
+        j += "\"can_buses\":[";
+        for (uint8_t i = 0; i < g_can_count && i < CAN_BUS_COUNT; i++) {
+            if (i) j += ',';
+            j += "{\"name\":\"";      j += can_bus_name((CanBusId)i);
+            j += "\",\"drv\":\"";     j += can_driver_kind(i);
+            j += "\",\"up\":";        j += can_driver_up(g_can_buses[i]) ? "true" : "false";
+            j += ",\"rx\":";          j += bus[i].rx;
+            j += ",\"tx\":";          j += bus[i].tx;
+            j += ",\"rx_missed\":";   j += bus[i].rx_missed;
+            j += ",\"bus_error\":";   j += bus[i].bus_error;
+            j += ",\"tx_failed\":";   j += bus[i].tx_failed;
+            j += '}';
+        }
+        j += "],";
+    }
     j += "\"bms\":";           j += bms;                               j += ',';
     // Tyre pressures (read-only 0x219, fsd_logic/fsd_tpms.h). Four slots in the
     // order the car fills them: mbar, temp in deg C, pos 0 FL 1 FR 2 RL 3 RR;
@@ -2569,6 +2776,9 @@ static WebCmdResult web_command(WebCmd &cmd, const uint8_t *payload, size_t leng
     } else if (cmd.is("capability_recheck")) {
         capability_start(millis());                 // re-run the tap check (#125)
         Serial.println("[Web] Capability: re-check");
+    } else if (cmd.is("can_counters_reset")) {
+        can_counters_reset();                       // CAN Bus card only (#252)
+        Serial.println("[Web] CAN counters reset");
     } else if (cmd.is("blackbox_mark")) {
         blackbox_mark(millis());                    // inject EVT_MANUAL + arm
         Serial.println("[Web] Black-box: manual mark");
@@ -2769,9 +2979,9 @@ static WebCmdResult web_command(WebCmd &cmd, const uint8_t *payload, size_t leng
             prefs_save(&saved);
         }
     } else if (cmd.is("accel_mode")) {
-        // Acceleration Mode override (#211): 1 Chill / 2 Sport / 3 Performance,
-        // anything else = Off (pass-through). The handler latches a new value
-        // only at standstill; Off applies on the next 0x334.
+        // Acceleration Mode override (#211): 1 Chill / 2 Standard (ACCEL_MODE_SPORT)
+        // / 3 Performance, anything else = Off (pass-through). The handler
+        // latches a new value only at standstill; Off applies on the next 0x334.
         int sel;
         if (cmd.integer(&sel)) {
             uint8_t want = (sel >= (int)ACCEL_MODE_CHILL && sel <= (int)ACCEL_MODE_PERFORMANCE)
