@@ -1,4 +1,5 @@
 #include "power_log.h"
+#include "prefs.h"  // prefs_namespace_exists
 
 #include <Arduino.h>
 #include <Preferences.h>
@@ -96,12 +97,13 @@ void power_log_init(void) {
         g_rtc.slept_quiet = 0;
     }
 
-    // Previous session's flash record.
+    // Previous session's flash record. The namespace only exists once a
+    // checkpoint has been committed.
     FsdPwrRecord prev;
     prev.valid = false;
     prev.uptime_ms = 0;
     prev.quiet_ms = 0;
-    if (g_nvs.begin(NS, /*readOnly=*/true)) {
+    if (prefs_namespace_exists(NS) && g_nvs.begin(NS, /*readOnly=*/true)) {
         if (g_nvs.isKey("v")) {
             prev.valid = true;
             prev.uptime_ms = g_nvs.getULong("up", 0);

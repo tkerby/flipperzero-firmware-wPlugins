@@ -14,6 +14,15 @@ uint32_t fsd_pwr_quiet_ms(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any) {
      * that had been quiet for weeks. */
     uint32_t gap = now_ms - last_rx_ms;
     if(gap < FSD_PWR_QUIET_MS) return 0u;
+
+    /* A stamp ahead of now. The caller reads its clock before it drains the
+     * bus, and each frame stamps the time it lands, so the newest frame can be
+     * a few ms later than now_ms. Then the gap wraps to just under 2^32: a bus
+     * busy this very moment read as 49.7 days of quiet and committed a
+     * checkpoint mid-traffic. A gap past half the clock range is a stamp from
+     * the future, and that is traffic. It costs quiet spells over 24.8 days,
+     * which nothing here waits for. */
+    if(gap > 0x7FFFFFFFu) return 0u;
     return gap;
 }
 

@@ -571,6 +571,13 @@ class Mcp2518FdDriver : public CanDriver {
     // Raw register access for the crystal check and the error counters; in
     // spec for SYSCLK down to 10 MHz.
     static constexpr uint32_t kRawSpiHz = 4000000;
+    // Before the oscillator is known to run: the clock the library resets and
+    // first checks the chip at.
+    static constexpr uint32_t kSlowSpiHz = 800000;
+    // Bounded waits: OSCRDY after the reset, the MCP2515's oscillator start-up
+    // timer after its reset (the Linux mcp251x driver's 5 ms).
+    static constexpr uint32_t kOscStartMs     = 10;
+    static constexpr uint32_t kMcp2515ResetMs = 5;
 
     ACAN2517FD can_;
     const char *label_;
@@ -595,6 +602,9 @@ class Mcp2518FdDriver : public CanDriver {
     uint32_t rx_missed_     = 0;   // RX FIFO overflow events
     uint32_t tx_failed_     = 0;   // tryToSend() refused: TX FIFO full
     uint32_t bus_errors_    = 0;
+    bool     diag_printed_  = false;  // last not-detected readback, for retries
+    uint32_t diag_err_      = 0;
+    Mcp2518fdReadback diag_ = {};
 
     static ACAN2517FDSettings settings(ACAN2517FDSettings::Oscillator osc, bool listen_only) {
         ACAN2517FDSettings s(osc, 500UL * 1000UL, DataBitRateFactor::x1);
@@ -657,8 +667,8 @@ class Mcp2518FdDriver : public CanDriver {
         return err;
     }
 
-    void transfer(uint8_t *buf, size_t len) {
-        SPI.beginTransaction(SPISettings(kRawSpiHz, MSBFIRST, SPI_MODE0));
+    void transfer(uint8_t *buf, size_t len, uint32_t hz = kRawSpiHz) {
+        SPI.beginTransaction(SPISettings(hz, MSBFIRST, SPI_MODE0));
         taskDISABLE_INTERRUPTS();   // same CS handling as the library
         digitalWrite((uint8_t)cs_pin_, LOW);
         SPI.transfer(buf, len);
@@ -667,9 +677,9 @@ class Mcp2518FdDriver : public CanDriver {
         SPI.endTransaction();
     }
 
-    uint32_t read_reg32(uint16_t addr) {
+    uint32_t read_reg32(uint16_t addr, uint32_t hz = kRawSpiHz) {
         uint8_t b[6] = {(uint8_t)(0x30 | (addr >> 8)), (uint8_t)addr, 0, 0, 0, 0};
-        transfer(b, sizeof(b));
+        transfer(b, sizeof(b), hz);
         return (uint32_t)b[2] | ((uint32_t)b[3] << 8) | ((uint32_t)b[4] << 16) |
                ((uint32_t)b[5] << 24);
     }
@@ -678,6 +688,11 @@ class Mcp2518FdDriver : public CanDriver {
         uint8_t b[6] = {(uint8_t)(0x20 | (addr >> 8)), (uint8_t)addr, (uint8_t)value,
                         (uint8_t)(value >> 8), (uint8_t)(value >> 16), (uint8_t)(value >> 24)};
         transfer(b, sizeof(b));
+    }
+
+    void write_reg8(uint16_t addr, uint8_t value, uint32_t hz) {
+        uint8_t b[3] = {(uint8_t)(0x20 | (addr >> 8)), (uint8_t)addr, value};
+        transfer(b, sizeof(b), hz);
     }
 
     // One time-base-counter sample: two reads that agree, and micros() right
@@ -705,6 +720,80 @@ class Mcp2518FdDriver : public CanDriver {
         return 0;
     }
 
+    void spi_reset() {
+        uint8_t b[2] = {0, 0};  // RESET: instruction 0, address 0
+        transfer(b, sizeof(b), kSlowSpiHz);
+    }
+
+    // OSC once OSCRDY is set, or as last read when kOscStartMs runs out.
+    uint32_t wait_osc_ready() {
+        uint32_t t0 = millis();
+        uint32_t osc = read_reg32(MCP2518FD_REG_OSC, kSlowSpiHz);
+        while (!mcp2518fd_osc_ready(osc) && millis() - t0 < kOscStartMs) {
+            delay(1);
+            osc = read_reg32(MCP2518FD_REG_OSC, kSlowSpiHz);
+        }
+        return osc;
+    }
+
+    // Before the library's begin(): Configuration mode, the SPI reset and the
+    // oscillator start-up, so a chip that is slow to come up is not reported
+    // missing. Configuration mode first, as the library and the Linux driver
+    // reset the chip: a controller still running from before an ESP32 reset
+    // ends the frame it is on and aborts the rest. A chip that has just
+    // powered up is in Configuration mode already; one that does not answer
+    // costs both bounded waits, 12 ms. Returns what the chip reads back then,
+    // the state the library starts from, for the not-detected line.
+    Mcp2518fdReadback reset_chip() {
+        write_reg8(MCP2518FD_REG_CON + 3, MCP2518FD_CON_REQ_CONFIG, kSlowSpiHz);
+        uint32_t t0 = millis();
+        while (mcp2518fd_opmod(read_reg32(MCP2518FD_REG_CON, kSlowSpiHz)) != MCP2518FD_OPMOD_CONFIG &&
+               millis() - t0 <= 2) {
+        }
+        spi_reset();
+        Mcp2518fdReadback rb = {};
+        rb.osc   = wait_osc_ready();
+        rb.con   = read_reg32(MCP2518FD_REG_CON, kSlowSpiHz);
+        rb.devid = read_reg32(MCP2518FD_REG_DEVID, kSlowSpiHz);
+        return rb;
+    }
+
+    // A classic T-2CAN has an MCP2515 on these pins. To an MCP2518FD its RESET
+    // (0xC0) is the start of a WRITE_SAFE, which writes nothing without the
+    // CRC that ends it, and its READ (0x03 0x0E) starts with the RESET
+    // instruction, so at most it resets the chip. The MCP2518FD RESET at the
+    // end leaves it in Configuration mode, as the failed start did; an MCP2515
+    // ignores that and stays in Configuration mode after its own RESET.
+    bool probe_mcp2515() {
+        uint8_t reset = 0xC0;
+        transfer(&reset, 1, kSlowSpiHz);
+        delay(kMcp2515ResetMs);
+        uint8_t rd[4] = {0x03, 0x0E, 0, 0};  // READ CANSTAT, then CANCTRL
+        transfer(rd, sizeof(rd), kSlowSpiHz);
+        spi_reset();
+        return mcp2515_reset_signature(rd[2], rd[3]);
+    }
+
+    // One line per failed attempt with what reset_chip() read back and what
+    // that says; a retry that reads back the same gets a short one.
+    void report_not_detected(uint32_t err, Mcp2518fdReadback rb) {
+        rb.mcp2515 = mcp2518fd_probe_mcp2515(mcp2518fd_spi_state(rb.con, rb.osc)) &&
+                     probe_mcp2515();
+        if (diag_printed_ && diag_err_ == err && mcp2518fd_readback_same(rb, diag_)) {
+            Serial.printf("[CAN] %s MCP2518FD NOT detected on SPI (code 0x%lX), same readback "
+                          "as before\n", label_, (unsigned long)err);
+            return;
+        }
+        diag_printed_ = true;
+        diag_err_ = err;
+        diag_ = rb;
+        Serial.printf("[CAN] %s MCP2518FD NOT detected on SPI (CS=%d SCK=%d MISO=%d MOSI=%d, "
+                      "code 0x%lX): CiCON=0x%08lX OSC=0x%08lX DEVID=0x%08lX — %s\n",
+                      label_, cs_pin_, sck_pin_, miso_pin_, mosi_pin_, (unsigned long)err,
+                      (unsigned long)rb.con, (unsigned long)rb.osc, (unsigned long)rb.devid,
+                      mcp2518fd_readback_text(rb));
+    }
+
 public:
     Mcp2518FdDriver(const char *label, int cs_pin, int sck_pin, int miso_pin, int mosi_pin)
         : can_((uint8_t)cs_pin, SPI, 255),  // 255: no INT pin, polled
@@ -730,6 +819,7 @@ public:
             spi_begun_ = true;
         }
 
+        Mcp2518fdReadback readback = reset_chip();
         // Probe: Listen-Only on the undivided clock. Nothing reaches the bus
         // whatever the crystal is, and the library's SPI clock for a 20 MHz
         // SYSCLK is in spec with a 20 or a 40 MHz crystal.
@@ -743,9 +833,7 @@ public:
             return false;
         }
         if (!chip_detected_) {
-            Serial.printf("[CAN] %s MCP2518FD NOT detected on SPI "
-                          "(CS=%d SCK=%d MISO=%d MOSI=%d, code 0x%lX) — check wiring and power\n",
-                          label_, cs_pin_, sck_pin_, miso_pin_, mosi_pin_, (unsigned long)err);
+            report_not_detected(err, readback);
             return false;
         }
         if (err != 0) {
