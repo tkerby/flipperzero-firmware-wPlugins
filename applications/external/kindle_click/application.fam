@@ -8,6 +8,6 @@ App(
     fap_category="Bluetooth",
     fap_author="zuyan9",
     fap_weburl="https://github.com/zuyan9/Flipper-Zero-Kindle-Click",
-    fap_version="0.3",
+    fap_version="0.4",
     fap_description="Turn Kindle pages: the Flipper acts as a Kindle Click remote",
 )

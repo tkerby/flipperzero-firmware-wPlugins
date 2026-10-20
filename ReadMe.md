@@ -265,6 +265,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Tricorder v0.3 (By rseufert)](https://github.com/rseufert/tricorder)
 - Added: [BLE Beacon v1.0 (By steanlab)](https://github.com/steanlab/BLE-Beacon)
 - RFID: [Better FDX-B (animal chips / implants) reading - Read now also tries 134kHz, the frequency these chips are made for, and weak signals are decoded more reliably. Also available separately in Extra Actions -> `Read FDX-B (Animals)` (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/525dcce0e461d4f4b852a32cc6e3b4d075b50f17)
+- Updated: [Kindle Click v0.4 (By zuyan9)](https://github.com/zuyan9/Flipper-Zero-Kindle-Click)
 
 <a name="release"></a>
 
@@ -874,7 +875,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Kelvinator AC v1.0 (By xMasterX)](https://github.com/xMasterX/all-the-plugins/tree/213baa6e872d1db597a25d2c16e81406e9634440/non_catalog_apps/kelvinator_ac_remote)
 - [Key Copier v1.5 (By zinongli)](https://github.com/zinongli/KeyCopier)
 - [Key Wizard v1.3 (By vazgen3201)](https://github.com/vazgen3201/flipper-key-wizard)
-- [Kindle Click v0.3 (By zuyan9)](https://github.com/zuyan9/Flipper-Zero-Kindle-Click)
+- [Kindle Click v0.4 (By zuyan9)](https://github.com/zuyan9/Flipper-Zero-Kindle-Click)
 - [KneeFlip Rehab v0.1 (By daryalok)](https://github.com/daryalok/KneeFlip-Rehab)
 - [Kota v0.2 (By cobanov)](https://github.com/cobanov/kota)
 - [KyberWrite v0.1 (By spandox2)](https://github.com/spandox2/KyberWrite)
