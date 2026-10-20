@@ -1094,12 +1094,14 @@ function renderPerf(d){
   var p=d.perf;
   setTxt('pfSpeed',p.speed_ok?(p.speed||0).toFixed(1)+' km/h':'--');
   // Timers: locked result if present, else the live run time while armed.
+  // Without a valid speed (SNA / stale) the run's progress is unknown: no
+  // live time and no "braking" then, only the locked results.
   function cell(id,bid,t,best){
     var e=document.getElementById(id);
     setTxt(bid,'best '+pfT(best));
     if(!e)return;
     if(t>0){e.textContent=pfT(t);e.style.color='var(--accent)';}
-    else if(p.armed&&p.run_ms>0){e.textContent=pfT(p.run_ms);e.style.color='var(--yellow)';}
+    else if(p.speed_ok&&p.armed&&p.run_ms>0){e.textContent=pfT(p.run_ms);e.style.color='var(--yellow)';}
     else{e.textContent='--';e.style.color='';}
   }
   cell('pf050','pf050b',p.t50,p.best50);
@@ -1108,7 +1110,7 @@ function renderPerf(d){
   var e1=document.getElementById('pf1000');
   if(e1){
     if(p.t1000>0){e1.textContent=pfT(p.t1000);e1.style.color='var(--accent)';}
-    else if(p.brake_armed){e1.textContent='braking';e1.style.color='var(--yellow)';}
+    else if(p.speed_ok&&p.brake_armed){e1.textContent='braking';e1.style.color='var(--yellow)';}
     else{e1.textContent='--';e1.style.color='';}
   }
   setTxt('pf1000b','best '+pfT(p.best1000));
