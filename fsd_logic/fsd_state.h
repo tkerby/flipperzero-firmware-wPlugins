@@ -23,7 +23,9 @@ typedef enum {
 } SpeedLimitSource;
 
 // Acceleration Mode override setting (#211). OFF = pass-through; otherwise the
-// UI_pedalMap value sent on 0x334 is (mode - 1): 0 CHILL, 1 SPORT, 2 PERFORMANCE.
+// UI_pedalMap value sent on 0x334 is (mode - 1): 0 CHILL, 1 STANDARD, 2
+// PERFORMANCE, as the car's touchscreen names them. Older signal lists call
+// pedal map 1 SPORT, hence ACCEL_MODE_SPORT.
 #define ACCEL_MODE_OFF         0u
 #define ACCEL_MODE_CHILL       1u
 #define ACCEL_MODE_SPORT       2u
