@@ -4,6 +4,8 @@
 - An Autopark pause the car never confirmed, such as FSD engaged from a standstill in stop-and-go traffic, now ends above 12 km/h instead of 20 km/h.
 - Battery temperatures from 0x312 that can't be right are no longer shown. That frame's layout isn't the same on every car.
 - The unused 0x33A Wh/km value, which was decoded from the wrong bytes, was removed.
+- Pack SOC from 0x292 now shows the BMS value meant for the screen, the same field the ESP32 uses. It read the lowest cell SOC before.
+- A Signal Map steering source on 0x129 uses the corrected steering-angle decode.
 
 ## v2.16.1
 
