@@ -1318,7 +1318,8 @@ static void test_capability(void) {
     // A "full Party-like" tap: 0x370 + HW4 DAS (0x39B) + AP control + steer.
     // Everything works.
     FSDCapSeen full = {0};
-    full.epas = true; full.das_hw4 = true; full.ap_control = true; full.steer = true;
+    full.epas = true; full.das_hw4 = true; full.ap_control = true;
+    full.steer = true; full.steer_valid = true;
     FSDCapReport r = fsd_capability_eval(full, TeslaHW_HW4);
     CHECK(r.nag_killer == CAP_OK, "full tap: nag killer OK (%d)", r.nag_killer);
     CHECK(r.ap_first == CAP_OK, "full tap: AP-First OK");
@@ -1442,10 +1443,26 @@ static void test_capability(void) {
 
     // ── bus hint: steering, no 0x370 -> Chassis/Vehicle-like ──
     FSDCapSeen chassis = {0};
-    chassis.steer = true;
+    chassis.steer = true; chassis.steer_valid = true;
     r = fsd_capability_eval(chassis, TeslaHW_HW4);
     CHECK(r.bus_hint == CAP_HINT_CHASSIS, "steer w/o 0x370: hint Chassis-like");
-    CHECK(r.soft_engage == CAP_OK, "0x129 present: soft engage OK");
+    CHECK(r.soft_engage == CAP_OK, "0x129 with a valid angle: soft engage OK");
+
+    // 0x129 arriving with no valid angle in the window (every frame INVALID,
+    // like the #211 parked record): neither OK nor missing. It still says
+    // which bus this is.
+    FSDCapSeen steer_invalid = {0};
+    steer_invalid.steer = true;
+    r = fsd_capability_eval(steer_invalid, TeslaHW_HW4);
+    CHECK(r.soft_engage == CAP_NO_VALID, "0x129, no valid angle: soft engage no-valid (%d)",
+          r.soft_engage);
+    CHECK(r.has_steer && !r.has_steer_valid, "0x129, no valid angle: present, not valid");
+    CHECK(r.bus_hint == CAP_HINT_CHASSIS, "0x129, no valid angle: hint still Chassis-like");
+    // A valid count without the frame itself counting as present is not OK.
+    FSDCapSeen valid_only = {0};
+    valid_only.steer_valid = true;
+    CHECK(fsd_capability_eval(valid_only, TeslaHW_HW4).soft_engage == CAP_MISSING,
+          "valid flag without 0x129 present: soft engage missing");
 
     // Empty tap -> everything missing, no hint.
     r = fsd_capability_eval(empty, TeslaHW_HW4);

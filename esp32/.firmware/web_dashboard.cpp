@@ -1229,6 +1229,7 @@ function bbRefreshList(){
 function bbDelete(n){cmd('blackbox_delete',n);setTimeout(bbRefreshList,400);}
 function bbDeleteAll(){uiConfirm('Delete all recorded events from the device?',function(){cmd('blackbox_delete_all',true);bbSeen();setTimeout(bbRefreshList,400);});}
 // ── Tap capability checker (#125) ──
+// Per verdict (FSDCapVerdict): OK, dual-CAN, missing, present but nothing valid.
 var CAP_MSG={
   nag_killer:['0x370 + DAS state present — gates correctly',
               '0x370 here but no DAS state — dual-CAN recommended (read DAS on a second tap)',
@@ -1241,14 +1242,15 @@ var CAP_MSG={
                   'no AP control frame to modify here'],
   soft_engage:['0x129 steering angle present',
                '',
-               'no 0x129 — degrades to AP-First-only'],
+               'no 0x129 — degrades to AP-First-only',
+               '0x129 present, no valid angle yet'],
   body_control:['Vehicle/body bus reachable — mirror/window/lights frames present (RX only; not proof of actuation)',
                 '',
                 'not on this tap — needs the X179 A-pillar (Vehicle-bus) tap']};
 function capRow(name,key,v){
-  var col=v===0?'var(--accent)':v===1?'var(--yellow)':'var(--red)';
-  var sym=v===0?'✓':v===1?'⚠':'✗';
-  var msg=(CAP_MSG[key]||['','',''])[v]||'';
+  var col=v===0?'var(--accent)':v===1?'var(--yellow)':v===3?'var(--text2)':'var(--red)';
+  var sym=v===0?'✓':v===1?'⚠':v===3?'–':'✗';
+  var msg=(CAP_MSG[key]||[])[v]||'';
   return '<div style="display:flex;gap:8px;padding:5px 0;border-top:1px solid var(--border)">'
     +'<span style="color:'+col+';font-weight:700;flex:0 0 14px">'+sym+'</span>'
     +'<span style="flex:0 0 92px;font-size:.8em;color:var(--text)">'+name+'</span>'
