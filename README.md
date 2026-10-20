@@ -317,7 +317,6 @@ Single-bus read-modify-retransmit on Party CAN. No MITM, no second bus tap.
 |--------|------|-----------|------|
 | `0x331` | `DAS_autopilotConfig` | TX | TLSSC Restore — set tier to SELF_DRIVING |
 | `0x370` | `EPAS3P_sysStatus` | TX | Nag killer — counter+1 echo with organic torque |
-| `0x399` | `ISA_speedLimit` / `DAS_status` | TX/RX | ESP32 HW-dependent: Legacy/HW3 read DAS status here; HW4 uses ISA speed chime suppression |
 | `0x3FD` | `UI_autopilotControl` | TX | FSD unlock — bit46/60 (HW3/HW4), TLSSC bit38, lane graph bit45 |
 | `0x3F8` | `UI_driverAssistControl` | TX | Nav FSD route, hands-off, dev mode, RHD driving-side (bit41), telemetry-off (beta) |
 | `0x3EE` | `UI_autopilotControl` | TX | FSD unlock — Legacy HW1/HW2 |
@@ -328,7 +327,7 @@ Single-bus read-modify-retransmit on Party CAN. No MITM, no second bus tap.
 | `0x334` | `UI_powertrainControl` | TX | Acceleration Mode — `UI_pedalMap` byte0 bits 5-6, set at standstill only (checksum recomputed, counter kept; Vehicle / Chassis bus) |
 | `0x398` | `GTW_carConfig` | RX | HW version detection |
 | `0x318` | `GTW_carState` | RX | OTA detection (auto-suspend TX) |
-| `0x399` | `DAS_status` (HW3/Legacy) / `ISA_speedLimit` (HW4) | RX/TX | HW-dispatched: pre-Highland HW3 reads as DAS_status (AP state + hands-on); HW4 keeps the chime-suppression write path |
+| `0x399` | `DAS_status` (HW3/Legacy) / `ISA_speedLimit` (HW4) | RX/TX | HW-dispatched, both apps: pre-Highland HW3 and Legacy read it as DAS_status (AP state + hands-on); HW4 rewrites it for Suppress Chime and reads the hands-on level from it when the car sends no `0x39B` |
 | `0x39B` | `DAS_status` | RX | HW4 + Highland HW3 — AP state (byte0 low nibble, for AP-First), autopark flags (Autopark pause), nag level, lane change, blind spot |
 | `0x132` | `BMS_hvBusStatus` | RX | Pack voltage / current |
 | `0x292` | `BMS_socStatus` | RX | State of charge: `BMS_socUI` (bit 10, 0.1 %), the BMS figure for display; both apps |
