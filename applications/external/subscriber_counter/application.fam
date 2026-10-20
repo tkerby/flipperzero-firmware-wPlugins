@@ -13,8 +13,8 @@ App(
     ],
     fap_icon="icon.png",
     fap_category="Tools",
-    fap_version="1.0",
     fap_author="TheProductAgency",
     fap_weburl="https://github.com/TheProductAgency/flipper-subscriber-counter",
+    fap_version="1.0",
     fap_description="Live YouTube subscriber count via Internet Bridge",
 )
