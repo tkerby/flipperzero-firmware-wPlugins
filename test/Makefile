@@ -8,6 +8,7 @@
 # test_can_counters covers esp32/.firmware/can_counters.h (driver counter bookkeeping).
 # test_loop_health covers esp32/.firmware/loop_health.h (loop() pass timing).
 # test_power_log covers esp32/.firmware/power_log.h (reset reason refinement).
+# test_web_page.py covers esp32/gen_web_page.py (the gzip copy of the dashboard).
 #
 #   make -C test check
 
@@ -63,6 +64,7 @@ check: test_fsd_core test_esp32_core test_can_capture_filter test_captive_probe 
 	./test_can_counters
 	./test_loop_health
 	./test_power_log
+	CXX="$(CXX)" python3 test_web_page.py
 
 clean:
 	rm -rf test_fsd_core test_fsd_core.dSYM test_esp32_core test_esp32_core.dSYM test_can_capture_filter test_can_capture_filter.dSYM test_captive_probe test_captive_probe.dSYM test_can_mcp2518fd test_can_mcp2518fd.dSYM test_web_cmd test_web_cmd.dSYM test_web_origin test_web_origin.dSYM test_can_counters test_can_counters.dSYM test_loop_health test_loop_health.dSYM test_power_log test_power_log.dSYM

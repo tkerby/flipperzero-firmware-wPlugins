@@ -35,6 +35,7 @@
 #include <Update.h>
 #include <esp_ota_ops.h>
 #include <esp_partition.h>
+#include <esp_rom_crc.h>
 
 // ── Module state ──────────────────────────────────────────────────────────────
 static FSDState  *g_state = nullptr;   // shared with main
@@ -121,6 +122,9 @@ static bool download_auth_ok() {
 
 // ── Embedded HTML/CSS/JS ──────────────────────────────────────────────────────
 // Tesla dark theme; mobile-first (max 480 px); WebSocket on :81
+// String literals and #if defined(...) blocks only: gen_web_page.py gzips the
+// page at build time and stops the build on a macro in it (FW_VERSION and the
+// like reach the page through the status JSON).
 static const char WEB_HTML[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html lang="en">
@@ -942,7 +946,7 @@ R"rawliteral(
   <div class="card-head"><div class="icon ic-d">D</div><h2>Device</h2></div>
   <div class="row">
     <span class="lbl">Firmware</span>
-    <span id="fwBuild" style="font-size:.8em;color:var(--text2)">)rawliteral" FW_VERSION " &middot; " __DATE__ " " __TIME__ R"rawliteral(</span>
+    <span id="fwBuild" style="font-size:.8em;color:var(--text2)">--</span>
   </div>
   <div class="row">
     <span class="lbl">Uptime</span>
@@ -974,7 +978,7 @@ R"rawliteral(
   </div>
 </details>
 
-<div class="foot">Tesla FSD ESP32 &middot; )rawliteral" BOARD_NAME " &middot; " FW_VERSION R"rawliteral(</div>
+<div class="foot">Tesla FSD ESP32<span id="footId"></span></div>
 <div class="foot">Free &amp; open source &middot; <a href="https://fsd.fkey.id/" target="_blank" rel="noopener">support the research</a></div>
 </div><!-- /wrap -->
 
@@ -1633,6 +1637,7 @@ function updTpms(d){
 function updDevice(d){
   // Device
   if(document.getElementById('fwBuild') && d.fw_build) document.getElementById('fwBuild').textContent=(d.fw_version?d.fw_version+' \u00b7 ':'')+d.fw_build;
+  if(d.board) setTxt('footId',' \u00b7 '+d.board+(d.fw_version?' \u00b7 '+d.fw_version:''));
   if(document.getElementById('uptime')) document.getElementById('uptime').textContent=fmt(d.uptime_s||0);
   if(document.getElementById('wifiCl')) document.getElementById('wifiCl').textContent=d.wifi_clients||0;
   // Lowest free loop-task stack since boot + heap now / lowest. Red under 1 KB of stack.
@@ -2205,6 +2210,15 @@ R"rawliteral(
 </body>
 </html>
 )rawliteral";
+
+// The same page gzip-compressed, written at build time by esp32/gen_web_page.py
+// from the literals above (into the build directory, not the source tree).
+#include "web_page_gz.h"
+static_assert(sizeof(WEB_HTML) - 1 == WEB_HTML_GZ_SRC_LEN,
+              "web_page_gz.h was made from a different page: see esp32/gen_web_page.py");
+// Set at init when WEB_HTML_GZ inflates to WEB_HTML (its gzip trailer: CRC-32
+// and length of the input); otherwise every client gets WEB_HTML.
+static bool g_page_gz_ok = false;
 
 // ── JSON helpers ──────────────────────────────────────────────────────────────
 static String json_escape(const char *s) {
@@ -3334,24 +3348,11 @@ static void ws_event(uint8_t num, WStype_t type,
 }
 
 // ── HTTP handlers ─────────────────────────────────────────────────────────────
-static void handle_root() {
-    // The page is served under our own names only: its origin is what the
-    // WebSocket and /api/cmd check, and on the SoftAP every name resolves
-    // here (captive portal). Under any other name it is sent to our address.
-    OwnNamesText t;
-    if (!web_host_header_ours(g_http.hostHeader().c_str(), own_names(t))) {
-        g_http.sendHeader("Location", home_url(), true);
-        g_http.send(302, "text/plain", "");
-        return;
-    }
-    captive_portal_note_dashboard(g_http);   // portal "login" for Apple's probe (SoftAP only)
-    g_http.setContentLength(sizeof(WEB_HTML) - 1);
-    g_http.send(200, "text/html", "");
-
-    const uint8_t *ptr = (const uint8_t *)WEB_HTML;
-    size_t left = sizeof(WEB_HTML) - 1;
+// The page body, after the headers. The loop task services no CAN while this
+// runs. WiFiClient::write() waits in select() until lwIP has room for more, so
+// the socket paces the writes; a pause between them only adds to that wait.
+static void send_page_body(const uint8_t *ptr, size_t left) {
     WiFiClient client = g_http.client();
-
     uint32_t timeout_ms = millis();
     while (left > 0 && client.connected()) {
         size_t chunk = (left > 1460) ? 1460 : left;
@@ -3364,8 +3365,35 @@ static void handle_root() {
             if (millis() - timeout_ms > 2000) break; // Prevent infinite loop
             delay(10);
         }
-        delay(2);
     }
+}
+
+static bool client_takes_gzip() {
+    String enc = g_http.header("Accept-Encoding");
+    enc.toLowerCase();
+    return enc.indexOf("gzip") >= 0;
+}
+
+static void handle_root() {
+    // The page is served under our own names only: its origin is what the
+    // WebSocket and /api/cmd check, and on the SoftAP every name resolves
+    // here (captive portal). Under any other name it is sent to our address.
+    OwnNamesText t;
+    if (!web_host_header_ours(g_http.hostHeader().c_str(), own_names(t))) {
+        g_http.sendHeader("Location", home_url(), true);
+        g_http.send(302, "text/plain", "");
+        return;
+    }
+    captive_portal_note_dashboard(g_http);   // portal "login" for Apple's probe (SoftAP only)
+    // Every browser sends Accept-Encoding: gzip and gets WEB_HTML_GZ, under a
+    // third of the bytes; any other client gets the page as it is.
+    bool gz = g_page_gz_ok && client_takes_gzip();
+    size_t len = gz ? sizeof(WEB_HTML_GZ) : sizeof(WEB_HTML) - 1;
+    g_http.sendHeader("Vary", "Accept-Encoding");
+    if (gz) g_http.sendHeader("Content-Encoding", "gzip");
+    g_http.setContentLength(len);
+    g_http.send(200, "text/html", "");
+    send_page_body(gz ? WEB_HTML_GZ : (const uint8_t *)WEB_HTML, len);
 }
 
 static void handle_status() {
@@ -3648,6 +3676,14 @@ void web_dashboard_init(FSDState *state,
     g_last_rx     = state ? state->rx_count : 0;
     g_last_can_seen_ms = (state && state->rx_count > 0) ? millis() : 0;
 
+    // The gzip trailer holds the CRC-32 of what was compressed.
+    const uint8_t *gz_end = WEB_HTML_GZ + sizeof(WEB_HTML_GZ);
+    uint32_t gz_crc = (uint32_t)gz_end[-8] | ((uint32_t)gz_end[-7] << 8) |
+                      ((uint32_t)gz_end[-6] << 16) | ((uint32_t)gz_end[-5] << 24);
+    g_page_gz_ok = esp_rom_crc32_le(0, (const uint8_t *)WEB_HTML, sizeof(WEB_HTML) - 1) == gz_crc;
+    Serial.printf("[Web] page %u bytes, gzip %u bytes%s\n", (unsigned)(sizeof(WEB_HTML) - 1),
+                  (unsigned)sizeof(WEB_HTML_GZ), g_page_gz_ok ? "" : " (CRC mismatch, not sent)");
+
     g_http.on("/",           HTTP_GET,  handle_root);
     g_http.on("/api/status", HTTP_GET,  handle_status);
     g_http.on("/api/cmd",    HTTP_POST, handle_cmd);
@@ -3665,8 +3701,8 @@ void web_dashboard_init(FSDState *state,
     // and collectHeaders() replaces the list instead of adding to it. This is
     // the last call before begin(), so it names every header a handler reads:
     // Content-Type and Origin for /api/cmd, Origin for /sdformat, User-Agent
-    // for the captive portal's probes.
-    const char *collect[] = { "Content-Type", "Origin", "User-Agent" };
+    // for the captive portal's probes, Accept-Encoding for the page.
+    const char *collect[] = { "Content-Type", "Origin", "User-Agent", "Accept-Encoding" };
     g_http.collectHeaders(collect, sizeof(collect) / sizeof(collect[0]));
     g_http.begin();
     captive_portal_begin();

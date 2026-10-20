@@ -542,6 +542,7 @@ esp32/
 ├── platformio.ini          — Build configs (one env per board, see Alternative Hardware)
 ├── build_firmware.sh       — Local build + packaging helper
 ├── gen_version.py          — Pre-build step that sets FW_VERSION (release tag / `git describe`; override with the FW_VERSION env var)
+├── gen_web_page.py         — Pre-build step that gzips the dashboard page into the build directory (served with Content-Encoding: gzip)
 ├── merge_firmware.py       — Post-build step that writes firmware-merged.bin for the web flasher
 ├── ci_check_stack.py       — CI check of the loop task's deepest call chains against its stack size
 └── README.md
