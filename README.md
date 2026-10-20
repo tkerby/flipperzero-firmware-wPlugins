@@ -225,7 +225,10 @@ See [`esp32/README.md`](https://github.com/hypery11/flipper-tesla-fsd/tree/main/
 New to this and not very technical? Pick your hardware — both paths avoid the command line:
 
 **Flipper Zero**
-1. Open [Releases](https://github.com/hypery11/flipper-tesla-fsd/releases) and download `tesla_mod.fap` from the latest release.
+
+The easiest way is the official Flipper Apps catalog: in the Flipper mobile app open **Apps** and search for **Tesla Mod**, or install it from [lab.flipper.net/apps/tesla_mod](https://lab.flipper.net/apps/tesla_mod). The catalog version follows stable releases and can lag behind the betas, so for a beta copy the `.fap` from Releases yourself:
+
+1. Open [Releases](https://github.com/hypery11/flipper-tesla-fsd/releases) and download `tesla_mod.fap` from the release you want (betas are marked Pre-release).
 2. Connect the Flipper and open [qFlipper](https://flipperzero.one/update) (the official desktop app).
 3. Copy `tesla_mod.fap` onto the SD card into `apps/GPIO/`.
 4. On the Flipper: **Apps → GPIO → Tesla Mod**.

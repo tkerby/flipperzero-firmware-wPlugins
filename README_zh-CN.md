@@ -228,7 +228,10 @@ ESP32 固件会依检测到的硬件版本对应 AP/DAS 状态来源：
 第一次接触、不太懂技术？选你的硬件 — 两条路径都不用命令行：
 
 **Flipper Zero**
-1. 打开 [Releases](https://github.com/hypery11/flipper-tesla-fsd/releases)，从最新版本下载 `tesla_mod.fap`。
+
+最简单的方式是 Flipper 官方应用目录：在 Flipper 手机 app 里打开 **Apps** 搜索 **Tesla Mod**，或者从 [lab.flipper.net/apps/tesla_mod](https://lab.flipper.net/apps/tesla_mod) 安装。目录里的版本跟随稳定版发布，可能落后于测试版；想用测试版，请自己复制 Releases 里的 `.fap`：
+
+1. 打开 [Releases](https://github.com/hypery11/flipper-tesla-fsd/releases)，下载你要的版本的 `tesla_mod.fap`（测试版标为 Pre-release）。
 2. 接上 Flipper，打开 [qFlipper](https://flipperzero.one/update)（官方桌面 app）。
 3. 把 `tesla_mod.fap` 复制到 SD 卡的 `apps/GPIO/`。
 4. 在 Flipper 上：**Apps → GPIO → Tesla Mod**。

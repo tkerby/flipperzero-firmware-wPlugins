@@ -228,7 +228,10 @@ ESP32 韌體會依偵測到的硬體版本對應 AP/DAS 狀態來源：
 第一次接觸、不太懂技術？選你的硬體 — 兩條路徑都不用命令列：
 
 **Flipper Zero**
-1. 打開 [Releases](https://github.com/hypery11/flipper-tesla-fsd/releases)，從最新版本下載 `tesla_mod.fap`。
+
+最簡單的方式是 Flipper 官方應用程式目錄：在 Flipper 手機 app 裡打開 **Apps** 搜尋 **Tesla Mod**，或從 [lab.flipper.net/apps/tesla_mod](https://lab.flipper.net/apps/tesla_mod) 安裝。目錄裡的版本跟著穩定版發布，可能落後於測試版；想用測試版，請自己複製 Releases 裡的 `.fap`：
+
+1. 打開 [Releases](https://github.com/hypery11/flipper-tesla-fsd/releases)，下載你要的版本的 `tesla_mod.fap`（測試版標示為 Pre-release）。
 2. 接上 Flipper，打開 [qFlipper](https://flipperzero.one/update)（官方桌面 app）。
 3. 把 `tesla_mod.fap` 複製到 SD 卡的 `apps/GPIO/`。
 4. 在 Flipper 上：**Apps → GPIO → Tesla Mod**。
