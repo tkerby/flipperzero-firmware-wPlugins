@@ -287,6 +287,7 @@ details input:disabled{opacity:.45}
   font-size:.95em;font-weight:700;cursor:pointer;letter-spacing:.04em;
   transition:opacity .2s;margin-bottom:10px}
 .btn-main:active{opacity:.75}
+.btn-main:disabled{opacity:.45;cursor:default}
 .btn-act{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000}
 .btn-stop{background:rgba(255,107,107,.14);color:var(--red);
   border:1px solid rgba(255,107,107,.3)}
@@ -755,12 +756,12 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
     <details>
       <summary class="lbl" style="cursor:pointer">Signal Map (advanced, 14.x)</summary>
       <div style="font-size:11px;color:var(--muted);margin:6px 0 8px">Override where the nag killer reads AP-state / hands-on / steering. Leave DAS id <b>0</b> for auto-detect. byte 0-7, shift 0-7, mask hex.</div>
-      <div style="display:grid;grid-template-columns:auto auto;gap:6px 10px;align-items:center;font-size:12px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;align-items:center;font-size:12px">
         <span>DAS id (0x..)</span><input id="cgDid" placeholder="0">
-        <span>AP-state byte/sh/mask</span><span><input id="cgApB" class="cgn"><input id="cgApS" class="cgn"><input id="cgApM" class="cgn" placeholder="0xF"></span>
-        <span>Hands-on byte/sh/mask</span><span><input id="cgHoB" class="cgn"><input id="cgHoS" class="cgn"><input id="cgHoM" class="cgn" placeholder="0xF"></span>
+        <span>AP-state byte/sh/mask</span><span style="white-space:nowrap"><input id="cgApB" class="cgn"><input id="cgApS" class="cgn"><input id="cgApM" class="cgn" placeholder="0xF"></span>
+        <span>Hands-on byte/sh/mask</span><span style="white-space:nowrap"><input id="cgHoB" class="cgn"><input id="cgHoS" class="cgn"><input id="cgHoM" class="cgn" placeholder="0xF"></span>
         <span>Steer id (0x..)</span><input id="cgSid" placeholder="0" oninput="sigSteerUi()">
-        <span>Steer hi/lo byte</span><span><input id="cgSHi" class="cgn"><input id="cgSLo" class="cgn"></span>
+        <span>Steer hi/lo byte</span><span style="white-space:nowrap"><input id="cgSHi" class="cgn"><input id="cgSLo" class="cgn"></span>
       </div>
       <div style="font-size:11px;color:var(--muted);margin-top:6px">Steer id 0 or 0x129: the car's 0x129 steering angle, read with its own layout and only while valid; hi/lo are not used. Another id: a signed 16-bit angle at the hi/lo bytes, 0.1&deg; per bit; hi = lo maps nothing.</div>
       <button onclick="saveSigCfg()" style="margin-top:8px;background:var(--accent);color:#000;border:0;padding:6px 12px;border-radius:4px;cursor:pointer">Save mapping</button>
@@ -838,9 +839,9 @@ R"rawliteral(
     <span class="lbl">Status</span>
     <span class="pill off" id="bbSt"><span class="pd"></span>Idle</span>
   </div>
-  <div class="row">
-    <span class="lbl">Storage</span>
-    <span id="bbStore" style="font-size:.78em;color:var(--text2)">--</span>
+  <div class="row" style="gap:12px">
+    <span class="lbl" style="white-space:nowrap">Storage</span>
+    <span id="bbStore" style="font-size:.78em;color:var(--text2);text-align:right">--</span>
   </div>
   <div id="bbVolatileWarn" class="log-info" style="display:none;margin:8px 0;color:var(--yellow)">
     &#9888;&#xFE0F; Volatile storage &mdash; download events before power-off; they are lost on reboot.
@@ -1206,6 +1207,9 @@ function updateControlsSummary(d){
 var bbCaptures=-1,bbNew=false,bbNoteDismissed=false;
 try{bbNoteDismissed=localStorage.getItem('bbNote')==='1'}catch(e){}
 function bbEsc(s){return String(s==null?'':s).replace(/[<>&"]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]})}
+// The fixed words of a composed line in a text node of their own, which the
+// zh layer can translate (it matches whole text nodes).
+function sp(t){return '<span>'+t+'</span>';}
 function bbDismiss(){bbNoteDismissed=true;try{localStorage.setItem('bbNote','1')}catch(e){}var n=document.getElementById('bbNote');if(n)n.style.display='none';}
 function bbSeen(){bbNew=false;var bd=document.getElementById('bbBadge');if(bd)bd.style.display='none';}
 function bbSync(d){
@@ -1213,7 +1217,7 @@ function bbSync(d){
   var sw=document.getElementById('swBlackbox');if(sw&&sw!==document.activeElement)sw.checked=!!b.enabled;
   pill('bbSt',b.enabled,b.armed?'Capturing':(b.enabled?'Armed':'Off'));
   var st=document.getElementById('bbStore');
-  if(st)st.textContent=(b.backend||'?')+' · '+(b.psram?'PSRAM':'internal')+' · '+((b.cap||0).toLocaleString())+' frames · '+(b.events||0)+' saved';
+  if(st)st.innerHTML=bbEsc(b.backend||'?')+' · '+(b.psram?'PSRAM':sp('internal RAM'))+' · '+((b.cap||0).toLocaleString())+' '+sp('frames')+' · '+(b.events||0)+' '+sp('saved');
   var vw=document.getElementById('bbVolatileWarn');if(vw)vw.style.display=b.volatile?'block':'none';
   var note=document.getElementById('bbNote');if(note)note.style.display=bbNoteDismissed?'none':'block';
   var da=document.getElementById('bbDelAll');if(da)da.style.display=(b.events>0)?'block':'none';
@@ -1235,7 +1239,7 @@ function bbRefreshList(){
       var det=String(s.detail||s.trigger||'event').replace(/^(\S+) (\d+)->\2 @/,'$1 AP state $2 @');
       h+='<div style="border-top:1px solid var(--border);padding:8px 0">';
       h+='<div style="font-size:.8em;color:var(--text);font-family:monospace">'+bbEsc(det)+'</div>';
-      h+='<div style="font-size:.72em;color:var(--text3);margin:2px 0">'+bbEsc(s.hw||'')+' · '+(s.frames||0)+' frames · '+bbEsc((s.buses&&s.buses.dual_can)?'dual-CAN':'single')+'</div>';
+      h+='<div style="font-size:.72em;color:var(--text3);margin:2px 0">'+bbEsc(s.hw||'')+' · '+(s.frames||0)+' '+sp('frames')+' · '+sp((s.buses&&s.buses.dual_can)?'dual-CAN':'single')+'</div>';
       h+='<div style="display:flex;gap:6px;margin-top:4px">';
       h+='<a class="btn-main btn-blue" style="padding:4px 10px;font-size:.7em;flex:0" href="/blackbox/get?name='+nm+'&type=log" onclick="bbSeen()">.log</a>';
       h+='<a class="btn-main btn-blue" style="padding:4px 10px;font-size:.7em;flex:0" href="/blackbox/get?name='+nm+'&type=json" onclick="bbSeen()">.json</a>';
@@ -1272,7 +1276,7 @@ function capRow(name,key,v){
   var msg=(CAP_MSG[key]||[])[v]||'';
   return '<div style="display:flex;gap:8px;padding:5px 0;border-top:1px solid var(--border)">'
     +'<span style="color:'+col+';font-weight:700;flex:0 0 14px">'+sym+'</span>'
-    +'<span style="flex:0 0 92px;font-size:.8em;color:var(--text)">'+name+'</span>'
+    +'<span style="flex:0 0 112px;white-space:nowrap;font-size:.8em;color:var(--text)">'+name+'</span>'
     +'<span style="font-size:.73em;color:var(--text3);line-height:1.3">'+msg+'</span></div>';
 }
 // bus_hint (FSDCapBusHint), the same as the firmware's English "hint" text.
@@ -1284,7 +1288,7 @@ var CAP_VEH_HINT=['no 0x3C2 and no body frames — no hint',
 function capHintRow(name,v){
   return '<div style="display:flex;gap:8px;padding:5px 0;border-top:1px solid var(--border)">'
     +'<span style="color:var(--text3);font-weight:700;flex:0 0 14px">i</span>'
-    +'<span style="flex:0 0 92px;font-size:.8em;color:var(--text)">'+name+'</span>'
+    +'<span style="flex:0 0 112px;white-space:nowrap;font-size:.8em;color:var(--text)">'+name+'</span>'
     +'<span style="font-size:.73em;color:var(--text3);line-height:1.3">'+(CAP_VEH_HINT[v]||'')+'</span></div>';
 }
 function capSync(d){
@@ -1297,9 +1301,7 @@ function capSync(d){
   var buses=c.buses||[];
   if(!buses.length){el.innerHTML='<div style="font-size:.8em;color:var(--yellow);padding:6px 0">No frames seen — check wiring / that the car is awake.</div>';return;}
   var dual=buses.length>1;
-  // sp(): fixed words of a composed line in a text node of their own, which
-  // the zh layer can translate (it matches whole text nodes).
-  var h='',sp=function(t){return '<span>'+t+'</span>';};
+  var h='';
   buses.forEach(function(b){
     h+='<div style="margin-top:8px">';
     if(dual)h+='<div style="font-size:.78em;color:var(--text2);font-weight:600;margin-bottom:2px">'+bbEsc(b.bus)+' &middot; '+(b.frames||0)+' '+sp('frames')+'</div>';
@@ -1315,7 +1317,7 @@ function capSync(d){
       if(ids.body_window)seen.push('windows');
       if(ids.body_lights)seen.push('lights/turn');
       if(ids.body_door)seen.push('mirror read-back');
-      if(seen.length)h+='<div style="font-size:.7em;color:var(--text3);padding-top:3px">'+sp('Reachable frames:')+' '+seen.map(sp).join(', ')+' '+sp('(presence only — not proof injection actuates them).')+'</div>';
+      if(seen.length)h+='<div style="font-size:.7em;color:var(--text3);padding-top:3px">'+sp('Reachable frames:')+' '+seen.map(sp).join(sp(', '))+' '+sp('(presence only — not proof injection actuates them).')+'</div>';
     }
     if(typeof b.vehicle_hint==='number')h+=capHintRow('Bus hint',b.vehicle_hint);
     var bh=CAP_BUS_HINT[b.bus_hint]||'';
@@ -1446,7 +1448,6 @@ function updControls(d){
   var acSt=document.getElementById('accelSt');
   if(acSt && d.accel_car_map!==undefined){
     var ACM=['CHILL','STANDARD','PERFORMANCE'], at;
-    var sp=function(t){return '<span>'+t+'</span>';};
     if(d.accel_car_map<0) at=d.accel_bad>0?'0x334 not recognised ('+d.accel_bad+' rejected)':'no 0x334 on this bus yet';
     else if(d.accel_sent_map===d.accel_car_map) at=sp('Car')+' '+ACM[d.accel_car_map]+' \u00b7 '+sp('pass-through');
     else at=sp('Car')+' '+ACM[d.accel_car_map]+' \u2192 '+sp('sent')+' '+ACM[d.accel_sent_map];
