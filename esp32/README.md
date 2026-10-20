@@ -230,7 +230,7 @@ LILYGO's physical connector names are easy to confuse with this project's `can0`
 | `can1` / MCP2515 | Party CAN | `2 / 3` | Nag-Killer A torque target: `0x370` |
 | `can1` / MCP2515 | Vehicle CAN | `9 / 10` | Scroll/stalk/light/preheat/service: `0x3C2`, `0x229`, `0x249`, `0x273`, `0x339` |
 
-Pins shown are for one harness (`1933903-XX`). Confirm yours on **Service Mode → CAN Port** before wiring.
+Pins shown are for one harness (`1933903-XX`). Confirm yours with your car's wiring diagram before wiring (or on **Service Mode → CAN Port**, where the car has it).
 
 The dashboard's **Tap Check** card adds a **Bus hint** per bus from `0x3C2`: seen there, the pair is likely Vehicle CAN; body frames without it point to the subset the gateway forwards. `0x3C2` showing only on Vehicle CAN is what contributors report and what the public DBCs say, not something confirmed on every car, so treat it as a hint and let the car's wiring diagram decide (or the CAN Port page, where the car has one).
 
@@ -268,8 +268,10 @@ Located in the rear center console area:
 > [!IMPORTANT]
 > **The X179 pin→bus map is not fixed — verify it on your own car.** On many
 > harnesses pins 13/14 are **Chassis CAN**, not the "Bus 6" mix, and the third
-> CAN pair has moved to other pins on newer builds. The deterministic check is
-> the car's **Service Mode → CAN Port** page, which lists each pin's bus by name.
+> CAN pair has moved to other pins on newer builds. Check your car's wiring
+> diagram first. Where the car has it, the **Service Mode → CAN Port** page is
+> the deterministic check and lists each pin's bus by name; not every car shows
+> it without Service+.
 > See [HARDWARE.md – X179](../HARDWARE.md#x179--behind-the-rear-center-console-2021-model-3y)
 > for the per-harness maps before you tap.
 

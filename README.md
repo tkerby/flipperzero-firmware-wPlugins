@@ -71,7 +71,7 @@
 - Organic torque variation — xorshift32 PRNG random walk in 1.00-1.80 Nm with a grip pulse every 5-9 seconds. Every nag path is capped at ±1.8 Nm since v2.16-beta.11, so grip pulses peak at 1.80 Nm ([#122](https://github.com/hypery11/flipper-tesla-fsd/issues/122))
 - **On-demand grip pulse (v2.15+)** — when `handsOnLevel` rises into a nag-demand state (0 imminent / 3 escalated), an immediate grip pulse fires and the periodic schedule resets. Closes the 2-second yellow-escalation window that could open between scheduled pulses on v2.14 and earlier
 - EPAS counter+1 echo on `0x370` with level 0 (nag imminent) and level 3 (escalated alarm) suppression
-- **Tap Party CAN (X179 pins 2/3) for the nag killer.** `0x370` is on Party CAN — not Vehicle CAN (9/10), and the Chassis CAN copy (13/14 on some harnesses) trips the 2026.14.x preflight. Confirmed working on HW4 2026.20 by tapping 2/3 ([#100](https://github.com/hypery11/flipper-tesla-fsd/issues/100)). A single-CAN board on the wrong pair has nothing to echo — the usual cause of "nag killer does nothing on HW4." Check your car's **Service Mode → CAN Port** page for which pin is Party on your harness; see [HARDWARE.md](HARDWARE.md).
+- **Tap Party CAN (X179 pins 2/3) for the nag killer.** `0x370` is on Party CAN — not Vehicle CAN (9/10), and the Chassis CAN copy (13/14 on some harnesses) trips the 2026.14.x preflight. Confirmed working on HW4 2026.20 by tapping 2/3 ([#100](https://github.com/hypery11/flipper-tesla-fsd/issues/100)). A single-CAN board on the wrong pair has nothing to echo — the usual cause of "nag killer does nothing on HW4." Check your car's wiring diagram (or the **Service Mode → CAN Port** page, where available) for which pin is Party on your harness; see [HARDWARE.md](HARDWARE.md).
 
 ### AP-First mode (v2.14+, for 2026.14.x firmware)
 - Tesla 2026.14.x added a preflight check that blocks AP/TACC engagement if CAN injection is already active
@@ -210,7 +210,7 @@ See [`esp32/README.md`](https://github.com/hypery11/flipper-tesla-fsd/tree/main/
 ### Connection points
 
 - **OBD-II** — Party CAN. On 2019+ Model 3 / 2020–April 2024 Model Y it sits in the rear center console area and needs a Tesla adapter cable; 2024+ Juniper / later Highland builds use DoIP (Ethernet) there, not CAN. May go silent in Drive on some Model 3/Y builds.
-- **X179** (behind the rear center console) — recommended. The pin→bus map varies by harness, so check the car's **Service Mode → CAN Port** page before wiring. See [`HARDWARE.md`](HARDWARE.md) for 20-pin and 26-pin pinouts.
+- **X179** (behind the rear center console) — recommended. The pin→bus map varies by harness, so check your car's wiring diagram before wiring (or the **Service Mode → CAN Port** page, where the car has it). See [`HARDWARE.md`](HARDWARE.md) for 20-pin and 26-pin pinouts and links to Tesla's Electrical Reference.
 
 <p align="center">
   <img src="images/wiring_diagram.png" alt="Wiring Diagram" width="700">
@@ -270,7 +270,7 @@ pio run -e m5stack-atom    # or: esp32-lilygo, waveshare-s3-can, esp32-mcp2515, 
 ## Usage
 
 1. Plug the CAN Add-On into your Flipper Zero (or flash the ESP32)
-2. Connect CAN-H/CAN-L to the vehicle via OBD-II or X179 (Service Mode → CAN Port shows which X179 pins carry which bus)
+2. Connect CAN-H/CAN-L to the vehicle via OBD-II or X179 (your car's wiring diagram, or Service Mode → CAN Port where available, shows which X179 pins carry which bus)
 3. Open the app: `Apps > GPIO > Tesla Mod`
 4. Select **"Auto Detect & Start"** (or Force HW3/HW4/Legacy)
 5. Wait for detection (up to 8 seconds) — Palladium S/X will auto-upgrade from Legacy to HW3

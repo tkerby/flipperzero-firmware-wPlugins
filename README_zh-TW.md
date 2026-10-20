@@ -74,7 +74,7 @@
 - 擬真扭力變化 — 在 1.00-1.80 Nm 之間用 xorshift32 PRNG 隨機漫步，每 5-9 秒有一次握力脈衝。自 v2.16-beta.11 起所有 nag 路徑都有 ±1.8 Nm 上限，所以握力脈衝最高 1.80 Nm（[#122](https://github.com/hypery11/flipper-tesla-fsd/issues/122)）
 - **按需握力脈衝（v2.15+）** — 當 `handsOnLevel` 升到提醒需求狀態（0 即將 / 3 升級）時，立即發出一次握力脈衝並重置週期排程。補上 v2.14 及更早版本在排程脈衝之間可能出現的 2 秒黃色升級空窗
 - 在 `0x370` 做 EPAS counter+1 回應，並抑制 level 0（提醒即將出現）與 level 3（升級警報）
-- **請接 Party CAN（X179 pin 2/3）給 nag killer。** `0x370` 在 Party CAN — 不在 Vehicle CAN（9/10），而 Chassis CAN 上的副本（部分線束的 13/14）會觸發 2026.14.x preflight。已在 HW4 2026.20 上以接 2/3 確認可用（[#100](https://github.com/hypery11/flipper-tesla-fsd/issues/100)）。接錯線對的單 CAN 板子沒有東西可回應 — 這是「nag killer 在 HW4 上沒反應」最常見的原因。用車上的 **Service Mode → CAN Port** 頁面確認你這條線束上哪一對是 Party；見 [HARDWARE.md](HARDWARE.md)。
+- **請接 Party CAN（X179 pin 2/3）給 nag killer。** `0x370` 在 Party CAN — 不在 Vehicle CAN（9/10），而 Chassis CAN 上的副本（部分線束的 13/14）會觸發 2026.14.x preflight。已在 HW4 2026.20 上以接 2/3 確認可用（[#100](https://github.com/hypery11/flipper-tesla-fsd/issues/100)）。接錯線對的單 CAN 板子沒有東西可回應 — 這是「nag killer 在 HW4 上沒反應」最常見的原因。對照車輛的線路圖（車上有 **Service Mode → CAN Port** 頁面的也可在那裡查看）確認你這條線束上哪一對是 Party；見 [HARDWARE.md](HARDWARE.md)。
 
 ### AP-First 模式（v2.14+，給 2026.14.x 韌體）
 - Tesla 2026.14.x 新增了 preflight 檢查，若 CAN 注入已在進行就擋下 AP/TACC 接管
@@ -213,7 +213,7 @@ ESP32 韌體會依偵測到的硬體版本對應 AP/DAS 狀態來源：
 ### 接點
 
 - **OBD-II** — Party CAN。2019+ Model 3／2020 至 2024 年 4 月的 Model Y 位於後中控台區域，需要 Tesla 專用轉接線；2024+ Juniper／較新的 Highland 在那裡改用 DoIP（乙太網路），不是 CAN。部分 Model 3/Y 車款在 Drive 檔可能靜默。
-- **X179**（後中控台後方）— 建議使用。針腳與匯流排的對應依線束而異，接線前請先看車上的 **Service Mode → CAN Port** 頁面。20-pin 與 26-pin 針腳見 [`HARDWARE.md`](HARDWARE.md)。
+- **X179**（後中控台後方）— 建議使用。針腳與匯流排的對應依線束而異，接線前請先對照車輛的線路圖（車上有 **Service Mode → CAN Port** 頁面的也可在那裡查看）。20-pin 與 26-pin 針腳以及 Tesla 電路參考資料的連結見 [`HARDWARE.md`](HARDWARE.md)。
 
 <p align="center">
   <img src="images/wiring_diagram.png" alt="接線圖" width="700">
@@ -273,7 +273,7 @@ pio run -e m5stack-atom    # 或：esp32-lilygo、waveshare-s3-can、esp32-mcp25
 ## 使用方式
 
 1. 把 CAN Add-On 插上 Flipper Zero（或燒錄 ESP32）
-2. 用 CAN-H/CAN-L 透過 OBD-II 或 X179 接到車輛（X179 哪幾腳是哪條匯流排，看 Service Mode → CAN Port）
+2. 用 CAN-H/CAN-L 透過 OBD-II 或 X179 接到車輛（X179 哪幾腳是哪條匯流排，看車輛的線路圖；車上有 Service Mode → CAN Port 的也可在那裡查看）
 3. 開啟 app：`Apps > GPIO > Tesla Mod`
 4. 選 **「Auto Detect & Start」**（或手動 Force HW3/HW4/Legacy）
 5. 等待偵測（最多 8 秒）— Palladium S/X 會自動從 Legacy 升級到 HW3
