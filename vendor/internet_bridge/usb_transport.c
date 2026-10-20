@@ -148,7 +148,8 @@ static int32_t usb_transport_worker(void* context) {
                     furi_hal_cdc_receive(FIB_CDC_INTERFACE, bytes, sizeof(bytes));
                 if(received <= 0) break;
                 if(transport->receive_callback) {
-                    transport->receive_callback(bytes, (size_t)received, transport->callback_context);
+                    transport->receive_callback(
+                        bytes, (size_t)received, transport->callback_context);
                 }
             }
         }
@@ -174,8 +175,8 @@ UsbTransport* usb_transport_alloc(
     transport->worker = furi_thread_alloc_ex(
         "FibUsbWorker", FIB_TRANSPORT_WORKER_STACK, usb_transport_worker, transport);
 
-    if(!transport->state_mutex || !transport->tx_mutex ||
-       !transport->tx_semaphore || !transport->worker) {
+    if(!transport->state_mutex || !transport->tx_mutex || !transport->tx_semaphore ||
+       !transport->worker) {
         usb_transport_free(transport);
         return NULL;
     }

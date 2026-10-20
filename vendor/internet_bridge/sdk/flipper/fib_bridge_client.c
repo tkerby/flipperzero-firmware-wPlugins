@@ -45,9 +45,8 @@ static FibBridgeState fib_bridge_map_state(BridgeSessionState state) {
     }
 }
 
-static void fib_bridge_copy_status(
-    const BridgeSessionStatus* source,
-    FibBridgeStatus* destination) {
+static void
+    fib_bridge_copy_status(const BridgeSessionStatus* source, FibBridgeStatus* destination) {
     memset(destination, 0, sizeof(*destination));
     destination->state = fib_bridge_map_state(source->state);
     destination->permission = (FibBridgePermission)source->permission;
@@ -157,7 +156,11 @@ bool fib_bridge_client_respond_to_computer(FibBridgeClient* client, uint64_t non
 }
 
 size_t fib_bridge_client_known_computers(
-    FibBridgeClient* client, uint8_t (*ids)[16], size_t capacity, size_t offset, bool* more) {
+    FibBridgeClient* client,
+    uint8_t (*ids)[16],
+    size_t capacity,
+    size_t offset,
+    bool* more) {
     if(more) *more = false;
     if(!client || !ids || !capacity || capacity > FIB_BRIDGE_KNOWN_COMPUTER_PAGE_SIZE) return 0U;
     return fib_pair_storage_list(ids, capacity, offset, more);
@@ -187,10 +190,11 @@ bool fib_bridge_client_is_ready(FibBridgeClient* client) {
     if(!client) return false;
     BridgeSessionStatus snapshot;
     bridge_session_get_status(client->session, &snapshot);
-    return (snapshot.state == BridgeSessionStateReady || snapshot.state == BridgeSessionStateComplete) &&
-        snapshot.usb_connected && snapshot.helper_present && snapshot.selected_major != 0U &&
-        (snapshot.permission == BridgePermissionAllowedOnce ||
-         snapshot.permission == BridgePermissionAllowedAlways);
+    return (snapshot.state == BridgeSessionStateReady ||
+            snapshot.state == BridgeSessionStateComplete) &&
+           snapshot.usb_connected && snapshot.helper_present && snapshot.selected_major != 0U &&
+           (snapshot.permission == BridgePermissionAllowedOnce ||
+            snapshot.permission == BridgePermissionAllowedAlways);
 }
 
 bool fib_bridge_client_has_active_request(FibBridgeClient* client) {

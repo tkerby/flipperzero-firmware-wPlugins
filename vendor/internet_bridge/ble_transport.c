@@ -13,11 +13,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#define BLE_RX_SIZE 2048U
-#define BLE_ATT_CHUNK 20U /* Safe even at the minimum negotiated ATT MTU. */
-#define BLE_FLAG_STOP (1UL << 0)
-#define BLE_FLAG_RX (1UL << 1)
-#define BLE_FLAG_STATE (1UL << 2)
+#define BLE_RX_SIZE       2048U
+#define BLE_ATT_CHUNK     20U /* Safe even at the minimum negotiated ATT MTU. */
+#define BLE_FLAG_STOP     (1UL << 0)
+#define BLE_FLAG_RX       (1UL << 1)
+#define BLE_FLAG_STATE    (1UL << 2)
 #define BLE_FLAG_OVERFLOW (1UL << 3)
 
 typedef struct {
@@ -60,8 +60,8 @@ static uint16_t ble_serial_event(SerialServiceEvent event, void* context) {
         transport->ready = true;
         ble_signal(transport, BLE_FLAG_STATE);
     } else if(event.event == SerialServiceEventTypeDataReceived && transport->ready) {
-        const size_t queued = furi_stream_buffer_send(
-            transport->rx, event.data.buffer, event.data.size, 0);
+        const size_t queued =
+            furi_stream_buffer_send(transport->rx, event.data.buffer, event.data.size, 0);
         ble_signal(transport, queued == event.data.size ? BLE_FLAG_RX : BLE_FLAG_OVERFLOW);
     }
     return (uint16_t)furi_stream_buffer_spaces_available(transport->rx);
@@ -102,15 +102,17 @@ static void ble_profile_config(GapConfig* config, FuriHalBleProfileParams params
     memset(config->adv_service.Service_UUID_128, 0, sizeof(config->adv_service.Service_UUID_128));
     /* Preserve AD type, but make the bridge's advertised name unambiguous. */
     const char* name = furi_hal_version_get_name_ptr();
-    snprintf(config->adv_name + 1, sizeof(config->adv_name) - 1,
-        "FZ Bridge %.6s", name ? name : "FIB");
+    snprintf(
+        config->adv_name + 1, sizeof(config->adv_name) - 1, "FZ Bridge %.6s", name ? name : "FIB");
     config->conn_param.conn_int_max = 0x0C; /* Request <=15 ms; central may differ. */
     config->bonding_mode = true;
     config->pairing_method = GapPairingPinCodeShow;
 }
 
 static const FuriHalBleProfileTemplate bridge_ble_template = {
-    .start = ble_profile_start, .stop = ble_profile_stop, .get_gap_config = ble_profile_config};
+    .start = ble_profile_start,
+    .stop = ble_profile_stop,
+    .get_gap_config = ble_profile_config};
 
 static void ble_status_changed(BtStatus status, void* context) {
     BleTransport* transport = context;
@@ -129,7 +131,8 @@ static int32_t ble_worker(void* context) {
     while(true) {
         const uint32_t flags = furi_thread_flags_wait(
             BLE_FLAG_STOP | BLE_FLAG_RX | BLE_FLAG_STATE | BLE_FLAG_OVERFLOW,
-            FuriFlagWaitAny, FuriWaitForever);
+            FuriFlagWaitAny,
+            FuriWaitForever);
         if(flags & FuriFlagError) continue;
         if(flags & BLE_FLAG_STOP) break;
         if(reported_ready != transport->ready) {
@@ -146,7 +149,8 @@ static int32_t ble_worker(void* context) {
         }
         if(flags & BLE_FLAG_RX) {
             size_t length;
-            while((length = furi_stream_buffer_receive(transport->rx, buffer, sizeof(buffer), 0))) {
+            while(
+                (length = furi_stream_buffer_receive(transport->rx, buffer, sizeof(buffer), 0))) {
                 if(transport->ready) transport->receive(buffer, length, transport->context);
             }
             if(transport->service && transport->accepting) {
@@ -158,7 +162,9 @@ static int32_t ble_worker(void* context) {
 }
 
 BleTransport* ble_transport_alloc(
-    UsbTransportReceiveCallback receive, UsbTransportEventCallback event, void* context) {
+    UsbTransportReceiveCallback receive,
+    UsbTransportEventCallback event,
+    void* context) {
     BleTransport* transport = calloc(1, sizeof(*transport));
     if(!transport) return NULL;
     transport->receive = receive;
@@ -177,8 +183,8 @@ BleTransport* ble_transport_alloc(
 
 bool ble_transport_start(BleTransport* transport) {
     if(!transport || transport->started) return false;
-    if(memmgr_get_free_heap() < 16U * 1024U ||
-       memmgr_heap_get_max_free_block() < 4U * 1024U) return false;
+    if(memmgr_get_free_heap() < 16U * 1024U || memmgr_heap_get_max_free_block() < 4U * 1024U)
+        return false;
     transport->bt = furi_record_open(RECORD_BT);
     furi_thread_start(transport->worker);
     transport->worker_started = true;
@@ -203,7 +209,10 @@ void ble_transport_disconnect(BleTransport* transport) {
 }
 
 bool ble_transport_send_until(
-    BleTransport* transport, const uint8_t* data, size_t length, uint32_t deadline) {
+    BleTransport* transport,
+    const uint8_t* data,
+    size_t length,
+    uint32_t deadline) {
     if(!ble_transport_is_connected(transport)) return false;
     const int32_t lock_ticks = (int32_t)(deadline - furi_get_tick());
     if(lock_ticks <= 0 || furi_mutex_acquire(transport->tx_mutex, lock_ticks) != FuriStatusOk) {
@@ -212,7 +221,8 @@ bool ble_transport_send_until(
     bool success = true;
     for(size_t offset = 0; offset < length;) {
         const size_t chunk = MIN(BLE_ATT_CHUNK, length - offset);
-        while(furi_semaphore_acquire(transport->sent, 0) == FuriStatusOk) {}
+        while(furi_semaphore_acquire(transport->sent, 0) == FuriStatusOk) {
+        }
         if(!ble_transport_is_connected(transport) ||
            !ble_svc_serial_update_tx(transport->service, (uint8_t*)data + offset, chunk)) {
             success = false;

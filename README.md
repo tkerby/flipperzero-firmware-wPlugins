@@ -143,7 +143,7 @@ cc -std=c11 -Wall -Wextra yt_parse.c tests/test_yt_parse.c -o /tmp/test_yt_parse
 | `yt_parse.c/.h` | YouTube API response parser and number formatting (portable, tested) |
 | `yt_strings.h` | English and German UI text |
 | `yt_fonts.c/.h` | Inter rasterized to 1-bit u8g2 fonts |
-| `vendor/internet_bridge/` | Unmodified client SDK of the Flipper Internet Bridge |
+| `vendor/internet_bridge/` | Client SDK of the Flipper Internet Bridge (only reformatted) |
 | `docs/` | Catalog description, changelog, guides and images |
 
 ## Credits

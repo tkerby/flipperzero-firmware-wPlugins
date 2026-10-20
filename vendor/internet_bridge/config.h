@@ -17,7 +17,7 @@
 #define FIB_BLE_BETA_MAX_RESPONSE_SIZE (8U * 1024U)
 #define FIB_RADIO_SOURCE_MAX_KBPS      64U
 #define FIB_USB_RADIO_PCM_CAPABILITY   (1UL << 10)
-#define FIB_RADIO_PCM_CONTENT_TYPE    "audio/x-fib-pcm;rate=14493;channels=1;format=s16le"
+#define FIB_RADIO_PCM_CONTENT_TYPE     "audio/x-fib-pcm;rate=14493;channels=1;format=s16le"
 #define FIB_RESPONSE_PREVIEW_SIZE      1536U
 #define FIB_MAX_REDIRECTS              3U
 #define FIB_DEFAULT_REQUEST_TIMEOUT_MS 25000U

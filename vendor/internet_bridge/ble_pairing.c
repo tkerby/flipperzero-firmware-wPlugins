@@ -5,7 +5,8 @@
 
 static bool equal_secret(const uint8_t* a, const uint8_t* b, size_t n) {
     uint8_t different = 0;
-    for(size_t i = 0; i < n; ++i) different |= a[i] ^ b[i];
+    for(size_t i = 0; i < n; ++i)
+        different |= a[i] ^ b[i];
     return different == 0;
 }
 
@@ -14,10 +15,15 @@ void fib_ble_pairing_reset(FibBlePairing* p, uint64_t nonce) {
     p->nonce = nonce;
 }
 
-FibPairResult fib_ble_pairing_open(FibBlePairing* p, const uint8_t* data, size_t size,
-    uint32_t now_ms, FibPairLoad load, void* context) {
-    if(!p || !data || size != 56 || p->opened ||
-       fib_read_u64_le(data) != p->nonce) return FibPairRejected;
+FibPairResult fib_ble_pairing_open(
+    FibBlePairing* p,
+    const uint8_t* data,
+    size_t size,
+    uint32_t now_ms,
+    FibPairLoad load,
+    void* context) {
+    if(!p || !data || size != 56 || p->opened || fib_read_u64_le(data) != p->nonce)
+        return FibPairRejected;
     p->opened = true;
     memcpy(p->host, data + 8, 16);
     uint8_t saved[32] = {0}, empty[32] = {0};
@@ -56,8 +62,13 @@ FibPairResult fib_ble_pairing_approve(FibBlePairing* p, uint32_t random_code, ui
     return FibPairNeedsCode;
 }
 
-FibPairResult fib_ble_pairing_submit(FibBlePairing* p, const uint8_t* data, size_t size,
-    uint32_t now_ms, FibPairSave save, void* context) {
+FibPairResult fib_ble_pairing_submit(
+    FibBlePairing* p,
+    const uint8_t* data,
+    size_t size,
+    uint32_t now_ms,
+    FibPairSave save,
+    void* context) {
     if(!p || !data || size != 62 || !p->pending || p->accepted ||
        fib_read_u64_le(data) != p->nonce || !equal_secret(p->host, data + 8, 16))
         return FibPairRejected;
@@ -86,8 +97,8 @@ FibPairResult fib_ble_pairing_submit(FibBlePairing* p, const uint8_t* data, size
 }
 
 bool fib_ble_pairing_revoke_matches(const FibBlePairing* p, const uint8_t* data, size_t size) {
-    return p && data && size == 24 && p->accepted &&
-        fib_read_u64_le(data) == p->nonce && equal_secret(p->host, data + 8, 16);
+    return p && data && size == 24 && p->accepted && fib_read_u64_le(data) == p->nonce &&
+           equal_secret(p->host, data + 8, 16);
 }
 
 bool fib_pair_host_from_filename(const char* name, uint8_t host[16]) {
@@ -97,8 +108,10 @@ bool fib_pair_host_from_filename(const char* name, uint8_t host[16]) {
         char c = name[i];
         int value = c >= '0' && c <= '9' ? c - '0' : c >= 'a' && c <= 'f' ? c - 'a' + 10 : -1;
         if(value < 0) return false;
-        if(i % 2 == 0) decoded[i / 2] = (uint8_t)(value << 4);
-        else decoded[i / 2] |= (uint8_t)value;
+        if(i % 2 == 0)
+            decoded[i / 2] = (uint8_t)(value << 4);
+        else
+            decoded[i / 2] |= (uint8_t)value;
     }
     memcpy(host, decoded, sizeof(decoded));
     return true;

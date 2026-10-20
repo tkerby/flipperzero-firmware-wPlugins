@@ -109,7 +109,11 @@ bool fib_bridge_client_respond_to_computer(FibBridgeClient*, uint64_t nonce, boo
 /* App thread only; bounded pages of public IDs, never credential tokens.
  * Recognition is shared with Internet Bridge on this Flipper's microSD card. */
 size_t fib_bridge_client_known_computers(
-    FibBridgeClient*, uint8_t (*ids)[16], size_t capacity, size_t offset, bool* more);
+    FibBridgeClient*,
+    uint8_t (*ids)[16],
+    size_t capacity,
+    size_t offset,
+    bool* more);
 bool fib_bridge_client_revoke_computer(FibBridgeClient*, const uint8_t id[16]);
 void fib_bridge_client_tick(FibBridgeClient* client);
 bool fib_bridge_client_ping(FibBridgeClient* client);

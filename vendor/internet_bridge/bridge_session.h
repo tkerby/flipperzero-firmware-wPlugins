@@ -103,8 +103,7 @@ typedef struct {
 } BridgeSessionPairingStatus;
 
 typedef void (*BridgeSessionUpdateCallback)(void* context);
-typedef bool (*BridgeSessionBodyCallback)(
-    void* context, const uint8_t* data, size_t length);
+typedef bool (*BridgeSessionBodyCallback)(void* context, const uint8_t* data, size_t length);
 
 BridgeSession*
     bridge_session_alloc(BridgeSessionUpdateCallback update_callback, void* update_context);
@@ -126,7 +125,9 @@ bool bridge_session_ping(BridgeSession* session);
 bool bridge_session_request_get(BridgeSession* session, const char* url, uint32_t timeout_ms);
 bool bridge_session_request_radio(BridgeSession* session, const char* url, uint32_t timeout_ms);
 void bridge_session_set_body_callback(
-    BridgeSession* session, BridgeSessionBodyCallback callback, void* context);
+    BridgeSession* session,
+    BridgeSessionBodyCallback callback,
+    void* context);
 /* UI thread only. Stop/unblock the consumer first; waits for any in-flight body. */
 void bridge_session_clear_body_callback_and_wait(BridgeSession* session);
 bool bridge_session_cancel(BridgeSession* session);

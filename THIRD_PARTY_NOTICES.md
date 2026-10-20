@@ -2,9 +2,10 @@
 
 ## Flipper Internet Bridge client SDK
 
-`vendor/internet_bridge/` is an unmodified copy of the client SDK of
+`vendor/internet_bridge/` is a copy of the client SDK of
 [Flipper Internet Bridge](https://github.com/mete888/flipper_internet_bridge), exported with its
-`scripts/vendor_bridge_sdk.py`.
+`scripts/vendor_bridge_sdk.py`. The only change is whitespace: the sources were reformatted with the
+Flipper Zero `.clang-format` so the project passes the catalog's lint check.
 
 - Copyright (c) 2026 mete888
 - MIT License – see [`licenses/flipper-internet-bridge-MIT.txt`](licenses/flipper-internet-bridge-MIT.txt)

@@ -27,7 +27,8 @@ typedef struct {
 static void fit(Canvas* canvas, int x, int y, const char* text) {
     char line[129];
     snprintf(line, sizeof(line), "%s", text);
-    while(line[0] && canvas_string_width(canvas, line) > 120U) line[strlen(line) - 1U] = '\0';
+    while(line[0] && canvas_string_width(canvas, line) > 120U)
+        line[strlen(line) - 1U] = '\0';
     canvas_draw_str(canvas, x, y, line);
 }
 
@@ -36,18 +37,25 @@ static void details(Canvas* canvas, const char* text) {
         char line[96];
         size_t used = 0U, space = 0U;
         while(text[used] && text[used] != '\n' && used < sizeof(line) - 1U) {
-            line[used] = text[used]; line[used + 1U] = '\0';
+            line[used] = text[used];
+            line[used + 1U] = '\0';
             if(canvas_string_width(canvas, line) > 120U) break;
             if(text[used] == ' ') space = used;
             ++used;
         }
-        if(!used && *text != '\n') used = 1U;
-        else if(text[used] && text[used] != '\n' && space) used = space;
-        memcpy(line, text, used); line[used] = '\0';
+        if(!used && *text != '\n')
+            used = 1U;
+        else if(text[used] && text[used] != '\n' && space)
+            used = space;
+        memcpy(line, text, used);
+        line[used] = '\0';
         canvas_draw_str(canvas, 3, 37 + (int)(row * 11U), line);
         text += used;
-        if(*text == '\n') ++text;
-        else while(*text == ' ') ++text;
+        if(*text == '\n')
+            ++text;
+        else
+            while(*text == ' ')
+                ++text;
     }
 }
 
@@ -78,7 +86,11 @@ static void draw(Canvas* canvas, void* context) {
         fit(canvas, 3, 44, "Enter code on computer");
         fit(canvas, 3, 62, "BACK: cancel pairing");
     } else {
-        fit(canvas, 3, 25, setup->selection == FibBridgeTransportBluetooth ? "Bluetooth connection" : "USB connection");
+        fit(canvas,
+            3,
+            25,
+            setup->selection == FibBridgeTransportBluetooth ? "Bluetooth connection" :
+                                                              "USB connection");
         details(canvas, setup->status.detail);
         fit(canvas, 3, 62, "OK: retry   BACK: cancel");
     }
@@ -130,15 +142,22 @@ bool fib_bridge_client_connect_ui(FibBridgeClient* client) {
         bool choosing = setup->choosing;
         FibBridgeTransport selection = setup->selection;
         furi_mutex_release(setup->mutex);
-        if(!choosing && fib_bridge_client_is_ready(client)) { ready = true; break; }
+        if(!choosing && fib_bridge_client_is_ready(client)) {
+            ready = true;
+            break;
+        }
         view_port_update(viewport);
         SetupEvent event;
-        if(furi_message_queue_get(setup->events, &event, furi_ms_to_ticks(100U)) != FuriStatusOk) continue;
-        if(event.input.key == InputKeyBack) running = false;
+        if(furi_message_queue_get(setup->events, &event, furi_ms_to_ticks(100U)) != FuriStatusOk)
+            continue;
+        if(event.input.key == InputKeyBack)
+            running = false;
         else if(choosing) {
             if(event.input.key == InputKeyUp || event.input.key == InputKeyDown) {
                 furi_mutex_acquire(setup->mutex, FuriWaitForever);
-                setup->selection = selection == FibBridgeTransportUSB ? FibBridgeTransportBluetooth : FibBridgeTransportUSB;
+                setup->selection = selection == FibBridgeTransportUSB ?
+                                       FibBridgeTransportBluetooth :
+                                       FibBridgeTransportUSB;
                 furi_mutex_release(setup->mutex);
             } else if(event.input.key == InputKeyOk) {
                 furi_mutex_acquire(setup->mutex, FuriWaitForever);
@@ -149,7 +168,8 @@ bool fib_bridge_client_connect_ui(FibBridgeClient* client) {
             }
         } else if(event.shown_nonce) {
             if(event.input.key == InputKeyRight || event.input.key == InputKeyLeft)
-                fib_bridge_client_respond_to_computer(client, event.shown_nonce, event.input.key == InputKeyRight);
+                fib_bridge_client_respond_to_computer(
+                    client, event.shown_nonce, event.input.key == InputKeyRight);
         } else if(event.input.key == InputKeyOk && !pairing.request_pending && !pairing.code_pending) {
             fib_bridge_client_disconnect(client);
             fib_bridge_client_connect(client, selection);

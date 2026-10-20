@@ -14,4 +14,7 @@ void ble_transport_free(BleTransport* transport);
 bool ble_transport_is_connected(BleTransport* transport);
 void ble_transport_disconnect(BleTransport* transport);
 bool ble_transport_send_until(
-    BleTransport* transport, const uint8_t* data, size_t length, uint32_t deadline);
+    BleTransport* transport,
+    const uint8_t* data,
+    size_t length,
+    uint32_t deadline);

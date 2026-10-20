@@ -20,9 +20,10 @@
 #define FIB_CAPABILITY_REQUEST_HEADERS  (1UL << 2)
 #define FIB_CAPABILITY_RESPONSE_HEADERS (1UL << 3)
 #define FIB_CAPABILITY_CANCELLATION     (1UL << 4)
-#define FIB_CLIENT_CAPABILITIES \
-    (FIB_CAPABILITY_HTTPS_GET | FIB_CAPABILITY_REQUEST_HEADERS | \
-     FIB_CAPABILITY_RESPONSE_HEADERS | FIB_CAPABILITY_CANCELLATION | FIB_USB_RADIO_PCM_CAPABILITY)
+#define FIB_CLIENT_CAPABILITIES                                      \
+    (FIB_CAPABILITY_HTTPS_GET | FIB_CAPABILITY_REQUEST_HEADERS |     \
+     FIB_CAPABILITY_RESPONSE_HEADERS | FIB_CAPABILITY_CANCELLATION | \
+     FIB_USB_RADIO_PCM_CAPABILITY)
 #define FIB_UNKNOWN_BODY_LENGTH UINT32_MAX
 #define FIB_FRAME_TX_TIMEOUT_MS 1000U
 #define FIB_ERROR_RATE_LIMIT_MS 250U
@@ -187,7 +188,8 @@ static bool bridge_session_send_frame(
     if(payload_length > FIB_MAX_FRAME_PAYLOAD || (!payload && payload_length != 0U)) {
         return false;
     }
-    const uint32_t deadline = furi_get_tick() +
+    const uint32_t deadline =
+        furi_get_tick() +
         furi_ms_to_ticks(session->bluetooth_alpha ? 3000U : FIB_FRAME_TX_TIMEOUT_MS);
     const uint32_t frame_wait = bridge_ticks_until(deadline);
     if(frame_wait == 0U ||
@@ -210,12 +212,13 @@ static bool bridge_session_send_frame(
     size_t encoded_length = 0U;
     const bool encoded = fib_frame_encode(
         &session->tx_frame, session->tx_encoded, sizeof(session->tx_encoded), &encoded_length);
-    const bool sent = encoded &&
-                      (session->bluetooth_alpha ?
-                           ble_transport_send_until(session->ble_transport, session->tx_encoded,
-                                                    encoded_length, deadline) :
-                           usb_transport_send_until(session->transport, session->tx_encoded,
-                                                    encoded_length, deadline));
+    const bool sent =
+        encoded &&
+        (session->bluetooth_alpha ?
+             ble_transport_send_until(
+                 session->ble_transport, session->tx_encoded, encoded_length, deadline) :
+             usb_transport_send_until(
+                 session->transport, session->tx_encoded, encoded_length, deadline));
     furi_mutex_release(session->tx_frame_mutex);
     if(sent) bridge_session_note_activity(session);
     return sent;
@@ -315,13 +318,17 @@ static bool bridge_session_send_hello(BridgeSession* session) {
     payload[used++] = FIB_PROTOCOL_MINOR;
     payload[used++] = FIB_PROTOCOL_MAJOR;
     payload[used++] = FIB_PROTOCOL_MINOR;
-    fib_write_u32_le(payload + used, (FIB_CLIENT_CAPABILITIES &
-        (session->bluetooth_alpha ? ~FIB_USB_RADIO_PCM_CAPABILITY : UINT32_MAX)) |
-        (session->bluetooth_alpha ? FIB_BLE_PAIR_CAPABILITY | FIB_BLE_SELECTION_CAPABILITY : 0U));
+    fib_write_u32_le(
+        payload + used,
+        (FIB_CLIENT_CAPABILITIES &
+         (session->bluetooth_alpha ? ~FIB_USB_RADIO_PCM_CAPABILITY : UINT32_MAX)) |
+            (session->bluetooth_alpha ? FIB_BLE_PAIR_CAPABILITY | FIB_BLE_SELECTION_CAPABILITY :
+                                        0U));
     used += 4U;
     fib_write_u16_le(payload + used, FIB_MAX_FRAME_PAYLOAD);
     used += 2U;
-    fib_write_u32_le(payload + used,
+    fib_write_u32_le(
+        payload + used,
         session->bluetooth_alpha ? FIB_BLE_BETA_MAX_RESPONSE_SIZE : FIB_MAX_RADIO_RESPONSE_SIZE);
     used += 4U;
     fib_write_u64_le(payload + used, nonce);
@@ -453,7 +460,8 @@ static void bridge_session_handle_hello_ack(BridgeSession* session, const FibFra
     session->negotiated_capabilities = capabilities & FIB_CLIENT_CAPABILITIES;
     session->negotiated_payload = maximum_payload;
     const uint32_t response_limit = (capabilities & FIB_USB_RADIO_PCM_CAPABILITY) ?
-        FIB_MAX_RADIO_RESPONSE_SIZE : FIB_MAX_RESPONSE_SIZE;
+                                        FIB_MAX_RADIO_RESPONSE_SIZE :
+                                        FIB_MAX_RESPONSE_SIZE;
     session->negotiated_response_bytes = MIN(maximum_response, response_limit);
     session->server_nonce = server_nonce;
     session->expected_control_sequence = 1U;
@@ -630,10 +638,12 @@ static void bridge_session_handle_response_start(BridgeSession* session, const F
         error = FibErrorDuplicateSequence;
     }
     uint32_t response_limit = session->negotiated_response_bytes != 0U ?
-                                        session->negotiated_response_bytes :
-                                        FIB_MAX_RESPONSE_SIZE;
-    if(!session->radio_request) response_limit = MIN(response_limit,
-        session->bluetooth_alpha ? FIB_BLE_BETA_MAX_RESPONSE_SIZE : FIB_MAX_RESPONSE_SIZE);
+                                  session->negotiated_response_bytes :
+                                  FIB_MAX_RESPONSE_SIZE;
+    if(!session->radio_request)
+        response_limit =
+            MIN(response_limit,
+                session->bluetooth_alpha ? FIB_BLE_BETA_MAX_RESPONSE_SIZE : FIB_MAX_RESPONSE_SIZE);
     if(error == 0U && declared != FIB_UNKNOWN_BODY_LENGTH && declared > response_limit) {
         error = FibErrorResponseTooLarge;
     }
@@ -772,7 +782,8 @@ static void bridge_session_handle_response_header(BridgeSession* session, const 
         if(session->radio_request && frame->payload[0] == 12U &&
            memcmp(frame->payload + 3U, "content-type", 12U) == 0) {
             const size_t length = fib_read_u16_le(frame->payload + 1U);
-            session->radio_pcm_confirmed = length == sizeof(FIB_RADIO_PCM_CONTENT_TYPE) - 1U &&
+            session->radio_pcm_confirmed =
+                length == sizeof(FIB_RADIO_PCM_CONTENT_TYPE) - 1U &&
                 memcmp(frame->payload + 15U, FIB_RADIO_PCM_CONTENT_TYPE, length) == 0;
         }
     }
@@ -813,10 +824,12 @@ static void bridge_session_handle_response_body(BridgeSession* session, const Fi
     belongs_to_active_request = session->active_request &&
                                 frame->request_id == session->active_request_id;
     uint32_t response_limit = session->negotiated_response_bytes != 0U ?
-                                        session->negotiated_response_bytes :
-                                        FIB_MAX_RESPONSE_SIZE;
-    if(!session->radio_request) response_limit = MIN(response_limit,
-        session->bluetooth_alpha ? FIB_BLE_BETA_MAX_RESPONSE_SIZE : FIB_MAX_RESPONSE_SIZE);
+                                  session->negotiated_response_bytes :
+                                  FIB_MAX_RESPONSE_SIZE;
+    if(!session->radio_request)
+        response_limit =
+            MIN(response_limit,
+                session->bluetooth_alpha ? FIB_BLE_BETA_MAX_RESPONSE_SIZE : FIB_MAX_RESPONSE_SIZE);
     error = bridge_session_check_response_sequence_locked(session, frame);
     if(error == 0U && session->radio_request &&
        (!session->radio_pcm_confirmed || session->http_status != 200U)) {
@@ -1128,27 +1141,38 @@ static void bridge_session_on_frame(const FibFrame* frame, void* context) {
             frame->type,
             frame->request_id,
             "unsupported frame version");
-        bridge_session_set_state(session, BridgeSessionStateError, "Incompatible protocol version");
+        bridge_session_set_state(
+            session, BridgeSessionStateError, "Incompatible protocol version");
         return;
     }
 
-    if(session->bluetooth_alpha && session->pairing &&
-       (uint8_t)frame->type >= FIB_PAIR_OPEN && (uint8_t)frame->type <= FIB_PAIR_REVOKE) {
+    if(session->bluetooth_alpha && session->pairing && (uint8_t)frame->type >= FIB_PAIR_OPEN &&
+       (uint8_t)frame->type <= FIB_PAIR_REVOKE) {
         if(frame->request_id != 0 || frame->sequence != 0 || frame->flags != 0) return;
         FibPairResult result = FibPairRejected;
         uint8_t reply[9];
         furi_mutex_acquire(session->state_mutex, FuriWaitForever);
         const uint64_t nonce = session->pairing->nonce;
         if((uint8_t)frame->type == FIB_PAIR_OPEN) {
-            result = fib_ble_pairing_open(session->pairing, frame->payload,
+            result = fib_ble_pairing_open(
+                session->pairing,
+                frame->payload,
                 frame->payload_length,
-                furi_get_tick() / furi_ms_to_ticks(1), fib_pair_storage_load, NULL);
+                furi_get_tick() / furi_ms_to_ticks(1),
+                fib_pair_storage_load,
+                NULL);
         } else if((uint8_t)frame->type == FIB_PAIR_CODE) {
-            result = fib_ble_pairing_submit(session->pairing, frame->payload,
-                frame->payload_length, furi_get_tick() / furi_ms_to_ticks(1),
-                fib_pair_storage_save, NULL);
-        } else if((uint8_t)frame->type == FIB_PAIR_REVOKE &&
-                  fib_ble_pairing_revoke_matches(session->pairing, frame->payload, frame->payload_length)) {
+            result = fib_ble_pairing_submit(
+                session->pairing,
+                frame->payload,
+                frame->payload_length,
+                furi_get_tick() / furi_ms_to_ticks(1),
+                fib_pair_storage_save,
+                NULL);
+        } else if(
+            (uint8_t)frame->type == FIB_PAIR_REVOKE &&
+            fib_ble_pairing_revoke_matches(
+                session->pairing, frame->payload, frame->payload_length)) {
             fib_pair_storage_remove(session->pairing->host);
             fib_ble_pairing_reset(session->pairing, nonce);
             session->permission = BridgePermissionUnknown;
@@ -1168,11 +1192,18 @@ static void bridge_session_on_frame(const FibFrame* frame, void* context) {
             bridge_session_set_detail_locked(session, "Bluetooth pairing cancelled or failed");
         }
         furi_mutex_release(session->state_mutex);
-        fib_write_u64_le(reply, nonce); reply[8] = result;
-        bridge_session_send_frame(session,
-            (FibMessageType)(result == FibPairWaiting ? FIB_PAIR_WAITING :
-                result == FibPairNeedsCode ? FIB_PAIR_NEEDED : FIB_PAIR_RESULT),
-            0, 0, 0, reply, sizeof(reply));
+        fib_write_u64_le(reply, nonce);
+        reply[8] = result;
+        bridge_session_send_frame(
+            session,
+            (FibMessageType)(result == FibPairWaiting   ? FIB_PAIR_WAITING :
+                             result == FibPairNeedsCode ? FIB_PAIR_NEEDED :
+                                                          FIB_PAIR_RESULT),
+            0,
+            0,
+            0,
+            reply,
+            sizeof(reply));
         bridge_session_notify(session);
         if(result == FibPairRejected) ble_transport_disconnect(session->ble_transport);
         return;
@@ -1189,12 +1220,10 @@ static void bridge_session_on_frame(const FibFrame* frame, void* context) {
     furi_mutex_acquire(session->state_mutex, FuriWaitForever);
     handshaken = session->selected_major != 0U;
     negotiated_payload = session->negotiated_payload;
-    cancelled_response = frame->request_id != 0U &&
-                         frame->request_id == session->last_cancelled_request_id &&
-                         (frame->type == FibMessageResponseStart ||
-                          frame->type == FibMessageResponseHeader ||
-                          frame->type == FibMessageResponseBodyChunk ||
-                          frame->type == FibMessageResponseEnd);
+    cancelled_response =
+        frame->request_id != 0U && frame->request_id == session->last_cancelled_request_id &&
+        (frame->type == FibMessageResponseStart || frame->type == FibMessageResponseHeader ||
+         frame->type == FibMessageResponseBodyChunk || frame->type == FibMessageResponseEnd);
     furi_mutex_release(session->state_mutex);
     if(!bridge_session_is_registered_message_type(frame->type)) {
         bridge_session_send_error(
@@ -1344,7 +1373,8 @@ static void bridge_session_begin_handshake(BridgeSession* session) {
     session->negotiated_payload = 0U;
     session->negotiated_response_bytes = 0U;
     session->client_nonce = nonce;
-    if(session->bluetooth_alpha && session->pairing) fib_ble_pairing_reset(session->pairing, nonce);
+    if(session->bluetooth_alpha && session->pairing)
+        fib_ble_pairing_reset(session->pairing, nonce);
     session->server_nonce = 0U;
     session->next_control_sequence = 1U;
     session->expected_control_sequence = 1U;
@@ -1400,7 +1430,9 @@ static void bridge_session_on_transport_event(UsbTransportEvent event, void* con
         bridge_session_notify(session);
         break;
     case UsbTransportEventUsbDisconnected:
-        bridge_session_transport_lost(session, false,
+        bridge_session_transport_lost(
+            session,
+            false,
             session->bluetooth_alpha ? "Bluetooth disconnected" : "USB disconnected");
         break;
     case UsbTransportEventPortOpened:
@@ -1408,12 +1440,10 @@ static void bridge_session_on_transport_event(UsbTransportEvent event, void* con
         break;
     case UsbTransportEventPortClosed: {
         const bool connected = session->bluetooth_alpha ?
-            ble_transport_is_connected(session->ble_transport) :
-            usb_transport_is_usb_connected(session->transport);
+                                   ble_transport_is_connected(session->ble_transport) :
+                                   usb_transport_is_usb_connected(session->transport);
         bridge_session_transport_lost(
-            session,
-            connected,
-            connected ? "Desktop host not found" : "USB disconnected");
+            session, connected, connected ? "Desktop host not found" : "USB disconnected");
     } break;
     case UsbTransportEventRxOverflow:
         bridge_session_reset_parser(session);
@@ -1518,14 +1548,20 @@ bool bridge_session_select_transport(BridgeSession* session, BridgeTransportMode
     const bool enabled = mode == BridgeTransportBluetooth;
     bridge_session_cancel(session);
     const bool channel_open = session->bluetooth_alpha ?
-        ble_transport_is_connected(session->ble_transport) :
-        usb_transport_is_port_open(session->transport);
+                                  ble_transport_is_connected(session->ble_transport) :
+                                  usb_transport_is_port_open(session->transport);
     if(channel_open) {
         /* A previously-dual USB configuration can retain its OS port while
          * callbacks are detached. Explicitly end consent on the old host. */
         const uint8_t reason = 0;
-        bridge_session_send_frame(session, FibMessageDisconnect, FibFlagFinal, 0,
-            bridge_session_take_control_sequence(session), &reason, 1);
+        bridge_session_send_frame(
+            session,
+            FibMessageDisconnect,
+            FibFlagFinal,
+            0,
+            bridge_session_take_control_sequence(session),
+            &reason,
+            1);
     }
     /* Drain callback owners before resetting parser, nonces, or permission. */
     if(session->bluetooth_alpha) {
@@ -1540,9 +1576,12 @@ bool bridge_session_select_transport(BridgeSession* session, BridgeTransportMode
     session->bluetooth_alpha = enabled;
     session->active_transport = mode;
     furi_mutex_release(session->state_mutex);
-    bridge_session_transport_lost(session, false,
-        enabled ? "Enable Bluetooth on computer" :
-        mode == BridgeTransportUSB ? "Waiting for USB connection" : "Select a connection");
+    bridge_session_transport_lost(
+        session,
+        false,
+        enabled                    ? "Enable Bluetooth on computer" :
+        mode == BridgeTransportUSB ? "Waiting for USB connection" :
+                                     "Select a connection");
     if(mode == BridgeTransportNone) return true;
     if(!enabled) {
         if(bridge_session_start_usb(session)) return true;
@@ -1552,7 +1591,8 @@ bool bridge_session_select_transport(BridgeSession* session, BridgeTransportMode
     session->pairing = calloc(1, sizeof(*session->pairing));
     session->ble_transport = ble_transport_alloc(
         bridge_session_on_transport_receive, bridge_session_on_transport_event, session);
-    if(session->pairing && session->ble_transport && ble_transport_start(session->ble_transport)) return true;
+    if(session->pairing && session->ble_transport && ble_transport_start(session->ble_transport))
+        return true;
     ble_transport_free(session->ble_transport);
     session->ble_transport = NULL;
     free(session->pairing);
@@ -1561,8 +1601,8 @@ bool bridge_session_select_transport(BridgeSession* session, BridgeTransportMode
     session->bluetooth_alpha = false;
     session->active_transport = BridgeTransportNone;
     furi_mutex_release(session->state_mutex);
-    bridge_session_set_state(session, BridgeSessionStateError,
-        "Bluetooth unavailable; select USB");
+    bridge_session_set_state(
+        session, BridgeSessionStateError, "Bluetooth unavailable; select USB");
     return false;
 }
 
@@ -1572,8 +1612,8 @@ bool bridge_session_start(BridgeSession* session) {
 
 /* Backward-compatible public SDK entry point. Product UI uses explicit modes. */
 bool bridge_session_set_bluetooth_alpha(BridgeSession* session, bool enabled) {
-    return bridge_session_select_transport(session,
-        enabled ? BridgeTransportBluetooth : BridgeTransportUSB);
+    return bridge_session_select_transport(
+        session, enabled ? BridgeTransportBluetooth : BridgeTransportUSB);
 }
 
 bool bridge_session_ping(BridgeSession* session) {
@@ -1594,7 +1634,8 @@ bool bridge_session_ping(BridgeSession* session) {
         bridge_session_set_detail_locked(session, "Testing connection");
     } else {
         if(!session->usb_connected) {
-            bridge_session_set_detail_locked(session,
+            bridge_session_set_detail_locked(
+                session,
                 session->bluetooth_alpha ? "Waiting for Bluetooth host" : "No USB connection");
         } else if(!session->helper_present) {
             bridge_session_set_detail_locked(session, "Desktop host not found");
@@ -1675,8 +1716,7 @@ static bool bridge_session_request_get_internal(
     }
     const bool payload_fits = 12U + url_length <= session->negotiated_payload;
     const bool headers_supported =
-        !radio_mode ||
-        (session->negotiated_capabilities & FIB_CAPABILITY_REQUEST_HEADERS) != 0U;
+        !radio_mode || (session->negotiated_capabilities & FIB_CAPABILITY_REQUEST_HEADERS) != 0U;
     const bool request_id_available = session->next_request_id != 0U;
     const bool ready = bridge_session_permission_is_allowed(session->permission) &&
                        session->helper_present && session->selected_major != 0U && payload_fits &&
@@ -1718,10 +1758,10 @@ static bool bridge_session_request_get_internal(
         } else if(!payload_fits) {
             bridge_session_set_detail_locked(session, "URL exceeds the packet size limit");
         } else if(!headers_supported) {
-            bridge_session_set_detail_locked(session, "Desktop host is too old for radio streaming");
-        } else if(!request_id_available) {
             bridge_session_set_detail_locked(
-                session, "Request IDs exhausted; restart the app");
+                session, "Desktop host is too old for radio streaming");
+        } else if(!request_id_available) {
+            bridge_session_set_detail_locked(session, "Request IDs exhausted; restart the app");
         } else {
             bridge_session_set_detail_locked(session, "Another request is active");
         }
@@ -1815,7 +1855,9 @@ bool bridge_session_cancel(BridgeSession* session) {
 }
 
 void bridge_session_set_body_callback(
-    BridgeSession* session, BridgeSessionBodyCallback callback, void* context) {
+    BridgeSession* session,
+    BridgeSessionBodyCallback callback,
+    void* context) {
     if(!session) return;
     furi_mutex_acquire(session->state_mutex, FuriWaitForever);
     session->body_callback = callback;
@@ -1845,13 +1887,14 @@ void bridge_session_tick(BridgeSession* session) {
 
     furi_mutex_acquire(session->state_mutex, FuriWaitForever);
     if(session->pairing && (session->pairing->pending || session->pairing->approval_pending) &&
-       (uint32_t)(now / furi_ms_to_ticks(1) - session->pairing->issued_ms) >= FIB_PAIR_TIMEOUT_MS) {
+       (uint32_t)(now / furi_ms_to_ticks(1) - session->pairing->issued_ms) >=
+           FIB_PAIR_TIMEOUT_MS) {
         fib_ble_pairing_reject(session->pairing);
         bridge_session_set_detail_locked(session, "Bluetooth connection request expired");
         pairing_timeout = true;
     }
-    if(session->helper_present && (!session->bluetooth_alpha ||
-       (session->pairing && session->pairing->accepted)) &&
+    if(session->helper_present &&
+       (!session->bluetooth_alpha || (session->pairing && session->pairing->accepted)) &&
        (session->state == BridgeSessionStateWaitingForHelloAck ||
         session->state == BridgeSessionStateHelperNotFound) &&
        bridge_ticks_elapsed(now, session->hello_sent_tick, FIB_HANDSHAKE_TIMEOUT_MS)) {
@@ -1867,9 +1910,10 @@ void bridge_session_tick(BridgeSession* session) {
         session->state = BridgeSessionStateTimedOut;
         bridge_session_set_detail_locked(session, "Request timed out");
     }
-    if(session->ping_pending &&
-       bridge_ticks_elapsed(now, session->ping_started_tick,
-           session->bluetooth_alpha ? 5000U : FIB_PONG_TIMEOUT_MS)) {
+    if(session->ping_pending && bridge_ticks_elapsed(
+                                    now,
+                                    session->ping_started_tick,
+                                    session->bluetooth_alpha ? 5000U : FIB_PONG_TIMEOUT_MS)) {
         session->ping_pending = false;
         session->state = BridgeSessionStateTimedOut;
         bridge_session_set_detail_locked(session, "Connection test timed out");
@@ -1940,33 +1984,45 @@ bool bridge_session_has_active_request(BridgeSession* session) {
 bool bridge_session_respond_bluetooth_request(BridgeSession* session, uint64_t nonce, bool allow) {
     if(!session) return false;
     furi_mutex_acquire(session->state_mutex, FuriWaitForever);
-    if(!session->bluetooth_alpha || !session->pairing ||
-       !session->pairing->approval_pending || session->pairing->nonce != nonce) {
+    if(!session->bluetooth_alpha || !session->pairing || !session->pairing->approval_pending ||
+       session->pairing->nonce != nonce) {
         furi_mutex_release(session->state_mutex);
         return false;
     }
     uint32_t random = 0;
     if(allow && !session->pairing->known_host) {
         /* Generate a code only after physical approval, without modulo bias. */
-        do { random = furi_hal_random_get(); } while(random >= 4294000000UL);
+        do {
+            random = furi_hal_random_get();
+        } while(random >= 4294000000UL);
         random %= 1000000U;
     }
-    FibPairResult result = allow ? fib_ble_pairing_approve(session->pairing, random,
-        furi_get_tick() / furi_ms_to_ticks(1)) : FibPairRejected;
+    FibPairResult result =
+        allow ? fib_ble_pairing_approve(
+                    session->pairing, random, furi_get_tick() / furi_ms_to_ticks(1)) :
+                FibPairRejected;
     if(result == FibPairRejected) fib_ble_pairing_reject(session->pairing);
     if(result == FibPairAccepted) {
         session->hello_sent_tick = furi_get_tick();
         session->state = BridgeSessionStateWaitingForHelloAck;
     }
-    bridge_session_set_detail_locked(session, result == FibPairAccepted ?
-        "Connected; waiting for internet permission" : result == FibPairNeedsCode ?
-        "Enter pairing code on your Mac" : "Bluetooth connection rejected");
+    bridge_session_set_detail_locked(
+        session,
+        result == FibPairAccepted  ? "Connected; waiting for internet permission" :
+        result == FibPairNeedsCode ? "Enter pairing code on your Mac" :
+                                     "Bluetooth connection rejected");
     furi_mutex_release(session->state_mutex);
     uint8_t reply[9];
-    fib_write_u64_le(reply, nonce); reply[8] = result;
-    const bool sent = bridge_session_send_frame(session,
+    fib_write_u64_le(reply, nonce);
+    reply[8] = result;
+    const bool sent = bridge_session_send_frame(
+        session,
         (FibMessageType)(result == FibPairNeedsCode ? FIB_PAIR_NEEDED : FIB_PAIR_RESULT),
-        0, 0, 0, reply, sizeof(reply));
+        0,
+        0,
+        0,
+        reply,
+        sizeof(reply));
     bridge_session_notify(session);
     if(result == FibPairRejected || !sent) ble_transport_disconnect(session->ble_transport);
     return sent && result != FibPairRejected;
@@ -1976,7 +2032,7 @@ bool bridge_session_revoke_bluetooth_host(BridgeSession* session, const uint8_t 
     if(!session || !host || !fib_pair_storage_remove(host)) return false;
     furi_mutex_acquire(session->state_mutex, FuriWaitForever);
     const bool current = session->bluetooth_alpha && session->pairing &&
-        memcmp(session->pairing->host, host, 16) == 0;
+                         memcmp(session->pairing->host, host, 16) == 0;
     const uint64_t nonce = current ? session->pairing->nonce : 0;
     if(current) {
         /* Deny first: no subsequent permission/ACK/network frame may reopen it. */
@@ -1989,9 +2045,11 @@ bool bridge_session_revoke_bluetooth_host(BridgeSession* session, const uint8_t 
     }
     furi_mutex_release(session->state_mutex);
     if(current) {
-        uint8_t notice[24]; fib_write_u64_le(notice, nonce); memcpy(notice + 8, host, 16);
-        bridge_session_send_frame(session, (FibMessageType)FIB_PAIR_FORGOTTEN, 0, 0, 0,
-            notice, sizeof(notice));
+        uint8_t notice[24];
+        fib_write_u64_le(notice, nonce);
+        memcpy(notice + 8, host, 16);
+        bridge_session_send_frame(
+            session, (FibMessageType)FIB_PAIR_FORGOTTEN, 0, 0, 0, notice, sizeof(notice));
         ble_transport_disconnect(session->ble_transport);
     }
     bridge_session_notify(session);
@@ -2006,14 +2064,19 @@ void bridge_session_get_snapshot(BridgeSession* session, BridgeSessionSnapshot* 
     snapshot->permission = session->permission;
     snapshot->usb_connected = session->usb_connected;
     snapshot->bluetooth_alpha = session->bluetooth_alpha;
-    snapshot->radio_pcm_supported = !session->bluetooth_alpha &&
+    snapshot->radio_pcm_supported =
+        !session->bluetooth_alpha &&
         (session->negotiated_capabilities & FIB_USB_RADIO_PCM_CAPABILITY) != 0U;
     if(session->pairing && session->pairing->approval_pending) {
         snapshot->pairing_request_pending = true;
         snapshot->pairing_known_host = session->pairing->known_host;
         snapshot->pairing_request_nonce = session->pairing->nonce;
-        snprintf(snapshot->pairing_host_label, sizeof(snapshot->pairing_host_label),
-            "Bridge PC - %02X%02X", session->pairing->host[0], session->pairing->host[1]);
+        snprintf(
+            snapshot->pairing_host_label,
+            sizeof(snapshot->pairing_host_label),
+            "Bridge PC - %02X%02X",
+            session->pairing->host[0],
+            session->pairing->host[1]);
     }
     if(session->pairing && session->pairing->pending) {
         snapshot->pairing_pending = true;
@@ -2047,10 +2110,15 @@ void bridge_session_get_pairing_status(BridgeSession* session, BridgeSessionPair
         if(status->request_pending || status->code_pending) {
             status->request_nonce = session->pairing->nonce;
             memcpy(status->host_id, session->pairing->host, sizeof(status->host_id));
-            snprintf(status->host_label, sizeof(status->host_label),
-                "Bridge PC - %02X%02X", status->host_id[0], status->host_id[1]);
+            snprintf(
+                status->host_label,
+                sizeof(status->host_label),
+                "Bridge PC - %02X%02X",
+                status->host_id[0],
+                status->host_id[1]);
         }
-        if(status->code_pending) memcpy(status->code, session->pairing->code, sizeof(status->code));
+        if(status->code_pending)
+            memcpy(status->code, session->pairing->code, sizeof(status->code));
     }
     furi_mutex_release(session->state_mutex);
 }
@@ -2087,8 +2155,9 @@ void bridge_session_free(BridgeSession* session) {
         furi_mutex_release(session->state_mutex);
     }
 
-    if(session->bluetooth_alpha ? ble_transport_is_connected(session->ble_transport) :
-       (session->transport && usb_transport_is_port_open(session->transport))) {
+    if(session->bluetooth_alpha ?
+           ble_transport_is_connected(session->ble_transport) :
+           (session->transport && usb_transport_is_port_open(session->transport))) {
         const uint8_t reason = 0U;
         bridge_session_send_frame(
             session,
