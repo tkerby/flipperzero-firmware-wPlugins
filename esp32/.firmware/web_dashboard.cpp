@@ -220,7 +220,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 .row+.row{border-top:1px solid rgba(255,255,255,.04)}
 .lbl{color:var(--text2);font-size:.85em}
 .hint{display:block;color:var(--text2);opacity:.62;font-size:.82em;line-height:1.35;margin-top:2px;max-width:20em}
-details select{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:4px 6px;border-radius:4px;font-size:.85em;flex:none}
+details select,select.sel{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:4px 6px;border-radius:4px;font-size:.85em;flex:none}
 details input{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:4px;border-radius:4px;text-align:right;width:60px}
 details input.cgn{width:38px;margin-left:4px}
 
@@ -471,23 +471,38 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
   </div>
 </div>
 
-<!-- Tyre pressure (read-only, 0x219); shown once the frame reaches this tap -->
+<!-- Tyre pressure (read-only, 0x219); shown once the frame reaches this tap.
+     The switch folds it, per browser like Performance (#237). -->
 <div class="card" id="tpmsCard" style="display:none">
   <div class="card-head"><div class="icon ic-b">T</div><h2>Tyre Pressure</h2>
     <span class="pill off" id="tpmsSt" style="margin-left:auto"><span class="pd"></span>--</span>
+    <label class="sw"><input type="checkbox" id="swTpms" onchange="tpToggle(this.checked)"><span class="sl2"></span></label>
   </div>
-  <div class="tg" id="tpGrid"></div>
-  <div class="row" id="rowTpAge" style="display:none">
-    <span class="lbl">Since last reading</span>
-    <span id="tpAge" style="font-variant-numeric:tabular-nums">--</span>
+  <div id="tpOff" class="log-info" style="display:none;margin-bottom:0">
+    Read-only read-out of the tyre pressures the car sends on 0x219 &mdash; it transmits
+    nothing. Turn on to show them.
   </div>
-  <div class="row" id="rowTpTgt" style="display:none">
-    <span class="lbl">Car's target</span>
-    <span id="tpTgt" style="font-size:.8em;color:var(--text2)">--</span>
+  <div id="tpBody">
+    <div class="tg" id="tpGrid"></div>
+    <div class="row" id="rowTpAge" style="display:none">
+      <span class="lbl">Since last reading</span>
+      <span id="tpAge" style="font-variant-numeric:tabular-nums">--</span>
+    </div>
+    <div class="row" id="rowTpTgt" style="display:none">
+      <span class="lbl">Car's target</span>
+      <span id="tpTgt" style="font-size:.8em;color:var(--text2)">--</span>
+    </div>
+    <div class="row">
+      <span class="lbl">Unit</span>
+      <select id="selTpUnit" class="sel" onchange="tpSetUnit(this.value)">
+        <option value="bar">bar</option>
+        <option value="psi">psi</option>
+      </select>
+    </div>
+    <div class="log-info" id="tpOrder" style="display:none">Columns follow the order the car sends them. Which wheel each one belongs to is not confirmed yet.</div>
+    <div class="log-info" id="tpNone" style="display:none">0x219 is arriving on this tap, but the car is not reporting a pressure in it.</div>
+    <div class="log-info" id="tpForm" style="display:none">This 0x219 has a length this firmware does not read yet. A capture of it would help.</div>
   </div>
-  <div class="log-info" id="tpOrder" style="display:none">Columns follow the order the car sends them. Which wheel each one belongs to is not confirmed yet.</div>
-  <div class="log-info" id="tpNone" style="display:none">0x219 is arriving on this tap, but the car is not reporting a pressure in it.</div>
-  <div class="log-info" id="tpForm" style="display:none">This 0x219 has a length this firmware does not read yet. A capture of it would help.</div>
 </div>
 
 <!-- Performance (read-only, opt-in) -->
@@ -1501,12 +1516,37 @@ function updBattery(d){
 }
 // Tyre pressure (read-only, 0x219). Columns stay in the order the car sends
 // them; they are named as corners only when the car gives each its own corner.
+// The card shows up once 0x219 has been seen; its switch and the unit are kept
+// per browser, as the Performance card's switch is (#237).
 var TPOS=['FL','FR','RL','RR'];
+var tpShow=true,tpUnit='bar',tpLast=null;
+try{tpShow=localStorage.getItem('tpmsShow')!=='0';tpUnit=localStorage.getItem('tpmsUnit')==='psi'?'psi':'bar';}catch(e){}
+function tpToggle(on){
+  tpShow=!!on;
+  try{localStorage.setItem('tpmsShow',tpShow?'1':'0')}catch(e){}
+  var b=document.getElementById('tpBody'),o=document.getElementById('tpOff');
+  if(b)b.style.display=tpShow?'':'none';
+  if(o)o.style.display=tpShow?'none':'';
+}
+function tpSetUnit(u){
+  tpUnit=u==='psi'?'psi':'bar';
+  try{localStorage.setItem('tpmsUnit',tpUnit)}catch(e){}
+  if(tpLast)updTpms(tpLast);
+}
+function tpInit(){
+  var sw=document.getElementById('swTpms'),su=document.getElementById('selTpUnit');
+  if(sw)sw.checked=tpShow;
+  if(su)su.value=tpUnit;
+  tpToggle(tpShow);
+}
+// Age of a reading: seconds, then minutes, then h:mm:ss.
+function ageTxt(s){s=Math.max(0,Math.floor(s||0));return s<60?s+' s':s<3600?Math.floor(s/60)+' min':fmt(s);}
 function updTpms(d){
   var c=document.getElementById('tpmsCard'),t=d.tpms,i;
   if(!c)return;
   if(!t||!t.seen){c.style.display='none';return;}
   c.style.display='';
+  tpLast=d;
   var mb=t.mbar||[],tc=t.temp||[],ps=t.pos||[],have=false,anyT=false;
   for(i=0;i<4;i++){if(mb[i]!=null)have=true;if(tc[i]!=null)anyT=true;}
   var known=t.dlc===5||t.dlc===7,stale=have&&!!t.stale;
@@ -1517,23 +1557,24 @@ function updTpms(d){
   if(!named)ord=[0,1,2,3];
   var bar=function(m){return m==null?'--':(Math.round(m/10)/100).toFixed(2);};
   var psi=function(m){return m==null?'--':(m*0.0145038).toFixed(1);};
-  var h='<span></span>',rb='<span class="tu">bar</span>',rp='<span class="tu">psi</span>',rt='<span class="tu">\u00b0C</span>';
+  var u=tpUnit==='psi'?psi:bar;
+  var h='<span></span>',ru='<span class="tu">'+tpUnit+'</span>',rt='<span class="tu">\u00b0C</span>';
   ord.forEach(function(k,n){
     h+='<span class="th">'+(named?TPOS[n]:String(n+1))+'</span>';
-    rb+='<span>'+bar(mb[k])+'</span>';
-    rp+='<span>'+psi(mb[k])+'</span>';
+    ru+='<span>'+u(mb[k])+'</span>';
     rt+='<span>'+(tc[k]==null?'--':tc[k])+'</span>';
   });
   var g=document.getElementById('tpGrid');
-  if(g){g.innerHTML=h+rb+rp+(anyT?rt:'');g.className='tg'+(stale?' stale':'');}
-  var ar=document.getElementById('rowTpAge');
-  if(ar)ar.style.display=stale?'flex':'none';
-  if(stale)setTxt('tpAge',fmt(t.age_s||0));
+  if(g){g.innerHTML=h+ru+(anyT?rt:'');g.className='tg'+(stale?' stale':'');}
+  // When the shown values were last updated, yellow once they count as stale.
+  var ar=document.getElementById('rowTpAge'),ae=document.getElementById('tpAge');
+  if(ar)ar.style.display=have?'flex':'none';
+  if(have&&ae){ae.textContent=ageTxt(t.age_s);ae.style.color=stale?'var(--yellow)':'';}
   var tg=(t.target||[]).filter(function(v){return v!=null;});
   if(tg.length===2&&tg[0]===tg[1])tg=[tg[0]];
   var tr=document.getElementById('rowTpTgt');
   if(tr)tr.style.display=tg.length?'flex':'none';
-  if(tg.length)setTxt('tpTgt',tg.map(bar).join(' / ')+' bar \u00b7 '+tg.map(psi).join(' / ')+' psi');
+  if(tg.length)setTxt('tpTgt',tg.map(u).join(' / ')+' '+tpUnit);
   var show=function(id,on){var e=document.getElementById(id);if(e)e.style.display=on?'':'none';};
   show('tpOrder',have&&!named);
   show('tpNone',!have&&known);
@@ -2095,6 +2136,7 @@ function conn(){
   ws.onerror=function(){ ws.close(); };
 }
 perfInit();
+tpInit();
 conn();
 statusPoll();
 setInterval(statusPoll,2000);
