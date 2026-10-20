@@ -139,7 +139,9 @@ FsdPwrVerdict fsd_pwr_live_verdict(uint32_t quiet_ms);
  *
  * Kept here rather than inlined at the call site so the "never seen a frame"
  * case is decided once: a module that has never received anything has not
- * observed the bus going quiet -- it has observed nothing.
+ * observed the bus going quiet -- it has observed nothing. Likewise a
+ * last_rx_ms later than now_ms (a frame that landed after the caller read its
+ * clock) is traffic.
  */
 uint32_t fsd_pwr_quiet_ms(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any);
 

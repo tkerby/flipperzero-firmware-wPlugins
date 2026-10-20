@@ -3240,6 +3240,32 @@ static void test_power_quiet_ms(void) {
     CHECK(fsd_pwr_quiet_ms(20000u, 0xFFFFFF00u, true) == 20256u,
           "long gap across the wrap, got %u",
           fsd_pwr_quiet_ms(20000u, 0xFFFFFF00u, true));
+
+    // The loop samples its clock once, then drains the bus, and every frame
+    // stamps millis() as it lands. A frame that landed after the loop's clock
+    // is a stamp ahead of now: traffic, not 49.7 days of quiet. That read as
+    // "bus quiet 4294967s" and committed a checkpoint while frames arrived.
+    CHECK(fsd_pwr_quiet_ms(60000u, 60001u, true) == 0u,
+          "frame stamped 1 ms after now -> not quiet, got %u",
+          fsd_pwr_quiet_ms(60000u, 60001u, true));
+    CHECK(fsd_pwr_quiet_ms(60000u, 60000u + 250u, true) == 0u,
+          "frame stamped during a long loop pass -> not quiet");
+    CHECK(fsd_pwr_quiet_ms(0xFFFFFFFEu, 3u, true) == 0u,
+          "frame stamped just after the wrap, now just before it -> not quiet");
+    {
+        FsdPwrCheckpoint cp = {false, 0};
+        CHECK(!fsd_pwr_checkpoint_due(&cp, fsd_pwr_quiet_ms(60000u, 60004u, true)),
+              "a stamp ahead of now never commits a checkpoint");
+        CHECK(fsd_pwr_live_verdict(fsd_pwr_quiet_ms(60000u, 60004u, true)) == FSD_PWR_UNKNOWN,
+              "a stamp ahead of now is not an always-on bus");
+    }
+    // Quiet times a verdict waits for are far inside the range kept: a day, a
+    // week, three weeks.
+    for (uint32_t days = 1u; days <= 21u; days *= 3u) {
+        uint32_t q = days * 86400000u;
+        CHECK(fsd_pwr_quiet_ms(1000u + q, 1000u, true) == q,
+              "quiet for %u days is reported, got %u", days, fsd_pwr_quiet_ms(1000u + q, 1000u, true));
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
