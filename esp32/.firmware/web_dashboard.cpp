@@ -2299,9 +2299,10 @@ static CanCounts can_counts(CanDriver *d) {
     return c;
 }
 
-// A counter below its baseline has restarted since the reset (TWAI's status
-// counters do when the driver is reinstalled for a mode switch or a capture
-// filter): everything it holds is newer than the reset.
+// The drivers' counters are cumulative: TWAI's carry across the reinstalls for
+// a mode switch or a capture filter (can_counters.h). Should one ever read
+// below its baseline it has restarted, and everything it holds is newer than
+// the reset.
 static uint32_t since_reset(uint32_t now, uint32_t &base) {
     if (now < base) base = 0;
     return now - base;
@@ -3785,13 +3786,7 @@ void web_dashboard_update() {
         g_last_fps_ms = now;
 
         // Nobody on the WebSocket: skip the push. /api/status builds its own.
-        // The CAN Bus card's baselines still follow a restarted counter, as
-        // build_json() does (since_reset()).
-        if (g_ws.connectedClients() == 0) {
-            for (uint8_t i = 0; i < g_can_count && i < CAN_BUS_COUNT; i++)
-                can_counts_since_reset(i);
-            return;
-        }
+        if (g_ws.connectedClients() == 0) return;
         String json = build_json();
         if (g_debug) Serial.printf("[WS] state json=%u bytes\n", (unsigned)json.length());
         g_ws.broadcastTXT(json.c_str(), json.length());
