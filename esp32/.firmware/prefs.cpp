@@ -1,12 +1,20 @@
 #include "prefs.h"
 #include "blackbox.h"   // BLACKBOX_DEFAULT_ENABLED
 #include <Preferences.h>
+#include <nvs.h>
 
 static Preferences g_prefs;
 static const char *NS = "fsd";
 
+bool prefs_namespace_exists(const char *ns) {
+    nvs_handle_t h;
+    if (nvs_open(ns, NVS_READONLY, &h) != ESP_OK) return false;
+    nvs_close(h);
+    return true;
+}
+
 void prefs_load(FSDState *state) {
-    g_prefs.begin(NS, /*readOnly=*/true);
+    if (prefs_namespace_exists(NS)) g_prefs.begin(NS, /*readOnly=*/true);
     if (!g_prefs.isKey("ok")) {
         Serial.println("[NVS] No saved settings found (first boot)");
         g_prefs.end();

@@ -163,10 +163,17 @@ static NOINLINE void serial_command_tick() {
                 wifi_print_status();
             } else if (serial_cmd_equals(buf, "canstat")) {
                 print_can_stats();
+            } else if (serial_cmd_equals(buf, "debug")) {
+                // RAM only: a reboot turns it off again.
+                static bool debug = false;
+                debug = !debug;
+                web_dashboard_set_debug(debug);
+                Serial.printf("[SER] Debug logs %s until reboot\n", debug ? "ON" : "OFF");
             } else if (serial_cmd_equals(buf, "help") || serial_cmd_equals(buf, "?")) {
-                Serial.println("[SER] Commands: ip | canstat (per-bus CAN counters and state)");
+                Serial.println("[SER] Commands: ip | canstat (per-bus CAN counters and state) | "
+                               "debug (verbose logs on/off, until reboot)");
             } else {
-                Serial.println("[SER] Unknown command. Type: ip, canstat");
+                Serial.println("[SER] Unknown command. Type: ip, canstat, debug");
             }
             continue;
         }
@@ -1847,6 +1854,24 @@ void setup() {
     }
 }
 
+// One line per bus whose controller is up and has not received a frame yet:
+// the first at the first check, then at most once a minute for that bus. A
+// bus whose driver failed has its own line from the retry, and on a two-bus
+// board one tap often carries traffic while the other is unwired.
+static NOINLINE void warn_quiet_buses(uint32_t now) {
+    static bool     warned[CAN_ACTIVE_BUS_COUNT] = {};
+    static uint32_t warned_ms[CAN_ACTIVE_BUS_COUNT] = {};
+    for (uint8_t i = 0; i < CAN_ACTIVE_BUS_COUNT; i++) {
+        if (!g_can_ok[i] || !g_can[i]) continue;
+        if (g_can[i]->rxCount() + g_can[i]->rxRejectedCount() != 0) continue;
+        if (warned[i] && now - warned_ms[i] < WIRING_WARN_REPEAT_MS) continue;
+        Serial.printf("[WARN] %s: no frames seen yet — check the tap wiring and that the car "
+                      "is awake\n", can_bus_name(bus_id_from_index(i)));
+        warned[i] = true;
+        warned_ms[i] = now;
+    }
+}
+
 static NOINLINE void drain_can_bus_index(uint8_t index) {
     if (index >= CAN_ACTIVE_BUS_COUNT || !g_can_ok[index] || !g_can[index]) return;
     CanBusId bus = bus_id_from_index(index);
@@ -2009,20 +2034,18 @@ void loop() {
     }
 
     // ── Wiring / hardware sanity warning ─────────────────────────────────────
+    // Checked every 5 s, not every loop.
     static uint32_t last_warn_ms = 0;
-    s = state_snapshot();
     if (now > WIRING_WARN_MS && (now - last_warn_ms) >= 5000u) {
+        last_warn_ms = now;
         if (!can_any_ok()) {
             // Driver init failed — distinguish chip-not-detected from other.
             // Skip the "no CAN traffic" warn entirely (it's never going to
             // arrive without a working driver).
             Serial.println("[WARN] CAN drivers not initialised — "
                            "no CAN traffic possible");
-            last_warn_ms = now;
-        } else if (s.rx_count == 0) {
-            Serial.println("[WARN] No CAN traffic after 5 s — check wiring");
-            Serial.println("[WARN] Verify CAN-H on OBD pin 6, CAN-L on pin 14");
-            last_warn_ms = now;
+        } else {
+            warn_quiet_buses(now);
         }
     }
 

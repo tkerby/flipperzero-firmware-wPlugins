@@ -48,6 +48,7 @@ static uint32_t g_last_rx     = 0;
 static uint32_t g_last_fps_ms = 0;
 static uint32_t g_last_can_seen_ms = 0;
 static float    g_fps         = 0.0f;
+static bool     g_debug       = false;  // serial `debug`: per-push JSON size
 
 #define CAN_VEHICLE_ALIVE_MS 3000u
 #define OTA_ESP32_IMAGE_MAGIC 0xE9u
@@ -3362,6 +3363,8 @@ void web_dashboard_init(FSDState *state,
     Serial.println("[Web] HTTP :80  WS :81 — ready");
 }
 
+void web_dashboard_set_debug(bool on) { g_debug = on; }
+
 void web_dashboard_update() {
     if (g_state == nullptr) return;   // init was never called (WiFi failed)
 
@@ -3383,7 +3386,7 @@ void web_dashboard_update() {
         g_last_fps_ms = now;
 
         String json = build_json();
-        Serial.printf("[WS] state json=%u bytes\n", (unsigned)json.length());
+        if (g_debug) Serial.printf("[WS] state json=%u bytes\n", (unsigned)json.length());
         g_ws.broadcastTXT(json.c_str(), json.length());
     }
 }
