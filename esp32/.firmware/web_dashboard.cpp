@@ -26,6 +26,7 @@
 #include "captive_portal.h"
 #include "web_cmd.h"
 #include "web_origin.h"
+#include "page_send.h"
 #include "../../fsd_logic/fsd_cp_status.h"  // CP_status stale read-out (#228)
 #include "../../fsd_logic/fsd_bms.h"        // 0x312 pack-temperature freshness
 #include <WebServer.h>
@@ -36,6 +37,8 @@
 #include <esp_ota_ops.h>
 #include <esp_partition.h>
 #include <esp_rom_crc.h>
+#include <lwip/sockets.h>
+#include <errno.h>
 
 // ── Module state ──────────────────────────────────────────────────────────────
 static FSDState  *g_state = nullptr;   // shared with main
@@ -71,6 +74,14 @@ static uint32_t  g_can_reset_ms = 0;
 // passphrases (64) = ~282, up to ~480 when every character needs a backslash
 // (\" or \\). The parser works in place, so this only bounds the work.
 #define WEB_CMD_MAX_LEN 767u
+// Page body limits (page_send.h). The gzip page is 8-9 send-buffer fills
+// (5760 bytes each), one per round trip: 40-250 ms at the 5-30 ms of a phone
+// on the SoftAP, over 1 s at the 100+ ms of in-car Wi-Fi in power save. A
+// client still taking data goes on; one that took nothing for STALL_MS has
+// gone (a round trip that long is not a working link). MAX_MS caps a client
+// that only ever takes a trickle.
+#define PAGE_SEND_STALL_MS 400u
+#define PAGE_SEND_MAX_MS   3000u
 
 static void state_enter() {
     if (g_state_mux) portENTER_CRITICAL(g_state_mux);
@@ -3372,22 +3383,33 @@ static void ws_event(uint8_t num, WStype_t type,
 
 // ── HTTP handlers ─────────────────────────────────────────────────────────────
 // The page body, after the headers. The loop task services no CAN while this
-// runs. WiFiClient::write() waits in select() until lwIP has room for more, so
-// the socket paces the writes; a pause between them only adds to that wait.
-static void send_page_body(const uint8_t *ptr, size_t left) {
+// runs, so the socket is written directly and non-blocking (page_send.h);
+// WiFiClient::write() would wait up to 10 s per call for a client that has
+// gone. A client that takes nothing for PAGE_SEND_STALL_MS, or is not done in
+// PAGE_SEND_MAX_MS, gets a cut page and the connection is dropped (WebServer
+// lets go of it once this handler returns).
+static void send_page_body(const uint8_t *ptr, size_t len) {
     WiFiClient client = g_http.client();
-    uint32_t timeout_ms = millis();
-    while (left > 0 && client.connected()) {
-        size_t chunk = (left > 1460) ? 1460 : left;
-        size_t written = client.write(ptr, chunk);
-        if (written > 0) {
-            ptr += written;
-            left -= written;
-            timeout_ms = millis(); // Reset timeout
-        } else {
-            if (millis() - timeout_ms > 2000) break; // Prevent infinite loop
-            delay(10);
-        }
+    int fd = client.fd();
+    if (fd < 0) return;
+    size_t sent = page_send(ptr, len, PAGE_SEND_STALL_MS, PAGE_SEND_MAX_MS,
+        [fd](const uint8_t *p, size_t n) -> long {
+            int r = send(fd, p, n, MSG_DONTWAIT);
+            if (r >= 0) return r;
+            return (errno == EAGAIN || errno == EWOULDBLOCK) ? 0 : -1;
+        },
+        [fd](uint32_t ms) {
+            fd_set w;
+            FD_ZERO(&w);
+            FD_SET(fd, &w);
+            struct timeval tv = { (time_t)(ms / 1000u), (suseconds_t)((ms % 1000u) * 1000u) };
+            return select(fd + 1, nullptr, &w, nullptr, &tv) >= 0;
+        },
+        []() { return (uint32_t)millis(); });
+    if (sent < len) {
+        Serial.printf("[Web] page cut at %u of %u bytes: client too slow or gone\n",
+                      (unsigned)sent, (unsigned)len);
+        client.stop();
     }
 }
 

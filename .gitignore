@@ -21,5 +21,6 @@ test/test_web_origin
 test/test_can_counters
 test/test_loop_health
 test/test_power_log
+test/test_page_send
 *.dSYM/
 /.vs
