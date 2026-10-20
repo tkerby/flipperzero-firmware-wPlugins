@@ -136,7 +136,7 @@ static void print_can_stats() {
             Serial.printf("[CAN] %s: no driver\n", name);
             continue;
         }
-        char state[192];
+        char state[256];
         g_can[i]->describeState(state, sizeof(state));
         Serial.printf("[CAN] %s %s RX=%lu TX=%lu rejected=%lu filter=%s | %s\n",
                       name, g_can_ok[i] ? "up" : "down",
@@ -1810,6 +1810,8 @@ void setup() {
     for (uint8_t i = 0; i < CAN_ACTIVE_BUS_COUNT; i++) {
         CanBusId bus = bus_id_from_index(i);
         g_can[i] = can_driver_create(bus);
+        // MCP2515 receive task (opt-in): started by begin() once the chip is up.
+        if (g_can[i]) g_can[i]->setRxTask(g_state.mcp_rx_task);
         g_can_ok[i] = g_can[i] && g_can[i]->begin(true);
         g_can_last_retry_ms[i] = millis();
     }

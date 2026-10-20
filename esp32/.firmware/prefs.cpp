@@ -61,6 +61,7 @@ void prefs_load(FSDState *state) {
     state->display_timeout_s        = g_prefs.getUInt("disp_to",  60);
 #endif
     state->sleep_idle_ms            = g_prefs.getUInt("sleep",  SLEEP_IDLE_MS);
+    state->mcp_rx_task              = g_prefs.getBool("mcprx",  false);  // MCP2515 RX task
 
     // WiFi
     if (g_prefs.isKey("wss")) g_prefs.getString("wss").toCharArray(state->wifi_ssid, sizeof(state->wifi_ssid));
@@ -147,6 +148,7 @@ void prefs_save(const FSDState *state) {
     g_prefs.putUInt("disp_to",  state->display_timeout_s);
 #endif
     g_prefs.putUInt("sleep",  state->sleep_idle_ms);
+    g_prefs.putBool("mcprx",  state->mcp_rx_task);  // MCP2515 RX task
 
     // WiFi
     g_prefs.putString("wss",  state->wifi_ssid);

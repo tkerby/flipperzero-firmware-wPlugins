@@ -394,6 +394,7 @@ typedef struct FSDState {
 
     bool bms_output;             // print BMS data to serial
     uint32_t sleep_idle_ms;      // CAN silence before deep sleep
+    bool mcp_rx_task;            // read the MCP2515 from its own task (opt-in, NVS)
 
     // Wi-Fi (ESP32 web dashboard)
     char wifi_ssid[33];          // max 32 chars + null

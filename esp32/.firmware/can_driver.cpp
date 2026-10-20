@@ -339,10 +339,40 @@ public:
 #endif
 
 // ── MCP2515 driver ────────────────────────────────────────────────────────────
-#if defined(CAN_DRIVER_MCP2515) || (defined(CAN_DRIVER_T2CAN_DUAL) && !defined(BOARD_LILYGO_T2CAN_FD))
+#if defined(CAN_HAS_MCP2515)
 
 #include <SPI.h>
 #include <mcp2515.h>   // autowp/autowp-mcp2515
+#include <freertos/semphr.h>
+#include <freertos/queue.h>
+
+// Receive task (opt-in, setRxTask()). The chip holds two received frames, a
+// millisecond of a busy bus, and the loop only reads it between its other
+// work: a T-2CAN's can1 got 61-90 % of the car's 0x370 (#176). The task
+// empties the chip as frames land and queues them for the loop. 256 frames is
+// 4 KB and about 130 ms at 2,000 frames/s. Stack: the deepest path,
+// rx_task_run -> rx_drain -> readMessage -> SPIClass::beginTransaction and the
+// SPI bus mutex, is 880 bytes of frames (-fstack-usage, the mutex at the
+// 432 bytes ci_check_stack.py allows it); with an interrupt frame and the
+// coprocessor save area on top, under 1.5 KB. canstat shows what is left.
+#define MCP_RX_QUEUE_LEN     256u
+#define MCP_RX_TASK_STACK    3072u
+// Frames one wake-up reads at most before it waits again.
+#define MCP_RX_DRAIN_MAX     32u
+// How often the task checks the error flags when no INT edge says to.
+#define MCP_RX_EFLG_MS       50u
+// Longest stop() waits for the task to leave.
+#define MCP_RX_STOP_WAIT_MS  100u
+
+// INT falling edge: wake the receive task. @p arg is the driver's rx_task_
+// handle, cleared only after the interrupt is detached.
+static void IRAM_ATTR mcp_int_isr(void *arg) {
+    TaskHandle_t task = *static_cast<TaskHandle_t *>(arg);
+    if (!task) return;
+    BaseType_t woken = pdFALSE;
+    vTaskNotifyGiveFromISR(task, &woken);
+    if (woken) portYIELD_FROM_ISR();
+}
 
 static const char *mcp_clock_name(CAN_CLOCK clock) {
     switch (clock) {
@@ -365,6 +395,7 @@ class Mcp2515Driver : public CanDriver {
     int      miso_pin_;
     int      mosi_pin_;
     int      rst_pin_;
+    int      int_pin_;
     bool     listen_only_  = false;
     bool     installed_    = false;
     bool     chip_detected_ = false;
@@ -372,11 +403,169 @@ class Mcp2515Driver : public CanDriver {
     uint32_t err_count_    = 0;
     uint32_t tx_count_     = 0;
     uint32_t rx_count_     = 0;
-    uint32_t rx_rejected_  = 0;   // DLC>8 frames dropped (readMessage FAIL)
+    volatile uint32_t rx_rejected_ = 0;   // DLC>8 frames dropped (readMessage FAIL)
+
+    // The library is not thread-safe and the receive task reads the chip
+    // while the loop sends, switches mode or filters: every call into mcp_
+    // holds this mutex.
+    SemaphoreHandle_t spi_mutex_ = nullptr;
+    QueueHandle_t     rx_queue_  = nullptr;  // kept once made, also after a stop
+    TaskHandle_t      rx_task_   = nullptr;  // set while the task runs
+    SemaphoreHandle_t rx_done_   = nullptr;  // the task gives it as it leaves
+    volatile bool     rx_stop_   = false;
+    bool              rx_wanted_ = false;
+    CanRxQueueStats   rx_stats_;             // written by the task only
+
+    struct SpiLock {
+        SemaphoreHandle_t m;
+        explicit SpiLock(SemaphoreHandle_t mutex) : m(mutex) {
+            if (m) xSemaphoreTake(m, portMAX_DELAY);
+        }
+        ~SpiLock() {
+            if (m) xSemaphoreGive(m);
+        }
+    };
+
+    static void rx_task_entry(void *arg) {
+        static_cast<Mcp2515Driver *>(arg)->rx_task_run();
+    }
+
+    // autowp flags extended / remote frames in can_id (a remote frame's data
+    // bytes are whatever the previous frame left in the buffer).
+    static void to_frame(const struct can_frame &f, CanFrame &frame) {
+        bool extended = (f.can_id & CAN_EFF_FLAG) != 0u;
+        memset(&frame, 0, sizeof(frame));
+        frame.id  = f.can_id & (extended ? CAN_EFF_MASK : CAN_SFF_MASK);
+        frame.ext = extended ? 1u : 0u;
+        frame.req = (f.can_id & CAN_RTR_FLAG) != 0u ? 1u : 0u;
+        frame.dlc = f.can_dlc;   // readMessage() already refused DLC > 8
+        memcpy(frame.data, f.data, frame.dlc);
+    }
+
+    // One frame off the chip, under the lock. ERROR_FAIL is a DLC 9..15
+    // frame: autowp returns it WITHOUT clearing its RXnIF flag, and
+    // readMessage() always re-reads RXB0 first, so that one frame would wedge
+    // RX for good. Drop it (and whatever sits in the other buffer) by clearing
+    // the RX interrupt flags.
+    MCP2515::ERROR read_chip(struct can_frame &f) {
+        SpiLock lock(spi_mutex_);
+        MCP2515::ERROR err = mcp_.readMessage(&f);
+        if (err == MCP2515::ERROR_FAIL) mcp_.clearInterrupts();
+        return err;
+    }
+
+    // Everything the chip holds, onto the queue.
+    void rx_drain() {
+        for (uint8_t i = 0; i < MCP_RX_DRAIN_MAX; i++) {
+            struct can_frame f;
+            MCP2515::ERROR err = read_chip(f);
+            if (err == MCP2515::ERROR_FAIL) {
+                rx_rejected_ = rx_rejected_ + 1;
+                return;
+            }
+            if (err != MCP2515::ERROR_OK) return;
+            CanFrame frame;
+            to_frame(f, frame);
+            bool ok = xQueueSend(rx_queue_, &frame, 0) == pdTRUE;
+            rx_stats_.note_push(ok, uxQueueMessagesWaiting(rx_queue_));
+        }
+    }
+
+    // RXnOVR: a frame arrived with both buffers full and was lost. Counted and
+    // cleared, as are the error interrupt flags: those hold INT low, and an
+    // INT pin that stays low sends no more edges.
+    void rx_check_errors() {
+        SpiLock lock(spi_mutex_);
+        uint8_t eflg = mcp_.getErrorFlags();
+        if (eflg & (MCP2515::EFLG_RX0OVR | MCP2515::EFLG_RX1OVR)) {
+            rx_stats_.overflows++;
+            mcp_.clearRXnOVRFlags();
+        }
+        uint8_t intf = mcp_.getInterrupts();
+        if (intf & MCP2515::CANINTF_ERRIF) mcp_.clearERRIF();
+        if (intf & MCP2515::CANINTF_MERRF) mcp_.clearMERR();
+    }
+
+    // Wakes on an INT edge (falling: the chip has something) or after 1 ms,
+    // whichever is first; without an INT pin, every millisecond.
+    void rx_task_run() {
+        uint32_t last_check = millis();
+        while (!rx_stop_) {
+            if (int_pin_ >= 0) ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(1));
+            else vTaskDelay(pdMS_TO_TICKS(1));
+            if (rx_stop_) break;
+            rx_drain();
+            uint32_t now = millis();
+            if ((int_pin_ >= 0 && digitalRead((uint8_t)int_pin_) == LOW) ||
+                now - last_check >= MCP_RX_EFLG_MS) {
+                last_check = now;
+                rx_check_errors();
+            }
+        }
+        xSemaphoreGive(rx_done_);
+        vTaskDelete(nullptr);
+    }
+
+    // Pinned to the caller's core (the loop's) one priority above it, so it
+    // preempts a long loop pass but never runs beside it on the other core.
+    bool start_rx_task() {
+        if (rx_task_) return true;
+        if (!spi_mutex_) return false;
+        if (!rx_queue_) rx_queue_ = xQueueCreate(MCP_RX_QUEUE_LEN, sizeof(CanFrame));
+        if (!rx_done_) rx_done_ = xSemaphoreCreateBinary();
+        if (!rx_queue_ || !rx_done_) return false;
+        rx_stop_ = false;
+        if (xTaskCreatePinnedToCore(rx_task_entry, "mcp_rx", MCP_RX_TASK_STACK, this,
+                                    uxTaskPriorityGet(nullptr) + 1, &rx_task_,
+                                    xPortGetCoreID()) != pdPASS) {
+            rx_task_ = nullptr;
+            return false;
+        }
+        if (int_pin_ >= 0) {
+            pinMode((uint8_t)int_pin_, INPUT_PULLUP);
+            attachInterruptArg(digitalPinToInterrupt(int_pin_), mcp_int_isr, &rx_task_, FALLING);
+        }
+        return true;
+    }
+
+    // From the loop: the task finishes the frame it is on, gives rx_done_ and
+    // deletes itself before the loop runs again (same core, higher priority).
+    // Frames still queued are read by receive() before it polls the chip.
+    void stop_rx_task() {
+        if (!rx_task_) return;
+        if (int_pin_ >= 0) detachInterrupt(digitalPinToInterrupt(int_pin_));
+        rx_stop_ = true;
+        xTaskNotifyGive(rx_task_);
+        if (xSemaphoreTake(rx_done_, pdMS_TO_TICKS(MCP_RX_STOP_WAIT_MS)) != pdTRUE) {
+            Serial.printf("[CAN] %s MCP2515 RX task did not stop\n", label_);
+            return;
+        }
+        rx_task_ = nullptr;
+    }
+
+    void apply_rx_task() {
+        bool was = rx_task_ != nullptr;
+        if (rx_wanted_ && installed_) start_rx_task();
+        else stop_rx_task();
+        bool now = rx_task_ != nullptr;
+        if (now && !was) {
+            if (int_pin_ >= 0)
+                Serial.printf("[CAN] %s MCP2515 RX task on (INT GPIO %d, queue %u)\n", label_,
+                              int_pin_, (unsigned)MCP_RX_QUEUE_LEN);
+            else
+                Serial.printf("[CAN] %s MCP2515 RX task on (1 ms poll, queue %u)\n", label_,
+                              (unsigned)MCP_RX_QUEUE_LEN);
+        } else if (was && !now) {
+            Serial.printf("[CAN] %s MCP2515 RX task off\n", label_);
+        } else if (rx_wanted_ && installed_ && !now) {
+            Serial.printf("[CAN] %s MCP2515 RX task could not start\n", label_);
+        }
+    }
 
 public:
 #if defined(BOARD_TTGO_DISPLAY)
-    Mcp2515Driver(const char *label, int cs_pin, int sck_pin, int miso_pin, int mosi_pin, int rst_pin)
+    Mcp2515Driver(const char *label, int cs_pin, int sck_pin, int miso_pin, int mosi_pin, int rst_pin,
+                  int int_pin)
         : spi_(HSPI),
           mcp_(cs_pin, 10000000, &spi_),
           label_(label),
@@ -384,19 +573,25 @@ public:
           sck_pin_(sck_pin),
           miso_pin_(miso_pin),
           mosi_pin_(mosi_pin),
-          rst_pin_(rst_pin) {}
+          rst_pin_(rst_pin),
+          int_pin_(int_pin),
+          spi_mutex_(xSemaphoreCreateMutex()) {}
 #else
-    Mcp2515Driver(const char *label, int cs_pin, int sck_pin, int miso_pin, int mosi_pin, int rst_pin)
+    Mcp2515Driver(const char *label, int cs_pin, int sck_pin, int miso_pin, int mosi_pin, int rst_pin,
+                  int int_pin)
         : mcp_(cs_pin),
           label_(label),
           cs_pin_(cs_pin),
           sck_pin_(sck_pin),
           miso_pin_(miso_pin),
           mosi_pin_(mosi_pin),
-          rst_pin_(rst_pin) {}
+          rst_pin_(rst_pin),
+          int_pin_(int_pin),
+          spi_mutex_(xSemaphoreCreateMutex()) {}
 #endif
 
     bool begin(bool listen_only) override {
+        stop_rx_task();   // a retry: begin() resets the chip
         if (rst_pin_ >= 0) {
             pinMode((uint8_t)rst_pin_, OUTPUT);
             digitalWrite((uint8_t)rst_pin_, LOW);
@@ -405,49 +600,51 @@ public:
             delay(10);
         }
 
+        MCP2515::ERROR err;
+        {
+            SpiLock lock(spi_mutex_);
 #if defined(BOARD_TTGO_DISPLAY)
-        // Keep MCP2515 on HSPI so TFT_eSPI can own the T-Display LCD SPI bus.
-        if (!spi_begun_) {
-            spi_.begin(sck_pin_, miso_pin_, mosi_pin_, cs_pin_);
-            spi_.setFrequency(8000000);
-            spi_begun_ = true;
-        }
+            // Keep MCP2515 on HSPI so TFT_eSPI can own the T-Display LCD SPI bus.
+            if (!spi_begun_) {
+                spi_.begin(sck_pin_, miso_pin_, mosi_pin_, cs_pin_);
+                spi_.setFrequency(8000000);
+                spi_begun_ = true;
+            }
 #else
-        static bool s_spi_begun = false;
-        if (!s_spi_begun) {
-            SPI.begin(sck_pin_, miso_pin_, mosi_pin_, cs_pin_);
-            SPI.setFrequency(8000000);
-            s_spi_begun = true;
-        }
+            static bool s_spi_begun = false;
+            if (!s_spi_begun) {
+                SPI.begin(sck_pin_, miso_pin_, mosi_pin_, cs_pin_);
+                SPI.setFrequency(8000000);
+                s_spi_begun = true;
+            }
 #endif
 
-        filter_mode_ = mcp_.reset() == MCP2515::ERROR_OK ? "accept-all" : "unknown";
+            filter_mode_ = mcp_.reset() == MCP2515::ERROR_OK ? "accept-all" : "unknown";
 
-        // setBitrate() internally enters CONFIG mode and verifies the mode
-        // change via an SPI register read-back. If the MCP2515 isn't wired
-        // up / powered / responding on SPI, this is the call that fails first.
-        // Failure here means SPI/chip presence problem (entering CONFIG mode
-        // does not require any CAN bus traffic).
-        if (mcp_.setBitrate(CAN_500KBPS, MCP_CRYSTAL_MHZ) != MCP2515::ERROR_OK) {
-            chip_detected_ = false;
-            installed_     = false;
-            Serial.printf("[CAN] %s MCP2515 NOT detected on SPI "
-                          "(CS=%d SCK=%d MISO=%d MOSI=%d CLK=%s) — "
-                          "check wiring, 5V power, and crystal\n",
-                          label_, cs_pin_, sck_pin_, miso_pin_, mosi_pin_,
-                          mcp_clock_name(MCP_CRYSTAL_MHZ));
-            return false;
+            // setBitrate() internally enters CONFIG mode and verifies the mode
+            // change via an SPI register read-back. If the MCP2515 isn't wired
+            // up / powered / responding on SPI, this is the call that fails first.
+            // Failure here means SPI/chip presence problem (entering CONFIG mode
+            // does not require any CAN bus traffic).
+            if (mcp_.setBitrate(CAN_500KBPS, MCP_CRYSTAL_MHZ) != MCP2515::ERROR_OK) {
+                chip_detected_ = false;
+                installed_     = false;
+                Serial.printf("[CAN] %s MCP2515 NOT detected on SPI "
+                              "(CS=%d SCK=%d MISO=%d MOSI=%d CLK=%s) — "
+                              "check wiring, 5V power, and crystal\n",
+                              label_, cs_pin_, sck_pin_, miso_pin_, mosi_pin_,
+                              mcp_clock_name(MCP_CRYSTAL_MHZ));
+                return false;
+            }
+
+            // Chip responded over SPI: we know the MCP2515 is physically there.
+            chip_detected_ = true;
+
+            // Switching to listen-only / normal mode is a chip-internal CANCTRL
+            // change — does not require CAN bus traffic either, but if it fails
+            // after a successful setBitrate it is still a chip / SPI issue.
+            err = listen_only ? mcp_.setListenOnlyMode() : mcp_.setNormalMode();
         }
-
-        // Chip responded over SPI: we know the MCP2515 is physically there.
-        chip_detected_ = true;
-
-        // Switching to listen-only / normal mode is a chip-internal CANCTRL
-        // change — does not require CAN bus traffic either, but if it fails
-        // after a successful setBitrate it is still a chip / SPI issue.
-        MCP2515::ERROR err = listen_only
-            ? mcp_.setListenOnlyMode()
-            : mcp_.setNormalMode();
         listen_only_ = listen_only;
         installed_ = (err == MCP2515::ERROR_OK);
         if (installed_) {
@@ -455,6 +652,7 @@ public:
                           label_,
                           listen_only ? "Listen-Only" : "Normal",
                           mcp_clock_name(MCP_CRYSTAL_MHZ));
+            apply_rx_task();
         } else {
             Serial.printf("[CAN] %s MCP2515 detected but mode change FAILED (err=%d)\n",
                           label_, (int)err);
@@ -471,7 +669,12 @@ public:
         f.can_id  = frame.id;
         f.can_dlc = frame.dlc;
         memcpy(f.data, frame.data, frame.dlc);
-        if (mcp_.sendMessage(&f) != MCP2515::ERROR_OK) {
+        MCP2515::ERROR err;
+        {
+            SpiLock lock(spi_mutex_);
+            err = mcp_.sendMessage(&f);
+        }
+        if (err != MCP2515::ERROR_OK) {
             err_count_++;
             return false;
         }
@@ -479,35 +682,28 @@ public:
         return true;
     }
 
+    // With the receive task, frames come off its queue; frames it left there
+    // when it stopped are read before the chip is polled again.
     bool receive(CanFrame &frame) override {
-        if (!installed_) return false;
+        if (rx_queue_ && xQueueReceive(rx_queue_, &frame, 0) == pdTRUE) {
+            rx_count_++;
+            return true;
+        }
+        if (rx_task_ || !installed_) return false;
         struct can_frame f;
-        MCP2515::ERROR err = mcp_.readMessage(&f);
+        MCP2515::ERROR err = read_chip(f);
         if (err == MCP2515::ERROR_FAIL) {
-            // autowp returns FAIL for a DLC 9..15 frame WITHOUT clearing its
-            // RXnIF flag, and readMessage() always re-reads RXB0 first, so that
-            // one frame would wedge RX for good. Drop it (and whatever sits in
-            // the other buffer) by clearing the RX interrupt flags.
-            mcp_.clearInterrupts();
-            rx_rejected_++;
+            rx_rejected_ = rx_rejected_ + 1;
             return false;
         }
         if (err != MCP2515::ERROR_OK) return false;
-        // autowp flags extended / remote frames in can_id (a remote frame's
-        // data bytes are whatever the previous frame left in the buffer).
-        bool extended = (f.can_id & CAN_EFF_FLAG) != 0u;
-        memset(&frame, 0, sizeof(frame));
-        frame.id  = f.can_id & (extended ? CAN_EFF_MASK : CAN_SFF_MASK);
-        frame.ext = extended ? 1u : 0u;
-        frame.req = (f.can_id & CAN_RTR_FLAG) != 0u ? 1u : 0u;
-        frame.dlc = f.can_dlc;   // readMessage() already refused DLC > 8
-        memcpy(frame.data, f.data, frame.dlc);
+        to_frame(f, frame);
         rx_count_++;
         return true;
     }
 
     uint32_t errorCount() override {
-        return err_count_;
+        return rxMissedCount() + err_count_;
     }
 
     uint32_t txCount() override { return tx_count_; }
@@ -516,39 +712,60 @@ public:
 
     uint32_t rxRejectedCount() override { return rx_rejected_; }
 
-    // rxMissedCount(): use the CanDriver default (0). The MCP2515 overflow flag
-    // would need an extra SPI read on the hot path, so it is not surfaced here.
-    // busErrorCount(): default 0 too; the chip only exposes live TEC/REC levels,
-    // not a cumulative bus-error count.
+    // Only the receive task sees lost frames: its full queue, and the RXnOVR
+    // flags it checks off the loop. Polled from the loop the overflow flag
+    // would need an extra SPI read on the hot path, so it stays 0 there.
+    // busErrorCount(): the CanDriver default 0; the chip only exposes live
+    // TEC/REC levels, not a cumulative bus-error count.
+    uint32_t rxMissedCount() override { return rx_stats_.dropped + rx_stats_.overflows; }
 
-    // Every errorCount() event is a sendMessage() failure.
+    // Every sendMessage() failure.
     uint32_t txFailedCount() override { return err_count_; }
 
     // The chip keeps no count of lost or errored frames, only flags: an RXnOVR
     // bit means a frame was lost at least once since the last reset, since
     // nothing here clears it. So say that, rather than print a 0 that reads
-    // like a clean bus next to the TWAI's real counts.
+    // like a clean bus next to the TWAI's real counts. The receive task does
+    // clear the flag, and counts each time it finds it set.
     void describeState(char *out, size_t n) override {
         if (!installed_) {
             snprintf(out, n, "MCP2515 %s", chip_detected_ ? "mode change failed"
                                                           : "not detected on SPI");
             return;
         }
-        uint8_t eflg = mcp_.getErrorFlags();
-        snprintf(out, n,
-                 "MCP2515 %s EFLG=0x%02X%s%s%s TEC=%u REC=%u tx_fail=%lu "
-                 "(no rx_missed/bus_err counts on this chip)",
-                 listen_only_ ? "Listen-Only" : "Normal", (unsigned)eflg,
-                 (eflg & (MCP2515::EFLG_RX0OVR | MCP2515::EFLG_RX1OVR)) ? " rx-overflow-seen" : "",
-                 (eflg & MCP2515::EFLG_TXBO) ? " bus-off" : "",
-                 (eflg & (MCP2515::EFLG_TXEP | MCP2515::EFLG_RXEP)) ? " error-passive" : "",
-                 (unsigned)mcp_.errorCountTX(), (unsigned)mcp_.errorCountRX(),
-                 (unsigned long)err_count_);
+        uint8_t eflg, tec, rec;
+        {
+            SpiLock lock(spi_mutex_);
+            eflg = mcp_.getErrorFlags();
+            tec = mcp_.errorCountTX();
+            rec = mcp_.errorCountRX();
+        }
+        int len = snprintf(out, n,
+                           "MCP2515 %s EFLG=0x%02X%s%s%s TEC=%u REC=%u tx_fail=%lu ",
+                           listen_only_ ? "Listen-Only" : "Normal", (unsigned)eflg,
+                           (eflg & (MCP2515::EFLG_RX0OVR | MCP2515::EFLG_RX1OVR)) ? " rx-overflow-seen" : "",
+                           (eflg & MCP2515::EFLG_TXBO) ? " bus-off" : "",
+                           (eflg & (MCP2515::EFLG_TXEP | MCP2515::EFLG_RXEP)) ? " error-passive" : "",
+                           (unsigned)tec, (unsigned)rec, (unsigned long)err_count_);
+        if (len < 0 || (size_t)len >= n) return;
+        if (rx_task_) {
+            snprintf(out + len, n - len,
+                     "rx_task on queue_max=%lu/%u dropped=%lu overflows=%lu stack_free=%lu",
+                     (unsigned long)rx_stats_.high_water, (unsigned)MCP_RX_QUEUE_LEN,
+                     (unsigned long)rx_stats_.dropped, (unsigned long)rx_stats_.overflows,
+                     (unsigned long)uxTaskGetStackHighWaterMark(rx_task_));
+        } else {
+            snprintf(out + len, n - len, "(no rx_missed/bus_err counts on this chip)");
+        }
     }
 
     void setListenOnly(bool enable) override {
         if (!installed_ || listen_only_ == enable) return;
-        MCP2515::ERROR err = enable ? mcp_.setListenOnlyMode() : mcp_.setNormalMode();
+        MCP2515::ERROR err;
+        {
+            SpiLock lock(spi_mutex_);
+            err = enable ? mcp_.setListenOnlyMode() : mcp_.setNormalMode();
+        }
         if (err == MCP2515::ERROR_OK) {
             listen_only_ = enable;
         } else {
@@ -570,16 +787,41 @@ public:
     // If the mode request doesn't take (e.g. a frame stuck pending TX), the SPI
     // RESET instruction forces the chip into CONFIG mode.
     void shutdown() override {
+        stop_rx_task();
         if (!chip_detected_) return;  // nothing answering on SPI
-        if (mcp_.setConfigMode() != MCP2515::ERROR_OK) mcp_.reset();
+        {
+            SpiLock lock(spi_mutex_);
+            if (mcp_.setConfigMode() != MCP2515::ERROR_OK) mcp_.reset();
+        }
         installed_ = false;
+    }
+
+    void setRxTask(bool on) override {
+        rx_wanted_ = on;
+        apply_rx_task();
+    }
+
+    bool rxTaskInfo(CanRxTaskInfo &out) override {
+        out.wanted     = rx_wanted_;
+        out.running    = rx_task_ != nullptr;
+        out.int_pin    = int_pin_ >= 0;
+        out.queue_len  = MCP_RX_QUEUE_LEN;
+        out.high_water = rx_stats_.high_water;
+        out.dropped    = rx_stats_.dropped;
+        out.overflows  = rx_stats_.overflows;
+        out.stack_free = rx_task_ ? (uint32_t)uxTaskGetStackHighWaterMark(rx_task_) : 0u;
+        return true;
     }
 
     void setAcceptanceFilters(const uint32_t *ids, uint8_t count) override {
         if (!installed_) return;
         if (!ids) count = 0;
         if (count > CAN_CAPTURE_MAX_IDS) count = CAN_CAPTURE_MAX_IDS;
-        bool ok = can_capture_program_mcp_filters(mcp_, ids, count, listen_only_);
+        bool ok;
+        {
+            SpiLock lock(spi_mutex_);
+            ok = can_capture_program_mcp_filters(mcp_, ids, count, listen_only_);
+        }
         filter_mode_ = ok ? (count ? "exact" : "accept-all") : "unknown";
         if (!ok) {
             Serial.printf("[CAN] %s MCP2515 filter switch FAILED\n", label_);
@@ -1064,7 +1306,7 @@ CanDriver *can_driver_create() {
     return new TwaiDriver("can0", PIN_CAN_TX, PIN_CAN_RX);
 #elif defined(CAN_DRIVER_MCP2515)
     return new Mcp2515Driver("can0", PIN_MCP_CS, PIN_MCP_SCK, PIN_MCP_MISO,
-                             PIN_MCP_MOSI, PIN_MCP_RST);
+                             PIN_MCP_MOSI, PIN_MCP_RST, PIN_MCP_INT);
 #elif defined(CAN_DRIVER_T2CAN_DUAL)
     return can_driver_create(CAN_BUS_PRIMARY);
 #else
@@ -1080,7 +1322,7 @@ CanDriver *can_driver_create(CanBusId bus) {
                                    PIN_MCP_MOSI);
 #else
         return new Mcp2515Driver("can1", PIN_MCP_CS, PIN_MCP_SCK, PIN_MCP_MISO,
-                                 PIN_MCP_MOSI, PIN_MCP_RST);
+                                 PIN_MCP_MOSI, PIN_MCP_RST, PIN_MCP_INT);
 #endif
     }
     return new TwaiDriver("can0", PIN_CAN_TX, PIN_CAN_RX);

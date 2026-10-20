@@ -765,6 +765,13 @@ R"rawliteral(
     <span class="lbl">CAN Dump</span>
     <label class="sw"><input type="checkbox" id="swDump" onchange="cmd('dump',this.checked)"><span class="sl2"></span></label>
   </div>
+  <div class="row" id="mcpRxRow" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <span class="lbl">MCP2515 RX task (experimental)<br><small style="color:var(--muted)">Reads the MCP2515 from its own task into a 256-frame queue, so a slow loop pass no longer loses frames from its two receive buffers.</small></span>
+      <label class="sw"><input type="checkbox" id="swMcpRx" onchange="cmd('mcp_rx_task',this.checked)"><span class="sl2"></span></label>
+    </div>
+    <div id="mcpRxSt" style="font-size:12px;color:var(--muted);margin-top:4px">--</div>
+  </div>
 )rawliteral"
 #if defined(BOARD_LILYGO)
 R"rawliteral(
@@ -1162,6 +1169,7 @@ function updateControlsSummary(d){
   if(d.cp_type_eu_rewrite)items.push('EU CP Type');
   if(d.display_enabled)items.push('Display');
   if(d.can_dump)items.push('CAN Dump');
+  if(d.mcp_rx_task&&d.mcp_rx_task.on)items.push('MCP2515 RX task');
   e.textContent=items.length?items.join(', '):'Expand to setup';
   e.title=e.textContent;
 }
@@ -1432,6 +1440,18 @@ function updControls(d){
       }
     }
     cpSt.textContent=ct;
+  }
+  // MCP2515 receive task (opt-in): queue depth reached, frames lost on a full
+  // queue, and the chip's RX overflows the task saw. Only builds with an
+  // MCP2515 send mcp_rx_task; the row stays hidden on the others.
+  var mr=d.mcp_rx_task,mrSt=document.getElementById('mcpRxSt');
+  var mrRow=document.getElementById('mcpRxRow');
+  if(mrRow) mrRow.style.display=mr?'block':'none';
+  if(mr&&document.getElementById('swMcpRx')) document.getElementById('swMcpRx').checked=mr.on;
+  if(mr&&mrSt){
+    var mw=function(t){return '<span style="white-space:nowrap">'+t+'</span>';};
+    if(mr.run) mrSt.innerHTML=mw(mr.int?'Running, INT pin':'Running, 1 ms poll')+' \u00b7 '+mw('queue max')+'\u00a0'+mr.max+'/'+mr.len+' \u00b7 '+mw('lost on a full queue')+'\u00a0'+mr.drop+' \u00b7 '+mw('chip overflows')+'\u00a0'+mr.ovf;
+    else mrSt.innerHTML=mw(mr.on?'Waiting for the MCP2515':'Off (read from the loop)');
   }
   if(document.getElementById('swTrkMode')) document.getElementById('swTrkMode').checked=d.track_mode_inject;
   if(document.getElementById('trkRot')&&focusId()!=='trkRot'&&d.track_rotation_pct!==undefined){document.getElementById('trkRot').value=d.track_rotation_pct;var _tr=document.getElementById('trkRotV');if(_tr)_tr.textContent=d.track_rotation_pct;}
@@ -2480,6 +2500,21 @@ static String build_json() {
         }
         j += "],";
     }
+    // MCP2515 receive task (opt-in), on the builds with one; one per board.
+    for (uint8_t i = 0; i < g_can_count && i < CAN_BUS_COUNT; i++) {
+        CanRxTaskInfo t;
+        if (!g_can_buses[i] || !g_can_buses[i]->rxTaskInfo(t)) continue;
+        j += "\"mcp_rx_task\":{\"on\":"; j += t.wanted ? "true" : "false";
+        j += ",\"run\":";   j += t.running ? "true" : "false";
+        j += ",\"int\":";   j += t.int_pin ? "true" : "false";
+        j += ",\"len\":";   j += t.queue_len;
+        j += ",\"max\":";   j += t.high_water;
+        j += ",\"drop\":";  j += t.dropped;
+        j += ",\"ovf\":";   j += t.overflows;
+        j += ",\"stack\":"; j += t.stack_free;
+        j += "},";
+        break;
+    }
     j += "\"bms\":";           j += bms;                               j += ',';
     // Tyre pressures (read-only 0x219, fsd_logic/fsd_tpms.h). Four slots in the
     // order the car fills them: mbar, temp in deg C, pos 0 FL 1 FR 2 RL 3 RR;
@@ -3099,6 +3134,20 @@ static WebCmdResult web_command(WebCmd &cmd, const uint8_t *payload, size_t leng
             if (want) can_dump_start();
             else      can_dump_stop();
             Serial.printf("[Web] CAN Dump: %s\n", want ? "START" : "STOP");
+        }
+    } else if (cmd.is("mcp_rx_task")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
+            FSDState saved;
+            state_enter();
+            g_state->mcp_rx_task = enabled;
+            saved = *g_state;
+            state_exit();
+            // Starts or stops at once; drivers without the task ignore it.
+            for (uint8_t i = 0; i < g_can_count; i++)
+                if (g_can_buses[i]) g_can_buses[i]->setRxTask(enabled);
+            Serial.printf("[Web] MCP2515 RX task: %s\n", enabled ? "ON" : "OFF");
+            prefs_save(&saved);
         }
     } else if (cmd.is("sleep")) {
         int n;
