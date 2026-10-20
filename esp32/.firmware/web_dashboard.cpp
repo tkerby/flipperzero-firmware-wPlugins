@@ -3737,6 +3737,14 @@ void web_dashboard_update() {
         g_last_rx    = rx;
         g_last_fps_ms = now;
 
+        // Nobody on the WebSocket: skip the push. /api/status builds its own.
+        // The CAN Bus card's baselines still follow a restarted counter, as
+        // build_json() does (since_reset()).
+        if (g_ws.connectedClients() == 0) {
+            for (uint8_t i = 0; i < g_can_count && i < CAN_BUS_COUNT; i++)
+                can_counts_since_reset(i);
+            return;
+        }
         String json = build_json();
         if (g_debug) Serial.printf("[WS] state json=%u bytes\n", (unsigned)json.length());
         g_ws.broadcastTXT(json.c_str(), json.length());
