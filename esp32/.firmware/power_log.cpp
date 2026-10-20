@@ -133,9 +133,11 @@ void power_log_init(void) {
     else
         Serial.printf("[PWR] reset: %s\n", power_log_reset_str());
     if (prev.valid) {
-        Serial.print("[PWR] last session: ");
+        // The uptime is when the record was written, not when the power went:
+        // nothing is written while the bus is busy.
+        Serial.print("[PWR] last record: ");
         print_minutes("up", prev.uptime_ms);
-        if (prev.quiet_ms == 0) Serial.print(" - CAN was still flowing");
+        if (prev.quiet_ms == 0) Serial.print(" - CAN was flowing");
         else { Serial.print(" - "); print_minutes("CAN quiet", prev.quiet_ms); }
         Serial.println();
     } else {
@@ -156,16 +158,21 @@ void power_log_init(void) {
     g_ok = true;
 }
 
-// Commit one record. The caller guarantees the bus is quiet, so the flash stall
-// has no frames to drop. noinline: ci_check_stack.py names it on its chains.
+// Commit one record: a quiet checkpoint, whose bus is quiet so the flash
+// stall has no frames to drop, or (quiet_ms 0) the correction at the wake
+// edge (fsd_pwr_correction_due). noinline: ci_check_stack.py names it on its
+// chains.
 static __attribute__((noinline)) void power_log_commit(uint32_t now_ms, uint32_t quiet_ms) {
     if (!g_nvs.begin(NS, /*readOnly=*/false)) return;
     g_nvs.putUChar("v", 1);
     g_nvs.putULong("up", now_ms);
     g_nvs.putULong("q", quiet_ms);
     g_nvs.end();
-    Serial.printf("[PWR] checkpoint: bus quiet %us, record committed\n",
-                  (unsigned)(quiet_ms / 1000u));
+    if (quiet_ms)
+        Serial.printf("[PWR] checkpoint: bus quiet %us, record committed\n",
+                      (unsigned)(quiet_ms / 1000u));
+    else
+        Serial.println("[PWR] bus active again: record corrected (no longer quiet)");
 }
 
 void power_log_tick(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any) {
@@ -183,7 +190,11 @@ void power_log_tick(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any) {
     }
 
     // Commit a checkpoint only when the scheduler says so -- bus settled quiet,
-    // no frames to lose. Never on the active-bus path.
+    // no frames to lose. The one exception is the correction when the bus
+    // comes back after a checkpoint: without it a power cut mid-drive reads as
+    // SWITCHED at the next boot.
+    if (fsd_pwr_correction_due(&g_cp, quiet))
+        power_log_commit(now_ms, 0);
     if (fsd_pwr_checkpoint_due(&g_cp, quiet))
         power_log_commit(now_ms, quiet);
 }

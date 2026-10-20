@@ -75,6 +75,13 @@ bool fsd_pwr_checkpoint_due(FsdPwrCheckpoint* cp, uint32_t quiet_ms) {
 
     cp->episode_committed = true;
     cp->writes++;
+    cp->quiet_on_flash = true;
+    return true;
+}
+
+bool fsd_pwr_correction_due(FsdPwrCheckpoint* cp, uint32_t quiet_ms) {
+    if (!cp || quiet_ms != 0u || !cp->quiet_on_flash) return false;
+    cp->quiet_on_flash = false;
     return true;
 }
 

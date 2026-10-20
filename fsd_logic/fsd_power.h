@@ -158,9 +158,28 @@ uint32_t fsd_pwr_quiet_ms(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any);
 typedef struct {
     bool    episode_committed; /* this quiet episode already produced a commit */
     uint8_t writes;            /* commits this power session (for the cap) */
+    bool    quiet_on_flash;    /* the record in flash says "quiet" (a commit,
+                                * not corrected since) */
 } FsdPwrCheckpoint;
 
 bool fsd_pwr_checkpoint_due(FsdPwrCheckpoint* cp, uint32_t quiet_ms);
+
+/**
+ * The one write the bus coming back forces.
+ *
+ * After a checkpoint the flash says "the bus went quiet". If the car then wakes
+ * and drives and the power is cut mid-drive, the next boot reads "quiet, then
+ * power lost" and answers SWITCHED. So on the first tick the bus carries
+ * traffic again (quiet_ms == 0) after a commit, this returns true once and the
+ * shim writes a record with quiet 0 (the next boot then says NO_SLEEP, a
+ * non-verdict). Adapted from ukinora's fork (778439d).
+ *
+ * This is the one flash write that lands with frames arriving: at the wake
+ * edge, the first frame after at least FSD_PWR_CHECKPOINT_MS of silence, when
+ * the car is only just waking. It needs a checkpoint before it, so a session
+ * writes at most 2 x FSD_PWR_MAX_CHECKPOINTS records.
+ */
+bool fsd_pwr_correction_due(FsdPwrCheckpoint* cp, uint32_t quiet_ms);
 
 /**
  * The verdict after waking from the board's own deep sleep.

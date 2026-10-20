@@ -2137,8 +2137,9 @@ void loop() {
     blackbox_tick(now);  // post-roll countdown + flush (#124)
     capability_tick(now);  // finalize the capability listen window (#125)
     // 12V-feed / reset log (#218). Commits one NVS record per quiet episode,
-    // only once the bus has been silent past the checkpoint window, so no flash
-    // write ever lands while frames are arriving.
+    // only once the bus has been silent past the checkpoint window, and one
+    // correcting record at the first frame after it (the car waking), so a
+    // power cut mid-drive does not read as a switched feed.
     power_log_tick(now, g_power_last_rx_ms, g_power_seen_any);
 
 #if defined(BOARD_LILYGO)

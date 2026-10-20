@@ -3701,6 +3701,63 @@ static void test_power_checkpoint(void) {
     CHECK(!fsd_pwr_checkpoint_due(NULL, FSD_PWR_CHECKPOINT_MS), "NULL checkpoint -> no commit");
 }
 
+/* One loop tick as power_log_tick() runs it: the correction check, then the
+ * checkpoint. Returns 1 for a correcting write, 2 for a checkpoint, 0 for none. */
+static int pwr_tick(FsdPwrCheckpoint* cp, uint32_t quiet) {
+    int w = 0;
+    if (fsd_pwr_correction_due(cp, quiet)) w = 1;
+    if (fsd_pwr_checkpoint_due(cp, quiet)) w = 2;
+    return w;
+}
+
+static void test_power_correction(void) {
+    printf("\n-- power: correcting a quiet record when the bus comes back --\n");
+    FsdPwrCheckpoint cp = {false, 0, false};
+
+    // An hour of driving from boot: nothing on flash to correct, no writes.
+    unsigned writes = 0;
+    for (uint32_t t = 0; t < 3600000u; t += 10u) writes += pwr_tick(&cp, 0u) != 0;
+    CHECK(writes == 0u, "a busy session from boot -> no writes, got %u", writes);
+
+    // The car sleeps: one checkpoint at the window, the flash now says quiet.
+    CHECK(pwr_tick(&cp, FSD_PWR_QUIET_MS) == 0, "just quiet -> nothing yet");
+    CHECK(pwr_tick(&cp, FSD_PWR_CHECKPOINT_MS) == 2, "settled quiet -> checkpoint");
+    CHECK(cp.quiet_on_flash, "flash says quiet");
+    CHECK(pwr_tick(&cp, FSD_PWR_CHECKPOINT_MS + 600000u) == 0, "a long sleep -> no more");
+
+    // 🔴 The trap: the car wakes and drives. Left alone, a power cut now reads
+    // "quiet, then power lost" = SWITCHED. One correcting write at the first
+    // busy tick, then nothing for the rest of the drive.
+    CHECK(pwr_tick(&cp, 0u) == 1, "bus back after a checkpoint -> one correction");
+    CHECK(!cp.quiet_on_flash, "flash no longer says quiet");
+    writes = 0;
+    for (uint32_t t = 0; t < 3600000u; t += 10u) writes += pwr_tick(&cp, 0u) != 0;
+    CHECK(writes == 0u, "the rest of the drive -> no writes, got %u", writes);
+    FsdPwrRecord corrected = {true, 7200000u, 0u};
+    CHECK(fsd_pwr_verdict(FSD_PWR_RESET_POWERON, &corrected) == FSD_PWR_NO_SLEEP,
+          "power cut mid-drive -> NO_SLEEP, not SWITCHED");
+
+    // Quiet, but not for the window (a stop, a short lull): no checkpoint, so
+    // nothing to correct when the frames come back.
+    CHECK(pwr_tick(&cp, FSD_PWR_CHECKPOINT_MS - 1u) == 0, "short quiet -> nothing");
+    CHECK(pwr_tick(&cp, 0u) == 0, "bus back without a checkpoint -> no correction");
+
+    // A bus that flaps: each checkpoint is corrected once, and the cap on
+    // checkpoints bounds the corrections with it.
+    FsdPwrCheckpoint flap = {false, 0, false};
+    unsigned checkpoints = 0, corrections = 0;
+    for (int episode = 0; episode < (int)FSD_PWR_MAX_CHECKPOINTS + 5; episode++) {
+        int w = pwr_tick(&flap, FSD_PWR_CHECKPOINT_MS);
+        if (w == 2) checkpoints++;
+        w = pwr_tick(&flap, 0u);
+        if (w == 1) corrections++;
+    }
+    CHECK(checkpoints == FSD_PWR_MAX_CHECKPOINTS, "checkpoints capped, got %u", checkpoints);
+    CHECK(corrections == checkpoints, "one correction per checkpoint, got %u", corrections);
+
+    CHECK(!fsd_pwr_correction_due(NULL, 0u), "NULL checkpoint -> no correction");
+}
+
 static void test_power_deepsleep_usb(void) {
     printf("\n-- power: deep-sleep wake and USB guard --\n");
 
@@ -3827,6 +3884,7 @@ int main(void) {
     test_power_verdict();
     test_power_quiet_ms();
     test_power_checkpoint();
+    test_power_correction();
     test_power_deepsleep_usb();
     test_power_restart_count();
 

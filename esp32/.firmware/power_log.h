@@ -22,11 +22,14 @@
  * evidence lives in flash (NVS). To keep flash writes off the CAN path, nothing
  * is written while the bus is active: a single record is committed only after
  * the bus has been quiet for FSD_PWR_CHECKPOINT_MS, when there are no frames to
- * lose (fsd_pwr_checkpoint_due), and the commits per session are capped. Each
- * boot reads the record, judges it, then clears it, so a session reasons only
- * from its own checkpoints. State that only has to survive a reset, not a power
- * cut -- the restart counter and "we slept on a quiet bus" -- lives in RTC
- * no-init memory, which costs no flash.
+ * lose (fsd_pwr_checkpoint_due), and the commits per session are capped. The
+ * one exception is a correcting record at the first frame after a checkpoint,
+ * the car waking (fsd_pwr_correction_due): without it a power cut later in
+ * that drive reads as a switched feed. Each boot reads the record, judges it,
+ * then clears it, so a session reasons only from its own checkpoints. State
+ * that only has to survive a reset, not a power cut -- the restart counter and
+ * "we slept on a quiet bus" -- lives in RTC no-init memory, which costs no
+ * flash.
  *
  * The judgement itself is in fsd_logic/fsd_power.{h,c} and host-tested. This
  * file owns only the hardware: NVS, esp_reset_reason(), RTC RAM, the clock and
@@ -81,8 +84,9 @@ void power_log_init(void);
 /**
  * Feed the clock and the bus. Call from loop().
  *
- * A flash commit happens here and only here, and only once the bus has been
- * quiet past the checkpoint window -- never while frames are arriving.
+ * A flash commit happens here (and on the way into deep sleep): once the bus
+ * has been quiet past the checkpoint window, and once more at the first frame
+ * after such a commit, to correct it -- never during sustained traffic.
  *
  * @param last_rx_ms  millis() of the last CAN frame (0 until the first one)
  * @param seen_any    whether any frame has ever arrived (0 is a legal clock
