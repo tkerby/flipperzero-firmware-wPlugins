@@ -485,9 +485,13 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
 <!-- Tyre pressure (read-only, 0x219); shown once the frame reaches this tap.
      The switch folds it, per browser like Performance (#237). -->
 <div class="card" id="tpmsCard" style="display:none">
-  <div class="card-head"><div class="icon ic-b">T</div><h2>Tyre Pressure</h2>
-    <span class="pill off" id="tpmsSt" style="margin-left:auto"><span class="pd"></span>--</span>
-    <label class="sw"><input type="checkbox" id="swTpms" onchange="tpToggle(this.checked)"><span class="sl2"></span></label>
+  <!-- Too narrow for title, pill and switch (320 px): the pill and switch
+       move to a line of their own instead of the title breaking. -->
+  <div class="card-head" style="flex-wrap:wrap"><div class="icon ic-b">T</div><h2 style="white-space:nowrap">Tyre Pressure</h2>
+    <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
+      <span class="pill off" id="tpmsSt"><span class="pd"></span>--</span>
+      <label class="sw"><input type="checkbox" id="swTpms" onchange="tpToggle(this.checked)"><span class="sl2"></span></label>
+    </span>
   </div>
   <div id="tpOff" class="log-info" style="display:none;margin-bottom:0">
     Read-only read-out of the tyre pressures the car sends on 0x219 &mdash; it transmits
@@ -1222,7 +1226,7 @@ function bbRefreshList(){
       h+='<div style="display:flex;gap:6px;margin-top:4px">';
       h+='<a class="btn-main btn-blue" style="padding:4px 10px;font-size:.7em;flex:0" href="/blackbox/get?name='+nm+'&type=log" onclick="bbSeen()">.log</a>';
       h+='<a class="btn-main btn-blue" style="padding:4px 10px;font-size:.7em;flex:0" href="/blackbox/get?name='+nm+'&type=json" onclick="bbSeen()">.json</a>';
-      h+='<button type="button" class="btn-main btn-stop" style="padding:4px 10px;font-size:.7em" onclick="bbDelete(\''+bbEsc(ev.name)+'\')">del</button>';
+      h+='<button type="button" class="btn-main btn-stop" style="padding:4px 10px;font-size:.7em;flex:none;width:auto;margin-left:auto" onclick="bbDelete(\''+bbEsc(ev.name)+'\')">del</button>';
       h+='</div></div>';
     });
     el.innerHTML=h;
