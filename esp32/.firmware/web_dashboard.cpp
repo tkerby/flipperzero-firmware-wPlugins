@@ -531,13 +531,13 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
   <div id="perfBody" style="display:none">
     <div class="row"><span class="lbl">Vehicle speed</span><span id="pfSpeed" style="color:var(--text2)">--</span></div>
     <div class="sg">
-      <div class="sb"><div class="sv" id="pf050">--</div><div class="sl">0-50 km/h</div><div class="sl" id="pf050b">best --</div></div>
-      <div class="sb"><div class="sv" id="pf060mph">--</div><div class="sl">0-60 mph</div><div class="sl" id="pf060mphb">best --</div></div>
-      <div class="sb"><div class="sv" id="pf0100">--</div><div class="sl">0-100 km/h</div><div class="sl" id="pf0100b">best --</div></div>
-      <div class="sb"><div class="sv" id="pf1000">--</div><div class="sl">100-0 km/h brake</div><div class="sl" id="pf1000b">best --</div></div>
+      <div class="sb"><div class="sv" id="pf050">--</div><div class="sl">0-50 km/h</div><div class="sl"><span>best</span> <span id="pf050b">--</span></div></div>
+      <div class="sb"><div class="sv" id="pf060mph">--</div><div class="sl">0-60 mph</div><div class="sl"><span>best</span> <span id="pf060mphb">--</span></div></div>
+      <div class="sb"><div class="sv" id="pf0100">--</div><div class="sl">0-100 km/h</div><div class="sl"><span>best</span> <span id="pf0100b">--</span></div></div>
+      <div class="sb"><div class="sv" id="pf1000">--</div><div class="sl">100-0 km/h brake</div><div class="sl"><span>best</span> <span id="pf1000b">--</span></div></div>
     </div>
     <div class="sg">
-      <div class="sb"><div class="sv" id="pfG">--</div><div class="sl">Est. long. G</div><div class="sl" id="pfGpk">peak --</div></div>
+      <div class="sb"><div class="sv" id="pfG">--</div><div class="sl">Est. long. G</div><div class="sl"><span>peak</span> <span id="pfGpk">--</span></div></div>
       <div class="sb"><div class="sv" id="pfSlip">--</div><div class="sl">Wheel slip</div></div>
       <div class="sb"><div class="sv" id="pfPow">--</div><div class="sl">Power</div></div>
       <div class="sb"><div class="sv" id="pfTemp">--</div><div class="sl">Pack temp</div><div class="sl">unconfirmed on some cars</div></div>
@@ -695,9 +695,9 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
       <span class="lbl">Acceleration Mode (experimental)<br><small style="color:var(--muted)">Rewrites the pedal map on 0x334. The touchscreen keeps showing your own setting; a new mode only switches at standstill.</small></span>
       <select id="selAccel" onchange="cmd('accel_mode',parseInt(this.value,10))">
         <option value="0">Off</option>
-        <option value="1">Chill</option>
-        <option value="2">Standard</option>
-        <option value="3">Performance</option>
+        <option value="1" translate="no">Chill</option>
+        <option value="2" translate="no">Standard</option>
+        <option value="3" translate="no">Performance</option>
       </select>
     </div>
     <div id="accelSt" style="font-size:12px;color:var(--muted);margin-top:4px">--</div>
@@ -1098,7 +1098,7 @@ function renderPerf(d){
   // live time and no "braking" then, only the locked results.
   function cell(id,bid,t,best){
     var e=document.getElementById(id);
-    setTxt(bid,'best '+pfT(best));
+    setTxt(bid,pfT(best));
     if(!e)return;
     if(t>0){e.textContent=pfT(t);e.style.color='var(--accent)';}
     else if(p.speed_ok&&p.armed&&p.run_ms>0){e.textContent=pfT(p.run_ms);e.style.color='var(--yellow)';}
@@ -1113,10 +1113,10 @@ function renderPerf(d){
     else if(p.speed_ok&&p.brake_armed){e1.textContent='braking';e1.style.color='var(--yellow)';}
     else{e1.textContent='--';e1.style.color='';}
   }
-  setTxt('pf1000b','best '+pfT(p.best1000));
+  setTxt('pf1000b',pfT(p.best1000));
   // Estimated longitudinal G (no IMU).
   setTxt('pfG',(p.g>=0?'+':'')+(p.g||0).toFixed(2)+'g');
-  setTxt('pfGpk','peak +'+(p.gpk||0).toFixed(2)+' / '+(p.gpkb||0).toFixed(2));
+  setTxt('pfGpk','+'+(p.gpk||0).toFixed(2)+' / '+(p.gpkb||0).toFixed(2));
   // Wheel slip (0x175, Party CAN).
   var se=document.getElementById('pfSlip');
   if(se){
@@ -1258,6 +1258,8 @@ function capRow(name,key,v){
     +'<span style="flex:0 0 92px;font-size:.8em;color:var(--text)">'+name+'</span>'
     +'<span style="font-size:.73em;color:var(--text3);line-height:1.3">'+msg+'</span></div>';
 }
+// bus_hint (FSDCapBusHint), the same as the firmware's English "hint" text.
+var CAP_BUS_HINT=['','looks Party-like','looks Chassis/Vehicle-like'];
 // vehicle_hint (0x3C2) is a hint about the bus, not a pass/fail, so no ✓/✗.
 var CAP_VEH_HINT=['no 0x3C2 and no body frames — no hint',
   '0x3C2 seen — likely the Vehicle CAN pair (a hint, not a verdict)',
@@ -1278,10 +1280,12 @@ function capSync(d){
   var buses=c.buses||[];
   if(!buses.length){el.innerHTML='<div style="font-size:.8em;color:var(--yellow);padding:6px 0">No frames seen — check wiring / that the car is awake.</div>';return;}
   var dual=buses.length>1;
-  var h='';
+  // sp(): fixed words of a composed line in a text node of their own, which
+  // the zh layer can translate (it matches whole text nodes).
+  var h='',sp=function(t){return '<span>'+t+'</span>';};
   buses.forEach(function(b){
     h+='<div style="margin-top:8px">';
-    if(dual)h+='<div style="font-size:.78em;color:var(--text2);font-weight:600;margin-bottom:2px">'+bbEsc(b.bus)+' &middot; '+(b.frames||0)+' frames</div>';
+    if(dual)h+='<div style="font-size:.78em;color:var(--text2);font-weight:600;margin-bottom:2px">'+bbEsc(b.bus)+' &middot; '+(b.frames||0)+' '+sp('frames')+'</div>';
     h+=capRow('Nag killer','nag_killer',b.nag_killer);
     h+=capRow('AP-First','ap_first',b.ap_first);
     h+=capRow('FSD activate','fsd_activation',b.fsd_activation);
@@ -1294,10 +1298,11 @@ function capSync(d){
       if(ids.body_window)seen.push('windows');
       if(ids.body_lights)seen.push('lights/turn');
       if(ids.body_door)seen.push('mirror read-back');
-      if(seen.length)h+='<div style="font-size:.7em;color:var(--text3);padding-top:3px">Reachable frames: '+seen.join(', ')+' (presence only — not proof injection actuates them).</div>';
+      if(seen.length)h+='<div style="font-size:.7em;color:var(--text3);padding-top:3px">'+sp('Reachable frames:')+' '+seen.map(sp).join(', ')+' '+sp('(presence only — not proof injection actuates them).')+'</div>';
     }
     if(typeof b.vehicle_hint==='number')h+=capHintRow('Bus hint',b.vehicle_hint);
-    var hint=b.hint?('Best guess: '+bbEsc(b.hint)+" — confirm with your car's wiring diagram (Service Mode → CAN Port where available)"):'';
+    var bh=CAP_BUS_HINT[b.bus_hint]||'';
+    var hint=bh?(sp('Best guess:')+' '+sp(bh)+' '+sp("— confirm with your car's wiring diagram (Service Mode → CAN Port where available)")):'';
     if(hint)h+='<div style="font-size:.7em;color:var(--text3);padding-top:5px">'+hint+'</div>';
     if(b.hw_unconfirmed)h+='<div style="font-size:.7em;color:var(--yellow);padding-top:3px">HW unconfirmed — 0x399 reading assumed; verdict may change once HW is detected.</div>';
     h+='</div>';

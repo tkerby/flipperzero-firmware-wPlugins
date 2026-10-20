@@ -167,6 +167,7 @@ String capability_status_json() {
         j += "\"soft_engage\":";    j += (int)r.soft_engage;    j += ',';
         j += "\"body_control\":";   j += (int)r.body_control;   j += ',';
         j += "\"vehicle_hint\":";   j += (int)r.vehicle_hint;   j += ',';
+        j += "\"bus_hint\":";       j += (int)r.bus_hint;       j += ',';
         j += "\"hw_unconfirmed\":"; j += r.hw_unconfirmed ? "true" : "false"; j += ',';
         j += "\"hint\":\"";         j += hint_str(r.bus_hint);  j += "\"}";
     }

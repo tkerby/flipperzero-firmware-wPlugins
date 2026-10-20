@@ -35,6 +35,8 @@ Behavior:
    with a dynamic part (file name, size) rely on the prefix / suffix match in
    zhText(): put the variable text after a key, or between two keys.
  - Upstream strings missing from the tables simply stay English (graceful).
+ - Text under an element with translate="no" stays English (the Acceleration
+   Mode names, which the zh READMEs write in English too).
 
 To update translations, edit the T table below and re-run:
     python3 gen_i18n.py
@@ -634,6 +636,59 @@ T = [
     ('DAS state readable',
      'DAS 状态可读',
      'DAS 狀態可讀'),
+    # Tap Check card (#125): feature rows, verdict lines, reachable frames and
+    # the firmware's bus-family hint.
+    ('Nag killer',
+     'NAG 消除',
+     'NAG 消除'),
+    ('frames',
+     '帧',
+     '訊框'),
+    ('0x370 + DAS state present — gates correctly',
+     '0x370 与 DAS 状态都在 — 可正常判断',
+     '0x370 與 DAS 狀態都在 — 可正常判斷'),
+    ('0x370 here but no DAS state — dual-CAN recommended (read DAS on a second tap)',
+     '有 0x370 但没有 DAS 状态 — 建议双路 CAN（在第二个接入点读取 DAS）',
+     '有 0x370 但沒有 DAS 狀態 — 建議雙路 CAN（在第二個接線點讀取 DAS）'),
+    ('no DAS state here (need 0x399/0x39B)',
+     '此处没有 DAS 状态（需要 0x399/0x39B）',
+     '這裡沒有 DAS 狀態（需要 0x399/0x39B）'),
+    ('AP control frame present (0x3FD/0x3EE)',
+     '有 AP 控制帧（0x3FD/0x3EE）',
+     '有 AP 控制訊框（0x3FD/0x3EE）'),
+    ('no AP control frame to modify here',
+     '此处没有可修改的 AP 控制帧',
+     '這裡沒有可修改的 AP 控制訊框'),
+    ('0x129 steering angle present',
+     '有 0x129 转向角',
+     '有 0x129 轉向角'),
+    ('no 0x129 — degrades to AP-First-only',
+     '没有 0x129 — 降级为仅 AP 优先',
+     '沒有 0x129 — 降級為僅 AP 優先'),
+    ('0x129 present, no valid angle yet',
+     '有 0x129，但还没有有效的转向角',
+     '有 0x129，但還沒有有效的轉向角'),
+    ('Vehicle/body bus reachable — mirror/window/lights frames present (RX only; not proof of actuation)',
+     '可接入车辆/车身总线 — 有后视镜/车窗/灯光帧（仅接收，不代表能实际控制）',
+     '可接到車輛/車身匯流排 — 有後照鏡/車窗/燈光訊框（僅接收，不代表能實際控制）'),
+    ('not on this tap — needs the X179 A-pillar (Vehicle-bus) tap',
+     '不在此接入点 — 需要 X179 A 柱（车辆总线）接入点',
+     '不在此接線點 — 需要 X179 A 柱（車輛匯流排）接線點'),
+    ('mirror/lock/horn',
+     '后视镜/门锁/喇叭',
+     '後照鏡/門鎖/喇叭'),
+    ('windows',
+     '车窗',
+     '車窗'),
+    ('lights/turn',
+     '灯光/转向灯',
+     '燈光/方向燈'),
+    ('looks Party-like',
+     '看起来像 Party CAN',
+     '看起來像 Party CAN'),
+    ('looks Chassis/Vehicle-like',
+     '看起来像底盘/车辆 CAN',
+     '看起來像底盤/車輛 CAN'),
     ('Records the key diagnostic CAN IDs around anomalies (aborts, bus-off, manual marks) to the device only — never uploaded. Use the toggle below to enable or disable.',
      '仅在设备本地记录异常（中断、bus-off、手动标记）前后的关键诊断 CAN ID — 永不上传。用下方开关启用或禁用。',
      '僅在裝置本機記錄異常（中斷、bus-off、手動標記）前後的關鍵診斷 CAN ID — 永不上傳。用下方開關啟用或停用。'),
@@ -748,6 +803,58 @@ T = [
     ('unconfirmed on some cars',
      '部分车型未确认',
      '部分車型未確認'),
+    # Performance card: switch text, tiles, advisory and the notes.
+    ('Performance',
+     '性能',
+     '性能'),
+    ('Read-only read-out derived from frames already on the bus — it transmits nothing. Enable to show acceleration / braking timers, an estimated G (no IMU), wheel slip and pack temperature / power. Speed & est. G need any tap carrying 0x257; wheel slip needs Party CAN (0x175); temp & power need a Vehicle-CAN tap (BMS).',
+     '只读读数，由总线上已有的帧推算 — 不发送任何数据。启用后显示加速 / 制动计时、估算 G 值（无 IMU）、车轮打滑以及电池包温度 / 功率。车速和估算 G 需要任一带 0x257 的接入点；车轮打滑需要 Party CAN（0x175）；温度和功率需要车辆 CAN 接入点（BMS）。',
+     '唯讀讀數，由匯流排上已有的訊框推算 — 不傳送任何資料。啟用後顯示加速 / 煞車計時、估算 G 值（無 IMU）、車輪打滑以及電池組溫度 / 功率。車速和估算 G 需要任一帶 0x257 的接線點；車輪打滑需要 Party CAN（0x175）；溫度和功率需要車輛 CAN 接線點（BMS）。'),
+    ('Vehicle speed',
+     '车速',
+     '車速'),
+    ('100-0 km/h brake',
+     '100-0 km/h 制动',
+     '100-0 km/h 煞車'),
+    ('best',
+     '最佳',
+     '最佳'),
+    ('Est. long. G',
+     '估算纵向 G',
+     '估算縱向 G'),
+    ('peak',
+     '峰值',
+     '峰值'),
+    ('Wheel slip',
+     '车轮打滑',
+     '車輪打滑'),
+    ('Pack temp',
+     '电池包温度',
+     '電池組溫度'),
+    ('Battery advisory',
+     '电池提示',
+     '電池提示'),
+    ('braking',
+     '制动中',
+     '煞車中'),
+    ('n/a',
+     '无数据',
+     '無資料'),
+    ('Cold pack — reduced regen and power until warmed',
+     '电池包偏冷 — 升温前动能回收和功率会降低',
+     '電池組偏冷 — 升溫前動能回收和功率會降低'),
+    ('Hot pack — power may be limited',
+     '电池包偏热 — 功率可能受限',
+     '電池組偏熱 — 功率可能受限'),
+    ('Normal',
+     '正常',
+     '正常'),
+    ('No BMS frames (needs Vehicle-CAN tap)',
+     '没有 BMS 帧（需要车辆 CAN 接入点）',
+     '沒有 BMS 訊框（需要車輛 CAN 接線點）'),
+    ('G is estimated from dv/dt of vehicle speed (no IMU). Timers auto-arm leaving a standstill, lock at the target, and reset at the next standstill; best time is kept per session. Temp / power need a Vehicle-CAN tap; wheel slip needs 0x175.',
+     'G 值由车速的 dv/dt 估算（无 IMU）。计时在离开静止时自动开始，到达目标时锁定，下次静止时重置；最佳成绩在本次运行期间保留。温度 / 功率需要车辆 CAN 接入点；车轮打滑需要 0x175。',
+     'G 值由車速的 dv/dt 估算（無 IMU）。計時在離開靜止時自動開始，到達目標時鎖定，下次靜止時重設；最佳成績在本次執行期間保留。溫度 / 功率需要車輛 CAN 接線點；車輪打滑需要 0x175。'),
     ('Pack SOC',
      '电池包电量',
      '電池組電量'),
@@ -1081,14 +1188,19 @@ function zhText(raw){
 var SKIP_TAGS = {SCRIPT:1, STYLE:1, TEXTAREA:1, NOSCRIPT:1, CODE:1, PRE:1};
 var ATTR_NAMES = ["placeholder", "title", "aria-label", "alt"];
 
+function keepEnglish(el){
+  return !!(el && el.closest && el.closest('[translate="no"]'));
+}
+
 function translateTextNode(node){
+  if(keepEnglish(node.parentElement)) return;
   var t = zhText(node.nodeValue);
   if(t !== null && t !== node.nodeValue) node.nodeValue = t;
 }
 
 function translateElement(el){
   var i, a, v, t;
-  if(!el.getAttribute) return;
+  if(!el.getAttribute || keepEnglish(el)) return;
   for(i = 0; i < ATTR_NAMES.length; i++){
     a = ATTR_NAMES[i];
     v = el.getAttribute(a);
