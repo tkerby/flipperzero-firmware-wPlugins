@@ -38,6 +38,10 @@ assert "NotificationMessageTypeLedGreen" in ui
 assert "NotificationMessageTypeLedBlue" in ui
 assert "notification_message(notification_, &BrTagLedSequence)" in ui
 assert "notification_message_block(notification_" not in ui
-assert "info.color_rgba[0]" in ui and "info.color_rgba[1]" in ui and "info.color_rgba[2]" in ui
+assert (
+    "info.color_rgba[0]" in ui
+    and "info.color_rgba[1]" in ui
+    and "info.color_rgba[2]" in ui
+)
 assert "screen() == Screen::Browse" in ui and "screen() == Screen::Detail" in ui
 print("Bambu UI/wipe/LED/batched-dictionary structure OK")

@@ -35,7 +35,9 @@ def main():
     assert probe[:4] == probe_uid
     assert probe_uid != bytes(4)  # zero UID is reserved from runtime probes
     assert probe[4] == 0x08  # 12 ^ 34 ^ 56 ^ 78
-    assert probe[5:] == SOURCE_BLOCK0[5:]  # UID test changes nothing else in page/block 0
+    assert (
+        probe[5:] == SOURCE_BLOCK0[5:]
+    )  # UID test changes nothing else in page/block 0
 
     assert len(UFUID_SEAL) == 16
     assert UFUID_SEAL[0] == 0x85 and UFUID_SEAL[-1] == 0x08
@@ -45,7 +47,6 @@ def main():
     assert GEN4_DEFAULT_CONFIG[1] == 0x00  # 4-byte UID
     assert GEN4_DEFAULT_CONFIG[29] == 0x02  # factory direct-write mode
     assert len(GEN4_DEFAULT_CONFIG[:30]) == 30  # F0/F1 omit returned CRC bytes
-
 
     factory_block0 = bytes.fromhex("00010203000804000000000000000000")
     assert len(factory_block0) == 16
@@ -83,7 +84,9 @@ def main():
     # random UID with zero-filled memory.
     # Structural regression: unknown blank tags must never receive a random UID
     # before the selected Bambu page 0. This protects write-once DirectWrite OTP.
-    writer = (Path(__file__).resolve().parents[1] / "src" / "magic" / "magic_writer.cpp").read_text()
+    writer = (
+        Path(__file__).resolve().parents[1] / "src" / "magic" / "magic_writer.cpp"
+    ).read_text()
     assert "0x00, 0x01, 0x02, 0x03, 0x00, 0x08, 0x04, 0x00" in writer
     assert "make_blank_dump(&blank);" in writer
     preflight = writer.split("// Unknown non-Gen1/Gen4 target.", 1)[1].split(
@@ -96,9 +99,9 @@ def main():
     # Every irreversible family lock is gated by exact source verification, and
     # MF4 overlay detection happens before the Gen1A source dump write.
     assert "bool safe_to_lock" in writer
-    safe_body = writer.split("bool safe_to_lock(Nfc* nfc, const BrTagDump& source) {", 1)[1].split(
-        "bool lock_ufuid", 1
-    )[0]
+    safe_body = writer.split(
+        "bool safe_to_lock(Nfc* nfc, const BrTagDump& source) {", 1
+    )[1].split("bool lock_ufuid", 1)[0]
     assert "live_sak" in safe_body and "live_atqa" in safe_body
     assert "verify_dump(nfc, source)" in safe_body
     assert "verify_block0_exact(nfc, source)" in safe_body
