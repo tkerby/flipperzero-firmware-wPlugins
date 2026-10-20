@@ -142,6 +142,21 @@ static void test_readback() {
     b = a;
     b.con = con_reset;
     assert(!mcp2518fd_readback_same(a, b));
+
+    // The retry skips the oscillator wait only after a silent readback, and
+    // only while CiCON and OSC read back the same.
+    const Mcp2518fdReadback silent0 = {0, 0, 0, false};
+    const Mcp2518fdReadback silent1 = {0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, true};
+    assert(!mcp2518fd_retry_skips_osc_wait(nullptr, 0, 0));  // first attempt: full
+    assert(mcp2518fd_retry_skips_osc_wait(&silent0, 0, 0));
+    assert(mcp2518fd_retry_skips_osc_wait(&silent1, 0xFFFFFFFFu, 0xFFFFFFFFu));
+    assert(!mcp2518fd_retry_skips_osc_wait(&silent0, 0xFFFFFFFFu, 0));  // MISO changed
+    assert(!mcp2518fd_retry_skips_osc_wait(&silent0, con_reset, osc_reset));  // chip now answers
+    assert(!mcp2518fd_retry_skips_osc_wait(&silent0, con_reset, 0));
+    const Mcp2518fdReadback no_clock = {con_reset, osc_reset, 0, false};
+    assert(!mcp2518fd_retry_skips_osc_wait(&no_clock, con_reset, osc_reset));  // not silent
+    const Mcp2518fdReadback garbled = {0x12345678u, 0xABCD0460u, 0, false};
+    assert(!mcp2518fd_retry_skips_osc_wait(&garbled, 0x12345678u, 0xABCD0460u));
 }
 
 static void test_timing() {

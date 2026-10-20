@@ -1035,9 +1035,12 @@ class Mcp2518FdDriver : public CanDriver {
     // reset the chip: a controller still running from before an ESP32 reset
     // ends the frame it is on and aborts the rest. A chip that has just
     // powered up is in Configuration mode already; one that does not answer
-    // costs both bounded waits, 12 ms. Returns what the chip reads back then,
-    // the state the library starts from, for the not-detected line.
-    Mcp2518fdReadback reset_chip() {
+    // costs both bounded waits, 12 ms. On a retry after a silent readback
+    // (@p prev) that reads back the same again, the oscillator wait is
+    // skipped: the 30 s retry then holds the loop about 10 ms less. Returns
+    // what the chip reads back then, the state the library starts from, for
+    // the not-detected line.
+    Mcp2518fdReadback reset_chip(const Mcp2518fdReadback *prev) {
         write_reg8(MCP2518FD_REG_CON + 3, MCP2518FD_CON_REQ_CONFIG, kSlowSpiHz);
         uint32_t t0 = millis();
         while (mcp2518fd_opmod(read_reg32(MCP2518FD_REG_CON, kSlowSpiHz)) != MCP2518FD_OPMOD_CONFIG &&
@@ -1045,8 +1048,12 @@ class Mcp2518FdDriver : public CanDriver {
         }
         spi_reset();
         Mcp2518fdReadback rb = {};
-        rb.osc   = wait_osc_ready();
-        rb.con   = read_reg32(MCP2518FD_REG_CON, kSlowSpiHz);
+        rb.osc = read_reg32(MCP2518FD_REG_OSC, kSlowSpiHz);
+        rb.con = read_reg32(MCP2518FD_REG_CON, kSlowSpiHz);
+        if (!mcp2518fd_retry_skips_osc_wait(prev, rb.con, rb.osc)) {
+            rb.osc = wait_osc_ready();
+            rb.con = read_reg32(MCP2518FD_REG_CON, kSlowSpiHz);
+        }
         rb.devid = read_reg32(MCP2518FD_REG_DEVID, kSlowSpiHz);
         return rb;
     }
@@ -1112,7 +1119,7 @@ public:
             spi_begun_ = true;
         }
 
-        Mcp2518fdReadback readback = reset_chip();
+        Mcp2518fdReadback readback = reset_chip(diag_printed_ ? &diag_ : nullptr);
         // Probe: Listen-Only on the undivided clock. Nothing reaches the bus
         // whatever the crystal is, and the library's SPI clock for a 20 MHz
         // SYSCLK is in spec with a 20 or a 40 MHz crystal.
