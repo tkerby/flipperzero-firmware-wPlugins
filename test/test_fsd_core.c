@@ -3573,6 +3573,14 @@ static void test_power_verdict(void) {
     CHECK(fsd_pwr_verdict(FSD_PWR_RESET_UNKNOWN, &slept) == FSD_PWR_UNKNOWN,
           "unknown reset reason -> unknown");
 
+    // The USB host reset us (S3 USB serial/JTAG): USB is connected and feeds
+    // the board, with or without a record.
+    CHECK(fsd_pwr_verdict(FSD_PWR_RESET_USB, &slept) == FSD_PWR_USB,
+          "USB reset after a quiet record -> USB, not switched");
+    CHECK(fsd_pwr_verdict(FSD_PWR_RESET_USB, &none) == FSD_PWR_USB, "USB reset, no record -> USB");
+    CHECK(fsd_pwr_verdict(FSD_PWR_RESET_USB, NULL) == FSD_PWR_USB, "USB reset, NULL record -> USB");
+    CHECK(fsd_pwr_restart_count(FSD_PWR_RESET_USB, true, 2u) == 3u, "a USB reset is a restart");
+
     // ALWAYS_ON can never come from the boot path: a module that kept its power
     // never rebooted to report anything. It has to come from the live path.
     CHECK(fsd_pwr_live_verdict(FSD_PWR_ALWAYS_ON_MS) == FSD_PWR_ALWAYS_ON,
@@ -3582,7 +3590,7 @@ static void test_power_verdict(void) {
     CHECK(fsd_pwr_live_verdict(0) == FSD_PWR_UNKNOWN, "bus busy -> no claim");
 
     // Every value has to be printable, or the serial line reports a number.
-    for (int r = 0; r <= FSD_PWR_RESET_EXTERNAL; r++)
+    for (int r = 0; r <= FSD_PWR_RESET_USB; r++)
         CHECK(fsd_pwr_reset_str((FsdPwrReset)r)[0] != '\0', "reset %d has a name", r);
     for (int v = 0; v <= FSD_PWR_CRASH; v++)
         CHECK(fsd_pwr_verdict_str((FsdPwrVerdict)v)[0] != '\0', "verdict %d has a name", v);

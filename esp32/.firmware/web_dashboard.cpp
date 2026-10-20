@@ -1654,7 +1654,7 @@ function updDevice(d){
   // (12V). Each phrase sits in its own span so the i18n layer can translate it.
   var pe=document.getElementById('pwrInfo');
   if(pe && d.reset_reason!==undefined){
-    var RST=['Unknown reset','Power-on','Brownout','Panic','Watchdog','Software restart','Deep-sleep wake','External reset'];
+    var RST=['Unknown reset','Power-on','Brownout','Panic','Watchdog','Software restart','Deep-sleep wake','External reset','USB reset'];
     var PV=['Not known yet','Inconclusive (car never slept)','Switched (dies with the car)','Always-on (outlives the car)','Brownout (check wiring)','Crash (supply not implicated)','Inconclusive (USB powered)'];
     var PVCOL=['var(--text2)','var(--text2)','var(--accent)','var(--yellow)','var(--red)','var(--text2)','var(--text2)'];
     var rc=d.reset_reason,vc=d.power_verdict;

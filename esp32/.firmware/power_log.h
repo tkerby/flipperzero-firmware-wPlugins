@@ -52,7 +52,25 @@ enum {
     PWR_RST_SOFTWARE,
     PWR_RST_DEEPSLEEP,
     PWR_RST_EXTERNAL,
+    PWR_RST_USB,
 };
+
+/* ESP32-S3 RTC reset reasons (soc/reset_reasons.h) for a reset from the USB
+ * host: the serial port's DTR/RTS reset (boot log "rst:0x15
+ * (USB_UART_CHIP_RESET)") and the JTAG one. esp_reset_reason() in the pinned
+ * IDF 4.4 has no code for them and says ESP_RST_UNKNOWN; IDF 5 says
+ * ESP_RST_USB. */
+#define PWR_S3_RTC_USB_UART 0x15
+#define PWR_S3_RTC_USB_JTAG 0x16
+
+/* The PWR_RST_* code for a reset esp_reset_reason() could not name, from the
+ * chip's own RTC reset reason. @p fine is what esp_reset_reason() mapped to;
+ * only an unknown one on the S3 is looked at again. */
+static inline int power_log_refine_reset(int fine, int rtc_reason, bool s3) {
+    if (fine != PWR_RST_UNKNOWN || !s3) return fine;
+    if (rtc_reason == PWR_S3_RTC_USB_UART || rtc_reason == PWR_S3_RTC_USB_JTAG) return PWR_RST_USB;
+    return fine;
+}
 
 /**
  * Read the previous session's record, print the verdict, start a new session.

@@ -92,6 +92,7 @@ typedef enum {
     FSD_PWR_RESET_SOFTWARE, /* panic, watchdog, esp_restart() */
     FSD_PWR_RESET_EXTERNAL, /* reset pin */
     FSD_PWR_RESET_DEEPSLEEP,/* woke from our own deep sleep (board kept power) */
+    FSD_PWR_RESET_USB,      /* the USB host reset us (ESP32-S3 USB serial/JTAG) */
 } FsdPwrReset;
 
 typedef enum {

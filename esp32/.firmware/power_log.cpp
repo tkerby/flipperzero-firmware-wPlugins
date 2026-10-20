@@ -5,6 +5,7 @@
 #include <Preferences.h>
 #include <esp_system.h>
 #include <esp_attr.h>
+#include <esp_rom_sys.h>  // esp_rom_get_reset_reason
 #if defined(ARDUINO_USB_CDC_ON_BOOT) && ARDUINO_USB_CDC_ON_BOOT
 #include <HWCDC.h>
 #endif
@@ -21,6 +22,7 @@ static FsdPwrVerdict g_boot_verdict = FSD_PWR_UNKNOWN;
 static FsdPwrVerdict g_live_verdict = FSD_PWR_UNKNOWN;
 static FsdPwrCheckpoint g_cp = {false, 0};
 static int g_reset_code = PWR_RST_UNKNOWN;
+static int g_rtc_reason = 0;  // the chip's own reset reason, for an unknown one
 
 // RTC no-init RAM: kept across a software reset, a crash, a brownout CPU reset
 // and (its real job here) deep sleep, but wiped by a true power cut and never
@@ -86,8 +88,13 @@ static void print_minutes(const char *label, uint32_t ms) {
 
 void power_log_init(void) {
     esp_reset_reason_t r = esp_reset_reason();
-    g_reset_code = fine_reset_code(r);
-    FsdPwrReset cat = verdict_category(r);
+    g_rtc_reason = (int)esp_rom_get_reset_reason(0);
+#if defined(CONFIG_IDF_TARGET_ESP32S3)
+    g_reset_code = power_log_refine_reset(fine_reset_code(r), g_rtc_reason, true);
+#else
+    g_reset_code = power_log_refine_reset(fine_reset_code(r), g_rtc_reason, false);
+#endif
+    FsdPwrReset cat = (g_reset_code == PWR_RST_USB) ? FSD_PWR_RESET_USB : verdict_category(r);
 
     // RTC RAM is valid only if it survived (not a power cut, not first boot).
     bool rtc_ok = (g_rtc.magic == PWR_RTC_MAGIC);
@@ -121,7 +128,10 @@ void power_log_init(void) {
         g_boot_verdict = fsd_pwr_verdict(cat, &prev);
     g_boot_verdict = fsd_pwr_apply_usb_guard(g_boot_verdict, usb_present());
 
-    Serial.printf("[PWR] reset: %s\n", power_log_reset_str());
+    if (g_reset_code == PWR_RST_UNKNOWN)
+        Serial.printf("[PWR] reset: unknown (RTC reason 0x%02X)\n", (unsigned)g_rtc_reason);
+    else
+        Serial.printf("[PWR] reset: %s\n", power_log_reset_str());
     if (prev.valid) {
         Serial.print("[PWR] last session: ");
         print_minutes("up", prev.uptime_ms);
@@ -217,6 +227,7 @@ const char *power_log_reset_str(void) {
     case PWR_RST_SOFTWARE:  return "software restart";
     case PWR_RST_DEEPSLEEP: return "deep-sleep wake";
     case PWR_RST_EXTERNAL:  return "reset pin";
+    case PWR_RST_USB:       return "USB reset (host on the USB port)";
     default:                return "unknown";
     }
 }

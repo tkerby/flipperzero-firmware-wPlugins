@@ -7,6 +7,7 @@
 # test_web_origin covers esp32/.firmware/web_origin.h (whose commands are taken).
 # test_can_counters covers esp32/.firmware/can_counters.h (driver counter bookkeeping).
 # test_loop_health covers esp32/.firmware/loop_health.h (loop() pass timing).
+# test_power_log covers esp32/.firmware/power_log.h (reset reason refinement).
 #
 #   make -C test check
 
@@ -48,7 +49,10 @@ test_can_counters: test_can_counters.cpp $(ESP32)/can_counters.h
 test_loop_health: test_loop_health.cpp $(ESP32)/loop_health.h
 	$(CXX) $(CXXFLAGS) -I$(ESP32) test_loop_health.cpp -o $@
 
-check: test_fsd_core test_esp32_core test_can_capture_filter test_captive_probe test_can_mcp2518fd test_web_cmd test_web_origin test_can_counters test_loop_health
+test_power_log: test_power_log.cpp $(ESP32)/power_log.h $(ROOT)/fsd_logic/fsd_power.h
+	$(CXX) $(CXXFLAGS) -I$(ESP32) test_power_log.cpp -o $@
+
+check: test_fsd_core test_esp32_core test_can_capture_filter test_captive_probe test_can_mcp2518fd test_web_cmd test_web_origin test_can_counters test_loop_health test_power_log
 	./test_fsd_core
 	./test_esp32_core
 	./test_can_capture_filter
@@ -58,8 +62,9 @@ check: test_fsd_core test_esp32_core test_can_capture_filter test_captive_probe 
 	./test_web_origin
 	./test_can_counters
 	./test_loop_health
+	./test_power_log
 
 clean:
-	rm -rf test_fsd_core test_fsd_core.dSYM test_esp32_core test_esp32_core.dSYM test_can_capture_filter test_can_capture_filter.dSYM test_captive_probe test_captive_probe.dSYM test_can_mcp2518fd test_can_mcp2518fd.dSYM test_web_cmd test_web_cmd.dSYM test_web_origin test_web_origin.dSYM test_can_counters test_can_counters.dSYM test_loop_health test_loop_health.dSYM
+	rm -rf test_fsd_core test_fsd_core.dSYM test_esp32_core test_esp32_core.dSYM test_can_capture_filter test_can_capture_filter.dSYM test_captive_probe test_captive_probe.dSYM test_can_mcp2518fd test_can_mcp2518fd.dSYM test_web_cmd test_web_cmd.dSYM test_web_origin test_web_origin.dSYM test_can_counters test_can_counters.dSYM test_loop_health test_loop_health.dSYM test_power_log test_power_log.dSYM
 
 .PHONY: check clean

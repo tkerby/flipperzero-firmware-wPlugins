@@ -27,6 +27,9 @@ uint32_t fsd_pwr_quiet_ms(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any) {
 }
 
 FsdPwrVerdict fsd_pwr_verdict(FsdPwrReset reset, const FsdPwrRecord* prev) {
+    /* A host on the USB port reset us, so USB is connected and feeds the
+     * board: whatever the record says, this boot cannot speak for the 12V. */
+    if(reset == FSD_PWR_RESET_USB) return FSD_PWR_USB;
     if(!prev || !prev->valid) return FSD_PWR_UNKNOWN;
 
     switch(reset) {
@@ -109,6 +112,7 @@ const char* fsd_pwr_reset_str(FsdPwrReset r) {
     case FSD_PWR_RESET_SOFTWARE: return "software reset";
     case FSD_PWR_RESET_EXTERNAL: return "reset pin";
     case FSD_PWR_RESET_DEEPSLEEP: return "deep-sleep wake";
+    case FSD_PWR_RESET_USB: return "USB reset";
     case FSD_PWR_RESET_UNKNOWN:
     default: return "unknown";
     }
