@@ -30,6 +30,17 @@ make momentum-sdk MOMENTUM_SDK="<对应固件的 SDK ZIP URL>"
 
 后续的打包和上传命令也需要加上 `FIRMWARE=momentum`。构建操作不更新设备固件。
 
+Momentum mntm-012 使用 API 87.1，与 Momentum CN v1.1.6 的 API 版本相同，可使用独立档位构建，保留原有 mntm-009（API 79.2）SDK 和产物：
+
+```sh
+make momentum-012-sdk
+make build FIRMWARE=momentum-012
+```
+
+产物为 `dist/momentum-012/taiko_player.fap`，SDK 保存在 `.ufbt/momentum-012/`。`make momentum-012` 是该构建命令的简写；打包和上传使用 `FIRMWARE=momentum-012`。作者已在 Momentum CN v1.1.6 上确认该构建正常运行；其他固件分支仍应单独验证播放、GPIO 和暂停功能。SDK 来源为[上游 mntm-012 Release](https://github.com/Next-Flip/Momentum-Firmware/releases/tag/mntm-012)，可通过 `MOMENTUM_012_SDK` 覆盖下载地址。
+
+现有 `make release` 仍打包官方版和 mntm-009 版；mntm-012 档位目前单独构建。
+
 两套 SDK 初始化后，可生成不含本地曲目和设置的双固件发布包：
 
 ```sh

@@ -103,6 +103,15 @@ make build FIRMWARE=momentum
 
 The Momentum build is saved to `dist/momentum/taiko_player.fap`. Use an SDK compatible with your device's firmware API. Run `make test` for local tests.
 
+For Momentum mntm-012 (API 87.1, also matching the API version of Momentum CN v1.1.6), use a separate SDK and output directory:
+
+```sh
+make momentum-012-sdk
+make build FIRMWARE=momentum-012
+```
+
+The output is `dist/momentum-012/taiko_player.fap`; this preserves the mntm-009 SDK and build. The author has confirmed that this build runs normally on Momentum CN v1.1.6. The existing release command continues to package official and mntm-009 builds.
+
 ## Credits
 
 The default Don/Ka sounds come from TJAPlayer3's SimpleStyle skin under the MIT license. See [sound attribution and license](assets/SFX-NOTICE.md).
