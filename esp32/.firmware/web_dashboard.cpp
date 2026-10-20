@@ -685,7 +685,7 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
       <select id="selAccel" onchange="cmd('accel_mode',parseInt(this.value,10))">
         <option value="0">Off</option>
         <option value="1">Chill</option>
-        <option value="2">Sport</option>
+        <option value="2">Standard</option>
         <option value="3">Performance</option>
       </select>
     </div>
@@ -1147,7 +1147,7 @@ function updateControlsSummary(d){
   if(d.tlssc_restore)items.push('TLSSC');
   if(d.precondition)items.push('Precond');
   if(d.assist_tlssc_bit38)items.push('TLSSC bit38');
-  if(d.accel_mode>0)items.push('Accel '+(['','Chill','Sport','Performance'][d.accel_mode]||'?'));
+  if(d.accel_mode>0)items.push('Accel '+(['','Chill','Standard','Performance'][d.accel_mode]||'?'));
   if(d.cp_type_eu_rewrite)items.push('EU CP Type');
   if(d.display_enabled)items.push('Display');
   if(d.can_dump)items.push('CAN Dump');
@@ -1380,18 +1380,23 @@ function updControls(d){
   if(document.getElementById('swTelOff')) document.getElementById('swTelOff').checked=d.assist_telemetry_off;
   var apmv3Sel=document.getElementById('selApmv3');
   if(apmv3Sel && d.apmv3_branch!==undefined && document.activeElement!==apmv3Sel) apmv3Sel.value=String(d.apmv3_branch);
-  // Acceleration Mode (#211): setting + car map -> map going out
+  // Acceleration Mode (#211): setting + car map -> map going out. Mode names as
+  // the car's own UI has them: pedal map 1 is Standard (SPORT in older signal
+  // lists). The fixed words sit in spans of their own for the i18n layer.
   var acSel=document.getElementById('selAccel');
   if(acSel && d.accel_mode!==undefined && document.activeElement!==acSel) acSel.value=String(d.accel_mode);
   var acSt=document.getElementById('accelSt');
   if(acSt && d.accel_car_map!==undefined){
-    var ACM=['CHILL','SPORT','PERFORMANCE'], at;
+    var ACM=['CHILL','STANDARD','PERFORMANCE'], at;
+    var sp=function(t){return '<span>'+t+'</span>';};
     if(d.accel_car_map<0) at=d.accel_bad>0?'0x334 not recognised ('+d.accel_bad+' rejected)':'no 0x334 on this bus yet';
-    else if(d.accel_sent_map===d.accel_car_map) at='Car '+ACM[d.accel_car_map]+' \u00b7 pass-through';
-    else at='Car '+ACM[d.accel_car_map]+' \u2192 sent '+ACM[d.accel_sent_map];
-    if(d.accel_pending) at+=' \u00b7 waiting for standstill';
-    else if(d.accel_mode>0 && !d.tx_allowed) at+=' \u00b7 TX off';
-    acSt.textContent=at;
+    else if(d.accel_sent_map===d.accel_car_map) at=sp('Car')+' '+ACM[d.accel_car_map]+' \u00b7 '+sp('pass-through');
+    else at=sp('Car')+' '+ACM[d.accel_car_map]+' \u2192 '+sp('sent')+' '+ACM[d.accel_sent_map];
+    // A new mode waits for standstill while the latched one keeps going out:
+    // name the waiting mode, so it is not read as the one being sent.
+    if(d.accel_pending) at+=' \u00b7 '+(ACM[d.accel_mode-1]||'?')+' '+sp('pending, applies at standstill');
+    else if(d.accel_mode>0 && !d.tx_allowed) at+=' \u00b7 '+sp('TX off');
+    acSt.innerHTML=at;
   }
   // EU Charge-Port Type (0x25D, #228): toggle + what the car reports and whether
   // the rewrite is active or held off (and by which guard).
@@ -2970,9 +2975,9 @@ static WebCmdResult web_command(WebCmd &cmd, const uint8_t *payload, size_t leng
             prefs_save(&saved);
         }
     } else if (cmd.is("accel_mode")) {
-        // Acceleration Mode override (#211): 1 Chill / 2 Sport / 3 Performance,
-        // anything else = Off (pass-through). The handler latches a new value
-        // only at standstill; Off applies on the next 0x334.
+        // Acceleration Mode override (#211): 1 Chill / 2 Standard (ACCEL_MODE_SPORT)
+        // / 3 Performance, anything else = Off (pass-through). The handler
+        // latches a new value only at standstill; Off applies on the next 0x334.
         int sel;
         if (cmd.integer(&sel)) {
             uint8_t want = (sel >= (int)ACCEL_MODE_CHILL && sel <= (int)ACCEL_MODE_PERFORMANCE)

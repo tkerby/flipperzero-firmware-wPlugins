@@ -110,7 +110,7 @@
 - **右舵（RHD）覆盖** — `0x3F8` bit41 `UI_drivingSide` = RHD。仅限右舵市场
 - **AP 分支／层级选择器** — `0x3FD` mux1 bits 40-42 `UI_apmv3Branch`：Live / Stage / Dev / Stage2 / EAP / Demo。实验性，非持久化的 UI 提示 — 停止注入后即还原
 - **可调 Track Mode** — `0x313` `UI_trackModeSettings`：操控平衡（Handling Balance）+ 稳定辅助（Stability Assist）+ 收车后冷却，校验和会重算。走 Vehicle 总线；默认为 rotation 100 / stability 30%，非 Performance 车型也可用
-- **加速模式（实验性）** — `0x334` `UI_powertrainControl` 的 `UI_pedalMap`（byte0 bits 5-6）：Off（原样转发）/ Chill / Sport / Performance，写进车辆自己的 frame，counter 保留、校验和重算。新模式只在静止时切换；切回 Off，或行驶中在中控屏上改了模式，会立刻回到原样转发。中控屏仍显示你自己的设置。`0x334` 在 Vehicle 和 Chassis CAN 上，不在 OBD-II 的 Party CAN 上。只改踏板映射，不改驱动单元的额定功率。尚未实车验证。点子来自 [ColinM-sys/tesla-can-boost](https://github.com/ColinM-sys/tesla-can-boost)（[#211](https://github.com/hypery11/flipper-tesla-fsd/issues/211)）
+- **加速模式（实验性）** — `0x334` `UI_powertrainControl` 的 `UI_pedalMap`（byte0 bits 5-6）：Off（原样转发）/ Chill / Standard / Performance，写进车辆自己的 frame，counter 保留、校验和重算。新模式只在静止时切换；切回 Off，或行驶中在中控屏上改了模式，会立刻回到原样转发。中控屏仍显示你自己的设置。`0x334` 在 Vehicle 和 Chassis CAN 上，不在 OBD-II 的 Party CAN 上。只改踏板映射，不改驱动单元的额定功率。尚未实车验证。点子来自 [ColinM-sys/tesla-can-boost](https://github.com/ColinM-sys/tesla-can-boost)（[#211](https://github.com/hypery11/flipper-tesla-fsd/issues/211)）
 
 ### 设置（运行时开关）
 

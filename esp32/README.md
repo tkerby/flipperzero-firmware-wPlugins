@@ -87,7 +87,7 @@ Most CAN protocol handling from hypery11's Flipper Zero implementation (`fsd_han
   - Telemetry Off (experimental) (clears reachable telemetry-enable flags on `0x3F8` / `0x3FD` mux1)
   - AP Branch/Tier selector (experimental apmv3 — Live / Stage / Dev / Stage2 / EAP / Demo, or Off)
   - Track Mode (experimental) (adjustable rotation / stability / cooling via `0x313`)
-  - Acceleration Mode (experimental) (Off / Chill / Sport / Performance pedal map on `0x334`, switches at standstill; shows the car's map and what goes out)
+  - Acceleration Mode (experimental) (Off / Chill / Standard / Performance pedal map on `0x334`, switches at standstill; shows the car's map and what goes out)
   - EU Charge-Port Type (experimental) (read-only charge-port type read-out always on; opt-in rewrite re-sends `0x25D` with `CP_type` = IEC CCS so EU Superchargers show in nav, behind a plug guard)
   - Hardware override selector (Auto-detect / Force HW4 / Force HW3 / Force Legacy)
 - **OTA Warning Banner** — pulsing red alert when vehicle OTA update is detected (same banner style for the in-car Autopark TX pause)

@@ -238,8 +238,9 @@
 
 // ── Acceleration Mode override (#211) ───────────────────────────────────────
 // UI_powertrainControl (0x334), little-endian, GTW-forwarded UI frame, 500 ms:
-//   UI_pedalMap: bit5|2 (0 CHILL, 1 SPORT, 2 PERFORMANCE); bit7 is a separate
-//   signal (UI_enableRegenBackfill on newer firmware) and is kept.
+//   UI_pedalMap: bit5|2 (0 CHILL, 1 SPORT, 2 PERFORMANCE; the car's own UI
+//   calls 1 Standard); bit7 is a separate signal (UI_enableRegenBackfill on
+//   newer firmware) and is kept.
 //   UI_powertrainControlCounter: bit52|4 (byte6 high nibble), kept as received.
 //   UI_powertrainControlChecksum: byte7, additive over byte0..6 + id low/high
 //   (matches all 219 0x334 frames in the HW3 + HW4 Model 3 captures).
