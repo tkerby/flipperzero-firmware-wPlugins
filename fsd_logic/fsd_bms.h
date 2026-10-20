@@ -11,6 +11,13 @@
  * and 24~101 on the one 0x312 in its dump. So the layout is kept, but a reading
  * is stored only when it is plausible for one pack; the last plausible one is
  * kept with its age.
+ *
+ * 0x33A UI_range: the SOC the car shows on its own screen, bit 20, 7 bits,
+ * plain percent (#251, from ukinora's fork). In no DBC; pinned by measurement.
+ * It is not 0x292's BMS figure: the two move together with a gap of 0.8-2.9 %
+ * that varies, so neither is derived from the other. Bit 27 is set on some
+ * frames, so the mask must stay 7 bits; above 100 is refused (SNA or a moved
+ * field). #211 Model Y: D2 34 04 7D FE FF 13 63 -> 80 % beside 0x292's 81.8 %.
  */
 
 #include "fsd_state.h"
@@ -59,4 +66,26 @@ static inline void fsd_bms_thermal_update(FSDState* s, const uint8_t* d, uint8_t
 // True while a plausible reading is at most FSD_BMS_TEMP_STALE_MS old.
 static inline bool fsd_bms_temp_fresh(const FSDState* s, uint32_t now_ms) {
     return s->batt_temp_ok && (uint32_t)(now_ms - s->batt_temp_ms) <= FSD_BMS_TEMP_STALE_MS;
+}
+
+#define FSD_BMS_UI_SOC_MIN_DLC   4u
+#define FSD_BMS_UI_SOC_MAX       100u
+
+// Decode the car-displayed SOC from one 0x33A. False (and *pct untouched) for a
+// short frame or a value above 100.
+static inline bool fsd_bms_decode_ui_soc(const uint8_t* d, uint8_t dlc, uint8_t* pct) {
+    if (dlc < FSD_BMS_UI_SOC_MIN_DLC) return false;
+    uint8_t raw = (uint8_t)(((d[2] >> 4) | ((uint16_t)d[3] << 4)) & 0x7Fu);
+    if (raw > FSD_BMS_UI_SOC_MAX) return false;
+    *pct = raw;
+    return true;
+}
+
+// Parse one 0x33A into ui_soc / ui_soc_seen. Read-only; soc_percent (0x292) is
+// left alone.
+static inline void fsd_bms_ui_soc_update(FSDState* s, const uint8_t* d, uint8_t dlc) {
+    uint8_t pct;
+    if (!fsd_bms_decode_ui_soc(d, dlc, &pct)) return;
+    s->ui_soc      = pct;
+    s->ui_soc_seen = true;
 }

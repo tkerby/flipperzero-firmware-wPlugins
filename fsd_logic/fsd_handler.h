@@ -40,7 +40,7 @@
 #define CAN_ID_STEER_ANGLE   0x129  // 297  - SCCM_steeringAngleSensor (steering angle — Party CAN)
 #define CAN_ID_DAS_STEER     0x488  // 1160 - DAS_steeringControl (DAS steering request — Party CAN)
 #define CAN_ID_APS_EACMON    0x27D  // 637  - APS_eacMonitor (steering permission — Party CAN)
-#define CAN_ID_ENERGY_CONS   0x33A  // 826  - UI_ratedConsumption (energy Wh/km — Party CAN)
+#define CAN_ID_UI_RANGE      0x33A  // 826  - UI_range (car-displayed SOC, fsd_bms.h; ESP32 dashboard)
 #define CAN_ID_DRIVER_ASSIST 0x3F8  // 1016 - UI_driverAssistControl (also follow distance — Party CAN)
 #define CAN_ID_VCLEFT_SWITCH 0x3C2  // 962  - VCLEFT_switchStatus (steering-wheel scrollwheel buttons — Vehicle CAN)
 
@@ -253,9 +253,6 @@ bool fsd_handle_gtw_tier_override(FSDState* state, CANFRAME* frame);
  *  Bits: 5 (devMode), 13+48+49 (nav FSD), 14 (handsOff), 40-41 (drivingSide).
  *  Returns true if frame was modified (caller should retransmit). */
 bool fsd_handle_driver_assist_override(FSDState* state, CANFRAME* frame);
-
-/** Parse 0x33A UI_ratedConsumption — energy Wh/km. */
-void fsd_handle_energy_consumption(FSDState* state, const CANFRAME* frame);
 
 /** Modify UI_trackModeSettings (0x313) to set track mode ON.
  *  byte[0] bits 1:0 = 0x01 (kTrackModeRequestOn) + recalc checksum byte[7].

@@ -379,9 +379,6 @@ static int32_t fsd_running_worker(void* context) {
                         send_can_frame(mcp, &frame);
                     }
                 }
-                else if(frame.canId == CAN_ID_ENERGY_CONS) {
-                    fsd_handle_energy_consumption(&state, &frame);
-                }
                 else if(frame.canId == CAN_ID_GTW_CONFIG_ETH) {
                     fsd_handle_gtw_autopilot_tier(&state, &frame);
                     // GTW Config Replay and Tier Override are mutually exclusive

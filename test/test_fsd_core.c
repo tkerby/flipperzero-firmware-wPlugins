@@ -908,6 +908,46 @@ static void test_bms_thermal(void) {
     CHECK(!s.bms_seen && !s.batt_temp_ok, "DLC 5 ignored");
 }
 
+// ── 0x33A car-displayed SOC (fsd_bms.h, #251) ────────────────────────────────
+// Five frames from ukinora's fork (their car, screen photographed at 22 %) and
+// one from the #211 Model Y. wide = what an 8-bit mask would report: bit 27 is
+// set on some frames.
+static const struct {
+    uint8_t d[8];
+    uint8_t pct;
+    uint8_t wide;
+} UISOC[] = {
+    {{0xF8, 0x70, 0x43, 0xA5, 0xFE, 0xFF, 0xCF, 0x64}, 84, 84},
+    {{0xCC, 0x70, 0x53, 0x2C, 0xFE, 0xFF, 0xCF, 0x64}, 69, 197},
+    {{0xAD, 0x70, 0xB3, 0xDB, 0xFD, 0xFF, 0xCF, 0x64}, 59, 187},
+    {{0x9D, 0x70, 0x53, 0xAB, 0xFD, 0xFF, 0xCF, 0x64}, 53, 181},
+    {{0x41, 0x70, 0x63, 0xB1, 0xFC, 0xFF, 0xCF, 0x64}, 22, 22},
+    {{0xD2, 0x34, 0x04, 0x7D, 0xFE, 0xFF, 0x13, 0x63}, 80, 208},   // #211, 0x292 read 81.8 %
+};
+static void test_ui_soc(void) {
+    for (size_t i = 0; i < sizeof(UISOC) / sizeof(UISOC[0]); i++) {
+        uint8_t pct = 0xFF;
+        CHECK(fsd_bms_decode_ui_soc(UISOC[i].d, 8, &pct) && pct == UISOC[i].pct,
+              "0x33A frame %u: %u %% exp %u (8-bit mask would say %u)", (unsigned)i,
+              (unsigned)pct, (unsigned)UISOC[i].pct, (unsigned)UISOC[i].wide);
+        FSDState s;
+        memset(&s, 0, sizeof(s));
+        fsd_bms_ui_soc_update(&s, UISOC[i].d, 8);
+        CHECK(s.ui_soc_seen && s.ui_soc == UISOC[i].pct && s.soc_percent == 0.0f && !s.bms_seen,
+              "0x33A frame %u: ui_soc only, BMS fields untouched", (unsigned)i);
+    }
+    uint8_t d[8] = {0, 0, 0x40, 0x06, 0, 0, 0, 0};                // 100
+    uint8_t pct = 0xFF;
+    CHECK(fsd_bms_decode_ui_soc(d, 8, &pct) && pct == 100, "100 %% decodes");
+    d[2] = 0x50;                                                   // 101
+    pct = 33;
+    CHECK(!fsd_bms_decode_ui_soc(d, 8, &pct) && pct == 33, "101 refused, caller value kept");
+    d[2] = 0xF0; d[3] = 0x07;                                      // 127 (all ones)
+    CHECK(!fsd_bms_decode_ui_soc(d, 8, &pct), "127 refused");
+    CHECK(!fsd_bms_decode_ui_soc(UISOC[0].d, 3, &pct), "DLC 3 refused");
+    CHECK(fsd_bms_decode_ui_soc(UISOC[0].d, 4, &pct) && pct == 84, "DLC 4 enough");
+}
+
 // ── 0x129 SCCM_steeringAngleSensor (fsd_steer.h) ─────────────────────────────
 // Real frames from the #176 (HW3 Model 3) and #211 (HW4 Model Y) records. The
 // pre-fix int16 read of bytes 0-1 gave the angle in the trailing comment.
@@ -2967,16 +3007,6 @@ static void test_readonly_parsers(void) {
     CHECK(s.das_steer_type == 3, "das_steer type got %u", s.das_steer_type);
     CHECK(fabs(s.das_steer_angle_req - 0.05f) < 0.1f, "das_steer angle got %.2f",
           (double)s.das_steer_angle_req);
-
-    // UI_ratedConsumption (0x33A): raw = byte1<<8|byte0, * 0.1
-    memset(&s, 0, sizeof(s));
-    zero(&f);
-    f.data_lenght = 4;
-    f.buffer[0] = 0x10;
-    f.buffer[1] = 0x00; // raw = 16 -> 1.6
-    fsd_handle_energy_consumption(&s, &f);
-    CHECK(fabs(s.energy_wh_per_km - 1.6f) < 0.05f, "energy got %.2f", (double)s.energy_wh_per_km);
-    CHECK(s.energy_seen, "energy seen");
 }
 
 // ── tyre pressures, 0x219 (fsd_tpms.h) ───────────────────────────────────────
@@ -3422,7 +3452,7 @@ static void test_blackbox_filter(void) {
     CHECK(fsd_blackbox_should_record(0x334u),                "0x334 pedal map in set");
     CHECK(fsd_blackbox_should_record(CAN_ID_BMS_THERMAL),     "0x312 pack temp in set");
     CHECK(fsd_blackbox_should_record(CAN_ID_BMS_SOC),         "0x292 pack SOC in set");
-    CHECK(fsd_blackbox_should_record(0x33Au),                "0x33A car SOC in set");
+    CHECK(fsd_blackbox_should_record(CAN_ID_UI_RANGE),        "0x33A car SOC in set");
 
     // 0x257 thinned to one frame per FSD_BLACKBOX_THIN_MS per bus; other ids untouched.
     FSDBlackboxThin th;
@@ -3698,6 +3728,7 @@ int main(void) {
     test_nag_killer_faithful();
     test_steering_angle();
     test_bms_thermal();
+    test_ui_soc();
     test_nag_burst_cap();
     test_signal_config();
     test_abort_guard();

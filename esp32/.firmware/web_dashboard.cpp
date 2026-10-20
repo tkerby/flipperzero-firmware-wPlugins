@@ -461,7 +461,7 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
       </svg>
       <div class="soc-val">
         <span class="soc-num" id="bSoc">--</span>
-        <span class="soc-lbl">SOC</span>
+        <span class="soc-lbl">Pack SOC</span>
       </div>
     </div>
     <div class="hg">
@@ -469,6 +469,10 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
       <div><div class="hv" id="bCurr">--</div><div class="hl">Current</div></div>
       <div><div class="hv" id="bTemp">--</div><div class="hl">Pack temp min~max</div></div>
     </div>
+  </div>
+  <div class="row" id="rowCarSoc" style="display:none">
+    <span class="lbl">Car SOC<br><small style="color:var(--muted)">the % on the car's screen (0x33A)</small></span>
+    <span id="bCarSoc" style="font-variant-numeric:tabular-nums">--</span>
   </div>
 </div>
 
@@ -1513,6 +1517,11 @@ function updCan(d){
 }
 function updBattery(d){
   // Battery
+  // Car-displayed SOC (0x33A) can arrive without the BMS frames; shown when decoded.
+  var cs=d.bms&&d.bms.car_soc!=null?d.bms.car_soc:null;
+  var cr=document.getElementById('rowCarSoc');
+  if(cr) cr.style.display=cs==null?'none':'';
+  setTxt('bCarSoc',cs==null?'--':cs+'%');
   if(d.bms && d.bms.seen){
     var sn=document.getElementById('bSoc');
     if(sn){
@@ -2256,7 +2265,12 @@ static String build_json() {
     // BMS sub-object. Pack temperature only from a fresh, plausible 0x312
     // reading (fsd_bms.h): temp_ok false -> null, the dashboard shows "--" and
     // no advisory. temp_bad counts the 0x312 frames the plausibility gate refused.
-    char bms[192];
+    // car_soc: the % on the car's screen (0x33A, #251), null until decoded; it can
+    // arrive without the BMS frames.
+    char bms[208];
+    char car_soc[8];
+    if (state.ui_soc_seen) snprintf(car_soc, sizeof(car_soc), "%u", (unsigned)state.ui_soc);
+    else strcpy(car_soc, "null");
     if (state.bms_seen) {
         bool temp_ok = fsd_bms_temp_fresh(&state, millis());
         char temp[64];
@@ -2268,14 +2282,14 @@ static String build_json() {
             strcpy(temp, "\"temp_min\":null,\"temp_max\":null");
         snprintf(bms, sizeof(bms),
             "{\"seen\":true,\"voltage\":%.1f,\"current\":%.1f,"
-            "\"soc\":%.1f,\"temp_ok\":%s,%s,\"temp_bad\":%lu}",
+            "\"soc\":%.1f,\"car_soc\":%s,\"temp_ok\":%s,%s,\"temp_bad\":%lu}",
             state.pack_voltage_v,
             state.pack_current_a,
             state.soc_percent,
-            temp_ok ? "true" : "false", temp,
+            car_soc, temp_ok ? "true" : "false", temp,
             (unsigned long)state.batt_temp_rejected);
     } else {
-        strcpy(bms, "{\"seen\":false}");
+        snprintf(bms, sizeof(bms), "{\"seen\":false,\"car_soc\":%s}", car_soc);
     }
 
     // Performance read-out sub-object (read-only; see fsd_logic/fsd_perf.h).

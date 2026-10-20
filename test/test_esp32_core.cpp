@@ -584,6 +584,27 @@ static void test_autopark_176(void) {
 }
 
 // ── Signal Map hardening (#100): mask-0 ignored + configured-but-absent flag ──
+// ── 0x33A car SOC beside 0x292 through the ESP32 handlers (#251) ─────────────
+// One #211 Model Y pair, same capture: 0x292 81.8 %, 0x33A 80 % (bit 27 set).
+static void test_ui_soc(void) {
+    FSDState s;
+    memset(&s, 0, sizeof(s));
+    CanFrame f;
+    memset(&f, 0, sizeof(f));
+    const uint8_t soc292[8] = {0x3D, 0xCB, 0x5C, 0xB4, 0xD0, 0x01, 0x00, 0x00};
+    const uint8_t ui33a[8]  = {0xD2, 0x34, 0x04, 0x7D, 0xFE, 0xFF, 0x13, 0x63};
+    f.id = CAN_ID_BMS_SOC; f.dlc = 8; memcpy(f.data, soc292, 8);
+    fsd_handle_bms_soc(&s, &f);
+    f.id = CAN_ID_UI_RANGE; memcpy(f.data, ui33a, 8);
+    fsd_handle_ui_range(&s, &f);
+    CHECK(s.soc_percent > 81.75f && s.soc_percent < 81.85f, "0x292 81.8 %% (got %.2f)",
+          (double)s.soc_percent);
+    CHECK(s.ui_soc_seen && s.ui_soc == 80, "0x33A 80 %% (got %u)", (unsigned)s.ui_soc);
+    f.data[2] = 0xF0; f.data[3] = 0x07;                            // 127: refused
+    fsd_handle_ui_range(&s, &f);
+    CHECK(s.ui_soc == 80, "0x33A above 100 refused, last value kept");
+}
+
 // ── 0x312 pack temperature through the ESP32 handler (fsd_bms.h) ─────────────
 static void bms312_feed(FSDState* s, uint8_t b4, uint8_t b5, uint32_t now) {
     CanFrame f;
@@ -1780,6 +1801,7 @@ int main() {
     test_signal_map();
     test_steering_angle();
     test_bms_thermal();
+    test_ui_soc();
     test_di_speed();
     test_cp_type_decode();
     test_cp_type_rewrite();

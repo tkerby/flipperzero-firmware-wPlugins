@@ -789,15 +789,6 @@ bool fsd_handle_driver_assist_override(FSDState* state, CANFRAME* frame) {
     return modified;
 }
 
-// --- 0x33A Energy Consumption Parser ---
-
-void fsd_handle_energy_consumption(FSDState* state, const CANFRAME* frame) {
-    if(frame->data_lenght < 4) return;
-    uint16_t raw = ((uint16_t)frame->buffer[1] << 8) | frame->buffer[0];
-    state->energy_wh_per_km = raw * 0.1f;
-    state->energy_seen = true;
-}
-
 // --- TLSSC Restore (0x331 / 817) ---
 // Spoof DAS_autopilot + DAS_autopilotBase to SELF_DRIVING.
 // byte[0] lower 6 bits → 0x1B. Preserves upper 2 bits.

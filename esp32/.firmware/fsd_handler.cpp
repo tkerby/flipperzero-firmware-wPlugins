@@ -16,7 +16,7 @@
 #include "../../fsd_logic/fsd_ota.h"       // shared 0x318 OTA-install detection (flag vs rolling counter)
 #include "../../fsd_logic/fsd_cp_status.h" // shared 0x25D CP_status decode + EU rewrite predicate (#228)
 #include "../../fsd_logic/fsd_steer.h"     // shared 0x129 steering-angle decode + freshness
-#include "../../fsd_logic/fsd_bms.h"       // shared 0x312 pack-temperature gate
+#include "../../fsd_logic/fsd_bms.h"       // shared 0x312 pack-temperature gate, 0x33A car SOC
 #include <string.h>
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
@@ -965,6 +965,12 @@ void fsd_handle_bms_soc(FSDState *state, const CanFrame *frame) {
         SIG_BMS_SOC_UI_MASK;
     state->soc_percent = raw * SIG_BMS_SOC_SCALE;
     state->bms_seen = true;
+}
+
+// Car-displayed SOC (0x33A UI_range, bit 20, 7 bits, #251): read-only, kept apart
+// from soc_percent (0x292) — fsd_logic/fsd_bms.h.
+void fsd_handle_ui_range(FSDState *state, const CanFrame *frame) {
+    fsd_bms_ui_soc_update(state, frame->data, frame->dlc);
 }
 
 // Pack temperature: byte4/byte5 − 40 °C, layout unconfirmed, plausibility-gated

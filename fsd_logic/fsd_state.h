@@ -70,7 +70,9 @@ typedef struct FSDState {
     bool bms_seen;
     float pack_voltage_v;
     float pack_current_a;
-    float soc_percent;
+    float soc_percent;           // 0x292 BMS figure
+    uint8_t ui_soc;              // 0x33A: the SOC on the car's own screen, 0..100 (fsd_bms.h)
+    bool ui_soc_seen;            // a 0x33A has decoded
     int8_t batt_temp_min_c;      // last plausible 0x312 reading (fsd_bms.h)
     int8_t batt_temp_max_c;
     bool batt_temp_ok;           // a plausible reading has been stored
@@ -341,10 +343,6 @@ typedef struct FSDState {
     // it does NOT touch Vehicle-bus ECU log-upload frames and does NOT guarantee
     // reduced detection. See the omission notes in fsd_handler.c.
     bool assist_telemetry_off;
-
-    // --- energy consumption (0x33A, read-only) ---
-    float energy_wh_per_km;
-    bool energy_seen;
 
     // --- Charge-port type (0x25D CP_status, Vehicle CAN; #228) ---
     // Read-only decode is always on (even Listen-Only); the rewrite is opt-in.

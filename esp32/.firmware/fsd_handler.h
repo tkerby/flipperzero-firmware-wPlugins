@@ -191,6 +191,10 @@ void fsd_handle_bms_hv(FSDState *state, const CanFrame *frame);
 /** Parse BMS_socStatus (0x292) — updates soc_percent. */
 void fsd_handle_bms_soc(FSDState *state, const CanFrame *frame);
 
+/** Parse UI_range (0x33A) — ui_soc, the SOC on the car's own screen (#251).
+ *  Leaves soc_percent (0x292) alone. */
+void fsd_handle_ui_range(FSDState *state, const CanFrame *frame);
+
 /** Parse BMS_thermalStatus (0x312) — updates batt_temp_min/max_c when plausible
  *  (fsd_logic/fsd_bms.h); now_ms stamps batt_temp_ms. */
 void fsd_handle_bms_thermal(FSDState *state, const CanFrame *frame, uint32_t now_ms);
