@@ -29,8 +29,8 @@ This software is for experimental purposes only and is not meant for any illegal
 
 ## Latest Updates - [PATREON: Latest Release RM1019-1847-10035a97-Patreon](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-10-19 18:47 EST`
-- Last Synced/Checked CFW, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-10-19 18:47 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-10-19 21:55 EST`
+- Last Synced/Checked CFW, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-10-19 21:55 EST`
 - Updated: [Maze 3D v7.2 (By k20120509)](https://github.com/k20120509/flipper-release)
 - Updated: [DFC v1.1.1 (By cindersocket)](https://github.com/cindersocket/dfc-flipper)
 - OFW: [Fixes of various valid issues found by code scan #4456 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4456)
@@ -266,6 +266,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [BLE Beacon v1.0 (By steanlab)](https://github.com/steanlab/BLE-Beacon)
 - RFID: [Better FDX-B (animal chips / implants) reading - Read now also tries 134kHz, the frequency these chips are made for, and weak signals are decoded more reliably. Also available separately in Extra Actions -> `Read FDX-B (Animals)` (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/525dcce0e461d4f4b852a32cc6e3b4d075b50f17)
 - Updated: [Kindle Click v0.4 (By zuyan9)](https://github.com/zuyan9/Flipper-Zero-Kindle-Click)
+- OFW: [FatFs: apply upstream R0.12c patches, fix 0-byte files in fragmented exFAT directories (By r3wretrhy)](https://github.com/flipperdevices/flipperzero-firmware/pull/4477)
 
 <a name="release"></a>
 
