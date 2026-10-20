@@ -1,0 +1,11 @@
+# Build output
+dist/
+.vscode/
+*.fap
+*.elf
+
+# Personal configuration - contains your API key
+config.txt
+
+# macOS
+.DS_Store

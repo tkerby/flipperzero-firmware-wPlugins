@@ -1,0 +1,20 @@
+App(
+    appid="sub_counter",
+    name="Subscriber Counter",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="sub_counter_main",
+    stack_size=4 * 1024,
+    sources=[
+        "subscriber_counter.c",
+        "yt_parse.c",
+        "yt_fonts.c",
+        "vendor/internet_bridge/*.c",
+        "vendor/internet_bridge/sdk/flipper/*.c",
+    ],
+    fap_icon="icon.png",
+    fap_category="Tools",
+    fap_version="1.0",
+    fap_author="TheProductAgency",
+    fap_weburl="https://github.com/TheProductAgency/flipper-subscriber-counter",
+    fap_description="Live YouTube subscriber count via Internet Bridge",
+)
