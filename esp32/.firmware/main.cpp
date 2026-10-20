@@ -1905,6 +1905,12 @@ void loop() {
 #else
     for (uint8_t i = 0; i < CAN_ACTIVE_BUS_COUNT; i++) drain_can_bus_index(i);
 #endif
+    // Read the clock again. process_frame() stamps what it sees with its own
+    // millis(), later than `now`, and an unsigned `now - stamp` below would
+    // read a frame that just landed as ~49.7 days old: the power log's "bus
+    // quiet 4294967s" (#206), and the Continuous AP brake and right-stalk
+    // kill switches missing a press for one pass.
+    now = millis();
     uint32_t rx_missed_total = 0;
     for (uint8_t i = 0; i < CAN_ACTIVE_BUS_COUNT; i++) {
         if (!g_can_ok[i] || !g_can[i]) continue;
