@@ -92,6 +92,7 @@ typedef enum {
     FSD_PWR_RESET_SOFTWARE, /* panic, watchdog, esp_restart() */
     FSD_PWR_RESET_EXTERNAL, /* reset pin */
     FSD_PWR_RESET_DEEPSLEEP,/* woke from our own deep sleep (board kept power) */
+    FSD_PWR_RESET_USB,      /* the USB host reset us (ESP32-S3 USB serial/JTAG) */
 } FsdPwrReset;
 
 typedef enum {
@@ -146,6 +147,29 @@ FsdPwrVerdict fsd_pwr_live_verdict(uint32_t quiet_ms);
 uint32_t fsd_pwr_quiet_ms(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any);
 
 /**
+ * Whether the bus can be judged at all, and how long it has been quiet.
+ *
+ * A hardware acceptance filter (a single- or multi-ID capture) hides most of
+ * the bus: with it on a rare id, a busy bus looks silent. So while a filter is
+ * installed on any bus nothing is judged -- no checkpoint, no correction, no
+ * live verdict. When it comes off, the quiet time counts from that moment, not
+ * from the last frame seen through the filter, until a frame arrives again;
+ * and the bus is not judged until that count reaches FSD_PWR_QUIET_MS either,
+ * since a few silent seconds after the clear prove neither quiet nor traffic.
+ *
+ * Returns false when the bus cannot be judged now; otherwise true with
+ * *quiet_ms as fsd_pwr_quiet_ms() gives it.
+ */
+typedef struct {
+    bool     filtered;  /* a filter was on at the last call */
+    bool     restarted; /* it came off, no frame since: quiet counts from since_ms */
+    uint32_t since_ms;  /* when it came off */
+} FsdPwrFilterGate;
+
+bool fsd_pwr_judge_quiet(FsdPwrFilterGate* g, uint32_t now_ms, uint32_t last_rx_ms,
+                         bool seen_any, bool filtered, uint32_t* quiet_ms);
+
+/**
  * Flash-checkpoint scheduler. Pure so the shim's write cadence is host-tested.
  *
  * Fed the current quiet duration each tick, it returns true exactly when the
@@ -157,9 +181,28 @@ uint32_t fsd_pwr_quiet_ms(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any);
 typedef struct {
     bool    episode_committed; /* this quiet episode already produced a commit */
     uint8_t writes;            /* commits this power session (for the cap) */
+    bool    quiet_on_flash;    /* the record in flash says "quiet" (a commit,
+                                * not corrected since) */
 } FsdPwrCheckpoint;
 
 bool fsd_pwr_checkpoint_due(FsdPwrCheckpoint* cp, uint32_t quiet_ms);
+
+/**
+ * The one write the bus coming back forces.
+ *
+ * After a checkpoint the flash says "the bus went quiet". If the car then wakes
+ * and drives and the power is cut mid-drive, the next boot reads "quiet, then
+ * power lost" and answers SWITCHED. So on the first tick the bus carries
+ * traffic again (quiet_ms == 0) after a commit, this returns true once and the
+ * shim writes a record with quiet 0 (the next boot then says NO_SLEEP, a
+ * non-verdict). Adapted from ukinora's fork (778439d).
+ *
+ * This is the one flash write that lands with frames arriving: at the wake
+ * edge, the first frame after at least FSD_PWR_CHECKPOINT_MS of silence, when
+ * the car is only just waking. It needs a checkpoint before it, so a session
+ * writes at most 2 x FSD_PWR_MAX_CHECKPOINTS records.
+ */
+bool fsd_pwr_correction_due(FsdPwrCheckpoint* cp, uint32_t quiet_ms);
 
 /**
  * The verdict after waking from the board's own deep sleep.

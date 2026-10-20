@@ -34,9 +34,11 @@
 #include "gear_tx_route.h"
 #include "../../fsd_logic/fsd_events.h"
 #include "../../fsd_logic/fsd_can_ops.h"  // tesla_can_rx_accept
+#include "../../fsd_logic/fsd_bms.h"      // fsd_bms_temp_fresh
 #include "prefs.h"
 #include "ota_verify.h"
 #include "power_log.h"
+#include "loop_health.h"
 #if defined(BOARD_TTGO_DISPLAY)
 #include "display.h"
 #endif
@@ -115,6 +117,16 @@ static bool frame_looks_like_hw3_das_status(const CanFrame &frame) {
            hands_on <= SIG_DAS_HANDS_ON_SUSPENDED;
 }
 
+// loop() pass timing (loop_health.h); the dashboard reads it on this task too.
+static LoopHealth g_loop_health;
+
+// Serial `debug`: the per-frame [DAS] / [NAG] / [BMS] lines and the
+// dashboard's per-push JSON size. RAM only, off after a reboot.
+static bool g_serial_debug = false;
+
+const LoopHealth &loop_health() { return g_loop_health; }
+void loop_health_reset_window() { g_loop_health.reset_window(); }
+
 static bool serial_cmd_equals(const char *cmd, const char *expected) {
     while (*cmd && *expected) {
         char a = *cmd++;
@@ -136,7 +148,7 @@ static void print_can_stats() {
             Serial.printf("[CAN] %s: no driver\n", name);
             continue;
         }
-        char state[192];
+        char state[256];
         g_can[i]->describeState(state, sizeof(state));
         Serial.printf("[CAN] %s %s RX=%lu TX=%lu rejected=%lu filter=%s | %s\n",
                       name, g_can_ok[i] ? "up" : "down",
@@ -146,6 +158,15 @@ static void print_can_stats() {
                       g_can_ok[i] ? g_can[i]->acceptanceFilterMode() : "down",
                       state);
     }
+    const LoopPassStats &b = g_loop_health.boot;
+    const LoopPassStats &r = g_loop_health.since;
+    Serial.printf("[LOOP] longest pass %lu.%lu ms (%s), %lu over %lu ms since boot; "
+                  "since CAN reset %lu.%lu ms (%s), %lu\n",
+                  (unsigned long)(b.max_us / 1000u), (unsigned long)(b.max_us % 1000u / 100u),
+                  loop_stage_name(b.max_stage), (unsigned long)b.slow,
+                  (unsigned long)(LOOP_SLOW_US / 1000u),
+                  (unsigned long)(r.max_us / 1000u), (unsigned long)(r.max_us % 1000u / 100u),
+                  loop_stage_name(r.max_stage), (unsigned long)r.slow);
 }
 
 static NOINLINE void serial_command_tick() {
@@ -164,14 +185,13 @@ static NOINLINE void serial_command_tick() {
             } else if (serial_cmd_equals(buf, "canstat")) {
                 print_can_stats();
             } else if (serial_cmd_equals(buf, "debug")) {
-                // RAM only: a reboot turns it off again.
-                static bool debug = false;
-                debug = !debug;
-                web_dashboard_set_debug(debug);
-                Serial.printf("[SER] Debug logs %s until reboot\n", debug ? "ON" : "OFF");
+                g_serial_debug = !g_serial_debug;
+                web_dashboard_set_debug(g_serial_debug);
+                Serial.printf("[SER] Debug logs %s until reboot\n", g_serial_debug ? "ON" : "OFF");
             } else if (serial_cmd_equals(buf, "help") || serial_cmd_equals(buf, "?")) {
-                Serial.println("[SER] Commands: ip | canstat (per-bus CAN counters and state) | "
-                               "debug (verbose logs on/off, until reboot)");
+                Serial.println("[SER] Commands: ip | canstat (per-bus CAN counters and state, "
+                               "loop timing) | debug ([DAS]/[NAG]/[BMS] frame logs on/off, "
+                               "until reboot)");
             } else {
                 Serial.println("[SER] Unknown command. Type: ip, canstat, debug");
             }
@@ -396,6 +416,11 @@ static const char *hw_to_str(TeslaHWVersion hw) {
     }
 }
 
+// A capture's hardware acceptance filter is on some bus, as of the last
+// sync: most frames never reach process_frame(), so the power log must not
+// read the gaps as a quiet bus.
+static bool g_can_filtered = false;
+
 static void sync_http_can_stream_filter_if_needed() {
     static CanCaptureFilterSync sync;
     uint32_t ids[CAN_CAPTURE_MAX_IDS] = {};
@@ -406,10 +431,15 @@ static void sync_http_can_stream_filter_if_needed() {
     sync.update(g_can, g_can_ok, CAN_ACTIVE_BUS_COUNT, state_snapshot().op_mode,
                 active, ids, count, scoped, bus);
     // Report actual driver state after programming, including failed changes.
+    // "unknown": a filter change failed part-way, so one may be on.
     const char *modes[CAN_BUS_COUNT] = {"down", "down"};
+    bool filtered = false;
     for (uint8_t i = 0; i < CAN_ACTIVE_BUS_COUNT; i++) {
         if (g_can_ok[i] && g_can[i]) modes[i] = g_can[i]->acceptanceFilterMode();
+        filtered |= strcmp(modes[i], "exact") == 0 || strcmp(modes[i], "prefilter") == 0 ||
+                    strcmp(modes[i], "unknown") == 0;
     }
+    g_can_filtered = filtered;
     http_can_stream_note_filters(CAN_ACTIVE_BUS_COUNT, modes);
 }
 
@@ -422,7 +452,24 @@ static uint8_t epas_counter(const CanFrame &frame) {
     return frame.data[SIG_EPAS_COUNTER_BYTE] & SIG_EPAS_COUNTER_MASK;
 }
 
-static void debug_log_das_status(CanBusId bus, uint32_t source_id, const FSDState &state) {
+// The debug helpers below run only with `debug` on. Each copies the few fields
+// it prints under the lock, so no FSDState copy lands in process_frame().
+static NOINLINE void debug_log_das_status(CanBusId bus, uint32_t source_id) {
+    struct {
+        TeslaHWVersion hw_version;
+        bool ap_active;
+        uint8_t das_ap_state, das_hands_on_state, das_lane_change_state, das_counter, das_checksum;
+    } state;
+    state_enter();
+    state.hw_version            = g_state.hw_version;
+    state.ap_active             = g_state.ap_active;
+    state.das_ap_state          = g_state.das_ap_state;
+    state.das_hands_on_state    = g_state.das_hands_on_state;
+    state.das_lane_change_state = g_state.das_lane_change_state;
+    state.das_counter           = g_state.das_counter;
+    state.das_checksum          = g_state.das_checksum;
+    state_exit();
+
     static bool initialized = false;
     static uint32_t last_ms = 0;
     static CanBusId last_bus = CAN_BUS_PRIMARY;
@@ -465,7 +512,7 @@ static void debug_log_das_status(CanBusId bus, uint32_t source_id, const FSDStat
     last_hands_state = state.das_hands_on_state;
 }
 
-static void debug_log_bms_seen(CanBusId bus, uint32_t frame_id, const FSDState &state) {
+static NOINLINE void debug_log_bms_seen(CanBusId bus, uint32_t frame_id) {
     static bool seen[CAN_ACTIVE_BUS_COUNT][3] = {};
     uint8_t bus_i = bus_index(bus);
     uint8_t id_i;
@@ -481,12 +528,15 @@ static void debug_log_bms_seen(CanBusId bus, uint32_t frame_id, const FSDState &
     if (bus_i >= CAN_ACTIVE_BUS_COUNT || seen[bus_i][id_i]) return;
     seen[bus_i][id_i] = true;
 
+    state_enter();
+    uint32_t hv = g_state.seen_bms_hv, soc = g_state.seen_bms_soc, thermal = g_state.seen_bms_thermal;
+    state_exit();
     Serial.printf("[BMS] first %s frame=0x%03lX hv=%lu soc=%lu thermal=%lu\n",
                   can_bus_name(bus),
                   (unsigned long)frame_id,
-                  (unsigned long)state.seen_bms_hv,
-                  (unsigned long)state.seen_bms_soc,
-                  (unsigned long)state.seen_bms_thermal);
+                  (unsigned long)hv,
+                  (unsigned long)soc,
+                  (unsigned long)thermal);
 }
 
 typedef enum {
@@ -516,7 +566,16 @@ static const char *nag_debug_reason_name(NagDebugReason reason) {
     }
 }
 
-static NagDebugReason nag_debug_reason(const FSDState &state,
+// What the nag decision read, copied under the lock next to the handler.
+struct NagDebugCtx {
+    bool nag_killer;
+    bool ap_active;
+    bool das_seen;
+    uint8_t das_hands_on_state;
+    uint32_t nag_echo_count;  // after the handler
+};
+
+static NagDebugReason nag_debug_reason(const NagDebugCtx &state,
                                        uint8_t epas_hands,
                                        bool fired,
                                        bool tx_allowed,
@@ -537,14 +596,13 @@ static NagDebugReason nag_debug_reason(const FSDState &state,
     return NagDebug_NotFired;
 }
 
-static void debug_log_nag_decision(CanBusId bus,
-                                   const CanFrame &frame,
-                                   const CanFrame &echo,
-                                   bool fired,
-                                   bool tx_allowed,
-                                   bool sent,
-                                   const FSDState &before,
-                                   const FSDState &after) {
+static NOINLINE void debug_log_nag_decision(CanBusId bus,
+                                            const CanFrame &frame,
+                                            const CanFrame &echo,
+                                            bool fired,
+                                            bool tx_allowed,
+                                            bool sent,
+                                            const NagDebugCtx &ctx) {
     static bool initialized = false;
     static uint32_t last_ms = 0;
     static CanBusId last_bus = CAN_BUS_PRIMARY;
@@ -555,15 +613,15 @@ static void debug_log_nag_decision(CanBusId bus,
 
     uint32_t now = millis();
     uint8_t hands = epas_hands_on_level(frame);
-    NagDebugReason reason = nag_debug_reason(before, hands, fired, tx_allowed, sent);
+    NagDebugReason reason = nag_debug_reason(ctx, hands, fired, tx_allowed, sent);
     bool nag_relevant = fired || hands != SIG_EPAS_HANDS_ON_OK;
     bool changed =
         !initialized ||
         last_bus != bus ||
         last_reason != reason ||
         last_epas_hands != hands ||
-        last_das_hands != before.das_hands_on_state ||
-        last_ap_active != before.ap_active;
+        last_das_hands != ctx.das_hands_on_state ||
+        last_ap_active != ctx.ap_active;
 
     if (!nag_relevant && !changed) return;
     if (!changed && (now - last_ms) < 1000u) return;
@@ -575,12 +633,12 @@ static void debug_log_nag_decision(CanBusId bus,
                       hands,
                       epas_counter(frame),
                       tx_allowed ? 1 : 0,
-                      before.ap_active ? 1 : 0,
-                      before.das_seen ? 1 : 0,
-                      before.das_hands_on_state,
+                      ctx.ap_active ? 1 : 0,
+                      ctx.das_seen ? 1 : 0,
+                      ctx.das_hands_on_state,
                       epas_counter(echo),
                       echo.data[7],
-                      (unsigned long)after.nag_echo_count);
+                      (unsigned long)ctx.nag_echo_count);
     } else {
         Serial.printf("[NAG] bus=%s skip=%s epas_lvl=%u cnt=%u tx=%u ap=%u das_seen=%u das=%u echoes=%lu\n",
                       can_bus_name(bus),
@@ -588,10 +646,10 @@ static void debug_log_nag_decision(CanBusId bus,
                       hands,
                       epas_counter(frame),
                       tx_allowed ? 1 : 0,
-                      before.ap_active ? 1 : 0,
-                      before.das_seen ? 1 : 0,
-                      before.das_hands_on_state,
-                      (unsigned long)after.nag_echo_count);
+                      ctx.ap_active ? 1 : 0,
+                      ctx.das_seen ? 1 : 0,
+                      ctx.das_hands_on_state,
+                      (unsigned long)ctx.nag_echo_count);
     }
 
     initialized = true;
@@ -599,8 +657,8 @@ static void debug_log_nag_decision(CanBusId bus,
     last_bus = bus;
     last_reason = reason;
     last_epas_hands = hands;
-    last_das_hands = before.das_hands_on_state;
-    last_ap_active = before.ap_active;
+    last_das_hands = ctx.das_hands_on_state;
+    last_ap_active = ctx.ap_active;
 }
 
 static void apply_detected_hw(TeslaHWVersion hw, const char *reason) {
@@ -1232,6 +1290,7 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
     }
 
     // ── BMS sniff (read-only, always) ─────────────────────────────────────────
+    if (g_serial_debug) debug_log_bms_seen(bus, frame.id);
     if (frame.id == CAN_ID_BMS_HV_BUS)  { state_enter(); fsd_handle_bms_hv(&g_state, &frame);      state_exit(); return; }
     if (frame.id == CAN_ID_BMS_SOC)     { state_enter(); fsd_handle_bms_soc(&g_state, &frame);     state_exit(); return; }
     if (frame.id == CAN_ID_UI_RANGE)    { state_enter(); fsd_handle_ui_range(&g_state, &frame);    state_exit(); return; }
@@ -1244,6 +1303,7 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
         state_enter();
         fsd_handle_das_status_hw3(&g_state, &frame);
         state_exit();
+        if (g_serial_debug) debug_log_das_status(bus, frame.id);
         return;
     }
     if (!das_cfg && hw_uses_hw4_das_status(das_state.hw_version) && frame.id == CAN_ID_DAS_STATUS_HW4) {
@@ -1252,6 +1312,7 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
         uint8_t ap = g_state.das_ap_state;         // as read by the std parser
         uint8_t ho = g_state.das_hands_on_state;
         state_exit();
+        if (g_serial_debug) debug_log_das_status(bus, frame.id);
         // Variant-profile auto-suggest (#126): feed the raw frame + what the std
         // parser made of it, so a stuck parser can be detected and matched.
         profile_match_record(frame, ap, ho, now);
@@ -1462,11 +1523,18 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
 
     // NAG killer — build echo only when TX is currently allowed.
     if (frame.id == CAN_ID_EPAS_STATUS) {
-        CanFrame echo;
+        CanFrame echo = {};
+        NagDebugCtx nag;
         state_enter();
         fsd_handle_epas_status(&g_state, &frame);
+        nag.nag_killer         = g_state.nag_killer;
+        nag.ap_active          = g_state.ap_active;
+        nag.das_seen           = g_state.das_seen;
+        nag.das_hands_on_state = g_state.das_hands_on_state;
         bool fired = (tx && ap_ok) ? fsd_handle_nag_killer(&g_state, &frame, &echo, millis()) : false;
+        nag.nag_echo_count     = g_state.nag_echo_count;
         state_exit();
+        bool sent = false;
         if (fired) {
             uint8_t lvl     = (frame.data[4] >> 6) & 0x03;
             uint8_t cnt_in  = frame.data[6] & 0x0F;
@@ -1475,8 +1543,9 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
             // here; route through the bus-aware helper from the dual-CAN work.
             can_dump_log("NAG 0x370 hands_off lvl=%u cnt=%u->%u TX echo",
                          lvl, cnt_in, cnt_out);
-            send_on_bus(bus, echo);
+            sent = send_on_bus(bus, echo);
         }
+        if (g_serial_debug) debug_log_nag_decision(bus, frame, echo, fired, tx && ap_ok, sent, nag);
         return;
     }
 
@@ -1595,7 +1664,7 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
         uint8_t after = g_state.accel_mode_applied;
         state_exit();
         if (before != after) {
-            Serial.printf("[ACCEL] 0x334 override %u -> %u (0=pass-through 1=CHILL 2=SPORT 3=PERFORMANCE)\n",
+            Serial.printf("[ACCEL] 0x334 override %u -> %u (0=pass-through 1=CHILL 2=STANDARD 3=PERFORMANCE)\n",
                           (unsigned)before, (unsigned)after);
             can_dump_log("ACCEL 0x334 override %u -> %u", (unsigned)before, (unsigned)after);
         }
@@ -1622,6 +1691,14 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
 #if defined(BOARD_LILYGO)
 // ── Deep-sleep watchdog (Lilygo only) ────────────────────────────────────────
 static NOINLINE void sleep_tick(uint32_t now) {
+    // A capture's hardware filter on a rare id makes a busy bus look silent:
+    // that is not a sleeping car. Hold the idle timer at zero while it is on,
+    // so it starts over when the filter comes off.
+    if (g_can_filtered) {
+        g_last_can_rx_ms = now;
+        g_sleep_warned   = false;
+        return;
+    }
     if (now < g_last_can_rx_ms) return;
     uint32_t idle_ms = now - g_last_can_rx_ms;
     FSDState s = state_snapshot();
@@ -1634,7 +1711,7 @@ static NOINLINE void sleep_tick(uint32_t now) {
         // before powering down: a deep-sleep wake then proves the feed is
         // always-on, while a switched feed cuts power mid-sleep and boots as
         // POWERON with the checkpoint already in flash (#218). Bus is quiet here.
-        power_log_note_deep_sleep(now, g_power_last_rx_ms, g_power_seen_any);
+        power_log_note_deep_sleep(now, g_power_last_rx_ms, g_power_seen_any, g_can_filtered);
         can_dump_stop();
         sd_syslog_close();
         led_set(LED_SLEEP);
@@ -1810,6 +1887,8 @@ void setup() {
     for (uint8_t i = 0; i < CAN_ACTIVE_BUS_COUNT; i++) {
         CanBusId bus = bus_id_from_index(i);
         g_can[i] = can_driver_create(bus);
+        // MCP2515 receive task (opt-in): started by begin() once the chip is up.
+        if (g_can[i]) g_can[i]->setRxTask(g_state.mcp_rx_task);
         g_can_ok[i] = g_can[i] && g_can[i]->begin(true);
         g_can_last_retry_ms[i] = millis();
     }
@@ -1884,6 +1963,7 @@ static NOINLINE void drain_can_bus_index(uint8_t index) {
 
 // ── loop ──────────────────────────────────────────────────────────────────────
 void loop() {
+    g_loop_health.begin_pass(micros());
     uint32_t now = millis();
 
     if (g_factory_reset_window && now >= FACTORY_RESET_WINDOW_MS) {
@@ -1894,6 +1974,7 @@ void loop() {
     button_tick();
     serial_command_tick();
     ota_verify_tick(now);
+    g_loop_health.mark(LOOP_STAGE_OTHER, micros());
 
     // Drain all available CAN frames in one shot. On LilyGO T-2CAN, can1 is the
     // SPI controller, read only when polled (the MCP2515 has just two RX
@@ -1922,6 +2003,7 @@ void loop() {
     // Feed the summed controller RX-missed total to the web stream so a capture
     // can self-report how many frames the hardware dropped while it ran.
     http_can_stream_note_rx_missed(rx_missed_total);
+    g_loop_health.mark(LOOP_STAGE_CAN_RX, micros());
 
     // ── Periodic error counter refresh (~every 250 ms) ────────────────────────
     static uint32_t last_err_ms = 0;
@@ -1952,13 +2034,17 @@ void loop() {
     if (s.bms_output && s.bms_seen &&
         (now - last_bms_ms) >= BMS_PRINT_MS) {
         float kw = s.pack_voltage_v * s.pack_current_a / 1000.0f;
-        Serial.printf("[BMS] %.1fV  %.1fA  %.2fkW  SoC:%.1f%%  Temp:%d~%d°C\n",
+        // Temperature only from a fresh reading that passed the plausibility
+        // gate (fsd_bms.h); the 0x312 layout is a guess on some cars (#211).
+        char temp[16] = "--";
+        if (fsd_bms_temp_fresh(&s, now))
+            snprintf(temp, sizeof(temp), "%d~%d°C", (int)s.batt_temp_min_c, (int)s.batt_temp_max_c);
+        Serial.printf("[BMS] %.1fV  %.1fA  %.2fkW  SoC:%.1f%%  Temp:%s\n",
             s.pack_voltage_v,
             s.pack_current_a,
             kw,
             s.soc_percent,
-            (int)s.batt_temp_min_c,
-            (int)s.batt_temp_max_c);
+            temp);
         last_bms_ms = now;
     }
 
@@ -2022,6 +2108,7 @@ void loop() {
             sigmap_warned = false;
         }
     }
+    g_loop_health.mark(LOOP_STAGE_LOGIC, micros());
 
     // ── Periodic re-init when a CAN driver failed at boot ────────────────────
     for (uint8_t i = 0; i < CAN_ACTIVE_BUS_COUNT; i++) {
@@ -2039,6 +2126,7 @@ void loop() {
             }
         }
     }
+    g_loop_health.mark(LOOP_STAGE_CAN_INIT, micros());
 
     // ── Wiring / hardware sanity warning ─────────────────────────────────────
     // Checked every 5 s, not every loop.
@@ -2048,9 +2136,16 @@ void loop() {
         if (!can_any_ok()) {
             // Driver init failed — distinguish chip-not-detected from other.
             // Skip the "no CAN traffic" warn entirely (it's never going to
-            // arrive without a working driver).
-            Serial.println("[WARN] CAN drivers not initialised — "
-                           "no CAN traffic possible");
+            // arrive without a working driver). The first at WIRING_WARN_MS,
+            // then once a minute: each retry prints its own line already.
+            static bool     init_warned    = false;
+            static uint32_t init_warned_ms = 0;
+            if (!init_warned || now - init_warned_ms >= WIRING_WARN_REPEAT_MS) {
+                Serial.println("[WARN] CAN drivers not initialised — "
+                               "no CAN traffic possible");
+                init_warned    = true;
+                init_warned_ms = now;
+            }
         } else {
             warn_quiet_buses(now);
         }
@@ -2060,18 +2155,22 @@ void loop() {
     blackbox_tick(now);  // post-roll countdown + flush (#124)
     capability_tick(now);  // finalize the capability listen window (#125)
     // 12V-feed / reset log (#218). Commits one NVS record per quiet episode,
-    // only once the bus has been silent past the checkpoint window, so no flash
-    // write ever lands while frames are arriving.
-    power_log_tick(now, g_power_last_rx_ms, g_power_seen_any);
+    // only once the bus has been silent past the checkpoint window, and one
+    // correcting record at the first frame after it (the car waking), so a
+    // power cut mid-drive does not read as a switched feed. Nothing while a
+    // capture filter hides most of the bus.
+    power_log_tick(now, g_power_last_rx_ms, g_power_seen_any, g_can_filtered);
 
 #if defined(BOARD_LILYGO)
     sleep_tick(now);
 #endif
+    g_loop_health.mark(LOOP_STAGE_LOGS, micros());
 
     // ── Web dashboard (after CAN to preserve CAN frame latency) ──────────────
     web_dashboard_update();
 
     sync_http_can_stream_filter_if_needed();
+    g_loop_health.mark(LOOP_STAGE_WEB, micros());
 
 #if defined(BOARD_TTGO_DISPLAY)
     s = state_snapshot();
@@ -2094,4 +2193,5 @@ void loop() {
 #endif
 
     update_led();
+    g_loop_health.mark(LOOP_STAGE_OTHER, micros());
 }

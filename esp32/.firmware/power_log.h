@@ -22,11 +22,14 @@
  * evidence lives in flash (NVS). To keep flash writes off the CAN path, nothing
  * is written while the bus is active: a single record is committed only after
  * the bus has been quiet for FSD_PWR_CHECKPOINT_MS, when there are no frames to
- * lose (fsd_pwr_checkpoint_due), and the commits per session are capped. Each
- * boot reads the record, judges it, then clears it, so a session reasons only
- * from its own checkpoints. State that only has to survive a reset, not a power
- * cut -- the restart counter and "we slept on a quiet bus" -- lives in RTC
- * no-init memory, which costs no flash.
+ * lose (fsd_pwr_checkpoint_due), and the commits per session are capped. The
+ * one exception is a correcting record at the first frame after a checkpoint,
+ * the car waking (fsd_pwr_correction_due): without it a power cut later in
+ * that drive reads as a switched feed. Each boot reads the record, judges it,
+ * then clears it, so a session reasons only from its own checkpoints. State
+ * that only has to survive a reset, not a power cut -- the restart counter and
+ * "we slept on a quiet bus" -- lives in RTC no-init memory, which costs no
+ * flash.
  *
  * The judgement itself is in fsd_logic/fsd_power.{h,c} and host-tested. This
  * file owns only the hardware: NVS, esp_reset_reason(), RTC RAM, the clock and
@@ -52,7 +55,25 @@ enum {
     PWR_RST_SOFTWARE,
     PWR_RST_DEEPSLEEP,
     PWR_RST_EXTERNAL,
+    PWR_RST_USB,
 };
+
+/* ESP32-S3 RTC reset reasons (soc/reset_reasons.h) for a reset from the USB
+ * host: the serial port's DTR/RTS reset (boot log "rst:0x15
+ * (USB_UART_CHIP_RESET)") and the JTAG one. esp_reset_reason() in the pinned
+ * IDF 4.4 has no code for them and says ESP_RST_UNKNOWN; IDF 5 says
+ * ESP_RST_USB. */
+#define PWR_S3_RTC_USB_UART 0x15
+#define PWR_S3_RTC_USB_JTAG 0x16
+
+/* The PWR_RST_* code for a reset esp_reset_reason() could not name, from the
+ * chip's own RTC reset reason. @p fine is what esp_reset_reason() mapped to;
+ * only an unknown one on the S3 is looked at again. */
+static inline int power_log_refine_reset(int fine, int rtc_reason, bool s3) {
+    if (fine != PWR_RST_UNKNOWN || !s3) return fine;
+    if (rtc_reason == PWR_S3_RTC_USB_UART || rtc_reason == PWR_S3_RTC_USB_JTAG) return PWR_RST_USB;
+    return fine;
+}
 
 /**
  * Read the previous session's record, print the verdict, start a new session.
@@ -63,14 +84,17 @@ void power_log_init(void);
 /**
  * Feed the clock and the bus. Call from loop().
  *
- * A flash commit happens here and only here, and only once the bus has been
- * quiet past the checkpoint window -- never while frames are arriving.
+ * A flash commit happens here (and on the way into deep sleep): once the bus
+ * has been quiet past the checkpoint window, and once more at the first frame
+ * after such a commit, to correct it -- never during sustained traffic.
  *
  * @param last_rx_ms  millis() of the last CAN frame (0 until the first one)
  * @param seen_any    whether any frame has ever arrived (0 is a legal clock
  *                    value, so last_rx_ms alone cannot say)
+ * @param filtered    a hardware acceptance filter is on some bus (a capture):
+ *                    nothing is judged or written (fsd_pwr_judge_quiet)
  */
-void power_log_tick(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any);
+void power_log_tick(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any, bool filtered);
 
 /**
  * Note that the board is about to deep-sleep on a quiet bus (LilyGO). Records
@@ -78,7 +102,8 @@ void power_log_tick(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any);
  * the sleep, and flushes the quiet checkpoint if it has not already been
  * committed. Call right before esp_deep_sleep_start(); the bus is quiet there.
  */
-void power_log_note_deep_sleep(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any);
+void power_log_note_deep_sleep(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any,
+                               bool filtered);
 
 /** The verdict as it stands (live/deep-sleep outranks the boot reading). */
 FsdPwrVerdict power_log_verdict(void);

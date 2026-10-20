@@ -111,6 +111,16 @@ inline bool mcp2518fd_readback_same(const Mcp2518fdReadback &a, const Mcp2518fdR
     return a.con == b.con && a.osc == b.osc && a.devid == b.devid && a.mcp2515 == b.mcp2515;
 }
 
+// A retry after a silent readback reads CiCON and OSC once instead of waiting
+// out the oscillator start-up (kOscStartMs): when they read back as they did,
+// nothing answers on MISO again and the wait cannot change that. @p prev is
+// the last failed attempt's readback, null on the first attempt.
+inline bool mcp2518fd_retry_skips_osc_wait(const Mcp2518fdReadback *prev, uint32_t con,
+                                           uint32_t osc) {
+    return prev && mcp2518fd_spi_state(prev->con, prev->osc) == MCP2518FD_SPI_SILENT &&
+           con == prev->con && osc == prev->osc;
+}
+
 inline const char *mcp2518fd_readback_text(const Mcp2518fdReadback &rb) {
     if (rb.mcp2515) {
         return "an MCP2515 answers on these pins: this looks like a classic T-2CAN, "

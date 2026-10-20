@@ -26,7 +26,39 @@ uint32_t fsd_pwr_quiet_ms(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any) {
     return gap;
 }
 
+bool fsd_pwr_judge_quiet(FsdPwrFilterGate* g, uint32_t now_ms, uint32_t last_rx_ms,
+                         bool seen_any, bool filtered, uint32_t* quiet_ms) {
+    if(!g || !quiet_ms) return false;
+    if(filtered) {
+        g->filtered = true;
+        return false;
+    }
+    if(g->filtered) {
+        g->filtered = false;
+        g->restarted = true;
+        g->since_ms = now_ms;
+    }
+    if(g->restarted) {
+        /* A frame after the clear (signed: the stamp may be a few ms ahead of
+         * now): the bus speaks for itself again. Never heard one at all: the
+         * normal path says "not quiet" for that. */
+        if(!seen_any || (int32_t)(last_rx_ms - g->since_ms) > 0) {
+            g->restarted = false;
+        } else {
+            uint32_t q = fsd_pwr_quiet_ms(now_ms, g->since_ms, true);
+            if(q == 0u) return false;
+            *quiet_ms = q;
+            return true;
+        }
+    }
+    *quiet_ms = fsd_pwr_quiet_ms(now_ms, last_rx_ms, seen_any);
+    return true;
+}
+
 FsdPwrVerdict fsd_pwr_verdict(FsdPwrReset reset, const FsdPwrRecord* prev) {
+    /* A host on the USB port reset us, so USB is connected and feeds the
+     * board: whatever the record says, this boot cannot speak for the 12V. */
+    if(reset == FSD_PWR_RESET_USB) return FSD_PWR_USB;
     if(!prev || !prev->valid) return FSD_PWR_UNKNOWN;
 
     switch(reset) {
@@ -72,6 +104,13 @@ bool fsd_pwr_checkpoint_due(FsdPwrCheckpoint* cp, uint32_t quiet_ms) {
 
     cp->episode_committed = true;
     cp->writes++;
+    cp->quiet_on_flash = true;
+    return true;
+}
+
+bool fsd_pwr_correction_due(FsdPwrCheckpoint* cp, uint32_t quiet_ms) {
+    if (!cp || quiet_ms != 0u || !cp->quiet_on_flash) return false;
+    cp->quiet_on_flash = false;
     return true;
 }
 
@@ -109,6 +148,7 @@ const char* fsd_pwr_reset_str(FsdPwrReset r) {
     case FSD_PWR_RESET_SOFTWARE: return "software reset";
     case FSD_PWR_RESET_EXTERNAL: return "reset pin";
     case FSD_PWR_RESET_DEEPSLEEP: return "deep-sleep wake";
+    case FSD_PWR_RESET_USB: return "USB reset";
     case FSD_PWR_RESET_UNKNOWN:
     default: return "unknown";
     }

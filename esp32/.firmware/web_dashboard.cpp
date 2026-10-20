@@ -22,6 +22,7 @@
 #include "prefs.h"
 #include "ota_verify.h"
 #include "power_log.h"
+#include "loop_health.h"
 #include "captive_portal.h"
 #include "web_cmd.h"
 #include "web_origin.h"
@@ -765,6 +766,13 @@ R"rawliteral(
     <span class="lbl">CAN Dump</span>
     <label class="sw"><input type="checkbox" id="swDump" onchange="cmd('dump',this.checked)"><span class="sl2"></span></label>
   </div>
+  <div class="row" id="mcpRxRow" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <span class="lbl">MCP2515 RX task (experimental)<br><small style="color:var(--muted)">Reads the MCP2515 from its own task into a 256-frame queue, so a slow loop pass no longer loses frames from its two receive buffers.</small></span>
+      <label class="sw"><input type="checkbox" id="swMcpRx" onchange="cmd('mcp_rx_task',this.checked)"><span class="sl2"></span></label>
+    </div>
+    <div id="mcpRxSt" style="font-size:12px;color:var(--muted);margin-top:4px">--</div>
+  </div>
 )rawliteral"
 #if defined(BOARD_LILYGO)
 R"rawliteral(
@@ -951,6 +959,10 @@ R"rawliteral(
   <div class="row">
     <span class="lbl">Memory</span>
     <span id="memInfo" style="font-size:.78em;color:var(--text2)">--</span>
+  </div>
+  <div class="row">
+    <span class="lbl">Loop</span>
+    <span id="loopInfo" style="font-size:.78em;color:var(--text2);text-align:right">--</span>
   </div>
   <div class="row">
     <span class="lbl">OTA Partition</span>
@@ -1162,6 +1174,7 @@ function updateControlsSummary(d){
   if(d.cp_type_eu_rewrite)items.push('EU CP Type');
   if(d.display_enabled)items.push('Display');
   if(d.can_dump)items.push('CAN Dump');
+  if(d.mcp_rx_task&&d.mcp_rx_task.on)items.push('MCP2515 RX task');
   e.textContent=items.length?items.join(', '):'Expand to setup';
   e.title=e.textContent;
 }
@@ -1433,6 +1446,18 @@ function updControls(d){
     }
     cpSt.textContent=ct;
   }
+  // MCP2515 receive task (opt-in): queue depth reached, frames lost on a full
+  // queue, and the chip's RX overflows the task saw. Only builds with an
+  // MCP2515 send mcp_rx_task; the row stays hidden on the others.
+  var mr=d.mcp_rx_task,mrSt=document.getElementById('mcpRxSt');
+  var mrRow=document.getElementById('mcpRxRow');
+  if(mrRow) mrRow.style.display=mr?'block':'none';
+  if(mr&&document.getElementById('swMcpRx')) document.getElementById('swMcpRx').checked=mr.on;
+  if(mr&&mrSt){
+    var mw=function(t){return '<span style="white-space:nowrap">'+t+'</span>';};
+    if(mr.run) mrSt.innerHTML=mw(mr.int?'Running, INT pin':'Running, 1 ms poll')+' \u00b7 '+mw('queue max')+'\u00a0'+mr.max+'/'+mr.len+' \u00b7 '+mw('lost on a full queue')+'\u00a0'+mr.drop+' \u00b7 '+mw('chip overflows')+'\u00a0'+mr.ovf;
+    else mrSt.innerHTML=mw(mr.on?'Waiting for the MCP2515':'Off (read from the loop)');
+  }
   if(document.getElementById('swTrkMode')) document.getElementById('swTrkMode').checked=d.track_mode_inject;
   if(document.getElementById('trkRot')&&focusId()!=='trkRot'&&d.track_rotation_pct!==undefined){document.getElementById('trkRot').value=d.track_rotation_pct;var _tr=document.getElementById('trkRotV');if(_tr)_tr.textContent=d.track_rotation_pct;}
   if(document.getElementById('trkStab')&&focusId()!=='trkStab'&&d.track_stability_pct!==undefined){document.getElementById('trkStab').value=d.track_stability_pct;var _ts=document.getElementById('trkStabV');if(_ts)_ts.textContent=d.track_stability_pct;}
@@ -1617,11 +1642,19 @@ function updDevice(d){
     me.textContent='stack '+kb(d.stack_free)+' \u00b7 heap '+kb(d.heap_free)+' (min '+kb(d.heap_min)+')';
     me.style.color=d.stack_free<1024?'var(--red)':'var(--text2)';
   }
+  // Longest loop() pass, the stage that took most of it, and passes over
+  // 25 ms: since the CAN Bus card's reset when there was one, else since boot.
+  var lo=document.getElementById('loopInfo'),lp=d.loop;
+  if(lo && lp){
+    var lr=d.can_reset_s>=0,lm=lr?lp.r_max_us:lp.max_us,ls=function(t){return '<span>'+t+'</span>';};
+    lo.innerHTML=ls('longest')+' '+(lm/1000).toFixed(1)+' ms ('+(lr?lp.r_stage:lp.stage)+') \u00b7 '+(lr?lp.r_slow:lp.slow)+' '+ls('over 25 ms')+(lr?' \u00b7 '+ls('since CAN reset'):'');
+    lo.style.color=lm>25000?'var(--yellow)':'var(--text2)';
+  }
   // Power / reset log (#218). Codes mirror power_log.h (reset) and FsdPwrVerdict
   // (12V). Each phrase sits in its own span so the i18n layer can translate it.
   var pe=document.getElementById('pwrInfo');
   if(pe && d.reset_reason!==undefined){
-    var RST=['Unknown reset','Power-on','Brownout','Panic','Watchdog','Software restart','Deep-sleep wake','External reset'];
+    var RST=['Unknown reset','Power-on','Brownout','Panic','Watchdog','Software restart','Deep-sleep wake','External reset','USB reset'];
     var PV=['Not known yet','Inconclusive (car never slept)','Switched (dies with the car)','Always-on (outlives the car)','Brownout (check wiring)','Crash (supply not implicated)','Inconclusive (USB powered)'];
     var PVCOL=['var(--text2)','var(--text2)','var(--accent)','var(--yellow)','var(--red)','var(--text2)','var(--text2)'];
     var rc=d.reset_reason,vc=d.power_verdict;
@@ -2249,6 +2282,7 @@ static void can_counters_reset() {
     g_fps         = 0.0f;
     g_can_reset    = true;
     g_can_reset_ms = millis();
+    loop_health_reset_window();
 }
 
 // ── JSON builder ──────────────────────────────────────────────────────────────
@@ -2480,6 +2514,21 @@ static String build_json() {
         }
         j += "],";
     }
+    // MCP2515 receive task (opt-in), on the builds with one; one per board.
+    for (uint8_t i = 0; i < g_can_count && i < CAN_BUS_COUNT; i++) {
+        CanRxTaskInfo t;
+        if (!g_can_buses[i] || !g_can_buses[i]->rxTaskInfo(t)) continue;
+        j += "\"mcp_rx_task\":{\"on\":"; j += t.wanted ? "true" : "false";
+        j += ",\"run\":";   j += t.running ? "true" : "false";
+        j += ",\"int\":";   j += t.int_pin ? "true" : "false";
+        j += ",\"len\":";   j += t.queue_len;
+        j += ",\"max\":";   j += t.high_water;
+        j += ",\"drop\":";  j += t.dropped;
+        j += ",\"ovf\":";   j += t.overflows;
+        j += ",\"stack\":"; j += t.stack_free;
+        j += "},";
+        break;
+    }
     j += "\"bms\":";           j += bms;                               j += ',';
     // Tyre pressures (read-only 0x219, fsd_logic/fsd_tpms.h). Four slots in the
     // order the car fills them: mbar, temp in deg C, pos 0 FL 1 FR 2 RL 3 RR;
@@ -2532,6 +2581,18 @@ static String build_json() {
     j += "\"stack_free\":";    j += (uint32_t)uxTaskGetStackHighWaterMark(nullptr); j += ',';
     j += "\"heap_free\":";     j += (uint32_t)ESP.getFreeHeap();       j += ',';
     j += "\"heap_min\":";      j += (uint32_t)ESP.getMinFreeHeap();    j += ',';
+    // Longest loop() pass, its slowest stage and passes over 25 ms
+    // (loop_health.h): since boot, and since the CAN Bus card's reset (r_*).
+    {
+        const LoopHealth &lh = loop_health();
+        j += "\"loop\":{\"max_us\":"; j += lh.boot.max_us;
+        j += ",\"stage\":\"";    j += loop_stage_name(lh.boot.max_stage);
+        j += "\",\"slow\":";     j += lh.boot.slow;
+        j += ",\"r_max_us\":";   j += lh.since.max_us;
+        j += ",\"r_stage\":\"";  j += loop_stage_name(lh.since.max_stage);
+        j += "\",\"r_slow\":";   j += lh.since.slow;
+        j += "},";
+    }
     j += "\"fw_version\":\""   FW_VERSION "\",";
     j += "\"board\":\""        BOARD_NAME "\",";
     j += "\"fw_build\":\"";    j += __DATE__;  j += ' '; j += __TIME__; j += "\",";
@@ -3099,6 +3160,20 @@ static WebCmdResult web_command(WebCmd &cmd, const uint8_t *payload, size_t leng
             if (want) can_dump_start();
             else      can_dump_stop();
             Serial.printf("[Web] CAN Dump: %s\n", want ? "START" : "STOP");
+        }
+    } else if (cmd.is("mcp_rx_task")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
+            FSDState saved;
+            state_enter();
+            g_state->mcp_rx_task = enabled;
+            saved = *g_state;
+            state_exit();
+            // Starts or stops at once; drivers without the task ignore it.
+            for (uint8_t i = 0; i < g_can_count; i++)
+                if (g_can_buses[i]) g_can_buses[i]->setRxTask(enabled);
+            Serial.printf("[Web] MCP2515 RX task: %s\n", enabled ? "ON" : "OFF");
+            prefs_save(&saved);
         }
     } else if (cmd.is("sleep")) {
         int n;

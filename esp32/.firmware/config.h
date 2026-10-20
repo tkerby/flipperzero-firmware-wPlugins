@@ -172,6 +172,12 @@
 #endif
 #endif
 
+// Builds with an MCP2515: can0 on the MCP2515 boards, can1 on the classic
+// T-2CAN (the T-2CAN FD has an MCP2518FD there instead).
+#if defined(CAN_DRIVER_MCP2515) || (defined(CAN_DRIVER_T2CAN_DUAL) && !defined(BOARD_LILYGO_T2CAN_FD))
+#define CAN_HAS_MCP2515 1
+#endif
+
 // MCP2515 oscillator. Generic breakout modules often use 8 MHz; the LilyGO
 // T-2CAN onboard MCP2515 follows the autowp library's 16 MHz default.
 #ifndef MCP_CRYSTAL_MHZ
