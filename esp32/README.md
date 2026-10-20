@@ -179,7 +179,7 @@ Any ESP32 board + CAN transceiver works. Pick the matching build env in `platfor
 | `ttgo-tdisplay` | LilyGO/TTGO T-Display + MCP2515 | MCP2515 SPI (HSPI) | CS=26, SCK=33, MISO=32, MOSI=25 | Built-in ST7789 dashboard, MISO needs 5V→3.3V divider |
 | `lilygo-t2can` | LilyGO-T2CAN | TWAI/MCP2515 SPI | 7 / 6 | ESP32-S3-WROOM-1U (MCN16R8) with MCP2515; the 8 MB PSRAM holds the black-box ring (40000 frames) |
 | `lilygo-t2can-fd` | LilyGO T-2CAN FD (H784-A) | TWAI/MCP2518FD SPI | 7 / 6 | Same board with an MCP2518FD on `can1`, classic CAN 2.0 at 500 kbps; PSRAM as on `lilygo-t2can`; not yet confirmed on real hardware |
-| `waveshare-s3-can` | Waveshare ESP32-S3-RS485-CAN | TWAI | 15 / 16 | ESP32-S3, 8MB flash/PSRAM, USB-CDC |
+| `waveshare-s3-can` | Waveshare ESP32-S3-RS485-CAN | TWAI | 15 / 16 | ESP32-S3R8 (8 MB octal PSRAM in the chip) with 16 MB flash, USB-CDC. The build uses 8 MB of the flash and doesn't enable the PSRAM yet (board default memory type, no `BOARD_HAS_PSRAM`), so the black-box ring is the internal-RAM one (6000 frames) |
 | `esp32-generic-twai` | Classic ESP32 DevKit + SN65HVD230 | TWAI | 21 / 22 | No LED; build from source (no prebuilt image) |
 | `esp32-generic-twai-sniffer` | Classic ESP32 DevKit + SN65HVD230 | TWAI (hardware Listen-Only) | 21 / 22 | `SNIFFER_ONLY`: can never transmit; build from source |
 | other | Any ESP32 / ESP32-S3 + CAN transceiver | TWAI | any two pins | Copy the closest env and override `PIN_CAN_TX` / `PIN_CAN_RX` (the envs target classic ESP32 or ESP32-S3; there is no ESP32-C3 env) |
@@ -287,7 +287,7 @@ Most IDs are common. The AP/DAS status and ISA-speed meaning depends on the dete
 | `0x082` | TRIP_PLANNING | Battery precondition trigger |
 | `0x132` | BMS_HV_BUS | Battery voltage / current |
 | `0x219` | VCSEC_TPMS | Tyre pressures (read-only) |
-| `0x292` | BMS_SOC | Battery state of charge |
+| `0x292` | BMS_SOC | Battery state of charge (`BMS_socUI`, bit 10, 0.1 %) |
 | `0x312` | BMS_THERMAL | Battery temperature |
 | `0x318` | GTW_CAR_STATE | Vehicle state (OTA detection) |
 | `0x370` | EPAS_STATUS | EPAS status (NAG killer target) |

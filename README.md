@@ -86,7 +86,7 @@
 - **"Does this unlock FSD on 2026.14.x / .20 / .26.x?"** Short answer: no — the activation preflight and an off-CAN region lock block it, while nag killer / TLSSC / Summon EU / captures still work. Full explanation in the [FSD-on-14.x FAQ (#168)](https://github.com/hypery11/flipper-tesla-fsd/discussions/168), with the frame-level proof in [#163](https://github.com/hypery11/flipper-tesla-fsd/discussions/163).
 
 ### Diagnostics (read-only, no FSD required)
-- Live BMS dashboard: pack voltage, current, SoC (the pack's figure from `0x292` and, on the ESP32, the car's own from `0x33A`), temperature range
+- Live BMS dashboard: pack voltage, current, SoC (the BMS figure from `0x292` and, on the ESP32, the car's own from `0x33A`), temperature range
 - **Performance panel (ESP32 web dashboard, read-only, opt-in):** acceleration / braking timers (0-50, 0-60 mph, 0-100, 100-0 km/h with a per-session best), estimated longitudinal G (dv/dt of speed, no IMU), wheel slip %, and pack temperature / power. Speed and est. G work on any tap carrying `0x257`; wheel slip needs Party CAN (`0x175`); temperature and power need the BMS frames on a Vehicle-CAN tap. Transmits nothing
 - Vehicle speed, steering angle, motor torque, brake state
 - DAS status: autopilot state, hands-on nag level, lane change state, blind spot warning, FCW, vision speed limit
@@ -317,7 +317,6 @@ Single-bus read-modify-retransmit on Party CAN. No MITM, no second bus tap.
 |--------|------|-----------|------|
 | `0x331` | `DAS_autopilotConfig` | TX | TLSSC Restore — set tier to SELF_DRIVING |
 | `0x370` | `EPAS3P_sysStatus` | TX | Nag killer — counter+1 echo with organic torque |
-| `0x399` | `ISA_speedLimit` / `DAS_status` | TX/RX | ESP32 HW-dependent: Legacy/HW3 read DAS status here; HW4 uses ISA speed chime suppression |
 | `0x3FD` | `UI_autopilotControl` | TX | FSD unlock — bit46/60 (HW3/HW4), TLSSC bit38, lane graph bit45 |
 | `0x3F8` | `UI_driverAssistControl` | TX | Nav FSD route, hands-off, dev mode, RHD driving-side (bit41), telemetry-off (beta) |
 | `0x3EE` | `UI_autopilotControl` | TX | FSD unlock — Legacy HW1/HW2 |
@@ -328,10 +327,10 @@ Single-bus read-modify-retransmit on Party CAN. No MITM, no second bus tap.
 | `0x334` | `UI_powertrainControl` | TX | Acceleration Mode — `UI_pedalMap` byte0 bits 5-6, set at standstill only (checksum recomputed, counter kept; Vehicle / Chassis bus) |
 | `0x398` | `GTW_carConfig` | RX | HW version detection |
 | `0x318` | `GTW_carState` | RX | OTA detection (auto-suspend TX) |
-| `0x399` | `DAS_status` (HW3/Legacy) / `ISA_speedLimit` (HW4) | RX/TX | HW-dispatched: pre-Highland HW3 reads as DAS_status (AP state + hands-on); HW4 keeps the chime-suppression write path |
+| `0x399` | `DAS_status` (HW3/Legacy) / `ISA_speedLimit` (HW4) | RX/TX | HW-dispatched, both apps: pre-Highland HW3 and Legacy read it as DAS_status (AP state + hands-on); HW4 rewrites it for Suppress Chime and reads the hands-on level from it when the car sends no `0x39B` |
 | `0x39B` | `DAS_status` | RX | HW4 + Highland HW3 — AP state (byte0 low nibble, for AP-First), autopark flags (Autopark pause), nag level, lane change, blind spot |
 | `0x132` | `BMS_hvBusStatus` | RX | Pack voltage / current |
-| `0x292` | `BMS_socStatus` | RX | State of charge |
+| `0x292` | `BMS_socStatus` | RX | State of charge: `BMS_socUI` (bit 10, 0.1 %), the BMS figure for display; both apps |
 | `0x312` | `BMS_thermalStatus` | RX | Battery temperature (layout unconfirmed on some cars; implausible readings are hidden) |
 | `0x33A` | `UI_range` | RX | SOC shown on the car's screen (ESP32 Battery card) |
 

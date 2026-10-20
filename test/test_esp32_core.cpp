@@ -585,7 +585,7 @@ static void test_autopark_176(void) {
 
 // ── Signal Map hardening (#100): mask-0 ignored + configured-but-absent flag ──
 // ── 0x33A car SOC beside 0x292 through the ESP32 handlers (#251) ─────────────
-// One #211 Model Y pair, same capture: 0x292 81.8 %, 0x33A 80 % (bit 27 set).
+// One #211 Model Y pair, same capture: 0x292 socUI 81.8 %, 0x33A 80 % (bit 27 set).
 static void test_ui_soc(void) {
     FSDState s;
     memset(&s, 0, sizeof(s));
@@ -603,6 +603,9 @@ static void test_ui_soc(void) {
     f.data[2] = 0xF0; f.data[3] = 0x07;                            // 127: refused
     fsd_handle_ui_range(&s, &f);
     CHECK(s.ui_soc == 80, "0x33A above 100 refused, last value kept");
+    f.id = CAN_ID_BMS_SOC; memset(f.data, 0, 8); f.data[1] = 0xFC; f.data[2] = 0x0F;
+    fsd_handle_bms_soc(&s, &f);                                    // socUI 102.3: refused
+    CHECK(s.soc_percent > 81.75f && s.soc_percent < 81.85f, "0x292 above 100 refused, last value kept");
 }
 
 // ── 0x312 pack temperature through the ESP32 handler (fsd_bms.h) ─────────────
@@ -1713,6 +1716,168 @@ static void test_blackbox_save_slices(void) {
     CHECK(ok, "slices cover the window in ceil(count / per_pass) passes");
 }
 
+// Slices cut by the time budget (BLACKBOX_FLUSH_BUDGET_US) and the gap after them.
+static void test_blackbox_slice_budget(void) {
+    CHECK(!bb_slice_over(1u, 32u, 0u, 600u), "one line, time left: go on");
+    CHECK(bb_slice_over(1u, 32u, 600u, 600u), "budget gone after one line: stop");
+    CHECK(bb_slice_over(32u, 32u, 10u, 600u) && bb_slice_over(5u, 5u, 0u, 600u),
+          "all the slice's lines written: stop");
+    CHECK(bb_slice_gap_ms(32u, 32u, 50u) == 50u && bb_slice_gap_ms(16u, 32u, 50u) == 25u &&
+              bb_slice_gap_ms(15u, 32u, 50u) == 24u && bb_slice_gap_ms(1u, 32u, 50u) == 2u &&
+              bb_slice_gap_ms(0u, 32u, 50u) == 1u,
+          "gap: full after 32 lines, the share rounded up after fewer");
+
+    // Whatever the slices, lines go out no faster than 32 per 50 ms.
+    uint32_t seed = 0xB1ACB0Fu;
+    bool pace = true;
+    for (int trial = 0; trial < 500; trial++) {
+        uint32_t lines = 0, ms = 0;
+        for (int k = 0; k < 200; k++) {
+            uint32_t n = 1u + xorshift32(&seed) % 32u;
+            lines += n;
+            ms += bb_slice_gap_ms(n, 32u, 50u);
+        }
+        pace &= (uint64_t)ms * 32u >= (uint64_t)lines * 50u;
+    }
+    CHECK(pace, "budget-cut slices never outpace 32 lines per 50 ms");
+
+    // A 1501-line save with lines of 40 us: 15 lines a slice instead of 32, each
+    // ending at the budget, the save about as long as with 32-line slices.
+    const uint32_t LINE_US = 40u, BUDGET = 600u, TOTAL = 1501u;
+    uint32_t left = TOTAL, slices = 0, ms = 0, longest = 0;
+    while (left) {
+        uint32_t n = bb_slice(left, 32u), lines = 0, us = 0;
+        do { lines++; us += LINE_US; left--; } while (!bb_slice_over(lines, n, us, BUDGET));
+        if (us > longest) longest = us;
+        slices++;
+        ms += bb_slice_gap_ms(lines, 32u, 50u);
+    }
+    const uint32_t fixed_ms = ((TOTAL + 31u) / 32u) * 50u;    // 47 slices of 32
+    CHECK(slices == 101u && longest == 600u, "15-line slices of 600 us (%u slices, %u us)",
+          (unsigned)slices, (unsigned)longest);
+    CHECK(ms >= fixed_ms && ms <= fixed_ms + fixed_ms / 10u,
+          "save takes %u ms against %u ms with 32-line slices", (unsigned)ms, (unsigned)fixed_ms);
+}
+
+// A trigger while an event is armed (blackbox_arm()).
+static void test_blackbox_arm_action(void) {
+    const uint32_t POST = 5000u;
+    CHECK(bb_arm_action(false, 0u, false, 0u, POST, 123u) == BB_ARM_NOW, "nothing armed: arm");
+    CHECK(bb_arm_action(true, 1000u, false, 0u, POST, 6000u) == BB_ARM_IN_WINDOW,
+          "at the end of the post-roll: inside the armed window");
+    CHECK(bb_arm_action(true, 1000u, false, 0u, POST, 6001u) == BB_ARM_QUEUE,
+          "after it, during the save: waits");
+    CHECK(bb_arm_action(true, 1000u, true, 7000u, POST, 12000u) == BB_ARM_IN_WINDOW,
+          "a second one in the waiting event's post-roll: part of it");
+    CHECK(bb_arm_action(true, 1000u, true, 7000u, POST, 12001u) == BB_ARM_MISSED,
+          "a second one after it: missed");
+    CHECK(bb_arm_action(true, 0xFFFFF000u, false, 0u, POST, 0x00000100u) == BB_ARM_IN_WINDOW,
+          "post-roll across the millis() wrap");
+    CHECK(bb_arm_action(true, 0xFFFFF000u, false, 0u, POST, 0xFFFFF000u + POST + 1u) ==
+              BB_ARM_QUEUE, "past the post-roll across the wrap");
+}
+
+// The save and the queue together, in the order blackbox.cpp runs them: `rate`
+// key frames every 10 ms, a save step of 32 frames every 50 ms, the trigger
+// handling of blackbox_arm() and blackbox_tick(). Returns the saved events.
+struct BBSimEvent {
+    uint32_t trig_ms, first_ts, last_ts, count;
+};
+static int bb_sim(uint32_t cap, uint32_t rate, const uint32_t* trig, int ntrig,
+                  BBSimEvent* out, uint32_t* missed, uint32_t* dropped) {
+    const uint32_t PRE = 10000u, POST = 5000u, TICK = 10u, GAP = 50u, PER = 32u;
+    static uint32_t ts[16384];
+    uint32_t head = 0, tail = 0, slot = 0;
+    bool armed = false, queued = false, saving = false;
+    uint32_t trig_ms = 0, q_ms = 0, flush_at = 0, next = 0, left = 0;
+    int nev = 0, ti = 0;
+    *missed = *dropped = 0;
+    for (uint32_t now = 100u; now < 120000u; now += TICK) {
+        for (uint32_t r = 0; r < rate; r++) {
+            if (bb_ring_push(cap, head, tail, left ? next : cap, &slot)) ts[slot] = now;
+            else (*dropped)++;
+        }
+        while (ti < ntrig && trig[ti] <= now) {
+            switch (bb_arm_action(armed, trig_ms, queued, q_ms, POST, now)) {
+            case BB_ARM_NOW: armed = true; trig_ms = now; flush_at = now + POST; break;
+            case BB_ARM_QUEUE: queued = true; q_ms = now; break;
+            case BB_ARM_MISSED: (*missed)++; break;
+            default: break;
+            }
+            ti++;
+        }
+        if (!armed || (int32_t)(now - flush_at) < 0) continue;
+        if (!saving) {
+            uint32_t t0 = tail;
+            BBWindow w = bb_find_window(bb_ring_count(cap, head, tail), trig_ms - PRE,
+                                        trig_ms + POST,
+                                        [&](uint32_t k) { return ts[(t0 + k) % cap]; });
+            next = (tail + w.first) % cap;
+            left = w.count;
+            out[nev] = {trig_ms, w.count ? ts[next] : 0u, 0u, w.count};
+            saving = true;
+        }
+        for (uint32_t n = bb_slice(left, PER); n > 0; n--) {
+            out[nev].last_ts = ts[next];
+            next = bb_ring_next(cap, next);
+            left--;
+        }
+        flush_at = now + GAP;
+        if (left) continue;
+        saving = false;
+        armed = false;
+        nev++;
+        if (queued) {
+            queued = false;
+            armed = true;
+            trig_ms = q_ms;
+            flush_at = q_ms + POST;
+        }
+    }
+    return nev;
+}
+
+static void test_blackbox_trigger_during_save(void) {
+    // 100 frames/s: 1501 frames a window, saved at 32 per 50 ms in about 2.3 s.
+    BBSimEvent ev[8];
+    uint32_t missed = 0, dropped = 0;
+    // 22000: inside the first window. 25500: during its save (25000..), waits.
+    // 26000: inside the waiting window. 30800: during the second save, waits in
+    // turn. 31000: inside that one.
+    const uint32_t t1[] = {20000u, 22000u, 25500u, 26000u, 30800u, 31000u};
+    int n = bb_sim(8192u, 1u, t1, 6, ev, &missed, &dropped);
+    CHECK(n == 3, "three events saved (%d)", n);
+    CHECK(n >= 2 && ev[1].trig_ms == 25500u && ev[1].first_ts == 15500u &&
+              ev[1].last_ts == 30500u && ev[1].count == 1501u,
+          "the trigger during the save gets its own full window (%u..%u, %u frames)",
+          n >= 2 ? (unsigned)ev[1].first_ts : 0u, n >= 2 ? (unsigned)ev[1].last_ts : 0u,
+          n >= 2 ? (unsigned)ev[1].count : 0u);
+    CHECK(n == 3 && ev[2].trig_ms == 30800u && ev[2].count == 1501u,
+          "and the one during its save gets the next");
+    CHECK(missed == 0 && dropped == 0, "big ring: nothing missed or dropped");
+
+    // 500 frames/s: 7501 frames, about 11.7 s of saving. 25100 waits; 31000 is
+    // past its post-roll (..30100) with the first save still running: missed.
+    // 36000 too (the first save ends at about 36750).
+    const uint32_t t2[] = {20000u, 25100u, 31000u, 36000u};
+    n = bb_sim(16384u, 5u, t2, 4, ev, &missed, &dropped);
+    CHECK(n == 2 && ev[1].trig_ms == 25100u && missed == 2,
+          "long save: one waits, the later two are missed (%d events, %u missed)", n,
+          (unsigned)missed);
+    CHECK(n == 2 && ev[1].first_ts == 15100u && ev[1].last_ts == 30100u,
+          "the waiting event still has its full window (%u..%u)",
+          n == 2 ? (unsigned)ev[1].first_ts : 0u, n == 2 ? (unsigned)ev[1].last_ts : 0u);
+
+    // Small ring (999 frames, 10 s at 100 frames/s): the waiting event's pre-roll
+    // is partly gone by the time it is saved; the trigger and its post-roll are not.
+    const uint32_t t3[] = {20000u, 25100u};
+    n = bb_sim(1000u, 1u, t3, 2, ev, &missed, &dropped);
+    CHECK(n == 2 && ev[1].trig_ms == 25100u && ev[1].first_ts > 15100u &&
+              ev[1].first_ts < 25100u && ev[1].last_ts == 30100u,
+          "small ring: pre-roll partly kept (%u..%u)", n == 2 ? (unsigned)ev[1].first_ts : 0u,
+          n == 2 ? (unsigned)ev[1].last_ts : 0u);
+}
+
 // Continuous AP (#218): the 0x229 press may only go out on a bus where the
 // car's own 0x229 was stored recently, never on a configured bus by default.
 static void test_gear_tx_route(void) {
@@ -1846,6 +2011,9 @@ int main() {
     test_blackbox_window();
     test_blackbox_ring_push();
     test_blackbox_save_slices();
+    test_blackbox_slice_budget();
+    test_blackbox_arm_action();
+    test_blackbox_trigger_during_save();
     test_blackbox_names();
 
     printf("\n%d passed, %d failed\n", g_pass, g_fail);

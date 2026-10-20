@@ -192,7 +192,7 @@ void fsd_handle_esp_status(FSDState *state, const CanFrame *frame);
 /** Parse BMS_hvBusStatus (0x132) — updates pack_voltage_v / pack_current_a. */
 void fsd_handle_bms_hv(FSDState *state, const CanFrame *frame);
 
-/** Parse BMS_socStatus (0x292) — updates soc_percent. */
+/** Parse BMS_socStatus (0x292) — updates soc_percent from BMS_socUI (fsd_bms.h). */
 void fsd_handle_bms_soc(FSDState *state, const CanFrame *frame);
 
 /** Parse UI_range (0x33A) — ui_soc, the SOC on the car's own screen (#251).

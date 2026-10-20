@@ -33,7 +33,7 @@
 // Ring capacity in frames @ 19 B/frame (BBFrame carries a 1-byte RX/TX tag).
 // PSRAM (runtime-detected) holds a full ~15 s window at a busy bus rate. The
 // internal-RAM fallback must cover the window on its own — PSRAM is never
-// required, and lilygo-t2can is the only build that enables it:
+// required, and the two lilygo-t2can builds are the only ones that enable it:
 //   - S3-class (512 KB SRAM): 6000 frames ≈ 114 KB → ≥15 s even at ~400 f/s.
 //     Only paired with the persistent disk backends here, which stream the ring
 //     straight to file (no frozen copy), so the ring is the whole footprint.
@@ -61,8 +61,18 @@
 // in between. On LittleFS every 4 KB written also erases a flash sector (tens
 // of ms with the cache, and so the CAN interrupt, off); written back to back
 // that is most of the time, with the gap under a third of it, at ~24 KB/s.
-#define BLACKBOX_FLUSH_SLICE  32u    // .log lines per step
-#define BLACKBOX_FLUSH_GAP_MS 50u
+// A slice also ends once BLACKBOX_FLUSH_BUDGET_US has gone, and the gap after
+// it shrinks to match (bb_slice_gap_ms()), so the save keeps its pace. The
+// MCP2515 holds two received frames. On ukinora's bench (fork commit fc7da9cb:
+// ~2000 frames/s into the T-2CAN's MCP2515, a slice every loop pass) a 32-line
+// slice took ~10 ms and the board kept about two frames a slice; ending slices
+// at 600 us doubled what it received during a save. A flash erase inside a
+// slice still runs to the end.
+#define BLACKBOX_FLUSH_SLICE  32u    // .log lines per step, at most
+#define BLACKBOX_FLUSH_GAP_MS 50u    // after a full slice or a file operation
+#ifndef BLACKBOX_FLUSH_BUDGET_US
+#define BLACKBOX_FLUSH_BUDGET_US 600u
+#endif
 #define BLACKBOX_TL_MAX      16      // das_ap_state timeline depth
 #define BLACKBOX_TL_EMIT     12      // timeline entries written to the summary
 
@@ -92,6 +102,13 @@ static BBTrigger g_trig = BB_TRIG_ABORT;
 static uint32_t  g_trig_ms = 0;
 static uint32_t  g_flush_at_ms = 0;
 static FSDState  g_snap;            // FSDState at trigger time (toggles/hw/evt_last_*)
+// A trigger that came while the armed event was being saved; armed when that
+// save is over (blackbox_flush.h).
+static bool      g_queued = false;
+static BBTrigger g_q_trig = BB_TRIG_ABORT;
+static uint32_t  g_q_ms = 0;
+static FSDState  g_q_snap;
+static uint32_t  g_missed = 0;      // triggers neither saved nor inside a saved window
 static uint32_t  g_captures = 0;    // monotonic count since boot (badge source)
 static uint32_t  g_next_seq = 1;    // number of the next event (blackbox_name.h)
 
@@ -555,6 +572,7 @@ static void blackbox_free_ring() {
     g_cap = 0;
     g_head = g_tail = 0;
     g_armed = false;
+    g_queued = false;
 }
 
 void blackbox_init(FSDState* state, portMUX_TYPE* state_mux) {
@@ -624,7 +642,26 @@ void blackbox_note_ap_state(uint8_t ap_state, uint32_t now_ms) {
 
 void blackbox_arm(BBTrigger trig, const FSDState* snap, uint32_t now_ms) {
     if (g_cap == 0 || g_state == nullptr || !g_state->blackbox_enabled) return;
-    if (g_armed) return;  // already capturing; ignore until the post-roll flushes
+    switch (bb_arm_action(g_armed, g_trig_ms, g_queued, g_q_ms, BLACKBOX_POST_MS, now_ms)) {
+    case BB_ARM_IN_WINDOW:  // already in the window of an armed or waiting event
+        return;
+    case BB_ARM_QUEUE:      // the armed event is being saved: this one is next
+        g_queued = true;
+        g_q_trig = trig;
+        g_q_ms = now_ms;
+        if (snap) g_q_snap = *snap; else g_q_snap = *g_state;
+        Serial.printf("[BB] %s @ %lums waits for the save in progress\n",
+                      trig_name_uc(trig), (unsigned long)now_ms);
+        return;
+    case BB_ARM_MISSED:     // one already waits, and this is past its window
+        g_missed++;
+        Serial.printf("[BB] %s @ %lums not recorded: a save is running and another "
+                      "event waits\n", trig_name_uc(trig), (unsigned long)now_ms);
+        return;
+    case BB_ARM_NOW:
+    default:
+        break;
+    }
     g_armed = true;
     g_trig = trig;
     g_trig_ms = now_ms;
@@ -728,10 +765,10 @@ static void bb_event_json(char* json, int json_sz, uint32_t count, uint32_t wind
 #if defined(BLACKBOX_BACKEND_LITTLEFS) || defined(BLACKBOX_BACKEND_SD)
 // One step of saving the armed event; true once the save is over. Each step
 // is one file operation or one slice of .log lines, and blackbox_tick() runs
-// them BLACKBOX_FLUSH_GAP_MS apart, so the loop never waits for a whole event
-// to reach the disk. The ring keeps recording; bb_keep_slot() protects the
+// the next one *gap_ms later, so the loop never waits for a whole event to
+// reach the disk. The ring keeps recording; bb_keep_slot() protects the
 // frames not written yet.
-static bool do_flush(uint32_t now_ms) {
+static bool do_flush(uint32_t now_ms, uint32_t* gap_ms) {
     char p[64];
     switch (g_save.step) {
     case BB_SAVE_IDLE: {
@@ -783,7 +820,10 @@ static bool do_flush(uint32_t now_ms) {
             return false;
         }
         char line[72];
-        for (uint32_t n = bb_slice(g_save.left, BLACKBOX_FLUSH_SLICE); n > 0; n--) {
+        const uint32_t n = bb_slice(g_save.left, BLACKBOX_FLUSH_SLICE);
+        const uint32_t t_us = micros();
+        uint32_t lines = 0;
+        do {
             const BBFrame& fr = g_ring[g_save.next];
             int len = tesla_format_candump_line(line, sizeof(line), fr.ts_ms - g_save.window_start,
                                                 bb_iface_name(fr), fr.id, fr.data, fr.dlc);
@@ -792,7 +832,9 @@ static bool do_flush(uint32_t now_ms) {
             if (fr.bus == CAN_BUS_SECONDARY) g_save.bus1++; else g_save.bus0++;
             g_save.next = ring_next(g_save.next);
             g_save.left--;
-        }
+            lines++;
+        } while (!bb_slice_over(lines, n, micros() - t_us, BLACKBOX_FLUSH_BUDGET_US));
+        *gap_ms = bb_slice_gap_ms(lines, BLACKBOX_FLUSH_SLICE, BLACKBOX_FLUSH_GAP_MS);
         return false;
     }
     case BB_SAVE_JSON: {
@@ -826,7 +868,8 @@ static bool do_flush(uint32_t now_ms) {
 #else
 // RAM: freeze the windowed frames into a contiguous buffer for download, in
 // one step (a copy, no file).
-static bool do_flush(uint32_t now_ms) {
+static bool do_flush(uint32_t now_ms, uint32_t* gap_ms) {
+    (void)gap_ms;
     uint32_t lo = (g_trig_ms >= BLACKBOX_PRE_MS) ? g_trig_ms - BLACKBOX_PRE_MS : 0u;
     uint32_t hi = g_trig_ms + BLACKBOX_POST_MS;
 
@@ -878,8 +921,23 @@ static bool do_flush(uint32_t now_ms) {
 void blackbox_tick(uint32_t now_ms) {
     if (!g_armed) return;
     if ((int32_t)(now_ms - g_flush_at_ms) < 0) return;  // post-roll, or between save steps
-    if (do_flush(now_ms)) g_armed = false;
-    else g_flush_at_ms = now_ms + BLACKBOX_FLUSH_GAP_MS;
+    uint32_t gap_ms = BLACKBOX_FLUSH_GAP_MS;
+    if (!do_flush(now_ms, &gap_ms)) {
+        g_flush_at_ms = now_ms + gap_ms;
+        return;
+    }
+    g_armed = false;
+    if (!g_queued) return;
+    // The trigger that came during the save: its window, its snapshot. With its
+    // post-roll already over, its save starts on the next call.
+    g_queued = false;
+    g_armed = true;
+    g_trig = g_q_trig;
+    g_trig_ms = g_q_ms;
+    g_flush_at_ms = g_q_ms + BLACKBOX_POST_MS;
+    g_snap = g_q_snap;
+    Serial.printf("[BB] armed by %s @ %lums, after the save\n",
+                  trig_name_uc(g_trig), (unsigned long)g_trig_ms);
 }
 
 void blackbox_set_enabled(bool enabled) {
@@ -921,6 +979,8 @@ String blackbox_status_json() {
     j += "\"psram\":";    j += g_ring_psram ? "true" : "false"; j += ',';
     j += "\"cap\":";      j += g_cap; j += ',';
     j += "\"armed\":";    j += g_armed ? "true" : "false"; j += ',';
+    j += "\"queued\":";   j += g_queued ? "true" : "false"; j += ',';
+    j += "\"missed\":";   j += g_missed; j += ',';
     j += "\"events\":";   j += backend_count(); j += ',';
     j += "\"captures\":"; j += g_captures;
     j += '}';
