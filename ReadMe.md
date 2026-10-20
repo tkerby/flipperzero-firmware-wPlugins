@@ -272,6 +272,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Flipper Lotto v1.0 (By molykima)](https://github.com/molykima/Flipper-Lottery-Number-Generator)
 - Added: [Subscriber Counter v1.0 (By TheProductAgency)](https://github.com/TheProductAgency/flipper-subscriber-counter)
 - Updated: [Bambu RFID v0.3 (By DanTheMan827)](https://github.com/DanTheMan827/bambu-rfid-flipper)
+- RFID: [Share the duplicated write_data bodies (-992 B of flash) (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/pull/1183)
 
 <a name="release"></a>
 
