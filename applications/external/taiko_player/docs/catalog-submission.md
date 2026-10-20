@@ -4,7 +4,7 @@
 
 ## 提交资料
 
-- 应用信息：application.fam，ID 为 taiko_player，分类 Media，目标 F7，待提交版本 0.4。
+- 应用信息：application.fam，ID 为 taiko_player，分类 Media，目标 F7，待提交版本 0.5。
 - 项目许可：[GPL-3.0-or-later](../LICENSE)。代码及原创图标适用；第三方音效保留 MIT。
 - 音效：[来源、固定提交及校验值](../assets/SFX-NOTICE.md)，以及[上游 MIT 原文](../assets/SFX-LICENSE.txt)。
 - 商店英文介绍：[catalog-description.md](catalog-description.md)。只使用商店支持的标题、段落、列表及链接。
@@ -75,7 +75,7 @@ PATH="$PWD/build/catalog-submission/venv/bin:$PATH" \
 
 ## 发起目录 PR
 
-Fork 官方目录仓库，建立单独分支，将生成的文件放到 applications/Media/taiko_player/manifest.yml。PR 标题可使用 **Add Taiko Player v0.4**，正文以 catalog/pull-request.md 为基础，保留上游模板的所有章节和 Reviewer Checklist。
+Fork 官方目录仓库，建立单独分支，将生成的文件放到 applications/Media/taiko_player/manifest.yml。PR 标题可使用 **Add Taiko Player v0.5**，正文以 catalog/pull-request.md 为基础，保留上游模板的所有章节和 Reviewer Checklist。
 
 PR 草稿保留未勾选的作者检查项，正式提交者应在审阅和校验后逐项确认。AI 声明使用 Fully AI generated，并解释解析、音频、UI、GPIO、设置和测试的作用；作者负责需求及实机反馈，原始截图由作者提供，鼓声来自明确标注的第三方资源。
 

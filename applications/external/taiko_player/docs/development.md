@@ -30,13 +30,22 @@ make momentum-sdk MOMENTUM_SDK="<对应固件的 SDK ZIP URL>"
 
 后续的打包和上传命令也需要加上 `FIRMWARE=momentum`。构建操作不更新设备固件。
 
-两套 SDK 初始化后，可生成不含本地曲目和设置的双固件发布包：
+Momentum mntm-012 使用 API 87.1，与 Momentum CN v1.1.6 的 API 版本相同，可使用独立档位构建，保留原有 mntm-009（API 79.2）SDK 和产物：
 
 ```sh
-make release VERSION=0.4
+make momentum-012-sdk
+make build FIRMWARE=momentum-012
 ```
 
-此命令运行测试、依次编译两个版本，并输出 `dist/releases/v0.4/` 下的两个 ZIP 和 SHA-256 校验文件。每个包记录源码提交、固件 SDK 版本及 FAP API，并包含中英文 README 与 `docs/` 下的 Markdown 文档。GitHub Release 工作流使用固定版本的 SDK；准备好对应的 `docs/releases/v<版本>.md` 并推送 `v<版本>` 标签后，会自动构建并发布。
+产物为 `dist/momentum-012/taiko_player.fap`，SDK 保存在 `.ufbt/momentum-012/`。`make momentum-012` 是该构建命令的简写；打包和上传使用 `FIRMWARE=momentum-012`。作者已在 Momentum CN v1.1.6 上确认该构建正常运行；其他固件分支仍应单独验证播放、GPIO 和暂停功能。SDK 来源为[上游 mntm-012 Release](https://github.com/Next-Flip/Momentum-Firmware/releases/tag/mntm-012)，可通过 `MOMENTUM_012_SDK` 覆盖下载地址。
+
+三套 SDK 初始化后，可生成不含本地曲目和设置的发布包：
+
+```sh
+make release VERSION=0.5
+```
+
+此命令运行测试、依次编译三个版本，并输出 `dist/releases/v0.5/` 下的三个 ZIP 和 SHA-256 校验文件。每个包记录源码提交、固件 SDK 版本及 FAP API，并包含中英文 README 与 `docs/` 下的 Markdown 文档。GitHub Release 工作流使用固定版本的 SDK；准备好对应的 `docs/releases/v<版本>.md` 并推送 `v<版本>` 标签后，会自动构建并发布。
 
 ## 打包与 USB 上传
 

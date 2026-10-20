@@ -14,13 +14,13 @@ A lightweight TJA player for Flipper Zero. Choose a chart from the SD card, play
 - Automatic drum-sound mixing and alternating left/right drum indicators.
 - Difficulty selection, pause, seeking, and separate playback speed, scroll speed, and volume controls.
 - Four configurable GPIO outputs, disabled by default, with saved preferences.
-- Separate builds for official firmware and Momentum.
+- Separate builds for official firmware and both older and newer Momentum APIs.
 
 This is a chart player; hit judgment is not implemented. Convert OGG audio to PCM WAV on your computer before playback.
 
 ## Quick start
 
-1. Download the package matching your firmware from [GitHub Releases](https://github.com/ZeroNinx/flipper-zero-taiko-player/releases). The v0.3 builds use official firmware 1.5.1 (API 88.2) and Momentum mntm-009 (API 79.2).
+1. Download the package matching your firmware from [GitHub Releases](https://github.com/ZeroNinx/flipper-zero-taiko-player/releases). See the [v0.5 release notes](docs/releases/v0.5.md) for the SDK and API of each package.
 2. Extract the archive and copy the contents of `sdcard/` to the root of your SD card. Packages include the app, drum sounds, and conversion scripts, but no songs or personal settings.
 3. Install Python 3 and FFmpeg on your computer. Place your TJA files and matching audio in the extracted `songs/` folder, keeping the audio paths specified by each chart's `WAVE:` field. For example:
 
@@ -102,6 +102,15 @@ make build FIRMWARE=momentum
 ```
 
 The Momentum build is saved to `dist/momentum/taiko_player.fap`. Use an SDK compatible with your device's firmware API. Run `make test` for local tests.
+
+For Momentum mntm-012 (API 87.1, also matching the API version of Momentum CN v1.1.6), use a separate SDK and output directory:
+
+```sh
+make momentum-012-sdk
+make build FIRMWARE=momentum-012
+```
+
+The output is `dist/momentum-012/taiko_player.fap`; this preserves the mntm-009 SDK and build. The author has confirmed that this build runs normally on Momentum CN v1.1.6. The release command packages all three builds: official, mntm-009, and mntm-012.
 
 ## Credits
 

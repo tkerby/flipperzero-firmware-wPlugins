@@ -4,7 +4,13 @@
 
 ## 安装与升级
 
-从 [GitHub Releases](https://github.com/ZeroNinx/flipper-zero-taiko-player/releases) 下载与设备固件 API 兼容的安装包。v0.3 使用官方 1.5.1（API 88.2）和 Momentum mntm-009（API 79.2）SDK 构建。
+从 [GitHub Releases](https://github.com/ZeroNinx/flipper-zero-taiko-player/releases) 下载与设备固件 API 兼容的安装包。v0.5 提供以下三个安装包：
+
+| 安装包后缀 | 固件 SDK | API |
+| --- | --- | --- |
+| official | 官方 1.5.1 | 88.2 |
+| momentum | Momentum mntm-009 | 79.2 |
+| momentum-012 | Momentum mntm-012，已在 Momentum CN v1.1.6 验证 | 87.1 |
 
 解压后将 `sdcard/` 内的内容复制到 SD 卡根目录，可通过 qFlipper 上传。发布包内附带咚／咔音效、转码脚本及 `INSTALL.md`，不含歌曲或用户设置；升级时可覆盖应用和音效，保留原有歌曲及 `settings.ff`。
 

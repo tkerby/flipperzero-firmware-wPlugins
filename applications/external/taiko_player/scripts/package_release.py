@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 ZeroNinx
 
-"""Package official and Momentum builds without local songs or settings."""
+"""Package official and both Momentum builds without local songs or settings."""
 
 import argparse
 import hashlib
@@ -91,6 +91,7 @@ def package(version, output):
     sdk_homes = {
         "official": Path(os.environ.get("UFBT_HOME", Path.home() / ".ufbt")),
         "momentum": ROOT / ".ufbt/momentum",
+        "momentum-012": ROOT / ".ufbt/momentum-012",
     }
     artifacts = []
     with tempfile.TemporaryDirectory(prefix="taiko-release-") as temporary:
@@ -170,7 +171,7 @@ def package(version, output):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--version", default="0.4")
+    parser.add_argument("--version", default="0.5")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
     if not re.fullmatch(r"\d+\.\d+", args.version):
