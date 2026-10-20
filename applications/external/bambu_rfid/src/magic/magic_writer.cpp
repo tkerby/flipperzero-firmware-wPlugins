@@ -21,8 +21,22 @@ constexpr uint32_t RawFwt = 200000U;
 constexpr uint32_t WriterDoneFlag = (1UL << 0);
 constexpr uint8_t DefaultKeyBytes[MF_CLASSIC_KEY_SIZE] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 constexpr uint8_t UfuidSealConfig[BR_BLOCK_SIZE] = {
-    0x85, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08,
+    0x85,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x08,
 };
 
 struct Gen1Session {
@@ -97,12 +111,13 @@ void key_from_bytes(const uint8_t bytes[6], MfClassicKey* key);
 bool gen1_tx(Gen1Session* s, const uint8_t* data, size_t bytes, size_t bits, bool crc) {
     bit_buffer_reset(s->tx);
     bit_buffer_reset(s->rx);
-    if(bits) bit_buffer_copy_bits(s->tx, data, bits);
-    else bit_buffer_copy_bytes(s->tx, data, bytes);
+    if(bits)
+        bit_buffer_copy_bits(s->tx, data, bits);
+    else
+        bit_buffer_copy_bytes(s->tx, data, bytes);
     if(crc) iso14443_crc_append(Iso14443CrcTypeA, s->tx);
     return nfc_poller_trx(s->nfc, s->tx, s->rx, RawFwt) == NfcErrorNone;
 }
-
 
 bool gen1_write_block_in_session(Gen1Session* s, uint8_t block, const uint8_t data[BR_BLOCK_SIZE]) {
     const uint8_t write_cmd[2] = {0xA0, block};
@@ -222,7 +237,8 @@ bool run_gen1(
     nfc_set_fdt_poll_fc(nfc, ISO14443_3A_FDT_POLL_FC);
     nfc_set_fdt_poll_poll_us(nfc, ISO14443_3A_POLL_POLL_MIN_US);
     nfc_start(nfc, gen1_callback, &s);
-    const uint32_t flags = furi_thread_flags_wait(WriterDoneFlag, FuriFlagWaitAny, FuriWaitForever);
+    const uint32_t flags =
+        furi_thread_flags_wait(WriterDoneFlag, FuriFlagWaitAny, FuriWaitForever);
     if(flags & WriterDoneFlag) furi_thread_flags_clear(WriterDoneFlag);
     nfc_stop(nfc);
 
@@ -259,7 +275,8 @@ bool run_gen1_read_block(
     nfc_set_fdt_poll_fc(nfc, ISO14443_3A_FDT_POLL_FC);
     nfc_set_fdt_poll_poll_us(nfc, ISO14443_3A_POLL_POLL_MIN_US);
     nfc_start(nfc, gen1_callback, &s);
-    const uint32_t flags = furi_thread_flags_wait(WriterDoneFlag, FuriFlagWaitAny, FuriWaitForever);
+    const uint32_t flags =
+        furi_thread_flags_wait(WriterDoneFlag, FuriFlagWaitAny, FuriWaitForever);
     if(flags & WriterDoneFlag) furi_thread_flags_clear(WriterDoneFlag);
     nfc_stop(nfc);
 
@@ -304,7 +321,8 @@ NfcCommand selected_callback(NfcGenericEvent event, void* context) {
         if(error == Iso14443_3aErrorNone) {
             s->response_len = bit_buffer_get_size_bytes(s->rx);
             if(s->response && s->response_capacity) {
-                const size_t copy = s->response_len < s->response_capacity ? s->response_len : s->response_capacity;
+                const size_t copy = s->response_len < s->response_capacity ? s->response_len :
+                                                                             s->response_capacity;
                 bit_buffer_write_bytes(s->rx, s->response, copy);
             }
             s->ok = true;
@@ -346,7 +364,8 @@ bool selected_exchange(
     }
 
     nfc_poller_start(poller, selected_callback, &s);
-    const uint32_t flags = furi_thread_flags_wait(WriterDoneFlag, FuriFlagWaitAny, FuriWaitForever);
+    const uint32_t flags =
+        furi_thread_flags_wait(WriterDoneFlag, FuriFlagWaitAny, FuriWaitForever);
     if(flags & WriterDoneFlag) furi_thread_flags_clear(WriterDoneFlag);
     nfc_poller_stop(poller);
     nfc_poller_free(poller);
@@ -393,7 +412,15 @@ bool gen4_write_block(Nfc* nfc, const uint8_t password[4], uint8_t block, const 
     memcpy(payload + 1, data, 16);
     uint8_t response[4]{};
     size_t response_len = 0;
-    return gen4_command(nfc, password, 0xCD, payload, sizeof(payload), response, sizeof(response), &response_len) &&
+    return gen4_command(
+               nfc,
+               password,
+               0xCD,
+               payload,
+               sizeof(payload),
+               response,
+               sizeof(response),
+               &response_len) &&
            response_len == 2U;
 }
 
@@ -406,14 +433,16 @@ bool gen4_write_dump(Nfc* nfc, const uint8_t password[4], const BrTagDump& dump)
 
 bool gen4_read_config(Nfc* nfc, const uint8_t password[4], uint8_t config[32]) {
     size_t response_len = 0;
-    return gen4_command(nfc, password, 0xC6, nullptr, 0, config, 32, &response_len) && response_len == 32U;
+    return gen4_command(nfc, password, 0xC6, nullptr, 0, config, 32, &response_len) &&
+           response_len == 32U;
 }
 
 bool gen4_fuse_config(Nfc* nfc, const uint8_t password[4], const uint8_t config[32]) {
     uint8_t response[4]{};
     size_t response_len = 0;
     // F1 consumes the 30 configuration bytes; the final two bytes returned by C6 are CRC.
-    return gen4_command(nfc, password, 0xF1, config, 30, response, sizeof(response), &response_len) &&
+    return gen4_command(
+               nfc, password, 0xF1, config, 30, response, sizeof(response), &response_len) &&
            response_len == 2U;
 }
 
@@ -421,7 +450,8 @@ bool gen3_read_block0(Nfc* nfc, uint8_t block0[16]) {
     const uint8_t command[2] = {0x30, 0x00};
     uint8_t response[20]{};
     size_t response_len = 0;
-    if(!selected_exchange(nfc, command, sizeof(command), response, sizeof(response), &response_len) ||
+    if(!selected_exchange(
+           nfc, command, sizeof(command), response, sizeof(response), &response_len) ||
        response_len != BR_BLOCK_SIZE)
         return false;
     memcpy(block0, response, BR_BLOCK_SIZE);
@@ -433,7 +463,8 @@ bool gen3_write_block0(Nfc* nfc, const uint8_t block0[16]) {
     memcpy(command + 5, block0, 16);
     uint8_t response[8]{};
     size_t response_len = 0;
-    return selected_exchange(nfc, command, sizeof(command), response, sizeof(response), &response_len) &&
+    return selected_exchange(
+               nfc, command, sizeof(command), response, sizeof(response), &response_len) &&
            response_len > 0U;
 }
 
@@ -445,7 +476,8 @@ bool gen3_change_uid(Nfc* nfc, const uint8_t uid[4]) {
     memcpy(command + 5, uid, 4);
     uint8_t response[8]{};
     size_t response_len = 0;
-    return selected_exchange(nfc, command, sizeof(command), response, sizeof(response), &response_len) &&
+    return selected_exchange(
+               nfc, command, sizeof(command), response, sizeof(response), &response_len) &&
            response_len > 0U;
 }
 
@@ -453,7 +485,8 @@ bool gen3_freeze(Nfc* nfc) {
     const uint8_t command[5] = {0x90, 0xFD, 0x11, 0x11, 0x00};
     uint8_t response[8]{};
     size_t response_len = 0;
-    return selected_exchange(nfc, command, sizeof(command), response, sizeof(response), &response_len) &&
+    return selected_exchange(
+               nfc, command, sizeof(command), response, sizeof(response), &response_len) &&
            response_len > 0U;
 }
 
@@ -463,7 +496,8 @@ bool read_identity(Nfc* nfc, uint8_t uid[4], uint8_t atqa[2], uint8_t* sak) {
     const bool found = nfc_poller_detect(poller);
     bool ok = false;
     if(found) {
-        const Iso14443_3aData* data = static_cast<const Iso14443_3aData*>(nfc_poller_get_data(poller));
+        const Iso14443_3aData* data =
+            static_cast<const Iso14443_3aData*>(nfc_poller_get_data(poller));
         if(data && data->uid_len == 4U) {
             if(uid) memcpy(uid, data->uid, 4);
             if(atqa) memcpy(atqa, data->atqa, 2);
@@ -510,8 +544,8 @@ bool write_with_either_key(
        MfClassicErrorNone)
         return true;
     copy = *data;
-    return mf_classic_poller_sync_write_block(
-               nfc, block, second, second_type, &copy) == MfClassicErrorNone;
+    return mf_classic_poller_sync_write_block(nfc, block, second, second_type, &copy) ==
+           MfClassicErrorNone;
 }
 
 bool relax_sector_access(Nfc* nfc, const BrTagDump& current, uint8_t sector) {
@@ -603,10 +637,7 @@ bool rewrite_dump_from_current(
     return true;
 }
 
-bool verify_dump_with_keys(
-    Nfc* nfc,
-    const BrTagDump& expected,
-    const MfClassicDeviceKeys& keys) {
+bool verify_dump_with_keys(Nfc* nfc, const BrTagDump& expected, const MfClassicDeviceKeys& keys) {
     MfClassicData* data = mf_classic_alloc();
     if(!data) return false;
     const MfClassicError error = mf_classic_poller_sync_read(nfc, &keys, data);
@@ -662,7 +693,8 @@ bool verify_block0_exact(Nfc* nfc, const BrTagDump& expected) {
     MfClassicKey key{};
     dump_key_a(expected, 0, &key);
     MfClassicBlock block{};
-    if(mf_classic_poller_sync_read_block(nfc, 0, &key, MfClassicKeyTypeA, &block) != MfClassicErrorNone)
+    if(mf_classic_poller_sync_read_block(nfc, 0, &key, MfClassicKeyTypeA, &block) !=
+       MfClassicErrorNone)
         return false;
     return memcmp(block.data, expected.blocks[0], BR_BLOCK_SIZE) == 0;
 }
@@ -671,8 +703,8 @@ void make_probe_block0(const uint8_t source[16], uint8_t probe[16], uint8_t prob
     memcpy(probe, source, 16);
     do {
         furi_hal_random_fill_buf(probe_uid, 4);
-    } while(memcmp(probe_uid, source, 4) == 0 ||
-            (probe_uid[0] == 0U && probe_uid[1] == 0U && probe_uid[2] == 0U && probe_uid[3] == 0U));
+    } while(memcmp(probe_uid, source, 4) == 0 || (probe_uid[0] == 0U && probe_uid[1] == 0U &&
+                                                  probe_uid[2] == 0U && probe_uid[3] == 0U));
     memcpy(probe, probe_uid, 4);
     probe[4] = probe_uid[0] ^ probe_uid[1] ^ probe_uid[2] ^ probe_uid[3];
 }
@@ -683,8 +715,22 @@ void make_blank_dump(BrTagDump* blank) {
     // and transport/default keys + access bytes in every sector trailer.
     memset(blank, 0, sizeof(*blank));
     static const uint8_t FactoryBlock0[BR_BLOCK_SIZE] = {
-        0x00, 0x01, 0x02, 0x03, 0x00, 0x08, 0x04, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00,
+        0x01,
+        0x02,
+        0x03,
+        0x00,
+        0x08,
+        0x04,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
     };
     memcpy(blank->blocks[0], FactoryBlock0, sizeof(FactoryBlock0));
     for(uint8_t sector = 0; sector < BR_SECTOR_COUNT; ++sector) {
@@ -696,14 +742,14 @@ void make_blank_dump(BrTagDump* blank) {
         trailer[9] = 0x69;
         memset(trailer + 10, 0xFF, 6);
     }
-    for(uint8_t block = 0; block < BR_BLOCK_COUNT; ++block) blank->read[block] = true;
+    for(uint8_t block = 0; block < BR_BLOCK_COUNT; ++block)
+        blank->read[block] = true;
 }
 
 bool is_ufuid_config(const uint8_t config[16]) {
-    return config[0] == 0x7A && config[1] == 0xFF && config[2] == 0x00 &&
-           config[8] == 0xBA && config[9] == 0xFA && config[15] == 0x08;
+    return config[0] == 0x7A && config[1] == 0xFF && config[2] == 0x00 && config[8] == 0xBA &&
+           config[9] == 0xFA && config[15] == 0x08;
 }
-
 
 bool restore_source(Nfc* nfc, BrMagicFamily family, const BrTagDump& source) {
     if(family == BrMagicFamily::Gen2) {
@@ -870,7 +916,6 @@ bool blank_after_unlocked(
     return verify_blank_dump(nfc, blank);
 }
 
-
 bool read_bambu_current_dump(
     Nfc* nfc,
     const uint8_t uid[BR_UID_SIZE],
@@ -903,10 +948,7 @@ bool read_bambu_current_dump(
     for(uint8_t sector = 0; sector < BR_SECTOR_COUNT; ++sector) {
         const uint8_t trailer = static_cast<uint8_t>(sector * 4U + 3U);
         memcpy(dump->blocks[trailer], derived_keys->key_a[sector].data, MF_CLASSIC_KEY_SIZE);
-        memcpy(
-            dump->blocks[trailer] + 10,
-            derived_keys->key_b[sector].data,
-            MF_CLASSIC_KEY_SIZE);
+        memcpy(dump->blocks[trailer] + 10, derived_keys->key_b[sector].data, MF_CLASSIC_KEY_SIZE);
     }
     return true;
 }
@@ -938,10 +980,7 @@ BrMagicFamily detect_magic_family_for_wipe(Nfc* nfc) {
     return BrMagicFamily::Gen2;
 }
 
-bool gen4_write_blocks_1_to_63(
-    Nfc* nfc,
-    const uint8_t password[4],
-    const BrTagDump& dump) {
+bool gen4_write_blocks_1_to_63(Nfc* nfc, const uint8_t password[4], const BrTagDump& dump) {
     for(uint8_t block = 1; block < BR_BLOCK_COUNT; ++block) {
         if(!gen4_write_block(nfc, password, block, dump.blocks[block])) return false;
     }
@@ -975,14 +1014,14 @@ bool write_canonical_blank(
     } else if(family == BrMagicFamily::Gen2) {
         block0_ready = gen2_write_block0_preserving_acl(nfc, current, blank.blocks[0]);
     } else if(family == BrMagicFamily::Gen1Alt) {
-        block0_ready = run_gen1(
-            nfc, 0x20, 0x23, nullptr, blank.blocks[0], nullptr, nullptr, false);
+        block0_ready =
+            run_gen1(nfc, 0x20, 0x23, nullptr, blank.blocks[0], nullptr, nullptr, false);
     } else if(family == BrMagicFamily::Gen1B) {
-        block0_ready = run_gen1(
-            nfc, 0x40, 0x00, nullptr, blank.blocks[0], nullptr, nullptr, false);
+        block0_ready =
+            run_gen1(nfc, 0x40, 0x00, nullptr, blank.blocks[0], nullptr, nullptr, false);
     } else if(family == BrMagicFamily::Gen1A || family == BrMagicFamily::Ufuid) {
-        block0_ready = run_gen1(
-            nfc, 0x40, 0x43, nullptr, blank.blocks[0], nullptr, nullptr, false);
+        block0_ready =
+            run_gen1(nfc, 0x40, 0x43, nullptr, blank.blocks[0], nullptr, nullptr, false);
     }
     if(!block0_ready) return false;
 
@@ -1081,16 +1120,16 @@ bool initial_write(
         // write is the final selected Bambu manufacturer block.
         MfClassicBlock source0{};
         memcpy(source0.data, source.blocks[0], BR_BLOCK_SIZE);
-        if(mf_classic_poller_sync_write_block(
-               nfc, 0, &default_key, MfClassicKeyTypeA, &source0) != MfClassicErrorNone)
+        if(mf_classic_poller_sync_write_block(nfc, 0, &default_key, MfClassicKeyTypeA, &source0) !=
+           MfClassicErrorNone)
             return false;
         furi_delay_ms(35);
 
         uint8_t live_uid[4]{};
         if(!wait_uid(nfc, live_uid) || memcmp(live_uid, source.blocks[0], 4) != 0) return false;
         MfClassicBlock checked{};
-        if(mf_classic_poller_sync_read_block(
-               nfc, 0, &default_key, MfClassicKeyTypeA, &checked) != MfClassicErrorNone ||
+        if(mf_classic_poller_sync_read_block(nfc, 0, &default_key, MfClassicKeyTypeA, &checked) !=
+               MfClassicErrorNone ||
            memcmp(checked.data, source.blocks[0], BR_BLOCK_SIZE) != 0)
             return false;
         is_gen2 = true;
@@ -1144,15 +1183,24 @@ bool initial_write(
 
 const char* br_magic_family_name(BrMagicFamily family) {
     switch(family) {
-    case BrMagicFamily::Gen1A: return "Gen1A / UID";
-    case BrMagicFamily::Gen1B: return "Gen1B";
-    case BrMagicFamily::Gen1Alt: return "FUID / alt Gen1";
-    case BrMagicFamily::Mf4Unsupported: return "MF4 (not safe for exact clone)";
-    case BrMagicFamily::Ufuid: return "UFUID";
-    case BrMagicFamily::Gen2: return "Gen2 / CUID";
-    case BrMagicFamily::Gen3: return "Gen3 / APDU";
-    case BrMagicFamily::Gen4: return "Gen4 / Ultimate";
-    default: return "Unknown magic";
+    case BrMagicFamily::Gen1A:
+        return "Gen1A / UID";
+    case BrMagicFamily::Gen1B:
+        return "Gen1B";
+    case BrMagicFamily::Gen1Alt:
+        return "FUID / alt Gen1";
+    case BrMagicFamily::Mf4Unsupported:
+        return "MF4 (not safe for exact clone)";
+    case BrMagicFamily::Ufuid:
+        return "UFUID";
+    case BrMagicFamily::Gen2:
+        return "Gen2 / CUID";
+    case BrMagicFamily::Gen3:
+        return "Gen3 / APDU";
+    case BrMagicFamily::Gen4:
+        return "Gen4 / Ultimate";
+    default:
+        return "Unknown magic";
     }
 }
 
@@ -1165,7 +1213,8 @@ int32_t br_write_worker(void* context) {
 
     BrTagDump source{};
     BrTagInfo source_info{};
-    if(!br_load_tag_dump(ctx->storage, ctx->source_path, &source, &source_info) || !source_info.complete) {
+    if(!br_load_tag_dump(ctx->storage, ctx->source_path, &source, &source_info) ||
+       !source_info.complete) {
         report(ctx, "Selected dump is incomplete or invalid");
         if(ctx->dispatcher) view_dispatcher_send_custom_event(ctx->dispatcher, ctx->done_event);
         return 0;
@@ -1173,12 +1222,13 @@ int32_t br_write_worker(void* context) {
     for(uint8_t block = 0; block < BR_BLOCK_COUNT; ++block) {
         if(!source.read[block]) {
             report(ctx, "Selected dump is missing blocks");
-            if(ctx->dispatcher) view_dispatcher_send_custom_event(ctx->dispatcher, ctx->done_event);
+            if(ctx->dispatcher)
+                view_dispatcher_send_custom_event(ctx->dispatcher, ctx->done_event);
             return 0;
         }
     }
-    const uint8_t expected_bcc =
-        source.blocks[0][0] ^ source.blocks[0][1] ^ source.blocks[0][2] ^ source.blocks[0][3];
+    const uint8_t expected_bcc = source.blocks[0][0] ^ source.blocks[0][1] ^ source.blocks[0][2] ^
+                                 source.blocks[0][3];
     if(source.blocks[0][4] != expected_bcc) {
         report(ctx, "Selected dump has an invalid block-0 BCC");
         if(ctx->dispatcher) view_dispatcher_send_custom_event(ctx->dispatcher, ctx->done_event);
@@ -1194,7 +1244,8 @@ int32_t br_write_worker(void* context) {
 
     report(ctx, "Hold blank magic MIFARE 1K tag steady");
     uint8_t target_uid[4]{};
-    while(!cancelled(ctx) && !wait_uid(nfc, target_uid)) furi_delay_ms(120);
+    while(!cancelled(ctx) && !wait_uid(nfc, target_uid))
+        furi_delay_ms(120);
     if(cancelled(ctx)) {
         nfc_free(nfc);
         return 0;
@@ -1215,7 +1266,8 @@ int32_t br_write_worker(void* context) {
     bool have_gen1_config = false;
     if(!initial_write(nfc, source, &family, gen1_config, &have_gen1_config)) {
         result->family = family;
-        snprintf(result->family_name, sizeof(result->family_name), "%s", br_magic_family_name(family));
+        snprintf(
+            result->family_name, sizeof(result->family_name), "%s", br_magic_family_name(family));
         if(family == BrMagicFamily::Mf4Unsupported)
             report(ctx, "MF4 rejected: exact Bambu trailers would alter live identity");
         else
@@ -1292,7 +1344,8 @@ int32_t br_write_worker(void* context) {
         if(!safe_to_lock(nfc, source)) {
             report(ctx, "Post-lock Bambu data verification failed");
             nfc_free(nfc);
-            if(ctx->dispatcher) view_dispatcher_send_custom_event(ctx->dispatcher, ctx->done_event);
+            if(ctx->dispatcher)
+                view_dispatcher_send_custom_event(ctx->dispatcher, ctx->done_event);
             return 0;
         }
 
@@ -1304,7 +1357,8 @@ int32_t br_write_worker(void* context) {
             result->locked = true;
             report(ctx, "Lock verified: repeated UID rewrites are blocked");
             nfc_free(nfc);
-            if(ctx->dispatcher) view_dispatcher_send_custom_event(ctx->dispatcher, ctx->done_event);
+            if(ctx->dispatcher)
+                view_dispatcher_send_custom_event(ctx->dispatcher, ctx->done_event);
             return 0;
         }
 
@@ -1314,7 +1368,8 @@ int32_t br_write_worker(void* context) {
         if(!restore_source(nfc, family, source) || !safe_to_lock(nfc, source)) {
             report(ctx, "Could not restore Bambu block 0 after lock test");
             nfc_free(nfc);
-            if(ctx->dispatcher) view_dispatcher_send_custom_event(ctx->dispatcher, ctx->done_event);
+            if(ctx->dispatcher)
+                view_dispatcher_send_custom_event(ctx->dispatcher, ctx->done_event);
             return 0;
         }
     }
@@ -1351,7 +1406,8 @@ int32_t br_wipe_worker(void* context) {
 
     report(ctx, "Hold the Bambu magic tag steady");
     uint8_t uid[BR_UID_SIZE]{};
-    while(!cancelled(ctx) && !wait_uid(nfc, uid)) furi_delay_ms(120);
+    while(!cancelled(ctx) && !wait_uid(nfc, uid))
+        furi_delay_ms(120);
     if(cancelled(ctx)) {
         nfc_free(nfc);
         return 0;
@@ -1412,4 +1468,3 @@ int32_t br_wipe_worker(void* context) {
     if(ctx->dispatcher) view_dispatcher_send_custom_event(ctx->dispatcher, ctx->done_event);
     return 0;
 }
-

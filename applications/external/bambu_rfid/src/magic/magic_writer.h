@@ -25,7 +25,6 @@ struct BrWriteResult {
     char message[160];
 };
 
-
 struct BrWipeContext {
     ViewDispatcher* dispatcher;
     volatile bool* cancel;

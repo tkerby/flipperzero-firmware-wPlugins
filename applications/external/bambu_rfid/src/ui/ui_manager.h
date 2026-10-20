@@ -17,7 +17,16 @@ public:
     void run();
 
 private:
-    enum class Screen : uint8_t { MainMenu, Advanced, Scan, Browse, Detail, Write, Wipe, About };
+    enum class Screen : uint8_t {
+        MainMenu,
+        Advanced,
+        Scan,
+        Browse,
+        Detail,
+        Write,
+        Wipe,
+        About
+    };
     enum CustomEvent : uint32_t {
         ScanProgress = 1,
         ScanDone = 2,

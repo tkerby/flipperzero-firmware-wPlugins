@@ -27,18 +27,13 @@ bool remember_key(
     if(*known_count >= known_capacity) return false;
     if(!keys_dict_add_key(dict, key, MF_CLASSIC_KEY_SIZE)) return false;
 
-    memcpy(
-        known_keys + (*known_count) * MF_CLASSIC_KEY_SIZE,
-        key,
-        MF_CLASSIC_KEY_SIZE);
+    memcpy(known_keys + (*known_count) * MF_CLASSIC_KEY_SIZE, key, MF_CLASSIC_KEY_SIZE);
     ++(*known_count);
     return true;
 }
 } // namespace
 
-bool br_add_uid_batch_to_user_dictionary(
-    const uint8_t (*uids)[BR_UID_SIZE],
-    size_t uid_count) {
+bool br_add_uid_batch_to_user_dictionary(const uint8_t (*uids)[BR_UID_SIZE], size_t uid_count) {
     if(!uids || uid_count == 0) return true;
 
     // All tag processing is finished before this function is called. From here
@@ -78,17 +73,9 @@ bool br_add_uid_batch_to_user_dictionary(
 
         for(uint8_t sector = 0; sector < BR_SECTOR_COUNT; ++sector) {
             if(!remember_key(
-                   dict,
-                   known_keys,
-                   known_capacity,
-                   &known_count,
-                   keys.key_a[sector].data) ||
+                   dict, known_keys, known_capacity, &known_count, keys.key_a[sector].data) ||
                !remember_key(
-                   dict,
-                   known_keys,
-                   known_capacity,
-                   &known_count,
-                   keys.key_b[sector].data)) {
+                   dict, known_keys, known_capacity, &known_count, keys.key_b[sector].data)) {
                 ok = false;
                 break;
             }
