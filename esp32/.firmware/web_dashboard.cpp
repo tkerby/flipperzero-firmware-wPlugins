@@ -22,6 +22,7 @@
 #include "prefs.h"
 #include "ota_verify.h"
 #include "power_log.h"
+#include "loop_health.h"
 #include "captive_portal.h"
 #include "web_cmd.h"
 #include "web_origin.h"
@@ -960,6 +961,10 @@ R"rawliteral(
     <span id="memInfo" style="font-size:.78em;color:var(--text2)">--</span>
   </div>
   <div class="row">
+    <span class="lbl">Loop</span>
+    <span id="loopInfo" style="font-size:.78em;color:var(--text2);text-align:right">--</span>
+  </div>
+  <div class="row">
     <span class="lbl">OTA Partition</span>
     <span id="otaPartInfo" style="font-size:.78em;color:var(--text2)">--</span>
   </div>
@@ -1637,6 +1642,14 @@ function updDevice(d){
     me.textContent='stack '+kb(d.stack_free)+' \u00b7 heap '+kb(d.heap_free)+' (min '+kb(d.heap_min)+')';
     me.style.color=d.stack_free<1024?'var(--red)':'var(--text2)';
   }
+  // Longest loop() pass, the stage that took most of it, and passes over
+  // 25 ms: since the CAN Bus card's reset when there was one, else since boot.
+  var lo=document.getElementById('loopInfo'),lp=d.loop;
+  if(lo && lp){
+    var lr=d.can_reset_s>=0,lm=lr?lp.r_max_us:lp.max_us,ls=function(t){return '<span>'+t+'</span>';};
+    lo.innerHTML=ls('longest')+' '+(lm/1000).toFixed(1)+' ms ('+(lr?lp.r_stage:lp.stage)+') \u00b7 '+(lr?lp.r_slow:lp.slow)+' '+ls('over 25 ms')+(lr?' \u00b7 '+ls('since CAN reset'):'');
+    lo.style.color=lm>25000?'var(--yellow)':'var(--text2)';
+  }
   // Power / reset log (#218). Codes mirror power_log.h (reset) and FsdPwrVerdict
   // (12V). Each phrase sits in its own span so the i18n layer can translate it.
   var pe=document.getElementById('pwrInfo');
@@ -2269,6 +2282,7 @@ static void can_counters_reset() {
     g_fps         = 0.0f;
     g_can_reset    = true;
     g_can_reset_ms = millis();
+    loop_health_reset_window();
 }
 
 // ── JSON builder ──────────────────────────────────────────────────────────────
@@ -2567,6 +2581,18 @@ static String build_json() {
     j += "\"stack_free\":";    j += (uint32_t)uxTaskGetStackHighWaterMark(nullptr); j += ',';
     j += "\"heap_free\":";     j += (uint32_t)ESP.getFreeHeap();       j += ',';
     j += "\"heap_min\":";      j += (uint32_t)ESP.getMinFreeHeap();    j += ',';
+    // Longest loop() pass, its slowest stage and passes over 25 ms
+    // (loop_health.h): since boot, and since the CAN Bus card's reset (r_*).
+    {
+        const LoopHealth &lh = loop_health();
+        j += "\"loop\":{\"max_us\":"; j += lh.boot.max_us;
+        j += ",\"stage\":\"";    j += loop_stage_name(lh.boot.max_stage);
+        j += "\",\"slow\":";     j += lh.boot.slow;
+        j += ",\"r_max_us\":";   j += lh.since.max_us;
+        j += ",\"r_stage\":\"";  j += loop_stage_name(lh.since.max_stage);
+        j += "\",\"r_slow\":";   j += lh.since.slow;
+        j += "},";
+    }
     j += "\"fw_version\":\""   FW_VERSION "\",";
     j += "\"board\":\""        BOARD_NAME "\",";
     j += "\"fw_build\":\"";    j += __DATE__;  j += ' '; j += __TIME__; j += "\",";

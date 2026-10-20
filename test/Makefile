@@ -6,6 +6,7 @@
 # test_web_cmd covers esp32/.firmware/web_cmd.h (dashboard command parser).
 # test_web_origin covers esp32/.firmware/web_origin.h (whose commands are taken).
 # test_can_counters covers esp32/.firmware/can_counters.h (driver counter bookkeeping).
+# test_loop_health covers esp32/.firmware/loop_health.h (loop() pass timing).
 #
 #   make -C test check
 
@@ -44,7 +45,10 @@ test_web_origin: test_web_origin.cpp $(ESP32)/web_origin.h
 test_can_counters: test_can_counters.cpp $(ESP32)/can_counters.h
 	$(CXX) $(CXXFLAGS) -I$(ESP32) test_can_counters.cpp -o $@
 
-check: test_fsd_core test_esp32_core test_can_capture_filter test_captive_probe test_can_mcp2518fd test_web_cmd test_web_origin test_can_counters
+test_loop_health: test_loop_health.cpp $(ESP32)/loop_health.h
+	$(CXX) $(CXXFLAGS) -I$(ESP32) test_loop_health.cpp -o $@
+
+check: test_fsd_core test_esp32_core test_can_capture_filter test_captive_probe test_can_mcp2518fd test_web_cmd test_web_origin test_can_counters test_loop_health
 	./test_fsd_core
 	./test_esp32_core
 	./test_can_capture_filter
@@ -53,8 +57,9 @@ check: test_fsd_core test_esp32_core test_can_capture_filter test_captive_probe 
 	./test_web_cmd
 	./test_web_origin
 	./test_can_counters
+	./test_loop_health
 
 clean:
-	rm -rf test_fsd_core test_fsd_core.dSYM test_esp32_core test_esp32_core.dSYM test_can_capture_filter test_can_capture_filter.dSYM test_captive_probe test_captive_probe.dSYM test_can_mcp2518fd test_can_mcp2518fd.dSYM test_web_cmd test_web_cmd.dSYM test_web_origin test_web_origin.dSYM test_can_counters test_can_counters.dSYM
+	rm -rf test_fsd_core test_fsd_core.dSYM test_esp32_core test_esp32_core.dSYM test_can_capture_filter test_can_capture_filter.dSYM test_captive_probe test_captive_probe.dSYM test_can_mcp2518fd test_can_mcp2518fd.dSYM test_web_cmd test_web_cmd.dSYM test_web_origin test_web_origin.dSYM test_can_counters test_can_counters.dSYM test_loop_health test_loop_health.dSYM
 
 .PHONY: check clean

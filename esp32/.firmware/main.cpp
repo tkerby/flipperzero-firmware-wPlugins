@@ -37,6 +37,7 @@
 #include "prefs.h"
 #include "ota_verify.h"
 #include "power_log.h"
+#include "loop_health.h"
 #if defined(BOARD_TTGO_DISPLAY)
 #include "display.h"
 #endif
@@ -115,6 +116,12 @@ static bool frame_looks_like_hw3_das_status(const CanFrame &frame) {
            hands_on <= SIG_DAS_HANDS_ON_SUSPENDED;
 }
 
+// loop() pass timing (loop_health.h); the dashboard reads it on this task too.
+static LoopHealth g_loop_health;
+
+const LoopHealth &loop_health() { return g_loop_health; }
+void loop_health_reset_window() { g_loop_health.reset_window(); }
+
 static bool serial_cmd_equals(const char *cmd, const char *expected) {
     while (*cmd && *expected) {
         char a = *cmd++;
@@ -146,6 +153,15 @@ static void print_can_stats() {
                       g_can_ok[i] ? g_can[i]->acceptanceFilterMode() : "down",
                       state);
     }
+    const LoopPassStats &b = g_loop_health.boot;
+    const LoopPassStats &r = g_loop_health.since;
+    Serial.printf("[LOOP] longest pass %lu.%lu ms (%s), %lu over %lu ms since boot; "
+                  "since CAN reset %lu.%lu ms (%s), %lu\n",
+                  (unsigned long)(b.max_us / 1000u), (unsigned long)(b.max_us % 1000u / 100u),
+                  loop_stage_name(b.max_stage), (unsigned long)b.slow,
+                  (unsigned long)(LOOP_SLOW_US / 1000u),
+                  (unsigned long)(r.max_us / 1000u), (unsigned long)(r.max_us % 1000u / 100u),
+                  loop_stage_name(r.max_stage), (unsigned long)r.slow);
 }
 
 static NOINLINE void serial_command_tick() {
@@ -1886,6 +1902,7 @@ static NOINLINE void drain_can_bus_index(uint8_t index) {
 
 // ── loop ──────────────────────────────────────────────────────────────────────
 void loop() {
+    g_loop_health.begin_pass(micros());
     uint32_t now = millis();
 
     if (g_factory_reset_window && now >= FACTORY_RESET_WINDOW_MS) {
@@ -1896,6 +1913,7 @@ void loop() {
     button_tick();
     serial_command_tick();
     ota_verify_tick(now);
+    g_loop_health.mark(LOOP_STAGE_OTHER, micros());
 
     // Drain all available CAN frames in one shot. On LilyGO T-2CAN, can1 is the
     // SPI controller, read only when polled (the MCP2515 has just two RX
@@ -1924,6 +1942,7 @@ void loop() {
     // Feed the summed controller RX-missed total to the web stream so a capture
     // can self-report how many frames the hardware dropped while it ran.
     http_can_stream_note_rx_missed(rx_missed_total);
+    g_loop_health.mark(LOOP_STAGE_CAN_RX, micros());
 
     // ── Periodic error counter refresh (~every 250 ms) ────────────────────────
     static uint32_t last_err_ms = 0;
@@ -2024,6 +2043,7 @@ void loop() {
             sigmap_warned = false;
         }
     }
+    g_loop_health.mark(LOOP_STAGE_LOGIC, micros());
 
     // ── Periodic re-init when a CAN driver failed at boot ────────────────────
     for (uint8_t i = 0; i < CAN_ACTIVE_BUS_COUNT; i++) {
@@ -2041,6 +2061,7 @@ void loop() {
             }
         }
     }
+    g_loop_health.mark(LOOP_STAGE_CAN_INIT, micros());
 
     // ── Wiring / hardware sanity warning ─────────────────────────────────────
     // Checked every 5 s, not every loop.
@@ -2069,11 +2090,13 @@ void loop() {
 #if defined(BOARD_LILYGO)
     sleep_tick(now);
 #endif
+    g_loop_health.mark(LOOP_STAGE_LOGS, micros());
 
     // ── Web dashboard (after CAN to preserve CAN frame latency) ──────────────
     web_dashboard_update();
 
     sync_http_can_stream_filter_if_needed();
+    g_loop_health.mark(LOOP_STAGE_WEB, micros());
 
 #if defined(BOARD_TTGO_DISPLAY)
     s = state_snapshot();
@@ -2096,4 +2119,5 @@ void loop() {
 #endif
 
     update_led();
+    g_loop_health.mark(LOOP_STAGE_OTHER, micros());
 }

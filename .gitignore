@@ -19,5 +19,6 @@ test/test_can_mcp2518fd
 test/test_web_cmd
 test/test_web_origin
 test/test_can_counters
+test/test_loop_health
 *.dSYM/
 /.vs
