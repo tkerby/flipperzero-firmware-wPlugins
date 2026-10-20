@@ -50,6 +50,17 @@ static uint32_t g_last_can_seen_ms = 0;
 static float    g_fps         = 0.0f;
 static bool     g_debug       = false;  // serial `debug`: per-push JSON size
 
+// CAN Bus card reset (#252). The card shows each counter minus its value at
+// the last reset; the counters themselves stay cumulative for everything else
+// that reads them (black box, capture meta, Tap Check, power log, canstat).
+struct CanCounts {
+    uint32_t rx, tx, rx_missed, bus_error, tx_failed;
+};
+static CanCounts g_can_base[CAN_BUS_COUNT] = {};  // each driver at the reset
+static uint32_t  g_rx_base      = 0;               // FSDState rx_count at the reset
+static bool      g_can_reset    = false;
+static uint32_t  g_can_reset_ms = 0;
+
 #define CAN_VEHICLE_ALIVE_MS 3000u
 #define OTA_ESP32_IMAGE_MAGIC 0xE9u
 #define OTA_AUTH_USER "admin"
@@ -248,6 +259,9 @@ details input.cgn{width:38px;margin-left:4px}
 .tg .tu,.tg .th{color:var(--text3);font-size:.72em}
 .tg .tu{text-align:left}
 .tg.stale{color:var(--text3)}
+.btn-mini{background:var(--card2);border:1px solid var(--border);color:var(--text2);
+  padding:4px 10px;border-radius:6px;font-size:.72em;font-weight:600;cursor:pointer}
+.btn-mini:active{opacity:.75}
 
 /* ── Controls ── */
 .btn-main{width:100%;padding:14px;border:none;border-radius:12px;
@@ -513,12 +527,20 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
 
 <!-- CAN Stats -->
 <div class="card">
-  <div class="card-head"><div class="icon ic-d">C</div><h2>CAN Bus</h2></div>
+  <div class="card-head"><div class="icon ic-d">C</div><h2>CAN Bus</h2>
+    <button type="button" class="btn-mini" style="margin-left:auto" onclick="canReset()">Reset</button>
+  </div>
   <div class="sg">
     <div class="sb"><div class="sv" id="rxCnt">0</div><div class="sl">RX Frames</div></div>
     <div class="sb"><div class="sv" id="txCnt">0</div><div class="sl">TX Frames</div></div>
-    <div class="sb"><div class="sv" id="crcErr">0</div><div class="sl">CAN Errors</div><div class="sl" id="crcSplit">RX&nbsp;missed&nbsp;0 &middot; bus&nbsp;0 &middot; TX&nbsp;fail&nbsp;0</div></div>
+    <div class="sb"><div class="sv" id="crcErr">0</div><div class="sl">CAN Errors</div><div class="sl" id="crcSplit"><span style="white-space:nowrap">RX missed</span>&nbsp;0 &middot; <span style="white-space:nowrap">bus</span>&nbsp;0 &middot; <span style="white-space:nowrap">TX fail</span>&nbsp;0</div></div>
     <div class="sb"><div class="sv" id="fps">0.0</div><div class="sl">Frames/s</div></div>
+  </div>
+  <!-- Per bus, on boards with two controllers (#253) -->
+  <div class="tg" id="canBuses" style="display:none;margin-top:12px"></div>
+  <div class="row" style="padding-bottom:0;margin-top:4px">
+    <span class="lbl" id="canSinceL">Since boot</span>
+    <span id="canSince" style="font-size:.8em;color:var(--text2);font-variant-numeric:tabular-nums">--</span>
   </div>
 </div>
 
@@ -1395,13 +1417,51 @@ function updControls(d){
   updateControlsSummary(d);
   pill('dumpSt',d.can_dump,d.can_dump?'Recording':'Idle');
 }
-function updCan(d){
-  // CAN stats
+// CAN Bus card. The counts are since the last reset (#252); the device keeps
+// the baseline, so every open dashboard shows the same reset.
+var canLast=null;
+function canStats(d){
   if(document.getElementById('rxCnt')) document.getElementById('rxCnt').textContent=(d.rx_count||0).toLocaleString();
   if(document.getElementById('txCnt')) document.getElementById('txCnt').textContent=(d.tx_count||0).toLocaleString();
   if(document.getElementById('crcErr')) document.getElementById('crcErr').textContent=d.crc_errors||0;
-  if(document.getElementById('crcSplit')) document.getElementById('crcSplit').textContent='RX\u00a0missed\u00a0'+(d.rx_missed_count||0)+' · bus\u00a0'+(d.bus_error_count||0)+' · TX\u00a0fail\u00a0'+(d.tx_failed_count||0);
+  // One span per label, so each one translates on its own (and stays whole).
+  var cs=document.getElementById('crcSplit'),nw=function(t){return '<span style="white-space:nowrap">'+t+'</span>';};
+  if(cs) cs.innerHTML=nw('RX missed')+'\u00a0'+(d.rx_missed_count||0)+' · '+nw('bus')+'\u00a0'+(d.bus_error_count||0)+' · '+nw('TX fail')+'\u00a0'+(d.tx_failed_count||0);
   if(document.getElementById('fps')) document.getElementById('fps').textContent=(d.fps||0.0).toFixed(1);
+  var rs=d.can_reset_s;
+  setTxt('canSinceL',rs>=0?'Since reset':'Since boot');
+  setTxt('canSince',fmt(rs>=0?rs:(d.uptime_s||0)));
+  // Per bus (#253): only boards with two controllers send can_buses.
+  var g=document.getElementById('canBuses'),b=d.can_buses;
+  if(!g)return;
+  if(!b||b.length<2){g.style.display='none';return;}
+  var n=function(x,k){return x.up?(x[k]||0).toLocaleString():'--';};
+  var rows=[['RX Frames','rx'],['TX Frames','tx'],['RX missed','rx_missed'],['Bus errors','bus_error'],['TX fail','tx_failed']];
+  var h='<span></span>';
+  b.forEach(function(x){
+    h+='<span class="th">'+bbEsc(x.name)+' · '+bbEsc(x.drv)
+      +(x.up?'':'<br><span style="color:var(--yellow)">not detected</span>')+'</span>';
+  });
+  rows.forEach(function(r){
+    h+='<span class="tu">'+r[0]+'</span>';
+    b.forEach(function(x){h+='<span>'+n(x,r[1])+'</span>';});
+  });
+  g.style.gridTemplateColumns='auto repeat('+b.length+',1fr)';
+  g.innerHTML=h;
+  g.style.display='';
+}
+function canReset(){
+  uiConfirm('Reset the CAN Bus counters?\nRX, TX, the error counts and frames/s start again from zero on every open dashboard. Black-box, CAN captures and Tap Check keep their own counts.',function(){
+    cmd('can_counters_reset',true);
+    // Pushes are held for a moment after a command: show the zeros now.
+    if(canLast)canStats({can_reset_s:0,can_buses:(canLast.can_buses||[]).map(function(x){
+      return {name:x.name,drv:x.drv,up:x.up};
+    })});
+  });
+}
+function updCan(d){
+  canLast=d;
+  canStats(d);
   httpLogAllowed=true; // capture works in both modes — needed to log through an Activate (#108)
   if(!httpLogRunning)setHttpLogUi(false);
   if(!httpLogRunning){
@@ -2057,6 +2117,73 @@ static String json_escape(const char *s) {
     return out;
 }
 
+// ── CAN counters since the last reset (#252, #253) ────────────────────────────
+// Controller behind each bus, as can_driver_create(CanBusId) picks it.
+static const char *can_driver_kind(uint8_t index) {
+#if defined(CAN_DRIVER_T2CAN_DUAL) && defined(BOARD_LILYGO_T2CAN_FD)
+    return index == 1 ? "MCP2518FD" : "TWAI";
+#elif defined(CAN_DRIVER_T2CAN_DUAL)
+    return index == 1 ? "MCP2515" : "TWAI";
+#elif defined(CAN_DRIVER_MCP2515)
+    (void)index;
+    return "MCP2515";
+#else
+    (void)index;
+    return "TWAI";
+#endif
+}
+
+// Up = the chip answered and begin() got it running ("down" is what every
+// driver reports for its filter mode while it is not installed).
+static bool can_driver_up(CanDriver *d) {
+    return d && d->hardwarePresent() && strcmp(d->acceptanceFilterMode(), "down") != 0;
+}
+
+static CanCounts can_counts(CanDriver *d) {
+    CanCounts c = {};
+    if (!d) return c;
+    c.rx        = d->rxCount();
+    c.tx        = d->txCount();
+    c.rx_missed = d->rxMissedCount();
+    c.bus_error = d->busErrorCount();
+    c.tx_failed = d->txFailedCount();
+    return c;
+}
+
+// A counter below its baseline has restarted since the reset (TWAI's status
+// counters do when the driver is reinstalled for a mode switch or a capture
+// filter): everything it holds is newer than the reset.
+static uint32_t since_reset(uint32_t now, uint32_t &base) {
+    if (now < base) base = 0;
+    return now - base;
+}
+
+static CanCounts can_counts_since_reset(uint8_t i) {
+    CanCounts c = can_counts(g_can_buses[i]);
+    CanCounts &b = g_can_base[i];
+    c.rx        = since_reset(c.rx, b.rx);
+    c.tx        = since_reset(c.tx, b.tx);
+    c.rx_missed = since_reset(c.rx_missed, b.rx_missed);
+    c.bus_error = since_reset(c.bus_error, b.bus_error);
+    c.tx_failed = since_reset(c.tx_failed, b.tx_failed);
+    return c;
+}
+
+static void can_counters_reset() {
+    for (uint8_t i = 0; i < g_can_count && i < CAN_BUS_COUNT; i++)
+        g_can_base[i] = can_counts(g_can_buses[i]);
+    state_enter();
+    uint32_t rx = g_state->rx_count;
+    state_exit();
+    g_rx_base = rx;
+    // Frames/s is a one-second rate: start its window again.
+    g_last_rx     = rx;
+    g_last_fps_ms = millis();
+    g_fps         = 0.0f;
+    g_can_reset    = true;
+    g_can_reset_ms = millis();
+}
+
 // ── JSON builder ──────────────────────────────────────────────────────────────
 static String build_json() {
     FSDState state;
@@ -2129,11 +2256,20 @@ static String build_json() {
     char fps_s[12];
     snprintf(fps_s, sizeof(fps_s), "%.1f", g_fps);
 
-    // Combined CAN error count (legacy crc_errors key) and its per-cause split,
-    // taken from one read so the dashboard tile always equals its breakdown.
-    // On a busy bus it is mostly rx_missed (controller RX-queue drops).
-    CanErrorSplit err = can_error_split(g_can_buses, g_can_count);
-    uint32_t err_total = err.rx_missed_count + err.bus_error_count + err.tx_failed_count;
+    // CAN counters since the last reset (#252), per bus and summed. The
+    // combined error count (legacy crc_errors key) and its per-cause split come
+    // from one read, so the dashboard tile always equals its breakdown. On a
+    // busy bus it is mostly rx_missed (controller RX-queue drops).
+    CanCounts bus[CAN_BUS_COUNT] = {};
+    CanCounts sum = {};
+    for (uint8_t i = 0; i < g_can_count && i < CAN_BUS_COUNT; i++) {
+        bus[i] = can_counts_since_reset(i);
+        sum.tx        += bus[i].tx;
+        sum.rx_missed += bus[i].rx_missed;
+        sum.bus_error += bus[i].bus_error;
+        sum.tx_failed += bus[i].tx_failed;
+    }
+    uint32_t err_total = sum.rx_missed + sum.bus_error + sum.tx_failed;
 
     String j;
     bool isa_speed_enabled = state.hw_version == TeslaHW_HW4;
@@ -2143,9 +2279,10 @@ static String build_json() {
         (state.hw_version == TeslaHW_Legacy) ? "Legacy: DAS 0x399" :
         "Waiting for HW detection";
     // Core payload runs ~2.3-2.5 KB of scalar fields plus small bms/perf/tpms/
-    // ota/http_can_stream objects, now that the heavy blackbox/capability/
-    // profile blocks fetch from /api/aux (#124). Past the reserve the String
-    // reallocs every 16 bytes, and build_json() runs on every WS push.
+    // ota/http_can_stream objects (and ~0.2 KB of can_buses on two-bus boards),
+    // now that the heavy blackbox/capability/profile blocks fetch from
+    // /api/aux (#124). Past the reserve the String reallocs every 16 bytes,
+    // and build_json() runs on every WS push.
     j.reserve(3072);
     j  = "{";
     j += "\"fsd_enabled\":";   j += state.fsd_enabled                 ? "true" : "false"; j += ',';
@@ -2234,14 +2371,33 @@ static String build_json() {
     j += "\"bms_hv_seen\":";   j += state.seen_bms_hv;                 j += ',';
     j += "\"bms_soc_seen\":";  j += state.seen_bms_soc;                j += ',';
     j += "\"bms_thermal_seen\":"; j += state.seen_bms_thermal;          j += ',';
-    j += "\"rx_count\":";      j += state.rx_count;                    j += ',';
-    j += "\"tx_count\":";      j += state.tx_count;                    j += ',';
+    j += "\"rx_count\":";      j += since_reset(state.rx_count, g_rx_base); j += ',';
+    j += "\"tx_count\":";      j += sum.tx;                            j += ',';
     j += "\"tx_modified\":";   j += state.frames_modified;             j += ',';
     j += "\"crc_errors\":";    j += err_total;                         j += ',';
-    j += "\"rx_missed_count\":"; j += err.rx_missed_count;             j += ',';
-    j += "\"bus_error_count\":"; j += err.bus_error_count;             j += ',';
-    j += "\"tx_failed_count\":"; j += err.tx_failed_count;             j += ',';
+    j += "\"rx_missed_count\":"; j += sum.rx_missed;                   j += ',';
+    j += "\"bus_error_count\":"; j += sum.bus_error;                   j += ',';
+    j += "\"tx_failed_count\":"; j += sum.tx_failed;                   j += ',';
     j += "\"fps\":";           j += fps_s;                             j += ',';
+    // Seconds since the CAN Bus card was reset, -1 = counting since boot.
+    j += "\"can_reset_s\":";   j += g_can_reset ? (long)((millis() - g_can_reset_ms) / 1000u) : -1L; j += ',';
+    // Per bus (#253), on boards with two controllers; same counts as above.
+    if (g_can_count > 1) {
+        j += "\"can_buses\":[";
+        for (uint8_t i = 0; i < g_can_count && i < CAN_BUS_COUNT; i++) {
+            if (i) j += ',';
+            j += "{\"name\":\"";      j += can_bus_name((CanBusId)i);
+            j += "\",\"drv\":\"";     j += can_driver_kind(i);
+            j += "\",\"up\":";        j += can_driver_up(g_can_buses[i]) ? "true" : "false";
+            j += ",\"rx\":";          j += bus[i].rx;
+            j += ",\"tx\":";          j += bus[i].tx;
+            j += ",\"rx_missed\":";   j += bus[i].rx_missed;
+            j += ",\"bus_error\":";   j += bus[i].bus_error;
+            j += ",\"tx_failed\":";   j += bus[i].tx_failed;
+            j += '}';
+        }
+        j += "],";
+    }
     j += "\"bms\":";           j += bms;                               j += ',';
     // Tyre pressures (read-only 0x219, fsd_logic/fsd_tpms.h). Four slots in the
     // order the car fills them: mbar, temp in deg C, pos 0 FL 1 FR 2 RL 3 RR;
@@ -2569,6 +2725,9 @@ static WebCmdResult web_command(WebCmd &cmd, const uint8_t *payload, size_t leng
     } else if (cmd.is("capability_recheck")) {
         capability_start(millis());                 // re-run the tap check (#125)
         Serial.println("[Web] Capability: re-check");
+    } else if (cmd.is("can_counters_reset")) {
+        can_counters_reset();                       // CAN Bus card only (#252)
+        Serial.println("[Web] CAN counters reset");
     } else if (cmd.is("blackbox_mark")) {
         blackbox_mark(millis());                    // inject EVT_MANUAL + arm
         Serial.println("[Web] Black-box: manual mark");
