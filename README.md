@@ -1,52 +1,54 @@
 # Mac Media Remote
 
-Показывает на Flipper Zero текущий медиапоток macOS по Bluetooth Low Energy: трек, исполнитель, альбом, прогресс и доступную обложку в контрастном постерном стиле. Работает с приложением или вкладкой браузера, если она публикует данные в системный Now Playing. Аудио остаётся на Mac. USB нужен только для установки приложения на Flipper.
+**English** | [Русский](README.ru.md)
 
-## Требования
+Display the current macOS media session on Flipper Zero over Bluetooth Low Energy: track title, artist, album, playback progress, and available cover art in a high-contrast poster style. Works with any app or browser tab that publishes information to the system Now Playing session. Audio stays on the Mac. USB is only needed to install the Flipper app.
 
-- Flipper Zero с официальной прошивкой 1.4.3 (API 87.1), включённым Bluetooth и картой microSD.
-- Mac с Bluetooth и Swift toolchain.
+## Requirements
+
+- Flipper Zero with official firmware 1.4.3 (API 87.1), Bluetooth enabled, and a microSD card.
+- A Mac with Bluetooth and the Swift toolchain.
 - `nowplaying-cli`: `brew install nowplaying-cli`.
 
-## Установка
+## Setup
 
 ```sh
-sh scripts/build-flipper.sh # SDK прошивки 1.4.3 по умолчанию
+sh scripts/build-flipper.sh # Uses the firmware 1.4.3 SDK by default
 sh scripts/build-mac.sh
 ```
 
-Скрипт Flipper скачивает официальный SDK и кладёт FAP в `dist/`. Установите FAP через qFlipper по USB в `/ext/apps/Bluetooth/now_playing.fap`, затем откройте **Apps → Bluetooth → Now Playing**. Для разработки `./fbt launch APPSRC=now_playing` в каталоге SDK загружает и запускает FAP без обновления прошивки.
+The Flipper build script downloads the official SDK and places the FAP in `dist/`. Use qFlipper over USB to install the FAP at `/ext/apps/Bluetooth/now_playing.fap`, then open **Apps → Bluetooth → Now Playing**. For development, run `./fbt launch APPSRC=now_playing` from the SDK directory to upload and launch the FAP without updating the firmware.
 
-В терминале Mac запустите:
+In a Mac terminal, run:
 
 ```sh
 sh scripts/run-mac.sh
 ```
 
-При первом запуске разрешите Bluetooth и подтвердите сопряжение на устройствах. После установки FAP кабель можно отключить. Выход с экрана Flipper: удерживать Back.
+On first launch, allow Bluetooth access and confirm pairing on both devices when prompted. You can disconnect the USB cable after installing the FAP. Hold Back to exit the Flipper app.
 
-Если на Flipper остаётся `Waiting for Mac`, проверьте запрос с кодом сопряжения на его экране и подтвердите его кнопкой OK. После подтверждения компаньон должен подключиться автоматически.
+If the Flipper stays on `Waiting for Mac`, check its screen for a pairing code and press OK to confirm. The companion should then connect automatically.
 
-## Управление
+## Controls
 
-- OK: пауза/воспроизведение активного системного медиаплеера.
-- Влево/вправо: предыдущий/следующий трек.
-- Вверх/вниз: системная громкость Mac на 5%; удержание повторяет команду. Работает, когда выбранное аудиоустройство поддерживает программную регулировку.
+- OK: play or pause the active system media player.
+- Left/right: previous/next track.
+- Up/down: adjust Mac system volume by 5%; hold to repeat. Requires an audio output device that supports software volume control.
 
-Если приложение или браузер не публикует состояние в macOS Now Playing, его трек не будет виден. Позиция трека зависит от метки времени, которую источник передаёт в системный медиапоток. При потере Bluetooth соединение восстанавливается автоматически; старые данные на Flipper помечаются как `Reconnecting`.
+Apps and browsers that do not publish their state to macOS Now Playing will not appear on the Flipper. Playback position depends on the timestamp provided by the media source. If Bluetooth disconnects, the companion reconnects automatically; the Flipper marks the previous track information as `Reconnecting`.
 
-## Экраны
+## Screenshots
 
-Реальные кадры с подключённого Flipper; музыкальные экраны сняты во время воспроизведения Яндекс Музыки:
+Actual screenshots from a connected Flipper. The music screens were captured during Yandex Music playback:
 
-| Ожидание Mac | Воспроизведение | Другой альбом |
+| Waiting for Mac | Playing | Another album |
 | --- | --- | --- |
-| ![Ожидание Mac](flipper/now_playing/screenshots/00-waiting-for-mac.png) | ![Трек Яндекс Музыки](flipper/now_playing/screenshots/01-playing-yandex.png) | ![Другой альбом](flipper/now_playing/screenshots/02-playing-yandex.png) |
+| ![Waiting for Mac](flipper/now_playing/screenshots/00-waiting-for-mac.png) | ![Yandex Music track](flipper/now_playing/screenshots/01-playing-yandex.png) | ![Another album](flipper/now_playing/screenshots/02-playing-yandex.png) |
 
-| Следующий трек | Пауза | Переподключение |
+| Next track | Paused | Reconnecting |
 | --- | --- | --- |
-| ![Следующий трек](flipper/now_playing/screenshots/03-next-track-yandex.png) | ![Пауза](flipper/now_playing/screenshots/04-paused-yandex.png) | ![Переподключение](flipper/now_playing/screenshots/05-reconnecting.png) |
+| ![Next track](flipper/now_playing/screenshots/03-next-track-yandex.png) | ![Paused](flipper/now_playing/screenshots/04-paused-yandex.png) | ![Reconnecting](flipper/now_playing/screenshots/05-reconnecting.png) |
 
-## Исходный код
+## Source code
 
-Протокол описан в `protocol/constants.json`. Код Flipper адаптирован из `villenull/flipper-now-playing`; см. `THIRD_PARTY_NOTICES.md` и `LICENSE`.
+The protocol is defined in `protocol/constants.json`. The Flipper code is adapted from `villenull/flipper-now-playing`; see `THIRD_PARTY_NOTICES.md` and `LICENSE`.

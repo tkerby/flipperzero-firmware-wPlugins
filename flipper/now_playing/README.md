@@ -11,7 +11,7 @@ Show the current macOS media session on Flipper Zero over Bluetooth LE: title, a
 ## Setup
 
 1. Install and launch Now Playing from the Bluetooth category on Flipper Zero.
-2. Follow the [Mac setup instructions](https://github.com/Vchekryzhov/mac-media-remote#установка) to build and start the companion.
+2. Follow the [Mac setup instructions](https://github.com/Vchekryzhov/mac-media-remote#setup) to build and start the companion.
 3. Enable Bluetooth and confirm pairing when prompted. USB is only needed for setup or recovery.
 
 ## Controls
