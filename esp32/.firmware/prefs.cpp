@@ -84,7 +84,7 @@ void prefs_load(FSDState *state) {
     state->cfg_handson_shift = g_prefs.getUChar("chos",   0);
     state->cfg_handson_mask  = g_prefs.getUChar("chom",   0x0F);
     state->cfg_steer_id      = g_prefs.getUShort("csid",  0);
-    state->cfg_steer_hi      = g_prefs.getUChar("cshi",   1);
+    state->cfg_steer_hi      = g_prefs.getUChar("cshi",   0);   // hi == lo: not mapped
     state->cfg_steer_lo      = g_prefs.getUChar("cslo",   0);
 
     Serial.printf("[NVS] Loaded: FSDUnlock=%d HW3Spd=%d NAG=%d ContinuousAP=%d IgnoreOTA=%d China=%d Chime=%d Summon=%d COG=%d TLSSC38=%d RHD=%d TelOff=%d APMv3=%d TrkMode=%d/%u/%u/%d/%d Accel=%u Sleep=%u AP=\"%s\" STA=\"%s\" HIDDEN=%d\n",

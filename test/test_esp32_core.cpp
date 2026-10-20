@@ -748,6 +748,45 @@ static void test_signal_map(void) {
     CHECK(fsd_signal_map_das_missing(&s, 8000u), "stale again -> missing");
     s.cfg_das_id = 0;
     CHECK(!fsd_signal_map_das_missing(&s, 8000u), "auto mode -> never missing");
+
+    // Steering id 0x129 is read with its own layout whatever hi/lo say: bytes
+    // 0-1 are CRC + counter, which the old hi=1/lo=0 default read as the angle
+    // (0x25DA = 969.0 deg for the #176 -1.2 frame).
+    memset(&s, 0, sizeof(s));
+    s.cfg_steer_id = 0x129; s.cfg_steer_hi = 1; s.cfg_steer_lo = 0;
+    memset(&f, 0, sizeof(f));
+    f.id = 0x129; f.dlc = 8;
+    memcpy(f.data, k_steer_hw3_m1_2, 8);
+    fsd_apply_signal_config(&s, &f, 6000u);
+    CHECK(s.steering_angle_valid && s.steering_angle_deg > -1.25f && s.steering_angle_deg < -1.15f,
+          "sigmap 0x129: DBC angle -1.2 (got %.1f)", (double)s.steering_angle_deg);
+    CHECK(fsd_steer_known(&s, 6000u) && s.steer_ctx_seen_ms == 6000u, "sigmap 0x129: known, stamped");
+    memcpy(f.data, k_steer_my_parked, 8);
+    fsd_apply_signal_config(&s, &f, 6100u);
+    CHECK(s.steering_angle_seen && !s.steering_angle_valid && !fsd_steer_known(&s, 6100u),
+          "sigmap 0x129: INVALID -> angle unknown");
+    f.dlc = 3;
+    memcpy(f.data, k_steer_hw3_m1_2, 8);
+    fsd_apply_signal_config(&s, &f, 6200u);
+    CHECK(!s.steering_angle_valid && s.steer_ctx_seen_ms == 6100u, "sigmap 0x129: DLC 3 ignored");
+
+    // Any other id: signed 16-bit at hi/lo, 0.1 deg per bit, as documented.
+    memset(&s, 0, sizeof(s));
+    s.cfg_steer_id = 0x123; s.cfg_steer_hi = 1; s.cfg_steer_lo = 0;
+    memset(&f, 0, sizeof(f));
+    f.id = 0x123; f.dlc = 4; f.data[0] = 0x2C; f.data[1] = 0x01;   // 300 -> 30.0
+    fsd_apply_signal_config(&s, &f, 7000u);
+    CHECK(s.steering_angle_valid && s.steering_angle_deg > 29.95f && s.steering_angle_deg < 30.05f,
+          "sigmap custom id: 30.0 deg (got %.1f)", (double)s.steering_angle_deg);
+    f.data[0] = 0xD4; f.data[1] = 0xFE;                              // -300 -> -30.0
+    fsd_apply_signal_config(&s, &f, 7100u);
+    CHECK(s.steering_angle_deg < -29.95f && s.steering_angle_deg > -30.05f,
+          "sigmap custom id: -30.0 deg (got %.1f)", (double)s.steering_angle_deg);
+    // hi == lo (the default, 0/0) maps nothing.
+    memset(&s, 0, sizeof(s));
+    s.cfg_steer_id = 0x123;
+    fsd_apply_signal_config(&s, &f, 7200u);
+    CHECK(!s.steering_angle_seen && s.steer_ctx_seen_ms == 0u, "sigmap custom id, hi == lo: not mapped");
 }
 
 // ── DI_speed decode parity with the Flipper (0x257) ───────────────────────────

@@ -230,6 +230,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 details select,select.sel{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:4px 6px;border-radius:4px;font-size:.85em;flex:none}
 details input{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:4px;border-radius:4px;text-align:right;width:60px}
 details input.cgn{width:38px;margin-left:4px}
+details input:disabled{opacity:.45}
 
 /* ── Pills ── */
 .pill{display:inline-flex;align-items:center;gap:5px;
@@ -747,9 +748,10 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
         <span>DAS id (0x..)</span><input id="cgDid" placeholder="0">
         <span>AP-state byte/sh/mask</span><span><input id="cgApB" class="cgn"><input id="cgApS" class="cgn"><input id="cgApM" class="cgn" placeholder="0xF"></span>
         <span>Hands-on byte/sh/mask</span><span><input id="cgHoB" class="cgn"><input id="cgHoS" class="cgn"><input id="cgHoM" class="cgn" placeholder="0xF"></span>
-        <span>Steer id (0x..)</span><input id="cgSid" placeholder="0">
+        <span>Steer id (0x..)</span><input id="cgSid" placeholder="0" oninput="sigSteerUi()">
         <span>Steer hi/lo byte</span><span><input id="cgSHi" class="cgn"><input id="cgSLo" class="cgn"></span>
       </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px">Steer id 0 or 0x129: the car's 0x129 steering angle, read with its own layout and only while valid; hi/lo are not used. Another id: a signed 16-bit angle at the hi/lo bytes, 0.1&deg; per bit; hi = lo maps nothing.</div>
       <button onclick="saveSigCfg()" style="margin-top:8px;background:var(--accent);color:#000;border:0;padding:6px 12px;border-radius:4px;cursor:pointer">Save mapping</button>
     </details>
   </div>
@@ -1959,6 +1961,13 @@ function setSig(d){
   sv('cgDid',hx(d.cfg_das_id)); sv('cgApB',d.cfg_apb); sv('cgApS',d.cfg_aps); sv('cgApM',hx(d.cfg_apm));
   sv('cgHoB',d.cfg_hob); sv('cgHoS',d.cfg_hos); sv('cgHoM',hx(d.cfg_hom));
   sv('cgSid',hx(d.cfg_steer_id)); sv('cgSHi',d.cfg_shi); sv('cgSLo',d.cfg_slo);
+  sigSteerUi();
+}
+// Steer hi/lo are for a steering id other than 0x129; 0 (auto) and 0x129 read
+// 0x129 by its own layout (fsd_apply_signal_config()).
+function sigSteerUi(){
+  var id=parseInt(gv('cgSid'))||0,off=(id===0||id===0x129);
+  ['cgSHi','cgSLo'].forEach(function(n){var e=document.getElementById(n);if(e)e.disabled=off;});
 }
 
 function logInfo(text,color){

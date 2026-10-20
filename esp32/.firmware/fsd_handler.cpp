@@ -644,7 +644,8 @@ static bool nag_in_pause(uint32_t now_ms) {
     return (now_ms % cycle) >= NAG_BURST_MS;
 }
 
-// Configurable signal mapping (#122) — mirror of the shared fsd_handler.c.
+// Configurable signal mapping (#122) — mirror of the shared fsd_handler.c,
+// except that a steering id of 0x129 is read as SCCM_steeringAngleSensor.
 void fsd_apply_signal_config(FSDState *state, const CanFrame *frame, uint32_t now_ms) {
     if (state->cfg_das_id != 0 && frame->id == state->cfg_das_id) {
         // A mask of 0 means "not mapped" — ignore the field and keep the prior
@@ -667,8 +668,15 @@ void fsd_apply_signal_config(FSDState *state, const CanFrame *frame, uint32_t no
         state->das_ctx_seen_ms = now_ms;
     }
     if (state->cfg_steer_id != 0 && frame->id == state->cfg_steer_id) {
-        if (state->cfg_steer_hi < 8 && state->cfg_steer_lo < 8 &&
-            frame->dlc > state->cfg_steer_hi && frame->dlc > state->cfg_steer_lo) {
+        if (frame->id == CAN_ID_STEER_ANGLE) {
+            // 0x129 has one layout (fsd_steer.h): bytes 0-1 are its CRC and
+            // counter, and the angle counts only while its validity is VALID.
+            // hi/lo are for other frames.
+            if (frame->dlc >= FSD_STEER_MIN_DLC) state->steer_ctx_seen_ms = now_ms;
+            fsd_steer_update(state, frame->data, frame->dlc, now_ms);
+        } else if (state->cfg_steer_hi != state->cfg_steer_lo &&   // equal = not mapped
+                   state->cfg_steer_hi < 8 && state->cfg_steer_lo < 8 &&
+                   frame->dlc > state->cfg_steer_hi && frame->dlc > state->cfg_steer_lo) {
             int16_t raw = (int16_t)(((uint16_t)frame->data[state->cfg_steer_hi] << 8) |
                                     frame->data[state->cfg_steer_lo]);
             fsd_steer_set(state, (float)raw * 0.1f, now_ms);
