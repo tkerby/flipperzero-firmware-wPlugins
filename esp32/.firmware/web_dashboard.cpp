@@ -466,7 +466,7 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
     <div class="hg">
       <div><div class="hv" id="bVolt">--</div><div class="hl">Voltage</div></div>
       <div><div class="hv" id="bCurr">--</div><div class="hl">Current</div></div>
-      <div><div class="hv" id="bTemp">--</div><div class="hl">Temp</div></div>
+      <div><div class="hv" id="bTemp">--</div><div class="hl">Pack temp min~max</div></div>
     </div>
   </div>
 </div>
@@ -624,7 +624,7 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
     <label class="sw"><input type="checkbox" id="swAbrt" onchange="cmd('abort_guard',this.checked)"><span class="sl2"></span></label>
   </div>
   <div class="row">
-    <span class="lbl">BMS Display</span>
+    <span class="lbl">BMS Display<span class="hint">Prints voltage, current, power, SoC and pack temperature to the USB serial log once a second. The dashboard shows them either way.</span></span>
     <label class="sw"><input type="checkbox" id="swBms" onchange="cmd('bms',this.checked)"><span class="sl2"></span></label>
   </div>
   <div class="row">
