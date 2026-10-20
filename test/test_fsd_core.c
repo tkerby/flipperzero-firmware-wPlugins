@@ -2779,7 +2779,8 @@ static void test_tpms_real_frames(void) {
         CHECK(fsd_tpms_mbar(t.pressure[i]) == mbar[i], "tpms slot %d %u mbar want %u", i,
               fsd_tpms_mbar(t.pressure[i]), mbar[i]);
         CHECK(t.temp[i] == FSD_TPMS_NA, "tpms slot %d: kind 5 has no temperature", i);
-        CHECK(t.pos[i] == FSD_TPMS_POS_UNKNOWN, "tpms slot %d: kind 5 names no corner", i);
+        CHECK(t.pos[i] == (uint8_t)(FSD_TPMS_POS_FL + i), "tpms slot %d: kind 5 corner %u", i,
+              t.pos[i]);
     }
     CHECK(t.last_ms == 4063 && fsd_tpms_age_ms(&t, 4663) == 600, "tpms: age 600 ms, got %u",
           (unsigned)fsd_tpms_age_ms(&t, 4663));
@@ -2827,6 +2828,31 @@ static void test_tpms_real_frames(void) {
         CHECK(fsd_tpms_update(&t, fork_sensor[i], 7, 600) == FSD_TPMS_RX_IGNORED &&
                   t.pressure[i] != 0x80,
               "tpms fork kind %d leaves slot %d alone", i, i);
+
+    // #237: the car's tyre screen read FL 2.2, FR 2.7, RL 1.6 (let down),
+    // RR 2.3 bar while the dashboard showed slots 1..4 as 2.15, 2.68, 1.55,
+    // 2.25 bar. At 0.025 bar per count each of those comes from one byte value
+    // only, so this kind 5 is rebuilt from them, not copied from a capture.
+    static const uint8_t photo_237[7] = {0x05, 0x00, 0x56, 0x6B, 0x3E, 0x5A, 0x00};
+    static const unsigned photo_mbar[4] = {2150, 2675, 1550, 2250};
+    static const uint8_t corner[4] = {FSD_TPMS_POS_FL, FSD_TPMS_POS_FR, FSD_TPMS_POS_RL,
+                                      FSD_TPMS_POS_RR};
+    tpms_zero(&t);
+    CHECK(fsd_tpms_update(&t, photo_237, 7, 700) == FSD_TPMS_RX_READING, "tpms #237 photo frame");
+    for (int i = 0; i < 4; i++)
+        CHECK(fsd_tpms_mbar(t.pressure[i]) == photo_mbar[i] && t.pos[i] == corner[i],
+              "tpms #237 byte %d: %u mbar at corner %u", 2 + i, fsd_tpms_mbar(t.pressure[i]),
+              t.pos[i]);
+    CHECK(t.pos[2] == FSD_TPMS_POS_RL && t.pressure[2] < t.pressure[0] &&
+              t.pressure[2] < t.pressure[1] && t.pressure[2] < t.pressure[3],
+          "tpms #237: the let-down tyre is RL");
+    // An empty kind 5 drops the values but keeps the corners.
+    static const uint8_t empty_all[7] = {0x05, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    CHECK(fsd_tpms_update(&t, empty_all, 7, 800) == FSD_TPMS_RX_EMPTY &&
+              !fsd_tpms_has_reading(&t) && t.source == FSD_TPMS_SRC_ALL,
+          "tpms: empty kind 5 clears the values");
+    for (int i = 0; i < 4; i++)
+        CHECK(t.pos[i] == corner[i], "tpms: empty kind 5 keeps slot %d at corner %u", i, t.pos[i]);
 }
 
 // The 5-byte form exactly as the public DBC lays it out (no capture of it yet).

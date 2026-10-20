@@ -1522,8 +1522,9 @@ function updBattery(d){
     if(document.getElementById('bTemp')) document.getElementById('bTemp').textContent=d.bms.temp_min+'~'+d.bms.temp_max+'\u00b0C';
   }
 }
-// Tyre pressure (read-only, 0x219). Columns stay in the order the car sends
-// them; they are named as corners only when the car gives each its own corner.
+// Tyre pressure (read-only, 0x219). Columns are named as corners when every
+// slot has its own: the 5-byte form's location field, or the 7-byte form's
+// fixed FL, FR, RL, RR (#237). Otherwise they stay in the order the car sends.
 // The card shows up once 0x219 has been seen; its switch and the unit are kept
 // per browser, as the Performance card's switch is (#237).
 var TPOS=['FL','FR','RL','RR'];
