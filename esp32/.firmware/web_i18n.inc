@@ -153,7 +153,7 @@ var TABLES = {
  "Auto-detect": "自动检测",
  "Auto-detect needs 0x398 — many Model 3/Y never send it. Pick your car if detection is wrong.": "自动检测需要 0x398 — 很多 Model 3/Y 从不发送该帧，若识别错误请手动选择车型。",
  "Best guess:": "最佳推测：",
- "— confirm in Service Mode → CAN Port": "— 请在 Service Mode → CAN Port 中确认",
+ "— confirm with your car's wiring diagram (Service Mode → CAN Port where available)": "— 请对照车辆的接线图确认（车上有 Service Mode → CAN Port 页面的也可在那里查看）",
  "for auto-detect. byte 0-7, shift 0-7, mask hex.": "用于自动检测。字节 0-7，位移 0-7，掩码为十六进制。",
  "Experimental & non-persistent — injects a UI branch/tier hint only, reverts when injection stops; unverified and may be a ban signal. Off by default.": "实验性且不持久 — 仅注入 UI 分支/层级提示，停止注入后恢复；未经验证，可能成为封禁依据。默认关闭。",
  "Experimental & unverified — clears reachable telemetry flags only (not the Vehicle-bus ECU log-upload). Does NOT guarantee reduced detection.": "实验性且未经验证 — 仅清除可达的遥测标记（不影响车辆总线 ECU 的日志上传），不保证降低被检测概率。",
@@ -453,7 +453,7 @@ var TABLES = {
  "Auto-detect": "自動偵測",
  "Auto-detect needs 0x398 — many Model 3/Y never send it. Pick your car if detection is wrong.": "自動偵測需要 0x398 — 許多 Model 3/Y 從不傳送該訊框，若辨識錯誤請手動選擇車型。",
  "Best guess:": "最佳推測：",
- "— confirm in Service Mode → CAN Port": "— 請至 Service Mode → CAN Port 確認",
+ "— confirm with your car's wiring diagram (Service Mode → CAN Port where available)": "— 請對照車輛的線路圖確認（車上有 Service Mode → CAN Port 頁面的也可在那裡查看）",
  "for auto-detect. byte 0-7, shift 0-7, mask hex.": "用於自動偵測。位元組 0-7，位移 0-7，遮罩為十六進位。",
  "Experimental & non-persistent — injects a UI branch/tier hint only, reverts when injection stops; unverified and may be a ban signal. Off by default.": "實驗性且不持久 — 僅注入 UI 分支/層級提示，停止注入後還原；未經驗證，可能成為停權依據。預設關閉。",
  "Experimental & unverified — clears reachable telemetry flags only (not the Vehicle-bus ECU log-upload). Does NOT guarantee reduced detection.": "實驗性且未經驗證 — 僅清除可觸及的遙測旗標（不影響車輛匯流排 ECU 的日誌上傳），不保證降低被偵測機率。",
@@ -653,7 +653,7 @@ function zhText(raw){
     tail = n.slice(k.length);
     if(tail !== "" && /[A-Za-z0-9]/.test(tail.charAt(0))) continue; // word boundary
     out = DICT[k] + tail;
-    // Suffix match on the remainder, e.g. "... -- confirm in Service Mode".
+    // Suffix match on the remainder, e.g. "... -- confirm with your car's wiring diagram".
     for(j = 0; j < KEYS.length; j++){
       s2 = KEYS[j];
       if(s2.length < 6 || out.length <= s2.length) continue;

@@ -481,9 +481,9 @@ T = [
     ('Best guess:',
      '最佳推测：',
      '最佳推測：'),
-    ('— confirm in Service Mode → CAN Port',
-     '— 请在 Service Mode → CAN Port 中确认',
-     '— 請至 Service Mode → CAN Port 確認'),
+    ("— confirm with your car's wiring diagram (Service Mode → CAN Port where available)",
+     '— 请对照车辆的接线图确认（车上有 Service Mode → CAN Port 页面的也可在那里查看）',
+     '— 請對照車輛的線路圖確認（車上有 Service Mode → CAN Port 頁面的也可在那裡查看）'),
     ('for auto-detect. byte 0-7, shift 0-7, mask hex.',
      '用于自动检测。字节 0-7，位移 0-7，掩码为十六进制。',
      '用於自動偵測。位元組 0-7，位移 0-7，遮罩為十六進位。'),
@@ -1010,7 +1010,7 @@ function zhText(raw){
     tail = n.slice(k.length);
     if(tail !== "" && /[A-Za-z0-9]/.test(tail.charAt(0))) continue; // word boundary
     out = DICT[k] + tail;
-    // Suffix match on the remainder, e.g. "... -- confirm in Service Mode".
+    // Suffix match on the remainder, e.g. "... -- confirm with your car's wiring diagram".
     for(j = 0; j < KEYS.length; j++){
       s2 = KEYS[j];
       if(s2.length < 6 || out.length <= s2.length) continue;
