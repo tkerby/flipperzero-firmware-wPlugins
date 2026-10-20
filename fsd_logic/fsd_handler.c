@@ -1242,8 +1242,16 @@ void fsd_apply_signal_config(FSDState* state, const CANFRAME* frame, uint32_t no
         state->das_ctx_seen_ms = now_ms;
     }
     if(state->cfg_steer_id != 0 && frame->canId == state->cfg_steer_id) {
-        if(state->cfg_steer_hi < 8 && state->cfg_steer_lo < 8 &&
-           frame->data_lenght > state->cfg_steer_hi && frame->data_lenght > state->cfg_steer_lo) {
+        if(frame->canId == CAN_ID_STEER_ANGLE) {
+            // 0x129 has one layout (fsd_steer.h): bytes 0-1 are its CRC and
+            // counter, and the angle counts only while its validity is VALID.
+            // hi/lo are for other frames.
+            if(frame->data_lenght >= FSD_STEER_MIN_DLC) state->steer_ctx_seen_ms = now_ms;
+            fsd_steer_update(state, frame->buffer, frame->data_lenght, now_ms);
+        } else if(state->cfg_steer_hi != state->cfg_steer_lo && // equal = not mapped
+                  state->cfg_steer_hi < 8 && state->cfg_steer_lo < 8 &&
+                  frame->data_lenght > state->cfg_steer_hi &&
+                  frame->data_lenght > state->cfg_steer_lo) {
             int16_t raw = (int16_t)(((uint16_t)frame->buffer[state->cfg_steer_hi] << 8) |
                                     frame->buffer[state->cfg_steer_lo]);
             fsd_steer_set(state, (float)raw * 0.1f, now_ms);

@@ -1139,14 +1139,30 @@ static void test_signal_config(void) {
     fsd_apply_signal_config(&s, &g, 12000u);
     CHECK(s.das_ap_state == 5, "cfg: non-matching id ignored");
 
-    // Steering config: 0x129, signed LE bytes hi=1 lo=0, *0.1.
+    // Steering id 0x129 is read with its own layout (fsd_steer.h) whatever hi/lo
+    // say: hi=1 lo=0 read the CRC + counter, 969.0 deg for this -1.2 frame.
     s.cfg_steer_id = 0x129; s.cfg_steer_hi = 1; s.cfg_steer_lo = 0;
-    CANFRAME h; zero(&h); h.canId = 0x129; h.data_lenght = 4;
-    h.buffer[0] = 0x2C; h.buffer[1] = 0x01;  // 0x012C = 300 -> 30.0 deg
+    CANFRAME h;
+    steer_frame(&h, STEER129[0].d);
     fsd_apply_signal_config(&s, &h, 12000u);
-    CHECK(s.steering_angle_deg > 29.0f && s.steering_angle_deg < 31.0f,
-          "cfg: steering = %.1f deg (expect ~30)", (double)s.steering_angle_deg);
-    CHECK(fsd_steer_known(&s, 12000u), "cfg: steering angle known (fresh)");
+    CHECK(s.steering_angle_deg > -1.25f && s.steering_angle_deg < -1.15f,
+          "cfg: 0x129 steering = %.1f deg (expect -1.2)", (double)s.steering_angle_deg);
+    CHECK(fsd_steer_known(&s, 12000u) && s.steer_ctx_seen_ms == 12000u,
+          "cfg: 0x129 steering angle known (fresh)");
+    steer_frame(&h, STEER129[6].d);   // parked, validity INVALID
+    fsd_apply_signal_config(&s, &h, 12100u);
+    CHECK(s.steering_angle_seen && !fsd_steer_known(&s, 12100u), "cfg: 0x129 INVALID -> unknown");
+
+    // Any other id: signed 16-bit at hi/lo, 0.1 deg per bit; hi == lo maps nothing.
+    s.cfg_steer_id = 0x123; s.steering_angle_valid = false;
+    zero(&h); h.canId = 0x123; h.data_lenght = 4;
+    h.buffer[0] = 0x2C; h.buffer[1] = 0x01;  // 0x012C = 300 -> 30.0 deg
+    fsd_apply_signal_config(&s, &h, 12200u);
+    CHECK(s.steering_angle_deg > 29.95f && s.steering_angle_deg < 30.05f && fsd_steer_known(&s, 12200u),
+          "cfg: custom id steering = %.1f deg (expect 30)", (double)s.steering_angle_deg);
+    s.cfg_steer_lo = 1; s.steering_angle_valid = false;
+    fsd_apply_signal_config(&s, &h, 12300u);
+    CHECK(!s.steering_angle_valid && s.steer_ctx_seen_ms == 12200u, "cfg: custom id, hi == lo -> not mapped");
 
     // Nag killer no-ops when the configured DAS source goes stale.
     FSDState n;

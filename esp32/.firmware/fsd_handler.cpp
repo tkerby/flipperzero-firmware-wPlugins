@@ -644,8 +644,7 @@ static bool nag_in_pause(uint32_t now_ms) {
     return (now_ms % cycle) >= NAG_BURST_MS;
 }
 
-// Configurable signal mapping (#122) — mirror of the shared fsd_handler.c,
-// except that a steering id of 0x129 is read as SCCM_steeringAngleSensor.
+// Configurable signal mapping (#122) — mirror of the shared fsd_handler.c.
 void fsd_apply_signal_config(FSDState *state, const CanFrame *frame, uint32_t now_ms) {
     if (state->cfg_das_id != 0 && frame->id == state->cfg_das_id) {
         // A mask of 0 means "not mapped" — ignore the field and keep the prior
