@@ -9,6 +9,7 @@
 #define CAN_ID_STEER_ANGLE    0x129u  // 297  - SCCM_steeringAngleSensor (Soft Engage gate, #108)
 #define CAN_ID_BMS_HV_BUS     0x132u  // 306  - BMS_hvBusStatus: pack voltage / current
 #define CAN_ID_BMS_SOC        0x292u  // 658  - BMS_socStatus:   state of charge
+#define CAN_ID_UI_RANGE       0x33Au  // 826  - UI_range: SOC on the car's screen (#251)
 #define CAN_ID_BMS_THERMAL    0x312u  // 786  - BMS_thermalStatus: battery temp
 #define CAN_ID_GTW_CAR_STATE  0x318u  // 792  - GTW_carState:    OTA detection
 #define CAN_ID_UI_MAP_DATA    0x238u  // 568  - UI_driverAssistMapData: map speed limit
@@ -171,6 +172,12 @@
 #endif
 #endif
 
+// Builds with an MCP2515: can0 on the MCP2515 boards, can1 on the classic
+// T-2CAN (the T-2CAN FD has an MCP2518FD there instead).
+#if defined(CAN_DRIVER_MCP2515) || (defined(CAN_DRIVER_T2CAN_DUAL) && !defined(BOARD_LILYGO_T2CAN_FD))
+#define CAN_HAS_MCP2515 1
+#endif
+
 // MCP2515 oscillator. Generic breakout modules often use 8 MHz; the LilyGO
 // T-2CAN onboard MCP2515 follows the autowp library's 16 MHz default.
 #ifndef MCP_CRYSTAL_MHZ
@@ -179,6 +186,7 @@
 
 // ── Timing ────────────────────────────────────────────────────────────────────
 #define WIRING_WARN_MS        5000u   // Red LED / serial warning if no CAN after this
+#define WIRING_WARN_REPEAT_MS 60000u  // ...then that bus's warning at most once a minute
 #define OTA_SELF_VERIFY_MS   15000u   // Runtime before a new web-OTA image is confirmed
 #define PRECOND_INTERVAL_MS    500u   // Re-inject 0x082 precondition every N ms
 #define BMS_PRINT_MS          1000u   // BMS serial print interval

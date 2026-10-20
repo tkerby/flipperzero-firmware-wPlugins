@@ -1,12 +1,20 @@
 #include "prefs.h"
 #include "blackbox.h"   // BLACKBOX_DEFAULT_ENABLED
 #include <Preferences.h>
+#include <nvs.h>
 
 static Preferences g_prefs;
 static const char *NS = "fsd";
 
+bool prefs_namespace_exists(const char *ns) {
+    nvs_handle_t h;
+    if (nvs_open(ns, NVS_READONLY, &h) != ESP_OK) return false;
+    nvs_close(h);
+    return true;
+}
+
 void prefs_load(FSDState *state) {
-    g_prefs.begin(NS, /*readOnly=*/true);
+    if (prefs_namespace_exists(NS)) g_prefs.begin(NS, /*readOnly=*/true);
     if (!g_prefs.isKey("ok")) {
         Serial.println("[NVS] No saved settings found (first boot)");
         g_prefs.end();
@@ -53,6 +61,7 @@ void prefs_load(FSDState *state) {
     state->display_timeout_s        = g_prefs.getUInt("disp_to",  60);
 #endif
     state->sleep_idle_ms            = g_prefs.getUInt("sleep",  SLEEP_IDLE_MS);
+    state->mcp_rx_task              = g_prefs.getBool("mcprx",  false);  // MCP2515 RX task
 
     // WiFi
     if (g_prefs.isKey("wss")) g_prefs.getString("wss").toCharArray(state->wifi_ssid, sizeof(state->wifi_ssid));
@@ -75,7 +84,7 @@ void prefs_load(FSDState *state) {
     state->cfg_handson_shift = g_prefs.getUChar("chos",   0);
     state->cfg_handson_mask  = g_prefs.getUChar("chom",   0x0F);
     state->cfg_steer_id      = g_prefs.getUShort("csid",  0);
-    state->cfg_steer_hi      = g_prefs.getUChar("cshi",   1);
+    state->cfg_steer_hi      = g_prefs.getUChar("cshi",   0);   // hi == lo: not mapped
     state->cfg_steer_lo      = g_prefs.getUChar("cslo",   0);
 
     Serial.printf("[NVS] Loaded: FSDUnlock=%d HW3Spd=%d NAG=%d ContinuousAP=%d IgnoreOTA=%d China=%d Chime=%d Summon=%d COG=%d TLSSC38=%d RHD=%d TelOff=%d APMv3=%d TrkMode=%d/%u/%u/%d/%d Accel=%u Sleep=%u AP=\"%s\" STA=\"%s\" HIDDEN=%d\n",
@@ -139,6 +148,7 @@ void prefs_save(const FSDState *state) {
     g_prefs.putUInt("disp_to",  state->display_timeout_s);
 #endif
     g_prefs.putUInt("sleep",  state->sleep_idle_ms);
+    g_prefs.putBool("mcprx",  state->mcp_rx_task);  // MCP2515 RX task
 
     // WiFi
     g_prefs.putString("wss",  state->wifi_ssid);

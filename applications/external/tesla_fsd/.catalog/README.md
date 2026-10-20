@@ -14,7 +14,7 @@ Open-source Tesla CAN bus toolkit for Flipper Zero. It needs an MCP2515 CAN add-
 ## Before you use it
 
 - The first boot starts in Listen-Only mode. The CAN add-on physically cannot transmit until you switch to Active.
-- Which bus carries which frame depends on the car and the harness. Check Service Mode → CAN Port in the car before wiring, and see HARDWARE.md in the repository.
+- Which bus carries which frame depends on the car and the harness. Check the wiring diagram for your car before wiring (or Service Mode → CAN Port, where the car has it), and see HARDWARE.md in the repository.
 - This changes CAN traffic on a moving vehicle. Use it at your own risk, keep your hands on the wheel and assume Tesla can detect it.
 
 Wiring, supported cars, the ESP32 port and the full documentation: https://github.com/hypery11/flipper-tesla-fsd

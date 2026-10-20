@@ -1,9 +1,10 @@
 #pragma once
 
 // The parts of the MCP2518FD driver (LilyGO T-2CAN FD, can1) that need no
-// hardware: the crystal check, the bit-timing check, the capture filters and
-// the classic-CAN-only frame conversion. Host-tested by
-// test/test_can_mcp2518fd.cpp; can_driver.cpp holds the SPI side.
+// hardware: the crystal check, the bit-timing check, the not-detected
+// diagnostic, the capture filters and the classic-CAN-only frame conversion.
+// Host-tested by test/test_can_mcp2518fd.cpp; can_driver.cpp holds the SPI
+// side.
 
 #include "can_capture_filter.h"
 #include "../../fsd_logic/fsd_can_ops.h"  // TESLA_CAN_MAX_DLC / tesla_can_tx_valid
@@ -45,6 +46,97 @@ inline bool mcp2518fd_osc_matches(uint32_t measured_hz, uint32_t expected_hz) {
 // incremented once per error and cleared by writing zero.
 inline uint32_t mcp2518fd_bdiag0_errors(uint32_t bdiag0) {
     return (bdiag0 & 0xFFu) + ((bdiag0 >> 8) & 0xFFu) + ((bdiag0 >> 16) & 0xFFu) + (bdiag0 >> 24);
+}
+
+// ── Reset, and what a failed detection read back ────────────────────────────
+// Registers the driver reads before the library starts the chip, and when it
+// does not answer. CiCON resets to 0x04980760 (Configuration mode); OSC to
+// 0x00000060 with OSCRDY (bit 10) set once the oscillator is stable, and its
+// bits 13-31 are unimplemented, read as zero. DEVID is printed as read.
+static constexpr uint16_t MCP2518FD_REG_CON   = 0x000;
+static constexpr uint16_t MCP2518FD_REG_OSC   = 0xE00;
+static constexpr uint16_t MCP2518FD_REG_DEVID = 0xE14;
+static constexpr uint32_t MCP2518FD_OSC_OSCRDY        = 1u << 10;
+static constexpr uint32_t MCP2518FD_OSC_UNIMPLEMENTED = 0xFFFFE000u;
+// CiCON byte 3: REQOP = Configuration, ABAT set (abort pending transmissions).
+static constexpr uint8_t  MCP2518FD_CON_REQ_CONFIG = 0x04 | 0x08;
+static constexpr uint32_t MCP2518FD_OPMOD_CONFIG   = 4;
+
+inline uint32_t mcp2518fd_opmod(uint32_t con) { return (con >> 21) & 0x7u; }
+
+// A word a disconnected MISO reads: held low or floating high.
+inline bool mcp2518fd_word_stuck(uint32_t v) { return v == 0 || v == 0xFFFFFFFFu; }
+
+// The oscillator is up: OSCRDY set in a word that can be OSC at all, so a
+// MISO floating high does not pass.
+inline bool mcp2518fd_osc_ready(uint32_t osc) {
+    return (osc & MCP2518FD_OSC_UNIMPLEMENTED) == 0 && (osc & MCP2518FD_OSC_OSCRDY) != 0;
+}
+
+enum Mcp2518fdSpiState : uint8_t {
+    MCP2518FD_SPI_SILENT,     // CiCON and OSC stuck at all zeros or all ones
+    MCP2518FD_SPI_GARBLED,    // something drives MISO, not with these registers
+    MCP2518FD_SPI_NO_CLOCK,   // the chip answers, OSCRDY clear
+    MCP2518FD_SPI_CLOCK_OK,   // the chip answers, OSCRDY set
+};
+
+inline Mcp2518fdSpiState mcp2518fd_spi_state(uint32_t con, uint32_t osc) {
+    if (mcp2518fd_word_stuck(con) && mcp2518fd_word_stuck(osc)) return MCP2518FD_SPI_SILENT;
+    if (mcp2518fd_word_stuck(con) || (osc & MCP2518FD_OSC_UNIMPLEMENTED) != 0) {
+        return MCP2518FD_SPI_GARBLED;
+    }
+    return (osc & MCP2518FD_OSC_OSCRDY) ? MCP2518FD_SPI_CLOCK_OK : MCP2518FD_SPI_NO_CLOCK;
+}
+
+// Only when no MCP2518FD answered is it worth asking for an MCP2515.
+inline bool mcp2518fd_probe_mcp2515(Mcp2518fdSpiState state) {
+    return state == MCP2518FD_SPI_SILENT || state == MCP2518FD_SPI_GARBLED;
+}
+
+// An MCP2515 right after its RESET, CANSTAT and CANCTRL from one sequential
+// READ: OPMOD Configuration, and CANCTRL's ABAT clear, CLKEN set, CLKPRE 1/8.
+// CANCTRL's REQOP and OSM are left out, as the Linux mcp251x probe does.
+inline bool mcp2515_reset_signature(uint8_t canstat, uint8_t canctrl) {
+    return (canstat & 0xE0u) == 0x80u && (canctrl & 0x17u) == 0x07u;
+}
+
+struct Mcp2518fdReadback {
+    uint32_t con;
+    uint32_t osc;
+    uint32_t devid;
+    bool     mcp2515;  // an MCP2515 answered on the same pins
+};
+
+inline bool mcp2518fd_readback_same(const Mcp2518fdReadback &a, const Mcp2518fdReadback &b) {
+    return a.con == b.con && a.osc == b.osc && a.devid == b.devid && a.mcp2515 == b.mcp2515;
+}
+
+// A retry after a silent readback reads CiCON and OSC once instead of waiting
+// out the oscillator start-up (kOscStartMs): when they read back as they did,
+// nothing answers on MISO again and the wait cannot change that. @p prev is
+// the last failed attempt's readback, null on the first attempt.
+inline bool mcp2518fd_retry_skips_osc_wait(const Mcp2518fdReadback *prev, uint32_t con,
+                                           uint32_t osc) {
+    return prev && mcp2518fd_spi_state(prev->con, prev->osc) == MCP2518FD_SPI_SILENT &&
+           con == prev->con && osc == prev->osc;
+}
+
+inline const char *mcp2518fd_readback_text(const Mcp2518fdReadback &rb) {
+    if (rb.mcp2515) {
+        return "an MCP2515 answers on these pins: this looks like a classic T-2CAN, "
+               "flash the lilygo-t2can image";
+    }
+    switch (mcp2518fd_spi_state(rb.con, rb.osc)) {
+    case MCP2518FD_SPI_SILENT:
+        return "nothing answers on MISO: check wiring and power, and that this is a T-2CAN FD";
+    case MCP2518FD_SPI_GARBLED:
+        return "MISO answers, but not with MCP2518FD registers: check the SPI wiring";
+    case MCP2518FD_SPI_NO_CLOCK:
+        return "the chip answers, its oscillator is not running: check the crystal";
+    case MCP2518FD_SPI_CLOCK_OK:
+    default:
+        return "the chip answers and its oscillator runs: the start sequence failed";
+    }
 }
 
 // Nominal bit timing the driver accepts from the library before it starts the

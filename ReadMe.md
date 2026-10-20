@@ -222,7 +222,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: NFC: [Fix FeliCa command handling #4465 (By kormax)](https://github.com/flipperdevices/flipperzero-firmware/pull/4465)
 - Added: [Kindle Click v0.3 (By zuyan9)](https://github.com/zuyan9/Flipper-Zero-Kindle-Click)
 - Updated: [ProtoPirate v4.1 (By RocketGod-git)](https://protopirate.net/ProtoPirate/ProtoPirate)
-- Updated: [Tesla Mod v2.17.0b1 (By hypery11)](https://github.com/hypery11/flipper-tesla-fsd)
 - Updated: [Sub-GHz Scheduler v3.1 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler) (Version Only)
 - SubGHz: [Add Nice O-Code One 433MHz manual and advanced generation with 72-bit frames; preserve captured frame length when saving recovered remotes (By xMasterX; RM adaptation by RogueMaster)](https://github.com/DarkFlippers/unleashed-firmware/commit/7e26e042b48a1e6173ba95c265733d2b145b46ca)
 - Nice O-Code: [Distinguish O-Code from ordinary FloR-S/Nice One, recognize long 112-bit captures, and build saved files through the protocol encoder (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/f67bb1fff48e68bfd14a5f8556a10f03dc220523)
@@ -269,6 +268,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: [FatFs: apply upstream R0.12c patches, fix 0-byte files in fragmented exFAT directories (By r3wretrhy)](https://github.com/flipperdevices/flipperzero-firmware/pull/4477)
 - ESP Flasher: [Comes with Marauder v1.19.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.19.0) (Version Only)
 - Updated: [Taiko Player v0.5 (By ZeroNinx)](https://github.com/ZeroNinx/flipper-zero-taiko-player)
+- Updated: [Tesla Mod v2.17.0b3 (By hypery11)](https://github.com/hypery11/flipper-tesla-fsd)
 
 <a name="release"></a>
 
@@ -1148,7 +1148,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Telemeter v1.1 (By alaviation)](https://github.com/alaviation/flipper-telemeter)
 - [Telink SWS v0.1 (By ngxson)](https://github.com/ngxson/flipper-telink) `Req: Telink device`
 - [Temp Sensors Reader 2.1 (By quen0n)](https://github.com/quen0n/Unitemp-Flipper-Zero-Plugin) Req: [See App Readme For Supported Modules](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/applications/external/unitemp/README.md)
-- [Tesla Mod v2.17.0b1 (By hypery11)](https://github.com/hypery11/flipper-tesla-fsd)
+- [Tesla Mod v2.17.0b3 (By hypery11)](https://github.com/hypery11/flipper-tesla-fsd)
 - [Text To SAM v1.5 (By RoundPi)](https://github.com/Round-Pi/flipperzero-text2sam)
 - [Text Viewer v1.7 (By WillyJL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/ae4fc4a54febccb44b010c4025a99c2edef9a7f0)
 - [The C Prog. Language v0.2 (By armixz)](https://github.com/armixz/Flipper-Zero-The-C-Programming-Language)

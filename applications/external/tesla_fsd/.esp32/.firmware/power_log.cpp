@@ -1,9 +1,11 @@
 #include "power_log.h"
+#include "prefs.h"  // prefs_namespace_exists
 
 #include <Arduino.h>
 #include <Preferences.h>
 #include <esp_system.h>
 #include <esp_attr.h>
+#include <esp_rom_sys.h>  // esp_rom_get_reset_reason
 #if defined(ARDUINO_USB_CDC_ON_BOOT) && ARDUINO_USB_CDC_ON_BOOT
 #include <HWCDC.h>
 #endif
@@ -18,8 +20,10 @@ static bool g_ok = false;
 
 static FsdPwrVerdict g_boot_verdict = FSD_PWR_UNKNOWN;
 static FsdPwrVerdict g_live_verdict = FSD_PWR_UNKNOWN;
-static FsdPwrCheckpoint g_cp = {false, 0};
+static FsdPwrCheckpoint g_cp = {false, 0, false};
+static FsdPwrFilterGate g_gate = {false, false, 0};
 static int g_reset_code = PWR_RST_UNKNOWN;
+static int g_rtc_reason = 0;  // the chip's own reset reason, for an unknown one
 
 // RTC no-init RAM: kept across a software reset, a crash, a brownout CPU reset
 // and (its real job here) deep sleep, but wiped by a true power cut and never
@@ -85,8 +89,13 @@ static void print_minutes(const char *label, uint32_t ms) {
 
 void power_log_init(void) {
     esp_reset_reason_t r = esp_reset_reason();
-    g_reset_code = fine_reset_code(r);
-    FsdPwrReset cat = verdict_category(r);
+    g_rtc_reason = (int)esp_rom_get_reset_reason(0);
+#if defined(CONFIG_IDF_TARGET_ESP32S3)
+    g_reset_code = power_log_refine_reset(fine_reset_code(r), g_rtc_reason, true);
+#else
+    g_reset_code = power_log_refine_reset(fine_reset_code(r), g_rtc_reason, false);
+#endif
+    FsdPwrReset cat = (g_reset_code == PWR_RST_USB) ? FSD_PWR_RESET_USB : verdict_category(r);
 
     // RTC RAM is valid only if it survived (not a power cut, not first boot).
     bool rtc_ok = (g_rtc.magic == PWR_RTC_MAGIC);
@@ -96,12 +105,13 @@ void power_log_init(void) {
         g_rtc.slept_quiet = 0;
     }
 
-    // Previous session's flash record.
+    // Previous session's flash record. The namespace only exists once a
+    // checkpoint has been committed.
     FsdPwrRecord prev;
     prev.valid = false;
     prev.uptime_ms = 0;
     prev.quiet_ms = 0;
-    if (g_nvs.begin(NS, /*readOnly=*/true)) {
+    if (prefs_namespace_exists(NS) && g_nvs.begin(NS, /*readOnly=*/true)) {
         if (g_nvs.isKey("v")) {
             prev.valid = true;
             prev.uptime_ms = g_nvs.getULong("up", 0);
@@ -119,11 +129,16 @@ void power_log_init(void) {
         g_boot_verdict = fsd_pwr_verdict(cat, &prev);
     g_boot_verdict = fsd_pwr_apply_usb_guard(g_boot_verdict, usb_present());
 
-    Serial.printf("[PWR] reset: %s\n", power_log_reset_str());
+    if (g_reset_code == PWR_RST_UNKNOWN)
+        Serial.printf("[PWR] reset: unknown (RTC reason 0x%02X)\n", (unsigned)g_rtc_reason);
+    else
+        Serial.printf("[PWR] reset: %s\n", power_log_reset_str());
     if (prev.valid) {
-        Serial.print("[PWR] last session: ");
+        // The uptime is when the record was written, not when the power went:
+        // nothing is written while the bus is busy.
+        Serial.print("[PWR] last record: ");
         print_minutes("up", prev.uptime_ms);
-        if (prev.quiet_ms == 0) Serial.print(" - CAN was still flowing");
+        if (prev.quiet_ms == 0) Serial.print(" - CAN was flowing");
         else { Serial.print(" - "); print_minutes("CAN quiet", prev.quiet_ms); }
         Serial.println();
     } else {
@@ -144,22 +159,30 @@ void power_log_init(void) {
     g_ok = true;
 }
 
-// Commit one record. The caller guarantees the bus is quiet, so the flash stall
-// has no frames to drop. noinline: ci_check_stack.py names it on its chains.
+// Commit one record: a quiet checkpoint, whose bus is quiet so the flash
+// stall has no frames to drop, or (quiet_ms 0) the correction at the wake
+// edge (fsd_pwr_correction_due). noinline: ci_check_stack.py names it on its
+// chains.
 static __attribute__((noinline)) void power_log_commit(uint32_t now_ms, uint32_t quiet_ms) {
     if (!g_nvs.begin(NS, /*readOnly=*/false)) return;
     g_nvs.putUChar("v", 1);
     g_nvs.putULong("up", now_ms);
     g_nvs.putULong("q", quiet_ms);
     g_nvs.end();
-    Serial.printf("[PWR] checkpoint: bus quiet %us, record committed\n",
-                  (unsigned)(quiet_ms / 1000u));
+    if (quiet_ms)
+        Serial.printf("[PWR] checkpoint: bus quiet %us, record committed\n",
+                      (unsigned)(quiet_ms / 1000u));
+    else
+        Serial.println("[PWR] bus active again: record corrected (no longer quiet)");
 }
 
-void power_log_tick(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any) {
+void power_log_tick(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any, bool filtered) {
     if (!g_ok) return;
 
-    uint32_t quiet = fsd_pwr_quiet_ms(now_ms, last_rx_ms, seen_any);
+    // A capture's hardware filter hides most of the bus: no verdict and no
+    // write while it is on, nor until the bus can be judged again after it.
+    uint32_t quiet;
+    if (!fsd_pwr_judge_quiet(&g_gate, now_ms, last_rx_ms, seen_any, filtered, &quiet)) return;
 
     // Live verdict: a board that never sleeps and is still running long after
     // the bus went quiet is on an always-on feed (unless USB is masking it).
@@ -171,14 +194,20 @@ void power_log_tick(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any) {
     }
 
     // Commit a checkpoint only when the scheduler says so -- bus settled quiet,
-    // no frames to lose. Never on the active-bus path.
+    // no frames to lose. The one exception is the correction when the bus
+    // comes back after a checkpoint: without it a power cut mid-drive reads as
+    // SWITCHED at the next boot.
+    if (fsd_pwr_correction_due(&g_cp, quiet))
+        power_log_commit(now_ms, 0);
     if (fsd_pwr_checkpoint_due(&g_cp, quiet))
         power_log_commit(now_ms, quiet);
 }
 
-void power_log_note_deep_sleep(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any) {
+void power_log_note_deep_sleep(uint32_t now_ms, uint32_t last_rx_ms, bool seen_any,
+                               bool filtered) {
     if (!g_ok) return;
-    uint32_t quiet = fsd_pwr_quiet_ms(now_ms, last_rx_ms, seen_any);
+    uint32_t quiet;
+    if (!fsd_pwr_judge_quiet(&g_gate, now_ms, last_rx_ms, seen_any, filtered, &quiet)) quiet = 0;
 
     // Remember we slept on a quiet bus, so a deep-sleep wake can tell the feed
     // held through the sleep. RTC RAM survives the sleep; a switched feed that
@@ -215,6 +244,7 @@ const char *power_log_reset_str(void) {
     case PWR_RST_SOFTWARE:  return "software restart";
     case PWR_RST_DEEPSLEEP: return "deep-sleep wake";
     case PWR_RST_EXTERNAL:  return "reset pin";
+    case PWR_RST_USB:       return "USB reset (host on the USB port)";
     default:                return "unknown";
     }
 }

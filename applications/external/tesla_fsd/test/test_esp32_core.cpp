@@ -18,6 +18,8 @@
 #include "fsd_can_ops.h" // tesla_can_rx_accept / tesla_can_tx_valid (driver RX/TX filter)
 #include "fsd_checksum.h" // tesla_additive_checksum (0x334 / 0x118 vectors)
 #include "fsd_cp_status.h" // 0x25D CP_status decode + plug guard + rewrite predicate (#228)
+#include "fsd_steer.h" // 0x129 steering-angle decode + freshness
+#include "fsd_bms.h" // 0x312 pack-temperature gate
 #include "blackbox_flush.h" // black-box ring push, window search, save slices
 #include "blackbox_name.h" // black-box event names and their order across reboots
 #include "gear_tx_route.h" // Continuous AP 0x229 press bus choice
@@ -325,8 +327,9 @@ static void test_autopark(void) {
     ap_update(&s, 6, 300);
     CHECK(!s.autopark_tx_block && fsd_can_transmit(&s), "FSD 2->3->6: no block");
 
-    // 2->6 (missed 3) at 0 km/h blocks; stale keeps block; fresh speed >20 ENDS
-    // the episode, so slowing back down in the same 6 does not re-block (#176).
+    // 2->6 (missed 3) at 0 km/h blocks; stale keeps block; fresh speed past the
+    // release speed ENDS the episode, so slowing back down in the same 6 does not
+    // re-block (#176).
     memset(&s, 0, sizeof(s));
     s.op_mode = OpMode_Active;
     s.speed_seen = true;
@@ -340,7 +343,7 @@ static void test_autopark(void) {
     s.vehicle_speed_kph = 25.0f;
     s.last_speed_tick_ms = 1900;
     ap_update(&s, 6, 2000);
-    CHECK(!s.autopark_episode && !s.autopark_tx_block, "fresh speed >20 ends the episode");
+    CHECK(!s.autopark_episode && !s.autopark_tx_block, "fresh 25 km/h ends the episode");
     s.vehicle_speed_kph = 5.0f;
     s.last_speed_tick_ms = 2900;
     ap_update(&s, 6, 3000);
@@ -510,18 +513,22 @@ static void test_autopark_176(void) {
     ap_das(&s, 0x06, 0xE0, 200);
     CHECK(!s.autopark_tx_block, "2->6 at 8.08 km/h (> ENTRY_MAX): no episode");
 
-    // 2->6 at 0 km/h: blocked; > 20 ends it; 5 km/h in the same 6 stays released;
-    // a maneuver bit re-opens it; leaving 6 resets.
+    // 2->6 at 0 km/h, no maneuver bit (#176 stop-and-go): blocked; 12 km/h keeps
+    // it; > 12 ends it; 5 km/h in the same 6 stays released; a maneuver bit
+    // re-opens it and that episode needs > 20; leaving 6 resets.
     memset(&s, 0, sizeof(s));
     s.op_mode = OpMode_Active;
     ap_kph(&s, 0.0f, 100);
     ap_das(&s, 0x02, 0xE0, 150);
     ap_das(&s, 0x06, 0xE0, 200);
     CHECK(s.autopark_episode && s.autopark_tx_block, "2->6 at 0 km/h: blocked");
+    CHECK(!s.autopark_evidence, "2->6 at 0 km/h, no maneuver bit: no evidence");
     ap_kph(&s, 12.0f, 300);
-    CHECK(s.autopark_tx_block, "12 km/h (<= 20) keeps the block");
-    ap_kph(&s, 25.0f, 400);
-    CHECK(!s.autopark_episode && !s.autopark_tx_block, "> 20 km/h ends the episode");
+    CHECK(s.autopark_tx_block, "no maneuver bit: 12 km/h keeps the block");
+    ap_kph(&s, 12.5f, 400);
+    CHECK(
+        !s.autopark_episode && !s.autopark_tx_block,
+        "no maneuver bit: > 12 km/h ends the episode");
     ap_kph(&s, 5.0f, 500);
     ap_das(&s, 0x06, 0xE1, 550);
     CHECK(
@@ -532,6 +539,11 @@ static void test_autopark_176(void) {
         s.autopark_episode && s.autopark_tx_block, "waitingForBrake mid-6 after release: blocked");
     ap_das(&s, 0x06, 0xE0, 700);
     CHECK(s.autopark_tx_block, "maneuver episode holds after the bit clears (still slow)");
+    ap_kph(&s, 15.0f, 750);
+    CHECK(
+        s.autopark_tx_block && s.autopark_evidence, "maneuver evidence: 15 km/h keeps the block");
+    ap_kph(&s, 20.0f, 760);
+    CHECK(s.autopark_tx_block, "maneuver evidence: 20 km/h keeps the block");
     ap_kph(&s, 25.0f, 800);
     CHECK(!s.autopark_tx_block, "> 20 km/h ends the maneuver episode too");
     ap_kph(&s, 3.0f, 900);
@@ -561,6 +573,58 @@ static void test_autopark_176(void) {
     ap_das(&s, 0x01, 0xE0, 150);
     ap_das(&s, 0x06, 0xE0, 200);
     CHECK(s.autopark_tx_block, "1->6, SNA speed: blocked");
+    ap_speed(&s, 0xF0, 0xFF, 300);
+    CHECK(s.autopark_tx_block, "no evidence, fresh SNA: still blocked");
+    ap_kph(&s, 30.0f, 400);
+    CHECK(!s.autopark_tx_block, "no evidence, fresh 30 km/h: released");
+    memset(&s, 0, sizeof(s));
+    s.op_mode = OpMode_Active;
+    ap_kph(&s, 0.0f, 100);
+    ap_das(&s, 0x02, 0xE0, 150);
+    ap_das(&s, 0x06, 0xE0, 200);
+    s.vehicle_speed_kph = 30.0f;
+    s.last_speed_tick_ms = 300; // 1.2 s old below
+    ap_das(&s, 0x06, 0xE0, 1500);
+    CHECK(s.autopark_tx_block, "no evidence, stale 30 km/h: still blocked");
+
+    // #176 stop-and-go: blocked only until the first fresh reading over 12 km/h.
+    memset(&s, 0, sizeof(s));
+    s.op_mode = OpMode_Active;
+    ap_kph(&s, 0.0f, 100);
+    ap_das(&s, 0x02, 0xE0, 150);
+    ap_das(&s, 0x06, 0xE0, 200);
+    blocked = 0;
+    for(uint32_t i = 0; i < 200; i++) {
+        uint32_t t = 300 + i * 100;
+        ap_kph(&s, (float)(i % 11), t);
+        ap_das(&s, 0x06, 0xE0, t + 10);
+        if(s.autopark_tx_block) blocked++;
+    }
+    CHECK(blocked == 200, "stop-and-go below 12 km/h: blocked %d/200", blocked);
+    ap_kph(&s, 15.0f, 20400);
+    CHECK(!s.autopark_tx_block && fsd_can_transmit(&s), "stop-and-go: 15 km/h releases");
+    blocked = 0;
+    for(uint32_t i = 0; i < 200; i++) {
+        uint32_t t = 20500 + i * 100;
+        ap_kph(&s, (float)(i % 11), t);
+        ap_das(&s, 0x06, ((i / 7) & 1u) ? 0xE1 : 0xE0, t + 10);
+        if(s.autopark_tx_block || !fsd_can_transmit(&s)) blocked++;
+    }
+    CHECK(blocked == 0, "stop-and-go after release, same 6: %d blocked frames", blocked);
+
+    // An episode opened by its maneuver bit (#180 entry, byte3 0xE5) has
+    // evidence from the start: 15 km/h keeps the block, > 20 ends it.
+    memset(&s, 0, sizeof(s));
+    s.op_mode = OpMode_Active;
+    ap_kph(&s, 0.0f, 100);
+    ap_frame(&s, k_das_parked, 150);
+    ap_frame(&s, k_das_autopark, 200);
+    CHECK(s.autopark_tx_block && s.autopark_evidence, "1->6 with waitingForBrake: evidence");
+    ap_kph(&s, 15.0f, 300);
+    ap_frame(&s, k_das_autopark, 310);
+    CHECK(s.autopark_tx_block, "maneuver-opened episode: 15 km/h keeps the block");
+    ap_kph(&s, 21.0f, 400);
+    CHECK(!s.autopark_tx_block, "maneuver-opened episode: > 20 km/h releases");
 
     // Real in-car Autopark (#180 trace): parked, autoparkReady rises, ~1.1 s
     // later 1->6 on 06 0A DF E5 B0 08 21 4B at 0..5 km/h held 20 s, then 6->1.
@@ -597,6 +661,184 @@ static void test_autopark_176(void) {
 }
 
 // ── Signal Map hardening (#100): mask-0 ignored + configured-but-absent flag ──
+// ── 0x33A car SOC beside 0x292 through the ESP32 handlers (#251) ─────────────
+// One #211 Model Y pair, same capture: 0x292 socUI 81.8 %, 0x33A 80 % (bit 27 set).
+static void test_ui_soc(void) {
+    FSDState s;
+    memset(&s, 0, sizeof(s));
+    CanFrame f;
+    memset(&f, 0, sizeof(f));
+    const uint8_t soc292[8] = {0x3D, 0xCB, 0x5C, 0xB4, 0xD0, 0x01, 0x00, 0x00};
+    const uint8_t ui33a[8] = {0xD2, 0x34, 0x04, 0x7D, 0xFE, 0xFF, 0x13, 0x63};
+    f.id = CAN_ID_BMS_SOC;
+    f.dlc = 8;
+    memcpy(f.data, soc292, 8);
+    fsd_handle_bms_soc(&s, &f);
+    f.id = CAN_ID_UI_RANGE;
+    memcpy(f.data, ui33a, 8);
+    fsd_handle_ui_range(&s, &f);
+    CHECK(
+        s.soc_percent > 81.75f && s.soc_percent < 81.85f,
+        "0x292 81.8 %% (got %.2f)",
+        (double)s.soc_percent);
+    CHECK(s.ui_soc_seen && s.ui_soc == 80, "0x33A 80 %% (got %u)", (unsigned)s.ui_soc);
+    f.data[2] = 0xF0;
+    f.data[3] = 0x07; // 127: refused
+    fsd_handle_ui_range(&s, &f);
+    CHECK(s.ui_soc == 80, "0x33A above 100 refused, last value kept");
+    f.id = CAN_ID_BMS_SOC;
+    memset(f.data, 0, 8);
+    f.data[1] = 0xFC;
+    f.data[2] = 0x0F;
+    fsd_handle_bms_soc(&s, &f); // socUI 102.3: refused
+    CHECK(
+        s.soc_percent > 81.75f && s.soc_percent < 81.85f,
+        "0x292 above 100 refused, last value kept");
+}
+
+// ── 0x312 pack temperature through the ESP32 handler (fsd_bms.h) ─────────────
+static void bms312_feed(FSDState* s, uint8_t b4, uint8_t b5, uint32_t now) {
+    CanFrame f;
+    memset(&f, 0, sizeof(f));
+    f.id = CAN_ID_BMS_THERMAL;
+    f.dlc = 8;
+    f.data[4] = b4;
+    f.data[5] = b5;
+    fsd_handle_bms_thermal(s, &f, now);
+}
+static void test_bms_thermal(void) {
+    FSDState s;
+    memset(&s, 0, sizeof(s));
+    bms312_feed(&s, 0xF6, 0x30, 1000u); // 206~8 (shown as -50~8)
+    CHECK(s.bms_seen && !s.batt_temp_ok && s.batt_temp_rejected == 1, "206~8 C rejected");
+    bms312_feed(&s, 0x40, 0x8D, 1100u); // #211 dump 24~101
+    CHECK(!s.batt_temp_ok && s.batt_temp_rejected == 2, "24~101 C rejected");
+    bms312_feed(&s, 0x3A, 0x3D, 1200u); // 18~21
+    CHECK(
+        fsd_bms_temp_fresh(&s, 1200u) && s.batt_temp_min_c == 18 && s.batt_temp_max_c == 21,
+        "18~21 C stored (%d~%d)",
+        s.batt_temp_min_c,
+        s.batt_temp_max_c);
+    bms312_feed(&s, 0xF5, 0x08, 1300u); // 205~-32 (shown as -51~-32)
+    CHECK(
+        s.batt_temp_min_c == 18 && s.batt_temp_ms == 1200u && s.batt_temp_rejected == 3,
+        "205~-32 C rejected, last plausible kept");
+    CHECK(
+        !fsd_bms_temp_fresh(&s, 1201u + FSD_BMS_TEMP_STALE_MS),
+        "stale after FSD_BMS_TEMP_STALE_MS");
+}
+
+// ── 0x129 steering angle: decode, Soft Engage, EPAS-faithful direction ───────
+// Same #176 / #211 frames as test_steering_angle in test_fsd_core.c, through
+// the ESP32 handlers.
+static const uint8_t k_steer_hw3_m1_2[8] = {0xDA, 0x25, 0xF4, 0x5F, 0x00, 0x20, 0xFF, 0x3F};
+static const uint8_t k_steer_hw3_p40_9[8] = {0x63, 0x2B, 0x99, 0x61, 0x0C, 0x20, 0xFF, 0x3F};
+static const uint8_t k_steer_my_p21_6[8] = {0x0E, 0x27, 0xD8, 0x60, 0xFF, 0x1F, 0xFF, 0x3F};
+static const uint8_t k_steer_my_m5_9[8] = {0xC9, 0x21, 0xC5, 0x5F, 0xFF, 0x1F, 0xFF, 0x3F};
+static const uint8_t k_steer_my_parked[8] = {0xC4, 0x27, 0x09, 0x12, 0xFF, 0x1F, 0xFF, 0x3F};
+static void steer_feed(FSDState* s, const uint8_t d[8], uint32_t now) {
+    CanFrame f;
+    memset(&f, 0, sizeof(f));
+    f.id = CAN_ID_STEER_ANGLE;
+    f.dlc = 8;
+    memcpy(f.data, d, 8);
+    fsd_handle_steering_angle(s, &f, now);
+}
+static int modec_raw(const CanFrame* out) {
+    return ((out->data[2] & 0x0F) << 8) | out->data[3];
+}
+static void test_steering_angle(void) {
+    FSDState s;
+    const struct {
+        const uint8_t* d;
+        bool valid;
+        float deg;
+        const char* where;
+    } v[] = {
+        {k_steer_hw3_m1_2, true, -1.2f, "#176 -1.2"},
+        {k_steer_hw3_p40_9, true, 40.9f, "#176 +40.9"},
+        {k_steer_my_p21_6, true, 21.6f, "#211 +21.6"},
+        {k_steer_my_m5_9, true, -5.9f, "#211 -5.9"},
+        {k_steer_my_parked, false, 0.0f, "#211 parked INVALID"},
+    };
+    for(size_t i = 0; i < sizeof(v) / sizeof(v[0]); i++) {
+        memset(&s, 0, sizeof(s));
+        steer_feed(&s, v[i].d, 1000u);
+        CHECK(
+            s.steering_angle_seen && s.steering_angle_valid == v[i].valid,
+            "%s: seen/valid",
+            v[i].where);
+        if(v[i].valid)
+            CHECK(
+                s.steering_angle_deg > v[i].deg - 0.05f && s.steering_angle_deg < v[i].deg + 0.05f,
+                "%s: got %.2f",
+                v[i].where,
+                (double)s.steering_angle_deg);
+    }
+
+    // Soft Engage: no 0x129 ever -> AP-First-only; INVALID / stale -> hold; a
+    // fresh centred angle latches; a turn holds.
+    memset(&s, 0, sizeof(s));
+    s.soft_engage = true;
+    CHECK(fsd_soft_engage_allows(&s, 100u) && s.soft_engage_latched, "soft: no 0x129 -> latch");
+    memset(&s, 0, sizeof(s));
+    s.soft_engage = true;
+    steer_feed(&s, k_steer_my_parked, 1000u);
+    CHECK(!fsd_soft_engage_allows(&s, 1000u) && !s.soft_engage_latched, "soft: INVALID -> hold");
+    steer_feed(&s, k_steer_hw3_p40_9, 1010u);
+    CHECK(!fsd_soft_engage_allows(&s, 1010u) && !s.soft_engage_latched, "soft: +40.9 -> hold");
+    steer_feed(&s, k_steer_hw3_m1_2, 1020u);
+    CHECK(
+        !fsd_soft_engage_allows(&s, 1020u + FSD_STEER_FRESH_MS + 1u),
+        "soft: stale centred -> hold");
+    CHECK(fsd_soft_engage_allows(&s, 1020u) && s.soft_engage_latched, "soft: -1.2 fresh -> latch");
+
+    // EPAS-faithful direction: opposite the wheel, held near centre and while
+    // unknown. Strong demand (3) after its 1 s pause, phase past the ramp.
+    memset(&s, 0, sizeof(s));
+    s.nag_killer = true;
+    s.nag_epas_faithful = true;
+    s.das_ap_state = 3;
+    CanFrame in, out;
+    memset(&in, 0, sizeof(in));
+    in.id = CAN_ID_EPAS_STATUS;
+    in.dlc = 8;
+    uint32_t t = 300000u;
+    s.das_hands_on_state = 0;
+    fsd_handle_nag_killer(&s, &in, &out, t);
+    s.das_hands_on_state = 3;
+    fsd_handle_nag_killer(&s, &in, &out, t);
+    memset(&out, 0, sizeof(out));
+    CHECK(
+        fsd_handle_nag_killer(&s, &in, &out, t + 1600u) && modec_raw(&out) > 2048,
+        "faithful dir: no angle -> + (raw %d)",
+        modec_raw(&out));
+    steer_feed(&s, k_steer_my_p21_6, t + 1700u);
+    memset(&out, 0, sizeof(out));
+    CHECK(
+        fsd_handle_nag_killer(&s, &in, &out, t + 1700u) && modec_raw(&out) < 2048,
+        "faithful dir: +21.6 -> - (raw %d)",
+        modec_raw(&out));
+    steer_feed(&s, k_steer_hw3_m1_2, t + 1800u); // inside the hold band
+    memset(&out, 0, sizeof(out));
+    CHECK(
+        fsd_handle_nag_killer(&s, &in, &out, t + 1800u) && modec_raw(&out) < 2048,
+        "faithful dir: -1.2 holds - (raw %d)",
+        modec_raw(&out));
+    steer_feed(&s, k_steer_my_m5_9, t + 1900u);
+    memset(&out, 0, sizeof(out));
+    CHECK(
+        fsd_handle_nag_killer(&s, &in, &out, t + 1900u) && modec_raw(&out) > 2048,
+        "faithful dir: -5.9 -> + (raw %d)",
+        modec_raw(&out));
+    steer_feed(&s, k_steer_my_parked, t + 2000u); // INVALID -> unknown
+    memset(&out, 0, sizeof(out));
+    CHECK(
+        fsd_handle_nag_killer(&s, &in, &out, t + 2000u) && modec_raw(&out) > 2048,
+        "faithful dir: INVALID holds + (raw %d)",
+        modec_raw(&out));
+}
+
 static void test_signal_map(void) {
     FSDState s;
 
@@ -642,6 +884,65 @@ static void test_signal_map(void) {
     CHECK(fsd_signal_map_das_missing(&s, 8000u), "stale again -> missing");
     s.cfg_das_id = 0;
     CHECK(!fsd_signal_map_das_missing(&s, 8000u), "auto mode -> never missing");
+
+    // Steering id 0x129 is read with its own layout whatever hi/lo say: bytes
+    // 0-1 are CRC + counter, which the old hi=1/lo=0 default read as the angle
+    // (0x25DA = 969.0 deg for the #176 -1.2 frame).
+    memset(&s, 0, sizeof(s));
+    s.cfg_steer_id = 0x129;
+    s.cfg_steer_hi = 1;
+    s.cfg_steer_lo = 0;
+    memset(&f, 0, sizeof(f));
+    f.id = 0x129;
+    f.dlc = 8;
+    memcpy(f.data, k_steer_hw3_m1_2, 8);
+    fsd_apply_signal_config(&s, &f, 6000u);
+    CHECK(
+        s.steering_angle_valid && s.steering_angle_deg > -1.25f && s.steering_angle_deg < -1.15f,
+        "sigmap 0x129: DBC angle -1.2 (got %.1f)",
+        (double)s.steering_angle_deg);
+    CHECK(
+        fsd_steer_known(&s, 6000u) && s.steer_ctx_seen_ms == 6000u,
+        "sigmap 0x129: known, stamped");
+    memcpy(f.data, k_steer_my_parked, 8);
+    fsd_apply_signal_config(&s, &f, 6100u);
+    CHECK(
+        s.steering_angle_seen && !s.steering_angle_valid && !fsd_steer_known(&s, 6100u),
+        "sigmap 0x129: INVALID -> angle unknown");
+    f.dlc = 3;
+    memcpy(f.data, k_steer_hw3_m1_2, 8);
+    fsd_apply_signal_config(&s, &f, 6200u);
+    CHECK(!s.steering_angle_valid && s.steer_ctx_seen_ms == 6100u, "sigmap 0x129: DLC 3 ignored");
+
+    // Any other id: signed 16-bit at hi/lo, 0.1 deg per bit, as documented.
+    memset(&s, 0, sizeof(s));
+    s.cfg_steer_id = 0x123;
+    s.cfg_steer_hi = 1;
+    s.cfg_steer_lo = 0;
+    memset(&f, 0, sizeof(f));
+    f.id = 0x123;
+    f.dlc = 4;
+    f.data[0] = 0x2C;
+    f.data[1] = 0x01; // 300 -> 30.0
+    fsd_apply_signal_config(&s, &f, 7000u);
+    CHECK(
+        s.steering_angle_valid && s.steering_angle_deg > 29.95f && s.steering_angle_deg < 30.05f,
+        "sigmap custom id: 30.0 deg (got %.1f)",
+        (double)s.steering_angle_deg);
+    f.data[0] = 0xD4;
+    f.data[1] = 0xFE; // -300 -> -30.0
+    fsd_apply_signal_config(&s, &f, 7100u);
+    CHECK(
+        s.steering_angle_deg < -29.95f && s.steering_angle_deg > -30.05f,
+        "sigmap custom id: -30.0 deg (got %.1f)",
+        (double)s.steering_angle_deg);
+    // hi == lo (the default, 0/0) maps nothing.
+    memset(&s, 0, sizeof(s));
+    s.cfg_steer_id = 0x123;
+    fsd_apply_signal_config(&s, &f, 7200u);
+    CHECK(
+        !s.steering_angle_seen && s.steer_ctx_seen_ms == 0u,
+        "sigmap custom id, hi == lo: not mapped");
 }
 
 // ── DI_speed decode parity with the Flipper (0x257) ───────────────────────────
@@ -661,6 +962,46 @@ static void test_di_speed(void) {
         "di_speed got %.3f exp 10.0",
         s.vehicle_speed_kph);
     CHECK(s.ui_speed == 0x42 && s.speed_seen, "di_speed ui_speed + speed_seen");
+}
+
+// Performance read-out vs DI_vehicleSpeed SNA: raw 4095 decodes to 287.6 km/h and
+// used to lock every acceleration timer and spike the est. G. Fed the way the
+// main.cpp 0x257 path does: parse, stamp, fsd_perf_on_speed().
+static void perf_speed(FSDState* s, uint16_t raw, uint32_t now) {
+    CanFrame f;
+    memset(&f, 0, sizeof(f));
+    f.id = 0x257u;
+    f.dlc = 8;
+    f.data[1] = (uint8_t)((raw & 0x0Fu) << 4);
+    f.data[2] = (uint8_t)(raw >> 4);
+    fsd_handle_di_speed(s, &f);
+    s->last_speed_tick_ms = now;
+    fsd_perf_on_speed(s, now);
+}
+static void test_perf_speed_sna(void) {
+    FSDState s;
+    memset(&s, 0, sizeof(s));
+    perf_speed(&s, 500, 0); // 0 km/h
+    perf_speed(&s, 500, 100);
+    perf_speed(&s, 4095, 200); // SNA right at standstill
+    CHECK(
+        !s.perf.accel_armed && !s.perf.lock_0_50 && !s.perf.lock_0_100,
+        "SNA at standstill: no run, no lock");
+    CHECK(s.perf.g_peak < 0.1f, "SNA: no G spike (peak %.2f)", (double)s.perf.g_peak);
+    CHECK(!fsd_speed_valid(&s, 200), "SNA: speed not valid for the card");
+    perf_speed(&s, 563, 300); // 5.04 km/h -> armed from the 100 ms sample
+    CHECK(s.perf.accel_armed && s.perf.accel_start_ms == 100, "valid 5 km/h arms the run");
+    perf_speed(&s, 4095, 400); // SNA mid-run
+    perf_speed(&s, 4063, 500); // above max valid
+    CHECK(!s.perf.lock_0_50 && s.perf.best_0_50_ms == 0, "SNA / 4063 mid-run: no lock, no best");
+    perf_speed(&s, 1188, 4100); // 55.04 km/h -> 0-50 locks at 4000 ms
+    CHECK(
+        s.perf.lock_0_50 && s.perf.t_0_50_ms == 4000u,
+        "valid 55 km/h locks 0-50 (%lu ms)",
+        (unsigned long)s.perf.t_0_50_ms);
+    CHECK(
+        fsd_speed_valid(&s, 4100) && !fsd_speed_valid(&s, 4100 + FSD_AUTOPARK_SPEED_FRESH_MS + 1),
+        "card speed valid while fresh, not once stale");
 }
 
 // ── state init ────────────────────────────────────────────────────────────────
@@ -1773,6 +2114,214 @@ static void test_blackbox_save_slices(void) {
     CHECK(ok, "slices cover the window in ceil(count / per_pass) passes");
 }
 
+// Slices cut by the time budget (BLACKBOX_FLUSH_BUDGET_US) and the gap after them.
+static void test_blackbox_slice_budget(void) {
+    CHECK(!bb_slice_over(1u, 32u, 0u, 600u), "one line, time left: go on");
+    CHECK(bb_slice_over(1u, 32u, 600u, 600u), "budget gone after one line: stop");
+    CHECK(
+        bb_slice_over(32u, 32u, 10u, 600u) && bb_slice_over(5u, 5u, 0u, 600u),
+        "all the slice's lines written: stop");
+    CHECK(
+        bb_slice_gap_ms(32u, 32u, 50u) == 50u && bb_slice_gap_ms(16u, 32u, 50u) == 25u &&
+            bb_slice_gap_ms(15u, 32u, 50u) == 24u && bb_slice_gap_ms(1u, 32u, 50u) == 2u &&
+            bb_slice_gap_ms(0u, 32u, 50u) == 1u,
+        "gap: full after 32 lines, the share rounded up after fewer");
+
+    // Whatever the slices, lines go out no faster than 32 per 50 ms.
+    uint32_t seed = 0xB1ACB0Fu;
+    bool pace = true;
+    for(int trial = 0; trial < 500; trial++) {
+        uint32_t lines = 0, ms = 0;
+        for(int k = 0; k < 200; k++) {
+            uint32_t n = 1u + xorshift32(&seed) % 32u;
+            lines += n;
+            ms += bb_slice_gap_ms(n, 32u, 50u);
+        }
+        pace &= (uint64_t)ms * 32u >= (uint64_t)lines * 50u;
+    }
+    CHECK(pace, "budget-cut slices never outpace 32 lines per 50 ms");
+
+    // A 1501-line save with lines of 40 us: 15 lines a slice instead of 32, each
+    // ending at the budget, the save about as long as with 32-line slices.
+    const uint32_t LINE_US = 40u, BUDGET = 600u, TOTAL = 1501u;
+    uint32_t left = TOTAL, slices = 0, ms = 0, longest = 0;
+    while(left) {
+        uint32_t n = bb_slice(left, 32u), lines = 0, us = 0;
+        do {
+            lines++;
+            us += LINE_US;
+            left--;
+        } while(!bb_slice_over(lines, n, us, BUDGET));
+        if(us > longest) longest = us;
+        slices++;
+        ms += bb_slice_gap_ms(lines, 32u, 50u);
+    }
+    const uint32_t fixed_ms = ((TOTAL + 31u) / 32u) * 50u; // 47 slices of 32
+    CHECK(
+        slices == 101u && longest == 600u,
+        "15-line slices of 600 us (%u slices, %u us)",
+        (unsigned)slices,
+        (unsigned)longest);
+    CHECK(
+        ms >= fixed_ms && ms <= fixed_ms + fixed_ms / 10u,
+        "save takes %u ms against %u ms with 32-line slices",
+        (unsigned)ms,
+        (unsigned)fixed_ms);
+}
+
+// A trigger while an event is armed (blackbox_arm()).
+static void test_blackbox_arm_action(void) {
+    const uint32_t POST = 5000u;
+    CHECK(bb_arm_action(false, 0u, false, 0u, POST, 123u) == BB_ARM_NOW, "nothing armed: arm");
+    CHECK(
+        bb_arm_action(true, 1000u, false, 0u, POST, 6000u) == BB_ARM_IN_WINDOW,
+        "at the end of the post-roll: inside the armed window");
+    CHECK(
+        bb_arm_action(true, 1000u, false, 0u, POST, 6001u) == BB_ARM_QUEUE,
+        "after it, during the save: waits");
+    CHECK(
+        bb_arm_action(true, 1000u, true, 7000u, POST, 12000u) == BB_ARM_IN_WINDOW,
+        "a second one in the waiting event's post-roll: part of it");
+    CHECK(
+        bb_arm_action(true, 1000u, true, 7000u, POST, 12001u) == BB_ARM_MISSED,
+        "a second one after it: missed");
+    CHECK(
+        bb_arm_action(true, 0xFFFFF000u, false, 0u, POST, 0x00000100u) == BB_ARM_IN_WINDOW,
+        "post-roll across the millis() wrap");
+    CHECK(
+        bb_arm_action(true, 0xFFFFF000u, false, 0u, POST, 0xFFFFF000u + POST + 1u) == BB_ARM_QUEUE,
+        "past the post-roll across the wrap");
+}
+
+// The save and the queue together, in the order blackbox.cpp runs them: `rate`
+// key frames every 10 ms, a save step of 32 frames every 50 ms, the trigger
+// handling of blackbox_arm() and blackbox_tick(). Returns the saved events.
+struct BBSimEvent {
+    uint32_t trig_ms, first_ts, last_ts, count;
+};
+static int bb_sim(
+    uint32_t cap,
+    uint32_t rate,
+    const uint32_t* trig,
+    int ntrig,
+    BBSimEvent* out,
+    uint32_t* missed,
+    uint32_t* dropped) {
+    const uint32_t PRE = 10000u, POST = 5000u, TICK = 10u, GAP = 50u, PER = 32u;
+    static uint32_t ts[16384];
+    uint32_t head = 0, tail = 0, slot = 0;
+    bool armed = false, queued = false, saving = false;
+    uint32_t trig_ms = 0, q_ms = 0, flush_at = 0, next = 0, left = 0;
+    int nev = 0, ti = 0;
+    *missed = *dropped = 0;
+    for(uint32_t now = 100u; now < 120000u; now += TICK) {
+        for(uint32_t r = 0; r < rate; r++) {
+            if(bb_ring_push(cap, head, tail, left ? next : cap, &slot))
+                ts[slot] = now;
+            else
+                (*dropped)++;
+        }
+        while(ti < ntrig && trig[ti] <= now) {
+            switch(bb_arm_action(armed, trig_ms, queued, q_ms, POST, now)) {
+            case BB_ARM_NOW:
+                armed = true;
+                trig_ms = now;
+                flush_at = now + POST;
+                break;
+            case BB_ARM_QUEUE:
+                queued = true;
+                q_ms = now;
+                break;
+            case BB_ARM_MISSED:
+                (*missed)++;
+                break;
+            default:
+                break;
+            }
+            ti++;
+        }
+        if(!armed || (int32_t)(now - flush_at) < 0) continue;
+        if(!saving) {
+            uint32_t t0 = tail;
+            BBWindow w = bb_find_window(
+                bb_ring_count(cap, head, tail), trig_ms - PRE, trig_ms + POST, [&](uint32_t k) {
+                    return ts[(t0 + k) % cap];
+                });
+            next = (tail + w.first) % cap;
+            left = w.count;
+            out[nev] = {trig_ms, w.count ? ts[next] : 0u, 0u, w.count};
+            saving = true;
+        }
+        for(uint32_t n = bb_slice(left, PER); n > 0; n--) {
+            out[nev].last_ts = ts[next];
+            next = bb_ring_next(cap, next);
+            left--;
+        }
+        flush_at = now + GAP;
+        if(left) continue;
+        saving = false;
+        armed = false;
+        nev++;
+        if(queued) {
+            queued = false;
+            armed = true;
+            trig_ms = q_ms;
+            flush_at = q_ms + POST;
+        }
+    }
+    return nev;
+}
+
+static void test_blackbox_trigger_during_save(void) {
+    // 100 frames/s: 1501 frames a window, saved at 32 per 50 ms in about 2.3 s.
+    BBSimEvent ev[8];
+    uint32_t missed = 0, dropped = 0;
+    // 22000: inside the first window. 25500: during its save (25000..), waits.
+    // 26000: inside the waiting window. 30800: during the second save, waits in
+    // turn. 31000: inside that one.
+    const uint32_t t1[] = {20000u, 22000u, 25500u, 26000u, 30800u, 31000u};
+    int n = bb_sim(8192u, 1u, t1, 6, ev, &missed, &dropped);
+    CHECK(n == 3, "three events saved (%d)", n);
+    CHECK(
+        n >= 2 && ev[1].trig_ms == 25500u && ev[1].first_ts == 15500u && ev[1].last_ts == 30500u &&
+            ev[1].count == 1501u,
+        "the trigger during the save gets its own full window (%u..%u, %u frames)",
+        n >= 2 ? (unsigned)ev[1].first_ts : 0u,
+        n >= 2 ? (unsigned)ev[1].last_ts : 0u,
+        n >= 2 ? (unsigned)ev[1].count : 0u);
+    CHECK(
+        n == 3 && ev[2].trig_ms == 30800u && ev[2].count == 1501u,
+        "and the one during its save gets the next");
+    CHECK(missed == 0 && dropped == 0, "big ring: nothing missed or dropped");
+
+    // 500 frames/s: 7501 frames, about 11.7 s of saving. 25100 waits; 31000 is
+    // past its post-roll (..30100) with the first save still running: missed.
+    // 36000 too (the first save ends at about 36750).
+    const uint32_t t2[] = {20000u, 25100u, 31000u, 36000u};
+    n = bb_sim(16384u, 5u, t2, 4, ev, &missed, &dropped);
+    CHECK(
+        n == 2 && ev[1].trig_ms == 25100u && missed == 2,
+        "long save: one waits, the later two are missed (%d events, %u missed)",
+        n,
+        (unsigned)missed);
+    CHECK(
+        n == 2 && ev[1].first_ts == 15100u && ev[1].last_ts == 30100u,
+        "the waiting event still has its full window (%u..%u)",
+        n == 2 ? (unsigned)ev[1].first_ts : 0u,
+        n == 2 ? (unsigned)ev[1].last_ts : 0u);
+
+    // Small ring (999 frames, 10 s at 100 frames/s): the waiting event's pre-roll
+    // is partly gone by the time it is saved; the trigger and its post-roll are not.
+    const uint32_t t3[] = {20000u, 25100u};
+    n = bb_sim(1000u, 1u, t3, 2, ev, &missed, &dropped);
+    CHECK(
+        n == 2 && ev[1].trig_ms == 25100u && ev[1].first_ts > 15100u && ev[1].first_ts < 25100u &&
+            ev[1].last_ts == 30100u,
+        "small ring: pre-roll partly kept (%u..%u)",
+        n == 2 ? (unsigned)ev[1].first_ts : 0u,
+        n == 2 ? (unsigned)ev[1].last_ts : 0u);
+}
+
 // Continuous AP (#218): the 0x229 press may only go out on a bus where the
 // car's own 0x229 was stored recently, never on a configured bus by default.
 static void test_gear_tx_route(void) {
@@ -1921,7 +2470,11 @@ int main() {
     test_autopark();
     test_autopark_176();
     test_signal_map();
+    test_steering_angle();
+    test_bms_thermal();
+    test_ui_soc();
     test_di_speed();
+    test_perf_speed_sna();
     test_cp_type_decode();
     test_cp_type_rewrite();
     test_cp_type_stale();
@@ -1930,6 +2483,9 @@ int main() {
     test_blackbox_window();
     test_blackbox_ring_push();
     test_blackbox_save_slices();
+    test_blackbox_slice_budget();
+    test_blackbox_arm_action();
+    test_blackbox_trigger_during_save();
     test_blackbox_names();
 
     printf("\n%d passed, %d failed\n", g_pass, g_fail);

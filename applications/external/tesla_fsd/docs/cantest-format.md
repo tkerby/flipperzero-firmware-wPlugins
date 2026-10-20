@@ -70,6 +70,7 @@ python3 tools/tesla_crc_cracker.py --id 0x485 apps_data/tesla_mod/captures/cap_<
 ```
 
 Capture from the bus that carries the frame natively (for Vehicle-CAN frames,
-the X179 pair your car's **Service Mode → CAN Port** page lists as Vehicle CAN,
-pins 9/10 on harness `1933903-XX`), not a gateway-forwarded subset bus —
+the X179 pair that is Vehicle CAN on your car's wiring diagram or, where
+available, its **Service Mode → CAN Port** page; pins 9/10 on harness
+`1933903-XX`), not a gateway-forwarded subset bus —
 forwarded frames may be re-emitted without the original counter/CRC.
