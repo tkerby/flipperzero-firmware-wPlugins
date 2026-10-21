@@ -17,10 +17,12 @@
 # build catches them.
 # This matrix moves that trap into CI where it detonates immediately.
 #
-# Why API == 87.1 is not asserted:
-# Both sides use the release channel, and channels float (today Official 1.4.3 / Momentum
-# mntm-012, both at API 87.1, see V-030 / V-048). Hard-asserting a version number would turn an
-# upstream release into a red unrelated to any commit in this repository. The only hard gate is
+# Why a specific API version is not asserted:
+# Both sides use a release channel, and channels float. On 2026-10-21 Official
+# release was SDK 1.5.1 / API 88.2 and Momentum release was still mntm-012 /
+# API 87.1, which is why release.yml ships two files. Hard-asserting a version
+# number would turn an upstream release into a red unrelated to any commit in
+# this repository. The only hard gate is
 # "every matrix target builds successfully and really produces a .fap";
 # the version numbers are recorded in the step summary and artifact names as evidence.
 

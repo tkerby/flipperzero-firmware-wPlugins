@@ -1,30 +1,24 @@
-# Tag-triggered release: build one .fap against the Official SDK and publish it.
+# Tag-triggered release: two Official-SDK .fap files, named by firmware.
 #
-# Why one artifact and not one per firmware:
-# `application.fam` declares no firmware-specific API, and the Official and
-# Momentum SDKs both produce `Target: 7, API: 87.1`. Building against both and
-# diffing the output showed the two .fap files differ in 5 bytes out of 53348:
-# the `.gnu_debuglink` CRC32, which the loader never reads, and the declared size
-# of `.fapmeta` -- 85 bytes on Official, 86 on Momentum, whose fbt appends a
-# `flags` byte. `.text`, `.rodata`, every relocation section and both symbol
-# tables are byte-identical. See V-076 in docs/VERIFY.md.
+# The loader compares API major only (V-074; the minor check is still commented
+# out in Official 1.5.1). One file cannot cover major 87 and major 88.
 #
-# The Official build is the one that ships, and the direction matters. Momentum's
-# loader explicitly accepts an 85-byte OFW manifest and defaults the flags, while
-# the Official loader guards `.fapmeta` only from below: an 86-byte manifest out
-# of a Momentum build is not rejected, it is read past the end of an 85-byte
-# struct. Shipping the Official build is the only direction that is safe on both,
-# and it is also the build the Apps Catalog requires (C4).
+# sigroam-<version>.fap
+#   Official release channel. On 2026-10-21 that was SDK 1.5.1 / API 88.2.
+#   File for current Official, and for Unleashed / RogueMaster while their API
+#   major matches. This is the build the Apps Catalog requires (C4).
 #
-# What gates loading is the API *major*, compared exactly; the minor is not
-# compared at all -- upstream has that half of the condition commented out in all
-# three firmwares (V-074). One 87.1 file therefore covers every firmware whose
-# API major is 87. Unleashed is API 88, so it stays out of this release. The
-# same ufbt action compiles it in fap-build.yml; this job does not upload that file.
+# sigroam-<version>-momentum.fap
+#   Official SDK 1.4.3, pinned by URL, API 87.1. File for Momentum (mntm-012)
+#   and for Official 1.4.3. Built with the Official SDK, not the Momentum SDK:
+#   Momentum's fbt appends a flags byte and makes .fapmeta 86 bytes, and the
+#   Official loader reads past an 85-byte manifest (V-076). The job fails if
+#   this pinned SDK is no longer API 87.
 #
-# fap-build.yml builds Official, Momentum, and Unleashed on every push. Official
-# and Momentum are the compile-time guard against firmware-specific APIs (C4);
-# dropping either would let a Momentum-only symbol reach this workflow undetected.
+# Drop the Momentum file once Momentum's stable API major matches the current
+# Official release. fap-build.yml still compiles Official, Momentum, and
+# Unleashed on every push so a firmware-specific API fails there (C4). This
+# workflow does not upload those Momentum-SDK or Unleashed-SDK binaries.
 #
 # Why this is a third workflow rather than a job inside fap-build.yml:
 # fap-build runs on every push and pull request and must stay read-only
@@ -155,13 +149,75 @@ jobs:
       - name: Upload staged FAP
         uses: actions/upload-artifact@v7
         with:
-          name: release
+          name: release-official
+          path: staged/*.fap
+          if-no-files-found: error
+
+  build_momentum:
+    name: build (official SDK 1.4.3)
+    needs: check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.check.outputs.tag }}
+
+      # Pinned zip, not the release channel. Momentum stable is still API 87
+      # (mntm-012) after Official moved to API 88. sdk-url matches `ufbt update -u`.
+      - name: Build FAP
+        id: build
+        uses: flipperdevices/flipperzero-ufbt-action@e7cd34914e61ddc056acd8daaab96d8b4d4d9f55 # v0.1.4
+        with:
+          sdk-url: https://update.flipperzero.one/builds/firmware/1.4.3/flipper-z-f7-sdk-1.4.3.zip
+          sdk-hw-target: f7
+
+      - name: Require API 87
+        run: |
+          set -euo pipefail
+          api="${{ steps.build.outputs.api-version }}"
+          case "$api" in
+            87.*) ;;
+            *)
+              echo "::error::pinned Official 1.4.3 SDK produced API $api, expected 87.*"
+              exit 1
+              ;;
+          esac
+
+      - name: Stage the .fap under its release name
+        run: |
+          set -euo pipefail
+          mkdir -p staged
+          fap=$(find ${{ steps.build.outputs.fap-artifacts }} -name '*.fap' -type f | head -1)
+          if [ -z "$fap" ]; then
+            echo "::error::no .fap produced"
+            exit 1
+          fi
+          cp "$fap" "staged/sigroam-${{ needs.check.outputs.version }}-momentum.fap"
+          ls -l staged/
+
+      - name: Record SDK / API version
+        run: |
+          {
+            echo "### official SDK 1.4.3 (Momentum file)"
+            echo ""
+            echo "| Item | Value |"
+            echo "|---|---|"
+            echo "| SDK version | \`${{ fromJSON(steps.build.outputs.ufbt-status).version }}\` |"
+            echo "| API version | \`${{ steps.build.outputs.api-version }}\` |"
+            echo "| hw target | \`${{ fromJSON(steps.build.outputs.ufbt-status).target }}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload staged FAP
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-momentum
           path: staged/*.fap
           if-no-files-found: error
 
   publish:
     name: publish release
-    needs: [check, build]
+    needs: [check, build, build_momentum]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -170,21 +226,27 @@ jobs:
         with:
           ref: ${{ needs.check.outputs.tag }}
 
-      - name: Download built FAP
+      - name: Download built FAPs
         uses: actions/download-artifact@v8
         with:
-          name: release
+          pattern: release-*
           path: dist
+          merge-multiple: true
 
-      # The artifact must exist and be non-empty. An empty upload would still
-      # publish a release, and the failure would only surface on a user's device.
-      - name: Verify the artifact is present
+      # Both files must exist and differ. An empty upload would still publish a
+      # release, and the failure would only surface on a user's device.
+      - name: Verify the artifacts are present
         run: |
           set -euo pipefail
           ls -l dist/
-          f="dist/sigroam-${{ needs.check.outputs.version }}.fap"
-          if [ ! -s "$f" ]; then
-            echo "::error::missing or empty artifact: $f"
+          off="dist/sigroam-${{ needs.check.outputs.version }}.fap"
+          mom="dist/sigroam-${{ needs.check.outputs.version }}-momentum.fap"
+          if [ ! -s "$off" ] || [ ! -s "$mom" ]; then
+            echo "::error::missing or empty release fap"
+            exit 1
+          fi
+          if cmp -s "$off" "$mom"; then
+            echo "::error::official and momentum faps are identical"
             exit 1
           fi
 
@@ -195,19 +257,26 @@ jobs:
           VERSION: ${{ needs.check.outputs.version }}
         run: |
           set -euo pipefail
+          off="dist/sigroam-$VERSION.fap"
+          mom="dist/sigroam-$VERSION-momentum.fap"
+          off_sha=$(sha256sum "$off" | awk '{print $1}')
+          mom_sha=$(sha256sum "$mom" | awk '{print $1}')
+          off_n=$(wc -c < "$off" | tr -d ' ')
+          mom_n=$(wc -c < "$mom" | tr -d ' ')
           notes=$(mktemp)
           {
             echo "SigRoam $VERSION for the Flipper Zero."
             echo ""
-            echo "Receive-only Wi-Fi survey front-end driving an external ESP32 Marauder scanner."
+            echo "Pick the file that matches the firmware on your Flipper. Copy it to \`SD Card/apps/GPIO/\`."
             echo ""
-            echo "One file for both supported firmwares: \`sigroam-$VERSION.fap\` runs on"
-            echo "Official and Momentum alike -- there is nothing to pick."
+            echo "- **Momentum**, and Official 1.4.3: \`sigroam-$VERSION-momentum.fap\`"
+            echo "  SHA-256 \`$mom_sha\`, $mom_n bytes."
+            echo "- **Official, Unleashed, RogueMaster:** \`sigroam-$VERSION.fap\`"
+            echo "  SHA-256 \`$off_sha\`, $off_n bytes."
             echo ""
-            echo "Copy it to \`SD Card/apps/GPIO/\` on the Flipper."
+            echo "If the Flipper says the app does not match its firmware, use the other file."
             echo ""
-            echo "Unleashed is not covered: its firmware API major differs (88.x against the"
-            echo "87.x this build targets), so its loader flags the app as incompatible."
+            echo "Scout Lite board tools, start recovery, and the upload status line need [Scout Lite Firmware v1.0.0](https://github.com/pingequalab/ESP32Marauder/releases/tag/scout-lite-v1.0.0) or later. Other Marauder builds keep the generic pages."
             echo ""
             if [ -f CHANGELOG.md ]; then
               echo "See [CHANGELOG.md](CHANGELOG.md) for the full change list."
