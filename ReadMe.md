@@ -244,7 +244,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [NFC QR Presenter v1.1 (By RogerF5-Security)](https://github.com/RogerF5-Security/NFC_QR_Presenter)
 - Updated: [UID Brute Smarter v1.1 (By fbettag)](https://github.com/fbettag/uid_brute_smarter)
 - Updated: [MTP WIP v1.0 (By Alex4386)](https://github.com/Alex4386/f0-mtp)
-- Updated: [5Ghost Wifi Lab v2.8.1 (By pingequalab)](https://github.com/pingequalab/5ghost-wifi-lab) `Req: BW15` (Version Only)
 - Updated: [Ham Scanner v1.1 (By Clawzman)](https://github.com/Clawzman/Flipper-HAM-Scanner)
 - Updated: [Ghost ESP v1.8.3 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 - Updated: [PC Monitor USB v2.0 (By DonJulve & TheSainEyereg)](https://github.com/DonJulve/Flipper-Zero-PC-Monitor-USB) `Req: [Backend](https://github.com/DonJulve/Flipper-Zero-PC-Monitor-USB-Backend)`
@@ -278,6 +277,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - API: [Advance F7 to 88.22 for T5577 block/file APIs and the worker password setter, retaining existing RM exports and T5577 controls (By mishamyte; RM compatibility adaptation)](https://github.com/DarkFlippers/unleashed-firmware/commit/1672f7c54d146114d7ecdb57043661f9456dd292)
 - Fixes: [Reject unset password writes, enforce verification deadlines on empty/overrun buffers, preserve dump files when opening fails, and correct long decimal exponent cancellation. (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/4d0a0c89c7555ae0fc5436a4a72361f96571a308)
 - Updated: [SigRoam Wardriving v0.7 (By pingequalab)](https://github.com/pingequalab/sigroam-wardriving) `Req: ESP32`
+- Updated: [5Ghost Wifi Lab v2.8.1 (By pingequalab)](https://github.com/pingequalab/5ghost-wifi-lab) `Req: BW15` (Version Only)
 
 <a name="release"></a>
 
