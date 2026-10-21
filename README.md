@@ -128,7 +128,7 @@ This app is tested against the current `dev` and `release` branches of the [OFW]
 * Current OFW Version: 1.5.1
 <br>[![Compatibility status:](https://github.com/shalebridge/flipper-subghz-scheduler/actions/workflows/build.yml/badge.svg)](https://github.com/shalebridge/flipper-subghz-scheduler/actions/workflows/build.yml)
 
-It has also been tested against [Momentum 009](https://github.com/Next-Flip/Momentum-Firmware/releases/tag/mntm-009). Playlist scheduling (v3.1) was tested on Momentum (API 87.1).
+It has also been tested against [Momentum 009](https://github.com/Next-Flip/Momentum-Firmware/releases/tag/mntm-009). Playlist scheduling (v3.2) was tested on Momentum (API 87.1).
 
 > [!NOTE]
 > Currently not supported on Xtreme, as development of that firmware was officially [discontinued on Nov 18, 2024](https://github.com/Flipper-XFW/Xtreme-Firmware/commit/54619d013a120897eeade491decf4d1e95217c06). Since then, breaking changes were made to the Furi API. For those who still use Xtreme I am working on a separate port.
