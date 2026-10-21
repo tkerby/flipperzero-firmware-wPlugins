@@ -16,7 +16,7 @@ App(
     name="SigRoam Wardriving",
     apptype=FlipperAppType.EXTERNAL,
     entry_point="sigroam_app",
-    stack_size=2 * 1024,
+    stack_size=4 * 1024,
     fap_category="GPIO",
     # A 10x10 1-bit PNG (a hard Catalog requirement, see docs/spikes/SPIKE-00-catalog.md:185:
     #   "must be a 10x10, 1-bit PNG, black and white only. No transparency,
@@ -31,7 +31,7 @@ App(
     # NOTE: this is a channel entirely separate from fap_icon: fap_icon is the 10x10 application
     #    icon the Catalog requires, whereas this is in-app artwork with no size constraint.
     fap_icon_assets="assets",
-    fap_version="0.6.1",
+    fap_version="0.7",
     fap_description="Passive dual-band Wi-Fi and GNSS survey for Scout Lite",
     fap_author="PINGEQUA_Lab",
     sources=["*.c*", "!tools", "!backups", "!docs"],

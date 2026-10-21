@@ -200,11 +200,15 @@ GPS-fix changes; Stealth suppresses the LED. `New net tick` is sound only.
 
 ## Compatibility and limits
 
-- **Flipper firmware:** the v0.6.1 release provides `sigroam-0.6.1.fap`, an
+- **Flipper firmware:** the v0.7 release provides `sigroam-0.7.fap`, an
   Official-SDK API-87 build for Official and compatible Momentum firmware.
   Unleashed is API 88 and is not in this release. Check the
   [release files and notes](https://github.com/pingequalab/sigroam-wardriving/releases/latest)
   for your installed firmware; do not bypass an API-mismatch warning.
+- **Scout Lite with stock-protocol firmware:** Board tools, start recovery and
+  the upload status line need
+  [Scout Lite Firmware v1.0.0](https://github.com/pingequalab/ESP32Marauder/releases/tag/scout-lite-v1.0.0)
+  or later. Other Marauder builds keep the generic pages.
 - **Scanner hardware:** Scout Lite is the verified reference for the dedicated
   SigRoam scanner firmware. The FAP speaks the Marauder serial protocol and may
   work with other boards exposing it on Flipper pins 13/14, but those boards
