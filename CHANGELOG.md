@@ -1,3 +1,9 @@
+# v3.4 (2026-10-21)
+
+## Bug-fix
+- Improve countdown LED blink timing synchronization.
+- Update external device power detection to accept both USB-C power as well as OTG.
+
 # v3.3 (unreleased)
 
 ## New Features
