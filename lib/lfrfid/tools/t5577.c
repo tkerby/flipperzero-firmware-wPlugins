@@ -1073,7 +1073,12 @@ void t5577_write_with_mask(LFRFIDT5577* data, uint8_t page, bool with_pass, uint
 
 // Existing RM entry points remain available to the RFID Extra Actions and apps.
 void t5577_write_page_block_pass(
-    uint8_t page, uint8_t block, bool lock_bit, uint32_t data, bool with_pass, uint32_t password) {
+    uint8_t page,
+    uint8_t block,
+    bool lock_bit,
+    uint32_t data,
+    bool with_pass,
+    uint32_t password) {
     // The legacy raw entry point expects the caller to own the carrier through
     // the HAL. Adopt that ownership for the frame checks without restarting it.
     const bool legacy_field = (t5577_field_depth == 0);
@@ -1083,13 +1088,21 @@ void t5577_write_page_block_pass(
 }
 
 void t5577_write_page_block_pass_with_start_and_stop(
-    uint8_t page, uint8_t block, bool lock_bit, uint32_t data, bool with_pass, uint32_t password) {
+    uint8_t page,
+    uint8_t block,
+    bool lock_bit,
+    uint32_t data,
+    bool with_pass,
+    uint32_t password) {
     t5577_field_start();
     t5577_write_page_block_pass(page, block, lock_bit, data, with_pass, password);
     t5577_field_stop();
 }
 
 void t5577_write_page_block_simple_with_start_and_stop(
-    uint8_t page, uint8_t block, bool lock_bit, uint32_t data) {
+    uint8_t page,
+    uint8_t block,
+    bool lock_bit,
+    uint32_t data) {
     t5577_write_page_block_pass_with_start_and_stop(page, block, lock_bit, data, false, 0);
 }

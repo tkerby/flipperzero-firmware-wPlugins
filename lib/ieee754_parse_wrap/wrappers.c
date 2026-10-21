@@ -82,7 +82,8 @@ static double strtod_parse(const char* in, char** tail) {
         p += 3;
         if(*p == '(') {
             const char* payload = p + 1;
-            while(isalnum((unsigned char)*payload) || *payload == '_') payload++;
+            while(isalnum((unsigned char)*payload) || *payload == '_')
+                payload++;
             if(*payload == ')') p = payload + 1;
         }
     } else if(strtod_word(p, "inf")) {
@@ -184,8 +185,7 @@ float __wrap_strtof(const char* in, char** tail) {
     narrow &= 0x7FFFFFFFu;
     // The decimal can fit a double and still overflow/underflow its float result.
     // Do not mistake an explicitly supplied inf/nan for a range error.
-    if(wide && wide < 0x7FF0000000000000ULL &&
-       (narrow < 0x00800000u || narrow == 0x7F800000u)) {
+    if(wide && wide < 0x7FF0000000000000ULL && (narrow < 0x00800000u || narrow == 0x7F800000u)) {
         errno = ERANGE;
     }
     return result;
