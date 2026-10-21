@@ -8,8 +8,13 @@ typedef enum MenuIndices {
     MenuIndexTxDelay,
     MenuIndexTxRadio,
     MenuIndexSelectFile,
+    MenuIndexStepMode,
+    MenuIndexScheduleType,
+    MenuIndexStartLine,
+    MenuIndexEditLines,
     MenuIndexSaveSchedule,
-    MenuIndexStartSchedule
+    MenuIndexStartSchedule,
+    MenuIndexNum,
 } MenuIndices;
 
 typedef enum FileTxType {
@@ -40,6 +45,43 @@ typedef enum SchedulerTimingMode {
 } SchedulerTimingMode;
 #define TIMING_MODE_COUNT SchedulerTimingModeNum
 static const char* const timing_mode_text[TIMING_MODE_COUNT] = {"Relative", "Precise"};
+
+// Playlist step mode: send the whole playlist per trigger, or one line per trigger
+typedef enum SchedulerStepMode {
+    SchedulerStepModeAll,
+    SchedulerStepModeOne,
+    SchedulerStepModeNum
+} SchedulerStepMode;
+#define STEP_MODE_COUNT SchedulerStepModeNum
+static const char* const step_mode_text[STEP_MODE_COUNT] = {"All", "One"};
+
+// Schedule type, only used when stepping through a playlist one line at a time
+typedef enum SchedulerScheduleType {
+    SchedulerScheduleUniform,
+    SchedulerSchedulePerLine,
+    SchedulerScheduleTimeOfDay,
+    SchedulerScheduleNum
+} SchedulerScheduleType;
+#define SCHEDULE_TYPE_COUNT SchedulerScheduleNum
+static const char* const schedule_type_text[SCHEDULE_TYPE_COUNT] = {"Uniform", "Per Line", "Time"};
+
+// First line of a Time schedule: always line 1, or the line whose time comes up first
+typedef enum SchedulerStartLine {
+    SchedulerStartLineFirst,
+    SchedulerStartLineNearest,
+    SchedulerStartLineNum
+} SchedulerStartLine;
+#define START_LINE_COUNT SchedulerStartLineNum
+static const char* const start_line_text[START_LINE_COUNT] = {"Line 1", "Nearest"};
+
+// Playlist line count is stored as int8_t
+#define SCHEDULER_MAX_LINES 127
+
+#define SECONDS_PER_DAY      86400UL
+#define DEFAULT_LINE_SECONDS (12UL * 60 * 60)
+
+// Only blink the idle LED when the next send is this close
+#define IDLE_BLINK_WINDOW_S 60
 
 #define TX_DELAY_STEP_MS 50
 #define TX_DELAY_MAX_MS  1000

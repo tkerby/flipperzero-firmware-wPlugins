@@ -4,6 +4,7 @@
 #include "helpers/scheduler_hms.h"
 
 #include <gui/elements.h>
+#include <stdio.h>
 
 #define TAG "SubGHzSchedulerRunView"
 
@@ -184,16 +185,11 @@ void scheduler_run_view_set_static_fields(SchedulerRunView* run_view, Scheduler*
     furi_assert(run_view);
     furi_assert(scheduler);
 
-    char hms[9];
-    const uint32_t interval_sec = scheduler_get_interval_seconds(scheduler);
-    scheduler_seconds_to_hms_string(interval_sec, hms, sizeof(hms));
-
     with_view_model(
         run_view->view,
         SchedulerRunViewModel * model,
         {
             furi_string_set(model->tx_mode, tx_mode_text[scheduler_get_tx_mode(scheduler)]);
-            furi_string_set(model->interval, hms);
             furi_string_set(model->tx_count, tx_count_text[scheduler_get_tx_count(scheduler)]);
             furi_string_set(model->file_type, file_type_text[scheduler_get_file_type(scheduler)]);
             furi_string_set(model->file_name, scheduler_get_file_name(scheduler));
@@ -203,18 +199,61 @@ void scheduler_run_view_set_static_fields(SchedulerRunView* run_view, Scheduler*
         true);
 }
 
-void scheduler_run_view_update_countdown(SchedulerRunView* run_view, Scheduler* scheduler) {
+void scheduler_run_view_update(
+    SchedulerRunView* run_view,
+    Scheduler* scheduler,
+    bool transmitting) {
     furi_assert(run_view);
     furi_assert(scheduler);
 
-    char countdown[9];
-    const uint32_t seconds = scheduler_get_countdown_seconds(scheduler);
-    scheduler_seconds_to_hms_string(seconds, countdown, sizeof(countdown));
+    const uint8_t line = scheduler_get_current_line(scheduler);
+
+    // Schedule of the line that fires next
+    char interval[16];
+    switch(scheduler_get_effective_schedule(scheduler)) {
+    case SchedulerSchedulePerLine:
+        scheduler_seconds_to_hms_string(
+            scheduler_get_line_interval(scheduler, line), interval, sizeof(interval));
+        break;
+    case SchedulerScheduleTimeOfDay:
+        scheduler_seconds_to_hms_string(
+            scheduler_get_line_time(scheduler, line), interval, sizeof(interval));
+        break;
+    case SchedulerScheduleUniform:
+    default:
+        scheduler_seconds_to_hms_string(
+            scheduler_get_interval_seconds(scheduler), interval, sizeof(interval));
+        break;
+    }
+
+    char header[32];
+    if(scheduler_is_stepping(scheduler)) {
+        snprintf(
+            header,
+            sizeof(header),
+            "Next Line %u/%u",
+            (unsigned)(line + 1),
+            (unsigned)scheduler_get_list_count(scheduler));
+    } else {
+        snprintf(header, sizeof(header), "Schedule Running");
+    }
+
+    char countdown[12];
+    if(transmitting) {
+        snprintf(countdown, sizeof(countdown), "Sending");
+    } else {
+        scheduler_seconds_to_hms_string(
+            scheduler_get_countdown_seconds(scheduler), countdown, sizeof(countdown));
+    }
 
     with_view_model(
         run_view->view,
         SchedulerRunViewModel * model,
-        { furi_string_set(model->tx_countdown, countdown); },
+        {
+            furi_string_set(model->header, header);
+            furi_string_set(model->interval, interval);
+            furi_string_set(model->tx_countdown, countdown);
+        },
         true);
 }
 

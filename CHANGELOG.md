@@ -1,4 +1,38 @@
-# v3.1 (2026-07-7)
+# v3.3 (unreleased)
+
+## New Features
+- Time schedule now uses HH:MM:SS instead of HH:MM.
+- 'Start' setting for the Time schedule: start with line 1, or with the line whose time comes up first (`Nearest`).
+- One-Shot with the Time schedule also sends following lines that share the same time.
+- Time editor: Up/Down change the selected block right away and Left/Right switch blocks, no OK needed first. OK saves and closes, Back closes without saving.
+- Schedule files are now version 3 (line times in seconds). Version 1 and 2 files still load.
+- Red idle LED only blinks during the last minute before a send, instead of every second while waiting.
+## Bug-fix
+- Playlist lines with the same time now fire one after the other, instead of the second one waiting a day.
+- Line times that pass during a long transmission fire right after it, instead of the next day.
+
+# v3.2 (unreleased)
+
+## New Features
+- Playlist 'Step' setting: send the whole playlist per trigger (`All`) or one line per trigger (`One`), wrapping around.
+- 'Schedule' setting when stepping one line at a time:
+  - `Uniform` -- one interval for every line.
+  - `Per Line` -- each line has its own wait before it is sent. A wait of 00:00:00 chains a line to the one before it.
+  - `Time` -- each line is sent at a time of day (HH:MM), in playlist order, repeating daily.
+- 'Edit Lines...' menu to set the wait or time for each playlist line.
+- One-Shot with a stepped playlist sends a single line (plus any chained zero-wait lines).
+- Run view shows the next line and its wait or time, and 'Sending' while transmitting.
+- Schedule files are now version 2 and store step mode, schedule type and per-line settings. Version 1 files still load.
+## Bug-fix
+- Scheduling uses the RTC instead of counting GUI ticks, so long intervals no longer drift.
+- Back on the run screen aborts a transmission in progress instead of waiting for the playlist to finish.
+- TX thread is no longer freed from its own state callback, and scenes are only switched from the GUI thread.
+- Charging is only suppressed while transmitting, not for the whole time the schedule runs.
+- Radio is put back to sleep when a file fails to load.
+- Empty playlists and playlists over 127 lines are rejected when selected.
+- Cancelling file selection keeps the previously selected file.
+
+# v3.1 (unreleased)
 
 ## Bug-fix
 - Fix external module detection and usage [PR #10], by @Lechnio

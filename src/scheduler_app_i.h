@@ -23,7 +23,7 @@
 #include <subghz_scheduler_icons.h>
 
 #define SCHEDULER_APP_NAME    "Sub-GHz Scheduler"
-#define SCHEDULER_APP_VERSION "3.1"
+#define SCHEDULER_APP_VERSION "3.3"
 #define SCHEDULER_APP_AUTHOR  "Patrick Edwards"
 #define SCHEDULER_APP_HANDLE  "@shalebridge"
 
@@ -58,6 +58,11 @@ struct SchedulerApp {
     char popup_msg[80];
     char save_name_tmp[SCHEDULER_MAX_LEN_NAME];
     volatile bool is_transmitting;
+    volatile bool tx_abort;
+    int16_t tx_line; // playlist line being sent, -1 for all
+    int16_t edit_line; // playlist line being edited, -1 for the global interval
+    uint8_t start_menu_ids[MenuIndexNum]; // start list position -> MenuIndices
+    uint8_t start_menu_count;
     bool should_reset;
     bool ext_radio_present;
 };
