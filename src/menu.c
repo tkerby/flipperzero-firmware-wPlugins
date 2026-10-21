@@ -81,11 +81,6 @@ static const CaptureFileDef wardrive_ble_def = {
     .ext = "csv",
     .folder = GHOST_ESP_APP_FOLDER_WARDRIVE,
 };
-static const CaptureFileDef wardrive_dual_def = {
-    .prefix = "wardrive_dual",
-    .ext = "csv",
-    .folder = GHOST_ESP_APP_FOLDER_WARDRIVE,
-};
 
 // Shared confirmation dialog definitions
 static const ConfirmDef confirm_forget_wifi = {
@@ -1885,15 +1880,6 @@ static const MenuCommand gps_wardrive_commands[] = {
         .details_text = "Map BLE + GPS to CSV.\n",
     },
     {
-        .label = "Dual Wardriving (WiFi+BLE)",
-        .command = "dualwd\n",
-        .capture = &wardrive_dual_def,
-        .details_header = "Dual Wardriving",
-        .details_text = "Map WiFi + BLE + GPS to\n"
-                        "CSV.\n"
-                        "Requires PSRAM.\n",
-    },
-    {
         .label = "Stop All GPS",
         .command = "stop\n",
         .details_header = "Stop GPS Operations",
@@ -1906,12 +1892,6 @@ static const MenuCommand gps_wardrive_commands[] = {
         .details_header = "Stop BLE Wardrive",
         .details_text = "Stops BLE wardriving capture\n"
                         "and logging.",
-    },
-    {
-        .label = "Stop Dual Wardriving",
-        .command = "dualwd -s\n",
-        .details_header = "Stop Dual Wardrive",
-        .details_text = "Stops dual WiFi+BLE\nwardriving.\n",
     },
     {
         .label = "WiGLE List CSV Files",
