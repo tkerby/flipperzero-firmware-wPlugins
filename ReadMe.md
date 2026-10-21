@@ -273,6 +273,10 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Bambu RFID v0.3 (By DanTheMan827)](https://github.com/DanTheMan827/bambu-rfid-flipper)
 - RFID: [Share the duplicated write_data bodies (-992 B of flash) (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/pull/1183)
 - Updated: [Sub-GHz Scheduler v3.4 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
+- Core: [Replace newlib decimal conversion with a smaller parser and preserve uppercase 0X literals in mJS; RM retains nan/inf GPS compatibility and float range reporting (By mishamyte; RM compatibility adaptation)](https://github.com/DarkFlippers/unleashed-firmware/commit/5082af55ba0c8908de85e8872d655543c95075e8)
+- Added: [T5577 v1.0 — block dumps, saved .t5577 files, block/configuration editing, verified restore, data-block testing, wipe and password clear (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/commit/1672f7c54d146114d7ecdb57043661f9456dd292)
+- RFID: [Verify the key and password block before enabling T5577 protection, report distinct outcomes, and bound verification reads (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/commit/1672f7c54d146114d7ecdb57043661f9456dd292)
+- API: [Advance F7 to 88.22 for T5577 block/file APIs and the worker password setter, retaining existing RM exports and T5577 controls (By mishamyte; RM compatibility adaptation)](https://github.com/DarkFlippers/unleashed-firmware/commit/1672f7c54d146114d7ecdb57043661f9456dd292)
 
 <a name="release"></a>
 
@@ -1144,8 +1148,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Survival Manual v1.0 (By Radiomanrf)](https://github.com/Radiomanrf/Survival_manual)
 - [SWD Probe v1.4 (By g3gg0)](https://github.com/g3gg0/flipper-swd_probe)
 - [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
+- [T5577 v1.0 (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/commit/1672f7c54d146114d7ecdb57043661f9456dd292) (.t5577 ext incompatible to T5577 Raw Writer)
 - [T5577 Multiwriter v0.2 (By Leptopt1los)](https://github.com/Leptopt1los/t5577_multiwriter)
-- [T5577 Raw Writer v1.1 (By zinongli)](https://github.com/zinongli/T5577_Raw_Writer)
+- [T5577 Raw Writer v1.1 (By zinongli)](https://github.com/zinongli/T5577_Raw_Writer) (.t5577 ext incompatible to T5577)
 - [TagTinker v2.1 (By i12bp8)](https://github.com/i12bp8/TagTinker)
 - [Taiko Player v0.5 (By ZeroNinx)](https://github.com/ZeroNinx/flipper-zero-taiko-player)
 - [TamaConnect v1.0 (By s2013p)](https://github.com/s2013p/TamaConnect)

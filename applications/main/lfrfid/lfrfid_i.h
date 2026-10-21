@@ -81,6 +81,12 @@ enum LfRfidCustomEvent {
     LfRfidEventRpcLoadFile,
     LfRfidEventRpcSessionClose,
     LfRfidEventEmulationTimeExpired,
+    LfRfidEventWriteCannotRead,
+    LfRfidEventWriteAlreadyProtected,
+    LfRfidEventWriteKeyNotStored,
+    LfRfidEventWritePasswordNotStored,
+    LfRfidEventWriteProtectionRefused,
+    LfRfidEventWriteProtectionUnchecked,
 };
 
 typedef enum {
