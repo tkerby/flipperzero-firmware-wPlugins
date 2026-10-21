@@ -1,6 +1,7 @@
 #pragma once
 
 #include <gui/view.h>
+#include <stdbool.h>
 
 typedef struct Scheduler Scheduler;
 typedef struct SchedulerRunView SchedulerRunView;
@@ -13,4 +14,8 @@ uint8_t scheduler_run_view_get_tick_counter(SchedulerRunView* run_view);
 void scheduler_run_view_inc_tick_counter(SchedulerRunView* run_view);
 
 void scheduler_run_view_set_static_fields(SchedulerRunView* run_view, Scheduler* scheduler);
-void scheduler_run_view_update_countdown(SchedulerRunView* run_view, Scheduler* scheduler);
+void scheduler_run_view_update(
+    SchedulerRunView* run_view,
+    Scheduler* scheduler,
+    bool transmitting,
+    uint32_t countdown_seconds);

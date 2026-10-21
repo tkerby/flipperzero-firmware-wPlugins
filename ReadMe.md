@@ -221,7 +221,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: NFC: [Fix FeliCa command handling #4465 (By kormax)](https://github.com/flipperdevices/flipperzero-firmware/pull/4465)
 - Added: [Kindle Click v0.3 (By zuyan9)](https://github.com/zuyan9/Flipper-Zero-Kindle-Click)
 - Updated: [ProtoPirate v4.1 (By RocketGod-git)](https://protopirate.net/ProtoPirate/ProtoPirate)
-- Updated: [Sub-GHz Scheduler v3.1 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler) (Version Only)
 - SubGHz: [Add Nice O-Code One 433MHz manual and advanced generation with 72-bit frames; preserve captured frame length when saving recovered remotes (By xMasterX; RM adaptation by RogueMaster)](https://github.com/DarkFlippers/unleashed-firmware/commit/7e26e042b48a1e6173ba95c265733d2b145b46ca)
 - Nice O-Code: [Distinguish O-Code from ordinary FloR-S/Nice One, recognize long 112-bit captures, and build saved files through the protocol encoder (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/f67bb1fff48e68bfd14a5f8556a10f03dc220523)
 - SubGHz: [Show O-Code frames with an unknown installer code as raw keys and hide their Save/Send actions (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/f67bb1fff48e68bfd14a5f8556a10f03dc220523)
@@ -273,6 +272,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Subscriber Counter v1.0 (By TheProductAgency)](https://github.com/TheProductAgency/flipper-subscriber-counter)
 - Updated: [Bambu RFID v0.3 (By DanTheMan827)](https://github.com/DanTheMan827/bambu-rfid-flipper)
 - RFID: [Share the duplicated write_data bodies (-992 B of flash) (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/pull/1183)
+- Updated: [Sub-GHz Scheduler v3.4 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
 
 <a name="release"></a>
 
@@ -1135,7 +1135,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Sub-GHz RAW Edit v1.7 (By Lechnio)](https://github.com/Lechnio/SubGHz-RAW-Edit)
 - [Sub-GHz Remote v1.8 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote)
 - [Sub-GHz Rolling Flaws v1.5 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials)
-- [Sub-GHz Scheduler v3.1 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
+- [Sub-GHz Scheduler v3.4 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
 - [Sub-GHz Spectrum v1.0 (By barkandbite)](https://github.com/barkandbite/flipper_suite)
 - [Sub-GHz Toolkit 1808 v1.0 (By RocketGod-git)](https://github.com/RocketGod-git/RocketGods-SubGHz-Toolkit)
 - [Sub-GHz WarDriving v0.1 (By xMasterX)](https://github.com/xMasterX/all-the-plugins/tree/213baa6e872d1db597a25d2c16e81406e9634440/base_pack/subghz_wardriving)
