@@ -1,4 +1,4 @@
-# v3.2 (unreleased)
+# v3.3 (unreleased)
 
 ## New Features
 - Time schedule now uses HH:MM:SS instead of HH:MM.
@@ -11,7 +11,7 @@
 - Playlist lines with the same time now fire one after the other, instead of the second one waiting a day.
 - Line times that pass during a long transmission fire right after it, instead of the next day.
 
-# v3.1 (unreleased)
+# v3.2 (unreleased)
 
 ## New Features
 - Playlist 'Step' setting: send the whole playlist per trigger (`All`) or one line per trigger (`One`), wrapping around.
@@ -31,6 +31,11 @@
 - Radio is put back to sleep when a file fails to load.
 - Empty playlists and playlists over 127 lines are rejected when selected.
 - Cancelling file selection keeps the previously selected file.
+
+# v3.1 (unreleased)
+
+## Bug-fix
+- Fix external module detection and usage [PR #10], by @Lechnio
 
 # v3.0 (2026-02-12)
 
