@@ -2,24 +2,21 @@
 
 ## v1.9.0
 
-- Reordered menus to put common actions first, including GPS > Wardriving and WiFi/BLE/dual wardriving ahead of WiGLE settings
-- Fixed reboots from out-of-memory errors when opening submenus on memory-constrained units
-- All menu views now share a single Submenu instance, cutting roughly 12 KB of heap use at launch and freeing a menu's items when you leave it instead of keeping every visited menu in memory
-- Reduced FAP size by ~8 KB: slimmer internal menu command table (shared capture-file and confirmation definitions) and trimmed hold-OK help text (still lists prerequisites, examples and ranges)
+- Reordered some menus to put common actions first
+- All menu views now share a single Submenu instance
+- Reduced FAP size by ~8 KB
 - Added Handshake + Deauth, Channel Switch, Probe Flood, Bad Msg, Auth Flood, and GTK Abuse attacks to WiFi Attacks menu
-- Renamed Stop Deauth/SAE/EAPOL to Stop All Attacks and documented that it stops every WiFi attack
-- Added List Saved PCAPs, Export PCAP to hc22000, and Sniff 802.15.4 (C5/C6) to WiFi Packet Capture menu
-- Added WiFi Recon Tools menu: Enum Scan (local/target), Name Sniff (mDNS/LLMNR/SSDP/NetBIOS), and channel hop plan controls
-- Added DNS Sinkhole submenu to WiFi Network menu: start/stop/status/stats, blocklist sources and download, query log toggle, add/remove domain, reload
+- Renamed Stop Deauth/SAE/EAPOL to Stop All Attacks
+- Added List Saved PCAPs, Export PCAP to hc22000, and Sniff 802.15.4 to WiFi Packet Capture menu
+- Added WiFi Recon Tools menu: Enum Scan, Name Sniff, and channel hop plan controls
+- Added DNS Sinkhole submenu to WiFi Network menu
 - Added BLE Spam Detector to Flipper & Skimmer menu and OUI/vendor advertiser scans to Advertisers & Traffic menu
-- Added Trackers & Beacons submenu to BLE Scanning menu: tracker detect scan, list, follow RSSI, AirTag spoof, clear results
-- Added Set Spam Name to BLE Attacks menu for a custom BLE spam advertised name
-- Added Dual Wardriving (WiFi+BLE) and WiGLE management commands (settings, account stats, CSV list, upload all, set API token, upload file) to GPS Wardriving menu
+- Added Trackers & Beacons submenu to BLE Scanning menu
+- Added Set Spam Name to BLE Attacks menu for a custom AirPods name
 - Added Govee Scan, Govee Control, and Wake-on-LAN to WiFi Network > IoT Control menu
 - Added Forget Saved WiFi and Auto-Reconnect to WiFi Network > WiFi Connection menu
-- Added Privacy Mode, Clock Style, Status Bar Clock, and Set Log Level to WiFi Settings > Misc menu
 - Added GhostScript list/run/status/stop commands to WiFi Settings > Device & Debug menu
-- Added 3 new submenu views (Recon Tools, DNS Sinkhole, Trackers & Beacons) with last-selection memory
+- Added 3 new submenu views (Recon Tools, DNS Sinkhole, Trackers & Beacons)
 
 ## v1.8.3
 
