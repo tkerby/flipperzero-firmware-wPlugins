@@ -152,10 +152,5 @@ Build outputs are found in the `dist` directory for each application.
 # To-Do
 - [ ] Enable running in the background.
 - [x] Enable interval delays for playlists. For example, turning on a light (playlist index 1), then 4 hours later turning it off (playlist index 2). See Step `One` with Schedule `Per Line`.
-- [ ] Separate into multiple modes:  
-  - `Periodic`: Current functionality.
-  - [x] `Alarm`: To set specific time for transmission. See Schedule `Time`.
-  - `Custom`: Periodic with custom breaks and tx count between transmissions.
 - [ ] More visual feedback of current transmission (like `SubGHz Playlist`).
-- [x] Enable quitting from transmission. Back on the run screen stops a transmission in progress.
 - [ ] Options to select notifications on transmit (vibro, backlight, etc).
