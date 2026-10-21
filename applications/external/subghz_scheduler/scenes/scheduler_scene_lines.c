@@ -16,8 +16,8 @@ void scheduler_scene_lines_on_enter(void* context) {
     furi_assert(context);
     SchedulerApp* app = context;
 
-    const bool time_of_day =
-        scheduler_get_schedule_type(app->scheduler) == SchedulerScheduleTimeOfDay;
+    const bool time_of_day = scheduler_get_schedule_type(app->scheduler) ==
+                             SchedulerScheduleTimeOfDay;
     const uint8_t count = scheduler_get_list_count(app->scheduler);
 
     submenu_reset(app->menu);
@@ -47,10 +47,7 @@ void scheduler_scene_lines_on_enter(void* context) {
         }
 
         furi_string_printf(
-            label,
-            "%s %s",
-            value,
-            have_file ? path_basename(furi_string_get_cstr(sub_path)) : "?");
+            label, "%s %s", value, have_file ? path_basename(furi_string_get_cstr(sub_path)) : "?");
         submenu_add_item(
             app->menu, furi_string_get_cstr(label), i, scheduler_scene_lines_callback, app);
     }

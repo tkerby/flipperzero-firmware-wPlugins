@@ -400,7 +400,7 @@ uint32_t scheduler_get_line_time(Scheduler* scheduler, uint8_t line) {
 void scheduler_set_start_line(Scheduler* scheduler, SchedulerStartLine start_line) {
     furi_assert(scheduler);
     scheduler->start_line = (start_line < SchedulerStartLineNum) ? start_line :
-                                                                  SchedulerStartLineFirst;
+                                                                   SchedulerStartLineFirst;
 }
 
 SchedulerStartLine scheduler_get_start_line(Scheduler* scheduler) {

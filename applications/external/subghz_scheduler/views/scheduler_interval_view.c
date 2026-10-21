@@ -58,8 +58,7 @@ static void interval_view_draw(Canvas* canvas, void* context) {
     canvas_set_color(canvas, ColorBlack);
 
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str_aligned(
-        canvas, GUI_DISPLAY_WIDTH / 2, 4, AlignCenter, AlignTop, model->title);
+    canvas_draw_str_aligned(canvas, GUI_DISPLAY_WIDTH / 2, 4, AlignCenter, AlignTop, model->title);
 
     // Hours
     snprintf(buffer, sizeof(buffer), "%02u", model->time.h);
