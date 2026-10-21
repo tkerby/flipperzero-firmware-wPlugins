@@ -115,8 +115,10 @@ void lfrfid_worker_set_write_targets(LFRFIDWorker* worker, LFRFIDWriteTargetMask
 /** Set the password a write-and-set-password run will store
  *
  * Applies to lfrfid_worker_write_and_set_pass_start() only. This is the word to store in block
- * 7, not a password to address frames with - that mode sends none - so a worker left at zero
- * would protect a tag with zero rather than leave it open.
+ * 7, not a password to address frames with - that mode sends none. This setter must be called
+ * before the first password-write run. Without it the run is rejected with
+ * LFRFIDWorkerWriteProtocolCannotBeWritten before any RF work is scheduled. An explicitly
+ * supplied zero password is valid.
  *
  * @param      worker    The worker
  * @param      password  The password to write into block 7

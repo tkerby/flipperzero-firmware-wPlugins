@@ -116,9 +116,11 @@ bool t5577_file_save(const T5577Dump* dump, const char* path) {
     FuriString* key = furi_string_alloc();
     FuriString* text = furi_string_alloc();
     bool saved = false;
+    bool opened = false;
 
     do {
-        if(!flipper_format_buffered_file_open_always(file, path)) break;
+        opened = flipper_format_buffered_file_open_always(file, path);
+        if(!opened) break;
         if(!flipper_format_write_header_cstr(file, T5577_FILE_TYPE, T5577_FILE_VERSION)) break;
 
         t5577_file_describe(dump, text);
@@ -142,8 +144,10 @@ bool t5577_file_save(const T5577Dump* dump, const char* path) {
     // Opening truncated the file, so what is on the card now is a header and whatever got
     // written before the card gave up. That loads as a dump, so it cannot be left there.
     if(!saved) {
-        FURI_LOG_E(TAG, "Failed to save %s, removing what was written", path);
-        storage_simply_remove(storage, path);
+        FURI_LOG_E(TAG, "Failed to save %s", path);
+        // A failed open did not give us ownership of this path. In particular,
+        // do not delete a pre-existing dump just because it could not be opened.
+        if(opened) storage_simply_remove(storage, path);
     }
 
     furi_string_free(text);

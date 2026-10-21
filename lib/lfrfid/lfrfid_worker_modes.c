@@ -190,6 +190,15 @@ static LFRFIDWorkerReadState lfrfid_worker_read_internal(
             break;
         }
 
+        // Check before receiving: empty buffers and overruns continue this loop
+        // without reaching the decoder's timeout checks below. Zero leaves the
+        // interactive read screens without a fixed deadline.
+        if(deadline > 0 && (furi_get_tick() - read_started) > deadline) {
+            FURI_LOG_W(TAG, "Read deadline, %lu ms", deadline);
+            state = LFRFIDWorkerReadTimeout;
+            break;
+        }
+
         Buffer* buffer = buffer_stream_receive(ctx.stream, 100);
 
 #ifdef LFRFID_WORKER_READ_DEBUG_GPIO
@@ -331,13 +340,6 @@ static LFRFIDWorkerReadState lfrfid_worker_read_internal(
         }
 
         if((furi_get_tick() - switch_os_tick_last) > timeout) {
-            state = LFRFIDWorkerReadTimeout;
-            break;
-        }
-
-        // Zero for the read screens, which are meant to go on until the user leaves.
-        if(deadline > 0 && (furi_get_tick() - read_started) > deadline) {
-            FURI_LOG_W(TAG, "Read deadline, %lu ms", deadline);
             state = LFRFIDWorkerReadTimeout;
             break;
         }

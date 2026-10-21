@@ -11,8 +11,8 @@
 // hex-float literals, inf/nan spellings and correct rounding of long mantissas -
 // ~8 KiB of flash. Everything that reaches here is a plain decimal literal: file
 // fields (flipper_format), CLI arguments (toolbox/args), and JS/JSON numbers
-// (mjs, which routes 0x/0X to strtoul first). Also exported to apps, so the
-// Decimal results are within 4 ulp rather than correctly rounded. RM also
+// (mjs, which routes 0x/0X to strtoul first). These wrappers are also exported
+// to apps. Decimal results are approximate rather than correctly rounded. RM also
 // preserves nan/inf spellings: saved Sub-GHz GPS fields can contain nan.
 // Narrowing a double can differ from correctly rounded strtof by 1 float ulp.
 
@@ -145,10 +145,14 @@ static double strtod_parse(const char* in, char** tail) {
 
         const char* exp_digits = p;
         int32_t exp = 0;
+        // The explicit exponent can cancel a long mantissa's decimal shift.
+        // Clamp only beyond that shift plus the scale table's range, otherwise
+        // e.g. 1 followed by 6000 zeros and e-6000 becomes infinity instead of 1.
+        const int32_t exp_limit = STRTOD_EXP_MAX + (exp10 < 0 ? -exp10 : exp10);
         for(; *p >= '0' && *p <= '9'; p++) {
             // Stop accumulating once it is certainly past the clamp, but keep
             // consuming digits so the tail lands after all of them
-            if(exp <= STRTOD_EXP_MAX) exp = exp * 10 + (*p - '0');
+            if(exp <= exp_limit) exp = exp * 10 + (*p - '0');
         }
 
         if(p == exp_digits) {

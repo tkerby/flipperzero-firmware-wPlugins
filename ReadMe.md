@@ -277,6 +277,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [T5577 v1.0 — block dumps, saved .t5577 files, block/configuration editing, verified restore, data-block testing, wipe and password clear (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/commit/1672f7c54d146114d7ecdb57043661f9456dd292)
 - RFID: [Verify the key and password block before enabling T5577 protection, report distinct outcomes, and bound verification reads (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/commit/1672f7c54d146114d7ecdb57043661f9456dd292)
 - API: [Advance F7 to 88.22 for T5577 block/file APIs and the worker password setter, retaining existing RM exports and T5577 controls (By mishamyte; RM compatibility adaptation)](https://github.com/DarkFlippers/unleashed-firmware/commit/1672f7c54d146114d7ecdb57043661f9456dd292)
+- Fixes: [Reject unset password writes, enforce verification deadlines on empty/overrun buffers, preserve dump files when opening fails, and correct long decimal exponent cancellation. (By RogueMaster)]
 
 <a name="release"></a>
 
