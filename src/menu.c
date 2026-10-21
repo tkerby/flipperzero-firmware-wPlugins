@@ -29,19 +29,104 @@ struct View {
 };
 
 typedef struct {
+    const char* prefix; // Prefix for capture files
+    const char* ext; // File extension for captures
+    const char* folder; // Folder for captures
+} CaptureFileDef;
+
+typedef struct {
+    const char* header; // Confirmation dialog header
+    const char* text; // Confirmation dialog text
+} ConfirmDef;
+
+typedef struct {
     const char* label; // Display label in menu
     const char* command; // UART command to send
-    const char* capture_prefix; // Prefix for capture files (NULL if none)
-    const char* file_ext; // File extension for captures (NULL if none)
-    const char* folder; // Folder for captures (NULL if none)
+    const CaptureFileDef* capture; // Capture file info (NULL if none)
     bool needs_input; // Whether command requires text input
     const char* input_text; // Text to show in input box (NULL if none)
-    bool needs_confirmation; // Whether command needs confirmation
-    const char* confirm_header; // Confirmation dialog header
-    const char* confirm_text; // Confirmation dialog text
+    const ConfirmDef* confirm; // Confirmation dialog (NULL if none)
     const char* details_header; // Header for details view
     const char* details_text; // Detailed description/info text
 } MenuCommand;
+
+// Shared capture file definitions
+static const CaptureFileDef capture_wps_def = {
+    .prefix = "wps_capture",
+    .ext = "pcap",
+    .folder = GHOST_ESP_APP_FOLDER_PCAPS,
+};
+static const CaptureFileDef capture_zigbee_def = {
+    .prefix = "zigbee_capture",
+    .ext = "pcap",
+    .folder = GHOST_ESP_APP_FOLDER_PCAPS,
+};
+static const CaptureFileDef capture_skimmer_def = {
+    .prefix = "skimmer_scan",
+    .ext = "pcap",
+    .folder = GHOST_ESP_APP_FOLDER_PCAPS,
+};
+static const CaptureFileDef capture_ble_def = {
+    .prefix = "ble_raw_capture",
+    .ext = "pcap",
+    .folder = GHOST_ESP_APP_FOLDER_PCAPS,
+};
+static const CaptureFileDef wardrive_wifi_def = {
+    .prefix = "wardrive_wifi",
+    .ext = "csv",
+    .folder = GHOST_ESP_APP_FOLDER_WARDRIVE,
+};
+static const CaptureFileDef wardrive_ble_def = {
+    .prefix = "wardrive_ble",
+    .ext = "csv",
+    .folder = GHOST_ESP_APP_FOLDER_WARDRIVE,
+};
+static const CaptureFileDef wardrive_dual_def = {
+    .prefix = "wardrive_dual",
+    .ext = "csv",
+    .folder = GHOST_ESP_APP_FOLDER_WARDRIVE,
+};
+
+// Shared confirmation dialog definitions
+static const ConfirmDef confirm_forget_wifi = {
+    .header = "Forget Saved WiFi",
+    .text = "Disconnect and forget the\nsaved WiFi network on the\nESP?",
+};
+static const ConfirmDef confirm_scanlocal = {
+    .header = "Local Network Scan",
+    .text = "Make sure you've connected\nto WiFi first via "
+            "the\n'Connect to WiFi' option.\n",
+};
+static const ConfirmDef confirm_cast_video = {
+    .header = "Cast Video",
+    .text = "Make sure you've connected\nto WiFi first via "
+            "the\n'Connect to WiFi' option.\n",
+};
+static const ConfirmDef confirm_printer_power = {
+    .header = "Printer Power",
+    .text = "You need to configure\n settings in the WebUI\n for this command.\n",
+};
+static const ConfirmDef confirm_reset_apcred = {
+    .header = "Reset AP Credentials",
+    .text = "Reset WebUI AP to\ndefault credentials?\n"
+            "SSID: GhostNet\nPassword: GhostNet\n",
+};
+static const ConfirmDef confirm_sd_save = {
+    .header = "Save SD Config",
+    .text = "Save current SD pin\nconfig to SD card?\nRequires SD mounted.",
+};
+static const ConfirmDef confirm_reboot = {
+    .header = "Reboot Device",
+    .text = "Are you sure you want to reboot?",
+};
+static const ConfirmDef confirm_coredump_erase = {
+    .header = "Erase Coredump",
+    .text = "Permanently erase the stored\ncrash coredump?\nThis cannot be undone.",
+};
+static const ConfirmDef confirm_force_crash = {
+    .header = "Force Crash",
+    .text = "This intentionally crashes\nthe ESP to test coredump.\nContinue?",
+};
 
 typedef struct {
     const char* label;
@@ -78,6 +163,7 @@ static void show_menu(
     uint8_t view_id);
 static void show_command_details(AppState* state, const MenuCommand* command);
 static bool menu_input_handler(InputEvent* event, void* context);
+static bool menu_view_input_handler(InputEvent* event, void* context);
 static void text_input_result_callback(void* context);
 static void confirmation_ok_callback(void* context);
 static void confirmation_cancel_callback(void* context);
@@ -291,6 +377,59 @@ static const MenuCommand wifi_scanning_commands[] = {
         .details_text = wifi_listen_modes[0].details_text,
     },
     {
+        .label = "Stop Scan",
+        .command = "stopscan\n",
+        .details_header = "Stop Scan",
+        .details_text = "Stops AP or Station scan.",
+    },
+    {
+        .label = "Stop Listen Probes",
+        .command = "listenprobes stop\n",
+        .details_header = "Stop Listening",
+        .details_text = "Stops the probe listener.",
+    },
+    {
+        .label = "Full Environment Sweep",
+        .command = "sweep\n",
+        .details_header = "Environment Sweep",
+        .details_text = "Sweep WiFi APs, stations and\n"
+                        "BLE; saves a CSV report to\n"
+                        "the ESP SD card.\n",
+    },
+    {
+        .label = "Combined AP+STA Scan",
+        .command = "scanall",
+        .needs_input = true,
+        .input_text = "Seconds",
+        .details_header = "Scan All",
+        .details_text = "Combined AP and station scan\n"
+                        "with summary report.\n"
+                        "Optional duration (seconds).\n",
+    },
+    {
+        .label = "Track Selected AP",
+        .command = "trackap\n",
+        .details_header = "Track AP Signal",
+        .details_text = "Track selected AP signal\n"
+                        "(RSSI) live.\n"
+                        "Select an AP first.\n",
+    },
+    {
+        .label = "Track Selected Station",
+        .command = "tracksta\n",
+        .details_header = "Track Station Signal",
+        .details_text = "Track selected station RSSI\n"
+                        "live.\n"
+                        "Select a station first.\n",
+    },
+    {
+        .label = "Channel Congestion",
+        .command = "congestion\n",
+        .details_header = "Channel Congestion",
+        .details_text = "Show Wi-Fi channel\n"
+                        "congestion chart.\n",
+    },
+    {
         .label = "Pineapple Detect",
         .command = "pineap\n",
         .details_header = "Pineapple Detection",
@@ -306,35 +445,31 @@ static const MenuCommand wifi_scanning_commands[] = {
         .label = "Flock Detection",
         .command = "flockscan\n",
         .details_header = "Flock Detection",
-        .details_text = "Detect Flock Safety cameras,\n"
-                        "extended battery units, and\n"
-                        "Penguin surveillance devices\n"
-                        "on 2.4 GHz Wi-Fi.\n"
-                        "Uses OUI matching, wildcard\n"
-                        "probe detection, and SSID\n"
-                        "keyword matching.\n",
+        .details_text = "Detects Flock Safety cameras\n"
+                        "and related surveillance\n"
+                        "devices on 2.4 GHz Wi-Fi via\n"
+                        "OUI, probe and SSID matching.\n",
     },
     {
         .label = "Flock List",
         .command = "flocklist\n",
         .details_header = "Flock List",
-        .details_text = "List detected Flock Safety\n"
-                        "surveillance devices.\n"
+        .details_text = "List detected Flock devices.\n"
                         "Run after Flock Detection.\n",
     },
     {
         .label = "Stop Flock Detection",
         .command = "flockstop\n",
         .details_header = "Stop Flock Detection",
-        .details_text = "Stops Flock Safety camera\n"
-                        "detection scanning.\n",
+        .details_text = "Stops Flock camera detection.\n",
     },
     {
-        .label = "Channel Congestion",
-        .command = "congestion\n",
-        .details_header = "Channel Congestion",
-        .details_text = "Display Wi-Fi channel\n"
-                        "congestion chart.\n",
+        .label = "ARP Scan",
+        .command = "scanarp\n",
+        .details_header = "ARP Scan",
+        .details_text = "ARP-scan the local network to\n"
+                        "find active hosts.\n"
+                        "Requires WiFi connection.\n",
     },
     {
         .label = "Scan Ports",
@@ -342,20 +477,9 @@ static const MenuCommand wifi_scanning_commands[] = {
         .needs_input = true,
         .input_text = "local or IP [options]",
         .details_header = "Port Scanner",
-        .details_text = "Scan ports on local net\n"
-                        "or specific IP.\n"
-                        "Options: -C, -A, range\n"
-                        "Ex: local -C\n"
-                        "Ex: 192.168.1.1 80-1000",
-    },
-    {
-        .label = "ARP Scan",
-        .command = "scanarp\n",
-        .details_header = "ARP Scan",
-        .details_text = "Initiates an ARP scan on the local network to discover hosts:\n"
-                        "- Sends ARP requests across the subnet\n"
-                        "- Shows responding IP/MAC pairs\n"
-                        "Requires WiFi connection.\n",
+        .details_text = "Scan ports on local net or\n"
+                        "an IP: -C, -A, or a range.\n"
+                        "Ex: 192.168.1.1 80-1000\n",
     },
     {
         .label = "Scan SSH",
@@ -363,45 +487,9 @@ static const MenuCommand wifi_scanning_commands[] = {
         .needs_input = true,
         .input_text = "IP",
         .details_header = "SSH Scan",
-        .details_text = "Initiate an SSH port/service scan against the target IP:\n"
-                        "- Provide an IP address (e.g., 192.168.1.10)\n"
-                        "- Scans common SSH ports and reports responses\n"
-                        "- Requires network connectivity\n\n",
-    },
-    {
-        .label = "Full Environment Sweep",
-        .command = "sweep\n",
-        .details_header = "Environment Sweep",
-        .details_text = "Full sweep: WiFi APs, stations,\n"
-                        "and BLE devices.\n"
-                        "Saves CSV report to SD.\n"
-                        "Uses default timing for scan.\n",
-    },
-    {
-        .label = "Combined AP+STA Scan",
-        .command = "scanall",
-        .needs_input = true,
-        .input_text = "Seconds",
-        .details_header = "Scan All",
-        .details_text = "Combined AP and station scan\n"
-                        "with summary report.\n"
-                        "Optionally specify duration.\n",
-    },
-    {
-        .label = "Track Selected AP",
-        .command = "trackap\n",
-        .details_header = "Track AP Signal",
-        .details_text = "Track selected AP signal\n"
-                        "strength (RSSI) in real-time.\n"
-                        "Select an AP first.\n",
-    },
-    {
-        .label = "Track Selected Station",
-        .command = "tracksta\n",
-        .details_header = "Track Station Signal",
-        .details_text = "Track selected station signal\n"
-                        "strength (RSSI) in real-time.\n"
-                        "Select a station first.\n",
+        .details_text = "Scan one IP for SSH services\n"
+                        "and grab banners.\n"
+                        "Ex: 192.168.1.10\n",
     },
     {
         .label = "NetBIOS Scan",
@@ -411,8 +499,7 @@ static const MenuCommand wifi_scanning_commands[] = {
         .details_header = "NetBIOS Scan",
         .details_text = "Scan a subnet for NetBIOS\n"
                         "names/hosts.\n"
-                        "Enter subnet prefix, e.g.\n"
-                        "192.168.1. or 192.168.1.0\n",
+                        "Enter prefix, e.g. 192.168.1.\n",
     },
     {
         .label = "HTTP Banner Scan",
@@ -422,8 +509,7 @@ static const MenuCommand wifi_scanning_commands[] = {
         .details_header = "HTTP Banner Scan",
         .details_text = "Grab HTTP banners from hosts\n"
                         "on a subnet.\n"
-                        "Enter subnet prefix, e.g.\n"
-                        "192.168.1. or 192.168.1.0\n",
+                        "Enter prefix, e.g. 192.168.1.\n",
     },
     {
         .label = "SNMP Probe",
@@ -432,29 +518,97 @@ static const MenuCommand wifi_scanning_commands[] = {
         .input_text = "Subnet (e.g. 192.168.1.)",
         .details_header = "SNMP Probe",
         .details_text = "Probe a subnet for SNMP\n"
-                        "enabled devices.\n"
-                        "Enter subnet prefix, e.g.\n"
-                        "192.168.1. or 192.168.1.0\n",
+                        "devices.\n"
+                        "Enter prefix, e.g. 192.168.1.\n",
     },
     {
         .label = "WPA3 Compliance Check",
         .command = "wpa3check\n",
         .details_header = "WPA3 Compliance",
         .details_text = "Check selected AP for WPA3\n"
-                        "compliance and SAE support.\n"
+                        "and SAE support.\n"
                         "Select an AP first.\n",
     },
+};
+
+// WiFi Recon Tools menu command definitions
+static const MenuCommand wifi_recon_commands[] = {
     {
-        .label = "Stop Listen Probes",
-        .command = "listenprobes stop\n",
-        .details_header = "Stop Listening",
-        .details_text = "Stops the probe listener.",
+        .label = "Enum Scan (Local Network)",
+        .command = "enumscan\n",
+        .details_header = "Enum Scan",
+        .details_text = "Enumerate local hosts\n"
+                        "(ARP + name discovery).\n"
+                        "Requires WiFi or Ethernet.\n",
     },
     {
-        .label = "Stop Scan",
-        .command = "stopscan\n",
-        .details_header = "Stop Scan",
-        .details_text = "Stops AP or Station scan.",
+        .label = "Enum Scan (Target)...",
+        .command = "enumscan",
+        .needs_input = true,
+        .input_text = "IP or 'subnet a.b.c.'",
+        .details_header = "Enum Scan Target",
+        .details_text = "Enumerate one host or subnet.\n"
+                        "Ex: 192.168.1.10\n"
+                        "Ex: subnet 192.168.1.\n",
+    },
+    {
+        .label = "Name Sniff (All Hosts)",
+        .command = "mdnssniff all\n",
+        .details_header = "Name Sniff",
+        .details_text = "Passively sniff mDNS, LLMNR,\n"
+                        "SSDP and NetBIOS names from\n"
+                        "all hosts.\n",
+    },
+    {
+        .label = "Name Sniff (Target)...",
+        .command = "mdnssniff",
+        .needs_input = true,
+        .input_text = "Target IP",
+        .details_header = "Name Sniff Target",
+        .details_text = "Sniff local names advertised\n"
+                        "by one host.\n",
+    },
+    {
+        .label = "Stop Name Sniff",
+        .command = "mdnssniff stop\n",
+        .details_header = "Stop Name Sniff",
+        .details_text = "Stop the passive name\nsniffer.\n",
+    },
+    {
+        .label = "Hop Plan: Auto",
+        .command = "hop auto\n",
+        .details_header = "Hop Plan: Auto",
+        .details_text = "Default channel plan\n"
+                        "(country / AP list).\n",
+    },
+    {
+        .label = "Hop Plan: Show Current",
+        .command = "hop\n",
+        .details_header = "Channel Hop Plan",
+        .details_text = "Show the channel hopping plan\n"
+                        "used by scans and monitors.\n",
+    },
+    {
+        .label = "Hop Plan: Basic (1/6/11)",
+        .command = "hop basic\n",
+        .details_header = "Hop Plan: Basic",
+        .details_text = "Fixed 1, 6, 11 channel plan.\n",
+    },
+    {
+        .label = "Hop Plan: All Channels",
+        .command = "hop all\n",
+        .details_header = "Hop Plan: All",
+        .details_text = "Hop every legal channel for\nthis device.\n",
+    },
+    {
+        .label = "Hop Plan: Custom...",
+        .command = "hop custom",
+        .needs_input = true,
+        .input_text = "1,6,11",
+        .details_header = "Hop Plan: Custom",
+        .details_text = "Comma-separated channel list\n"
+                        "allowed by your country.\n"
+                        "Ex: 1,6,11\n",
     },
 };
 
@@ -462,17 +616,38 @@ static const MenuCommand wifi_capture_commands[] = {
     {
         .label = "< Sniff WPS >",
         .command = "capture -wps\n",
-        .capture_prefix = "wps_capture",
-        .file_ext = "pcap",
-        .folder = GHOST_ESP_APP_FOLDER_PCAPS,
+        .capture = &capture_wps_def,
         .details_header = "Variable Sniff",
-        .details_text = "Use Left/Right to change:\n"
-                        "- WPS traffic\n"
-                        "- Raw packets\n"
-                        "- Probe requests\n"
-                        "- Deauth frames\n"
-                        "- Beacon frames\n"
-                        "- EAPOL/Handshakes\n",
+        .details_text = "Use Left/Right:\n"
+                        "WPS, Raw, Probe, Deauth,\n"
+                        "Beacon, EAPOL, Pwn.\n",
+    },
+    {
+        .label = "Sniff 802.15.4 (C5/C6)",
+        .command = "capture -802154\n",
+        .capture = &capture_zigbee_def,
+        .details_header = "802.15.4 Sniff",
+        .details_text = "Capture Zigbee/Thread traffic\n"
+                        "(C5/C6 only). Hops 11-26.\n",
+    },
+    {
+        .label = "List Saved PCAPs",
+        .command = "capture -list\n",
+        .details_header = "List PCAPs",
+        .details_text = "List PCAPs on the ESP SD\n"
+                        "card. [+] = has PMKID or\n"
+                        "handshake material.\n",
+    },
+    {
+        .label = "Export PCAP to hc22000...",
+        .command = "capture -export",
+        .needs_input = true,
+        .input_text = "PCAP filename",
+        .details_header = "Export hc22000",
+        .details_text = "Convert an ESP SD PCAP to\n"
+                        "hashcat hc22000 (PMKID +\n"
+                        "M2/M3). Run List Saved\n"
+                        "PCAPs first for the name.\n",
     },
 };
 
@@ -483,21 +658,39 @@ static const MenuCommand wifi_attack_commands[] = {
         .needs_input = false,
         .input_text = "SSID Name",
         .details_header = "Variable Beacon Spam",
-        .details_text = "Use Left/Right to change:\n"
-                        "- List mode\n"
-                        "- Random names\n"
-                        "- Rickroll mode\n"
-                        "- Custom SSID\n"
+        .details_text = "Use Left/Right:\n"
+                        "List, Random, Rickroll,\n"
+                        "Custom SSID.\n"
                         "Range: ~50-100m\n",
     },
     {
         .label = "Deauth",
         .command = "attack -d\n",
         .details_header = "Deauth Attack",
-        .details_text = "Sends deauth frames to\n"
-                        "disconnect clients from\n"
-                        "selected network.\n"
+        .details_text = "Send deauth frames to\n"
+                        "disconnect clients.\n"
                         "Range: ~50-100m\n",
+    },
+    {
+        .label = "Handshake + Deauth",
+        .command = "attack -hsd\n",
+        .details_header = "Handshake + Deauth",
+        .details_text = "Deauth bursts + handshake\n"
+                        "capture to ESP SD PCAP.\n"
+                        "Select an AP/STA first.\n"
+                        "Range: ~50-100m\n",
+    },
+    {
+        .label = "Stop All Attacks",
+        .command = "stopdeauth\n",
+        .details_header = "Stop Attacks",
+        .details_text = "Stops all WiFi attacks.\n",
+    },
+    {
+        .label = "Stop Beacon Spam",
+        .command = "stopspam\n",
+        .details_header = "Stop Beacon Spam",
+        .details_text = "Stops any active beacon spam.",
     },
     {
         .label = "EAPOL Logoff",
@@ -507,44 +700,11 @@ static const MenuCommand wifi_attack_commands[] = {
                         "disconnect clients.",
     },
     {
-        .label = "SAE Handshake Flood",
-        .command = "saeflood",
-        .needs_input = true,
-        .input_text = "SAE PSK",
-        .details_header = "SAE Flood Attack",
-        .details_text = "Floods WPA3 networks with\nSAE handshakes using the\n"
-                        "provided PSK. Select a\nWPA3 AP first.",
-    },
-    {
-        .label = "Stop SAE Flood",
-        .command = "stopsaeflood\n",
-        .details_header = "Stop SAE Flood",
-        .details_text = "Stops active SAE flood and\n"
-                        "password spray attacks.",
-    },
-    {
-        .label = "SAE Flood Help",
-        .command = "saefloodhelp\n",
-        .details_header = "SAE Flood Help",
-        .details_text = "Shows usage guidance for\n"
-                        "SAE flood operations.",
-    },
-    {
         .label = "Karma Start",
         .command = "karma start\n",
         .details_header = "Karma Rogue AP",
         .details_text = "Replies to probe requests\n"
                         "with saved SSIDs.",
-    },
-    {
-        .label = "Karma Start (Custom)",
-        .command = "karma start",
-        .needs_input = true,
-        .input_text = "SSID [SSID...]",
-        .details_header = "Karma Rogue AP (Custom)",
-        .details_text = "Replies to probe requests\n"
-                        "using SSIDs you provide\n"
-                        "or saved entries.",
     },
     {
         .label = "Karma Stop",
@@ -554,27 +714,26 @@ static const MenuCommand wifi_attack_commands[] = {
                         "rogue AP responder.",
     },
     {
-        .label = "DHCP Starve Start",
-        .command = "dhcpstarve",
+        .label = "Karma Start (Custom)",
+        .command = "karma start",
         .needs_input = true,
-        .input_text = "start [threads]",
-        .details_header = "DHCP Starve Attack",
-        .details_text = "Exhausts DHCP server's IP pool.\n"
-                        "Input: start [threads]\n"
-                        "e.g., 'start' or 'start 5'",
+        .input_text = "SSID [SSID...]",
+        .details_header = "Karma Rogue AP (Custom)",
+        .details_text = "Reply to probes using your\n"
+                        "SSIDs or saved entries.\n",
     },
     {
-        .label = "DHCP Starve Stop",
-        .command = "dhcpstarve stop\n",
-        .details_header = "Stop DHCP Starve",
-        .details_text = "Stops the DHCP starvation attack.",
+        .label = "Start Beacon List Spam",
+        .command = "beaconspamlist\n",
+        .details_header = "Beacon List Spam",
+        .details_text = "Beacon-spam the custom\n"
+                        "SSID list.\n",
     },
     {
-        .label = "Stop Deauth/SAE/EAPOL",
-        .command = "stopdeauth\n",
-        .details_header = "Stop Attacks",
-        .details_text = "Stops Deauth, SAE Flood,\n"
-                        "and EAPOL Logoff attacks.",
+        .label = "Show Beacon List",
+        .command = "beaconshow\n",
+        .details_header = "Show Beacon List",
+        .details_text = "Show the beacon spam list.\n",
     },
     {
         .label = "Add SSID to Beacon List",
@@ -582,8 +741,8 @@ static const MenuCommand wifi_attack_commands[] = {
         .needs_input = true,
         .input_text = "SSID",
         .details_header = "Add to Beacon List",
-        .details_text = "Add an SSID to the list used\n"
-                        "by Beacon List Spam.",
+        .details_text = "Add an SSID to the beacon\n"
+                        "spam list.\n",
     },
     {
         .label = "Remove SSID from Beacon List",
@@ -592,34 +751,96 @@ static const MenuCommand wifi_attack_commands[] = {
         .input_text = "SSID",
         .details_header = "Remove from Beacon List",
         .details_text = "Remove an SSID from the\n"
-                        "beacon spam list.",
+                        "beacon list.\n",
     },
     {
         .label = "Clear Beacon List",
         .command = "beaconclear\n",
         .details_header = "Clear Beacon List",
-        .details_text = "Clears all SSIDs from the\n"
-                        "beacon spam list.",
+        .details_text = "Clear the beacon spam list.\n",
     },
     {
-        .label = "Show Beacon List",
-        .command = "beaconshow\n",
-        .details_header = "Show Beacon List",
-        .details_text = "Displays all SSIDs in the\n"
-                        "beacon spam list.",
+        .label = "Channel Switch Attack",
+        .command = "attack -c\n",
+        .details_header = "Channel Switch Attack",
+        .details_text = "Move clients to another\n"
+                        "channel with CSA frames.\n"
+                        "Select AP(s) first.\n",
     },
     {
-        .label = "Start Beacon List Spam",
-        .command = "beaconspamlist\n",
-        .details_header = "Beacon List Spam",
-        .details_text = "Starts beacon spam using the\n"
-                        "custom list of SSIDs.",
+        .label = "Probe Request Flood",
+        .command = "attack -p\n",
+        .details_header = "Probe Flood",
+        .details_text = "Flood probe requests to\n"
+                        "create phantom clients.\n"
+                        "Select AP(s) first.\n",
     },
     {
-        .label = "Stop Beacon Spam",
-        .command = "stopspam\n",
-        .details_header = "Stop Beacon Spam",
-        .details_text = "Stops any active beacon spam.",
+        .label = "Bad Msg Attack",
+        .command = "attack -b\n",
+        .details_header = "Bad Msg Attack",
+        .details_text = "EAPOL key install + zero MIC\n"
+                        "frames.\n"
+                        "Select AP(s) first.\n",
+    },
+    {
+        .label = "Auth Flood",
+        .command = "attack -a\n",
+        .details_header = "Auth Flood",
+        .details_text = "Flood auth frames to exhaust\n"
+                        "the AP.\n"
+                        "Select AP(s) first.\n",
+    },
+    {
+        .label = "GTK Abuse Test",
+        .command = "attack -g",
+        .needs_input = true,
+        .input_text = "SSID Password",
+        .details_header = "GTK Abuse Test",
+        .details_text = "Test client isolation bypass\n"
+                        "via GTK injection.\n"
+                        "Enter SSID + password,\n"
+                        "space-separated.\n",
+    },
+    {
+        .label = "SAE Handshake Flood",
+        .command = "saeflood",
+        .needs_input = true,
+        .input_text = "SAE PSK",
+        .details_header = "SAE Flood Attack",
+        .details_text = "Flood a WPA3 AP with SAE\n"
+                        "handshakes using the PSK.\n"
+                        "Select a WPA3 AP first.\n",
+    },
+    {
+        .label = "Stop SAE Flood",
+        .command = "stopsaeflood\n",
+        .details_header = "Stop SAE Flood",
+        .details_text = "Stops SAE flood and password\n"
+                        "spray attacks.\n",
+    },
+    {
+        .label = "SAE Flood Help",
+        .command = "saefloodhelp\n",
+        .details_header = "SAE Flood Help",
+        .details_text = "Shows usage guidance for\n"
+                        "SAE flood operations.",
+    },
+    {
+        .label = "DHCP Starve Start",
+        .command = "dhcpstarve",
+        .needs_input = true,
+        .input_text = "start [threads]",
+        .details_header = "DHCP Starve Attack",
+        .details_text = "Exhaust the DHCP server's IP\n"
+                        "pool.\n"
+                        "Input: 'start' or 'start 5'.\n",
+    },
+    {
+        .label = "DHCP Starve Stop",
+        .command = "dhcpstarve stop\n",
+        .details_header = "Stop DHCP Starve",
+        .details_text = "Stops the DHCP starvation attack.",
     },
 };
 
@@ -631,17 +852,14 @@ static const MenuCommand wifi_network_portal_commands[] = {
         .needs_input = true,
         .input_text = "<filepath> <SSID> <PSK (leave blank for open)>",
         .details_header = "Evil Portal",
-        .details_text = "Captive portal for\n"
-                        "credential harvest.\n"
-                        "Configure in WebUI:\n"
-                        "- Portal settings\n"
-                        "- Landing page\n",
+        .details_text = "Captive portal for credential\n"
+                        "harvest. Configure in WebUI.\n",
     },
     {
         .label = "List Portals",
         .command = "listportals\n",
         .details_header = "List Portals",
-        .details_text = "Show all available HTML portals\non the SD card.",
+        .details_text = "List portal HTML files on SD.\n",
     },
     {
         .label = "Set Evil Portal HTML",
@@ -649,16 +867,15 @@ static const MenuCommand wifi_network_portal_commands[] = {
         .needs_input = true,
         .input_text = "HTML File",
         .details_header = "Set Evil Portal HTML",
-        .details_text = "Select and send an HTML\n"
-                        "file to the ESP32 for\n"
-                        "the evil portal.\n\n",
+        .details_text = "Send an HTML file to the ESP\n"
+                        "for the evil portal.\n",
     },
     {
         .label = "Clear Evil Portal HTML",
         .command = "evilportal -c clear\n",
         .details_header = "Clear Evil Portal",
-        .details_text = "Restores the default portal\n"
-                        "landing page on the ESP.",
+        .details_text = "Restore the default portal\n"
+                        "landing page.\n",
     },
     {
         .label = "Stop Evil Portal",
@@ -676,29 +893,44 @@ static const MenuCommand wifi_network_conn_commands[] = {
         .needs_input = true,
         .input_text = "SSID",
         .details_header = "WiFi Connect",
-        .details_text = "Connect ESP to WiFi:\n"
-                        "Enter SSID followed by password.\n\n",
+        .details_text = "Connect ESP to WiFi.\n"
+                        "Enter SSID then password.\n",
     },
     {
         .label = "Connect to Saved WiFi",
         .command = "connect\n",
         .details_header = "Connect (Saved)",
-        .details_text = "Connect to the previously saved WiFi credentials on the ESP.\n"
-                        "No input required.\n\n",
-    },
-    {
-        .label = "Disconnect WiFi",
-        .command = "disconnect\n",
-        .details_header = "Disconnect",
-        .details_text = "Disconnects from the current WiFi network on the ESP.\n"
-                        "No input required.\n",
+        .details_text = "Connect using saved ESP WiFi\n"
+                        "credentials.\n",
     },
     {
         .label = "WiFi Status",
         .command = "wifistatus\n",
         .details_header = "WiFi Status",
-        .details_text = "Show current WiFi connection\n"
-                        "status (SSID, IP, RSSI).\n",
+        .details_text = "Show WiFi status (SSID, IP,\n"
+                        "RSSI).\n",
+    },
+    {
+        .label = "Disconnect WiFi",
+        .command = "disconnect\n",
+        .details_header = "Disconnect",
+        .details_text = "Disconnect ESP from WiFi.\n",
+    },
+    {
+        .label = "Auto-Reconnect",
+        .command = "autoreconnect",
+        .needs_input = true,
+        .input_text = "on | off",
+        .details_header = "Auto-Reconnect",
+        .details_text = "Auto-reconnect after WiFi\n"
+                        "drops.\n",
+    },
+    {
+        .label = "Forget Saved WiFi",
+        .command = "forgetwifi\n",
+        .confirm = &confirm_forget_wifi,
+        .details_header = "Forget WiFi",
+        .details_text = "Disconnect and delete the\nsaved WiFi credentials.\n",
     },
 };
 
@@ -707,16 +939,11 @@ static const MenuCommand wifi_network_scan_commands[] = {
     {
         .label = "Scan Local Network",
         .command = "scanlocal\n",
-        .needs_confirmation = true,
-        .confirm_header = "Local Network Scan",
-        .confirm_text = "Make sure you've connected\nto WiFi first via "
-                        "the\n'Connect to WiFi' option.\n",
+        .confirm = &confirm_scanlocal,
         .details_header = "Network Scanner",
-        .details_text = "Scans local network for:\n"
-                        "- Printers\n"
-                        "- Smart devices\n"
-                        "- Cast devices\n"
-                        "- Requires WiFi connection\n\n",
+        .details_text = "Scan local network for\n"
+                        "printers, smart/cast devices.\n"
+                        "Requires WiFi connection.\n",
     },
     {
         .label = "Scan Ports",
@@ -724,19 +951,16 @@ static const MenuCommand wifi_network_scan_commands[] = {
         .needs_input = true,
         .input_text = "local or IP [options]",
         .details_header = "Port Scanner",
-        .details_text = "Scan ports on local net\n"
-                        "or specific IP.\n"
-                        "Options: -C, -A, range\n"
-                        "Ex: local -C\n"
-                        "Ex: 192.168.1.1 80-1000",
+        .details_text = "Scan ports on local net or\n"
+                        "an IP: -C, -A, or a range.\n"
+                        "Ex: 192.168.1.1 80-1000\n",
     },
     {
         .label = "ARP Scan",
         .command = "scanarp\n",
         .details_header = "ARP Scan",
-        .details_text = "Initiates an ARP scan on the local network to discover hosts:\n"
-                        "- Sends ARP requests across the subnet\n"
-                        "- Shows responding IP/MAC pairs\n"
+        .details_text = "ARP-scan the local network to\n"
+                        "find active hosts.\n"
                         "Requires WiFi connection.\n",
     },
     {
@@ -745,10 +969,9 @@ static const MenuCommand wifi_network_scan_commands[] = {
         .needs_input = true,
         .input_text = "IP",
         .details_header = "SSH Scan",
-        .details_text = "Initiate an SSH port/service scan against the target IP:\n"
-                        "- Provide an IP address (e.g., 192.168.1.10)\n"
-                        "- Scans common SSH ports and reports responses\n"
-                        "- Requires network connectivity\n\n",
+        .details_text = "Scan one IP for SSH services\n"
+                        "and grab banners.\n"
+                        "Ex: 192.168.1.10\n",
     },
     {
         .label = "NetBIOS Scan",
@@ -758,8 +981,7 @@ static const MenuCommand wifi_network_scan_commands[] = {
         .details_header = "NetBIOS Scan",
         .details_text = "Scan a subnet for NetBIOS\n"
                         "names/hosts.\n"
-                        "Enter subnet prefix, e.g.\n"
-                        "192.168.1. or 192.168.1.0\n",
+                        "Enter prefix, e.g. 192.168.1.\n",
     },
     {
         .label = "HTTP Banner Scan",
@@ -769,8 +991,7 @@ static const MenuCommand wifi_network_scan_commands[] = {
         .details_header = "HTTP Banner Scan",
         .details_text = "Grab HTTP banners from hosts\n"
                         "on a subnet.\n"
-                        "Enter subnet prefix, e.g.\n"
-                        "192.168.1. or 192.168.1.0\n",
+                        "Enter prefix, e.g. 192.168.1.\n",
     },
     {
         .label = "SNMP Probe",
@@ -779,9 +1000,8 @@ static const MenuCommand wifi_network_scan_commands[] = {
         .input_text = "Subnet (e.g. 192.168.1.)",
         .details_header = "SNMP Probe",
         .details_text = "Probe a subnet for SNMP\n"
-                        "enabled devices.\n"
-                        "Enter subnet prefix, e.g.\n"
-                        "192.168.1. or 192.168.1.0\n",
+                        "devices.\n"
+                        "Enter prefix, e.g. 192.168.1.\n",
     },
 };
 
@@ -790,29 +1010,19 @@ static const MenuCommand wifi_network_iot_commands[] = {
     {
         .label = "Cast Random Video",
         .command = "dialconnect\n",
-        .needs_confirmation = true,
-        .confirm_header = "Cast Video",
-        .confirm_text = "Make sure you've connected\nto WiFi first via "
-                        "the\n'Connect to WiFi' option.\n",
+        .confirm = &confirm_cast_video,
         .details_header = "Video Cast",
-        .details_text = "Casts random videos\n"
-                        "to nearby Cast/DIAL\n"
-                        "enabled devices.\n"
-                        "Range: ~50m\n\n",
+        .details_text = "Cast random videos to Cast/\n"
+                        "DIAL devices.\n"
+                        "Range: ~50m\n",
     },
     {
         .label = "Printer Power",
         .command = "powerprinter\n",
-        .needs_confirmation = true,
-        .confirm_header = "Printer Power",
-        .confirm_text = "You need to configure\n settings in the WebUI\n for "
-                        "this command.\n",
+        .confirm = &confirm_printer_power,
         .details_header = "WiFi Printer",
-        .details_text = "Control power state\n"
-                        "of network printers.\n"
-                        "Configure in WebUI:\n"
-                        "- Printer IP/Port\n"
-                        "- Protocol type\n\n",
+        .details_text = "Control network printer power.\n"
+                        "Configure IP/port in WebUI.\n",
     },
     {
         .label = "TP-Link Smart Plug",
@@ -823,10 +1033,46 @@ static const MenuCommand wifi_network_iot_commands[] = {
         .details_text = "Control TP-Link smart plugs\n"
                         "on the local network.",
     },
+    {
+        .label = "Govee Scan",
+        .command = "govee scan\n",
+        .details_header = "Govee Scan",
+        .details_text = "Find Govee lights on the LAN.\n"
+                        "Requires WiFi connection.\n",
+    },
+    {
+        .label = "Govee Control...",
+        .command = "govee",
+        .needs_input = true,
+        .input_text = "<IP> <command>",
+        .details_header = "Govee Control",
+        .details_text = "Control a Govee light.\n"
+                        "Ex: IP on | off | status |\n"
+                        "brightness N | color RRGGBB\n",
+    },
+    {
+        .label = "Wake-on-LAN...",
+        .command = "wol",
+        .needs_input = true,
+        .input_text = "MAC or IP",
+        .details_header = "Wake-on-LAN",
+        .details_text = "Send a Wake-on-LAN packet.\n"
+                        "Ex MAC: AA:BB:CC:DD:EE:FF\n"
+                        "Needs same WiFi network.\n",
+    },
 };
 
 // WiFi Network sub-category: WebUI
 static const MenuCommand wifi_network_webui_commands[] = {
+    {
+        .label = "WebUI AP",
+        .command = "webuiap",
+        .needs_input = true,
+        .input_text = "on | off | toggle | status",
+        .details_header = "WebUI Access Point",
+        .details_text = "Control the WebUI access\n"
+                        "point: on/off/toggle/status.\n",
+    },
     {
         .label = "Set WebUI Creds",
         .command = "apcred",
@@ -834,34 +1080,95 @@ static const MenuCommand wifi_network_webui_commands[] = {
         .input_text = "MySSID MyPassword",
         .details_header = "Set AP Credentials",
         .details_text = "Set custom WebUI AP:\n"
-                        "Format:\nMySSID MyPassword\n"
-                        "Example: GhostNet,spooky123\n",
+                        "MySSID MyPassword\n"
+                        "Ex: GhostNet,spooky123\n",
     },
     {
         .label = "Reset WebUI Creds",
         .command = "apcred -r\n",
-        .needs_confirmation = true,
-        .confirm_header = "Reset AP Credentials",
-        .confirm_text = "Reset WebUI AP to\n"
-                        "default credentials?\n"
-                        "SSID: GhostNet\n"
-                        "Password: GhostNet\n",
+        .confirm = &confirm_reset_apcred,
         .details_header = "Reset AP Credentials",
-        .details_text = "Restores default WebUI AP:\n"
-                        "SSID: GhostNet\n"
-                        "Password: GhostNet\n"
-                        "Requires ESP reboot\n",
+        .details_text = "Restore default WebUI AP\n"
+                        "(GhostNet). Requires reboot.\n",
+    },
+};
+
+// WiFi Network sub-category: DNS Sinkhole
+static const MenuCommand wifi_network_sinkhole_commands[] = {
+    {
+        .label = "Start Sinkhole",
+        .command = "sinkhole start\n",
+        .details_header = "Start DNS Sinkhole",
+        .details_text = "Start the DNS sinkhole.\n"
+                        "Connect to WiFi/Ethernet first.\n",
     },
     {
-        .label = "WebUI AP",
-        .command = "webuiap",
+        .label = "Stop Sinkhole",
+        .command = "sinkhole stop\n",
+        .details_header = "Stop Sinkhole",
+        .details_text = "Stop the sinkhole and\nrestore the AP.\n",
+    },
+    {
+        .label = "Sinkhole Status",
+        .command = "sinkhole status\n",
+        .details_header = "Sinkhole Status",
+        .details_text = "Show sinkhole running state.\n",
+    },
+    {
+        .label = "Sinkhole Stats",
+        .command = "sinkhole stats\n",
+        .details_header = "Sinkhole Stats",
+        .details_text = "Show detailed sinkhole\nstatistics.\n",
+    },
+    {
+        .label = "Add Domain...",
+        .command = "sinkhole add",
         .needs_input = true,
-        .input_text = "on | off | toggle | status",
-        .details_header = "WebUI Access Point",
-        .details_text = "Control the dedicated WebUI\n"
-                        "access point.\n"
-                        "Options: on, off, toggle,\n"
-                        "status.\n",
+        .input_text = "example.com",
+        .details_header = "Add Blocked Domain",
+        .details_text = "Add a domain to the\nblocklist.\n",
+    },
+    {
+        .label = "Remove Domain...",
+        .command = "sinkhole remove",
+        .needs_input = true,
+        .input_text = "example.com",
+        .details_header = "Remove Domain",
+        .details_text = "Remove a domain from the\nblocklist.\n",
+    },
+    {
+        .label = "Show Blocklist Sources",
+        .command = "sinkhole download\n",
+        .details_header = "Blocklist Sources",
+        .details_text = "List the available blocklists\nand their numbers.\n",
+    },
+    {
+        .label = "Download Blocklist...",
+        .command = "sinkhole download",
+        .needs_input = true,
+        .input_text = "List number",
+        .details_header = "Download Blocklist",
+        .details_text = "Download a blocklist to SD.\n"
+                        "See sources list for numbers.\n"
+                        "Needs PSRAM + SD + WiFi.\n",
+    },
+    {
+        .label = "Reload Sinkhole",
+        .command = "sinkhole reload\n",
+        .details_header = "Reload Sinkhole",
+        .details_text = "Restart the sinkhole to apply\nblocklist changes.\n",
+    },
+    {
+        .label = "Blocklist Log: On",
+        .command = "sinkhole log on\n",
+        .details_header = "Log Queries",
+        .details_text = "Log sinkhole DNS queries to\nthe SD card.\n",
+    },
+    {
+        .label = "Blocklist Log: Off",
+        .command = "sinkhole log off\n",
+        .details_header = "Stop Logging",
+        .details_text = "Stop logging sinkhole DNS\nqueries.\n",
     },
 };
 
@@ -870,31 +1177,10 @@ static const MenuCommand wifi_settings_led_commands[] = {
     {
         .label = "< LED: Rainbow >",
         .command = "rgbmode rainbow\n",
-        .confirm_header = "LED Effects",
         .details_header = "LED Effects",
-        .details_text = "Control LED effects:\n"
-                        "- rainbow, police, strobe, off, or fixed colors\n"
-                        "Cycle with Left/Right to select an effect\n",
-    },
-    {
-        .label = "Set RGB Pins",
-        .command = "setrgbpins",
-        .needs_input = true,
-        .input_text = "<red> <green> <blue>",
-        .details_header = "Set RGB Pins",
-        .details_text = "Change RGB LED pins.\n"
-                        "Requires restart.\n"
-                        "Use same value for all\n"
-                        "pins for single-pin LED.",
-    },
-    {
-        .label = "Set RGB Profile",
-        .command = "setrgbmode",
-        .needs_input = true,
-        .input_text = "normal|rainbow|stealth",
-        .details_header = "Set RGB Profile",
-        .details_text = "Save the default LED mode\n"
-                        "used after reboot.",
+        .details_text = "Left/Right: pick an LED\n"
+                        "effect (rainbow, police,\n"
+                        "strobe, off, color).\n",
     },
     {
         .label = "Set NeoPixel Brightness",
@@ -902,15 +1188,33 @@ static const MenuCommand wifi_settings_led_commands[] = {
         .needs_input = true,
         .input_text = "0-100",
         .details_header = "NeoPixel Brightness",
-        .details_text = "Adjust NeoPixel brightness\n"
-                        "from 0 to 100%.",
+        .details_text = "Set NeoPixel brightness\n"
+                        "0-100%.\n",
     },
     {
         .label = "Get NeoPixel Brightness",
         .command = "getneopixelbrightness\n",
         .details_header = "NeoPixel Brightness",
-        .details_text = "Displays the current NeoPixel\n"
-                        "brightness level.",
+        .details_text = "Show NeoPixel brightness.\n",
+    },
+    {
+        .label = "Set RGB Profile",
+        .command = "setrgbmode",
+        .needs_input = true,
+        .input_text = "normal|rainbow|stealth",
+        .details_header = "Set RGB Profile",
+        .details_text = "Save default LED mode for\n"
+                        "after reboot.\n",
+    },
+    {
+        .label = "Set RGB Pins",
+        .command = "setrgbpins",
+        .needs_input = true,
+        .input_text = "<red> <green> <blue>",
+        .details_header = "Set RGB Pins",
+        .details_text = "Set RGB pins. Same value for\n"
+                        "all if using one pin.\n"
+                        "Requires restart.\n",
     },
     {
         .label = "Set RGB LED Count",
@@ -918,11 +1222,8 @@ static const MenuCommand wifi_settings_led_commands[] = {
         .needs_input = true,
         .input_text = "1-512",
         .details_header = "Set RGB LED Count",
-        .details_text = "Set the number of RGB LEDs\n"
-                        "connected (1-512).\n"
-                        "Effects will span the correct\n"
-                        "length. Reinitializes if pins\n"
-                        "are already configured.\n",
+        .details_text = "Number of RGB LEDs (1-512).\n"
+                        "Effects span the right length.\n",
     },
 };
 
@@ -932,9 +1233,7 @@ static const MenuCommand wifi_settings_sd_commands[] = {
         .label = "Show SD Pin Config",
         .command = "sd_config",
         .details_header = "SD Pin Config",
-        .details_text = "Show current SD GPIO\n"
-                        "pin configuration for\n"
-                        "MMC and SPI modes.",
+        .details_text = "Show SD GPIO pins (MMC + SPI).\n",
     },
     {
         .label = "Set SD Pins (MMC)",
@@ -942,10 +1241,9 @@ static const MenuCommand wifi_settings_sd_commands[] = {
         .needs_input = true,
         .input_text = "<clk> <cmd> <d0..d3>",
         .details_header = "Set SD Pins (MMC)",
-        .details_text = "Set GPIO pins for SDMMC.\n"
-                        "Requires restart.\n"
-                        "Only if firmware built\n"
-                        "for SDMMC mode.",
+        .details_text = "Set SDMMC pins.\n"
+                        "Requires restart + SDMMC\n"
+                        "firmware.\n",
     },
     {
         .label = "Set SD Pins (SPI)",
@@ -953,23 +1251,17 @@ static const MenuCommand wifi_settings_sd_commands[] = {
         .needs_input = true,
         .input_text = "<cs> <clk> <miso> <mosi>",
         .details_header = "Set SD Pins (SPI)",
-        .details_text = "Set GPIO pins for SPI.\n"
-                        "Requires restart.\n"
-                        "Only if firmware built\n"
-                        "for SPI mode.",
+        .details_text = "Set SPI pins.\n"
+                        "Requires restart + SPI\n"
+                        "firmware.\n",
     },
     {
         .label = "Save SD Pin Config",
         .command = "sd_save_config",
-        .needs_confirmation = true,
-        .confirm_header = "Save SD Config",
-        .confirm_text = "Save current SD pin\n"
-                        "config to SD card?\n"
-                        "Requires SD mounted.",
+        .confirm = &confirm_sd_save,
         .details_header = "Save SD Pin Config",
-        .details_text = "Save current SD pin\n"
-                        "config (both modes) to\n"
-                        "SD card (sd_config.conf).",
+        .details_text = "Save SD pin config to SD\n"
+                        "(sd_config.conf).\n",
     },
 };
 
@@ -979,15 +1271,7 @@ static const MenuCommand wifi_settings_mgmt_commands[] = {
         .label = "Settings List",
         .command = "settings list\n",
         .details_header = "List Settings",
-        .details_text = "Shows available configuration\n"
-                        "keys and descriptions.",
-    },
-    {
-        .label = "Settings Help",
-        .command = "settings help\n",
-        .details_header = "Settings Help",
-        .details_text = "Displays CLI usage for\n"
-                        "settings commands.",
+        .details_text = "List config keys + help.\n",
     },
     {
         .label = "Settings Get",
@@ -995,8 +1279,7 @@ static const MenuCommand wifi_settings_mgmt_commands[] = {
         .needs_input = true,
         .input_text = "Key",
         .details_header = "Get Setting",
-        .details_text = "Read the current value for\n"
-                        "a configuration key.",
+        .details_text = "Read a config key's value.\n",
     },
     {
         .label = "Settings Set",
@@ -1004,8 +1287,13 @@ static const MenuCommand wifi_settings_mgmt_commands[] = {
         .needs_input = true,
         .input_text = "Key Value",
         .details_header = "Set Setting",
-        .details_text = "Update a configuration key\n"
-                        "with a new value.",
+        .details_text = "Set a config key's value.\n",
+    },
+    {
+        .label = "Settings Help",
+        .command = "settings help\n",
+        .details_header = "Settings Help",
+        .details_text = "CLI usage for settings.\n",
     },
     {
         .label = "Settings Reset (Key)",
@@ -1013,15 +1301,13 @@ static const MenuCommand wifi_settings_mgmt_commands[] = {
         .needs_input = true,
         .input_text = "Key",
         .details_header = "Reset Setting",
-        .details_text = "Reset a specific configuration\n"
-                        "key to defaults.",
+        .details_text = "Reset one config key.\n",
     },
     {
         .label = "Settings Reset (All)",
         .command = "settings reset\n",
         .details_header = "Reset Settings",
-        .details_text = "Restore all configuration\n"
-                        "keys to defaults.",
+        .details_text = "Reset all config keys.\n",
     },
 };
 
@@ -1034,19 +1320,51 @@ static const MenuCommand wifi_settings_device_commands[] = {
         .details_text = "Show chip and memory info.",
     },
     {
+        .label = "Reboot Device",
+        .command = "reboot\n",
+        .confirm = &confirm_reboot,
+        .details_header = "Reboot",
+        .details_text = "Restart the ESP device.",
+    },
+    {
+        .label = "Identify Device",
+        .command = "identify\n",
+        .details_header = "Identify Device",
+        .details_text = "Blink/beep to identify the\n"
+                        "ESP.\n",
+    },
+    {
+        .label = "List Scripts",
+        .command = "script list\n",
+        .details_header = "GhostScripts",
+        .details_text = "List GhostScripts on SD.\n",
+    },
+    {
+        .label = "Run Script...",
+        .command = "script run",
+        .needs_input = true,
+        .input_text = "Script index",
+        .details_header = "Run GhostScript",
+        .details_text = "Run a GhostScript by index\n"
+                        "(see List Scripts).\n",
+    },
+    {
+        .label = "Script Status",
+        .command = "script status\n",
+        .details_header = "Script Status",
+        .details_text = "Show running GhostScript\nstatus.\n",
+    },
+    {
+        .label = "Stop Script",
+        .command = "script stop\n",
+        .details_header = "Stop GhostScript",
+        .details_text = "Stop the running\nGhostScript.\n",
+    },
+    {
         .label = "Show Time",
         .command = "time\n",
         .details_header = "Device Time",
         .details_text = "Show the current device time.",
-    },
-    {
-        .label = "Reboot Device",
-        .command = "reboot\n",
-        .needs_confirmation = true,
-        .confirm_header = "Reboot Device",
-        .confirm_text = "Are you sure you want to reboot?",
-        .details_header = "Reboot",
-        .details_text = "Restart the ESP device.",
     },
     {
         .label = "Enable/Disable AP",
@@ -1054,7 +1372,8 @@ static const MenuCommand wifi_settings_device_commands[] = {
         .needs_input = true,
         .input_text = "on | off",
         .details_header = "AP Enable/Disable",
-        .details_text = "Enable or disable the Access Point\nacross reboots.",
+        .details_text = "Toggle the ESP AP across\n"
+                        "reboots.\n",
     },
     {
         .label = "Load Config",
@@ -1064,65 +1383,64 @@ static const MenuCommand wifi_settings_device_commands[] = {
                         "SD card.",
     },
     {
-        .label = "Identify Device",
-        .command = "identify\n",
-        .details_header = "Identify Device",
-        .details_text = "Trigger a visual/audible\n"
-                        "identify signal on the ESP.",
-    },
-    {
         .label = "Coredump Dump",
         .command = "coredump dump\n",
         .details_header = "Coredump Dump",
-        .details_text = "Read out the stored crash\n"
-                        "coredump from the partition.",
+        .details_text = "Read the stored crash\n"
+                        "coredump.\n",
     },
     {
         .label = "Erase Coredump",
         .command = "coredump erase\n",
-        .needs_confirmation = true,
-        .confirm_header = "Erase Coredump",
-        .confirm_text = "Permanently erase the stored\n"
-                        "crash coredump?\n"
-                        "This cannot be undone.",
+        .confirm = &confirm_coredump_erase,
         .details_header = "Erase Coredump",
-        .details_text = "Erase the crash coredump\n"
-                        "partition on the ESP.",
+        .details_text = "Erase the crash coredump.\n",
     },
     {
         .label = "Force Crash",
         .command = "crash\n",
-        .needs_confirmation = true,
-        .confirm_header = "Force Crash",
-        .confirm_text = "This intentionally crashes\n"
-                        "the ESP to test coredump.\n"
-                        "Continue?",
+        .confirm = &confirm_force_crash,
         .details_header = "Force Crash",
-        .details_text = "Intentionally crash the ESP\n"
-                        "to generate a coredump for\n"
-                        "debugging.",
+        .details_text = "Crash the ESP to make a\n"
+                        "test coredump.\n",
     },
 };
 
 // WiFi Settings sub-category: Misc
 static const MenuCommand wifi_settings_misc_commands[] = {
     {
+        .label = "Privacy Mode",
+        .command = "privacy",
+        .needs_input = true,
+        .input_text = "on | off | toggle | status",
+        .details_header = "Privacy Mode",
+        .details_text = "Hide SSIDs/MACs on screen.\n",
+    },
+    {
+        .label = "Clock Style",
+        .command = "clockstyle",
+        .needs_input = true,
+        .input_text = "digital | analog | segment",
+        .details_header = "Clock Style",
+        .details_text = "Switch clock face (digital,\n"
+                        "analog, segment).\n",
+    },
+    {
+        .label = "Status Bar Clock",
+        .command = "statusbarclock",
+        .needs_input = true,
+        .input_text = "on | off | toggle | status",
+        .details_header = "Status Bar Clock",
+        .details_text = "Show/hide status bar clock.\n",
+    },
+    {
         .label = "Set Timezone",
         .command = "timezone",
         .needs_input = true,
         .input_text = "TZ String",
         .details_header = "Set Timezone",
-        .details_text = "Set timezone for the clock.\n"
-                        "e.g. 'EST5EDT,M3.2.0,M11.1.0'",
-    },
-    {
-        .label = "Set Web Auth",
-        .command = "webauth",
-        .needs_input = true,
-        .input_text = "on | off",
-        .details_header = "Set Web Auth",
-        .details_text = "Enable or disable Web\n"
-                        "UI authentication.",
+        .details_text = "Set the clock timezone.\n"
+                        "Ex: EST5EDT,M3.2.0,M11.1.0\n",
     },
     {
         .label = "Set WiFi Country",
@@ -1130,8 +1448,24 @@ static const MenuCommand wifi_settings_misc_commands[] = {
         .needs_input = true,
         .input_text = "Country Code (e.g. US)",
         .details_header = "Set WiFi Country",
-        .details_text = "Set the WiFi country code.\n"
-                        "May require ESP32-C5.",
+        .details_text = "Set WiFi country code.\n"
+                        "May need ESP32-C5.\n",
+    },
+    {
+        .label = "Set Web Auth",
+        .command = "webauth",
+        .needs_input = true,
+        .input_text = "on | off",
+        .details_header = "Set Web Auth",
+        .details_text = "Toggle WebUI authentication.\n",
+    },
+    {
+        .label = "Set Log Level",
+        .command = "loglevel",
+        .needs_input = true,
+        .input_text = "none|error|warn|info|debug|verbose",
+        .details_header = "Log Level",
+        .details_text = "Change ESP log verbosity.\n",
     },
     {
         .label = "Show Help",
@@ -1145,13 +1479,9 @@ static const MenuCommand wifi_stop_command = {
     .label = "Stop All WiFi",
     .command = "stop\n",
     .details_header = "Stop WiFi Operations",
-    .details_text = "Stops all active WiFi\n"
-                    "operations including:\n"
-                    "- Scanning\n"
-                    "- Beacon Spam\n"
-                    "- Deauth Attacks\n"
-                    "- Packet Captures\n"
-                    "- Evil Portal\n",
+    .details_text = "Stops all WiFi activity\n"
+                    "(scan, spam, attacks,\n"
+                    "captures, portal).\n",
 };
 
 static const MenuCommand status_idle_commands[] = {
@@ -1159,64 +1489,55 @@ static const MenuCommand status_idle_commands[] = {
         .label = "Life (Game of Life)",
         .command = "statusidle set life\n",
         .details_header = "Life Animation",
-        .details_text = "Set idle status display to\n"
-                        "Game of Life animation.",
+        .details_text = "Idle screen: Game of Life.\n",
     },
     {
         .label = "Ghost (Sprite)",
         .command = "statusidle set ghost\n",
         .details_header = "Ghost Animation",
-        .details_text = "Set idle status display to\n"
-                        "ghost sprite animation.",
+        .details_text = "Idle screen: ghost sprite.\n",
     },
     {
         .label = "Starfield",
         .command = "statusidle set starfield\n",
         .details_header = "Starfield Animation",
-        .details_text = "Set idle status display to\n"
-                        "starfield effect.",
+        .details_text = "Idle screen: starfield.\n",
     },
     {
         .label = "HUD",
         .command = "statusidle set hud\n",
         .details_header = "HUD Animation",
-        .details_text = "Set idle status display to\n"
-                        "HUD-style overlay.",
+        .details_text = "Idle screen: HUD overlay.\n",
     },
     {
         .label = "Matrix",
         .command = "statusidle set matrix\n",
         .details_header = "Matrix Animation",
-        .details_text = "Set idle status display to\n"
-                        "Matrix-style rain effect.",
+        .details_text = "Idle screen: matrix rain.\n",
     },
     {
         .label = "Multiple Ghosts",
         .command = "statusidle set ghosts\n",
         .details_header = "Ghosts Animation",
-        .details_text = "Set idle status display to\n"
-                        "floating ghosts effect.",
+        .details_text = "Idle screen: ghost swarm.\n",
     },
     {
         .label = "Spiral",
         .command = "statusidle set spiral\n",
         .details_header = "Spiral Animation",
-        .details_text = "Set idle status display to\n"
-                        "spiral pattern effect.",
+        .details_text = "Idle screen: spiral.\n",
     },
     {
         .label = "Falling Leaves",
         .command = "statusidle set leaves\n",
         .details_header = "Falling Leaves Animation",
-        .details_text = "Set idle status display to\n"
-                        "falling leaves effect.",
+        .details_text = "Idle screen: falling leaves.\n",
     },
     {
         .label = "Bouncing Text",
         .command = "statusidle set bouncing\n",
         .details_header = "Bouncing Text Animation",
-        .details_text = "Set idle status display to\n"
-                        "bouncing text effect.",
+        .details_text = "Idle screen: bouncing text.\n",
     },
 };
 
@@ -1224,34 +1545,18 @@ static const MenuCommand status_idle_commands[] = {
 // BLE Scanning sub-category: Flipper & Skimmer Detection
 static const MenuCommand ble_scan_detect_commands[] = {
     {
-        .label = "Skimmer Detection",
-        .command = "capture -skimmer\n",
-        .capture_prefix = "skimmer_scan",
-        .file_ext = "pcap",
-        .folder = GHOST_ESP_APP_FOLDER_PCAPS,
-        .details_header = "Skimmer Scanner",
-        .details_text = "Detects potential\n"
-                        "card skimmers by\n"
-                        "analyzing BLE\n"
-                        "signatures and\n"
-                        "known patterns.\n",
-    },
-    {
         .label = "Find the Flippers",
         .command = "blescan -f\n",
         .details_header = "Flipper Scanner",
-        .details_text = "Scans for Flippers:\n"
-                        "- Device name\n"
-                        "- BT address\n"
-                        "- Signal level\n"
+        .details_text = "Scan for nearby Flippers:\n"
+                        "name, BT address, RSSI.\n"
                         "Range: ~50m\n",
     },
     {
         .label = "List Flippers",
         .command = "listflippers\n",
         .details_header = "List Flippers",
-        .details_text = "List discovered Flipper Devices\n"
-                        "in range.",
+        .details_text = "List Flippers found in range.\n",
     },
     {
         .label = "Select Flipper to Track",
@@ -1259,7 +1564,22 @@ static const MenuCommand ble_scan_detect_commands[] = {
         .needs_input = true,
         .input_text = "Flipper Number",
         .details_header = "Select Flipper to Track",
-        .details_text = "Select a Flipper by number to track RSSI strength.",
+        .details_text = "Pick a Flipper to track RSSI.\n",
+    },
+    {
+        .label = "Skimmer Detection",
+        .command = "capture -skimmer\n",
+        .capture = &capture_skimmer_def,
+        .details_header = "Skimmer Scanner",
+        .details_text = "Detect card skimmers by BLE\n"
+                        "signatures.\n",
+    },
+    {
+        .label = "BLE Spam Detector",
+        .command = "blescan -ds\n",
+        .details_header = "BLE Spam Detector",
+        .details_text = "Detect BLE ad spam nearby.\n"
+                        "Stop via Stop BLE Scanning.\n",
     },
 };
 
@@ -1269,11 +1589,8 @@ static const MenuCommand ble_scan_airtag_commands[] = {
         .label = "AirTag Scanner",
         .command = "blescan -a\n",
         .details_header = "AirTag Scanner",
-        .details_text = "Detects nearby Apple\n"
-                        "AirTags and shows:\n"
-                        "- Device ID\n"
-                        "- Signal strength\n"
-                        "- Last seen time\n",
+        .details_text = "Detect nearby Apple AirTags:\n"
+                        "ID, signal, last seen.\n",
     },
     {
         .label = "List AirTags",
@@ -1297,17 +1614,15 @@ static const MenuCommand ble_scan_gatt_commands[] = {
         .label = "Scan GATT Devices",
         .command = "blescan -g\n",
         .details_header = "GATT Device Scanner",
-        .details_text = "Scan for connectable BLE\n"
-                        "devices for GATT enumeration.\n"
-                        "Shows device addresses and\n"
-                        "connection capability.\n",
+        .details_text = "Scan connectable BLE devices\n"
+                        "for GATT enumeration.\n",
     },
     {
         .label = "List GATT Devices",
         .command = "listgatt\n",
         .details_header = "List GATT Devices",
-        .details_text = "List discovered GATT devices\n"
-                        "with tracker type detection.\n",
+        .details_text = "List GATT devices (with\n"
+                        "tracker detection).\n",
     },
     {
         .label = "Select GATT Device",
@@ -1315,61 +1630,46 @@ static const MenuCommand ble_scan_gatt_commands[] = {
         .needs_input = true,
         .input_text = "Device Index",
         .details_header = "Select GATT Device",
-        .details_text = "Select a GATT device by index\n"
-                        "for enumeration or tracking.\n",
+        .details_text = "Pick a GATT device to\n"
+                        "enumerate or track.\n",
     },
     {
         .label = "Enumerate GATT Services",
         .command = "enumgatt\n",
         .details_header = "Enumerate GATT",
-        .details_text = "Connect to selected device\n"
-                        "and enumerate its GATT\n"
-                        "services, characteristics,\n"
-                        "and descriptors.\n",
+        .details_text = "Enumerate the selected\n"
+                        "device's GATT services.\n",
     },
     {
         .label = "Track GATT Device",
         .command = "trackgatt\n",
         .details_header = "Track GATT Device",
         .details_text = "Track selected GATT device\n"
-                        "using real-time RSSI signal\n"
-                        "strength monitoring.\n",
+                        "RSSI live.\n",
     },
 };
 
 // BLE Scanning sub-category: Advertisers & Traffic
 static const MenuCommand ble_scan_adv_commands[] = {
     {
-        .label = "View All BLE Traffic",
-        .command = "blescan -r\n",
-        .details_header = "BLE Raw Traffic",
-        .details_text = "View all Bluetooth Low Energy\ntraffic in range.",
-    },
-    {
         .label = "Scan Advertisers",
         .command = "blescan -adv\n",
         .details_header = "Scan Advertisers",
-        .details_text = "Start a parsed BLE\n"
-                        "advertiser scan.\n"
-                        "Run 'List Advertisers'\n"
-                        "afterwards for results.\n",
+        .details_text = "Scan parsed BLE advertisers.\n"
+                        "Then run List Advertisers.\n",
     },
     {
         .label = "List Advertisers",
         .command = "listadv\n",
         .details_header = "List Advertisers",
-        .details_text = "List discovered BLE\n"
-                        "advertisers in range.\n",
+        .details_text = "List found BLE advertisers.\n",
     },
     {
-        .label = "BLE Bridge",
-        .command = "blebridge",
-        .needs_input = true,
-        .input_text = "start | stop | status | pair <peer>",
-        .details_header = "BLE GhostLink Bridge",
-        .details_text = "Start/stop/status the BLE\n"
-                        "GhostLink bridge, or pair\n"
-                        "with a peer by name.\n",
+        .label = "View All BLE Traffic",
+        .command = "blescan -r\n",
+        .details_header = "BLE Raw Traffic",
+        .details_text = "Show all BLE traffic in\n"
+                        "range.\n",
     },
     {
         .label = "Stop BLE Scanning",
@@ -1377,18 +1677,107 @@ static const MenuCommand ble_scan_adv_commands[] = {
         .details_header = "Stop BLE Scan",
         .details_text = "Stops any active BLE scanning.",
     },
+    {
+        .label = "Scan by OUI Prefix...",
+        .command = "blescan -oui",
+        .needs_input = true,
+        .input_text = "00:1A:2B",
+        .details_header = "OUI Scan",
+        .details_text = "Scan advertisers by MAC OUI.\n"
+                        "Format: 6 hex digits,\n"
+                        "Ex: 00:1A:2B\n",
+    },
+    {
+        .label = "Scan by Vendor...",
+        .command = "blescan -vendor",
+        .needs_input = true,
+        .input_text = "Exact vendor name",
+        .details_header = "Vendor Scan",
+        .details_text = "Scan by OUI vendor name\n"
+                        "(exact match), e.g.\n"
+                        "Apple, Inc.\n",
+    },
+    {
+        .label = "BLE Bridge",
+        .command = "blebridge",
+        .needs_input = true,
+        .input_text = "start | stop | status | pair <peer>",
+        .details_header = "BLE GhostLink Bridge",
+        .details_text = "BLE GhostLink bridge:\n"
+                        "start/stop/status/pair.\n",
+    },
+};
+
+// BLE Scanning sub-category: Trackers & Beacons
+static const MenuCommand ble_scan_tracker_commands[] = {
+    {
+        .label = "Start Tracker Detect",
+        .command = "bledetect\n",
+        .details_header = "Tracker Detection",
+        .details_text = "Scan for trackers, skimmers\n"
+                        "and beacons by signature.\n",
+    },
+    {
+        .label = "List Detected Devices",
+        .command = "bledetect -l\n",
+        .details_header = "List Detected",
+        .details_text = "List devices: index, type,\n"
+                        "name/MAC, RSSI.\n",
+    },
+    {
+        .label = "Follow Device (RSSI)...",
+        .command = "bledetect -t",
+        .needs_input = true,
+        .input_text = "Device index",
+        .details_header = "Follow Device",
+        .details_text = "Follow one device's live RSSI\n"
+                        "(index from List Detected).\n",
+    },
+    {
+        .label = "Stop Tracker Detect",
+        .command = "bledetect -s\n",
+        .details_header = "Stop Detection",
+        .details_text = "Stop detection (results are\n"
+                        "kept).\n",
+    },
+    {
+        .label = "Stop Following",
+        .command = "bledetect -u\n",
+        .details_header = "Stop Following",
+        .details_text = "Stop tracking the selected\ndevice.\n",
+    },
+    {
+        .label = "Spoof Detected AirTag...",
+        .command = "bledetect -sp",
+        .needs_input = true,
+        .input_text = "AirTag index",
+        .details_header = "Spoof AirTag",
+        .details_text = "Spoof a detected AirTag\n"
+                        "(index from List Detected).\n"
+                        "Stop with Stop Spoofing.\n",
+    },
+    {
+        .label = "Stop Spoofing",
+        .command = "stopspoof\n",
+        .details_header = "Stop Spoofing",
+        .details_text = "Stop AirTag spoofing.\n",
+    },
+    {
+        .label = "Clear Results",
+        .command = "bledetect -c\n",
+        .details_header = "Clear Results",
+        .details_text = "Clear stored results (stop\n"
+                        "the scan first).\n",
+    },
 };
 
 static const MenuCommand ble_capture_commands[] = {
     {
         .label = "BLE Raw Capture",
         .command = "capture -ble\n",
-        .capture_prefix = "ble_raw_capture",
-        .file_ext = "pcap",
-        .folder = GHOST_ESP_APP_FOLDER_PCAPS,
+        .capture = &capture_ble_def,
         .details_header = "BLE Raw Capture",
-        .details_text = "Captures raw BLE\n"
-                        "traffic and data.\n"
+        .details_text = "Raw BLE capture to PCAP.\n"
                         "Range: ~10-30m\n",
     },
 };
@@ -1398,19 +1787,10 @@ static const MenuCommand ble_attack_commands[] = {
         .label = "< BLE Spam (Apple) >",
         .command = "blespam -apple\n",
         .details_header = "Variable BLE Spam",
-        .details_text = "Use Left/Right to change:\n"
-                        "- Apple device spam\n"
-                        "- Microsoft Swift Pair\n"
-                        "- Samsung Galaxy Watch\n"
-                        "- Google Fast Pair\n"
-                        "- Random spam (all types)\n"
+        .details_text = "Use Left/Right:\n"
+                        "Apple, Microsoft, Samsung,\n"
+                        "Google, Random.\n"
                         "Range: ~50m\n",
-    },
-    {
-        .label = "Spoof Selected AirTag",
-        .command = "spoofairtag\n",
-        .details_header = "Spoof AirTag",
-        .details_text = "Spoof the selected AirTag.",
     },
     {
         .label = "Stop BLE Spam",
@@ -1420,10 +1800,26 @@ static const MenuCommand ble_attack_commands[] = {
                         "spam attacks.",
     },
     {
+        .label = "Spoof Selected AirTag",
+        .command = "spoofairtag\n",
+        .details_header = "Spoof AirTag",
+        .details_text = "Spoof the selected AirTag.",
+    },
+    {
         .label = "Stop AirTag Spoof",
         .command = "stopspoof\n",
         .details_header = "Stop Spoofing",
         .details_text = "Stops AirTag spoofing.",
+    },
+    {
+        .label = "Set Spam Name...",
+        .command = "blespam -name",
+        .needs_input = true,
+        .input_text = "Name (no spaces)",
+        .details_header = "Set Spam Name",
+        .details_text = "Set BLE spam name (no\n"
+                        "spaces); renames a running\n"
+                        "spam.\n",
     },
 };
 
@@ -1431,12 +1827,9 @@ static const MenuCommand ble_stop_command = {
     .label = "Stop All BLE",
     .command = "stop\n",
     .details_header = "Stop BLE Operations",
-    .details_text = "Stops all active BLE\n"
-                    "operations including:\n"
-                    "- BLE Scanning\n"
-                    "- Skimmer Detection\n"
-                    "- Packet Captures\n"
-                    "- Device Detection\n",
+    .details_text = "Stops all BLE activity\n"
+                    "(scan, skimmer, captures,\n"
+                    "spoofs).\n",
 };
 
 // GPS sub-category: GPS Config
@@ -1445,11 +1838,14 @@ static const MenuCommand gps_config_commands[] = {
         .label = "GPS Info",
         .command = "gpsinfo\n",
         .details_header = "GPS Information",
-        .details_text = "Shows GPS details:\n"
-                        "- Position (Lat/Long)\n"
-                        "- Altitude & Speed\n"
-                        "- Direction & Quality\n"
-                        "- Satellite Status\n",
+        .details_text = "Show GPS details: position,\n"
+                        "altitude, speed, sats.\n",
+    },
+    {
+        .label = "View GPS Pin",
+        .command = "gpspin\n",
+        .details_header = "View GPS RX Pin",
+        .details_text = "Show current GPS RX pin.\n",
     },
     {
         .label = "Set GPS Pin",
@@ -1457,18 +1853,9 @@ static const MenuCommand gps_config_commands[] = {
         .needs_input = true,
         .input_text = "Pin Number",
         .details_header = "Set GPS RX Pin",
-        .details_text = "Set the GPS RX pin for\n"
-                        "external GPS modules.\n"
-                        "Setting persists to NVS.\n"
-                        "Restart GPS commands to apply.\n",
-    },
-    {
-        .label = "View GPS Pin",
-        .command = "gpspin\n",
-        .details_header = "View GPS RX Pin",
-        .details_text = "Shows current GPS RX pin\n"
-                        "configuration for external\n"
-                        "GPS modules.\n",
+        .details_text = "Set GPS RX pin for external\n"
+                        "modules. Persists to NVS;\n"
+                        "restart GPS to apply.\n",
     },
     {
         .label = "Set GPS Baud",
@@ -1476,58 +1863,42 @@ static const MenuCommand gps_config_commands[] = {
         .needs_input = true,
         .input_text = "Baud Rate (e.g. 9600)",
         .details_header = "Set GPS Baud Rate",
-        .details_text = "Set the GPS module baud\n"
-                        "rate. Persists to NVS.\n"
-                        "Restart GPS to apply.\n",
+        .details_text = "Set GPS baud rate (or auto).\n"
+                        "Persists to NVS.\n",
     },
 };
 
 // GPS sub-category: Wardriving
 static const MenuCommand gps_wardrive_commands[] = {
     {
-        .label = "WiGLE Auto Upload",
-        .command = "wigle auto",
-        .needs_input = true,
-        .input_text = "on | off",
-        .details_header = "WiGLE Auto Upload",
-        .details_text = "Enable or disable automatic\n"
-                        "upload of wardrive data to\n"
-                        "WiGLE.\n",
-    },
-    {
-        .label = "WiGLE Donate",
-        .command = "wigle donate",
-        .needs_input = true,
-        .input_text = "on | off",
-        .details_header = "WiGLE Donate Mode",
-        .details_text = "Toggle WiGLE donate mode for\n"
-                        "uploaded observations.\n",
-    },
-    {
         .label = "Start Wardriving",
         .command = "startwd\n",
-        .capture_prefix = "wardrive_wifi",
-        .file_ext = "csv",
-        .folder = GHOST_ESP_APP_FOLDER_WARDRIVE,
+        .capture = &wardrive_wifi_def,
         .details_header = "Wardrive Mode",
-        .details_text = "Maps WiFi networks:\n"
-                        "- Network info\n"
-                        "- GPS location\n"
-                        "- Signal levels\n"
-                        "Saves as CSV\n",
+        .details_text = "Map WiFi + GPS to CSV.\n",
     },
     {
         .label = "BLE Wardriving",
         .command = "blewardriving\n",
-        .capture_prefix = "wardrive_ble",
-        .file_ext = "csv",
-        .folder = GHOST_ESP_APP_FOLDER_WARDRIVE,
+        .capture = &wardrive_ble_def,
         .details_header = "BLE Wardriving",
-        .details_text = "Maps BLE devices:\n"
-                        "- Device info\n"
-                        "- GPS location\n"
-                        "- Signal levels\n"
-                        "Saves as CSV\n",
+        .details_text = "Map BLE + GPS to CSV.\n",
+    },
+    {
+        .label = "Dual Wardriving (WiFi+BLE)",
+        .command = "dualwd\n",
+        .capture = &wardrive_dual_def,
+        .details_header = "Dual Wardriving",
+        .details_text = "Map WiFi + BLE + GPS to\n"
+                        "CSV.\n"
+                        "Requires PSRAM.\n",
+    },
+    {
+        .label = "Stop All GPS",
+        .command = "stop\n",
+        .details_header = "Stop GPS Operations",
+        .details_text = "Stops GPS: info, WiFi and\n"
+                        "BLE wardriving.\n",
     },
     {
         .label = "Stop BLE Wardriving",
@@ -1537,14 +1908,73 @@ static const MenuCommand gps_wardrive_commands[] = {
                         "and logging.",
     },
     {
-        .label = "Stop All GPS",
-        .command = "stop\n",
-        .details_header = "Stop GPS Operations",
-        .details_text = "Stops all active GPS\n"
-                        "operations including:\n"
-                        "- GPS Info Updates\n"
-                        "- WiFi Wardriving\n"
-                        "- BLE Wardriving\n",
+        .label = "Stop Dual Wardriving",
+        .command = "dualwd -s\n",
+        .details_header = "Stop Dual Wardrive",
+        .details_text = "Stops dual WiFi+BLE\nwardriving.\n",
+    },
+    {
+        .label = "WiGLE List CSV Files",
+        .command = "wigle files\n",
+        .details_header = "WiGLE CSV Files",
+        .details_text = "List GPS CSVs on SD for\n"
+                        "manual upload.\n",
+    },
+    {
+        .label = "WiGLE Upload All",
+        .command = "wigle upload all\n",
+        .details_header = "WiGLE Upload All",
+        .details_text = "Upload all pending CSVs\n"
+                        "(needs WiFi + API key).\n",
+    },
+    {
+        .label = "WiGLE Upload File...",
+        .command = "wigle upload",
+        .needs_input = true,
+        .input_text = "CSV filename",
+        .details_header = "WiGLE Upload File",
+        .details_text = "Upload one CSV from SD\n"
+                        "(name from List CSV Files).\n",
+    },
+    {
+        .label = "WiGLE Account Stats",
+        .command = "wigle stats\n",
+        .details_header = "WiGLE Stats",
+        .details_text = "Show WiGLE account stats\n"
+                        "(needs WiFi + API key).\n",
+    },
+    {
+        .label = "WiGLE Show Settings",
+        .command = "wigle show\n",
+        .details_header = "WiGLE Settings",
+        .details_text = "Show WiGLE key + settings.\n",
+    },
+    {
+        .label = "WiGLE Set API Token...",
+        .command = "wigle API",
+        .needs_input = true,
+        .input_text = "Token or Name:Token",
+        .details_header = "WiGLE API Token",
+        .details_text = "Set WiGLE API credentials\n"
+                        "from wigle.net/account\n"
+                        "(encoded or Name:Token).\n",
+    },
+    {
+        .label = "WiGLE Auto Upload",
+        .command = "wigle auto",
+        .needs_input = true,
+        .input_text = "on | off",
+        .details_header = "WiGLE Auto Upload",
+        .details_text = "Auto-upload wardrive data\n"
+                        "to WiGLE.\n",
+    },
+    {
+        .label = "WiGLE Donate",
+        .command = "wigle donate",
+        .needs_input = true,
+        .input_text = "on | off",
+        .details_header = "WiGLE Donate Mode",
+        .details_text = "Toggle WiGLE donate mode.\n",
     },
 };
 
@@ -1554,39 +1984,16 @@ static const MenuCommand aerial_commands[] = {
         .label = "Start Scan (30s)",
         .command = "aerialscan 30\n",
         .details_header = "Scan for Drones",
-        .details_text = "Scans for aerial devices:\n"
-                        "- OpenDroneID (WiFi/BLE)\n"
-                        "- DJI drones\n"
-                        "- Drone networks\n"
-                        "Phase 1: WiFi (all channels)\n"
-                        "Phase 2: BLE\n"
-                        "Duration: 30 seconds\n",
-    },
-    {
-        .label = "Quick Scan (15s)",
-        .command = "aerialscan 15\n",
-        .details_header = "Quick Scan",
-        .details_text = "Fast 15 second scan for\n"
-                        "nearby aerial devices.\n",
-    },
-    {
-        .label = "Extended Scan (60s)",
-        .command = "aerialscan 60\n",
-        .details_header = "Extended Scan",
-        .details_text = "Extended 60 second scan\n"
-                        "for maximum coverage.\n",
+        .details_text = "Scan for drones: RemoteID,\n"
+                        "DJI, drone networks.\n"
+                        "30s WiFi+BLE.\n",
     },
     {
         .label = "List Detected Drones",
         .command = "aeriallist\n",
         .details_header = "Detected Devices",
-        .details_text = "Lists all detected aerial\n"
-                        "devices with:\n"
-                        "- Device ID & Type\n"
-                        "- GPS coordinates\n"
-                        "- Altitude & Speed\n"
-                        "- Operator location\n"
-                        "- RSSI signal\n",
+        .details_text = "List drones: ID, type, GPS,\n"
+                        "altitude, operator, RSSI.\n",
     },
     {
         .label = "Track Drone by Index",
@@ -1594,10 +2001,27 @@ static const MenuCommand aerial_commands[] = {
         .needs_input = true,
         .input_text = "Device Index",
         .details_header = "Track Drone",
-        .details_text = "Track specific drone by\n"
-                        "index from aeriallist.\n"
-                        "Shows real-time updates\n"
-                        "for selected device.\n",
+        .details_text = "Track a drone by index\n"
+                        "(from the drone list).\n",
+    },
+    {
+        .label = "Stop All",
+        .command = "aerialstop\n",
+        .details_header = "Stop All Operations",
+        .details_text = "Stops aerial scan, tracking\n"
+                        "and spoofing.\n",
+    },
+    {
+        .label = "Quick Scan (15s)",
+        .command = "aerialscan 15\n",
+        .details_header = "Quick Scan",
+        .details_text = "Fast 15 s drone scan.\n",
+    },
+    {
+        .label = "Extended Scan (60s)",
+        .command = "aerialscan 60\n",
+        .details_header = "Extended Scan",
+        .details_text = "Extended 60 s drone scan.\n",
     },
     {
         .label = "Track Drone by MAC",
@@ -1605,21 +2029,16 @@ static const MenuCommand aerial_commands[] = {
         .needs_input = true,
         .input_text = "MAC Address",
         .details_header = "Track by MAC",
-        .details_text = "Track specific drone by\n"
-                        "MAC address.\n"
-                        "Format: aa:bb:cc:dd:ee:ff\n",
+        .details_text = "Track a drone by MAC.\n"
+                        "Ex: aa:bb:cc:dd:ee:ff\n",
     },
     {
         .label = "Spoof Test Drone",
         .command = "aerialspoof\n",
         .details_header = "Test Spoof",
-        .details_text = "Broadcasts test RemoteID:\n"
-                        "ID: GHOST-TEST\n"
-                        "Location: San Francisco\n"
-                        "Altitude: 100m\n"
-                        "Status: Airborne\n\n"
-                        "Note: WiFi suspended\n"
-                        "during BLE broadcast\n",
+        .details_text = "Broadcast a test RemoteID\n"
+                        "(GHOST-TEST, San Francisco).\n"
+                        "WiFi pauses during BLE.\n",
     },
     {
         .label = "Custom Spoof",
@@ -1627,11 +2046,9 @@ static const MenuCommand aerial_commands[] = {
         .needs_input = true,
         .input_text = "ID Lat Lon Alt",
         .details_header = "Custom Spoof",
-        .details_text = "Broadcast custom RemoteID.\n"
-                        "Format:\n"
-                        "DRONE-ID lat lon alt\n\n"
-                        "Example:\n"
-                        "GHOST-1 40.7128 -74.0060 100\n",
+        .details_text = "Broadcast custom RemoteID:\n"
+                        "ID lat lon alt\n"
+                        "Ex: GHOST-1 40.7 -74.0 100\n",
     },
     {
         .label = "Stop Spoofing",
@@ -1639,16 +2056,6 @@ static const MenuCommand aerial_commands[] = {
         .details_header = "Stop Spoofing",
         .details_text = "Stops RemoteID broadcast\n"
                         "and restores WiFi.\n",
-    },
-    {
-        .label = "Stop All",
-        .command = "aerialstop\n",
-        .details_header = "Stop All Operations",
-        .details_text = "Stops all active aerial\n"
-                        "operations including:\n"
-                        "- Scanning\n"
-                        "- Tracking\n"
-                        "- Spoofing\n",
     },
 };
 
@@ -1670,14 +2077,14 @@ static const MenuCommand ir_commands[] = {
         .label = "Send from Flipper",
         .command = "send_ir_file",
         .details_header = "Send from Flipper",
-        .details_text = "Browse Flipper IR files and\nsend signals to ESP.\n",
+        .details_text = "Send Flipper IR files to ESP.\n",
     },
     {
         .label = "IR Learn (Auto File)",
         .command = "ir learn\n",
         .details_header = "Learn IR (Auto)",
-        .details_text = "Capture IR signal (10s wait).\n"
-                        "Auto-create a new IR file.\n",
+        .details_text = "Learn IR (10s). New file\n"
+                        "auto-created.\n",
     },
     {
         .label = "IR Learn (Path)",
@@ -1685,9 +2092,9 @@ static const MenuCommand ir_commands[] = {
         .needs_input = true,
         .input_text = "Path (optional)",
         .details_header = "Learn IR (Path)",
-        .details_text = "Capture IR signal (10s wait).\n"
-                        "Leave blank to auto-create,\n"
-                        "or specify path to append.\n",
+        .details_text = "Learn IR (10s). Blank = new\n"
+                        "file, or give a path to\n"
+                        "append.\n",
     },
     {
         .label = "IR Receive",
@@ -1695,15 +2102,14 @@ static const MenuCommand ir_commands[] = {
         .needs_input = true,
         .input_text = "Timeout (default 60)",
         .details_header = "Receive IR",
-        .details_text = "Wait for single IR signal.\n"
-                        "Prints decoded or RAW data.\n",
+        .details_text = "Wait for one IR signal;\n"
+                        "prints decoded/raw.\n",
     },
     {
         .label = "IR List Files (Raw)",
         .command = "ir list\n",
         .details_header = "List IR Files",
-        .details_text = "List all .ir/.json files in\n"
-                        "remote directories.\n",
+        .details_text = "List .ir/.json remote files.\n",
     },
     {
         .label = "IR Show File (Raw)",
@@ -2386,16 +2792,15 @@ static void confirmation_ok_callback(void* context) {
         bool file_opened = false;
 
         // Handle capture commands
-        if(cmd_ctx->command->capture_prefix || cmd_ctx->command->file_ext ||
-           cmd_ctx->command->folder) {
+        if(cmd_ctx->command->capture) {
             FURI_LOG_I("Capture", "Attempting to open PCAP file before sending capture command.");
             file_opened = uart_receive_data(
                 cmd_ctx->state->uart_context,
                 cmd_ctx->state->view_dispatcher,
                 cmd_ctx->state,
-                cmd_ctx->command->capture_prefix ? cmd_ctx->command->capture_prefix : "",
-                cmd_ctx->command->file_ext ? cmd_ctx->command->file_ext : "",
-                cmd_ctx->command->folder ? cmd_ctx->command->folder : "");
+                cmd_ctx->command->capture->prefix,
+                cmd_ctx->command->capture->ext,
+                cmd_ctx->command->capture->folder);
 
             if(!file_opened) {
                 FURI_LOG_E("Capture", "Failed to open PCAP file. Aborting capture command.");
@@ -2498,6 +2903,16 @@ void navigate_to_view(AppState* state, uint8_t view_id) {
         break;
     case VIEW_GPS_WARDRIVE:
         show_gps_wardrive_menu(state);
+        break;
+    // Recon / sinkhole / tracker sub-categories
+    case VIEW_WIFI_RECON:
+        show_wifi_recon_menu(state);
+        break;
+    case VIEW_WIFI_NETWORK_SINKHOLE:
+        show_wifi_network_sinkhole_menu(state);
+        break;
+    case VIEW_BLE_SCAN_TRACKERS:
+        show_ble_scan_tracker_menu(state);
         break;
     case VIEW_AERIAL:
         show_aerial_menu(state);
@@ -3155,8 +3570,7 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
         return;
     }
 
-    if(!command->needs_input && !command->needs_confirmation && !command->capture_prefix &&
-       !command->file_ext && !command->folder) {
+    if(!command->needs_input && !command->confirm && !command->capture) {
         if(handle_ir_command_feedback(state, command->command)) {
             return;
         }
@@ -3207,13 +3621,13 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
     }
 
     // For commands needing confirmation
-    if(command->needs_confirmation) {
+    if(command->confirm) {
         MenuCommandContext* cmd_ctx = malloc(sizeof(MenuCommandContext));
         cmd_ctx->state = state;
         cmd_ctx->command = command;
         state->active_confirm_context = cmd_ctx;
-        confirmation_view_set_header(state->confirmation_view, command->confirm_header);
-        confirmation_view_set_text(state->confirmation_view, command->confirm_text);
+        confirmation_view_set_header(state->confirmation_view, command->confirm->header);
+        confirmation_view_set_text(state->confirmation_view, command->confirm->text);
         confirmation_view_set_ok_callback(
             state->confirmation_view, confirmation_ok_callback, cmd_ctx);
         confirmation_view_set_cancel_callback(
@@ -3332,16 +3746,16 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
     }
 
     // Handle capture commands
-    if(command->capture_prefix || command->file_ext || command->folder) {
+    if(command->capture) {
         // Save view and show terminal log
         state->previous_view = state->current_view;
         bool file_opened = uart_receive_data(
             state->uart_context,
             state->view_dispatcher,
             state,
-            command->capture_prefix ? command->capture_prefix : "",
-            command->file_ext ? command->file_ext : "",
-            command->folder ? command->folder : "");
+            command->capture->prefix,
+            command->capture->ext,
+            command->capture->folder);
 
         if(!file_opened) {
             FURI_LOG_E("Capture", "Failed to open capture file");
@@ -3379,8 +3793,12 @@ static void show_menu(
 
     // Set up view with input handler
     View* menu_view = submenu_get_view(menu);
+    if(!state->submenu_original_input) {
+        state->submenu_original_input = menu_view->input_callback;
+        state->submenu_original_context = menu_view->context;
+    }
     view_set_context(menu_view, state);
-    view_set_input_callback(menu_view, menu_input_handler);
+    view_set_input_callback(menu_view, menu_view_input_handler);
 
     // Restore last selection based on menu type
     uint32_t last_index = 0;
@@ -3473,6 +3891,15 @@ static void show_menu(
     case VIEW_GPS_WARDRIVE:
         last_index = state->last_gps_wardrive_index;
         break;
+    case VIEW_WIFI_RECON:
+        last_index = state->last_wifi_recon_index;
+        break;
+    case VIEW_WIFI_NETWORK_SINKHOLE:
+        last_index = state->last_wifi_network_sinkhole_index;
+        break;
+    case VIEW_BLE_SCAN_TRACKERS:
+        last_index = state->last_ble_scan_tracker_index;
+        break;
     }
     if(last_index < command_count) {
         submenu_set_selected_item(menu, last_index);
@@ -3514,6 +3941,16 @@ void show_wifi_scanning_menu(AppState* state) {
         state->wifi_scanning_menu, 3, wifi_listen_modes[current_wifi_listen_index].label);
 }
 
+void show_wifi_recon_menu(AppState* state) {
+    show_menu(
+        state,
+        wifi_recon_commands,
+        COUNT_OF(wifi_recon_commands),
+        "Recon Tools",
+        state->wifi_recon_menu,
+        VIEW_WIFI_RECON);
+}
+
 void show_wifi_capture_menu(AppState* state) {
     show_menu(
         state,
@@ -3541,11 +3978,12 @@ void show_wifi_attack_menu(AppState* state) {
 void show_wifi_network_menu(AppState* state) {
     submenu_reset(state->wifi_network_menu);
     submenu_set_header(state->wifi_network_menu, "Portal & Network");
-    submenu_add_item(state->wifi_network_menu, "Evil Portal >", 0, submenu_callback, state);
-    submenu_add_item(state->wifi_network_menu, "WiFi Connection >", 1, submenu_callback, state);
+    submenu_add_item(state->wifi_network_menu, "WiFi Connection >", 0, submenu_callback, state);
+    submenu_add_item(state->wifi_network_menu, "Evil Portal >", 1, submenu_callback, state);
     submenu_add_item(state->wifi_network_menu, "Network Scan >", 2, submenu_callback, state);
     submenu_add_item(state->wifi_network_menu, "IoT Control >", 3, submenu_callback, state);
     submenu_add_item(state->wifi_network_menu, "WebUI >", 4, submenu_callback, state);
+    submenu_add_item(state->wifi_network_menu, "DNS Sinkhole >", 5, submenu_callback, state);
     submenu_set_selected_item(state->wifi_network_menu, state->last_wifi_network_index);
     view_dispatcher_switch_to_view(state->view_dispatcher, VIEW_WIFI_NETWORK);
     state->current_view = VIEW_WIFI_NETWORK;
@@ -3668,6 +4106,16 @@ void show_wifi_network_webui_menu(AppState* state) {
         VIEW_WIFI_NETWORK_WEBUI);
 }
 
+void show_wifi_network_sinkhole_menu(AppState* state) {
+    show_menu(
+        state,
+        wifi_network_sinkhole_commands,
+        COUNT_OF(wifi_network_sinkhole_commands),
+        "DNS Sinkhole",
+        state->wifi_network_sinkhole_menu,
+        VIEW_WIFI_NETWORK_SINKHOLE);
+}
+
 void show_status_idle_menu(AppState* state) {
     show_menu(
         state,
@@ -3686,6 +4134,7 @@ void show_ble_scanning_menu(AppState* state) {
     submenu_add_item(state->ble_scanning_menu, "GATT >", 2, submenu_callback, state);
     submenu_add_item(
         state->ble_scanning_menu, "Advertisers & Traffic >", 3, submenu_callback, state);
+    submenu_add_item(state->ble_scanning_menu, "Trackers & Beacons >", 4, submenu_callback, state);
     submenu_set_selected_item(state->ble_scanning_menu, state->last_ble_scanning_index);
     view_dispatcher_switch_to_view(state->view_dispatcher, VIEW_BLE_SCANNING);
     state->current_view = VIEW_BLE_SCANNING;
@@ -3732,6 +4181,16 @@ void show_ble_scan_adv_menu(AppState* state) {
         VIEW_BLE_SCAN_ADV);
 }
 
+void show_ble_scan_tracker_menu(AppState* state) {
+    show_menu(
+        state,
+        ble_scan_tracker_commands,
+        COUNT_OF(ble_scan_tracker_commands),
+        "Trackers & Beacons",
+        state->ble_scan_tracker_menu,
+        VIEW_BLE_SCAN_TRACKERS);
+}
+
 void show_ble_capture_menu(AppState* state) {
     show_menu(
         state,
@@ -3760,11 +4219,12 @@ void show_wifi_menu(AppState* state) {
     submenu_reset(state->wifi_menu);
     submenu_set_header(state->wifi_menu, "WiFi Commands");
     submenu_add_item(state->wifi_menu, "Scanning & Probing > ", 0, submenu_callback, state);
-    submenu_add_item(state->wifi_menu, "Packet Capture > ", 1, submenu_callback, state);
-    submenu_add_item(state->wifi_menu, "Attacks > ", 2, submenu_callback, state);
-    submenu_add_item(state->wifi_menu, "Evil Portal & Network >", 3, submenu_callback, state);
-    submenu_add_item(state->wifi_menu, "Aerial Detector >", 4, submenu_callback, state);
-    submenu_add_item(state->wifi_menu, wifi_stop_command.label, 5, submenu_callback, state);
+    submenu_add_item(state->wifi_menu, "Recon Tools >", 1, submenu_callback, state);
+    submenu_add_item(state->wifi_menu, "Packet Capture > ", 2, submenu_callback, state);
+    submenu_add_item(state->wifi_menu, "Attacks > ", 3, submenu_callback, state);
+    submenu_add_item(state->wifi_menu, "Evil Portal & Network >", 4, submenu_callback, state);
+    submenu_add_item(state->wifi_menu, "Aerial Detector >", 5, submenu_callback, state);
+    submenu_add_item(state->wifi_menu, wifi_stop_command.label, 6, submenu_callback, state);
     // Restore last selected WiFi category
     submenu_set_selected_item(state->wifi_menu, state->last_wifi_category_index);
 
@@ -3800,8 +4260,8 @@ void show_gps_menu(AppState* state) {
     state->came_from_settings = false;
     submenu_reset(state->gps_menu);
     submenu_set_header(state->gps_menu, "GPS Commands");
-    submenu_add_item(state->gps_menu, "GPS Config >", 0, submenu_callback, state);
-    submenu_add_item(state->gps_menu, "Wardriving >", 1, submenu_callback, state);
+    submenu_add_item(state->gps_menu, "Wardriving >", 0, submenu_callback, state);
+    submenu_add_item(state->gps_menu, "GPS Config >", 1, submenu_callback, state);
     submenu_set_selected_item(state->gps_menu, state->last_gps_index);
     view_dispatcher_switch_to_view(state->view_dispatcher, VIEW_GPS);
     state->current_view = VIEW_GPS;
@@ -3916,6 +4376,18 @@ void handle_wifi_menu(AppState* state, uint32_t index) {
             state->last_wifi_network_webui_index = index;
         }
         break;
+    case VIEW_WIFI_RECON:
+        if(index < COUNT_OF(wifi_recon_commands)) {
+            command = &wifi_recon_commands[index];
+            state->last_wifi_recon_index = index;
+        }
+        break;
+    case VIEW_WIFI_NETWORK_SINKHOLE:
+        if(index < COUNT_OF(wifi_network_sinkhole_commands)) {
+            command = &wifi_network_sinkhole_commands[index];
+            state->last_wifi_network_sinkhole_index = index;
+        }
+        break;
     }
 
     if(command) {
@@ -3961,6 +4433,12 @@ void handle_ble_menu(AppState* state, uint32_t index) {
         if(index < COUNT_OF(ble_scan_adv_commands)) {
             command = &ble_scan_adv_commands[index];
             state->last_ble_scan_adv_index = index;
+        }
+        break;
+    case VIEW_BLE_SCAN_TRACKERS:
+        if(index < COUNT_OF(ble_scan_tracker_commands)) {
+            command = &ble_scan_tracker_commands[index];
+            state->last_ble_scan_tracker_index = index;
         }
         break;
     }
@@ -4058,19 +4536,22 @@ void submenu_callback(void* context, uint32_t index) {
             show_wifi_scanning_menu(state);
             break;
         case 1:
-            show_wifi_capture_menu(state);
+            show_wifi_recon_menu(state);
             break;
         case 2:
-            show_wifi_attack_menu(state);
+            show_wifi_capture_menu(state);
             break;
         case 3:
-            show_wifi_network_menu(state);
+            show_wifi_attack_menu(state);
             break;
         case 4:
+            show_wifi_network_menu(state);
+            break;
+        case 5:
             show_aerial_menu(state);
             state->last_aerial_category_index = 0;
             break;
-        case 5:
+        case 6:
             execute_menu_command(state, &wifi_stop_command);
             break;
         }
@@ -4096,10 +4577,10 @@ void submenu_callback(void* context, uint32_t index) {
         state->last_gps_index = index;
         switch(index) {
         case 0:
-            show_gps_config_menu(state);
+            show_gps_wardrive_menu(state);
             break;
         case 1:
-            show_gps_wardrive_menu(state);
+            show_gps_config_menu(state);
             break;
         }
         break;
@@ -4107,10 +4588,10 @@ void submenu_callback(void* context, uint32_t index) {
         state->last_wifi_network_index = index;
         switch(index) {
         case 0:
-            show_wifi_network_portal_menu(state);
+            show_wifi_network_conn_menu(state);
             break;
         case 1:
-            show_wifi_network_conn_menu(state);
+            show_wifi_network_portal_menu(state);
             break;
         case 2:
             show_wifi_network_scan_menu(state);
@@ -4120,6 +4601,9 @@ void submenu_callback(void* context, uint32_t index) {
             break;
         case 4:
             show_wifi_network_webui_menu(state);
+            break;
+        case 5:
+            show_wifi_network_sinkhole_menu(state);
             break;
         }
         break;
@@ -4158,6 +4642,9 @@ void submenu_callback(void* context, uint32_t index) {
         case 3:
             show_ble_scan_adv_menu(state);
             break;
+        case 4:
+            show_ble_scan_tracker_menu(state);
+            break;
         }
         break;
     case VIEW_BLE_CAPTURE:
@@ -4174,12 +4661,15 @@ void submenu_callback(void* context, uint32_t index) {
     case VIEW_WIFI_NETWORK_SCAN:
     case VIEW_WIFI_NETWORK_IOT:
     case VIEW_WIFI_NETWORK_WEBUI:
+    case VIEW_WIFI_RECON:
+    case VIEW_WIFI_NETWORK_SINKHOLE:
         handle_wifi_menu(state, index);
         break;
     case VIEW_BLE_SCAN_DETECT:
     case VIEW_BLE_SCAN_AIRTAG:
     case VIEW_BLE_SCAN_GATT:
     case VIEW_BLE_SCAN_ADV:
+    case VIEW_BLE_SCAN_TRACKERS:
         handle_ble_menu(state, index);
         break;
     case VIEW_GPS_CONFIG:
@@ -4365,6 +4855,12 @@ bool back_event_callback(void* context) {
         navigate_to_view(state, VIEW_BLE_SCANNING);
     } else if(cv >= VIEW_GPS_CONFIG && cv <= VIEW_GPS_WARDRIVE) {
         navigate_to_view(state, VIEW_GPS);
+    } else if(cv == VIEW_WIFI_RECON) {
+        navigate_to_view(state, VIEW_WIFI);
+    } else if(cv == VIEW_WIFI_NETWORK_SINKHOLE) {
+        navigate_to_view(state, VIEW_WIFI_NETWORK);
+    } else if(cv == VIEW_BLE_SCAN_TRACKERS) {
+        navigate_to_view(state, VIEW_BLE_SCANNING);
     } else if(cv == VIEW_MAIN) {
         view_dispatcher_stop(state->view_dispatcher);
     }
@@ -4437,6 +4933,18 @@ void text_view_attach_input_handler(AppState* state) {
     view_set_input_callback(text_view, text_view_input_handler);
 
     state->text_box_user_scrolled = false;
+}
+
+static bool menu_view_input_handler(InputEvent* event, void* context) {
+    AppState* state = context;
+    if(!state || !event) return false;
+
+    if(menu_input_handler(event, context)) return true;
+
+    // The shared view keeps this handler when rebuilt as a category or IR list.
+    // Let the native submenu handle navigation and item callbacks in those views.
+    return state->submenu_original_input &&
+           state->submenu_original_input(event, state->submenu_original_context);
 }
 
 static bool menu_input_handler(InputEvent* event, void* context) {
@@ -4561,6 +5069,16 @@ static bool menu_input_handler(InputEvent* event, void* context) {
         commands = wifi_network_webui_commands;
         commands_count = COUNT_OF(wifi_network_webui_commands);
         break;
+    case VIEW_WIFI_RECON:
+        current_menu = state->wifi_recon_menu;
+        commands = wifi_recon_commands;
+        commands_count = COUNT_OF(wifi_recon_commands);
+        break;
+    case VIEW_WIFI_NETWORK_SINKHOLE:
+        current_menu = state->wifi_network_sinkhole_menu;
+        commands = wifi_network_sinkhole_commands;
+        commands_count = COUNT_OF(wifi_network_sinkhole_commands);
+        break;
     // BLE Scanning sub-categories
     case VIEW_BLE_SCAN_DETECT:
         current_menu = state->ble_scan_detect_menu;
@@ -4581,6 +5099,11 @@ static bool menu_input_handler(InputEvent* event, void* context) {
         current_menu = state->ble_scan_adv_menu;
         commands = ble_scan_adv_commands;
         commands_count = COUNT_OF(ble_scan_adv_commands);
+        break;
+    case VIEW_BLE_SCAN_TRACKERS:
+        current_menu = state->ble_scan_tracker_menu;
+        commands = ble_scan_tracker_commands;
+        commands_count = COUNT_OF(ble_scan_tracker_commands);
         break;
     // GPS sub-categories
     case VIEW_GPS_CONFIG:
@@ -4664,6 +5187,12 @@ static bool menu_input_handler(InputEvent* event, void* context) {
                             state->last_ble_attack_index = current_index;
                             break;
                         }
+                    } else if(state->current_view == VIEW_WIFI_RECON) {
+                        state->last_wifi_recon_index = current_index;
+                    } else if(state->current_view == VIEW_WIFI_NETWORK_SINKHOLE) {
+                        state->last_wifi_network_sinkhole_index = current_index;
+                    } else if(state->current_view == VIEW_BLE_SCAN_TRACKERS) {
+                        state->last_ble_scan_tracker_index = current_index;
                     } else if(state->current_view == VIEW_GPS) {
                         state->last_gps_index = current_index;
                     } else if(state->current_view == VIEW_AERIAL) {
@@ -4708,6 +5237,12 @@ static bool menu_input_handler(InputEvent* event, void* context) {
                 state->current_view >= VIEW_GPS_CONFIG &&
                 state->current_view <= VIEW_GPS_WARDRIVE) {
                 navigate_to_view(state, VIEW_GPS);
+            } else if(state->current_view == VIEW_WIFI_RECON) {
+                navigate_to_view(state, VIEW_WIFI);
+            } else if(state->current_view == VIEW_WIFI_NETWORK_SINKHOLE) {
+                navigate_to_view(state, VIEW_WIFI_NETWORK);
+            } else if(state->current_view == VIEW_BLE_SCAN_TRACKERS) {
+                navigate_to_view(state, VIEW_BLE_SCANNING);
             } else if(
                 (state->current_view >= VIEW_WIFI && state->current_view <= VIEW_GPS) ||
                 state->current_view == VIEW_IR) {

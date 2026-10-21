@@ -27,6 +27,7 @@ void handle_gps_menu(AppState* state, uint32_t index);
 
 void show_wifi_menu(AppState* state);
 void show_wifi_scanning_menu(AppState* state);
+void show_wifi_recon_menu(AppState* state);
 void show_wifi_capture_menu(AppState* state);
 void show_wifi_attack_menu(AppState* state);
 void show_wifi_network_menu(AppState* state);
@@ -56,12 +57,14 @@ void show_wifi_network_conn_menu(AppState* state);
 void show_wifi_network_scan_menu(AppState* state);
 void show_wifi_network_iot_menu(AppState* state);
 void show_wifi_network_webui_menu(AppState* state);
+void show_wifi_network_sinkhole_menu(AppState* state);
 
 // BLE Scanning sub-category show functions
 void show_ble_scan_detect_menu(AppState* state);
 void show_ble_scan_airtag_menu(AppState* state);
 void show_ble_scan_gatt_menu(AppState* state);
 void show_ble_scan_adv_menu(AppState* state);
+void show_ble_scan_tracker_menu(AppState* state);
 
 // GPS sub-category show functions
 void show_gps_config_menu(AppState* state);
