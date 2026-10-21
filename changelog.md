@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.0.0
+## v1.0
 
 - Initial release for the Flipper Apps Catalog.
 - Receive Wireless M-Bus telegrams at 868.95 MHz in T and C modes.

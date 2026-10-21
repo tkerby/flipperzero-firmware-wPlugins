@@ -1,288 +1,62 @@
 # WM-Bus Decoder
 
-WM-Bus Decoder is a receive-only Flipper Zero app for Wireless M-Bus meter
-telegrams at **868.95 MHz**. It receives packets in **T** or **C**
-mode, validates their frames, and decodes supported meter readings. You can
-inspect packets live, browse recent history, and optionally save CSV logs.
-
-This README covers [getting started](#getting-started), the
-[architecture](#architecture), [controls and configuration](#runtime-controls),
-and [building and testing](#build).
+Receive and decode Wireless M-Bus meter telegrams at **868.95 MHz** with
+Flipper Zero's built-in Sub-GHz radio. Supports **T and C modes**, live packet
+inspection, history, and optional CSV logging to microSD. No external module is
+required.
 
 ## Getting Started
 
-The app uses Flipper Zero's built-in Sub-GHz radio; no external radio module is
-required. Use official Release or Release Candidate firmware and a microSD card
-for settings, optional keys, and CSV logs.
+Use official Release or Release Candidate firmware and a microSD card.
 
-1. Build with `ufbt` and copy `dist/wmbus_decoder.fap` to `/ext/apps/Sub-GHz/`
-   using qFlipper, or install and launch with `ufbt launch` over USB.
-2. Open **Apps > Sub-GHz > WM-Bus Decoder** on your Flipper.
-3. Start with **T** mode near a compatible meter. Telegrams appear in **Live**;
-   press **OK** to browse **History**.
-4. Press **Left** to change receive mode, filtering, or CSV logging. Encrypted
-   telegrams require a supported security mode and a key you supply.
+1. Build with `ufbt`, then copy `dist/wmbus_decoder.fap` to `/ext/apps/Sub-GHz/`
+   using qFlipper, or install and launch over USB with `ufbt launch`.
+2. Open **Apps > Sub-GHz > WM-Bus Decoder**.
+3. Start in **T** mode near a compatible meter. Press **Left** to configure
+   receive mode, quality/RSSI filters, logging, or decryption keys.
 
-Reception depends on range and the meter's transmission schedule. Not every
-meter broadcasts continuously or uses a supported format.
+Reception depends on range and the meter's transmission schedule.
 
-## Architecture
+## Controls
 
-The app separates radio reception from packet processing. The radio thread
-drains the CC1101 receive FIFO and reconstructs frames. A separate processing
-worker validates each frame, resolves its application payload, runs the parsers,
-and sends the result to the UI and storage.
-
-```mermaid
-flowchart TD
-    Radio["CC1101 radio: T or C mode"] --> Capture["Capture: framing and exact length"]
-    Capture --> Queue["WmBusPhyFrame queue"]
-    Queue --> Validate["Packet processing: plausibility, length, CRC"]
-    Validate --> Record["WmBusPacketRecord: wire bytes, quality, metadata"]
-    Record --> Eligible{"CRC valid and payload supported?"}
-    Eligible -->|Yes| Parse["Transient payload: decrypt if needed, then parse"]
-    Parse --> Result["Packet record with available application fields"]
-    Eligible -->|No| Result
-    Result --> Live["Live view and counters"]
-    Result --> MemoryGate["RSSI + memory quality gate"]
-    MemoryGate --> History["In-memory history"]
-    Result --> CsvGate["Logging enabled + RSSI + CSV quality gate"]
-    CsvGate --> CSV["CSV on microSD"]
-```
-
-### From radio bytes to a packet
-
-1. **Capture establishes the frame boundary.** In T mode, capture decodes
-   3-of-6 symbols into a Frame A telegram. In C mode, it validates and removes
-   the remaining sync bytes, then produces Frame A or B. Both paths check the
-   expected length and produce a `WmBusPhyFrame` starting at the link-layer
-   L-field. Invalid framing and incomplete captures are discarded here.
-2. **The radio hands off the frame.** A bounded queue lets the radio resume
-   reception while the worker processes the packet. If the queue fills, the new
-   frame is dropped and the drop count is reported. Settings and key updates
-   use the same queue, giving each frame a coherent processing configuration.
-3. **Packet processing assigns a quality level.** Plausibility, length, and CRC
-   checks determine how much of the frame can be trusted. Complete frames yield
-   identity and protocol metadata. A failed CRC prevents application parsing,
-   but the packet can still reach the live view and qualify for retention.
-4. **Supported payloads are parsed.** For CRC-valid frames, the worker uses
-   the normalized frame with link-layer CRC bytes removed. It resolves the
-   application payload and decrypts supported Mode 5 payloads when a configured
-   key succeeds. Registered parsers then try to extract application fields.
-   Unsupported payloads or unsuccessful decryption retain the frame metadata.
-5. **The app routes the result.** Every processed record updates live state and
-   counters. History and CSV each apply their retention policy before saving.
-
-See [Receive Pipeline](docs/receive-pipeline.md) for the radio presets, FIFO
-handling, mode-specific framing, and supported length range.
-
-### Data ownership
-
-`WmBusPacketRecord` is the shared result passed from processing to the app. It
-contains reception metadata, quality, identity, protocol headers, application
-fields, and the authoritative **link-layer wire bytes**. These bytes include
-link-layer CRCs and retain any encrypted payload; they exclude radio sync and
-T-mode 3-of-6 coding.
-
-Normalization happens during frame validation. The normalized frame and any
-decrypted payload live in temporary worker buffers. Parsers access the resolved
-application payload and packet metadata through `WmBusParserPacketView`. The
-extracted fields and decryption status are added to the record; the temporary
-payload buffers are not retained.
-
-History keeps compact entries with a wire-byte preview. **Full CSV** writes the
-complete wire bytes as hex alongside metadata and decoded fields; **Basic CSV**
-writes a smaller summary.
-
-### Quality and retention
-
-Quality progresses through **Received → Header OK → Frame complete → CRC OK →
-Decoded**. A packet reaches **Decoded** only when an application parser succeeds.
-
-The `MEM gate >=` and `CSV gate >=` settings select independent minimum quality
-levels. Both use the same optional RSSI threshold. These gates control saving;
-packets below either threshold still update live state and counters. History is
-held in memory, while CSV logs persist on the microSD card.
-
-### Source map
-
-| Location | Responsibility |
+| Button | Action |
 | --- | --- |
-| [`src/app/`](src/app/) | App lifecycle, processing queue, and routing results to UI and storage |
-| [`src/app/radio/`](src/app/radio/) | CC1101 configuration, FIFO service, and RX recovery |
-| [`src/protocol/capture/`](src/protocol/capture/) | Mode-specific FIFO framing and `WmBusPhyFrame` construction |
-| [`src/protocol/frame/`](src/protocol/frame/) and [`decode/`](src/protocol/decode/) | Frame lengths, CRC handling, normalization, and decoding helpers |
-| [`src/protocol/packet/`](src/protocol/packet/) and [`crypto/`](src/protocol/crypto/) | Packet quality, metadata, payload resolution, and Mode 5 decryption |
-| [`src/protocol/parser/`](src/protocol/parser/) and [`model/`](src/protocol/model/) | Parser registry, device parsers, and application records |
-| [`src/protocol/format/`](src/protocol/format/) | Packet and application-field presentation |
-| [`src/ui/`](src/ui/) | Scenes, live display, compact history, and packet details |
-| [`src/storage/`](src/storage/) | Settings, keys, and CSV files |
-| [`src/test/`](src/test/) | Opt-in on-device selftests |
+| OK | Switch between Live and History |
+| Up / Down | Browse History |
+| Left | Open configuration |
+| Right | Inspect the displayed packet |
+| Long Up | Toggle debug overlay |
+| Long Down | Open decoded application records |
+| Back | Exit; confirm if packets are held in memory |
 
-## Current Limitations
+## Decoding and Keys
 
-- T- and C-mode Frame A processing is validated against real RX captures.
-  C-mode Frame B reception still needs live on-air validation.
-- The app receives only; it does not transmit or pair with meters.
-- Device-specific parsing covers selected telegram families. Other telegrams
-  use generic DIF/VIF parsing where supported, or remain undecoded.
-- Decryption supports TPL Mode 5 (AES-128-CBC). Unsupported protection modes
-  retain frame metadata without application parsing.
+Parsers support selected Qundis QWater v2 and Apator telegrams, with a generic
+DIF/VIF fallback. Decryption supports **TPL Mode 5 (AES-128-CBC)** using keys you
+supply. Unsupported formats retain frame metadata. C-mode Frame B reception
+still needs live on-air validation. The app receives only.
 
-## Parsers
+Enter keys in configuration or put them in
+`/ext/apps_data/wmbus_decoder/keys.txt`: one 32-character hexadecimal AES-128 key
+per line, up to 16 keys. Lines starting with `#` are ignored. Only supplied keys
+are tried.
 
-Parsers run in the following order. The first successful parser supplies the
-application fields, so device-specific parsers precede the generic fallback.
+Settings and dated CSV logs also live in `/ext/apps_data/wmbus_decoder/`.
+Logging offers **Off**, **Basic** summaries, or **Full** wire bytes and decoded
+fields. History and CSV have separate minimum quality gates and share an
+optional RSSI threshold.
 
-| Parser | Handles |
-| --- | --- |
-| `QWaterV2` | Qundis QWater v2 WalkByDataSet telegrams |
-| `Apator162` | Supported Apator short-TPL telegrams |
-| `DifVif` | Standard DIF/VIF application records |
-
-### Adding a parser
-
-New parsers live under `src/protocol/parser/`.
-
-1. Add a parser ID in `src/protocol/model/wmbus_application_types.h`.
-2. Implement `parse(const WmBusParserPacketView*, WmBusPacketApplicationData*)`.
-   Return `false` when the packet does not match or cannot be safely interpreted.
-3. Add its display name to the indexed table in `wmbus_parser.c`.
-4. Include and register it in `wmbus_parser_registry.c` with its `parser_id`,
-   before any broader parser it should override.
-5. Add or update selftests in `src/test/`.
-
-`WmBusParserPacketView` exposes data-link (DLL), transport (TPL), payload, and
-identity data from the shared packet pipeline. New parser tests should exercise
-the full path through `wmbus_packet_process_phy_frame(...)` so they also cover
-framing, security checks, and parser selection.
-
-## Runtime Controls
-
-- `OK`: switch between `Live` and `History`
-- `Up` / `Down`: browse saved packets in `History`
-- `Left`: open config
-- `Right`: open packet detail for the displayed packet
-- `Long Up`: toggle the debug overlay
-- `Long Down`: open application records for the displayed packet
-- `Back`: exit immediately when no packet is in memory; otherwise confirm before discarding packets
-
-## Configuration
-
-Available settings:
-
-- RX mode: `T` / `C`
-- CSV logging: `Off` / `Basic` / `Full`
-- memory quality threshold: `MEM gate >=`
-- CSV quality threshold: `CSV gate >=`
-- RSSI gate: `Off` or a negative dBm threshold
-- keyring status and key entry
-- About screen with author, repository, and build commit information
-
-Files used by the app:
-
-- settings: `/ext/apps_data/wmbus_decoder/settings.txt`
-- keys: `/ext/apps_data/wmbus_decoder/keys.txt`
-- selftest report: `/ext/apps_data/wmbus_decoder/selftest.txt`
-- CSV basic: `/ext/apps_data/wmbus_decoder/packets_YYYYMMDD_basic.csv`
-- CSV full: `/ext/apps_data/wmbus_decoder/packets_YYYYMMDD_full.csv`
-
-## Key File
-
-Optional AES keys are loaded from:
-
-`/ext/apps_data/wmbus_decoder/keys.txt`
-
-Format:
-
-```text
-00112233445566778899AABBCCDDEEFF
-```
-
-- one AES-128 key per line as 32 hex characters
-- lines starting with `#` are ignored
-- only keys explicitly listed in this file are tested; no keys are derived or brute-forced
-- up to 16 keys are tried in file order, stopping at the first result with the Mode 5 `2F 2F` decryption-verification field required by EN 13757-7/OMS
-
-## Protocol Sources
-
-- EN 13757-3 and EN 13757-4 are normative for supported WM-Bus frame, transport, and security behavior.
-- EN 13757-7 defines transport-layer security; Mode 5 follows its address/access-number IV and decryption-verification field.
-- OMS documents are used only for extensions they define.
-- The [TI CC1101 errata](https://www.ti.com/lit/er/swrz020e/swrz020e.pdf) is authoritative for RX FIFO handling.
-- Proprietary Apator behavior is maintained from tested packet fixtures.
-
-Application decoding accepts the supported variable-data CI values `72`, `7A`,
-and `78`. Unsupported VIF modifiers and record errors remain uninterpreted.
-Other services retain frame metadata without speculative application
-parsing. QWater WDS extraction follows DIF/VIF record boundaries.
-
-## Build
-
-From this app directory:
+## Build and Development
 
 ```bash
 ufbt
 ```
 
-Output:
+Output: `dist/wmbus_decoder.fap`. Normal builds exclude on-device selftests.
 
-`dist/wmbus_decoder.fap`
+See [development documentation](docs/development.md) for architecture, parser
+extensions, protocol references, and selftests, or the
+[receive pipeline](docs/receive-pipeline.md) for radio and framing details.
 
-## Tests
-
-Parser selftests live in separate `src/test/wmbus_selftest_parser_<parser>.c` files
-for `qwaterv2`, `apator162`, and `dif_vif`. Each file exposes its own check list,
-registered in `wmbus_selftest_runner.c`. Shared packet/security integration checks
-live in `wmbus_selftest_packet.c`; reusable fixtures and helpers stay in
-`wmbus_selftest_support.c`.
-
-Normal builds exclude the on-device test suite. Build, deploy, and run the test variant with:
-
-```bash
-WMBUS_SELFTESTS=1 ufbt launch
-```
-
-The test build writes its startup report to:
-
-`/ext/apps_data/wmbus_decoder/selftest.txt`
-
-After building and launching the app on a device, fetch the report with the Flipper CLI:
-
-```bash
-ufbt cli
-```
-
-Then run:
-
-```text
-storage read /ext/apps_data/wmbus_decoder/selftest.txt
-```
-
-Expected result ends with:
-
-```text
-selftests done total=<N> passed=<N> failed=0
-```
-
-Rebuild production mode after testing so `dist/wmbus_decoder.fap` does not contain selftests:
-
-```bash
-ufbt
-```
-
-## Credits
-
-- Inspired by [wmbusmeters](https://wmbusmeters.org/)
-
-## License and Contact
-
-Licensed under the [GNU General Public License v3.0](LICENSE).
-Maintained by [Martin Mares](https://github.com/maresmar).
-Report problems through [GitHub issues](https://github.com/maresmar/wmbus-decoder/issues).
-
-## Catalog Submission
-
-See the [catalog submission guide](docs/catalog-submission.md) for screenshot
-requirements, release validation, and preparing the catalog pull request.
-Release notes are in [changelog.md](changelog.md).
+Inspired by [wmbusmeters](https://wmbusmeters.org/).
+Licensed under [GPL v3.0](LICENSE). See the [changelog](changelog.md) for releases.

@@ -27,7 +27,7 @@ App(
     requires=["gui"],
     fap_libs=["mbedtls"],
     fap_category="Sub-GHz",
-    fap_version="1.0.0",
+    fap_version="1.0",
     fap_author="Martin Mares",
     fap_description="Receive and decode Wireless M-Bus meter telegrams at 868.95 MHz.",
     fap_weburl="https://github.com/maresmar/wmbus-decoder",
