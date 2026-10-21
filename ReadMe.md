@@ -188,7 +188,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Game Mode: Load game-menu safely and quickly. Automatically doubles held scrolling speed after four consecutive pages. (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/e4cb0791152123c5a3499e083d94ea4406d968b3)
 - SubGHz: [KeeLoq Erreka programming mode - the 0xF button now sends the seed in the clear like the original remote, same as BFT, and the seed is saved with the signal so the hops can be rebuilt (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/1139732616045a15b9efc59790cc83e3a8ad292a)
 - Added: [TamaConnect v1.0 (By s2013p)](https://github.com/s2013p/TamaConnect)
-- Updated: [SigRoam Wardriving v0.6.1 (By pingequalab)](https://github.com/pingequalab/sigroam-wardriving) `Req: ESP32`
 - OFW: [Enforce new build flags #4461 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4461)
 - OFW: [NFC: Type 4 Support (NTAG4xx/DESFire) + Many Improvements #4242 (By WillyJL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4242) (Already in RM)
 - OFW: [BadUSB: Full USB/BLE parameter customization, UI improvements, and more #4136 (By WillyJL)](https://github.com/flipperdevices/flipperzero-firmware/pull/4136) (Already in RM)
@@ -278,6 +277,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - RFID: [Verify the key and password block before enabling T5577 protection, report distinct outcomes, and bound verification reads (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/commit/1672f7c54d146114d7ecdb57043661f9456dd292)
 - API: [Advance F7 to 88.22 for T5577 block/file APIs and the worker password setter, retaining existing RM exports and T5577 controls (By mishamyte; RM compatibility adaptation)](https://github.com/DarkFlippers/unleashed-firmware/commit/1672f7c54d146114d7ecdb57043661f9456dd292)
 - Fixes: [Reject unset password writes, enforce verification deadlines on empty/overrun buffers, preserve dump files when opening fails, and correct long decimal exponent cancellation. (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/4d0a0c89c7555ae0fc5436a4a72361f96571a308)
+- Updated: [SigRoam Wardriving v0.7 (By pingequalab)](https://github.com/pingequalab/sigroam-wardriving) `Req: ESP32`
 
 <a name="release"></a>
 
@@ -1106,7 +1106,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [SI4713 Tuner v0.1 (By rullinoiz)](https://github.com/rullinoiz/flipper-si4713) `Req: SI4713`
 - [Sig Diary WIP v0.1 (By C0d3-5t3w)](https://github.com/C0d3-5t3w/flipper-sigdiary)
 - [Signal Generator v1.2 (By nminaylov)-OFW](https://github.com/flipperdevices/flipperzero-firmware/pull/1793)
-- [SigRoam Wardriving v0.6.1 (By pingequalab)](https://github.com/pingequalab/sigroam-wardriving) `Req: ESP32`
+- [SigRoam Wardriving v0.7 (By pingequalab)](https://github.com/pingequalab/sigroam-wardriving) `Req: ESP32`
 - [Simultanious UHF RFID Reader v1.1.2 (By RileyHaffner)](https://github.com/haffnerriley/Simultaneous-UHF-RFID-FlipperZero) `Req: M6e Nano UHF RFID Reader & Raspberry Pi Zero`
 - [Skeleton App v1.1 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/ui/skeleton_app)
 - [SKIDcity v1.2 (By H4W9)](https://github.com/H4W9/SKIDcity_App)
