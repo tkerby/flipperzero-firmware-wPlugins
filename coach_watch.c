@@ -148,6 +148,14 @@ static void reset_timer(CoachWatch* app) {
     app->unsaved = false;
 }
 
+static void save_and_exit(CoachWatch* app) {
+    /* Running sessions never set unsaved until Stop; still persist them. */
+    if(app->unsaved || app->run == Running) {
+        write_session(app);
+    }
+    app->app_running = false;
+}
+
 static void load_history(CoachWatch* app) {
     app->file_n = 0;
     ensure_dir(app);
@@ -265,10 +273,11 @@ static void draw_timer(Canvas* canvas, CoachWatch* app) {
         elements_button_right(canvas, "Log");
     } else if(app->run == Running) {
         elements_button_center(canvas, "Stop");
+        elements_button_left(canvas, "Exit");
         elements_button_right(canvas, "Split");
     } else {
         elements_button_center(canvas, "Reset");
-        elements_button_left(canvas, "Log");
+        elements_button_left(canvas, "Exit");
         elements_button_right(canvas, "Save");
     }
 }
@@ -376,11 +385,7 @@ static void handle_timer(CoachWatch* app, InputKey key) {
             }
         }
     } else if(key == InputKeyBack || key == InputKeyLeft) {
-        if(app->run == Idle) {
-            app->app_running = false;
-        } else if(app->run == Stopped) {
-            open_history(app);
-        }
+        save_and_exit(app);
     }
 }
 
@@ -426,13 +431,21 @@ int32_t coach_watch_app(void* p) {
     while(app->app_running) {
         uint32_t wait = (app->page == PageTimer && app->run == Running) ? 50 : FuriWaitForever;
         FuriStatus st = furi_message_queue_get(app->queue, &ev, wait);
-        if(st == FuriStatusOk && (ev.type == InputTypeShort || ev.type == InputTypeRepeat)) {
-            if(app->page == PageTimer && ev.type == InputTypeShort) {
-                handle_timer(app, ev.key);
-            } else if(app->page == PageHistory) {
+        if(st == FuriStatusOk) {
+            if(ev.key == InputKeyBack && ev.type == InputTypeLong) {
+                save_and_exit(app);
+            } else if(ev.type == InputTypeShort) {
+                if(app->page == PageTimer) {
+                    handle_timer(app, ev.key);
+                } else if(app->page == PageHistory) {
+                    handle_history(app, ev.key);
+                } else {
+                    handle_detail(app, ev.key);
+                }
+            } else if(
+                ev.type == InputTypeRepeat && app->page == PageHistory &&
+                (ev.key == InputKeyUp || ev.key == InputKeyDown)) {
                 handle_history(app, ev.key);
-            } else if(app->page == PageDetail && ev.type == InputTypeShort) {
-                handle_detail(app, ev.key);
             }
         }
         view_port_update(app->view_port);
