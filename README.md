@@ -25,9 +25,13 @@ Keep the app open while you read. While it runs, the Flipper's own Bluetooth (fo
 Install
 -------
 
-Download `kindle_click.fap` from [Releases](https://github.com/zuyan9/Flipper-Zero-Kindle-Click/releases) and copy it to `apps/Bluetooth` on the Flipper's SD card, with qFlipper or the Flipper mobile app. The release is built for official firmware 1.5.1.
+Use one of these ways:
 
-To build it yourself, install [ufbt](https://github.com/flipperdevices/flipperzero-ufbt) (`pipx install ufbt`), connect the Flipper over USB and run `ufbt launch` in this folder. ufbt builds against the latest official firmware release by default.
+* Use Flipper Apps Catalog: https://lab.flipper.net/apps/kindle_click
+
+* Download `kindle_click.fap` from [Releases](https://github.com/zuyan9/Flipper-Zero-Kindle-Click/releases) and copy it to `apps/Bluetooth` on the Flipper's SD card, with qFlipper or the Flipper mobile app. The release is built for official firmware 1.5.1.
+
+* To build it yourself, install [ufbt](https://github.com/flipperdevices/flipperzero-ufbt) (`pipx install ufbt`), connect the Flipper over USB and run `ufbt launch` in this folder. ufbt builds against the latest official firmware release by default.
 
 The app is then in Apps › Bluetooth.
 
