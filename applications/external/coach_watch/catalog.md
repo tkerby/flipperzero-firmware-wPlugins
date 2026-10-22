@@ -9,7 +9,7 @@ A coach stopwatch for Flipper Zero. **OK** starts, stops, and resets. **Right** 
 3. **Right** while paused: save without reset.
 4. **Up**: list saved sessions. **OK** opens a file.
 5. **Down**: save immediately (also while running, without stopping).
-6. **Back** / **Left**: Exit from idle, or open the log from pause.
+6. **Back**: short press goes back one screen, or exits from the timer. Long press Back exits from any screen and saves first if the session is unsaved. **Left** does the same as short Back. **Up** opens the session list.
 
 The Flipper vibrates on start, stop, split, and save.
 
