@@ -1,3 +1,7 @@
+## v1.3
+
+- Fresh installs start with the Flipper's built-in fonts, which read cleanly on every display; Inter and Mix stay available in Settings → Font
+
 ## v1.2
 
 - Wi-Fi (beta): go online through a FlipperHTTP board on the GPIO header, no computer needed

@@ -229,6 +229,8 @@ static bool yt_load_config(YtConfig* config, char* error, size_t error_size) {
     config->sound = true;
     config->vibro = true;
     config->led = true;
+    /* Built-in fonts read cleanly on every display; Inter is opt-in. */
+    config->font = YtStyleFlipper;
 
     char* buffer = malloc(1536);
     if(!buffer) {

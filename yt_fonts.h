@@ -20,7 +20,7 @@ typedef enum {
 
 typedef enum {
     YtStyleInter, /* Inter everywhere */
-    YtStyleFlipper, /* Flipper's built-in fonts only */
+    YtStyleFlipper, /* Flipper's built-in fonts only (default) */
     YtStyleMix, /* Inter numbers, built-in text */
     YtStyleCount,
 } YtFontStyle;

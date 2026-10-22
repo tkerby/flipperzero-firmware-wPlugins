@@ -43,8 +43,8 @@ Pick one in **Settings → Font**; the screen switches at once.
 
 | Style | Number | Text |
 |---|---|---|
-| **Inter** (default) | Inter Display Bold | Inter |
-| **Flipper** | Built-in big-number font | Built-in fonts – crisp on every screen |
+| **Inter** | Inter Display Bold | Inter |
+| **Flipper** (default) | Built-in big-number font | Built-in fonts – crisp on every screen |
 | **Mix** | Inter Display Bold | Built-in fonts |
 
 ## How it works
@@ -113,7 +113,7 @@ Everything except `api_key` and `channel` can also be changed in the app.
 | `vibro` | `1` | Haptic tick for new subscribers |
 | `led` | `1` | Green LED for new subscribers |
 | `language` | `en` | `en` or `de` |
-| `font` | `inter` | `inter`, `flipper` or `mix` |
+| `font` | `flipper` | `flipper`, `inter` or `mix` |
 | `transport` | `bridge` | `bridge` (desktop helper) or `wifi` ([Wi-Fi board](docs/wifi.md)) |
 | `wifi_ssid` | – | Optional network for the Wi-Fi board |
 | `wifi_password` | – | Its password |

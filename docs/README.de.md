@@ -77,8 +77,8 @@ mit echter WLAN-Hardware. Details und Hinweise zur Sicherheit: [Wi-Fi board](wif
 
 Unter **Einstellungen → Schrift** wählst du zwischen drei Stilen, die Anzeige wechselt sofort:
 
-- **Inter** (Standard): Inter Display für die Zahl, Inter für Texte
-- **Flipper**: nur die eingebauten Flipper-Schriften, auf jedem Display gestochen scharf
+- **Flipper** (Standard): nur die eingebauten Flipper-Schriften, auf jedem Display gestochen scharf
+- **Inter**: Inter Display für die Zahl, Inter für Texte
 - **Mix**: Inter-Zahl mit den eingebauten Schriften für Texte
 
 <p align="center">
