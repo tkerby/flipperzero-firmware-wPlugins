@@ -6,4 +6,6 @@ Giant mechs rule the wasteland; strategically attach modular plates to your WYRM
 
 ![IRONWYRM Gameplay](screenshots/preview.png)
 
+---
+
 You can also play the [IRONWYRM web port](https://henrygurney.co.uk/games/) in your browser
