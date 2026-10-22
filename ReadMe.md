@@ -228,7 +228,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - SubGHz: [Reject unknown presets safely on load, receive and transmit instead of crashing; apply the matching guard to Sub-GHz Remote (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/e1ebaa318b6dec205c2dce4575844b8e9bd56c3f)
 - SubGHz: [Free the temporary Security+ 2.0 generator transmitter and clear its pointer after generation (By xMasterX; RM adaptation Vy RogueMaster)](https://github.com/DarkFlippers/unleashed-firmware/commit/e1ebaa318b6dec205c2dce4575844b8e9bd56c3f)
 - Updated: [Gitphin v1.2 (By Adhamura)](https://github.com/Adhamura/gitphin)
-- Updated: [RF Survey v1.1 (By tbelbek)](https://github.com/tbelbek/flipper-rf-survey)
 - Updated: [Nice O-Code v2.0 (By zero-mega & xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/e6ded9b108454b30a3e710295e6d2b7fd146e188)
 - SubGHz: [Nice O-Code 112bit frames are decoded and sent - the receiver certificate they carry is shown on the Read screen and saved with the remote, and a remote that has one broadcasts it for its first 20 presses so the receiver enrols it by itself. Nice O-Code+Crt 433MHz is the matching Add Manually entry & other Nice O-Code changes (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/5d3c950e98a3504c018e0810eb7faca3540827d8)
 - Updated: [MTools v1.1 (By mtoolstec)](https://github.com/mtoolstec/flipper-mtools)
@@ -289,6 +288,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Sub-GHz WarDriving v0.2 (By xMasterX)](https://github.com/xMasterX/all-the-plugins/tree/213baa6e872d1db597a25d2c16e81406e9634440/base_pack/subghz_wardriving)
 - Updated: [Subscriber Counter v1.3 (By TheProductAgency)](https://github.com/TheProductAgency/flipper-subscriber-counter)
 - Updated: [Networking NFC + QR v2.0 (By DonJulve)](https://github.com/DonJulve/Networking_NFC_QR_Flipper_Zero)
+- Updated: [Tricorder v0.3 (By rseufert)](https://github.com/rseufert/tricorder)
+- Updated: [Coach Watch v1.0 (By alaviation)](https://github.com/alaviation/flipper-coach-watch)
+- Updated: [RF Survey v1.1 (By tbelbek)](https://github.com/tbelbek/flipper-rf-survey)
 
 <a name="release"></a>
 

@@ -758,6 +758,11 @@ static int32_t sweep_worker(void* ctx) {
                 // there is no cross-thread write to race and the motor can never stay stuck on.
                 haptic_off(app);
             }
+            // Yield every bin so the GUI/input threads get time even on the invalid-frequency
+            // path (band gaps take the else branch above with no settle delay -> tight spin that
+            // starved input). Valid bins already yield via furi_delay_ms(settle_ms); this also
+            // covers settle_ms == 0. One cooperative yield per bin, negligible cost.
+            furi_thread_yield();
         }
         // an all-band-gap range (e.g. a custom 350-360 MHz) measures zero bins and would otherwise
         // spin this loop at 100% CPU with no settle delay -- back off so it can't busy-wait.
