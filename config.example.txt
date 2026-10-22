@@ -14,3 +14,5 @@ vibro=1
 led=1
 # en or de
 language=en
+# inter, flipper or mix
+font=inter

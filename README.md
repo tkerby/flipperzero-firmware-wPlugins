@@ -24,14 +24,28 @@
 - **New-subscriber alert** – a short two-note chime, a haptic tick and a green LED glow. Each one can be switched off.
 - **Badge** showing how many subscribers you gained since the app was opened.
 - **Info sheet** with the last and next update and the connection type.
-- **Settings on the device** – sound, vibration, LED, backlight, update interval (1 min – 1 h) and language.
+- **Settings on the device** – sound, vibration, LED, backlight, update interval (1 min – 1 h), language and font style.
 - **English and German** user interface.
 - **USB or Bluetooth** via the [Flipper Internet Bridge](https://github.com/mete888/flipper_internet_bridge).
-- Typeset in [Inter](https://rsms.me/inter/), rasterized pixel by pixel for the 128 × 64 display.
+- **Three font styles** – [Inter](https://rsms.me/inter/) rasterized pixel by pixel for the 128 × 64 display, the Flipper's own built-in fonts, or a mix of both.
 
 <p align="center">
   <img src="docs/images/gallery.png" alt="Screens: subscribers, views, new subscribers, info sheet, settings, German" width="840">
 </p>
+
+## Font styles
+
+Pick one in **Settings → Font**; the screen switches at once.
+
+<p align="center">
+  <img src="docs/images/fonts.png" alt="Inter, Flipper and Mix font styles" width="840">
+</p>
+
+| Style | Number | Text |
+|---|---|---|
+| **Inter** (default) | Inter Display Bold | Inter |
+| **Flipper** | Built-in big-number font | Built-in fonts – crisp on every screen |
+| **Mix** | Inter Display Bold | Built-in fonts |
 
 ## How it works
 
@@ -96,6 +110,7 @@ Everything except `api_key` and `channel` can also be changed in the app.
 | `vibro` | `1` | Haptic tick for new subscribers |
 | `led` | `1` | Green LED for new subscribers |
 | `language` | `en` | `en` or `de` |
+| `font` | `inter` | `inter`, `flipper` or `mix` |
 
 See [`config.example.txt`](config.example.txt).
 

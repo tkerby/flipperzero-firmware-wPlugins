@@ -39,6 +39,7 @@ typedef enum {
     YtRowBacklight,
     YtRowInterval,
     YtRowLanguage,
+    YtRowFont,
     YtRowTest,
     YtRowCount,
 } YtSettingsRow;
@@ -55,6 +56,7 @@ typedef struct {
     bool vibro;
     bool led;
     uint8_t language; /* YtLang */
+    uint8_t font; /* YtFontStyle */
 } YtConfig;
 
 typedef enum {
@@ -111,7 +113,8 @@ typedef struct {
     uint8_t alert_index;
 } YtApp;
 
-#define YT_TEXT(app) (&yt_strings[(app)->config.language])
+#define YT_TEXT(app)  (&yt_strings[(app)->config.language])
+#define YT_STYLE(app) (&yt_styles[(app)->config.font])
 
 static bool yt_body(void* context, const uint8_t* data, size_t length) {
     YtApp* app = context;
@@ -163,6 +166,8 @@ static bool yt_write_config(const YtConfig* config) {
         "led=%d\n"
         "# en or de\n"
         "language=%s\n"
+        "# inter, flipper or mix\n"
+        "font=%s\n"
         "# Everything except key and channel can be changed in the app (press Down)\n",
         config->api_key,
         config->channel,
@@ -171,7 +176,8 @@ static bool yt_write_config(const YtConfig* config) {
         config->sound,
         config->vibro,
         config->led,
-        config->language == YtLangGerman ? "de" : "en");
+        config->language == YtLangGerman ? "de" : "en",
+        yt_styles[config->font].config_value);
     bool ok = false;
     Storage* storage = furi_record_open(RECORD_STORAGE);
     storage_simply_mkdir(storage, APP_DATA_PATH(""));
@@ -234,6 +240,10 @@ static bool yt_load_config(YtConfig* config, char* error, size_t error_size) {
                                                                        (uint32_t)seconds;
             } else if(strcmp(key, "backlight") == 0) {
                 config->backlight = value[0] != '0';
+            } else if(strcmp(key, "font") == 0) {
+                for(uint8_t i = 0; i < YtStyleCount; ++i) {
+                    if(strcmp(value, yt_styles[i].config_value) == 0) config->font = i;
+                }
             } else if(strcmp(key, "language") == 0) {
                 config->language = strcmp(value, "de") == 0 ? YtLangGerman : YtLangEnglish;
             } else if(strcmp(key, "sound") == 0) {
@@ -358,25 +368,40 @@ static void yt_draw_fit(Canvas* canvas, const char* text, int cx, int baseline, 
     canvas_draw_str_aligned(canvas, cx, baseline, AlignCenter, AlignBottom, line);
 }
 
+static void yt_set_font(Canvas* canvas, const YtStyle* style, YtFontRole role) {
+    if(style->custom[role]) {
+        canvas_set_custom_u8g2_font(canvas, style->custom[role]);
+    } else {
+        canvas_set_font(canvas, style->builtin[role]);
+    }
+}
+
 static void yt_draw_text(
     Canvas* canvas,
-    const uint8_t* font,
+    const YtStyle* style,
+    YtFontRole role,
     const char* text,
     int cx,
     int baseline,
     int max_width) {
-    canvas_set_custom_u8g2_font(canvas, font);
+    yt_set_font(canvas, style, role);
     yt_draw_fit(canvas, text, cx, baseline, max_width);
 }
 
 /* Filled capsule with white text sitting on baseline: button or badge. */
-static int yt_draw_pill(Canvas* canvas, const char* text, int x, int baseline, bool center) {
+static int yt_draw_pill(
+    Canvas* canvas,
+    const YtStyle* style,
+    const char* text,
+    int x,
+    int baseline,
+    bool center) {
     char line[24];
     strlcpy(line, text, sizeof(line));
-    canvas_set_custom_u8g2_font(canvas, YT_FONT_LABEL);
+    yt_set_font(canvas, style, YtFontLabel);
     int width = canvas_string_width(canvas, line) + 7;
     if(center) x -= width / 2;
-    canvas_draw_rbox(canvas, x, baseline - YT_LABEL_CAP - 2, width, YT_LABEL_CAP + 4, 3);
+    canvas_draw_rbox(canvas, x, baseline - style->label_cap - 2, width, style->label_cap + 4, 3);
     canvas_set_color(canvas, ColorWhite);
     canvas_draw_str(canvas, x + 3, baseline, line);
     canvas_set_color(canvas, ColorBlack);
@@ -421,15 +446,16 @@ static void yt_draw_subscriber_icon(Canvas* canvas, int cx, int cy) {
     canvas_draw_box(canvas, cx + 5, cy - 2, 8, 2);
 }
 
-/* Hero number in Inter Display, stepping down a size when it would not fit. */
-static void yt_draw_number(Canvas* canvas, uint64_t value, char separator, int cx) {
+/* Hero number, stepping down a size when it would not fit. */
+static void
+    yt_draw_number(Canvas* canvas, const YtStyle* style, uint64_t value, char separator, int cx) {
     char text[24];
     yt_format_grouped(value, separator, text, sizeof(text));
-    int baseline = 37;
-    canvas_set_custom_u8g2_font(canvas, YT_FONT_BIG);
+    int baseline = style->big_baseline;
+    yt_set_font(canvas, style, YtFontBig);
     if(canvas_string_width(canvas, text) > 124) {
-        canvas_set_custom_u8g2_font(canvas, YT_FONT_MID);
-        baseline = 35;
+        yt_set_font(canvas, style, YtFontMid);
+        baseline = style->mid_baseline;
     }
     if(canvas_string_width(canvas, text) > 124) {
         canvas_set_font(canvas, FontPrimary);
@@ -441,15 +467,17 @@ static void yt_draw_number(Canvas* canvas, uint64_t value, char separator, int c
 /* Header title, card body (number + label + badge) offset by x for sliding. */
 static void yt_draw_card(Canvas* canvas, YtApp* app, uint8_t page, int x) {
     const int cx = 64 + x;
+    const YtStyle* style = YT_STYLE(app);
     if(page == 0U && app->stats.hidden) {
-        yt_draw_text(canvas, YT_FONT_LABEL, YT_TEXT(app)->hidden, cx, 33, 124);
+        yt_draw_text(canvas, style, YtFontLabel, YT_TEXT(app)->hidden, cx, 33, 124);
     } else {
-        yt_draw_number(canvas, yt_shown_value(app, page), YT_TEXT(app)->thousands_separator, cx);
+        yt_draw_number(
+            canvas, style, yt_shown_value(app, page), YT_TEXT(app)->thousands_separator, cx);
     }
 
     char label[24];
     strlcpy(label, yt_card_label(app, page), sizeof(label));
-    canvas_set_custom_u8g2_font(canvas, YT_FONT_LABEL);
+    yt_set_font(canvas, style, YtFontLabel);
     int label_width = canvas_string_width(canvas, label);
     char badge[16] = "";
     int badge_width = 0;
@@ -459,8 +487,10 @@ static void yt_draw_card(Canvas* canvas, YtApp* app, uint8_t page, int x) {
         badge_width = canvas_string_width(canvas, badge) + 7 + 4;
     }
     int left = cx - (label_width + badge_width) / 2;
-    canvas_draw_str(canvas, left, YT_LABEL_BASELINE, label);
-    if(badge_width) yt_draw_pill(canvas, badge, left + label_width + 4, YT_LABEL_BASELINE, false);
+    canvas_draw_str(canvas, left, style->label_baseline, label);
+    if(badge_width) {
+        yt_draw_pill(canvas, style, badge, left + label_width + 4, style->label_baseline, false);
+    }
 }
 
 /* Page control: dots with a capsule that glides to the active page. */
@@ -597,7 +627,7 @@ static void yt_draw_setup(Canvas* canvas, YtApp* app) {
     strlcpy(headline, app->config_error, sizeof(headline));
     char* hint = strchr(headline, '\n');
     if(hint) *hint++ = '\0';
-    yt_draw_text(canvas, YT_FONT_LABEL, headline, 64, 35, 124);
+    yt_draw_text(canvas, YT_STYLE(app), YtFontLabel, headline, 64, 35, 124);
     canvas_set_font(canvas, FontSecondary);
     if(hint) yt_draw_fit(canvas, hint, 64, 47, 124);
     canvas_draw_str_aligned(canvas, 64, 60, AlignCenter, AlignBottom, YT_TEXT(app)->edit_config);
@@ -611,23 +641,25 @@ static void yt_draw_header(Canvas* canvas, YtApp* app) {
     } else if(app->have_stats && app->status_line[0] && app->phase != YtPhaseFetching) {
         text = YT_TEXT(app)->not_current;
     }
-    yt_draw_text(canvas, YT_FONT_TITLE, text, 64, YT_TITLE_BASELINE, 124);
+    const YtStyle* style = YT_STYLE(app);
+    yt_draw_text(canvas, style, YtFontTitle, text, 64, style->title_baseline, 124);
 }
 
 static void yt_draw_empty(Canvas* canvas, YtApp* app) {
     yt_draw_header(canvas, app);
     if(app->phase == YtPhaseFetching || (!app->status_line[0] && app->phase != YtPhaseOffline)) {
         yt_draw_spinner(canvas, 64, 30);
-        yt_draw_text(canvas, YT_FONT_LABEL, YT_TEXT(app)->loading, 64, 52, 124);
+        yt_draw_text(canvas, YT_STYLE(app), YtFontLabel, YT_TEXT(app)->loading, 64, 52, 124);
         return;
     }
     yt_draw_alert_icon(canvas, 64, 21);
     bool offline = app->phase == YtPhaseOffline;
     const YtStrings* text = YT_TEXT(app);
-    yt_draw_text(canvas, YT_FONT_LABEL, offline ? text->offline : text->error, 64, 39, 124);
+    const YtStyle* style = YT_STYLE(app);
+    yt_draw_text(canvas, style, YtFontLabel, offline ? text->offline : text->error, 64, 39, 124);
     canvas_set_font(canvas, FontSecondary);
     yt_draw_fit(canvas, app->status_line[0] ? app->status_line : text->start_helper, 64, 49, 124);
-    yt_draw_pill(canvas, offline ? text->button_connect : text->button_retry, 64, 62, true);
+    yt_draw_pill(canvas, style, offline ? text->button_connect : text->button_retry, 64, 62, true);
 }
 
 static void yt_draw_cards(Canvas* canvas, YtApp* app) {
@@ -672,6 +704,8 @@ static const char* yt_settings_label(const YtApp* app, uint8_t row) {
         return text->interval;
     case YtRowLanguage:
         return text->language;
+    case YtRowFont:
+        return text->font;
     default:
         return text->test;
     }
@@ -730,26 +764,30 @@ static void yt_draw_settings(Canvas* canvas, YtApp* app) {
     canvas_set_color(canvas, ColorBlack);
     if(y0 < 0) canvas_draw_line(canvas, 0, y0 + 64, 127, y0 + 64);
 
-    yt_draw_text(canvas, YT_FONT_TITLE, YT_TEXT(app)->settings, 64, y0 + YT_TITLE_BASELINE, 124);
+    const YtStyle* style = YT_STYLE(app);
+    yt_draw_text(
+        canvas, style, YtFontTitle, YT_TEXT(app)->settings, 64, y0 + style->title_baseline, 124);
 
     for(uint8_t i = 0; i < YT_SETTINGS_VISIBLE; ++i) {
         uint8_t row = (uint8_t)(app->settings_scroll + i);
         if(row >= YtRowCount) break;
         int y = y0 + 14 + i * 12;
         bool selected = row == app->settings_row;
-        canvas_set_custom_u8g2_font(canvas, YT_FONT_LABEL);
+        yt_set_font(canvas, style, YtFontLabel);
         canvas_draw_str(canvas, 6, y + 10, yt_settings_label(app, row));
 
         bool* flag = yt_settings_flag(app, row);
         if(flag) {
             yt_draw_switch(canvas, app, row, *flag, 100, y + 2);
-        } else if(row == YtRowInterval || row == YtRowLanguage) {
+        } else if(row == YtRowInterval || row == YtRowLanguage || row == YtRowFont) {
             char value[24];
             char text[16];
             if(row == YtRowInterval) {
                 yt_format_interval(YT_TEXT(app), app->config.interval_s, text, sizeof(text));
-            } else {
+            } else if(row == YtRowLanguage) {
                 strlcpy(text, YT_TEXT(app)->language_name, sizeof(text));
+            } else {
+                strlcpy(text, style->name, sizeof(text));
             }
             snprintf(value, sizeof(value), selected ? "< %s >" : "%s", text);
             canvas_draw_str_aligned(canvas, 118, y + 10, AlignRight, AlignBottom, value);
@@ -998,6 +1036,16 @@ static YtAction yt_settings_key(YtApp* app, InputEvent* event, uint32_t now) {
                         app->last_success_tick + furi_ms_to_ticks(app->config.interval_s * 1000U);
                 }
             }
+            return YtActionNone;
+        }
+        if(row == YtRowFont) {
+            /* Applies at once: the settings list itself redraws in the new style. */
+            uint8_t font = app->config.font;
+            font = event->key == InputKeyLeft ?
+                       (uint8_t)((font + YtStyleCount - 1U) % YtStyleCount) :
+                       (uint8_t)((font + 1U) % YtStyleCount);
+            app->config.font = font;
+            app->settings_dirty = true;
             return YtActionNone;
         }
         if(row == YtRowLanguage) {

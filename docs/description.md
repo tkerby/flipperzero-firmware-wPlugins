@@ -28,6 +28,7 @@ Shows the live subscriber count of a YouTube channel on your Flipper Zero and re
 - Keep the backlight on
 - Update interval from 1 minute to 1 hour
 - Language: English or German
+- Font style: Inter, the Flipper's built-in fonts or a mix
 
 ## Notes
 

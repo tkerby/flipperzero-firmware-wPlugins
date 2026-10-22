@@ -62,6 +62,7 @@ typedef struct {
     const char* backlight;
     const char* interval;
     const char* language;
+    const char* font;
     const char* test;
     const char* minutes; /* %lu */
     const char* hours; /* %lu */
@@ -112,6 +113,7 @@ static const YtStrings yt_strings[YtLangCount] = {
             .backlight = "Backlight",
             .interval = "Interval",
             .language = "Language",
+            .font = "Font",
             .test = "Test alert",
             .minutes = "%lu min",
             .hours = "%lu h",
@@ -160,6 +162,7 @@ static const YtStrings yt_strings[YtLangCount] = {
             .backlight = "Display an",
             .interval = "Intervall",
             .language = "Sprache",
+            .font = "Schrift",
             .test = "Testen",
             .minutes = "%lu Min",
             .hours = "%lu Std",

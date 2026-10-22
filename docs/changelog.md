@@ -1,3 +1,7 @@
+## v1.1
+
+- Font styles: choose Inter, the Flipper's built-in fonts or a mix in Settings → Font
+
 ## v1.0
 
 - Initial release

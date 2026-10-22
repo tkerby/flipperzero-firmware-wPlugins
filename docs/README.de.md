@@ -57,7 +57,19 @@ Der Key liegt im Klartext auf der SD-Karte. Falls er doch einmal öffentlich wir
 | Zurück | Sheet bzw. Einstellungen schließen, dann beenden |
 
 In den **Einstellungen** wählst du mit ▲ ▼ eine Zeile, änderst sie mit OK oder ◀ ▶ und speicherst mit Zurück:
-Ton, Vibration, LED, Display an, Intervall (1 Min – 1 Std), Sprache und *Testen*.
+Ton, Vibration, LED, Display an, Intervall (1 Min – 1 Std), Sprache, Schrift und *Testen*.
+
+### Schriftstile
+
+Unter **Einstellungen → Schrift** wählst du zwischen drei Stilen, die Anzeige wechselt sofort:
+
+- **Inter** (Standard): Inter Display für die Zahl, Inter für Texte
+- **Flipper**: nur die eingebauten Flipper-Schriften, auf jedem Display gestochen scharf
+- **Mix**: Inter-Zahl mit den eingebauten Schriften für Texte
+
+<p align="center">
+  <img src="images/fonts.png" alt="Schriftstile Inter, Flipper und Mix" width="840">
+</p>
 
 ## Gut zu wissen
 
