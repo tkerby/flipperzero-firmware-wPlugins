@@ -29,8 +29,8 @@ This software is for experimental purposes only and is not meant for any illegal
 
 ## Latest Updates - [PATREON: Latest Release RM1020-2006-1f381609-Patreon](https://www.patreon.com/RogueMaster?filters[tag]=Latest%20Release)
 
-- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-10-20 14:20 EST`
-- Last Synced/Checked CFW, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-10-20 14:20 EST`
+- Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-10-22 13:05 EST`
+- Last Synced/Checked CFW, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-10-22 13:05 EST`
 - Updated: [Maze 3D v7.2 (By k20120509)](https://github.com/k20120509/flipper-release)
 - Updated: [DFC v1.1.1 (By cindersocket)](https://github.com/cindersocket/dfc-flipper)
 - OFW: [Fixes of various valid issues found by code scan #4456 (By xMasterX)](https://github.com/flipperdevices/flipperzero-firmware/pull/4456)
@@ -279,6 +279,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [SigRoam Wardriving v0.7 (By pingequalab)](https://github.com/pingequalab/sigroam-wardriving) `Req: ESP32`
 - Updated: [5Ghost Wifi Lab v2.8.1 (By pingequalab)](https://github.com/pingequalab/5ghost-wifi-lab) `Req: BW15` (Version Only)
 - OFW: [fix typos in user visible strings #4479 (By 4aia)](https://github.com/flipperdevices/flipperzero-firmware/pull/4479)
+- SubGHz Apps: [Scheduler v3.4, Playlist, Quac and Cross Remote: use held-button protocol transmissions, let RAW files complete, and reset rolling-code/custom-button state between sends; Scheduler now saves updated counters (By xMasterX)](https://github.com/xMasterX/all-the-plugins/commit/6a81d05018a09f4963982c52d63689e88d02b85a)
+- Updated: [Sub-GHz Bruteforcer v4.3 (By derskythe, Ganapati & xMasterX)](https://github.com/DarkFlippers/flipperzero-subbrute/commit/f05b7d0368d34ba2c154a34d930f99345a9c7e18) - Save per-protocol settings, fix worker/decoder lifetime and scene navigation, correct the final key range, and reuse radio setup between keys.
 
 <a name="release"></a>
 
@@ -1133,7 +1135,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [StroboMeter v1.1 (By LeanderJDev)](https://github.com/LeanderJDev/FlipperStroboMeterApp)
 - [Sub Analyzer v1.0 (By RocketGod)](https://github.com/RocketGod-git/Flipper-Zero-SUB-Analyzer)
 - [Sub Duplicate Finder v1.3 (By Endika)](https://github.com/Endika/flipper-sub-dup)
-- [Sub-GHz Bruteforcer v4.0 (By Ganapati/xMasterX/derskythe)](https://github.com/derskythe/flipperzero-subbrute/tree/master)
+- [Sub-GHz Bruteforcer v4.3 (By Ganapati/xMasterX/derskythe)](https://github.com/derskythe/flipperzero-subbrute/tree/master)
 - [Sub-GHz Jammer Detect v1.0 (By barkandbite)](https://github.com/barkandbite/flipper_suite)
 - [Sub-GHz Keystore Decryptor v1.1 (By Lechnio)](https://github.com/Lechnio/KeeLoq-Keystore-Decryptor)
 - [Sub-GHz Playlist Creator v0.2 (By coolerUA)](https://github.com/coolerUA/Sub-Ghz-Playlist-Creator)
