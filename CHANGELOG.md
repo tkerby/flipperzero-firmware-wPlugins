@@ -2,11 +2,12 @@
 
 ## v1.9.0
 
+- Restored the IR Dazzler start warning with explicit confirmation and cancellation
 - Reordered some menus to put common actions first
 - All menu views now share a single Submenu instance
 - Reduced FAP size by ~8 KB
 - Added Handshake + Deauth, Channel Switch, Probe Flood, Bad Msg, Auth Flood, and GTK Abuse attacks to WiFi Attacks menu
-- Renamed Stop Deauth/SAE/EAPOL to Stop All Attacks
+- Renamed Stop Deauth/SAE/EAPOL to Stop All Attacks, using the firmware's global stop command
 - Added List Saved PCAPs, Export PCAP to hc22000, and Sniff 802.15.4 to WiFi Packet Capture menu
 - Added WiFi Recon Tools menu: Enum Scan, Name Sniff, and channel hop plan controls
 - Added DNS Sinkhole submenu to WiFi Network menu

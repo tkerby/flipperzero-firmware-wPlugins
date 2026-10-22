@@ -56,6 +56,11 @@ static const CaptureFileDef capture_wps_def = {
     .ext = "pcap",
     .folder = GHOST_ESP_APP_FOLDER_PCAPS,
 };
+static const CaptureFileDef capture_handshake_def = {
+    .prefix = "handshake_deauth",
+    .ext = "pcap",
+    .folder = GHOST_ESP_APP_FOLDER_PCAPS,
+};
 static const CaptureFileDef capture_zigbee_def = {
     .prefix = "zigbee_capture",
     .ext = "pcap",
@@ -121,6 +126,16 @@ static const ConfirmDef confirm_coredump_erase = {
 static const ConfirmDef confirm_force_crash = {
     .header = "Force Crash",
     .text = "This intentionally crashes\nthe ESP to test coredump.\nContinue?",
+};
+static const ConfirmDef confirm_ir_dazzler = {
+    .header = "IR Dazzler Warning",
+    .text = "Continuous IR heats LEDs\n"
+            "and draws more current.\n"
+            "Check board limits first,\n"
+            "especially Poltergeist\n"
+            "from Rabbit-Labs.\n"
+            "Stop if the board gets hot.\n\n"
+            "OK: Start. Back: Cancel.",
 };
 
 typedef struct {
@@ -669,17 +684,21 @@ static const MenuCommand wifi_attack_commands[] = {
     {
         .label = "Handshake + Deauth",
         .command = "attack -hsd\n",
+        .capture = &capture_handshake_def,
         .details_header = "Handshake + Deauth",
         .details_text = "Deauth bursts + handshake\n"
-                        "capture to ESP SD PCAP.\n"
+                        "capture. Saves to ESP SD,\n"
+                        "or Flipper SD via UART\n"
+                        "when ESP SD is unavailable.\n"
                         "Select an AP/STA first.\n"
                         "Range: ~50-100m\n",
     },
     {
         .label = "Stop All Attacks",
-        .command = "stopdeauth\n",
+        .command = "stop\n",
         .details_header = "Stop Attacks",
-        .details_text = "Stops all WiFi attacks.\n",
+        .details_text = "Stops all running operations\n"
+                        "on the ESP.\n",
     },
     {
         .label = "Stop Beacon Spam",
@@ -1145,13 +1164,31 @@ static const MenuCommand wifi_network_sinkhole_commands[] = {
         .details_header = "Download Blocklist",
         .details_text = "Download a blocklist to SD.\n"
                         "See sources list for numbers.\n"
+                        "Then use Load Blocklist.\n"
                         "Needs PSRAM + SD + WiFi.\n",
+    },
+    {
+        .label = "Load Blocklist...",
+        .command = "sinkhole load",
+        .needs_input = true,
+        .input_text = "Blocklist filename",
+        .details_header = "Load Blocklist",
+        .details_text = "Activate a downloaded list\n"
+                        "and start the sinkhole.\n"
+                        "1: peter_lowe.txt\n"
+                        "2: oisd.txt\n"
+                        "3: stevenblack.txt\n"
+                        "Wait for download to finish.\n"
+                        "Requires WiFi/Ethernet.\n",
     },
     {
         .label = "Reload Sinkhole",
         .command = "sinkhole reload\n",
         .details_header = "Reload Sinkhole",
-        .details_text = "Restart the sinkhole to apply\nblocklist changes.\n",
+        .details_text = "Reload the active blocklist\n"
+                        "after adding/removing domains.\n"
+                        "Use Load Blocklist to switch\n"
+                        "to a downloaded list.\n",
     },
     {
         .label = "Blocklist Log: On",
@@ -2110,6 +2147,7 @@ static const MenuCommand ir_commands[] = {
     {
         .label = "IR Dazzler Start",
         .command = "ir dazzler\n",
+        .confirm = &confirm_ir_dazzler,
         .details_header = "IR Dazzler Start",
         .details_text = "Start continuous IR dazzler flood.\n",
     },
@@ -2792,16 +2830,14 @@ static void confirmation_ok_callback(void* context) {
             send_uart_command(cmd_ctx->command->command, cmd_ctx->state);
             FURI_LOG_I("Capture", "Capture command sent to firmware.");
         } else {
-            // For non-capture confirmation commands, send command and switch to text
-            // view
-            send_uart_command(cmd_ctx->command->command, cmd_ctx->state);
-            uart_receive_data(
-                cmd_ctx->state->uart_context,
-                cmd_ctx->state->view_dispatcher,
-                cmd_ctx->state,
-                "",
-                "",
-                ""); // No capture files needed
+            // Restore the origin so result dialogs and logs return to the menu.
+            AppState* state = cmd_ctx->state;
+            state->current_view = state->previous_view;
+            if(!handle_ir_command_feedback(state, cmd_ctx->command->command)) {
+                uart_receive_data(
+                    state->uart_context, state->view_dispatcher, state, "", "", "");
+                send_uart_command(cmd_ctx->command->command, state);
+            }
         }
     }
     if(cmd_ctx->state) cmd_ctx->state->active_confirm_context = NULL;
@@ -3603,9 +3639,11 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
     // For commands needing confirmation
     if(command->confirm) {
         MenuCommandContext* cmd_ctx = malloc(sizeof(MenuCommandContext));
+        if(!cmd_ctx) return;
         cmd_ctx->state = state;
         cmd_ctx->command = command;
         state->active_confirm_context = cmd_ctx;
+        state->previous_view = state->current_view;
         confirmation_view_set_header(state->confirmation_view, command->confirm->header);
         confirmation_view_set_text(state->confirmation_view, command->confirm->text);
         confirmation_view_set_ok_callback(
