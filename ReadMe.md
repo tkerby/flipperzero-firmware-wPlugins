@@ -291,6 +291,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [RF Survey v1.1 (By tbelbek)](https://github.com/tbelbek/flipper-rf-survey)
 - Updated: [IRONWYRM v1.1 (By Atompunk78)](https://github.com/Atompunk78/IRONWYRM)
 - Updated: [Sub-GHz Bruteforcer v4.3 (By derskythe, Ganapati & xMasterX)](https://github.com/DarkFlippers/flipperzero-subbrute/commit/f05b7d0368d34ba2c154a34d930f99345a9c7e18) - Save per-protocol settings, fix worker/decoder lifetime and scene navigation, correct the final key range, and reuse radio setup between keys.
+- Updated: [T5577 Multiwriter v0.3 (By Leptopt1los)](https://github.com/Leptopt1los/t5577_multiwriter)
 
 <a name="release"></a>
 
@@ -1163,7 +1164,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [SWD Probe v1.4 (By g3gg0)](https://github.com/g3gg0/flipper-swd_probe)
 - [T-Union Master (China) v0.1 (By SocialSisterYi)](https://github.com/SocialSisterYi/T-Union_Master)
 - [T5577 v1.0 (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/commit/1672f7c54d146114d7ecdb57043661f9456dd292) (.t5577 ext incompatible to T5577 Raw Writer)
-- [T5577 Multiwriter v0.2 (By Leptopt1los)](https://github.com/Leptopt1los/t5577_multiwriter)
+- [T5577 Multiwriter v0.3 (By Leptopt1los)](https://github.com/Leptopt1los/t5577_multiwriter)
 - [T5577 Raw Writer v1.1 (By zinongli)](https://github.com/zinongli/T5577_Raw_Writer) (.t5577 ext incompatible to T5577)
 - [TagTinker v2.1 (By i12bp8)](https://github.com/i12bp8/TagTinker)
 - [Taiko Player v0.5 (By ZeroNinx)](https://github.com/ZeroNinx/flipper-zero-taiko-player)

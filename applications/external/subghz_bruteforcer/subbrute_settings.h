@@ -6,10 +6,10 @@
 #include <storage/storage.h>
 #include "subbrute_protocols.h"
 
-#define SUBBRUTE_MIN_REPEATS       1
-#define SUBBRUTE_MAX_REPEATS       100
-#define SUBBRUTE_MIN_TIME_DELAY    0
-#define SUBBRUTE_MAX_TIME_DELAY    255
+#define SUBBRUTE_MIN_REPEATS        1
+#define SUBBRUTE_MAX_REPEATS        100
+#define SUBBRUTE_MIN_TIME_DELAY     0
+#define SUBBRUTE_MAX_TIME_DELAY     255
 #define SUBBRUTE_DEFAULT_TIME_DELAY 6
 
 /**
