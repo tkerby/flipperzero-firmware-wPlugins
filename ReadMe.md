@@ -288,6 +288,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Sub-GHz Remote v1.9 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote) [Changes (By xMasterX)](https://github.com/DarkFlippers/SubGHz_Remote/commit/a94f7c754f4e0f9881b7f3432906b46da4007e21)
 - Updated: [Sub-GHz WarDriving v0.2 (By xMasterX)](https://github.com/xMasterX/all-the-plugins/tree/213baa6e872d1db597a25d2c16e81406e9634440/base_pack/subghz_wardriving)
 - Updated: [Subscriber Counter v1.3 (By TheProductAgency)](https://github.com/TheProductAgency/flipper-subscriber-counter)
+- Updated: [Networking NFC + QR v2.0 (By DonJulve)](https://github.com/DonJulve/Networking_NFC_QR_Flipper_Zero)
 
 <a name="release"></a>
 
@@ -994,7 +995,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Netflix TV Remote v0.1 (By ablaran)](https://github.com/ablaran/NetflixTvRemote)
 - [Network Calculator v1.0 (By WolfRorDev)](https://github.com/WolfRorDev/Net-Calculator-for-Flipper-Zero)
 - [Network Subnet v0.1 (By aaumkar)](https://github.com/aaumkar/network_subnet)
-- [Networking NFC + QR v1.0 (By DonJulve)](https://github.com/DonJulve/Networking_NFC_QR_Flipper_Zero)
+- [Networking NFC + QR v2.0 (By DonJulve)](https://github.com/DonJulve/Networking_NFC_QR_Flipper_Zero)
 - [NFC APDU Runner v0.3.5 (By SpenserCai)](https://github.com/SpenserCai/nfc_apdu_runner)
 - [NFC Canary v0.2 (By antitree)](https://github.com/antitree/nfc_canary)
 - [NFC Comparator v2.6 (By acegoal07)](https://github.com/acegoal07/FlipperZero_NFC_Comparator)
