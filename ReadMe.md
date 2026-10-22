@@ -278,6 +278,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Fixes: [Reject unset password writes, enforce verification deadlines on empty/overrun buffers, preserve dump files when opening fails, and correct long decimal exponent cancellation. (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/4d0a0c89c7555ae0fc5436a4a72361f96571a308)
 - Updated: [SigRoam Wardriving v0.7 (By pingequalab)](https://github.com/pingequalab/sigroam-wardriving) `Req: ESP32`
 - Updated: [5Ghost Wifi Lab v2.8.1 (By pingequalab)](https://github.com/pingequalab/5ghost-wifi-lab) `Req: BW15` (Version Only)
+- OFW: [fix typos in user visible strings #4479 (By 4aia)](https://github.com/flipperdevices/flipperzero-firmware/pull/4479)
 
 <a name="release"></a>
 
