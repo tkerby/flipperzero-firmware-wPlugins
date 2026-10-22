@@ -110,9 +110,14 @@ jobs:
       - name: Write catalog manifest
         id: manifest
         run: |
-          APP_ID=$(sed -n 's/^id: *//p' app/manifest.yml)
-          CATEGORY=$(sed -n 's/^category: *//p' app/manifest.yml)
-          APP_NAME=$(sed -n 's/^name: *//p' app/manifest.yml)
+          # The catalog manifest no longer carries id/name/category, they come from application.fam.
+          APP_ID=$(sed -n 's/^[[:space:]]*appid="\([^"]*\)".*/\1/p' app/application.fam)
+          CATEGORY=$(sed -n 's/^[[:space:]]*fap_category="\([^"]*\)".*/\1/p' app/application.fam)
+          APP_NAME=$(sed -n 's/^[[:space:]]*name="\([^"]*\)".*/\1/p' app/application.fam)
+          if [ -z "$APP_ID" ] || [ -z "$CATEGORY" ] || [ -z "$APP_NAME" ]; then
+            echo "::error::Couldn't read appid/name/fap_category from application.fam"
+            exit 1
+          fi
           COMMIT_SHA=$(git -C app rev-parse "${GITHUB_REF_NAME}^{commit}")
           DEST="applications/$CATEGORY/$APP_ID/manifest.yml"
 
