@@ -277,7 +277,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [5Ghost Wifi Lab v2.8.1 (By pingequalab)](https://github.com/pingequalab/5ghost-wifi-lab) `Req: BW15` (Version Only)
 - OFW: [fix typos in user visible strings #4479 (By 4aia)](https://github.com/flipperdevices/flipperzero-firmware/pull/4479)
 - SubGHz Apps: [Scheduler v3.4, Playlist, Quac and Cross Remote: use held-button protocol transmissions, let RAW files complete, and reset rolling-code/custom-button state between sends; Scheduler now saves updated counters (By xMasterX)](https://github.com/xMasterX/all-the-plugins/commit/6a81d05018a09f4963982c52d63689e88d02b85a)
-- Updated: [Sub-GHz Bruteforcer v4.3 (By derskythe, Ganapati & xMasterX)](https://github.com/DarkFlippers/flipperzero-subbrute/commit/f05b7d0368d34ba2c154a34d930f99345a9c7e18) - Save per-protocol settings, fix worker/decoder lifetime and scene navigation, correct the final key range, and reuse radio setup between keys.
 - RM external-app reliability updates: [Sub-GHz Remote v1.9, Sub-GHz WarDriving v0.2, Restaurant Pager v1.8, ProtoView v1.4, Genie Door Recorder v3.2, and FlipBoard Signal v3.13. Adds checked transmit starts, safe cleanup, responsive cancellation, and guarded saved-state handling. (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/30963ff5e492b93978dd6797c9aad0e154318399)
 - Updated: [FlipBoard Signal v3.13 (By jamisonderek)](https://github.com/jamisonderek/flipboard)
 - Updated: [Genie Recorder v3.2 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/subghz/apps/genie-recorder)
@@ -291,6 +290,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Coach Watch v1.0 (By alaviation)](https://github.com/alaviation/flipper-coach-watch)
 - Updated: [RF Survey v1.1 (By tbelbek)](https://github.com/tbelbek/flipper-rf-survey)
 - Updated: [IRONWYRM v1.1 (By Atompunk78)](https://github.com/Atompunk78/IRONWYRM)
+- Updated: [Sub-GHz Bruteforcer v4.3 (By derskythe, Ganapati & xMasterX)](https://github.com/DarkFlippers/flipperzero-subbrute/commit/f05b7d0368d34ba2c154a34d930f99345a9c7e18) - Save per-protocol settings, fix worker/decoder lifetime and scene navigation, correct the final key range, and reuse radio setup between keys.
 
 <a name="release"></a>
 

@@ -40,9 +40,6 @@ void subbrute_settings_load(SubBruteSettings* instance) {
     bool was_read_te = false;
     bool was_read_opencode = false;
 
-    storage_common_migrate(
-        storage, EXT_PATH("subghz-bruteforcer.settings"), SUBBRUTE_SETTINGS_PATH);
-
     if(FSE_OK == storage_sd_status(storage) &&
        flipper_format_file_open_existing(fff_data_file, SUBBRUTE_SETTINGS_PATH)) {
         // Rewind before every read: key search goes only forward,
@@ -62,13 +59,16 @@ void subbrute_settings_load(SubBruteSettings* instance) {
                                   SUBBRUTE_FIELD_TIME_DELAY,
                                   temp_time_delay,
                                   SubBruteAttackTotalCount);
-        was_read_te = flipper_format_rewind(fff_data_file) &&
-                      flipper_format_read_uint32(
-                          fff_data_file, SUBBRUTE_FIELD_TE, temp_te, SubBruteAttackTotalCount);
-        was_read_opencode =
+        was_read_te =
             flipper_format_rewind(fff_data_file) &&
-            flipper_format_read_hex(
-                fff_data_file, SUBBRUTE_FIELD_OPENCODE, temp_opencode, SubBruteAttackTotalCount);
+            flipper_format_read_uint32(
+                fff_data_file, SUBBRUTE_FIELD_TE, temp_te, SubBruteAttackTotalCount);
+        was_read_opencode = flipper_format_rewind(fff_data_file) &&
+                            flipper_format_read_hex(
+                                fff_data_file,
+                                SUBBRUTE_FIELD_OPENCODE,
+                                temp_opencode,
+                                SubBruteAttackTotalCount);
     } else {
         FURI_LOG_E(TAG, "Error open file %s", SUBBRUTE_SETTINGS_PATH);
     }
