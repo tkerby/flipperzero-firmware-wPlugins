@@ -1,0 +1,9 @@
+Sub-GHz Remote: start/cleanup cases: 125 assertions passed
+WarDriving: start/cleanup cases: 143 assertions passed
+Restaurant Pager: start/cleanup cases: 144 assertions passed
+ProtoView: ProtoView lifecycle/wrap cases: 168 assertions passed
+Genie: Genie TX/index/retry cases: 685 assertions passed
+FlipBoard: FlipBoard TX/journal/recovery/deadline cases: 2420 assertions passed
+ProtoView snapshot: ProtoView waveform snapshot cases: 17 assertions passed
+Genie storage: Genie index storage failures: 89 assertions passed
+All extracted-production-C cases passed with ASan/UBSan and explicit resource-balance checks. LeakSanitizer is unavailable under this executor.

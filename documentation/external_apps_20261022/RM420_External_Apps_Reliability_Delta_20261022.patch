@@ -1,0 +1,1869 @@
+diff --git a/applications/external/flipsignal/app.c b/applications/external/flipsignal/app.c
+index 66fb74e94e0de306a650eb0a4187a5f4e9073370..cb940dceb1ce141d415b974ebd32b850367c644a 100644
+--- a/applications/external/flipsignal/app.c
++++ b/applications/external/flipsignal/app.c
+@@ -3,6 +3,38 @@
+ 
+ #include <devices/devices.h>
+ 
++#define SIGNAL_CANCEL 1U
++
++static struct {
++    FuriThread* thread;
++    FuriMutex* mutex;
++    FlipboardModel* model;
++    uint8_t action;
++    bool active; // GUI thread only.
++    const char* status; // Protected by mutex.
++} signal_job;
++
++static bool signal_cancelled(void) {
++    return (furi_thread_flags_get() & SIGNAL_CANCEL) != 0;
++}
++
++static void signal_set_status(const char* status) {
++    furi_mutex_acquire(signal_job.mutex, FuriWaitForever);
++    signal_job.status = status;
++    furi_mutex_release(signal_job.mutex);
++    flipboard_model_update_gui(signal_job.model);
++}
++
++static void signal_stop(void) {
++    if(!signal_job.thread) return;
++    if(furi_thread_get_state(signal_job.thread) != FuriThreadStateStopped) {
++        furi_thread_flags_set(furi_thread_get_id(signal_job.thread), SIGNAL_CANCEL);
++    }
++    furi_thread_join(signal_job.thread);
++    furi_thread_free(signal_job.thread);
++    signal_job.thread = NULL;
++}
++
+ /**
+  * @brief This method handles Flipper D-Pad input when in the FlipboardSignal mode.
+  * @param event The InputEvent* to handle.
+@@ -47,6 +79,15 @@ static void flipboard_view_flip_signal_draw(Canvas* canvas, void* model) {
+     canvas_set_font(canvas, FontPrimary);
+     canvas_draw_str(canvas, 84, 60, furi_string_get_cstr(action_text));
+ 
++    furi_mutex_acquire(signal_job.mutex, FuriWaitForever);
++    if(signal_job.status) {
++        canvas_set_color(canvas, ColorWhite);
++        canvas_draw_box(canvas, 0, 50, 128, 14);
++        canvas_set_color(canvas, ColorBlack);
++        canvas_set_font(canvas, FontSecondary);
++        canvas_draw_str(canvas, 1, 62, signal_job.status);
++    }
++    furi_mutex_release(signal_job.mutex);
+     furi_string_free(action_text);
+ }
+ 
+@@ -58,12 +99,30 @@ static void flipboard_view_flip_signal_draw(Canvas* canvas, void* model) {
+  * @param filename The filename of the signal to send.
+  */
+ static void send_subghz(FlipboardModel* model, char* filename) {
+-    // TODO: Add cancel API for subghz RAW by using ButtonMonitor.
+     FlipboardLeds* leds = flipboard_model_get_leds(model);
+     Resources* resources = flipboard_model_get_resources(model);
+     SubGhzSignal* signal = subghz_signal_load_file(filename);
++    if(!signal) {
++        Storage* storage = furi_record_open(RECORD_STORAGE);
++        FuriString* pending = furi_string_alloc_printf("%s.flip.pending", filename);
++        FuriString* backup = furi_string_alloc_printf("%s.flip.bak", filename);
++        if(storage_file_exists(storage, filename) ||
++           storage_file_exists(storage, furi_string_get_cstr(pending)) ||
++           storage_file_exists(storage, furi_string_get_cstr(backup))) {
++            signal_set_status("Sub-GHz file load failed");
++        }
++        furi_string_free(backup);
++        furi_string_free(pending);
++        furi_record_close(RECORD_STORAGE);
++    }
+     flipboard_status_led(leds, true);
+-    subghz_signal_send(signal, false, resources);
++    SubGhzSignalResult result = subghz_signal_send(signal, false, resources, SIGNAL_CANCEL);
++    if(signal && result != SubGhzSignalComplete && result != SubGhzSignalCancelled) {
++        signal_set_status(
++            result == SubGhzSignalSaveError ? "Counter save failed" :
++            result == SubGhzSignalTimeout   ? "Sub-GHz TX timed out" :
++                                              "Sub-GHz send failed");
++    }
+     flipboard_status_led(leds, false);
+     subghz_signal_free(signal);
+ }
+@@ -83,10 +142,11 @@ static bool send_ir(FlipboardModel* model, char* filename, char* action_name) {
+     FlipboardLeds* leds = flipboard_model_get_leds(model);
+     InfraredSignal* ir_signal = infrared_signal_load_file(filename, action_name, resources);
+     do {
++        if(signal_cancelled()) break;
+         flipboard_status_led(leds, true);
+         sent_signal |= infrared_signal_send(ir_signal);
+         flipboard_status_led(leds, false);
+-    } while(infrared_signal_load_next(ir_signal) &&
++    } while(!signal_cancelled() && infrared_signal_load_next(ir_signal) &&
+             button_monitor_get_last_status(button_monitor));
+     infrared_signal_free(ir_signal);
+     return sent_signal;
+@@ -138,6 +198,7 @@ static void flipboard_debounced_switch(void* context, uint8_t old_button, uint8_
+  */
+ static void flipboard_enter_callback(void* context) {
+     FlipboardModel* fm = flipboard_get_model((Flipboard*)context);
++    signal_job.active = true;
+     flipboard_model_set_button_monitor(fm, flipboard_debounced_switch, (Flipboard*)context);
+     flipboard_model_set_colors(fm, NULL, 0x0);
+ }
+@@ -147,6 +208,8 @@ static void flipboard_enter_callback(void* context) {
+  * @param context The Flipboard* context.
+  */
+ static void flipboard_exit_callback(void* context) {
++    signal_job.active = false;
++    signal_stop(); // Join before the button monitor or model can be freed.
+     FlipboardModel* fm = flipboard_get_model((Flipboard*)context);
+     flipboard_model_set_colors(fm, NULL, 0x0);
+     flipboard_model_set_button_monitor(fm, NULL, NULL);
+@@ -223,77 +286,52 @@ static void loaded_app_menu(FlipboardModel* model) {
+  * @param event The event to handle.
+  * @return true if the event was handled, false otherwise.
+  */
+-static bool custom_event_handler(void* context, uint32_t event) {
+-    FlipboardModel* model = flipboard_get_model((Flipboard*)context);
+-
+-    if(event == CustomEventAppMenuEnter) {
+-        loaded_app_menu(model);
+-    } else if(event == CustomEventFlipboardButtonPress + (1 | 0 | 0 | 0)) {
+-        send_subghz(model, "/ext/subghz/flip1.sub");
+-        if(!send_ir(model, "/ext/infrared/flipboard.ir", "Flip1")) {
++static int32_t signal_worker(void* context) {
++    UNUSED(context);
++    FlipboardModel* model = signal_job.model;
++    uint8_t action = signal_job.action;
++    char sub_path[32];
++    char ir_action[8];
++    snprintf(sub_path, sizeof(sub_path), "/ext/subghz/flip%u.sub", action);
++    snprintf(ir_action, sizeof(ir_action), "Flip%u", action);
++    if(!signal_cancelled()) send_subghz(model, sub_path);
++    if(!signal_cancelled() && !send_ir(model, "/ext/infrared/flipboard.ir", ir_action) &&
++       !signal_cancelled()) {
++        /* Preserve the four built-in TV fallbacks. Chords have no fallback. */
++        switch(action) {
++        case 1:
+             send_ir(model, "/ext/infrared/assets/tv.ir", "Power");
+-        }
+-    } else if(event == CustomEventFlipboardButtonPress + (0 | 2 | 0 | 0)) {
+-        send_subghz(model, "/ext/subghz/flip2.sub");
+-        if(!send_ir(model, "/ext/infrared/flipboard.ir", "Flip2")) {
++            break;
++        case 2:
+             send_ir(model, "/ext/infrared/assets/tv.ir", "Mute");
+-        }
+-    } else if(event == CustomEventFlipboardButtonPress + (1 | 2 | 0 | 0)) {
+-        send_subghz(model, "/ext/subghz/flip3.sub");
+-        if(!send_ir(model, "/ext/infrared/flipboard.ir", "Flip3")) {
+-        }
+-    } else if(event == CustomEventFlipboardButtonPress + (0 | 0 | 4 | 0)) {
+-        send_subghz(model, "/ext/subghz/flip4.sub");
+-        if(!send_ir(model, "/ext/infrared/flipboard.ir", "Flip4")) {
++            break;
++        case 4:
+             send_ir(model, "/ext/infrared/assets/tv.ir", "Ch_prev");
+-        }
+-    } else if(event == CustomEventFlipboardButtonPress + (1 | 0 | 4 | 0)) {
+-        send_subghz(model, "/ext/subghz/flip5.sub");
+-        if(!send_ir(model, "/ext/infrared/flipboard.ir", "Flip5")) {
+-        }
+-    } else if(event == CustomEventFlipboardButtonPress + (0 | 2 | 4 | 0)) {
+-        send_subghz(model, "/ext/subghz/flip6.sub");
+-        if(!send_ir(model, "/ext/infrared/flipboard.ir", "Flip6")) {
+-        }
+-    } else if(event == CustomEventFlipboardButtonPress + (1 | 2 | 4 | 0)) {
+-        send_subghz(model, "/ext/subghz/flip7.sub");
+-        if(!send_ir(model, "/ext/infrared/flipboard.ir", "Flip7")) {
+-        }
+-    } else if(event == CustomEventFlipboardButtonPress + (0 | 0 | 0 | 8)) {
+-        send_subghz(model, "/ext/subghz/flip8.sub");
+-        if(!send_ir(model, "/ext/infrared/flipboard.ir", "Flip8")) {
++            break;
++        case 8:
+             send_ir(model, "/ext/infrared/assets/tv.ir", "Ch_next");
+-        }
+-    } else if(event == CustomEventFlipboardButtonPress + (1 | 0 | 0 | 8)) {
+-        send_subghz(model, "/ext/subghz/flip9.sub");
+-        if(!send_ir(model, "/ext/infrared/flipboard.ir", "Flip9")) {
+-        }
+-    } else if(event == CustomEventFlipboardButtonPress + (0 | 2 | 0 | 8)) {
+-        send_subghz(model, "/ext/subghz/flip10.sub");
+-        if(!send_ir(model, "/ext/infrared/flipboard.ir", "Flip10")) {
+-        }
+-    } else if(event == CustomEventFlipboardButtonPress + (1 | 2 | 0 | 8)) {
+-        send_subghz(model, "/ext/subghz/flip11.sub");
+-        if(!send_ir(model, "/ext/infrared/flipboard.ir", "Flip11")) {
+-        }
+-    } else if(event == CustomEventFlipboardButtonPress + (0 | 0 | 4 | 8)) {
+-        send_subghz(model, "/ext/subghz/flip12.sub");
+-        if(!send_ir(model, "/ext/infrared/flipboard.ir", "Flip12")) {
+-        }
+-    } else if(event == CustomEventFlipboardButtonPress + (1 | 0 | 4 | 8)) {
+-        send_subghz(model, "/ext/subghz/flip13.sub");
+-        if(!send_ir(model, "/ext/infrared/flipboard.ir", "Flip13")) {
+-        }
+-    } else if(event == CustomEventFlipboardButtonPress + (0 | 2 | 4 | 8)) {
+-        send_subghz(model, "/ext/subghz/flip14.sub");
+-        if(!send_ir(model, "/ext/infrared/flipboard.ir", "Flip14")) {
+-        }
+-    } else if(event == CustomEventFlipboardButtonPress + (1 | 2 | 4 | 8)) {
+-        send_subghz(model, "/ext/subghz/flip15.sub");
+-        if(!send_ir(model, "/ext/infrared/flipboard.ir", "Flip15")) {
++            break;
++        default:
++            break;
+         }
+     }
++    return 0;
++}
+ 
++static bool custom_event_handler(void* context, uint32_t event) {
++    FlipboardModel* model = flipboard_get_model((Flipboard*)context);
++    if(event == CustomEventAppMenuEnter) {
++        loaded_app_menu(model);
++    } else if(
++        signal_job.active && event > CustomEventFlipboardButtonPress &&
++        event <= CustomEventFlipboardButtonPress + 15) {
++        signal_stop();
++        signal_job.model = model;
++        signal_job.action = event - CustomEventFlipboardButtonPress;
++        signal_set_status(NULL);
++        signal_job.thread = furi_thread_alloc_ex("FlipSignalSend", 4096, signal_worker, NULL);
++        furi_thread_start(signal_job.thread);
++    }
+     return true;
+ }
+ 
+@@ -337,6 +375,10 @@ int32_t flipboard_signal_app(void* p) {
+                                ActionModelFieldFrequency;
+     bool single_mode_button = false;
+ 
++    signal_job.mutex = furi_mutex_alloc(FuriMutexTypeNormal);
++    signal_job.thread = NULL;
++    signal_job.status = NULL;
++    signal_job.active = false;
+     Flipboard* app = flipboard_alloc(
+         FLIPBOARD_APP_NAME,
+         &I_qr_github,
+@@ -353,7 +395,9 @@ int32_t flipboard_signal_app(void* p) {
+     view_dispatcher_set_custom_event_callback(
+         flipboard_get_view_dispatcher(app), custom_event_handler);
+     view_dispatcher_run(flipboard_get_view_dispatcher(app));
++    signal_stop();
+     flipboard_free(app);
++    furi_mutex_free(signal_job.mutex);
+ 
+     return 0;
+ }
+diff --git a/applications/external/flipsignal/app_config.h b/applications/external/flipsignal/app_config.h
+index a9bc09464f45c5b0b603724c280aafa1eccf29e9..03a36b7276a5f137048b8f608965d42ecc90c860 100644
+--- a/applications/external/flipsignal/app_config.h
++++ b/applications/external/flipsignal/app_config.h
+@@ -10,7 +10,7 @@
+ 
+ #define ABOUT_TEXT                                   \
+     "Welcome to the Flipboard\n"                     \
+-    "Signal v3.12!\n"                                \
++    "Signal v3.13!\n"                                \
+     "Quickly send to any device!\n\n"                \
+     "Be sure to put your .SUB\n"                     \
+     "files in 'SD Card/subghz'\n"                    \
+diff --git a/applications/external/flipsignal/application.fam b/applications/external/flipsignal/application.fam
+index c15ef7c02c532ff86d2b82d3ae1ac6054657f5f3..2995ed3da9b6a9744df2c7fad8186e0701a5c992 100644
+--- a/applications/external/flipsignal/application.fam
++++ b/applications/external/flipsignal/application.fam
+@@ -13,6 +13,6 @@ App(
+     fap_icon_assets="assets",
+     fap_author="jamisonderek",
+     fap_weburl="https://github.com/jamisonderek/flipboard",
+-    fap_version=(3, 12),
++    fap_version=(3, 13),
+     fap_description="FlipBoard Signal turns your FlipBoard into a signal sender.",
+ )
+diff --git a/applications/external/flipsignal/common/subghz_signal.c b/applications/external/flipsignal/common/subghz_signal.c
+index a537f752db8e0ecd95aae50a102ae75b9fca3b56..878503eb9fbdd290301eebb8b76eacc379ab1ee2 100644
+--- a/applications/external/flipsignal/common/subghz_signal.c
++++ b/applications/external/flipsignal/common/subghz_signal.c
+@@ -9,8 +9,10 @@
+ struct SubGhzSignal {
+     FuriString* sub_file_contents;
+     FuriString* protocol;
++    FuriString* file_path;
+     uint32_t frequency;
+     FuriHalSubGhzPreset preset;
++    uint8_t* preset_data;
+ };
+ 
+ #ifdef FIRMWARE_SUPPORTS_SUBGHZ
+@@ -60,72 +62,207 @@ static void __flipper_format_populate(FlipperFormat* flipper_format, FuriString*
+     stream_seek(stream, 0, StreamOffsetFromStart);
+ }
+ 
+-/**
+- * @brief Sends a signal using the SubGhz module.
+- * @param sub_file_contents The contents of the signal file (can be RAW or Protocol).
+- * @param protocol The protocol to use.
+- * @param frequency The frequency to use.
+- * @param preset The preset to use.
+- * @param use_external_radio Currently only the internal radio is supported (please use 'false').  Whether or not to use the external radio.  
+-*/
+-static void send_signal(
+-    FuriString* sub_file_contents,
+-    const char* protocol,
+-    uint32_t frequency,
+-    FuriHalSubGhzPreset preset,
+-    bool use_external_radio) {
+-    bool enable_5v = use_external_radio;
+-    const SubGhzDevice* device;
++/* Only .pending files contain fully written, synced state. A .tmp file is never
++ * recovered. Keep the old file as .bak until the replacement has been installed. */
++static bool subghz_signal_recover(Storage* storage, const char* path) {
++    FuriString* pending = furi_string_alloc_printf("%s.flip.pending", path);
++    FuriString* backup = furi_string_alloc_printf("%s.flip.bak", path);
++    const char* p = furi_string_get_cstr(pending);
++    const char* b = furi_string_get_cstr(backup);
++    bool ok = false;
++    do {
++        if(storage_file_exists(storage, p)) {
++            if(storage_file_exists(storage, path)) {
++                if(storage_file_exists(storage, b)) break; // Ambiguous; preserve all copies.
++                if(storage_common_rename_safe(storage, path, b) != FSE_OK) break;
++            }
++            if(storage_common_rename_safe(storage, p, path) != FSE_OK) break;
++        } else if(!storage_file_exists(storage, path) && storage_file_exists(storage, b)) {
++            if(storage_common_rename_safe(storage, b, path) != FSE_OK) break;
++        }
++        if(storage_file_exists(storage, b) && storage_common_remove(storage, b) != FSE_OK) break;
++        ok = true;
++    } while(false);
++    furi_string_free(backup);
++    furi_string_free(pending);
++    return ok;
++}
+ 
+-    subghz_devices_init();
+-    if(use_external_radio) {
+-        if(enable_5v) {
+-            subghz_radio_device_power_on();
++static bool subghz_signal_stage(FlipperFormat* format, Storage* storage, const char* path) {
++    FuriString* temporary = furi_string_alloc_printf("%s.flip.tmp", path);
++    FuriString* pending = furi_string_alloc_printf("%s.flip.pending", path);
++    File* file = storage_file_alloc(storage);
++    Stream* stream = flipper_format_get_raw_stream(format);
++    bool ok = false;
++    if(storage_file_open(file, furi_string_get_cstr(temporary), FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
++        size_t remaining = stream_size(stream);
++        ok = remaining && stream_seek(stream, 0, StreamOffsetFromStart);
++        uint8_t buffer[256];
++        while(ok && remaining) {
++            size_t count = MIN(remaining, sizeof(buffer));
++            ok = stream_read(stream, buffer, count) == count &&
++                 storage_file_write(file, buffer, count) == count;
++            remaining -= count;
+         }
+-        // TODO: I haven't tested EXT, so not sure if there is additional setup required.
+-        device = subghz_devices_get_by_name(SUBGHZ_DEVICE_CC1101_EXT_NAME);
+-    } else {
+-        device = subghz_devices_get_by_name(SUBGHZ_DEVICE_CC1101_INT_NAME);
++        if(ok) ok = storage_file_sync(file);
++        if(!storage_file_close(file)) ok = false;
++        if(ok)
++            ok = storage_common_rename_safe(
++                     storage, furi_string_get_cstr(temporary), furi_string_get_cstr(pending)) ==
++                 FSE_OK;
+     }
++    storage_file_free(file);
++    furi_string_free(pending);
++    furi_string_free(temporary);
++    return ok;
++}
++
++typedef struct {
++    SubGhzTransmitter* transmitter;
++    uint32_t queued_until; // Written only by the DMA feeder.
++    uint32_t tick_fraction;
++    volatile uint32_t deadline; // One aligned word shared with the worker.
++} SubGhzSignalFeed;
++
++static LevelDuration subghz_signal_yield(void* context) {
++    SubGhzSignalFeed* feed = context;
++    LevelDuration sample = subghz_transmitter_yield(feed->transmitter);
++    if(!level_duration_is_reset(sample) && !level_duration_is_wait(sample)) {
++        uint32_t now = furi_get_tick();
++        if((int32_t)(now - feed->queued_until) > 0) {
++            feed->queued_until = now;
++            feed->tick_fraction = 0;
++        }
++        uint64_t ticks =
++            (uint64_t)level_duration_get_duration(sample) * furi_kernel_get_tick_frequency() +
++            feed->tick_fraction;
++        feed->queued_until += ticks / 1000000;
++        feed->tick_fraction = ticks % 1000000;
++        feed->deadline = feed->queued_until + furi_ms_to_ticks(5000) + 1;
++    }
++    return sample;
++}
+ 
++static bool subghz_signal_cancelled(uint32_t cancel_flag) {
++    return cancel_flag && (furi_thread_flags_get() & cancel_flag);
++}
++
++static SubGhzSignalResult
++    send_signal(SubGhzSignal* signal, bool use_external_radio, uint32_t cancel_flag) {
++    SubGhzSignalResult result = SubGhzSignalError;
++    bool enable_5v = use_external_radio && !furi_hal_power_is_otg_enabled();
++    bool device_started = false;
++    bool charge_suppressed = false;
++    bool staged = false;
++    bool started = false;
++    const char* path = furi_string_get_cstr(signal->file_path);
++    Storage* storage = furi_record_open(RECORD_STORAGE);
++    subghz_devices_init();
++    if(enable_5v) subghz_radio_device_power_on();
++    const SubGhzDevice* device = subghz_devices_get_by_name(
++        use_external_radio ? SUBGHZ_DEVICE_CC1101_EXT_NAME : SUBGHZ_DEVICE_CC1101_INT_NAME);
+     SubGhzEnvironment* environment = subghz_environment_alloc();
+ #ifdef APP_USES_SUBGHZ_PROTOCOL_ITEMS
+     subghz_environment_set_protocol_registry(environment, (void*)&subghz_protocol_registry);
+ #endif
+-    SubGhzTransmitter* transmitter = subghz_transmitter_alloc_init(environment, protocol);
+-    FlipperFormat* flipper_format = flipper_format_string_alloc();
+-    __flipper_format_populate(flipper_format, sub_file_contents);
+-    subghz_transmitter_deserialize(transmitter, flipper_format);
+-    subghz_devices_begin(device);
+-    subghz_devices_reset(device);
+-    // TODO: I haven't testing Custom preset, so not sure if there is additional setup required.
+-    subghz_devices_load_preset(device, preset, NULL);
+-    frequency = subghz_devices_set_frequency(device, frequency);
+-
+-    // subghz_devices_set_async_mirror_pin -- blink the board status LED with the signal data?
+-
+-    // Send
+-    furi_hal_power_suppress_charge_enter();
+-    if(subghz_devices_start_async_tx(device, subghz_transmitter_yield, transmitter)) {
+-        // TODO: Allow cancelling the transmission when button is no longer pressed.
+-        while(!(subghz_devices_is_async_complete_tx(device))) {
+-            furi_delay_ms(100);
++    SubGhzTransmitter* transmitter =
++        subghz_transmitter_alloc_init(environment, furi_string_get_cstr(signal->protocol));
++    FlipperFormat* format = flipper_format_string_alloc();
++    do {
++        if(subghz_signal_cancelled(cancel_flag)) {
++            result = SubGhzSignalCancelled;
++            break;
++        }
++        if(!device || !transmitter ||
++           !subghz_devices_is_frequency_valid(device, signal->frequency))
++            break;
++        bool dynamic = subghz_transmitter_get_protocol_instance(transmitter)->protocol->type ==
++                       SubGhzProtocolTypeDynamic;
++        if(dynamic) {
++            subghz_environment_load_keystore(environment, SUBGHZ_KEYSTORE_DIR_NAME);
++            subghz_environment_load_keystore(environment, SUBGHZ_KEYSTORE_DIR_USER_NAME);
++            subghz_environment_set_came_atomo_rainbow_table_file_name(
++                environment, SUBGHZ_CAME_ATOMO_DIR_NAME);
++            subghz_environment_set_alutech_at_4n_rainbow_table_file_name(
++                environment, SUBGHZ_ALUTECH_AT_4N_DIR_NAME);
++            subghz_environment_set_nice_flor_s_rainbow_table_file_name(
++                environment, SUBGHZ_NICE_FLOR_S_DIR_NAME);
++        }
++        __flipper_format_populate(format, signal->sub_file_contents);
++        if(furi_string_equal(signal->protocol, "RAW")) {
++            flipper_format_update_string_cstr(
++                format, "Radio_device_name", subghz_devices_get_name(device));
++        }
++        if(subghz_transmitter_deserialize(transmitter, format) != SubGhzProtocolStatusOk) break;
++        subghz_devices_begin(device);
++        device_started = true;
++        subghz_devices_reset(device);
++        subghz_devices_load_preset(device, signal->preset, signal->preset_data);
++        subghz_devices_set_frequency(device, signal->frequency);
++        if(dynamic) {
++            if(!subghz_signal_stage(format, storage, path)) {
++                result = SubGhzSignalSaveError;
++                break;
++            }
++            staged = true;
++        }
++        if(subghz_signal_cancelled(cancel_flag)) {
++            result = SubGhzSignalCancelled;
++            break;
+         }
+-        subghz_devices_stop_async_tx(device);
++        furi_hal_power_suppress_charge_enter();
++        charge_suppressed = true;
++        SubGhzSignalFeed feed = {.transmitter = transmitter, .queued_until = furi_get_tick()};
++        feed.deadline = feed.queued_until + furi_ms_to_ticks(5000);
++        if(!subghz_devices_start_async_tx(device, subghz_signal_yield, &feed)) break;
++        started = true;
++        for(;;) {
++            if(subghz_devices_is_async_complete_tx(device)) {
++                result = SubGhzSignalComplete;
++                break;
++            }
++            if(subghz_signal_cancelled(cancel_flag)) {
++                result = SubGhzSignalCancelled;
++                break;
++            }
++            if((int32_t)(furi_get_tick() - feed.deadline) >= 0) {
++                result = SubGhzSignalTimeout;
++                break;
++            }
++            if(cancel_flag)
++                furi_thread_flags_wait(
++                    cancel_flag, FuriFlagWaitAny | FuriFlagNoClear, furi_ms_to_ticks(20));
++            else
++                furi_delay_ms(20);
++        }
++        subghz_devices_stop_async_tx(device); // Stop before the stack feeder goes out of scope.
++    } while(false);
++    if(transmitter) {
++        subghz_transmitter_stop(transmitter);
++        subghz_transmitter_free(transmitter);
++    }
++    if(device_started) {
++        subghz_devices_sleep(device);
++        subghz_devices_end(device);
+     }
+-
+-    // Cleanup
+-    subghz_devices_sleep(device);
+-    subghz_devices_end(device);
+     subghz_devices_deinit();
+-
+-    if(enable_5v) {
+-        subghz_radio_device_power_off();
++    if(enable_5v) subghz_radio_device_power_off();
++    if(charge_suppressed) furi_hal_power_suppress_charge_exit();
++    if(staged) {
++        if(started) {
++            // A cancelled TX may already have emitted a valid frame. Keep the advanced state.
++            if(!subghz_signal_recover(storage, path)) result = SubGhzSignalSaveError;
++        } else {
++            FuriString* pending = furi_string_alloc_printf("%s.flip.pending", path);
++            if(storage_common_remove(storage, furi_string_get_cstr(pending)) != FSE_OK)
++                result = SubGhzSignalSaveError;
++            furi_string_free(pending);
++        }
+     }
+-    furi_hal_power_suppress_charge_exit();
+-    flipper_format_free(flipper_format);
+-    subghz_transmitter_free(transmitter);
++    flipper_format_free(format);
+     subghz_environment_free(environment);
++    furi_record_close(RECORD_STORAGE);
++    return result;
+ }
+ 
+ /**
+@@ -155,19 +292,6 @@ static FuriHalSubGhzPreset signal_get_preset(FuriString* preset_str) {
+     }
+     return preset;
+ }
+-#else
+-void send_signal(
+-    FuriString* sub_file_contents,
+-    const char* protocol,
+-    uint32_t frequency,
+-    FuriHalSubGhzPreset preset,
+-    bool use_external_radio) {
+-    FURI_LOG_D("FlipSignal", "TODO: Send %s signal", protocol);
+-    UNUSED(sub_file_contents);
+-    UNUSED(frequency);
+-    UNUSED(preset);
+-    UNUSED(use_external_radio);
+-}
+ #endif
+ 
+ /**
+@@ -180,8 +304,10 @@ SubGhzSignal* subghz_signal_load_file(char* file_path) {
+     SubGhzSignal* signal = (SubGhzSignal*)malloc(sizeof(SubGhzSignal));
+     signal->sub_file_contents = furi_string_alloc();
+     signal->protocol = furi_string_alloc();
++    signal->file_path = furi_string_alloc_set(file_path);
+     signal->frequency = 0;
+     signal->preset = FuriHalSubGhzPresetIDLE;
++    signal->preset_data = NULL;
+ 
+     Storage* storage = furi_record_open(RECORD_STORAGE);
+     FlipperFormat* fff_data_file = flipper_format_file_alloc(storage);
+@@ -190,7 +316,8 @@ SubGhzSignal* subghz_signal_load_file(char* file_path) {
+     FileType file_type = Unknown;
+     bool parsed = false;
+ 
+-    if(flipper_format_file_open_existing(fff_data_file, file_path)) {
++    if(subghz_signal_recover(storage, file_path) &&
++       flipper_format_file_open_existing(fff_data_file, file_path)) {
+         do {
+             if(!flipper_format_read_header(fff_data_file, temp_str, &temp_data32)) {
+                 FURI_LOG_E(TAG, "Error reading header");
+@@ -222,6 +349,24 @@ SubGhzSignal* subghz_signal_load_file(char* file_path) {
+                 break;
+             }
+ 
++            if(signal->preset == FuriHalSubGhzPresetCustom) {
++                uint32_t count = 0;
++                if(!flipper_format_get_value_count(fff_data_file, "Custom_preset_data", &count) ||
++                   count < 10 || count > 512 || (count & 1))
++                    break;
++                signal->preset_data = malloc(count);
++                if(!signal->preset_data ||
++                   !flipper_format_read_hex(
++                       fff_data_file, "Custom_preset_data", signal->preset_data, count))
++                    break;
++                bool valid = signal->preset_data[count - 10] == 0 &&
++                             signal->preset_data[count - 9] == 0;
++                for(uint32_t i = 0; valid && i < count - 10; i += 2) {
++                    valid = signal->preset_data[i] != 0 && signal->preset_data[i] <= 0x2E;
++                }
++                if(!valid) break;
++            }
++
+             if(!flipper_format_read_string(fff_data_file, "Protocol", temp_str)) {
+                 FURI_LOG_E(TAG, "Missing Protocol");
+                 break;
+@@ -251,8 +396,9 @@ SubGhzSignal* subghz_signal_load_file(char* file_path) {
+         File* file = storage_file_alloc(storage);
+         if(storage_file_open(file, file_path, FSAM_READ, FSOM_OPEN_EXISTING)) {
+             uint64_t file_size = storage_file_size(file);
+-            char* file_contents = (char*)malloc(file_size + 1);
+-            if(storage_file_read(file, file_contents, file_size) == file_size) {
++            // Protocol key files are small. RAW data is streamed by its encoder instead.
++            char* file_contents = file_size && file_size <= 16384 ? malloc(file_size + 1) : NULL;
++            if(file_contents && storage_file_read(file, file_contents, file_size) == file_size) {
+                 file_contents[file_size] = '\0';
+                 furi_string_set(signal->sub_file_contents, file_contents);
+             } else {
+@@ -265,6 +411,7 @@ SubGhzSignal* subghz_signal_load_file(char* file_path) {
+             FURI_LOG_E(TAG, "Error open file %s", file_path);
+             parsed = false;
+         }
++        storage_file_free(file);
+     }
+ 
+     furi_string_free(temp_str);
+@@ -298,6 +445,8 @@ void subghz_signal_free(SubGhzSignal* signal) {
+             furi_string_free(signal->protocol);
+             signal->protocol = NULL;
+         }
++        free(signal->preset_data);
++        furi_string_free(signal->file_path);
+         free(signal);
+     }
+ }
+@@ -308,15 +457,26 @@ void subghz_signal_free(SubGhzSignal* signal) {
+  * @param use_external_radio Currently only the internal radio is supported (please use 'false').  Whether or not to use the external radio.
+  * @param resources Resources used for sending the signal.
+ */
+-void subghz_signal_send(SubGhzSignal* signal, bool use_external_radio, Resources* resources) {
+-    if(signal) {
+-        resources_acquire(resources, ResourceIdSubGhzSignal, FuriWaitForever);
+-        send_signal(
+-            signal->sub_file_contents,
+-            furi_string_get_cstr(signal->protocol),
+-            signal->frequency,
+-            signal->preset,
+-            use_external_radio);
+-        resources_release(resources, ResourceIdSubGhzSignal);
++SubGhzSignalResult subghz_signal_send(
++    SubGhzSignal* signal,
++    bool use_external_radio,
++    Resources* resources,
++    uint32_t cancel_flag) {
++#ifdef FIRMWARE_SUPPORTS_SUBGHZ
++    if(!signal) return SubGhzSignalError;
++    uint32_t start = furi_get_tick();
++    while(!resources_acquire(resources, ResourceIdSubGhzSignal, furi_ms_to_ticks(20))) {
++        if(subghz_signal_cancelled(cancel_flag)) return SubGhzSignalCancelled;
++        if(furi_get_tick() - start >= furi_ms_to_ticks(5000)) return SubGhzSignalTimeout;
+     }
++    SubGhzSignalResult result = send_signal(signal, use_external_radio, cancel_flag);
++    resources_release(resources, ResourceIdSubGhzSignal);
++    return result;
++#else
++    UNUSED(signal);
++    UNUSED(use_external_radio);
++    UNUSED(resources);
++    UNUSED(cancel_flag);
++    return SubGhzSignalError;
++#endif
+ }
+diff --git a/applications/external/flipsignal/common/subghz_signal.h b/applications/external/flipsignal/common/subghz_signal.h
+index 0c3de045e7fee271db65f26c8dc698d2fd709f88..2d3e1d5dada62325b47f5dd06e340c0ee62ffd1a 100644
+--- a/applications/external/flipsignal/common/subghz_signal.h
++++ b/applications/external/flipsignal/common/subghz_signal.h
+@@ -16,6 +16,14 @@
+ 
+ typedef struct SubGhzSignal SubGhzSignal;
+ 
++typedef enum {
++    SubGhzSignalError,
++    SubGhzSignalComplete,
++    SubGhzSignalCancelled,
++    SubGhzSignalTimeout,
++    SubGhzSignalSaveError,
++} SubGhzSignalResult;
++
+ /**
+  * @brief Loads a SubGhzSignal from a file (supports RAW and Protocol .SUB files)
+  * @param file_path The path to the file to load.
+@@ -35,4 +43,9 @@ void subghz_signal_free(SubGhzSignal* signal);
+  * @param use_external_radio Currently only the internal radio is supported (please use 'false').  Whether or not to use the external radio.
+  * @param resources Resources to use for sending the signal.
+ */
+-void subghz_signal_send(SubGhzSignal* signal, bool use_external_radio, Resources* resources);
++/* Runs on the caller's worker. cancel_flag is a thread flag, or zero to disable. */
++SubGhzSignalResult subghz_signal_send(
++    SubGhzSignal* signal,
++    bool use_external_radio,
++    Resources* resources,
++    uint32_t cancel_flag);
+diff --git a/applications/external/genie_recorder/application.fam b/applications/external/genie_recorder/application.fam
+index a236e50ca867f06d3fc943c7d507df24504b9120..af48f793d4a2fe27dee97d7ed98dc7b1b1d6dde9 100644
+--- a/applications/external/genie_recorder/application.fam
++++ b/applications/external/genie_recorder/application.fam
+@@ -10,6 +10,6 @@ App(
+     fap_icon_assets="assets",
+     fap_author="jamisonderek",
+     fap_weburl="https://github.com/jamisonderek/flipper-zero-tutorials",
+-    fap_version="3.1",
++    fap_version="3.2",
+     fap_description="This application extracts the codes from a Genie garage door remote into a .GNE file.  It also plays back a .GNE file to a Genie garage door opener.",
+ )
+diff --git a/applications/external/genie_recorder/genie_file.c b/applications/external/genie_recorder/genie_file.c
+index d8dec9dfdff5ab4ae880e4d51f062b237dc40d48..13ac3ad566c14b6f226ac6d736681cd74b35f389 100644
+--- a/applications/external/genie_recorder/genie_file.c
++++ b/applications/external/genie_recorder/genie_file.c
+@@ -229,7 +229,8 @@ uint16_t genie_file_get_last_sent(GenieFile* file) {
+     return file ? file->last_sent : 0;
+ }
+ 
+-void genie_file_set_last_sent(const char* genie_path, uint16_t last_sent) {
++bool genie_file_set_last_sent(const char* genie_path, uint16_t last_sent) {
++    bool saved = false;
+     if(genie_path) {
+         Storage* storage = furi_record_open(RECORD_STORAGE);
+ 
+@@ -256,7 +257,13 @@ void genie_file_set_last_sent(const char* genie_path, uint16_t last_sent) {
+                     FURI_LOG_E(TAG, "Failed to seek to GENIE_VERSION @ %d", GENIE_VERSION);
+                     break;
+                 }
+-                uint16_t version = storage_file_read16(file);
++                uint8_t version_bytes[2];
++                if(storage_file_read(file, version_bytes, sizeof(version_bytes)) !=
++                   sizeof(version_bytes)) {
++                    FURI_LOG_E(TAG, "Failed to read file version");
++                    break;
++                }
++                uint16_t version = ((uint16_t)version_bytes[0] << 8) | version_bytes[1];
+                 if((version >> 8) > GENIE_MAJOR_VERSION) {
+                     FURI_LOG_E(TAG, "Unsupported version: %04X", version);
+                     break;
+@@ -271,6 +278,7 @@ void genie_file_set_last_sent(const char* genie_path, uint16_t last_sent) {
+                     FURI_LOG_E(TAG, "Failed to set last sent count to %d.", last_sent);
+                     break;
+                 }
++                saved = storage_file_sync(file);
+             } else {
+                 FURI_LOG_E(TAG, "Failed to open file");
+                 break;
+@@ -278,12 +286,13 @@ void genie_file_set_last_sent(const char* genie_path, uint16_t last_sent) {
+         } while(false);
+ 
+         if(file) {
+-            storage_file_close(file);
++            if(!storage_file_close(file)) saved = false;
+             storage_file_free(file);
+         }
+ 
+         furi_record_close(RECORD_STORAGE);
+     }
++    return saved;
+ }
+ 
+ uint16_t genie_file_get_rec_count(GenieFile* file) {
+diff --git a/applications/external/genie_recorder/genie_file.h b/applications/external/genie_recorder/genie_file.h
+index 1171f4f2a31f35b8b9fd96fd052808c32c887227..7ab0cdbcd098b729ea289bbfde381aec91b28201 100644
+--- a/applications/external/genie_recorder/genie_file.h
++++ b/applications/external/genie_recorder/genie_file.h
+@@ -10,7 +10,7 @@ uint32_t genie_file_get_key_hi(GenieFile* file);
+ uint32_t genie_file_get_key_lo(GenieFile* file);
+ uint16_t genie_file_get_last_sent(GenieFile* file);
+ uint16_t genie_file_get_rec_count(GenieFile* file);
+-void genie_file_set_last_sent(const char* genie_path, uint16_t last_sent);
++bool genie_file_set_last_sent(const char* genie_path, uint16_t last_sent);
+ 
+ bool genie_save(uint32_t count, FuriString* key);
+ uint32_t genie_save_bin(const char* key);
+diff --git a/applications/external/genie_recorder/genie_send.c b/applications/external/genie_recorder/genie_send.c
+index 09225e9f89d463617f5f9e2c88191422be56d6ab..9f598566afb98e20dc030103af6cf9b144e83bf6 100644
+--- a/applications/external/genie_recorder/genie_send.c
++++ b/applications/external/genie_recorder/genie_send.c
+@@ -13,18 +13,39 @@
+ #endif
+ #define TAG "GenieSend"
+ 
+-typedef struct GenieSend GenieSend;
++#define GENIE_SEND_CANCEL     1U
++#define GENIE_SEND_TIMEOUT_MS 5000U
++
++typedef enum {
++    GenieTxFailed,
++    GenieTxComplete,
++    GenieTxCancelled,
++    GenieTxTimeout,
++} GenieTxResult;
+ 
+ struct GenieSend {
+     View* view;
++    GenieApp* app;
++    FuriThread* worker;
++    FuriString* path;
++    uint32_t key_hi;
++    uint32_t key_lo;
++    uint32_t frequency;
++    uint16_t next_index;
++    bool pending_save; /* Accessed by the GUI only after joining the worker. */
+ };
+ 
+ typedef struct {
+-    GenieApp* app;
+     GenieFile* file;
+     bool loaded;
++    bool sending;
++    const char* status;
+ } GenieRefs;
+ 
++static bool genie_send_cancelled(void) {
++    return (furi_thread_flags_get() & GENIE_SEND_CANCEL) != 0;
++}
++
+ static void
+     set_genie(FlipperFormat* flipper_format, uint32_t key_hi, uint32_t key_lo, uint32_t repeat) {
+     FuriString* genie_settings = furi_string_alloc_printf(
+@@ -57,40 +78,135 @@ const SubGhzProtocolRegistry send_subghz_protocol_registry = {
+     .items = send_subghz_protocol_registry_items,
+     .size = COUNT_OF(send_subghz_protocol_registry_items)};
+ 
+-static void send_genie(uint32_t key_hi, uint32_t key_lo, uint32_t frequency) {
+-    uint32_t repeat = 5;
++static GenieTxResult send_genie(uint32_t key_hi, uint32_t key_lo, uint32_t frequency) {
++    GenieTxResult result = GenieTxFailed;
+     const SubGhzDevice* device;
+-
++    bool device_started = false;
++    bool charge_suppressed = false;
+     subghz_devices_init();
+     device = subghz_devices_get_by_name(SUBGHZ_DEVICE_CC1101_INT_NAME);
+     SubGhzEnvironment* environment = subghz_environment_alloc();
+     subghz_environment_set_protocol_registry(environment, (void*)&send_subghz_protocol_registry);
+     SubGhzTransmitter* transmitter = subghz_transmitter_alloc_init(environment, "Genie");
+     FlipperFormat* flipper_format = flipper_format_string_alloc();
+-    set_genie(flipper_format, key_hi, key_lo, repeat);
+-    subghz_transmitter_deserialize(transmitter, flipper_format);
+-    subghz_devices_begin(device);
+-    subghz_devices_reset(device);
+-    subghz_devices_load_preset(device, FuriHalSubGhzPresetOok650Async, NULL);
+-    frequency = subghz_devices_set_frequency(device, frequency);
+-
+-    // Send
+-    furi_hal_power_suppress_charge_enter();
+-    if(subghz_devices_start_async_tx(device, subghz_transmitter_yield, transmitter)) {
+-        while(!(subghz_devices_is_async_complete_tx(device))) {
+-            furi_delay_ms(100);
++    do {
++        if(genie_send_cancelled()) {
++            result = GenieTxCancelled;
++            break;
++        }
++        if(!device || !transmitter || !subghz_devices_is_frequency_valid(device, frequency)) break;
++        set_genie(flipper_format, key_hi, key_lo, 5);
++        if(subghz_transmitter_deserialize(transmitter, flipper_format) != SubGhzProtocolStatusOk)
++            break;
++        subghz_devices_begin(device);
++        device_started = true;
++        subghz_devices_reset(device);
++        subghz_devices_load_preset(device, FuriHalSubGhzPresetOok650Async, NULL);
++        subghz_devices_set_frequency(device, frequency);
++        if(genie_send_cancelled()) {
++            result = GenieTxCancelled;
++            break;
++        }
++        furi_hal_power_suppress_charge_enter();
++        charge_suppressed = true;
++        if(!subghz_devices_start_async_tx(device, subghz_transmitter_yield, transmitter)) break;
++        uint32_t started = furi_get_tick();
++        for(;;) {
++            if(subghz_devices_is_async_complete_tx(device)) {
++                result = GenieTxComplete;
++                break;
++            }
++            if(genie_send_cancelled()) {
++                result = GenieTxCancelled;
++                break;
++            }
++            if(furi_get_tick() - started >= furi_ms_to_ticks(GENIE_SEND_TIMEOUT_MS)) {
++                result = GenieTxTimeout;
++                break;
++            }
++            /* Keep the cancellation bit set until this worker exits. */
++            furi_thread_flags_wait(
++                GENIE_SEND_CANCEL, FuriFlagWaitAny | FuriFlagNoClear, furi_ms_to_ticks(20));
+         }
+         subghz_devices_stop_async_tx(device);
++    } while(false);
++    if(transmitter) {
++        subghz_transmitter_stop(transmitter);
++        subghz_transmitter_free(transmitter);
++    }
++    if(device_started) {
++        subghz_devices_sleep(device);
++        subghz_devices_end(device);
+     }
+-
+-    // Cleanup
+-    subghz_devices_sleep(device);
+-    subghz_devices_end(device);
+     subghz_devices_deinit();
+-    furi_hal_power_suppress_charge_exit();
++    if(charge_suppressed) furi_hal_power_suppress_charge_exit();
+     flipper_format_free(flipper_format);
+-    subghz_transmitter_free(transmitter);
+     subghz_environment_free(environment);
++    return result;
++}
++
++static void genie_send_refresh_file(GenieSend* sender) {
++    GenieFile* file = genie_file_load(genie_app_get_file_path(sender->app));
++    with_view_model(
++        sender->view,
++        GenieRefs * refs,
++        {
++            genie_file_free(refs->file);
++            refs->file = file;
++            refs->loaded = file != NULL;
++        },
++        true);
++}
++
++static int32_t genie_send_worker(void* context) {
++    GenieSend* sender = context;
++    GenieTxResult result = send_genie(sender->key_hi, sender->key_lo, sender->frequency);
++    const char* status = NULL;
++    if(result == GenieTxComplete) {
++        sender->pending_save =
++            !genie_file_set_last_sent(furi_string_get_cstr(sender->path), sender->next_index);
++        if(sender->pending_save) status = "Save failed. OK to retry.";
++        genie_send_refresh_file(sender);
++    } else if(result == GenieTxCancelled) {
++        status = "Cancelled. OK to retry.";
++    } else if(result == GenieTxTimeout) {
++        status = "TX timeout. OK to retry.";
++    } else {
++        status = "Send failed. OK to retry.";
++    }
++    with_view_model(
++        sender->view,
++        GenieRefs * refs,
++        {
++            refs->status = status;
++            refs->sending = false;
++        },
++        true);
++    return 0;
++}
++
++static void genie_send_join(GenieSend* sender, bool cancel) {
++    if(!sender->worker) return;
++    if(cancel && furi_thread_get_state(sender->worker) != FuriThreadStateStopped) {
++        furi_thread_flags_set(furi_thread_get_id(sender->worker), GENIE_SEND_CANCEL);
++    }
++    furi_thread_join(sender->worker);
++    furi_thread_free(sender->worker);
++    sender->worker = NULL;
++}
++
++/* Retry a failed index write without transmitting the same code again. */
++static bool genie_send_retry_save(GenieSend* sender) {
++    if(!sender->pending_save) return true;
++    sender->pending_save =
++        !genie_file_set_last_sent(furi_string_get_cstr(sender->path), sender->next_index);
++    with_view_model(
++        sender->view,
++        GenieRefs * refs,
++        { refs->status = sender->pending_save ? "Save failed. OK to retry." : NULL; },
++        true);
++    genie_send_refresh_file(sender);
++    return !sender->pending_save;
+ }
+ 
+ static void genie_send_draw_callback(Canvas* canvas, void* model) {
+@@ -129,8 +245,9 @@ static void genie_send_draw_callback(Canvas* canvas, void* model) {
+             canvas_draw_str(canvas, 1, 33, buffer);
+         }
+ 
+-        // TODO: Is this off by 1?
+-        if(genie_file_get_last_sent(file) < genie_file_get_rec_count(file)) {
++        if(refs->status) {
++            canvas_draw_str(canvas, 1, 63, refs->status);
++        } else if(genie_file_get_last_sent(file) < genie_file_get_rec_count(file)) {
+             canvas_draw_str(canvas, 1, 63, "Press OK to send next code.");
+         } else {
+             canvas_draw_str(canvas, 1, 61, "Long press OK to reset code.");
+@@ -140,120 +257,114 @@ static void genie_send_draw_callback(Canvas* canvas, void* model) {
+     }
+ }
+ 
+-static void genie_send_refresh_file(View* view) {
++static bool genie_send_input_callback(InputEvent* event, void* context) {
++    GenieSend* sender = context;
++    if(event->key != InputKeyOk) return false;
++    bool sending = false;
++    with_view_model(sender->view, GenieRefs * refs, { sending = refs->sending; }, false);
++    if(sending) return true;
++    if(event->type != InputTypeShort && event->type != InputTypeLong) return false;
++    genie_send_join(sender, false);
++    if(sender->pending_save) {
++        genie_send_retry_save(sender);
++        return true;
++    }
++    genie_send_refresh_file(sender);
++    bool start = false;
++    bool reset = false;
+     with_view_model(
+-        view,
++        sender->view,
+         GenieRefs * refs,
+         {
+-            const char* path = genie_app_get_file_path(refs->app);
+             if(refs->file) {
+-                genie_file_free(refs->file);
+-                refs->file = NULL;
++                uint16_t last = genie_file_get_last_sent(refs->file);
++                uint16_t count = genie_file_get_rec_count(refs->file);
++                if(event->type == InputTypeShort && last < count) {
++                    sender->key_hi = genie_file_get_key_hi(refs->file);
++                    sender->key_lo = genie_file_get_key_lo(refs->file);
++                    sender->next_index = last + 1;
++                    refs->sending = true;
++                    refs->status = "Sending... Back to cancel";
++                    start = true;
++                } else if(event->type == InputTypeLong && last >= count) {
++                    reset = true;
++                }
+             }
+-            refs->file = genie_file_load(path);
+         },
+         true);
+-}
+-
+-static bool genie_send_input_callback(InputEvent* event, void* context) {
+-    View* view = (View*)context;
+-    genie_send_refresh_file(view);
+-
+-    if(event->type == InputTypeShort) {
+-        if(event->key == InputKeyOk) {
+-            with_view_model(
+-                view,
+-                GenieRefs * refs,
+-                {
+-                    if(refs->file) {
+-                        if(genie_file_get_last_sent(refs->file) <
+-                           genie_file_get_rec_count(refs->file)) {
+-                            send_genie(
+-                                genie_file_get_key_hi(refs->file),
+-                                genie_file_get_key_lo(refs->file),
+-                                genie_app_get_frequency(refs->app));
+-
+-                            genie_file_set_last_sent(
+-                                genie_app_get_file_path(refs->app),
+-                                genie_file_get_last_sent(refs->file) + 1);
+-                            genie_send_refresh_file(view);
+-                        }
+-                    }
+-                },
+-                false);
+-            return true;
+-        }
+-    } else if(event->type == InputTypeLong) {
++    if(start) {
++        furi_string_set(sender->path, genie_app_get_file_path(sender->app));
++        sender->frequency = genie_app_get_frequency(sender->app);
++        sender->worker = furi_thread_alloc_ex("GenieSend", 4096, genie_send_worker, sender);
++        furi_thread_start(sender->worker);
++    } else if(reset) {
++        bool saved = genie_file_set_last_sent(genie_app_get_file_path(sender->app), 0);
+         with_view_model(
+-            view,
++            sender->view,
+             GenieRefs * refs,
+-            {
+-                if(refs->file) {
+-                    if(genie_file_get_last_sent(refs->file) >=
+-                       genie_file_get_rec_count(refs->file)) {
+-                        genie_file_set_last_sent(genie_app_get_file_path(refs->app), 0);
+-                        genie_send_refresh_file(view);
+-                    }
+-                }
+-            },
++            { refs->status = saved ? NULL : "Unable to reset index"; },
+             true);
+-        return true;
++        genie_send_refresh_file(sender);
+     }
+-
+-    return false;
++    return true;
+ }
+ 
+ static void genie_send_enter_callback(void* context) {
+-    View* view = (View*)context;
++    GenieSend* sender = context;
++    genie_send_join(sender, true);
++    genie_send_retry_save(sender);
++    genie_send_refresh_file(sender);
++}
+ 
+-    with_view_model(
+-        view,
+-        GenieRefs * refs,
+-        {
+-            const char* path = genie_app_get_file_path(refs->app);
+-            refs->file = genie_file_load(path);
+-            refs->loaded = refs->file != NULL;
+-        },
+-        false);
++static void genie_send_exit_callback(void* context) {
++    genie_send_join(context, true);
+ }
+ 
+ GenieSend* genie_send_alloc(GenieApp* app) {
+-    UNUSED(app);
+-    GenieSend* genie_send = malloc(sizeof(GenieSend));
++    GenieSend* sender = malloc(sizeof(GenieSend));
++    sender->app = app;
++    sender->worker = NULL;
++    sender->pending_save = false;
++    sender->path = furi_string_alloc();
+     View* view = view_alloc();
+-    genie_send->view = view;
++    sender->view = view;
+     view_set_draw_callback(view, genie_send_draw_callback);
+     view_set_input_callback(view, genie_send_input_callback);
+     view_set_previous_callback(view, genie_navigation_submenu_callback);
+     view_set_enter_callback(view, genie_send_enter_callback);
+-    view_set_context(view, view);
+-    view_allocate_model(view, ViewModelTypeLockFree, sizeof(GenieRefs));
+-    GenieRefs* refs = (GenieRefs*)view_get_model(view);
+-    refs->app = app;
+-    refs->file = NULL;
+-    refs->loaded = false;
+-
+-    return genie_send;
++    view_set_exit_callback(view, genie_send_exit_callback);
++    view_set_context(view, sender);
++    view_allocate_model(view, ViewModelTypeLocking, sizeof(GenieRefs));
++    with_view_model(
++        view,
++        GenieRefs * refs,
++        {
++            refs->file = NULL;
++            refs->loaded = false;
++            refs->sending = false;
++            refs->status = NULL;
++        },
++        false);
++    return sender;
+ }
+ 
+-void genie_send_free(GenieSend* genie_send) {
+-    furi_assert(genie_send);
+-    furi_assert(genie_send->view);
++void genie_send_free(GenieSend* sender) {
++    furi_assert(sender);
++    genie_send_join(sender, true);
+     with_view_model(
+-        genie_send->view,
++        sender->view,
+         GenieRefs * refs,
+         {
+             genie_file_free(refs->file);
+             refs->file = NULL;
+         },
+         false);
+-    view_free(genie_send->view);
+-    genie_send->view = NULL;
+-    free(genie_send);
++    view_free(sender->view);
++    furi_string_free(sender->path);
++    free(sender);
+ }
+ 
+-View* genie_send_get_view(GenieSend* genie_send) {
+-    furi_assert(genie_send);
+-    furi_assert(genie_send->view);
+-    return genie_send->view;
++View* genie_send_get_view(GenieSend* sender) {
++    furi_assert(sender);
++    return sender->view;
+ }
+diff --git a/applications/external/meal_pager/application.fam b/applications/external/meal_pager/application.fam
+index fe22e5dbe670b36216cb02529b51ca01d775d88a..184dacb1c273db8aaab9899de7d314c4dd14d635 100644
+--- a/applications/external/meal_pager/application.fam
++++ b/applications/external/meal_pager/application.fam
+@@ -10,6 +10,6 @@ App(
+     fap_category="Sub-GHz",
+     fap_author="leedave",
+     fap_weburl="https://github.com/leedave/flipper-zero-meal-pager",
+-    fap_version="1.7",
++    fap_version="1.8",
+     fap_description="This app triggers restaurant pagers in a brute force manner, useful to test if devices are still functional.",
+ )
+diff --git a/applications/external/meal_pager/helpers/subghz/subghz.c b/applications/external/meal_pager/helpers/subghz/subghz.c
+index a326f4e153fa815e311489a996c0b581cba22394..a29c9201d548ca22e574958c2219ada69f33fd68 100644
+--- a/applications/external/meal_pager/helpers/subghz/subghz.c
++++ b/applications/external/meal_pager/helpers/subghz/subghz.c
+@@ -26,52 +26,16 @@ void subghz_free(SubGhz* subghz) {
+     free(subghz);
+ }
+ 
+-void subghz_scene_transmit_callback_end_tx(void* context) {
+-    furi_assert(context);
+-    //UNUSED(context);
+-    FURI_LOG_D(TAG, "callback end");
++bool subghz_send(void* context) {
+     Meal_Pager* app = context;
+-    view_dispatcher_send_custom_event(
+-        app->view_dispatcher, Meal_PagerCustomEventViewTransmitterSendStop);
+-}
+-
+-void subghz_send(void* context) {
+-    //UNUSED(context);
+-    Meal_Pager* app = context;
+-    //SubGhz* subghz = subghz_alloc();
+-
+-    FURI_LOG_D(TAG, "loading protocol from file");
+-    subghz_load_protocol_from_file(app->subghz);
+-
+-    /*Storage* storage = furi_record_open(RECORD_STORAGE);
+-    FlipperFormat* ff = flipper_format_file_alloc(storage);
+-
+-    if(!flipper_format_file_open_existing(ff, MEAL_PAGER_TMP_FILE)) {
+-        //totp_close_config_file(fff_file);
+-        FURI_LOG_E(TAG, "Error reading Temp File %s", MEAL_PAGER_TMP_FILE);
+-        furi_record_close(RECORD_STORAGE);
+-        return;
+-    }*/
+-
+-    //subghz_txrx_tx_start(subghz->txrx, ff);
+-
+-    FURI_LOG_D(TAG, "Starting Transmission");
+-    subghz_txrx_tx_start(
+-        app->subghz->txrx,
+-        subghz_txrx_get_fff_data(app->subghz->txrx)); //Seems like it must be done this way
+-
+-    FURI_LOG_D(TAG, "setting sugbhz raw file encoder worker callback");
+-    subghz_txrx_set_raw_file_encoder_worker_callback_end(
+-        app->subghz->txrx, subghz_scene_transmit_callback_end_tx, app);
++    furi_assert(app);
++    app->state_notifications = SubGhzNotificationStateIDLE;
++    if(!subghz_load_protocol_from_file(app->subghz)) return false;
++    if(subghz_txrx_tx_start(app->subghz->txrx, subghz_txrx_get_fff_data(app->subghz->txrx)) !=
++       SubGhzTxRxStartTxStateOk) {
++        return false;
++    }
++    // Poll hardware completion in the scene, after the entire RAW file has drained.
+     app->state_notifications = SubGhzNotificationStateTx;
+-
+-    /*flipper_format_rewind(ff);
+-    flipper_format_file_close(ff);
+-    flipper_format_free(ff);
+-
+-    furi_record_close(RECORD_STORAGE);*/
+-
+-    //subghz_free(subghz);
+-    FURI_LOG_D(TAG, "Finished Transmitting");
+-    //meal_pager_blink_stop(app);
++    return true;
+ }
+diff --git a/applications/external/meal_pager/helpers/subghz/subghz.h b/applications/external/meal_pager/helpers/subghz/subghz.h
+index dabd0ee3eed6364281e38197bccfef29796e2c55..8eaa14ac275ad884d65b168552cb957c34315235 100644
+--- a/applications/external/meal_pager/helpers/subghz/subghz.h
++++ b/applications/external/meal_pager/helpers/subghz/subghz.h
+@@ -6,4 +6,4 @@ typedef struct SubGhz SubGhz;
+ 
+ SubGhz* subghz_alloc();
+ void subghz_free(SubGhz* subghz);
+-void subghz_send(void* context);
++bool subghz_send(void* context);
+diff --git a/applications/external/meal_pager/helpers/subghz/subghz_txrx.c b/applications/external/meal_pager/helpers/subghz/subghz_txrx.c
+index af79300743c9db43cabf97e95f95652997a87717..42dcb1cd3ac4398592dcd2eabaaa3b0c6f99a518 100644
+--- a/applications/external/meal_pager/helpers/subghz/subghz_txrx.c
++++ b/applications/external/meal_pager/helpers/subghz/subghz_txrx.c
+@@ -29,6 +29,7 @@ static void subghz_txrx_radio_device_power_off(SubGhzTxRx* instance) {
+ 
+ SubGhzTxRx* subghz_txrx_alloc() {
+     SubGhzTxRx* instance = malloc(sizeof(SubGhzTxRx));
++    instance->transmitter = NULL;
+     instance->setting = subghz_setting_alloc();
+     subghz_setting_load(instance->setting, EXT_PATH("subghz/assets/setting_user.txt"));
+ 
+@@ -79,6 +80,7 @@ SubGhzTxRx* subghz_txrx_alloc() {
+ void subghz_txrx_free(SubGhzTxRx* instance) {
+     furi_assert(instance);
+     FURI_LOG_D(TAG, "freeing TXRX");
++    subghz_txrx_stop(instance);
+ 
+     if(instance->radio_device_type != SubGhzRadioDeviceTypeInternal) {
+         subghz_txrx_radio_device_power_off(instance);
+@@ -272,12 +274,10 @@ SubGhzTxRxStartTxState subghz_txrx_tx_start(SubGhzTxRx* instance, FlipperFormat*
+                SubGhzProtocolStatusOk) {
+                 //if (false) {
+                 FURI_LOG_D(TAG, "deserialization");
+-                if(strcmp(furi_string_get_cstr(preset->name), "") != 0) {
+-                    FURI_LOG_D(TAG, "got preset name");
+-                    subghz_txrx_begin(
+-                        instance,
+-                        subghz_setting_get_preset_data_by_name(
+-                            instance->setting, furi_string_get_cstr(preset->name)));
++                uint8_t* preset_data = subghz_setting_get_preset_data_by_name(
++                    instance->setting, furi_string_get_cstr(preset->name));
++                if(preset_data) {
++                    subghz_txrx_begin(instance, preset_data);
+                     FURI_LOG_D(TAG, "loaded preset by name");
+                     if(preset->frequency) {
+                         if(!subghz_txrx_tx(instance, preset->frequency)) {
+@@ -298,8 +298,13 @@ SubGhzTxRxStartTxState subghz_txrx_tx_start(SubGhzTxRx* instance, FlipperFormat*
+                 if(ret == SubGhzTxRxStartTxStateOk) {
+                     //Start TX
+                     FURI_LOG_D(TAG, "starting Async TX");
+-                    subghz_devices_start_async_tx(
+-                        instance->radio_device, subghz_transmitter_yield, instance->transmitter);
++                    if(!subghz_devices_start_async_tx(
++                           instance->radio_device,
++                           subghz_transmitter_yield,
++                           instance->transmitter)) {
++                        FURI_LOG_E(TAG, "Failed to start async TX");
++                        ret = SubGhzTxRxStartTxStateErrorParserOthers;
++                    }
+                 }
+             } else {
+                 FURI_LOG_D(TAG, "no deserialization");
+@@ -310,7 +315,10 @@ SubGhzTxRxStartTxState subghz_txrx_tx_start(SubGhzTxRx* instance, FlipperFormat*
+         }
+         if(ret != SubGhzTxRxStartTxStateOk) {
+             FURI_LOG_D(TAG, "state not ok");
+-            subghz_transmitter_free(instance->transmitter); // Crashes here
++            if(instance->transmitter) {
++                subghz_transmitter_free(instance->transmitter);
++                instance->transmitter = NULL;
++            }
+             if(instance->txrx_state != SubGhzTxRxStateIDLE) {
+                 subghz_txrx_idle(instance);
+             }
+@@ -346,6 +354,7 @@ static void subghz_txrx_tx_stop(SubGhzTxRx* instance) {
+     subghz_devices_stop_async_tx(instance->radio_device);
+     subghz_transmitter_stop(instance->transmitter);
+     subghz_transmitter_free(instance->transmitter);
++    instance->transmitter = NULL;
+ 
+     //if protocol dynamic then we save the last upload
+     /*if(instance->decoder_result->protocol->type == SubGhzProtocolTypeDynamic) {
+@@ -385,6 +394,12 @@ void subghz_txrx_stop(SubGhzTxRx* instance) {
+     }
+ }
+ 
++bool subghz_txrx_is_tx_complete(SubGhzTxRx* instance) {
++    furi_assert(instance);
++    return instance->txrx_state == SubGhzTxRxStateTx &&
++           subghz_devices_is_async_complete_tx(instance->radio_device);
++}
++
+ /*void subghz_txrx_hopper_update(SubGhzTxRx* instance) {
+     furi_assert(instance);
+ 
+diff --git a/applications/external/meal_pager/helpers/subghz/subghz_txrx.h b/applications/external/meal_pager/helpers/subghz/subghz_txrx.h
+index 3242652c1b466a5696831ce7d4510d5d7022cd62..afb8c8fa1c42a845049ee92378181d34df17e09c 100644
+--- a/applications/external/meal_pager/helpers/subghz/subghz_txrx.h
++++ b/applications/external/meal_pager/helpers/subghz/subghz_txrx.h
+@@ -109,6 +109,9 @@ SubGhzTxRxStartTxState subghz_txrx_tx_start(SubGhzTxRx* instance, FlipperFormat*
+  */
+ void subghz_txrx_stop(SubGhzTxRx* instance);
+ 
++/** Poll hardware completion after a successful start; no RAW worker callback needed. */
++bool subghz_txrx_is_tx_complete(SubGhzTxRx* instance);
++
+ /**
+  * Set sleep mode CC1101
+  * 
+diff --git a/applications/external/meal_pager/scenes/meal_pager_scene_transmit.c b/applications/external/meal_pager/scenes/meal_pager_scene_transmit.c
+index 2618f5fc92778ff300ebef3cb8a2fcacf66d5561..b70ae80e28dd9b30b238e8509814a0000533b04b 100644
+--- a/applications/external/meal_pager/scenes/meal_pager_scene_transmit.c
++++ b/applications/external/meal_pager/scenes/meal_pager_scene_transmit.c
+@@ -22,6 +22,7 @@ void meal_pager_scene_transmit_on_enter(void* context) {
+     FURI_LOG_D(TAG, "Type is %lu", app->pager_type);
+ 
+     app->stop_transmit = false;
++    meal_pager_transmit_model_set_sending(app->meal_pager_transmit, 0);
+     meal_pager_blink_start_compile(app);
+     meal_pager_transmit_model_set_type(app->meal_pager_transmit, app->pager_type);
+     meal_pager_transmit_model_set_station(app->meal_pager_transmit, app->current_station);
+@@ -49,15 +50,22 @@ void meal_pager_scene_transmit_on_enter(void* context) {
+     if(!generated) {
+         FURI_LOG_D(TAG, "Could not generate temp file");
+         meal_pager_blink_stop(app);
++        meal_pager_transmit_model_set_sending(app->meal_pager_transmit, 2);
++        notification_message(app->notification, &sequence_error);
+         return;
+     }
+     FURI_LOG_D(TAG, "Generated tmp.sub");
+     FURI_LOG_D(TAG, "Start Transmitting");
+     if(!app->stop_transmit) {
+-        meal_pager_transmit_model_set_sending(app->meal_pager_transmit, 1);
+-        subghz_send(app);
++        if(subghz_send(app)) {
++            meal_pager_transmit_model_set_sending(app->meal_pager_transmit, 1);
++            dolphin_deed(DolphinDeedSubGhzSend);
++        } else {
++            meal_pager_blink_stop(app);
++            meal_pager_transmit_model_set_sending(app->meal_pager_transmit, 2);
++            notification_message(app->notification, &sequence_error);
++        }
+     }
+-    dolphin_deed(DolphinDeedSubGhzSend);
+ }
+ 
+ bool meal_pager_scene_transmit_on_event(void* context, SceneManagerEvent event) {
+@@ -83,16 +91,14 @@ bool meal_pager_scene_transmit_on_event(void* context, SceneManagerEvent event)
+             }
+             consumed = true;
+             break;
+-        case Meal_PagerCustomEventViewTransmitterSendStop:
+-            app->state_notifications = SubGhzNotificationStateIDLE;
+-            subghz_txrx_stop(app->subghz->txrx);
+-            meal_pager_blink_stop(app);
+-            meal_pager_transmit_model_set_sending(app->meal_pager_transmit, 0);
+-            scene_manager_next_scene(app->scene_manager, Meal_PagerSceneMenu);
+-            FURI_LOG_D(TAG, "Stop Event");
+-            break;
+         }
+     } else if(event.type == SceneManagerEventTypeTick) {
++        if(app->state_notifications == SubGhzNotificationStateTx &&
++           subghz_txrx_is_tx_complete(app->subghz->txrx)) {
++            scene_manager_search_and_switch_to_previous_scene(
++                app->scene_manager, Meal_PagerSceneMenu);
++            return true;
++        }
+         if(app->state_notifications == SubGhzNotificationStateTx && app->led == 1) {
+             notification_message(app->notification, &sequence_blink_magenta_10);
+         }
+@@ -104,5 +110,9 @@ bool meal_pager_scene_transmit_on_event(void* context, SceneManagerEvent event)
+ 
+ void meal_pager_scene_transmit_on_exit(void* context) {
+     Meal_Pager* app = context;
+-    UNUSED(app);
++    subghz_txrx_stop(app->subghz->txrx);
++    app->stop_transmit = true;
++    app->state_notifications = SubGhzNotificationStateIDLE;
++    meal_pager_blink_stop(app);
++    meal_pager_transmit_model_set_sending(app->meal_pager_transmit, 0);
+ }
+diff --git a/applications/external/meal_pager/views/meal_pager_transmit.c b/applications/external/meal_pager/views/meal_pager_transmit.c
+index 4b0137e5e441bb405bed43c1c394c0a9bfa90096..0768973a822411da78c3b34c20aaa2c79e77050f 100644
+--- a/applications/external/meal_pager/views/meal_pager_transmit.c
++++ b/applications/external/meal_pager/views/meal_pager_transmit.c
+@@ -52,6 +52,9 @@ void meal_pager_transmit_draw(Canvas* canvas, Meal_PagerTransmitModel* model) {
+         canvas_draw_str_aligned(canvas, 0, 22, AlignLeft, AlignTop, "Generating Data");
+         canvas_draw_str_aligned(canvas, 0, 32, AlignLeft, AlignTop, stationText);
+         canvas_draw_str_aligned(canvas, 0, 42, AlignLeft, AlignTop, pagerText);
++    } else if(model->sending == 2) {
++        canvas_draw_str_aligned(canvas, 0, 22, AlignLeft, AlignTop, "Unable to send");
++        canvas_draw_str_aligned(canvas, 0, 42, AlignLeft, AlignTop, "Back to return");
+     } else {
+         canvas_draw_str_aligned(canvas, 0, 22, AlignLeft, AlignTop, "Sending Data");
+     }
+diff --git a/applications/external/protoview/app.c b/applications/external/protoview/app.c
+index bf4bebdc483fa94a635c22fc392eaaf7ca53c30f..c647d9faa5e669dcb83249a877694742237f2024 100644
+--- a/applications/external/protoview/app.c
++++ b/applications/external/protoview/app.c
+@@ -167,6 +167,7 @@ ProtoViewApp* protoview_app_alloc() {
+     app->txrx = malloc(sizeof(ProtoViewTxRx));
+ 
+     /* Setup rx state. */
++    app->txrx->tx_context = NULL;
+     app->txrx->freq_mod_changed = false;
+     app->txrx->debug_timer_sampling = false;
+     app->txrx->last_g0_change_time = DWT->CYCCNT;
+@@ -242,8 +243,11 @@ static void timer_callback(void* ctx) {
+         delta = RawSamples->total - lastidx + RawSamples->idx;
+     }
+     if(delta < RawSamples->total / 2) return;
+-    app->signal_last_scan_idx = RawSamples->idx;
+-    scan_for_signal(app, RawSamples, ProtoViewModulations[app->modulation].duration_filter);
++    if(furi_mutex_acquire(app->view_updating_mutex, 0) == FuriStatusOk) {
++        app->signal_last_scan_idx = RawSamples->idx;
++        scan_for_signal(app, RawSamples, ProtoViewModulations[app->modulation].duration_filter);
++        furi_mutex_release(app->view_updating_mutex);
++    }
+ }
+ 
+ /* This is the navigation callback we use in the view dispatcher used
+@@ -282,6 +286,24 @@ int32_t protoview_app_entry(void* p) {
+     InputEvent input;
+     while(app->running) {
+         FuriStatus qstat = furi_message_queue_get(app->event_queue, &input, 100);
++        ProtoViewTxResult tx_result = radio_tx_poll(app);
++        if(tx_result == ProtoViewTxComplete) {
++            notify_signal_sent(app);
++            ui_show_alert(app, "Signal sent", 1000);
++        } else if(tx_result == ProtoViewTxTimeout) {
++            ui_show_alert(app, "Transmit timed out", 2000);
++        }
++        if(qstat == FuriStatusOk && app->txrx->txrx_state == TxRxStateTx) {
++            /* Keep the radio configuration stable, but service Back immediately. */
++            if(input.key == InputKeyBack &&
++               (input.type == InputTypeShort || input.type == InputTypeLong)) {
++                radio_tx_stop(app, true);
++                ui_show_alert(app, "Transmission cancelled", 1000);
++                if(input.type == InputTypeLong) app->running = 0;
++            }
++            view_port_update(app->view_port);
++            continue;
++        }
+         if(qstat == FuriStatusOk) {
+             if(DEBUG_MSG)
+                 FURI_LOG_E(TAG, "Main Loop - Input: type %d key %u", input.type, input.key);
+@@ -397,6 +419,7 @@ int32_t protoview_app_entry(void* p) {
+     }
+ 
+     /* App no longer running. Shut down and free. */
++    radio_tx_stop(app, false);
+     if(app->txrx->txrx_state == TxRxStateRx) {
+         FURI_LOG_E(TAG, "Putting CC1101 to sleep before exiting.");
+         radio_rx_end(app);
+diff --git a/applications/external/protoview/app.h b/applications/external/protoview/app.h
+index 9020fb891514a43ec91f72a63d5c80b0a2d20396..3c45f5a514718a748865d24870f250f613b228f6 100644
+--- a/applications/external/protoview/app.h
++++ b/applications/external/protoview/app.h
+@@ -46,6 +46,13 @@ typedef enum {
+     TxRxStateSleep,
+ } TxRxState;
+ 
++typedef enum {
++    ProtoViewTxIdle,
++    ProtoViewTxPending,
++    ProtoViewTxComplete,
++    ProtoViewTxTimeout,
++} ProtoViewTxResult;
++
+ /* Currently active view. */
+ typedef enum {
+     ViewRawPulses,
+@@ -86,6 +93,9 @@ struct ProtoViewTxRx {
+                                    from the interface. There is to restart the
+                                    radio with the right parameters. */
+     TxRxState txrx_state; /* Receiving, idle or sleeping? */
++    TxRxState tx_previous_state;
++    void* tx_context; /* Owned until asynchronous TX has been stopped. */
++    uint32_t tx_deadline;
+ 
+     /* Timer sampling mode state. */
+     bool debug_timer_sampling; /* Read data from GDO0 in a busy loop. Only
+@@ -267,7 +277,14 @@ void radio_rx_end(ProtoViewApp* app);
+ void radio_sleep(ProtoViewApp* app);
+ void raw_sampling_worker_start(ProtoViewApp* app);
+ void raw_sampling_worker_stop(ProtoViewApp* app);
+-void radio_tx_signal(ProtoViewApp* app, FuriHalSubGhzAsyncTxCallback data_feeder, void* ctx);
++/* Takes ownership of ctx only on success. timeout_ticks must be <= INT32_MAX. */
++bool radio_tx_signal(
++    ProtoViewApp* app,
++    FuriHalSubGhzAsyncTxCallback data_feeder,
++    void* ctx,
++    uint32_t timeout_ticks);
++ProtoViewTxResult radio_tx_poll(ProtoViewApp* app);
++void radio_tx_stop(ProtoViewApp* app, bool restore_rx);
+ void protoview_rx_callback(bool level, uint32_t duration, void* context);
+ 
+ /* signal.c */
+@@ -331,6 +348,7 @@ void process_input_settings(ProtoViewApp* app, InputEvent input);
+ void render_view_info(Canvas* const canvas, ProtoViewApp* app);
+ void render_list_view_info(Canvas* const canvas, ProtoViewApp* app);
+ void process_input_info(ProtoViewApp* app, InputEvent input);
++void notify_signal_sent(ProtoViewApp* app);
+ void tyre_list_process_input(ProtoViewApp* app, InputEvent input);
+ void render_view_direct_sampling(Canvas* const canvas, ProtoViewApp* app);
+ void process_input_direct_sampling(ProtoViewApp* app, InputEvent input);
+diff --git a/applications/external/protoview/app_subghz.c b/applications/external/protoview/app_subghz.c
+index cc2755d142f10ae774c4903be786546e2c0673ab..efa9b4f09390b34f7bec1d181a0cf7e89070136e 100644
+--- a/applications/external/protoview/app_subghz.c
++++ b/applications/external/protoview/app_subghz.c
+@@ -137,7 +137,12 @@ void radio_sleep(ProtoViewApp* app) {
+ /* This function suspends the current RX state, switches to TX mode,
+  * transmits the signal provided by the callback data_feeder, and later
+  * restores the RX state if there was one. */
+-void radio_tx_signal(ProtoViewApp* app, FuriHalSubGhzAsyncTxCallback data_feeder, void* ctx) {
++bool radio_tx_signal(
++    ProtoViewApp* app,
++    FuriHalSubGhzAsyncTxCallback data_feeder,
++    void* ctx,
++    uint32_t timeout_ticks) {
++    if(app->txrx->txrx_state == TxRxStateTx) return false;
+     TxRxState oldstate = app->txrx->txrx_state;
+ 
+     if(oldstate == TxRxStateRx) radio_rx_end(app);
+@@ -147,14 +152,41 @@ void radio_tx_signal(ProtoViewApp* app, FuriHalSubGhzAsyncTxCallback data_feeder
+     uint32_t value = subghz_devices_set_frequency(app->radio_device, app->frequency);
+     FURI_LOG_E(TAG, "Switched to frequency: %lu", value);
+ 
+-    subghz_devices_start_async_tx(app->radio_device, data_feeder, ctx);
+-    while(!subghz_devices_is_async_complete_tx(app->radio_device))
+-        furi_delay_ms(10);
++    if(!subghz_devices_start_async_tx(app->radio_device, data_feeder, ctx)) {
++        radio_begin(app);
++        if(oldstate == TxRxStateRx) radio_rx(app);
++        if(oldstate == TxRxStateSleep) radio_sleep(app);
++        return false;
++    }
++    app->txrx->tx_previous_state = oldstate;
++    app->txrx->tx_context = ctx;
++    app->txrx->tx_deadline = furi_get_tick() + timeout_ticks;
++    app->txrx->txrx_state = TxRxStateTx;
++    return true;
++}
++
++void radio_tx_stop(ProtoViewApp* app, bool restore_rx) {
++    if(app->txrx->txrx_state != TxRxStateTx) return;
+     subghz_devices_stop_async_tx(app->radio_device);
+     subghz_devices_idle(app->radio_device);
++    free(app->txrx->tx_context);
++    app->txrx->tx_context = NULL;
+ 
+     radio_begin(app);
+-    if(oldstate == TxRxStateRx) radio_rx(app);
++    if(restore_rx && app->txrx->tx_previous_state == TxRxStateRx) radio_rx(app);
++    if(restore_rx && app->txrx->tx_previous_state == TxRxStateSleep) radio_sleep(app);
++}
++
++ProtoViewTxResult radio_tx_poll(ProtoViewApp* app) {
++    if(app->txrx->txrx_state != TxRxStateTx) return ProtoViewTxIdle;
++    ProtoViewTxResult result = ProtoViewTxPending;
++    if(subghz_devices_is_async_complete_tx(app->radio_device)) {
++        result = ProtoViewTxComplete;
++    } else if((int32_t)(furi_get_tick() - app->txrx->tx_deadline) >= 0) {
++        result = ProtoViewTxTimeout;
++    }
++    if(result != ProtoViewTxPending) radio_tx_stop(app, true);
++    return result;
+ }
+ 
+ /* ============================= Raw sampling mode =============================
+diff --git a/applications/external/protoview/application.fam b/applications/external/protoview/application.fam
+index 2878091494f2739608bebb6b7a678bb944d29f35..c699e429c43159dde93e7baff0a0f019f6ed4a42 100644
+--- a/applications/external/protoview/application.fam
++++ b/applications/external/protoview/application.fam
+@@ -8,7 +8,7 @@ App(
+     fap_icon="appicon.png",
+     fap_category="Sub-GHz",
+     fap_author="antirez & (fixes by xMasterX) + TPMS history by Mascot68",
+-    fap_version="1.3",
++    fap_version="1.4",
+     fap_description="Digital signal detection, visualization, editing and reply tool",
+     #  v1.3: [Extra history page for TPMS detections (By Mascot68)](https://github.com/Mascot68/ProtoViewTPMS)
+ )
+diff --git a/applications/external/protoview/view_info.c b/applications/external/protoview/view_info.c
+index 1c09baa3ac3c7e3696563c4b7a1bf6b12b610c4a..51e18d0ee358cf2afe4eae4cfd241f47ac574b3f 100644
+--- a/applications/external/protoview/view_info.c
++++ b/applications/external/protoview/view_info.c
+@@ -186,9 +186,12 @@ typedef enum {
+ typedef struct {
+     SendSignalState state; // Current state.
+     uint32_t curpos; // Current bit position of data to send.
+-    ProtoViewApp* app; // App reference.
++    uint32_t pulses_count;
++    uint32_t short_pulse_dur;
++    uint32_t bits_bytes;
+     uint32_t start_gap_dur; // Gap to send at the start.
+     uint32_t end_gap_dur; // Gap to send at the end.
++    uint8_t bits[]; // Snapshot: the receive scanner may replace app->msg_info.
+ } SendSignalCtx;
+ 
+ /* Setup the state context for the callback responsible to feed data
+@@ -196,7 +199,10 @@ typedef struct {
+ static void send_signal_init(SendSignalCtx* ss, ProtoViewApp* app) {
+     ss->state = SendSignalSendStartGap;
+     ss->curpos = 0;
+-    ss->app = app;
++    ss->pulses_count = app->msg_info->pulses_count;
++    ss->short_pulse_dur = app->msg_info->short_pulse_dur;
++    ss->bits_bytes = app->msg_info->bits_bytes;
++    memcpy(ss->bits, app->msg_info->bits, ss->bits_bytes);
+     ss->start_gap_dur = PROTOVIEW_SENDSIGNAL_START_GAP;
+     ss->end_gap_dur = PROTOVIEW_SENDSIGNAL_END_GAP;
+ }
+@@ -230,27 +236,26 @@ LevelDuration radio_tx_feed_data(void* ctx) {
+ 
+         /* Let's see how many consecutive bits we have with the same
+          * level. */
+-        for(j = 0; ss->curpos + j < ss->app->msg_info->pulses_count; j++) {
+-            uint32_t l =
+-                bitmap_get(ss->app->msg_info->bits, ss->app->msg_info->bits_bytes, ss->curpos + j);
++        for(j = 0; ss->curpos + j < ss->pulses_count; j++) {
++            uint32_t l = bitmap_get(ss->bits, ss->bits_bytes, ss->curpos + j);
+             if(j == 0) {
+                 /* At the first bit of this sequence, we store the
+                  * level of the sequence. */
+                 level = l;
+-                dur += ss->app->msg_info->short_pulse_dur;
++                dur += ss->short_pulse_dur;
+                 continue;
+             }
+ 
+             /* As long as the level is the same, we update the duration.
+              * Otherwise stop the loop and return this sample. */
+             if(l != level) break;
+-            dur += ss->app->msg_info->short_pulse_dur;
++            dur += ss->short_pulse_dur;
+         }
+         ss->curpos += j;
+ 
+         /* If this was the last set of bits, change the state to
+          * send the final gap. */
+-        if(ss->curpos >= ss->app->msg_info->pulses_count) ss->state = SendSignalSendEndGap;
++        if(ss->curpos >= ss->pulses_count) ss->state = SendSignalSendEndGap;
+         return level_duration_make(level, dur);
+     }
+ 
+@@ -310,10 +315,32 @@ void process_input_info(ProtoViewApp* app, InputEvent input) {
+             set_signal_random_filename(app, privdata->filename, SAVE_FILENAME_LEN);
+             ui_show_keyboard(app, privdata->filename, SAVE_FILENAME_LEN, text_input_done_callback);
+         } else if(input.type == InputTypeShort && input.key == InputKeyOk) {
+-            SendSignalCtx send_state;
+-            send_signal_init(&send_state, app);
+-            radio_tx_signal(app, radio_tx_feed_data, &send_state);
+-            notify_signal_sent(app);
++            /* Snapshot under the same mutex used by the receive scanner. */
++            SendSignalCtx* send_state = NULL;
++            uint32_t timeout_ticks = 0;
++            furi_mutex_acquire(app->view_updating_mutex, FuriWaitForever);
++            if(app->msg_info && app->msg_info->bits && app->msg_info->pulses_count &&
++               app->msg_info->short_pulse_dur &&
++               app->msg_info->bits_bytes <= SIZE_MAX - sizeof(SendSignalCtx) &&
++               (uint64_t)app->msg_info->pulses_count <= (uint64_t)app->msg_info->bits_bytes * 8) {
++                uint64_t duration_us =
++                    (uint64_t)app->msg_info->pulses_count * app->msg_info->short_pulse_dur +
++                    PROTOVIEW_SENDSIGNAL_START_GAP + PROTOVIEW_SENDSIGNAL_END_GAP;
++                /* Derive the limit from the waveform, with one second for DMA drain. */
++                uint32_t tick_hz = furi_kernel_get_tick_frequency();
++                if(duration_us <= ((uint64_t)INT32_MAX - tick_hz) * 1000000 / tick_hz) {
++                    timeout_ticks = (duration_us * tick_hz + 999999) / 1000000 + tick_hz;
++                    send_state = malloc(sizeof(SendSignalCtx) + app->msg_info->bits_bytes);
++                    if(send_state) send_signal_init(send_state, app);
++                }
++            }
++            furi_mutex_release(app->view_updating_mutex);
++            if(send_state && radio_tx_signal(app, radio_tx_feed_data, send_state, timeout_ticks)) {
++                ui_show_alert(app, "Sending; Back to cancel", 2000);
++            } else {
++                free(send_state);
++                ui_show_alert(app, "Unable to send signal", 2000);
++            }
+         }
+     }
+ }
+diff --git a/applications/external/subghz_remote/application.fam b/applications/external/subghz_remote/application.fam
+index da34857ae4eba8c26bc77a2127d3831901460de2..79c7cfe48f862ad374b014b91d35c119f86d044a 100644
+--- a/applications/external/subghz_remote/application.fam
++++ b/applications/external/subghz_remote/application.fam
+@@ -17,6 +17,6 @@ App(
+     fap_icon_assets_symbol="subghz_remote",
+     fap_author="gid9798 xMasterX",
+     fap_weburl="https://github.com/DarkFlippers/SubGHz_Remote",
+-    fap_version="1.8",
++    fap_version="1.9",
+     fap_description="SubGhz Remote, uses up to 5 .sub files",
+ )
+diff --git a/applications/external/subghz_remote/helpers/txrx/subghz_txrx.c b/applications/external/subghz_remote/helpers/txrx/subghz_txrx.c
+index 3e3e4d07e1aca5bab9059709818de8ab0706083c..4c892fc29d6dac5bcb6369913717006df1563322 100644
+--- a/applications/external/subghz_remote/helpers/txrx/subghz_txrx.c
++++ b/applications/external/subghz_remote/helpers/txrx/subghz_txrx.c
+@@ -282,8 +282,13 @@ SubGhzTxRxStartTxState subghz_txrx_tx_start(SubGhzTxRx* instance, FlipperFormat*
+ 
+                 if(ret == SubGhzTxRxStartTxStateOk) {
+                     //Start TX
+-                    subghz_devices_start_async_tx(
+-                        instance->radio_device, subghz_transmitter_yield, instance->transmitter);
++                    if(!subghz_devices_start_async_tx(
++                           instance->radio_device,
++                           subghz_transmitter_yield,
++                           instance->transmitter)) {
++                        FURI_LOG_E(TAG, "Failed to start async TX");
++                        ret = SubGhzTxRxStartTxStateErrorParserOthers;
++                    }
+                 }
+             } else {
+                 ret = SubGhzTxRxStartTxStateErrorParserOthers;
+diff --git a/applications/external/subghz_wardriving/application.fam b/applications/external/subghz_wardriving/application.fam
+index 765bbc98a4a737b03f710e429ea6acf74a6a3327..b08e87f01280177e4c1558ce27c230e54f2eb8f7 100644
+--- a/applications/external/subghz_wardriving/application.fam
++++ b/applications/external/subghz_wardriving/application.fam
+@@ -17,7 +17,7 @@ App(
+     fap_category="Sub-GHz",
+     fap_author="xMasterX",
+     fap_weburl="https://github.com/xMasterX/all-the-plugins/tree/213baa6e872d1db597a25d2c16e81406e9634440/base_pack/subghz_wardriving",
+-    fap_version="0.1",
++    fap_version="0.2",
+     fap_description="Record received Sub-GHz signals with GPS coordinates over UART.",
+ )
+ 
+diff --git a/applications/external/subghz_wardriving/helpers/subghz_wardriving_txrx.c b/applications/external/subghz_wardriving/helpers/subghz_wardriving_txrx.c
+index 64f019e72e95dc80094c4d1ed94d7717a2afbdea..8740d3c80440abf7693645390c2606fa14e193f9 100644
+--- a/applications/external/subghz_wardriving/helpers/subghz_wardriving_txrx.c
++++ b/applications/external/subghz_wardriving/helpers/subghz_wardriving_txrx.c
+@@ -391,11 +391,10 @@ SubGhzTxRxStartTxState
+         if(instance->transmitter) {
+             if(subghz_transmitter_deserialize(instance->transmitter, flipper_format) ==
+                SubGhzProtocolStatusOk) {
+-                if(strcmp(furi_string_get_cstr(preset->name), "") != 0) {
+-                    subghz_wardriving_txrx_begin(
+-                        instance,
+-                        subghz_setting_get_preset_data_by_name(
+-                            instance->setting, furi_string_get_cstr(preset->name)));
++                uint8_t* preset_data = subghz_setting_get_preset_data_by_name(
++                    instance->setting, furi_string_get_cstr(preset->name));
++                if(preset_data) {
++                    subghz_wardriving_txrx_begin(instance, preset_data);
+                     if(preset->frequency) {
+                         if(!subghz_wardriving_txrx_tx(instance, preset->frequency)) {
+                             FURI_LOG_E(TAG, "Only Rx");
+@@ -413,8 +412,13 @@ SubGhzTxRxStartTxState
+ 
+                 if(ret == SubGhzTxRxStartTxStateOk) {
+                     //Start TX
+-                    subghz_devices_start_async_tx(
+-                        instance->radio_device, subghz_transmitter_yield, instance->transmitter);
++                    if(!subghz_devices_start_async_tx(
++                           instance->radio_device,
++                           subghz_transmitter_yield,
++                           instance->transmitter)) {
++                        FURI_LOG_E(TAG, "Failed to start async TX");
++                        ret = SubGhzTxRxStartTxStateErrorParserOthers;
++                    }
+                 }
+             } else {
+                 ret = SubGhzTxRxStartTxStateErrorParserOthers;
+diff --git a/applications/external/subghz_wardriving/scenes/subghz_wardriving_scene_transmitter.c b/applications/external/subghz_wardriving/scenes/subghz_wardriving_scene_transmitter.c
+index fa127811bddbdd5c800574698d76b0d1e545636b..4b1a10b1064a4dc9d0386c07b808d87ead297dec 100644
+--- a/applications/external/subghz_wardriving/scenes/subghz_wardriving_scene_transmitter.c
++++ b/applications/external/subghz_wardriving/scenes/subghz_wardriving_scene_transmitter.c
+@@ -83,6 +83,8 @@ bool subghz_scene_transmitter_on_event(void* context, SceneManagerEvent event) {
+                 subghz->state_notifications = SubGhzNotificationStateTx;
+                 subghz_scene_transmitter_update_data_show(subghz);
+                 dolphin_deed(DolphinDeedSubGhzSend);
++            } else {
++                subghz_block_generic_global.endless_tx = false;
+             }
+             return true;
+         } else if(event.event == SubGhzCustomEventViewTransmitterSendStop) {

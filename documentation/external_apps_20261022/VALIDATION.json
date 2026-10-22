@@ -1,0 +1,91 @@
+{
+  "target_commit": "a9237105afde0fc7ab9d7d4ee4025c59c1ebad26",
+  "f7_api": "88.22",
+  "build_command": "FBT_NO_SYNC=1 CCACHE_DISABLE=1 ./fbt -j4 fap_subghz_remote_refactored fap_subghz_wardriving fap_meal_pager fap_protoview fap_genie_record fap_flipboard_signal --extra-ext-apps=subghz_wardriving,meal_pager,protoview,genie_record,flipboard_signal SKIP_EXTERNAL=1 DIST_SUFFIX=rm-external6-20261022",
+  "all_changed_sources_forced_to_recompile": true,
+  "hardware_tested": false,
+  "leak_sanitizer_available": false,
+  "apps": {
+    "subghz_remote": {
+      "appid": "subghz_remote_refactored",
+      "name": "Sub-GHz Remote",
+      "version": "1.9",
+      "fap_bytes": 49328,
+      "fap_sha256": "f409ec7c94b17459d7b1c6890cb6630e64e1b38bfa2a8d0cc4e08ac214844c20",
+      "import_count": 240,
+      "appchk": "passed",
+      "exact_target_api_exports": "passed",
+      "updated_code_in_linked_binary": "passed"
+    },
+    "subghz_wardriving": {
+      "appid": "subghz_wardriving",
+      "name": "Sub-GHz WarDriving",
+      "version": "0.2",
+      "fap_bytes": 106464,
+      "fap_sha256": "3c1aef4ed0aa40656366cfbc57e657658455343b61d62162d84714c9462d7f02",
+      "import_count": 339,
+      "appchk": "passed",
+      "exact_target_api_exports": "passed",
+      "updated_code_in_linked_binary": "passed"
+    },
+    "meal_pager": {
+      "appid": "meal_pager",
+      "name": "Restaurant Pager",
+      "version": "1.8",
+      "fap_bytes": 48408,
+      "fap_sha256": "c74492bb4b02c0f7ae9a84ffa4bbca219eb06fbbe78feceb20bba7dff32ef50d",
+      "import_count": 171,
+      "appchk": "passed",
+      "exact_target_api_exports": "passed",
+      "updated_code_in_linked_binary": "passed"
+    },
+    "protoview": {
+      "appid": "protoview",
+      "name": "ProtoView",
+      "version": "1.4",
+      "fap_bytes": 61004,
+      "fap_sha256": "922e215e6dc3eeed325864e78c61f5c239a0e502e0be08c379590e7fc4af9402",
+      "import_count": 137,
+      "appchk": "passed",
+      "exact_target_api_exports": "passed",
+      "updated_code_in_linked_binary": "passed"
+    },
+    "genie_recorder": {
+      "appid": "genie_record",
+      "name": "Genie Door Recorder",
+      "version": "3.2",
+      "fap_bytes": 42372,
+      "fap_sha256": "3077d01eab13405da0380976e8d485b8eac3293632faeafa65db527e14d142cf",
+      "import_count": 155,
+      "appchk": "passed",
+      "exact_target_api_exports": "passed",
+      "updated_code_in_linked_binary": "passed"
+    },
+    "flipsignal": {
+      "appid": "flipboard_signal",
+      "name": "FlipBoard Signal",
+      "version": "3.13",
+      "fap_bytes": 81588,
+      "fap_sha256": "6f51d5f18c5645795702f8b41ae3c49fe41ab0cbcd5ac82e48cedad37db6bd0e",
+      "import_count": 245,
+      "appchk": "passed",
+      "exact_target_api_exports": "passed",
+      "updated_code_in_linked_binary": "passed"
+    }
+  },
+  "host_tests": {
+    "suites": 8,
+    "assertions": 3791,
+    "sanitizers": [
+      "AddressSanitizer",
+      "UndefinedBehaviorSanitizer"
+    ],
+    "hardware_storage_mocks": true,
+    "explicit_resource_balance_checks": true
+  },
+  "patch_apply_exact_bytes": true,
+  "patch_reverse_check": true,
+  "source_replacements": 26,
+  "source_additions": 0,
+  "source_deletions": 0
+}

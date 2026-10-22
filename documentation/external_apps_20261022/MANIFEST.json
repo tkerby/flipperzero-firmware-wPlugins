@@ -1,0 +1,161 @@
+{
+  "baseline": "a9237105afde0fc7ab9d7d4ee4025c59c1ebad26",
+  "files": [
+    {
+      "path": "applications/external/flipsignal/app.c",
+      "status": "modified",
+      "before_sha256": "dc3931bad3afed0673f0a6c7ce5bd410240b72a3bf3ee2fc534d46da90098a42",
+      "after_sha256": "5906d326eae67c7aae17f4409af224b0b77f76443b14bc2cce7e3075790938eb"
+    },
+    {
+      "path": "applications/external/flipsignal/app_config.h",
+      "status": "modified",
+      "before_sha256": "7c0ac827ea02c9db687c2345d9397db9e603085684b2adcb8a02adc554657a76",
+      "after_sha256": "43ef6e60f0d9772fb7655fcdfee07bf1f5a916b55c564d994fe41815f090bdf8"
+    },
+    {
+      "path": "applications/external/flipsignal/application.fam",
+      "status": "modified",
+      "before_sha256": "513920cc2c13ebfb624d524a4493c594d911318c0f4569485924d59b5cb00a3e",
+      "after_sha256": "382524d195dfab99b7817dc1b512fb99ef346e70527268f5de34317ff535b925"
+    },
+    {
+      "path": "applications/external/flipsignal/common/subghz_signal.c",
+      "status": "modified",
+      "before_sha256": "646afde604f8e67350a9c2bf10f3c34f6140ae0f0d83f5180862450b3c06d31c",
+      "after_sha256": "23302b6cb8f1b2c81f5417eeb493c24293104e5f23a76f7d3509d802740d3509"
+    },
+    {
+      "path": "applications/external/flipsignal/common/subghz_signal.h",
+      "status": "modified",
+      "before_sha256": "504ec6d6c62ccb2a3095323db37ab2385950b33cc9f94ab3c6725a609007d77c",
+      "after_sha256": "c74503fea568c930f25b49435edf4ad8a346819662ce24af21e800814e967dc0"
+    },
+    {
+      "path": "applications/external/genie_recorder/application.fam",
+      "status": "modified",
+      "before_sha256": "445ad08a05baecd7cce53a678998a283f8cee5d1a7e5808ac6a4ac8faccb8f44",
+      "after_sha256": "d2483dec85edcc1705d7748dfc98a3037f0aaae30424940e3d1decd0a6014cec"
+    },
+    {
+      "path": "applications/external/genie_recorder/genie_file.c",
+      "status": "modified",
+      "before_sha256": "4fafc3cfd116f0e045fb78136f14426213eb6ace78e4c826b296a62362b39b9d",
+      "after_sha256": "c4ad19ff4f32846bf6ede56040373612a0454695c4fea5ef5a2ffdaf35c21ca1"
+    },
+    {
+      "path": "applications/external/genie_recorder/genie_file.h",
+      "status": "modified",
+      "before_sha256": "a13a8cc4c5f1cadd1d32b70f2ea6bf67e7e82469107ff630d55373abb79e1fd6",
+      "after_sha256": "d3af705a4c7d1d6df5face3dcda3c56288b3b18b99623e0689dac44e6a108be9"
+    },
+    {
+      "path": "applications/external/genie_recorder/genie_send.c",
+      "status": "modified",
+      "before_sha256": "19d63a45cee597815507892a20a289c4538cba4d697595bc551709ca1fc43dc6",
+      "after_sha256": "bf1a97b8be7397e039c2f4e594407a16460102ba0632fe3b5ea3ff2a57c8edbe"
+    },
+    {
+      "path": "applications/external/meal_pager/application.fam",
+      "status": "modified",
+      "before_sha256": "b23c40a589a2d2b50980517e5c6787d162dccbdd6aba537bfa1b844e2e66610f",
+      "after_sha256": "de6ef854ebcc3e1a18cd6b0296c0e6f2288e08129d9c509a328303a194b54715"
+    },
+    {
+      "path": "applications/external/meal_pager/helpers/subghz/subghz.c",
+      "status": "modified",
+      "before_sha256": "dec8389d883707b956936d9e4507e165ebb656857e29baefaecc99cfff0b8677",
+      "after_sha256": "880df9010723fa71e6f001a241ad7d2db77c27f771b0a39715e4889b204f3d3d"
+    },
+    {
+      "path": "applications/external/meal_pager/helpers/subghz/subghz.h",
+      "status": "modified",
+      "before_sha256": "7a9fc0cbc39203dc2f551684ff09cf4d06bc2e8b258dd53c2d87c92b582f63ef",
+      "after_sha256": "15e8613b7f4c3c0e2024875986bcb554479f1f387974e96247b7157235d85c5a"
+    },
+    {
+      "path": "applications/external/meal_pager/helpers/subghz/subghz_txrx.c",
+      "status": "modified",
+      "before_sha256": "2fc0e91c174b8e50803af408e554671c4be470067ebae9587f94fb99df0faaf3",
+      "after_sha256": "681dd7268cf74a3872b49473b4d08ea911a8b4c87b521cf04fe1935769b1a2a8"
+    },
+    {
+      "path": "applications/external/meal_pager/helpers/subghz/subghz_txrx.h",
+      "status": "modified",
+      "before_sha256": "a6a538fee796161a49be0d5c1d59e365568cf8c6f0bd9a3585e7129b0cd6f3e9",
+      "after_sha256": "70c665123439a8447150b67457f3e4a7239c6f43e24733abd7b7f0f87c103d18"
+    },
+    {
+      "path": "applications/external/meal_pager/scenes/meal_pager_scene_transmit.c",
+      "status": "modified",
+      "before_sha256": "b55904c3411c8ee821c7aad90fce8f875a51b31772944161fbeb0196298232f3",
+      "after_sha256": "4fddfd2b9ffb09f92d3c82b1fc6cf5d55c6ae0d6b328e99813630b134c70ec5e"
+    },
+    {
+      "path": "applications/external/meal_pager/views/meal_pager_transmit.c",
+      "status": "modified",
+      "before_sha256": "0261a37f13f7e8df75c268935104e9ddf40d84ba3fb72a2ceff64d35011b42df",
+      "after_sha256": "7d4776d70635ac964ccba2d4f3cd71d69a94204b9f6d2b56f20bd048e0d6a69f"
+    },
+    {
+      "path": "applications/external/protoview/app.c",
+      "status": "modified",
+      "before_sha256": "a720bd15b04c0cf54d69a74e8f1eb3abe80348466f610255b26ebdab464ba447",
+      "after_sha256": "7707ca648ad2e64e06d692b7a2d5fa9c71f7c66a619fefaf2af22dd738c39ffd"
+    },
+    {
+      "path": "applications/external/protoview/app.h",
+      "status": "modified",
+      "before_sha256": "a9ca549846669c8ffa92dc98bbf1629166daa5127abb508af40840007efb94dc",
+      "after_sha256": "efcb8fcfd9dc8689a6ed483d7db3e64615645cedcd4297f7aec37143d7e779d0"
+    },
+    {
+      "path": "applications/external/protoview/app_subghz.c",
+      "status": "modified",
+      "before_sha256": "720cb9bf8f26d21a5ad1c643bcc9a410e1453a8e4522be3243cf06cf67895b3b",
+      "after_sha256": "682d13bb4c8d963980fbab29cb6dd626e0a345bd74c29b6a4801703d5fdfbab4"
+    },
+    {
+      "path": "applications/external/protoview/application.fam",
+      "status": "modified",
+      "before_sha256": "02c6b23be7b012de64e3d8086568eb439749152541f9cae0277e62eb4d886484",
+      "after_sha256": "99f335ea3c930a13c34d09d3b13ae6ee92de04f71f0eae244d0b95f64fed082a"
+    },
+    {
+      "path": "applications/external/protoview/view_info.c",
+      "status": "modified",
+      "before_sha256": "a1f6c3b4dd07b236145200c234a99ec57d0c1512a482d2b6d8b3949b5952dbec",
+      "after_sha256": "8d10bded8eb82edb7611204b3e1e4c64345edf30d363f4a6e737f4866a89c07e"
+    },
+    {
+      "path": "applications/external/subghz_remote/application.fam",
+      "status": "modified",
+      "before_sha256": "8379cfaa6ee3c2aea35dacbb6f9dc4375a990c2fc5cdde5756a2c34282a8b633",
+      "after_sha256": "44c4b4de5f73ffc09be3842b0d4335751241e81483c0ef701608c0f66ec05d9c"
+    },
+    {
+      "path": "applications/external/subghz_remote/helpers/txrx/subghz_txrx.c",
+      "status": "modified",
+      "before_sha256": "68d94df684c1df5dd8bf4db7a8a4efa0dc193d27658a102fc1053648764d3ae9",
+      "after_sha256": "17b4157ba621cec0e2491abca94e648505279e75c320b096990d9123366519f4"
+    },
+    {
+      "path": "applications/external/subghz_wardriving/application.fam",
+      "status": "modified",
+      "before_sha256": "9fc23d31681f76775c08e2e56f77ab046efe0c7bcbfccc151af9731b7674bbd4",
+      "after_sha256": "b48bd51aa3e4eca78cdf93fc23e5b36a6891e7a3e10f017b40bd67188cddb681"
+    },
+    {
+      "path": "applications/external/subghz_wardriving/helpers/subghz_wardriving_txrx.c",
+      "status": "modified",
+      "before_sha256": "26760d38b923ae0477d8248b79451a24f3a94c0d9a0f551d23370bb9444c0822",
+      "after_sha256": "853ced6496c16bbbab834fec8d593afd78af902293506a33a72bbfab6cc0c973"
+    },
+    {
+      "path": "applications/external/subghz_wardriving/scenes/subghz_wardriving_scene_transmitter.c",
+      "status": "modified",
+      "before_sha256": "ebdc978eab02a6b6fb56744e972978bf894f234476eecc002fc9281d06ef5800",
+      "after_sha256": "73eaa07bc9968f4354554612500b0bafd2c8e25d44036fecb9c24feefa857ac7"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+- RM external-app reliability updates: Sub-GHz Remote v1.9, Sub-GHz WarDriving v0.2, Restaurant Pager v1.8, ProtoView v1.4, Genie Door Recorder v3.2, and FlipBoard Signal v3.13. Adds checked transmit starts, safe cleanup, responsive cancellation, and guarded saved-state handling. Original app authors remain credited in application.fam. Firmware API stays 88.22.
