@@ -6,6 +6,7 @@ v0.3:
 - Stardate on the start-up screen
 - Breathing LED in the active sensor's colour, with a menu switch
 - TAG shows a notice and keeps retrying when another app holds the NFC chip, instead of crashing
+- Fix a crash in every mode: the breathing LED handed the notification service a sequence that had already gone out of scope
 
 v0.2:
 - Full sweep tab that runs RF, IR, EMF and TAG in turn
