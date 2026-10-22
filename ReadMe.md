@@ -227,7 +227,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - SubGHz: [Deduplicate rotating parcels from Beninca ARC, CAME Atomo and Nice remotes while retaining RM's 32-bit history hashes and leaving CAME Atomo raw frame data intact (By xMasterX; RM adaptation by RogueMaster)](https://github.com/DarkFlippers/unleashed-firmware/commit/ea01dfccfd324db081c3ab793c33c0fd71492a68)
 - SubGHz: [Reject unknown presets safely on load, receive and transmit instead of crashing; apply the matching guard to Sub-GHz Remote (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/e1ebaa318b6dec205c2dce4575844b8e9bd56c3f)
 - SubGHz: [Free the temporary Security+ 2.0 generator transmitter and clear its pointer after generation (By xMasterX; RM adaptation Vy RogueMaster)](https://github.com/DarkFlippers/unleashed-firmware/commit/e1ebaa318b6dec205c2dce4575844b8e9bd56c3f)
-- Updated: [Sub-GHz Remote v1.8 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote) [Changes (By xMasterX)](https://github.com/DarkFlippers/SubGHz_Remote/commit/a94f7c754f4e0f9881b7f3432906b46da4007e21)
 - Updated: [Gitphin v1.2 (By Adhamura)](https://github.com/Adhamura/gitphin)
 - Updated: [RF Survey v1.1 (By tbelbek)](https://github.com/tbelbek/flipper-rf-survey)
 - Updated: [Nice O-Code v2.0 (By zero-mega & xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/e6ded9b108454b30a3e710295e6d2b7fd146e188)
@@ -281,6 +280,13 @@ This software is for experimental purposes only and is not meant for any illegal
 - OFW: [fix typos in user visible strings #4479 (By 4aia)](https://github.com/flipperdevices/flipperzero-firmware/pull/4479)
 - SubGHz Apps: [Scheduler v3.4, Playlist, Quac and Cross Remote: use held-button protocol transmissions, let RAW files complete, and reset rolling-code/custom-button state between sends; Scheduler now saves updated counters (By xMasterX)](https://github.com/xMasterX/all-the-plugins/commit/6a81d05018a09f4963982c52d63689e88d02b85a)
 - Updated: [Sub-GHz Bruteforcer v4.3 (By derskythe, Ganapati & xMasterX)](https://github.com/DarkFlippers/flipperzero-subbrute/commit/f05b7d0368d34ba2c154a34d930f99345a9c7e18) - Save per-protocol settings, fix worker/decoder lifetime and scene navigation, correct the final key range, and reuse radio setup between keys.
+- RM external-app reliability updates: [Sub-GHz Remote v1.9, Sub-GHz WarDriving v0.2, Restaurant Pager v1.8, ProtoView v1.4, Genie Door Recorder v3.2, and FlipBoard Signal v3.13. Adds checked transmit starts, safe cleanup, responsive cancellation, and guarded saved-state handling. (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/f22f2f793e0c2f3c26814bc3e2cea7b259e04e81)
+- Updated: [FlipBoard Signal v3.13 (By jamisonderek)](https://github.com/jamisonderek/flipboard)
+- Updated: [Genie Recorder v3.2 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/subghz/apps/genie-recorder)
+- Updated: [ProtoView v1.4 (By antirez)](https://github.com/antirez/protoview)
+- Updated: [Restaurant Pager Trigger v1.8 (By leedave)](https://github.com/leedave/flipper-zero-meal-pager)
+- Updated: [Sub-GHz Remote v1.9 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote) [Changes (By xMasterX)](https://github.com/DarkFlippers/SubGHz_Remote/commit/a94f7c754f4e0f9881b7f3432906b46da4007e21)
+- Updated: [Sub-GHz WarDriving v0.2 (By xMasterX)](https://github.com/xMasterX/all-the-plugins/tree/213baa6e872d1db597a25d2c16e81406e9634440/base_pack/subghz_wardriving)
 
 <a name="release"></a>
 
@@ -754,7 +760,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [FlipBIP Crypto Wallet v2.0 (By xtruan)](https://github.com/xtruan/FlipBIP)
 - [FlipBoard Blinky v3.6 (By jamisonderek)](https://github.com/jamisonderek/flipboard)
 - [FlipBoard Keyboard v3.9 (By jamisonderek)](https://github.com/jamisonderek/flipboard)
-- [FlipBoard Signal v3.12 (By jamisonderek)](https://github.com/jamisonderek/flipboard)
+- [FlipBoard Signal v3.13 (By jamisonderek)](https://github.com/jamisonderek/flipboard)
 - [FlipBoard Simon v1.10 (By jamisonderek)](https://github.com/jamisonderek/flipboard)
 - [FlipCrypt v0.7 (By TAxelAnderson)](https://github.com/TAxelAnderson/FlipCrypt)
 - [FlipDeck v3.0 (By ismail-oe)](https://github.com/ismail-oe/flipdeck)
@@ -814,7 +820,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Gauge Tool v0.1 (By skotopes)](https://github.com/skotopes/flipperzero_gauge_tool) (Used To Downgrade From 10/07/2024 Update)
 - [GB Printer v0.5 (By kbembedded)](https://github.com/kbembedded/flipper-gb-printer) `Req: GB Link Cable / Malveke`
 - [Gemini IA v1.1 (By d4rks1d33 & jamisonderek)](https://github.com/d4rks1d33/Gemini-Flipper)
-- [Genie Recorder v3.1 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/subghz/apps/genie-recorder)
+- [Genie Recorder v3.2 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/subghz/apps/genie-recorder)
 - [Ghost ESP v1.8.3 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 - [GhostBook v0.6 (By digitard)](https://github.com/digitard/ghostbook)
 - [GhostTag v2.0 (By at0m-b0mb)](https://github.com/at0m-b0mb/GhostTag-FlipperZero) `Req: ESP32`
@@ -1060,7 +1066,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Prime Factors v1.0 (By gbritoda)](https://github.com/gbritoda/flipper0-prime_factors)
 - [Programmer Calculator v0.9.2 (By armixz)](https://github.com/armixz/Flipper-Zero-Programmer-Calculator)
 - [ProtoPirate v4.1 (By RocketGod-git)](https://protopirate.net/ProtoPirate/ProtoPirate)
-- [ProtoView v1.3 (By antirez)](https://github.com/antirez/protoview)
+- [ProtoView v1.4 (By antirez)](https://github.com/antirez/protoview)
 - [Pulse BPM v1.0 (By alaviation)](https://github.com/alaviation/flipper-pulse)
 - [PwnPal v3.0 (By mrq1911)](https://github.com/mrq1911/pwnpal) `Req: ESP32`
 - [QR Code v2.1.4 (By bmatcuk)](https://github.com/bmatcuk/flipperzero-qrcode)
@@ -1078,7 +1084,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Remote for CaiXianlin v1.0 (By anty-ce)](https://github.com/anty-ce/flipper_zero_caixianlin_remote)[Remote for CaiXianlin v1.0 (By anty-ce)](https://github.com/anty-ce/flipper_zero_caixianlin_remote)
 - [Remote Maker (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/487)
 - [Resistance Calculator v1.4 (By instantiator)](https://github.com/instantiator/flipper-zero-experimental-apps)
-- [Restaurant Pager Trigger v1.7 (By leedave)](https://github.com/leedave/flipper-zero-meal-pager)
+- [Restaurant Pager Trigger v1.8 (By leedave)](https://github.com/leedave/flipper-zero-meal-pager)
 - [RF Survey v1.1 (By tbelbek)](https://github.com/tbelbek/flipper-rf-survey)
 - [RFID Fuzzer v1.8 (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/507)
 - [RFID Metal Detector v1.0 (By hnsvrdmn)](https://github.com/hnsvrdmn/flipper-rfid-metal-detector)
@@ -1141,12 +1147,12 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Sub-GHz Playlist Creator v0.2 (By coolerUA)](https://github.com/coolerUA/Sub-Ghz-Playlist-Creator)
 - [Sub-GHz Playlist v1.0.1 (By darmiel)](https://github.com/darmiel/flipper-playlist)
 - [Sub-GHz RAW Edit v1.7 (By Lechnio)](https://github.com/Lechnio/SubGHz-RAW-Edit)
-- [Sub-GHz Remote v1.8 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote)
+- [Sub-GHz Remote v1.9 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote)
 - [Sub-GHz Rolling Flaws v1.5 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials)
 - [Sub-GHz Scheduler v3.4 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
 - [Sub-GHz Spectrum v1.0 (By barkandbite)](https://github.com/barkandbite/flipper_suite)
 - [Sub-GHz Toolkit 1808 v1.0 (By RocketGod-git)](https://github.com/RocketGod-git/RocketGods-SubGHz-Toolkit)
-- [Sub-GHz WarDriving v0.1 (By xMasterX)](https://github.com/xMasterX/all-the-plugins/tree/213baa6e872d1db597a25d2c16e81406e9634440/base_pack/subghz_wardriving)
+- [Sub-GHz WarDriving v0.2 (By xMasterX)](https://github.com/xMasterX/all-the-plugins/tree/213baa6e872d1db597a25d2c16e81406e9634440/base_pack/subghz_wardriving)
 - [Subhound v1.2 (By maxwalks)](https://github.com/maxwalks/subhound)
 - [Subscriber Counter v1.0 (By TheProductAgency)](https://github.com/TheProductAgency/flipper-subscriber-counter)
 - [Survival Manual v1.0 (By Radiomanrf)](https://github.com/Radiomanrf/Survival_manual)
