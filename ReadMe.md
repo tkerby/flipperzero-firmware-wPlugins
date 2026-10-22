@@ -237,7 +237,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - SubGHz Remote: [Support hold-to-transmit, full RAW-file clicks and held RAW repeats; remove forced Repeat=200 and correct custom-button/counter cleanup (By xMasterX)](https://github.com/DarkFlippers/SubGHz_Remote/commit/6674983c3e94622bc17f1985c18a2c30ab838861)
 - SubGHz WarDriving: [Resume RX after TX and prevent received/history signals from overwriting an unrelated saved file; reset FAAC programming state (By xMasterX)](https://github.com/xMasterX/all-the-plugins/commit/1aa52e2a30efaf3f16d59abce9803d9b0f769972)
 - Updated: [UHF Expansion v1.7 (By mtoolstec)](https://github.com/mtoolstec/fz-uhf-expansion)
-- Updated: [IRONWYRM v1.0.1 (By Atompunk78)](https://github.com/Atompunk78/IRONWYRM)
 - SubGHz: [Nice O-Code - the certificate frame index now changes from press to press as a real remote's does, instead of repeating the same value (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/3c6d6fa34f0be567d49a61a4c4c04dc2eb98f2d7)
 - Updated: [NFC QR Presenter v1.1 (By RogerF5-Security)](https://github.com/RogerF5-Security/NFC_QR_Presenter)
 - Updated: [UID Brute Smarter v1.1 (By fbettag)](https://github.com/fbettag/uid_brute_smarter)
@@ -291,6 +290,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Tricorder v0.3 (By rseufert)](https://github.com/rseufert/tricorder)
 - Updated: [Coach Watch v1.0 (By alaviation)](https://github.com/alaviation/flipper-coach-watch)
 - Updated: [RF Survey v1.1 (By tbelbek)](https://github.com/tbelbek/flipper-rf-survey)
+- Updated: [IRONWYRM v1.1 (By Atompunk78)](https://github.com/Atompunk78/IRONWYRM)
 
 <a name="release"></a>
 
@@ -494,7 +494,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Impostor v0.1.3 (By Endika)](https://github.com/Endika/flipper-impostor-game)
 - [Infinite Tic Tac Toe v0.1 (By kdiller713)](https://github.com/kdiller713/public-FlipperApps/tree/main/infinite_tic_tac_toe)
 - [Insults v1.0 (By ERSUCC)](https://github.com/ERSUCC/Flipper-Insults)
-- [IRONWYRM v1.0.1 (By Atompunk78)](https://github.com/Atompunk78/IRONWYRM)
+- [IRONWYRM v1.1 (By Atompunk78)](https://github.com/Atompunk78/IRONWYRM)
 - [JetPack v1.1 (by timstrasser)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/1164e4d214efa38847e08c6387bf53578bc0d366)
 - [Jumping Pawns v0.1 (By Tyl3rA)](https://github.com/Tyl3rA/Jumping-Pawns)
 - [KC Line v1.2 (By HappyAmos)](https://github.com/HappyAmos/Flipper_FAPS/tree/master/kcline)
