@@ -21,7 +21,16 @@ int GetMinimumAttackingPlateIndex(const GameState* gameState) {
 
 static void StartEnemy(GameState* gameState) {
     gameState->enemy = MakeEnemy(gameState->round, &gameState->randomGenerator);
+
     gameState->enemyReward = CalculateEnemyReward(&gameState->enemy);
+    if(gameState->round >= 16 && gameState->enemyReward > 9) {
+        gameState->enemyReward = 9;
+    } else if(gameState->round >= 11 && gameState->enemyReward > 12) {
+        gameState->enemyReward = 12;
+    } else if(gameState->enemyReward > 15) {
+        gameState->enemyReward = 15;
+    }
+    
     SelectOutermostPlayerPlate(gameState);
     gameState->mode = GameModePlayerSelect;
 }
@@ -194,18 +203,22 @@ void HandleGameAction(GameState* gameState, GameAction action) {
         break;
 
     case GameModeIntro:
-        if(action == GameActionConfirm) {
-            if(
-                gameState->introParagraph <
-                GetIntroParagraphCount() - 1
-            ) {
-                gameState->introParagraph++;
-            } else {
-                gameState->mode = GameModePlayerSelect;
-            }
-        }
-        if (action == GameActionCancel) {
-            gameState->mode = GameModePlayerSelect;
+        switch(action) {
+            case GameActionConfirm:
+                if(gameState->introParagraph < GetIntroParagraphCount() - 1) {
+                    gameState->introParagraph++;
+                } else {
+                    gameState->mode = GameModePlayerSelect;
+                }
+                break;
+            case GameActionCancel:
+                if(gameState->introParagraph < 18) {
+                    gameState->introParagraph = 18;
+                }
+                // else do nothing from 18 onwards
+                break;
+            default:
+                break;
         }
         break;
 
