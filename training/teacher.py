@@ -15,7 +15,7 @@ DURATIONS = (1, 2, 3, 4, 6, 8, 12, 16)
 PITCH_MIN, PITCH_MAX = -5, 19
 BAR = 16
 BARS = 8
-STYLES = ("chiptune", "blues", "classical", "folk", "game")
+STYLES = ("chiptune", "blues", "classical", "folk", "game", "phonk", "hiphop", "jazz")
 
 MAJOR = (0, 2, 4, 5, 7, 9, 11)
 NATURAL_MINOR = (0, 2, 3, 5, 7, 8, 10)
@@ -24,6 +24,8 @@ DORIAN = (0, 2, 3, 5, 7, 9, 10)
 MIXOLYDIAN = (0, 2, 4, 5, 7, 9, 10)
 PENTATONIC = (0, 2, 4, 7, 9)
 BLUES = (0, 3, 5, 6, 7, 10)
+PHRYGIAN = (0, 1, 3, 5, 7, 8, 10)
+MINOR_PENTATONIC = (0, 3, 5, 7, 10)
 
 # Chords as pitch classes relative to the tonic.
 C = {
@@ -31,6 +33,10 @@ C = {
     "vi": (9, 0, 4), "V7": (7, 11, 2, 5), "I7": (0, 4, 7, 10), "IV7": (5, 9, 0, 3),
     "i": (0, 3, 7), "iv": (5, 8, 0), "v": (7, 10, 2), "III": (3, 7, 10), "VI": (8, 0, 3),
     "VII": (10, 2, 5), "bVII": (10, 2, 5), "Vm": (7, 11, 2),
+    "bII": (1, 5, 8),
+    # Seventh chords for jazz
+    "Imaj7": (0, 4, 7, 11), "ii7": (2, 5, 9, 0), "iii7": (4, 7, 11, 2), "vi7": (9, 0, 4, 7),
+    "VI7": (9, 1, 4, 7), "IVmaj7": (5, 9, 0, 4), "i7": (0, 3, 7, 10), "iv7": (5, 8, 0, 3),
 }
 
 STYLE_RULES = {
@@ -88,6 +94,43 @@ STYLE_RULES = {
         "range": (-5, 17), "rest": 0.05, "arpeggio": 0.35, "step": 0.45, "octave_jump": 0.05,
         "repeat": [(2, 0), (4, 0)], "end_len": [8, 16], "fanfare": True, "sequence_up": True,
     },
+    # Memphis-style cowbell lines: dark modes, high register, staccato, looped riffs.
+    "phonk": {
+        "scales": [(PHRYGIAN, 0.5), (HARMONIC_MINOR, 0.3), (NATURAL_MINOR, 0.2)],
+        "progressions": {
+            PHRYGIAN: [["i", "bII", "i", "bII", "i", "bII", "iv", "i"], ["i", "i", "bII", "i"] * 2],
+            HARMONIC_MINOR: [["i", "VI", "iv", "Vm"] * 2, ["i", "iv", "Vm", "i"] * 2],
+            NATURAL_MINOR: [["i", "i", "VI", "VII"] * 2, ["i", "VI", "VII", "i"] * 2],
+        },
+        "rhythms": [[3, 3, 2, 3, 3, 2], [2, 2, 1, 1, 2, 2, 2, 4], [3, 3, 4, 2, 2, 2], [1, 1, 2, 1, 1, 2, 4, 4],
+                    [2, 1, 1, 2, 1, 1, 4, 4], [3, 3, 2, 2, 2, 4]],
+        "range": (0, 17), "rest": 0.14, "arpeggio": 0.3, "step": 0.5, "octave_jump": 0.15,
+        "repeat": [(1, 0), (2, 0), (3, 1), (5, 4), (6, 4), (7, 5)], "end_len": [4, 8],
+    },
+    # Laid-back loops with space and syncopation.
+    "hiphop": {
+        "scales": [(MINOR_PENTATONIC, 0.5), (DORIAN, 0.3), (NATURAL_MINOR, 0.2)],
+        "progressions": {
+            MINOR_PENTATONIC: [["i", "iv", "i", "iv"] * 2, ["i", "VII", "VI", "VII"] * 2],
+            DORIAN: [["i", "IV"] * 4, ["i7", "IV", "i7", "IV", "iv7", "IV", "i7", "i7"]],
+            NATURAL_MINOR: [["i", "VI", "iv", "v"] * 2, ["i", "VI", "III", "VII"] * 2],
+        },
+        "rhythms": [[4, 2, 2, 6, 2], [3, 1, 4, 4, 4], [2, 4, 2, 4, 4], [6, 2, 2, 2, 4], [4, 4, 3, 1, 4],
+                    [8, 2, 2, 4], [3, 3, 2, 8]],
+        "range": (-5, 12), "rest": 0.2, "rest_any": True, "arpeggio": 0.25, "step": 0.6,
+        "octave_jump": 0.0, "repeat": [(2, 0), (3, 1), (6, 0), (7, 1)], "end_len": [8, 12],
+    },
+    # Swing feel (dotted eighth + sixteenth), ii-V-I with sevenths, chromatic passing tones.
+    "jazz": {
+        "scales": [(MAJOR, 1.0)],
+        "progressions": {MAJOR: [["ii7", "V7", "Imaj7", "Imaj7", "ii7", "V7", "Imaj7", "Imaj7"],
+                                 ["Imaj7", "vi7", "ii7", "V7", "iii7", "VI7", "ii7", "Imaj7"],
+                                 ["Imaj7", "IVmaj7", "iii7", "VI7", "ii7", "V7", "Imaj7", "Imaj7"]]},
+        "rhythms": [[3, 1, 3, 1, 3, 1, 3, 1], [3, 1, 3, 1, 4, 4], [4, 3, 1, 3, 1, 4], [6, 2, 3, 1, 4],
+                    [2, 2, 3, 1, 3, 1, 4], [8, 3, 1, 4], [3, 1, 3, 1, 8]],
+        "range": (-2, 19), "rest": 0.06, "arpeggio": 0.35, "step": 0.45, "octave_jump": 0.0,
+        "chromatic": 0.25, "repeat": [(4, 0)], "end_len": [8, 12],
+    },
 }
 
 
@@ -125,7 +168,8 @@ def _bar(rng, rules, scale, chord, rhythm, prev, direction, lo, hi):
     notes, pos = [], 0
     for dur in rhythm:
         strong = pos in (0, 8) or dur >= 4
-        if notes and rng.random() < rules["rest"] and not strong:
+        may_rest = not strong or (rules.get("rest_any") and pos != 0)
+        if notes and rng.random() < rules["rest"] and may_rest:
             notes.append((None, dur))
         else:
             if prev <= lo + 1:
@@ -135,6 +179,12 @@ def _bar(rng, rules, scale, chord, rhythm, prev, direction, lo, hi):
             elif rng.random() < 0.25:
                 direction = -direction
             r = rng.random()
+            if not strong and rng.random() < rules.get("chromatic", 0.0) and lo < prev < hi:
+                # Chromatic passing tone: a semitone toward the next chord tone.
+                notes.append((prev + direction, dur))
+                prev += direction
+                pos += dur
+                continue
             if strong:
                 pitch = _nearest(chord_pitches, prev + direction * 2, rng)
             elif r < rules["arpeggio"]:

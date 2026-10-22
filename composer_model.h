@@ -8,7 +8,7 @@
  * then the duration head conditioned on the chosen pitch. Weights are int8
  * with one float scale per row (see composer_weights.c, made by export.py). */
 
-#define CM_STYLES    5
+#define CM_STYLES    8
 #define CM_E         32
 #define CM_H         80
 #define CM_EP        16
@@ -29,7 +29,8 @@ typedef struct {
     uint8_t pos; /* sixteenths written so far */
 } ComposerState;
 
-/* weights[i] mixes style i (0 chiptune, 1 blues, 2 classical, 3 folk, 4 game);
+/* weights[i] mixes style i (0 chiptune, 1 blues, 2 classical, 3 folk, 4 game,
+ * 5 phonk, 6 hip-hop, 7 jazz);
  * they are normalised internally. */
 void composer_reset(ComposerState* state, const float weights[CM_STYLES]);
 

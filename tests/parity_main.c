@@ -6,8 +6,8 @@
 #include <stdlib.h>
 
 int main(int argc, char** argv) {
-    if(argc < 9) {
-        fprintf(stderr, "usage: parity seed temperature w0 w1 w2 w3 w4 melodies\n");
+    if(argc < 4 + CM_STYLES) {
+        fprintf(stderr, "usage: parity seed temperature w0..w%d melodies\n", CM_STYLES - 1);
         return 2;
     }
     uint32_t seed = (uint32_t)strtoul(argv[1], NULL, 10);
@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
     float weights[CM_STYLES];
     for(int i = 0; i < CM_STYLES; ++i)
         weights[i] = strtof(argv[3 + i], NULL);
-    int melodies = atoi(argv[8]);
+    int melodies = atoi(argv[3 + CM_STYLES]);
     for(int m = 0; m < melodies; ++m) {
         ComposerState state;
         composer_reset(&state, weights);

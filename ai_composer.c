@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define AC_CONFIG_PATH  APP_DATA_PATH("settings.txt")
+#define AC_CONFIG_PATH  APP_DATA_PATH("settings_v2.txt") /* v2: eight styles */
 #define AC_WRITE_MS     22U /* "writing" animation: per note */
 #define AC_GAP_MS       14U /* articulation gap between notes */
 #define AC_TOAST_MS     1800U

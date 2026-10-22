@@ -4,8 +4,9 @@
 #include <stdio.h>
 #include <string.h>
 
-const char* const cm_style_names[CM_STYLES] = {"Chiptune", "Blues", "Classical", "Folk", "Game"};
-const uint16_t cm_style_bpm[CM_STYLES] = {150, 96, 100, 120, 132};
+const char* const cm_style_names[CM_STYLES] =
+    {"Chiptune", "Blues", "Classical", "Folk", "Game", "Phonk", "Hip-Hop", "Jazz"};
+const uint16_t cm_style_bpm[CM_STYLES] = {150, 96, 100, 120, 132, 136, 90, 140};
 
 static const char* const cm_note_names[12] =
     {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};

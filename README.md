@@ -12,13 +12,15 @@
 <p align="center">
   <a href="https://github.com/TheProductAgency/flipper-ai-composer/actions/workflows/build.yml"><img src="https://github.com/TheProductAgency/flipper-ai-composer/actions/workflows/build.yml/badge.svg" alt="Build"></a>
   <img src="https://img.shields.io/badge/Flipper%20Zero-official%20firmware-ff8200" alt="Official firmware">
-  <img src="https://img.shields.io/badge/model-32.7k%20params%20%C2%B7%2036.7%20KB-555" alt="Model size">
+  <img src="https://img.shields.io/badge/model-32.8k%20params%20%C2%B7%2036.8%20KB-555" alt="Model size">
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license">
 </p>
 
 ## Features
 
-- **Five styles** – Chiptune, Blues, Classical, Folk and Game.
+- **Eight styles** – Chiptune, Blues, Classical, Folk, Game, Phonk, Hip-Hop and Jazz. The speaker plays one
+  note at a time, so Phonk and Hip-Hop are their typical melodies (cowbell lines, laid-back loops) without
+  beat or bass.
 - **Blend two styles**, e.g. 70 % Chiptune + 30 % Blues. The network mixes them inside its own
   “style space”, something a fixed rule set cannot do.
 - **Creativity** in five steps, from careful and predictable to wild and surprising.
@@ -50,18 +52,19 @@ Saved files go to `SD card/apps_data/ai_composer/melody_001.fmf`, `melody_002.fm
 
 1. **A music teacher writes the lessons.** [`training/teacher.py`](training/teacher.py) is a
    rule-based composer: scales, chord progressions, rhythm patterns, motifs that repeat and a
-   cadence on the tonic, separately for each style. It wrote **40,000 melodies** (8 bars, 4/4) for
+   cadence on the tonic, separately for each style. It wrote **64,000 melodies** (8 bars, 4/4) for
    training. The project uses no third-party songs, so there are no copyright questions.
 2. **A small neural network learns from them.** [`training/model.py`](training/model.py) is a GRU
    with 80 hidden units that reads the previous note, its position in the bar and a style vector,
-   and predicts the next pitch and then its length – **32,738 parameters** in total. Training takes
-   about three minutes on a laptop ([`training/train.py`](training/train.py)). Its melodies match
+   and predicts the next pitch and then its length – **32,834 parameters** in total. Training takes
+   about five minutes on a laptop ([`training/train.py`](training/train.py)). Its melodies match
    the teacher's styles closely in note count, rests, rhythm and interval size.
 3. **It is shrunk for the Flipper.** [`training/export.py`](training/export.py) rounds every weight
-   to 8 bits with one scale per row: **36.7 KB**.
+   to 8 bits with one scale per row: **36.8 KB**.
 4. **The Flipper runs it.** [`composer_model.c`](composer_model.c) is a small, dependency-free C
-   implementation of the network. A test compares it with the Python reference on 200 melodies
-   (8,257 notes): both produce **identical** melodies.
+   implementation of the network. A test compares it with the Python reference on 275 melodies in
+   all styles and mixes (11,843 notes): the melodies are identical, apart from a single note where
+   the random number fell exactly on the boundary between two pitches.
 
 Creativity is the sampling temperature (0.45 – 1.3). Styles are blended by mixing their learned
 style vectors. The last note always resolves to the tonic.
@@ -102,12 +105,13 @@ python3 export.py composer.pt ../composer_weights.c ../composer_weights.h
 ## Deutsch
 
 **AI Composer** lässt ein winziges neuronales Netz direkt auf dem Flipper Zero neue Melodien
-erfinden – ohne Internet und ohne Computer. Fünf Stile (Chiptune, Blues, Klassik, Folk, Game), zwei
+erfinden – ohne Internet und ohne Computer. Acht Stile (Chiptune, Blues, Klassik, Folk, Game, Phonk,
+Hip-Hop, Jazz), zwei
 Stile mischbar, Kreativität in fünf Stufen, freie Tonart und Lautstärke. Im Studio wählst du mit
 ▲ ▼ eine Einstellung, änderst sie mit ◀ ▶ und komponierst mit OK. Im Player: OK = neue Melodie,
 ◀ = als `.fmf` speichern (für den Music Player), ▶ = noch einmal, Zurück = Studio.
 
-Das Netz (32.738 Parameter, 36,7 KB) hat aus 40.000 Melodien gelernt, die ein eigener,
+Das Netz (32.834 Parameter, 36,8 KB) hat aus 64.000 Melodien gelernt, die ein eigener,
 regelbasierter „Musiklehrer“ geschrieben hat – es stecken keine fremden Songs darin.
 
 ## License
