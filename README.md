@@ -26,7 +26,7 @@
 - **Info sheet** with the last and next update and the connection type.
 - **Settings on the device** – sound, vibration, LED, backlight, update interval (1 min – 1 h), language and font style.
 - **English and German** user interface.
-- **USB or Bluetooth** via the [Flipper Internet Bridge](https://github.com/mete888/flipper_internet_bridge).
+- **USB or Bluetooth** via the [Flipper Internet Bridge](https://github.com/mete888/flipper_internet_bridge), or **Wi-Fi** through a [FlipperHTTP](https://github.com/jblanked/FlipperHTTP) board – no computer needed (beta, see [Wi-Fi board](docs/wifi.md)).
 - **Three font styles** – [Inter](https://rsms.me/inter/) rasterized pixel by pixel for the 128 × 64 display, the Flipper's own built-in fonts, or a mix of both.
 
 <p align="center">
@@ -60,12 +60,15 @@ The Flipper has no internet connection of its own. Subscriber Counter embeds the
 (`channels.list`) every few minutes and passes the answer back. The Internet Bridge app on the Flipper
 itself does not need to be open.
 
+Alternatively a Wi-Fi board running [FlipperHTTP](https://github.com/jblanked/FlipperHTTP) on the GPIO
+header makes the same request on its own – see [Wi-Fi board (beta)](docs/wifi.md).
+
 ## What you need
 
 | | |
 |---|---|
 | **Flipper Zero** | Official firmware (release channel) |
-| **Computer** | Running the [Flipper Internet Bridge](https://github.com/mete888/flipper_internet_bridge) desktop helper (macOS, Windows, Linux) |
+| **Connection** | A computer running the [Flipper Internet Bridge](https://github.com/mete888/flipper_internet_bridge) desktop helper (macOS, Windows, Linux) – **or** a Wi-Fi board with [FlipperHTTP](https://github.com/jblanked/FlipperHTTP) ([beta](docs/wifi.md)) |
 | **YouTube Data API key** | Free, takes about five minutes – see [Get an API key](docs/api-key.md) |
 | **Channel** | Your `@handle` or channel ID (`UC…`) |
 
@@ -111,6 +114,9 @@ Everything except `api_key` and `channel` can also be changed in the app.
 | `led` | `1` | Green LED for new subscribers |
 | `language` | `en` | `en` or `de` |
 | `font` | `inter` | `inter`, `flipper` or `mix` |
+| `transport` | `bridge` | `bridge` (desktop helper) or `wifi` ([Wi-Fi board](docs/wifi.md)) |
+| `wifi_ssid` | – | Optional network for the Wi-Fi board |
+| `wifi_password` | – | Its password |
 
 See [`config.example.txt`](config.example.txt).
 
@@ -134,6 +140,7 @@ See [`config.example.txt`](config.example.txt).
 | *HTTP 403: … quota …* | Daily quota used up – choose a longer interval |
 | *Channel not found* | Check the handle (with or without `@`) or use the channel ID |
 | *Not up to date* | The last update failed; the info sheet (▲) shows why |
+| *Wi-Fi board not found* / *Wi-Fi connection failed* | See [Wi-Fi board](docs/wifi.md#troubleshooting) |
 
 ## Building from source
 
@@ -144,10 +151,11 @@ ufbt                # dist/sub_counter.fap
 ufbt launch         # build, install and start over USB
 ```
 
-Parser tests run on any computer:
+Tests run on any computer – the parser, and the Wi-Fi transport against a simulated FlipperHTTP board:
 
 ```sh
 cc -std=c11 -Wall -Wextra yt_parse.c tests/test_yt_parse.c -o /tmp/test_yt_parse && /tmp/test_yt_parse
+tests/wifi_sim/run.sh
 ```
 
 ### Project layout
@@ -157,13 +165,16 @@ cc -std=c11 -Wall -Wextra yt_parse.c tests/test_yt_parse.c -o /tmp/test_yt_parse
 | `subscriber_counter.c` | App: UI, animations, settings, data flow |
 | `yt_parse.c/.h` | YouTube API response parser and number formatting (portable, tested) |
 | `yt_strings.h` | English and German UI text |
-| `yt_fonts.c/.h` | Inter rasterized to 1-bit u8g2 fonts |
+| `yt_fonts.c/.h` | Inter rasterized to 1-bit u8g2 fonts, font styles |
+| `yt_wifi.c/.h` | Wi-Fi transport: non-blocking FlipperHTTP handshake and GET |
 | `vendor/internet_bridge/` | Client SDK of the Flipper Internet Bridge (only reformatted) |
+| `vendor/flipper_http/` | FlipperHTTP Flipper library (include path adjusted, reformatted) |
 | `docs/` | Catalog description, changelog, guides and images |
 
 ## Credits
 
 - [Flipper Internet Bridge](https://github.com/mete888/flipper_internet_bridge) by mete888 – transport and client SDK (MIT)
+- [FlipperHTTP](https://github.com/jblanked/FlipperHTTP) by JBlanked – Wi-Fi board library (MIT)
 - [Inter](https://rsms.me/inter/) by Rasmus Andersson – typeface (SIL Open Font License 1.1)
 
 See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

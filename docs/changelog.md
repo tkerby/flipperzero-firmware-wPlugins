@@ -1,3 +1,8 @@
+## v1.2
+
+- Wi-Fi (beta): go online through a FlipperHTTP board on the GPIO header, no computer needed
+- Settings → Connection switches between the desktop helper and the Wi-Fi board
+
 ## v1.1
 
 - Font styles: choose Inter, the Flipper's built-in fonts or a mix in Settings → Font

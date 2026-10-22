@@ -2,6 +2,7 @@
 #include "yt_fonts.h"
 #include "yt_parse.h"
 #include "yt_strings.h"
+#include "yt_wifi.h"
 
 #include <furi.h>
 #include <math.h>
@@ -38,6 +39,7 @@ typedef enum {
     YtRowLed,
     YtRowBacklight,
     YtRowInterval,
+    YtRowConnection,
     YtRowLanguage,
     YtRowFont,
     YtRowTest,
@@ -57,7 +59,15 @@ typedef struct {
     bool led;
     uint8_t language; /* YtLang */
     uint8_t font; /* YtFontStyle */
+    uint8_t transport; /* YtTransport */
+    char wifi_ssid[33]; /* Optional: the board's saved network is used otherwise */
+    char wifi_password[65];
 } YtConfig;
+
+typedef enum {
+    YtTransportBridge, /* Flipper Internet Bridge desktop helper, USB or Bluetooth */
+    YtTransportWifi, /* FlipperHTTP board on the GPIO header */
+} YtTransport;
 
 typedef enum {
     YtPhaseIdle,
@@ -89,6 +99,8 @@ typedef struct {
     uint32_t fetch_tick;
     uint32_t last_success_tick;
     bool bluetooth;
+    YtWifi* wifi; /* Set while the Wi-Fi transport is open */
+    bool wifi_pending; /* A refresh waits for the board to join Wi-Fi */
 
     /* UI and motion state, guarded by mutex. */
     uint8_t page;
@@ -146,11 +158,11 @@ static void yt_trim(char* text) {
 
 /* Writes all settings back to config.txt, keeping key and channel. */
 static bool yt_write_config(const YtConfig* config) {
-    char* text = malloc(768);
+    char* text = malloc(1536);
     if(!text) return false;
     int length = snprintf(
         text,
-        768,
+        1536,
         "# Subscriber Counter - configuration\n"
         "# API key from the Google Cloud Console (YouTube Data API v3)\n"
         "api_key=%s\n"
@@ -168,7 +180,12 @@ static bool yt_write_config(const YtConfig* config) {
         "language=%s\n"
         "# inter, flipper or mix\n"
         "font=%s\n"
-        "# Everything except key and channel can be changed in the app (press Down)\n",
+        "# bridge (desktop helper) or wifi (FlipperHTTP board)\n"
+        "transport=%s\n"
+        "# Optional Wi-Fi network for the board\n"
+        "wifi_ssid=%s\n"
+        "wifi_password=%s\n"
+        "# Everything except key, channel and Wi-Fi can be changed in the app (press Down)\n",
         config->api_key,
         config->channel,
         (unsigned long)config->interval_s,
@@ -177,7 +194,10 @@ static bool yt_write_config(const YtConfig* config) {
         config->vibro,
         config->led,
         config->language == YtLangGerman ? "de" : "en",
-        yt_styles[config->font].config_value);
+        yt_styles[config->font].config_value,
+        config->transport == YtTransportWifi ? "wifi" : "bridge",
+        config->wifi_ssid,
+        config->wifi_password);
     bool ok = false;
     Storage* storage = furi_record_open(RECORD_STORAGE);
     storage_simply_mkdir(storage, APP_DATA_PATH(""));
@@ -192,6 +212,15 @@ static bool yt_write_config(const YtConfig* config) {
     return ok;
 }
 
+/* True if text contains a quote or backslash, which would break the JSON the
+ * Wi-Fi board receives. */
+static bool yt_json_unsafe(const char* text) {
+    for(; *text; ++text) {
+        if(*text == '"' || *text == '\\') return true;
+    }
+    return false;
+}
+
 /* Reads /ext/apps_data/sub_counter/config.txt; writes a template on first start. */
 static bool yt_load_config(YtConfig* config, char* error, size_t error_size) {
     memset(config, 0, sizeof(*config));
@@ -201,7 +230,7 @@ static bool yt_load_config(YtConfig* config, char* error, size_t error_size) {
     config->vibro = true;
     config->led = true;
 
-    char* buffer = malloc(1024);
+    char* buffer = malloc(1536);
     if(!buffer) {
         snprintf(error, error_size, "Out of memory\nRestart the app");
         return false;
@@ -212,7 +241,7 @@ static bool yt_load_config(YtConfig* config, char* error, size_t error_size) {
     File* file = storage_file_alloc(storage);
     if(storage_file_open(file, YT_CONFIG_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
         exists = true;
-        length = storage_file_read(file, buffer, 1023);
+        length = storage_file_read(file, buffer, 1535);
     }
     storage_file_close(file);
     storage_file_free(file);
@@ -244,6 +273,13 @@ static bool yt_load_config(YtConfig* config, char* error, size_t error_size) {
                 for(uint8_t i = 0; i < YtStyleCount; ++i) {
                     if(strcmp(value, yt_styles[i].config_value) == 0) config->font = i;
                 }
+            } else if(strcmp(key, "transport") == 0) {
+                config->transport = strcmp(value, "wifi") == 0 ? YtTransportWifi :
+                                                                 YtTransportBridge;
+            } else if(strcmp(key, "wifi_ssid") == 0) {
+                strlcpy(config->wifi_ssid, value, sizeof(config->wifi_ssid));
+            } else if(strcmp(key, "wifi_password") == 0) {
+                strlcpy(config->wifi_password, value, sizeof(config->wifi_password));
             } else if(strcmp(key, "language") == 0) {
                 config->language = strcmp(value, "de") == 0 ? YtLangGerman : YtLangEnglish;
             } else if(strcmp(key, "sound") == 0) {
@@ -272,6 +308,16 @@ static bool yt_load_config(YtConfig* config, char* error, size_t error_size) {
     if(!yt_api_key_valid(config->api_key)) {
         snprintf(
             error, error_size, "%s\n%s", yt_strings[config->language].key_missing, YT_CONFIG_HINT);
+        return false;
+    }
+    /* The board receives these inside a JSON string. */
+    if(yt_json_unsafe(config->wifi_ssid) || yt_json_unsafe(config->wifi_password)) {
+        snprintf(
+            error,
+            error_size,
+            "%s\n%s",
+            yt_strings[config->language].wifi_config_invalid,
+            YT_CONFIG_HINT);
         return false;
     }
     char query[80];
@@ -602,6 +648,7 @@ static void yt_draw_sheet(Canvas* canvas, YtApp* app) {
         top + 38,
         text->sheet_connection,
         app->phase == YtPhaseOffline ? text->connection_offline :
+        app->wifi                    ? text->transport_wifi :
         app->bluetooth               ? "Bluetooth" :
                                        "USB");
 
@@ -702,6 +749,8 @@ static const char* yt_settings_label(const YtApp* app, uint8_t row) {
         return text->backlight;
     case YtRowInterval:
         return text->interval;
+    case YtRowConnection:
+        return text->sheet_connection;
     case YtRowLanguage:
         return text->language;
     case YtRowFont:
@@ -779,11 +828,19 @@ static void yt_draw_settings(Canvas* canvas, YtApp* app) {
         bool* flag = yt_settings_flag(app, row);
         if(flag) {
             yt_draw_switch(canvas, app, row, *flag, 100, y + 2);
-        } else if(row == YtRowInterval || row == YtRowLanguage || row == YtRowFont) {
+        } else if(
+            row == YtRowInterval || row == YtRowConnection || row == YtRowLanguage ||
+            row == YtRowFont) {
             char value[24];
             char text[16];
             if(row == YtRowInterval) {
                 yt_format_interval(YT_TEXT(app), app->config.interval_s, text, sizeof(text));
+            } else if(row == YtRowConnection) {
+                strlcpy(
+                    text,
+                    app->config.transport == YtTransportWifi ? YT_TEXT(app)->transport_wifi :
+                                                               YT_TEXT(app)->transport_bridge,
+                    sizeof(text));
             } else if(row == YtRowLanguage) {
                 strlcpy(text, YT_TEXT(app)->language_name, sizeof(text));
             } else {
@@ -893,6 +950,19 @@ static void yt_start_fetch(YtApp* app) {
     char previous_error[sizeof(app->status_line)];
     strlcpy(previous_error, app->status_line, sizeof(previous_error));
     furi_mutex_release(app->mutex);
+    if(app->wifi) {
+        YtWifiState state = yt_wifi_state(app->wifi);
+        if(state == YtWifiNoBoard || state == YtWifiFailed) {
+            /* Board missing or not on Wi-Fi yet: shake hands again first. */
+            yt_wifi_start(app->wifi, app->config.wifi_ssid, app->config.wifi_password);
+            state = yt_wifi_state(app->wifi);
+        }
+        app->wifi_pending = state != YtWifiReady || !yt_wifi_get(app->wifi, app->url);
+        /* Keep showing the last error until this request succeeds. */
+        yt_set_status(app, YtPhaseFetching, previous_error);
+        return;
+    }
+    if(!app->bridge) return;
     if(fib_bridge_client_get(app->bridge, app->url, YT_REQUEST_TIMEOUT)) {
         /* Keep showing the last error until this request succeeds. */
         yt_set_status(app, YtPhaseFetching, previous_error);
@@ -909,13 +979,14 @@ static void yt_start_fetch(YtApp* app) {
     }
 }
 
-static void yt_finish_fetch(YtApp* app, const FibBridgeStatus* status) {
+/* complete: a full HTTP response arrived (any status); detail explains failures. */
+static void yt_finish_fetch(YtApp* app, bool complete, uint16_t http_status, const char* detail) {
     furi_mutex_acquire(app->mutex, FuriWaitForever);
     bool rose = false;
-    if(status->state != FibBridgeStateComplete || status->http_status == 0U) {
+    if(!complete || http_status == 0U) {
         strlcpy(
             app->status_line,
-            status->detail[0] ? status->detail : YT_TEXT(app)->no_response,
+            detail && detail[0] ? detail : YT_TEXT(app)->no_response,
             sizeof(app->status_line));
         app->next_fetch_tick = furi_get_tick() + furi_ms_to_ticks(YT_RETRY_SECONDS * 1000U);
     } else if(app->body_overflow) {
@@ -923,7 +994,7 @@ static void yt_finish_fetch(YtApp* app, const FibBridgeStatus* status) {
         app->next_fetch_tick = furi_get_tick() + furi_ms_to_ticks(app->config.interval_s * 1000U);
     } else {
         YtStats parsed;
-        yt_parse_response(app->body, status->http_status, &parsed);
+        yt_parse_response(app->body, http_status, &parsed);
         if(parsed.ok) {
             /* Count up from what is on screen now (zero on first load). */
             for(uint8_t i = 0; i < YT_PAGES; ++i) {
@@ -961,6 +1032,49 @@ static bool yt_connect(YtApp* app, ViewPort* viewport) {
     bool connected = fib_bridge_client_connect_ui(app->bridge);
     if(viewport) view_port_enabled_set(viewport, true);
     return connected;
+}
+
+/* Opens the configured transport. Returns false only when the user leaves the
+ * bridge setup screen at launch (viewport == NULL), which exits the app. */
+static bool yt_transport_open(YtApp* app, ViewPort* viewport) {
+    const YtStrings* text = YT_TEXT(app);
+    app->bluetooth = false;
+    if(app->config.transport == YtTransportWifi) {
+        app->wifi = yt_wifi_alloc();
+        if(!app->wifi) {
+            yt_set_status(app, YtPhaseIdle, text->wifi_busy);
+            yt_schedule(app, YT_RETRY_SECONDS);
+            return true;
+        }
+        yt_wifi_start(app->wifi, app->config.wifi_ssid, app->config.wifi_password);
+        return true;
+    }
+    const FibBridgeClientConfig bridge_config = {.app_version = "sub-counter-1.2"};
+    const FibBridgeClientCallbacks callbacks = {.on_body = yt_body, .context = app};
+    app->bridge = fib_bridge_client_alloc(&bridge_config, &callbacks);
+    if(!app->bridge) {
+        yt_set_status(app, YtPhaseOffline, text->bridge_failed);
+        return true;
+    }
+    if(!yt_connect(app, viewport)) {
+        if(!viewport) return false;
+        yt_set_status(app, YtPhaseOffline, text->helper_unreachable);
+    }
+    return true;
+}
+
+static void yt_transport_close(YtApp* app) {
+    if(app->bridge) {
+        fib_bridge_client_cancel(app->bridge);
+        /* Joins transport callbacks before their context goes away. */
+        fib_bridge_client_free(app->bridge);
+        app->bridge = NULL;
+    }
+    if(app->wifi) {
+        yt_wifi_free(app->wifi);
+        app->wifi = NULL;
+    }
+    app->wifi_pending = false;
 }
 
 typedef enum {
@@ -1036,6 +1150,13 @@ static YtAction yt_settings_key(YtApp* app, InputEvent* event, uint32_t now) {
                         app->last_success_tick + furi_ms_to_ticks(app->config.interval_s * 1000U);
                 }
             }
+            return YtActionNone;
+        }
+        if(row == YtRowConnection) {
+            /* Applied when the settings close (the transport is reopened then). */
+            app->config.transport = app->config.transport == YtTransportWifi ? YtTransportBridge :
+                                                                               YtTransportWifi;
+            app->settings_dirty = true;
             return YtActionNone;
         }
         if(row == YtRowFont) {
@@ -1140,20 +1261,9 @@ int32_t sub_counter_main(void* argument) {
     bool config_ok = yt_load_config(&app->config, app->config_error, sizeof(app->config_error));
     if(config_ok) {
         yt_build_url(app);
-        const FibBridgeClientConfig bridge_config = {.app_version = "sub-counter-1.0"};
-        const FibBridgeClientCallbacks callbacks = {.on_body = yt_body, .context = app};
-        app->bridge = fib_bridge_client_alloc(&bridge_config, &callbacks);
-        if(!app->bridge) {
-            snprintf(
-                app->config_error,
-                sizeof(app->config_error),
-                "%s\n%s",
-                YT_TEXT(app)->bridge_failed,
-                "Restart the app");
-            config_ok = false;
-        } else if(!yt_connect(app, NULL)) {
-            /* Back pressed in the setup screen: leave the app. */
-            fib_bridge_client_free(app->bridge);
+        if(!yt_transport_open(app, NULL)) {
+            /* Back pressed in the bridge setup screen: leave the app. */
+            yt_transport_close(app);
             furi_record_close(RECORD_NOTIFICATION);
             furi_message_queue_free(app->input);
             furi_mutex_free(app->mutex);
@@ -1181,12 +1291,48 @@ int32_t sub_counter_main(void* argument) {
             fib_bridge_client_get_status(app->bridge, &status);
             app->bluetooth = status.bluetooth_mode;
             if(app->phase == YtPhaseFetching && !status.active_request) {
-                yt_finish_fetch(app, &status);
+                yt_finish_fetch(
+                    app, status.state == FibBridgeStateComplete, status.http_status, status.detail);
             }
-            if(app->phase == YtPhaseIdle &&
-               (int32_t)(app->next_fetch_tick - furi_get_tick()) <= 0) {
-                yt_start_fetch(app);
+        }
+        if(app->wifi) {
+            yt_wifi_tick(app->wifi);
+            YtWifiState state = yt_wifi_state(app->wifi);
+            if(app->phase == YtPhaseFetching) {
+                if(state == YtWifiReady && app->wifi_pending) {
+                    app->wifi_pending = false;
+                    if(!yt_wifi_get(app->wifi, app->url)) {
+                        yt_finish_fetch(app, false, 0, YT_TEXT(app)->request_rejected);
+                    }
+                } else if(state == YtWifiDone) {
+                    uint16_t http_status = 0;
+                    char error[96];
+                    furi_mutex_acquire(app->mutex, FuriWaitForever);
+                    app->body_overflow = !yt_wifi_take_result(
+                        app->wifi,
+                        app->body,
+                        sizeof(app->body),
+                        &http_status,
+                        error,
+                        sizeof(error));
+                    furi_mutex_release(app->mutex);
+                    yt_finish_fetch(app, http_status != 0U, http_status, error);
+                } else if(state == YtWifiNoBoard || state == YtWifiFailed) {
+                    app->wifi_pending = false;
+                    const char* error = yt_wifi_error(app->wifi);
+                    yt_finish_fetch(
+                        app,
+                        false,
+                        0,
+                        state == YtWifiNoBoard ? YT_TEXT(app)->wifi_no_board :
+                        error[0]               ? error :
+                                                 YT_TEXT(app)->wifi_failed);
+                }
             }
+        }
+        if((app->bridge || app->wifi) && app->phase == YtPhaseIdle &&
+           (int32_t)(app->next_fetch_tick - furi_get_tick()) <= 0) {
+            yt_start_fetch(app);
         }
         view_port_update(viewport);
 
@@ -1201,6 +1347,12 @@ int32_t sub_counter_main(void* argument) {
         switch(action) {
         case YtActionSaveSettings:
             yt_write_config(&app->config);
+            if((app->config.transport == YtTransportWifi) != (app->wifi != NULL)) {
+                /* Connection changed in Settings: switch over right away. */
+                yt_transport_close(app);
+                yt_transport_open(app, viewport);
+                if(app->bridge || app->wifi) yt_start_fetch(app);
+            }
             break;
         case YtActionApplyBacklight:
             notification_message(
@@ -1226,8 +1378,12 @@ int32_t sub_counter_main(void* argument) {
         if(action == YtActionExit) {
             running = false;
         } else if(action == YtActionRefresh && app->phase != YtPhaseFetching) {
-            if(!app->bridge) continue;
-            if(app->phase == YtPhaseOffline) {
+            if(!app->bridge && !app->wifi) {
+                yt_transport_open(app, viewport);
+                if(app->bridge || app->wifi) yt_start_fetch(app);
+            } else if(app->wifi) {
+                yt_start_fetch(app);
+            } else if(app->phase == YtPhaseOffline) {
                 if(yt_connect(app, viewport)) yt_start_fetch(app);
             } else {
                 yt_start_fetch(app);
@@ -1235,7 +1391,6 @@ int32_t sub_counter_main(void* argument) {
         }
     }
 
-    if(app->bridge) fib_bridge_client_cancel(app->bridge);
     notification_message(app->notification, &sequence_display_backlight_enforce_auto);
     /* Flush queued alerts: they point into app->alert, which is freed below. */
     notification_message_block(app->notification, &sequence_empty);
@@ -1244,7 +1399,7 @@ int32_t sub_counter_main(void* argument) {
     view_port_free(viewport);
     furi_record_close(RECORD_GUI);
     /* Join transport callbacks before freeing their context and mutex. */
-    if(app->bridge) fib_bridge_client_free(app->bridge);
+    yt_transport_close(app);
     furi_record_close(RECORD_NOTIFICATION);
     furi_message_queue_free(app->input);
     furi_mutex_free(app->mutex);

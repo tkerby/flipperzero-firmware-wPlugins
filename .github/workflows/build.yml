@@ -20,6 +20,8 @@ jobs:
             -fsanitize=address,undefined -fno-omit-frame-pointer \
             yt_parse.c tests/test_yt_parse.c -o /tmp/test_yt_parse
           /tmp/test_yt_parse
+      - name: Wi-Fi transport against a simulated FlipperHTTP board
+        run: tests/wifi_sim/run.sh
 
   build:
     name: "ufbt: ${{ matrix.name }}"
