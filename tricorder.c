@@ -319,6 +319,8 @@ typedef struct {
     uint8_t sw_report; // frames left on the sweep report card
     uint8_t sw_contacts;
     uint8_t led_level; // last brightness sent, so quiet frames send nothing
+    NotificationMessage led_msg[3]; // red, green, blue; read later by the notification thread
+    const NotificationMessage* led_seq[5];
 
     // Sound
     bool sound;
@@ -464,14 +466,23 @@ static void led_update(App* app) {
     if(level == app->led_level) return;
     app->led_level = level;
     const Rgb* c = &mode_colors[app->mode];
-    NotificationMessage red = {
-        .type = NotificationMessageTypeLedRed, .data.led.value = c->r * level / 255};
-    NotificationMessage green = {
-        .type = NotificationMessageTypeLedGreen, .data.led.value = c->g * level / 255};
-    NotificationMessage blue = {
-        .type = NotificationMessageTypeLedBlue, .data.led.value = c->b * level / 255};
-    const NotificationMessage* seq[] = {&red, &green, &blue, &message_do_not_reset, NULL};
-    notification_message(app->notifications, (const NotificationSequence*)&seq);
+    // notification_message only queues the pointer; the service walks the sequence
+    // later on its own thread, so it must not live on this stack frame
+    app->led_msg[0].data.led.value = c->r * level / 255;
+    app->led_msg[1].data.led.value = c->g * level / 255;
+    app->led_msg[2].data.led.value = c->b * level / 255;
+    notification_message(app->notifications, (const NotificationSequence*)&app->led_seq);
+}
+
+static void led_init(App* app) {
+    app->led_msg[0].type = NotificationMessageTypeLedRed;
+    app->led_msg[1].type = NotificationMessageTypeLedGreen;
+    app->led_msg[2].type = NotificationMessageTypeLedBlue;
+    app->led_seq[0] = &app->led_msg[0];
+    app->led_seq[1] = &app->led_msg[1];
+    app->led_seq[2] = &app->led_msg[2];
+    app->led_seq[3] = &message_do_not_reset;
+    app->led_seq[4] = NULL;
 }
 
 // ---------------------------------------------------------------- Sub-GHz
@@ -2416,6 +2427,7 @@ int32_t tricorder_app(void* p) {
     app->running = true;
     app->sound = true;
     app->led = true;
+    led_init(app);
     app->band = 1;
     app->ir_zoom = 2;
     settings_load(app);
