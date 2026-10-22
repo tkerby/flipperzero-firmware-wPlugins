@@ -244,8 +244,7 @@ static int32_t scheduler_tx(void* context) {
 
     const bool radio = scheduler_get_radio(app->scheduler);
     subghz_txrx_radio_device_set(
-        tx_run->txrx,
-        radio ? SubGhzRadioDeviceTypeExternalCC1101 : SubGhzRadioDeviceTypeInternal);
+        tx_run->txrx, radio ? SubGhzRadioDeviceTypeExternalCC1101 : SubGhzRadioDeviceTypeInternal);
     subghz_txrx_set_need_save_callback(tx_run->txrx, scheduler_subghz_need_save_callback, tx_run);
 
     const int16_t line = app->tx_line;

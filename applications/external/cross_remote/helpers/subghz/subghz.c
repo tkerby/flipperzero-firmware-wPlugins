@@ -38,8 +38,8 @@ void subghz_send(void* context, const char* path) {
     // Send like a single button press in Sub-GHz app: protocols TX as if the button
     // was held for sg_timing and then finish with their own repeats,
     // RAW is sent once to the end of file. subghz_send_tick() catches the end of TX
-    subghz_block_generic_global.endless_tx =
-        subghz_get_load_type_file(app->subghz) != SubGhzLoadTypeFileRaw;
+    subghz_block_generic_global.endless_tx = subghz_get_load_type_file(app->subghz) !=
+                                             SubGhzLoadTypeFileRaw;
     if(!subghz_tx_start(app->subghz, subghz_txrx_get_fff_data(app->subghz->txrx))) {
         subghz_block_generic_global.endless_tx = false;
         xremote_cross_remote_set_transmitting(app->cross_remote, XRemoteTransmittingStop);
