@@ -1,0 +1,15 @@
+# ESP-IDF build output -- 136 MB of regenerable objects.
+esp32-firmware/build/
+sdkconfig.old
+
+# ufbt build output and the editor config it generates.
+flipper-app/dist/
+flipper-app/.vscode/
+.ufbt/
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc

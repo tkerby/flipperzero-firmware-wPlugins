@@ -1,0 +1,14 @@
+App(
+    appid="flipper_radio",
+    name="Flipper Radio",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="flipper_radio_app",
+    requires=["gui"],
+    # ufbt's default source glob is recursive — pin these so a test/ dir with
+    # its own main() can never get compiled into the FAP.
+    sources=["radio_app.c", "radio_proto.c", "radio_uart.c", "mp3_pacer.c"],
+    stack_size=8 * 1024,
+    fap_version="1.0",
+    fap_description="Pocket WiFi radio station (ESP32 devboard)",
+    fap_category="Tools",
+)
