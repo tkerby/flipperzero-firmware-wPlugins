@@ -9,6 +9,9 @@ App(
     sources=["radio_app.c", "radio_proto.c", "radio_uart.c", "mp3_pacer.c"],
     stack_size=8 * 1024,
     fap_version="1.0",
-    fap_description="Pocket WiFi radio station (ESP32 devboard)",
+    fap_description="Stream MP3s from the SD card as a live WiFi radio station anyone nearby can tune into with a browser",
     fap_category="Tools",
+    fap_icon="flipper_radio_10x10.png",
+    fap_author="Monte Walker",
+    fap_weburl="https://github.com/thecoolguy2001/flipper-wifi-radio",
 )

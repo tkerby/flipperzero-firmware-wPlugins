@@ -7,6 +7,15 @@ flipper-app/dist/
 flipper-app/.vscode/
 .ufbt/
 
+# Test audio. Tracks live on the Flipper's SD card at /ext/music and are the
+# user's own files -- none of them belong in the repo or the catalog bundle.
+*.mp3
+*.wav
+*.m4a
+*.flac
+*.aac
+*.ogg
+
 # macOS
 .DS_Store
 

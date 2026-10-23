@@ -67,12 +67,17 @@ static esp_err_t status_get(httpd_req_t* req) {
     int n = snprintf(
         body,
         sizeof(body),
-        "{\"station\":\"%s\",\"listeners\":%u,\"clients\":%u,\"buf\":%u,\"bytes\":%llu,"
+        "{\"station\":\"%s\",\"listeners\":%u,\"max\":%u,\"clients\":%u,\"buf\":%u,"
+        "\"bytes\":%llu,"
         "\"link\":{\"up\":%s,\"frames\":%lu,\"crc\":%lu,\"oversize\":%lu,"
         "\"resyncs\":%lu,\"truncated\":%lu,\"audio\":%llu},"
         "\"meta\":%s}",
         ssid,
         stream_hub_listener_count(),
+        // Sent rather than hardcoded in the page: the cap is a firmware
+        // constant, and a copy of it in the HTML would drift the first time
+        // it changed.
+        STREAM_MAX_LISTENERS,
         wifi_ap_station_count(),
         stream_hub_fill_percent(),
         stream_hub_total_written(),

@@ -226,7 +226,7 @@
           // the Flipper is not sending and the browser is not the problem.
           var kb = Math.round((s.bytes || 0) / 1024);
           stats.textContent =
-            s.listeners + ' listening \u00B7 buffer ' + s.buf + '% \u00B7 ' +
+            s.listeners + ' of ' + (s.max || 8) + ' listening \u00B7 buffer ' + s.buf + '% \u00B7 ' +
             kb + ' KB received' +
             (s.link && s.link.up ? '' : ' \u00B7 no Flipper');
 
