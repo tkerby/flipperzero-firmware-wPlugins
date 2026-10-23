@@ -34,7 +34,7 @@ idf.py -p <devboard-port> flash        # hold BOOT on first flash
 
 # Flipper app
 cd ..
-ufbt                                    # build -> dist/flipper_radio.fap
+ufbt                                    # build -> dist/flipper_wifi_radio.fap
 ufbt launch                             # build + install to a connected Flipper
 ```
 

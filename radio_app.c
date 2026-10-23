@@ -571,7 +571,7 @@ static void radio_tick(void* ctx) {
 
 // --- lifecycle --------------------------------------------------------------
 
-int32_t flipper_radio_app(void* p) {
+int32_t flipper_wifi_radio_app(void* p) {
     UNUSED(p);
 
     RadioApp* app = malloc(sizeof(RadioApp));
