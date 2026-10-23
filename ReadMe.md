@@ -292,10 +292,12 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [IRONWYRM v1.1 (By Atompunk78)](https://github.com/Atompunk78/IRONWYRM)
 - Updated: [Sub-GHz Bruteforcer v4.3 (By derskythe, Ganapati & xMasterX)](https://github.com/DarkFlippers/flipperzero-subbrute/commit/f05b7d0368d34ba2c154a34d930f99345a9c7e18) - Save per-protocol settings, fix worker/decoder lifetime and scene navigation, correct the final key range, and reuse radio setup between keys.
 - Updated: [T5577 Multiwriter v0.3 (By Leptopt1los)](https://github.com/Leptopt1los/t5577_multiwriter)
-- RFID: [Show T5577 dumps beside keys in Saved and Archive, open them in the T5577 app, return to the selected list on exit, and preserve the original folder when renaming. New dumps save to `/ext/lfrfid`. (By [mishamyte](https://github.com/mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/pull/1188))
-- RFID: [Fix T5577 file/favorite launches not exiting cleanly. (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/0f3d3834d0930212522e012cd400f17fee5c95c0))
+- RFID: [Show T5577 dumps beside keys in Saved and Archive, open them in the T5577 app, return to the selected list on exit, and preserve the original folder when renaming. New dumps save to `/ext/lfrfid`. (By mishamyte)](https://github.com/mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/pull/1188)
+- RFID: [Fix T5577 file/favorite launches not exiting cleanly. (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/0f3d3834d0930212522e012cd400f17fee5c95c0)
 - Sub-GHz: [Correct Nice O-Code receiver-certificate extraction and storage, apply the remote serial mask on transmission, and handle saved installer code `FFFF` correctly. (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/3c5f8a29cc03c72816b4e7f3dfcb05baf63f3254)
-- RFID: [Update T5577 MultiWriter to 0.3 with per-block write verification, stored-key inspection, alternating-key testing, and password lock/unlock. (By mishamyte)](https://github.com/xMasterX/all-the-plugins/pull/275))
+- RFID: [Update T5577 MultiWriter to 0.3 with per-block write verification, stored-key inspection, alternating-key testing, and password lock/unlock. (By mishamyte)](https://github.com/xMasterX/all-the-plugins/pull/275)
+- RFID: [Improve T5577 Saved navigation, return to the original folder after rename/delete, remove the directory pre-scan, show clearer file errors, and keep tag-test backups from changing the selected folder. (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/pull/1189)
+- Sub-GHz: [Add Nero Radio normal and long-range rolling frame capture/save/load/replay, improve static frame details, and recognize shorter stop gaps. Rolling support replays captures; it does not generate new rolling codes. (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/44ef0b91eafeb59215626cffb2cac9be1fc2f310)
 
 <a name="release"></a>
 

@@ -7,7 +7,7 @@
 #include "toolbox/path.h"
 #include <cfw/cfw.h>
 
-#define FAP_MANIFEST_MAX_ICON_SIZE 32
+#include <flipper_application/application_manifest.h> // FAP_MANIFEST_MAX_ICON_SIZE
 
 typedef enum {
     ArchiveFileTypeIButton,
