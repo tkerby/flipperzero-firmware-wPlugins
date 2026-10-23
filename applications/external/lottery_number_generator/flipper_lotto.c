@@ -440,6 +440,8 @@ void deallocate_lotto_app(LottoApp* instance) {
 
     furi_record_close(RECORD_GUI);
 
+    numbersArr_clear(instance->ball_numbers);
+
     free(instance);
 }
 
