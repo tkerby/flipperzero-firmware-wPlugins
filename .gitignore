@@ -3,8 +3,8 @@ esp32-firmware/build/
 sdkconfig.old
 
 # ufbt build output and the editor config it generates.
-flipper-app/dist/
-flipper-app/.vscode/
+dist/
+.vscode/
 .ufbt/
 
 # Test audio. Tracks live on the Flipper's SD card at /ext/music and are the

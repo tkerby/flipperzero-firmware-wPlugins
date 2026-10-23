@@ -16,9 +16,10 @@ reads + paces bytes   921600 baud   HTTP: / player, /stream, /status    tap play
 
 ## Layout
 
-- `flipper-app/`   — the FAP (station console), built with `ufbt`.
+- repo root        — the FAP (station console), built with `ufbt`.
 - `esp32-firmware/`— ESP-IDF project (AP + captive portal + stream fan-out).
 - `protocol.md`    — the UART protocol spec shared by both halves.
+- `test/`          — host tests for the shared protocol codec.
 - `tools/`         — helper scripts (music conversion).
 
 ## Build (once toolchains are set up)
@@ -32,7 +33,7 @@ idf.py build
 idf.py -p <devboard-port> flash        # hold BOOT on first flash
 
 # Flipper app
-cd ../flipper-app
+cd ..
 ufbt                                    # build -> dist/flipper_radio.fap
 ufbt launch                             # build + install to a connected Flipper
 ```

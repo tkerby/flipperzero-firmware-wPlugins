@@ -204,8 +204,10 @@ size_t stream_hub_listener_read(StreamListener* l, uint8_t* out, size_t max) {
                 // Whatever is on the wire is not parsing as MP3. Stream it
                 // anyway rather than stay silent: being wrong about the frame
                 // boundary costs one glitch, staying silent costs the track.
-                ESP_LOGW(TAG, "no frame header in %u bytes, streaming unsynced",
-                         (unsigned)(l->sync_scanned + avail));
+                ESP_LOGW(
+                    TAG,
+                    "no frame header in %u bytes, streaming unsynced",
+                    (unsigned)(l->sync_scanned + avail));
                 l->synced = true;
             } else if(at < 0) {
                 // Rewind the last 3 bytes: a header can straddle two reads.

@@ -3,7 +3,7 @@ idf_component_register(
          # Shared verbatim with the FAP rather than reimplemented here: one
          # codec means the two halves of the link cannot drift apart, and the
          # host tests that cover it cover both sides.
-         "../../flipper-app/radio_proto.c"
-    INCLUDE_DIRS "." "../../flipper-app"
+         "../../radio_proto.c"
+    INCLUDE_DIRS "." "../.."
     EMBED_FILES "web/index.html"
 )

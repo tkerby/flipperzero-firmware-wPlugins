@@ -16,11 +16,11 @@
 #include "http_srv.h"
 #include "uart_link.h"
 
-static const char *TAG = "radio";
+static const char* TAG = "radio";
 
 void app_main(void) {
     esp_err_t err = nvs_flash_init();
-    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+    if(err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ESP_ERROR_CHECK(nvs_flash_erase());
         ESP_ERROR_CHECK(nvs_flash_init());
     }
@@ -31,10 +31,10 @@ void app_main(void) {
     status_led_start();
 
     ESP_LOGI(TAG, "Flipper Radio booting");
-    stream_hub_init();    // must exist before any audio source or listener
-    wifi_ap_start();      // softAP "Flipper Radio"
-    dns_captive_start();  // answer all lookups with our IP
-    http_srv_start();     // /, /stream, /status
-    uart_link_start();    // Flipper audio source + stats
+    stream_hub_init(); // must exist before any audio source or listener
+    wifi_ap_start(); // softAP "Flipper Radio"
+    dns_captive_start(); // answer all lookups with our IP
+    http_srv_start(); // /, /stream, /status
+    uart_link_start(); // Flipper audio source + stats
     ESP_LOGI(TAG, "startup complete");
 }

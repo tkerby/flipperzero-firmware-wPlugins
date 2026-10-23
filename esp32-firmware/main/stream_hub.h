@@ -15,11 +15,11 @@
 
 // ~64 KB per protocol.md: 4 seconds of 128 kbps audio, which covers UART
 // hiccups while staying well inside the S2's internal RAM.
-#define STREAM_RING_SIZE (64 * 1024)
-#define STREAM_MAX_LISTENERS 8
+#define STREAM_RING_SIZE       (64 * 1024)
+#define STREAM_MAX_LISTENERS   8
 // Head start handed to a joining listener: ~1 s of 128 kbps audio, enough for
 // iOS to identify the stream at once instead of waiting it out at the live edge.
-#define STREAM_PRIME_BYTES (16 * 1024)
+#define STREAM_PRIME_BYTES     (16 * 1024)
 // A listener that has not read for this long is not being drained -- the tab is
 // paused, locked, closed, or its buffer is full -- so it stops counting against
 // the writer. Without this a listener's backlog can grow until credit reaches
@@ -31,15 +31,15 @@
 // paces at the file's own bitrate, so this is not the clock -- it is the
 // guarantee that the writer can ALWAYS make progress, because every mechanism
 // for recovering from a stuck listener depends on more bytes being written.
-#define STREAM_MIN_CREDIT (4 * RADIO_MAX_PAYLOAD)
+#define STREAM_MIN_CREDIT      (4 * RADIO_MAX_PAYLOAD)
 // Give up hunting for an MP3 frame header after this much data and hand the
 // bytes over regardless. A decoder resyncs by itself mid-stream; a listener
 // that waits forever for a header that never parses just reads as "stalled"
 // with no way to tell it apart from the Flipper having stopped sending.
-#define STREAM_SYNC_SCAN_MAX (8 * 1024)
+#define STREAM_SYNC_SCAN_MAX   (8 * 1024)
 // Sized by the protocol, not chosen here: TRACK_META arrives over the wire and
 // is stored verbatim, so this must match the FAP's cap exactly.
-#define STREAM_META_MAX ((int)RADIO_META_MAX)
+#define STREAM_META_MAX        ((int)RADIO_META_MAX)
 
 typedef struct StreamListener StreamListener;
 

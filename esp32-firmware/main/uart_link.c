@@ -31,7 +31,7 @@ static const char* TAG = "uart_link";
 #define LINK_RX_BUF 8192
 #define LINK_TX_BUF 2048
 
-#define LINK_READ_CHUNK 512
+#define LINK_READ_CHUNK      512
 #define LINK_READ_TIMEOUT_MS 20
 
 // Credit is the overflow backstop, not the clock — the Flipper paces audio at
@@ -122,8 +122,8 @@ static void uart_link_rx_task(void* arg) {
     int64_t last_rx_us = esp_timer_get_time();
 
     for(;;) {
-        const int n = uart_read_bytes(
-            LINK_UART, chunk, sizeof(chunk), pdMS_TO_TICKS(LINK_READ_TIMEOUT_MS));
+        const int n =
+            uart_read_bytes(LINK_UART, chunk, sizeof(chunk), pdMS_TO_TICKS(LINK_READ_TIMEOUT_MS));
         const int64_t now = esp_timer_get_time();
 
         if(n > 0) {

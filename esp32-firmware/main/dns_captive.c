@@ -14,7 +14,7 @@
 
 static const char* TAG = "dns_captive";
 
-#define DNS_PORT 53
+#define DNS_PORT    53
 #define DNS_MAX_MSG 512 // classic UDP DNS limit; anything larger we ignore
 #define AP_IP_BYTES {192, 168, 4, 1}
 
@@ -28,7 +28,7 @@ typedef struct __attribute__((packed)) {
     uint16_t arcount;
 } dns_header_t;
 
-#define DNS_QTYPE_A 1
+#define DNS_QTYPE_A   1
 #define DNS_QCLASS_IN 1
 
 // Walk a (possibly compressed) QNAME and return the offset just past it.

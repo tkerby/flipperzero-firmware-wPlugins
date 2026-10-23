@@ -41,7 +41,12 @@ static void wifi_event_handler(void* arg, esp_event_base_t base, int32_t id, voi
             TAG,
             "phone joined aid=%d %02x:%02x:%02x:%02x:%02x:%02x",
             e->aid,
-            e->mac[0], e->mac[1], e->mac[2], e->mac[3], e->mac[4], e->mac[5]);
+            e->mac[0],
+            e->mac[1],
+            e->mac[2],
+            e->mac[3],
+            e->mac[4],
+            e->mac[5]);
     } else if(id == WIFI_EVENT_AP_STADISCONNECTED) {
         wifi_event_ap_stadisconnected_t* e = data;
         ESP_LOGI(
@@ -49,7 +54,12 @@ static void wifi_event_handler(void* arg, esp_event_base_t base, int32_t id, voi
             "phone left aid=%d reason=%u %02x:%02x:%02x:%02x:%02x:%02x",
             e->aid,
             (unsigned)e->reason,
-            e->mac[0], e->mac[1], e->mac[2], e->mac[3], e->mac[4], e->mac[5]);
+            e->mac[0],
+            e->mac[1],
+            e->mac[2],
+            e->mac[3],
+            e->mac[4],
+            e->mac[5]);
     }
 }
 

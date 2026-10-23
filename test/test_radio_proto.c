@@ -52,7 +52,8 @@ int main(void) {
     {
         const uint8_t audio[] = {0xFF, 0xFB, 0x90, 0x44, 0x00, 0xAA, 0xAA, 0x13};
         uint8_t frame[RADIO_MAX_FRAME];
-        size_t n = radio_frame_encode(RADIO_MSG_AUDIO_DATA, audio, sizeof(audio), frame, sizeof(frame));
+        size_t n =
+            radio_frame_encode(RADIO_MSG_AUDIO_DATA, audio, sizeof(audio), frame, sizeof(frame));
         check_eq(n, sizeof(audio) + RADIO_FRAME_OVERHEAD, "encoded length");
         check_eq(frame[0], RADIO_FRAME_START, "starts with 0xAA");
         check_eq(frame[1], RADIO_MSG_AUDIO_DATA, "type byte");
@@ -83,9 +84,11 @@ int main(void) {
     // --- maximum payload ---
     {
         uint8_t big[RADIO_MAX_PAYLOAD];
-        for(size_t i = 0; i < sizeof(big); i++) big[i] = (uint8_t)(i * 7u);
+        for(size_t i = 0; i < sizeof(big); i++)
+            big[i] = (uint8_t)(i * 7u);
         uint8_t frame[RADIO_MAX_FRAME];
-        size_t n = radio_frame_encode(RADIO_MSG_AUDIO_DATA, big, sizeof(big), frame, sizeof(frame));
+        size_t n =
+            radio_frame_encode(RADIO_MSG_AUDIO_DATA, big, sizeof(big), frame, sizeof(frame));
         check_eq(n, RADIO_MAX_FRAME, "max frame fills the buffer");
         RadioDecoder d;
         radio_decoder_init(&d);
@@ -93,18 +96,24 @@ int main(void) {
         check(memcmp(d.payload, big, sizeof(big)) == 0, "max payload survives");
 
         // One byte over the limit must be refused outright.
-        check_eq(radio_frame_encode(RADIO_MSG_AUDIO_DATA, big, RADIO_MAX_PAYLOAD + 1, frame, sizeof(frame)), 0,
-                 "oversize payload refused");
+        check_eq(
+            radio_frame_encode(
+                RADIO_MSG_AUDIO_DATA, big, RADIO_MAX_PAYLOAD + 1, frame, sizeof(frame)),
+            0,
+            "oversize payload refused");
         // So must a buffer that cannot hold the frame.
-        check_eq(radio_frame_encode(RADIO_MSG_AUDIO_DATA, big, sizeof(big), frame, 8), 0,
-                 "short output buffer refused");
+        check_eq(
+            radio_frame_encode(RADIO_MSG_AUDIO_DATA, big, sizeof(big), frame, 8),
+            0,
+            "short output buffer refused");
     }
 
     // --- a corrupted payload byte is caught by the CRC ---
     {
         const uint8_t pay[] = {1, 2, 3, 4};
         uint8_t frame[RADIO_MAX_FRAME];
-        size_t n = radio_frame_encode(RADIO_MSG_TRACK_META, pay, sizeof(pay), frame, sizeof(frame));
+        size_t n =
+            radio_frame_encode(RADIO_MSG_TRACK_META, pay, sizeof(pay), frame, sizeof(frame));
         frame[5] ^= 0x01; // flip a bit in the payload
         RadioDecoder d;
         radio_decoder_init(&d);
@@ -148,7 +157,8 @@ int main(void) {
     {
         const uint8_t pay[] = {1, 2, 3, 4, 5, 6, 7, 8};
         uint8_t whole[RADIO_MAX_FRAME];
-        size_t n = radio_frame_encode(RADIO_MSG_AUDIO_DATA, pay, sizeof(pay), whole, sizeof(whole));
+        size_t n =
+            radio_frame_encode(RADIO_MSG_AUDIO_DATA, pay, sizeof(pay), whole, sizeof(whole));
 
         // Without the reset: feed a truncated frame, then a good one.
         RadioDecoder bad;
@@ -180,7 +190,8 @@ int main(void) {
         uint8_t stream[RADIO_MAX_FRAME * 3];
         size_t off = 0;
         const uint8_t a[] = {0xAA, 0xAA, 0xAA}; // start bytes as payload
-        off += radio_frame_encode(RADIO_MSG_AUDIO_DATA, a, sizeof(a), stream + off, sizeof(stream) - off);
+        off += radio_frame_encode(
+            RADIO_MSG_AUDIO_DATA, a, sizeof(a), stream + off, sizeof(stream) - off);
         off += radio_frame_encode(RADIO_MSG_FLUSH, NULL, 0, stream + off, sizeof(stream) - off);
         off += radio_frame_encode(RADIO_MSG_PING, NULL, 0, stream + off, sizeof(stream) - off);
 
@@ -219,7 +230,8 @@ int main(void) {
         buf[21] = 0xFB;
         buf[22] = 0x90;
         buf[23] = 0x00;
-        check_eq((unsigned long)radio_mp3_find_header(buf, sizeof(buf)), 20, "header found past ID3");
+        check_eq(
+            (unsigned long)radio_mp3_find_header(buf, sizeof(buf)), 20, "header found past ID3");
 
         uint8_t none[16];
         memset(none, 0, sizeof(none));

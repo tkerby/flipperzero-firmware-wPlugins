@@ -10,9 +10,9 @@
 
 #include <stddef.h>
 
-#define SSID_PREFIX "Flipper Radio"
+#define SSID_PREFIX    "Flipper Radio"
 #define SSID_SEPARATOR " - "
-#define SSID_MAX 32 // 802.11 limit, in bytes
+#define SSID_MAX       32 // 802.11 limit, in bytes
 
 // Compose the broadcast SSID from an optional user suffix.
 //

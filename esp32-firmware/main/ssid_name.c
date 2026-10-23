@@ -66,7 +66,8 @@ size_t ssid_build(const char* suffix, char* out, size_t out_cap) {
     len += take;
 
     // Truncation can leave a dangling space; drop it.
-    while(len > prefix_len + sep_len && out[len - 1] == ' ') len--;
+    while(len > prefix_len + sep_len && out[len - 1] == ' ')
+        len--;
     // If truncation ate the whole suffix, drop the separator too.
     if(len == prefix_len + sep_len) len = prefix_len;
 

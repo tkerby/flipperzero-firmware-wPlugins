@@ -26,9 +26,9 @@ extern const uint8_t index_html_end[] asm("_binary_index_html_end");
 // next one (417 + 4 bytes at 128 kbps), because this is also the window the
 // hub gets to confirm a frame header in -- at 512 bytes it could only ever
 // verify a match found in the first 91, so it effectively never verified.
-#define STREAM_CHUNK 1536
-#define STREAM_IDLE_MS 10 // nothing buffered yet -> wait this long and retry
-#define STREAM_PEER_CHECK_MS 500 // how often to test a socket we are not writing to
+#define STREAM_CHUNK          1536
+#define STREAM_IDLE_MS        10 // nothing buffered yet -> wait this long and retry
+#define STREAM_PEER_CHECK_MS  500 // how often to test a socket we are not writing to
 #define STREAM_IDLE_GIVEUP_MS 30000 // no audio at all for this long -> hang up
 
 // Every listener costs one of these, and a FreeRTOS stack is forced into
@@ -393,7 +393,8 @@ static esp_err_t probe_get(httpd_req_t* req) {
 static esp_err_t connect_get(httpd_req_t* req) {
     const uint64_t id = req_client_id(req);
     portal_auth(id);
-    ESP_LOGI(TAG, "portal: client %012llx signed in", (unsigned long long)(id & 0xFFFFFFFFFFFFULL));
+    ESP_LOGI(
+        TAG, "portal: client %012llx signed in", (unsigned long long)(id & 0xFFFFFFFFFFFFULL));
 
     httpd_resp_set_hdr(req, "Cache-Control", "no-store");
 
