@@ -149,10 +149,6 @@ hardware behavior (verified via live device testing and screen capture — see
 - [pchmielewski1/tea5767-pt22xx-fm-radio-with-volume-control](https://github.com/pchmielewski1/tea5767-pt22xx-fm-radio-with-volume-control) — wiring reference and audio-chain finding for the planned future TEA5767 integration
 - [evilpete/flipperzero_protobuf_py](https://github.com/evilpete/flipperzero_protobuf_py) — Python RPC client used in `tools/capture_screen.py` to pull real screenshots over USB serial (same protocol qFlipper's "Remote Control" uses) for visually verifying UI changes during development
 
-**Menu ghost icon**
-- [Lucide icons — "ghost"](https://lucide.dev/icons/ghost) ([lucide-icons/lucide](https://github.com/lucide-icons/lucide), MIT) — reference for the round dome, straight sides, and zigzag feet replicated with plain canvas primitives (disc/box/triangle) in `view_menu.c`
-- [Twitter/Twemoji](https://github.com/twitter/twemoji) ghost emoji (`1f47b.svg`) — also researched as a reference, not the style ultimately used
-
 **Official Flipper docs**
 - [docs.flipper.net/zero/gpio-and-modules](https://docs.flipper.net/zero/gpio-and-modules) and [docs.flipper.net/zero/rfid](https://docs.flipper.net/zero/rfid) — GPIO pinout and LF-RFID reference
 
