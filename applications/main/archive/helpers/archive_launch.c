@@ -1,6 +1,7 @@
 #include "archive_launch.h"
 #include "archive_helpers_ext.h"
 #include <loader/loader.h>
+#include <lfrfid/tools/t5577_file.h>
 
 #ifndef APP_ARCHIVE_BROWSER
 #include <desktop/desktop_i.h>
@@ -40,6 +41,8 @@ static const char* archive_get_flipper_app_name(ArchiveFileTypeEnum file_type) {
         return EXT_PATH("apps/NFC/picopass.fap");
     case ArchiveFileTypeU2f:
         return "U2F";
+    case ArchiveFileTypeT5577:
+        return T5577_APP_PATH;
     case ArchiveFileTypeUpdateManifest:
         return "UpdaterApp";
     case ArchiveFileTypeDiskImage:

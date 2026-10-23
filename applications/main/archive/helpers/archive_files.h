@@ -36,6 +36,7 @@ typedef enum {
     ArchiveFileTypeUnknown,
     ArchiveFileTypeAppOrJs,
     ArchiveFileTypeLoading,
+    ArchiveFileTypeT5577, // Append to preserve RM file-type values.
 } ArchiveFileTypeEnum;
 
 typedef struct {

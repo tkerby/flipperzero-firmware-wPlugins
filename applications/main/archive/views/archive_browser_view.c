@@ -1,4 +1,5 @@
 #include "assets_icons.h"
+#include <archive_browser_icons.h>
 #include "toolbox/path.h"
 #include <furi.h>
 #include "../archive_i.h"
@@ -40,6 +41,7 @@ static const Icon* ArchiveItemIcons[] = {
     [ArchiveFileTypeCrossRemote] = &I_xremote_10px,
     [ArchiveFileTypePicopass] = &I_125_10px,
     [ArchiveFileTypeU2f] = &I_u2f_10px,
+    [ArchiveFileTypeT5577] = &I_t5577_10px,
     [ArchiveFileTypeSetting] = &I_settings_10px,
     [ArchiveFileTypeApplication] = &I_Apps_10px,
     [ArchiveFileTypeJS] = &I_js_script_10px,

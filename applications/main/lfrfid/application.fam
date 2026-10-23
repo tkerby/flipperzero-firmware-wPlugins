@@ -12,6 +12,7 @@ App(
     sources=["*.c*", "!plugins"],
     fap_libs=["assets"],
     fap_icon="icon.png",
+    fap_icon_assets="images",
     fap_category="RFID",
 )
 

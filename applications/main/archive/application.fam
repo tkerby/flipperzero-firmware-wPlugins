@@ -39,7 +39,9 @@ App(
         "scenes/*.c",
         "views/*.c",
     ],
-    fap_category="Main",
+    fap_libs=["assets"],
     fap_icon="archive_10px.png",
+    fap_icon_assets="images",
+    fap_category="Main",
     fap_version="1.0",
 )
