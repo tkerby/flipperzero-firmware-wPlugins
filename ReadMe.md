@@ -298,6 +298,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - RFID: [Update T5577 MultiWriter to 0.3 with per-block write verification, stored-key inspection, alternating-key testing, and password lock/unlock. (By mishamyte)](https://github.com/xMasterX/all-the-plugins/pull/275)
 - RFID: [Improve T5577 Saved navigation, return to the original folder after rename/delete, remove the directory pre-scan, show clearer file errors, and keep tag-test backups from changing the selected folder. (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/pull/1189)
 - Sub-GHz: [Add Nero Radio normal and long-range rolling frame capture/save/load/replay, improve static frame details, and recognize shorter stop gaps. Rolling support replays captures; it does not generate new rolling codes. (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/44ef0b91eafeb59215626cffb2cac9be1fc2f310)
+- Updated: [Flipper Lotto v1.0 (By molykima)](https://github.com/molykima/Flipper-Lottery-Number-Generator)
 
 <a name="release"></a>
 
