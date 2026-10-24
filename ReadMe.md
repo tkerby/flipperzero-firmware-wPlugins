@@ -176,7 +176,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [DNDCombat v4.20.2 (By RogueMaster)](https://github.com/RogueMaster/Dungeons_and_Dolphins)
 - Updated: [DNDGrants v4.20.2 (By RogueMaster)](https://github.com/RogueMaster/Dungeons_and_Dolphins)
 - Updated: [FlipDeFlock v0.99 (By ReconGrunt)](https://github.com/ReconGrunt/FlipDeFlock) `Req: ESP32`
-- ESP Flasher: [Comes with Marauder v1.18.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.18.0)
 - Updated: [OpenPrintTag v1.0 (By Houzvicka)](https://github.com/Houzvicka/FlipperPrintTag)
 - Added: [MTools v1.0 (By mtoolstec)](https://github.com/mtoolstec/flipper-mtools)
 - Added: [PC Health Remote v1.1 (By vladatman)](https://github.com/vladatman/pc-health-remote)
@@ -259,7 +258,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - RFID: [Better FDX-B (animal chips / implants) reading - Read now also tries 134kHz, the frequency these chips are made for, and weak signals are decoded more reliably. Also available separately in Extra Actions -> `Read FDX-B (Animals)` (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/525dcce0e461d4f4b852a32cc6e3b4d075b50f17)
 - Updated: [Kindle Click v0.4 (By zuyan9)](https://github.com/zuyan9/Flipper-Zero-Kindle-Click)
 - OFW: [FatFs: apply upstream R0.12c patches, fix 0-byte files in fragmented exFAT directories (By r3wretrhy)](https://github.com/flipperdevices/flipperzero-firmware/pull/4477)
-- ESP Flasher: [Comes with Marauder v1.19.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.19.0) (Version Only)
 - Updated: [Taiko Player v0.5 (By ZeroNinx)](https://github.com/ZeroNinx/flipper-zero-taiko-player)
 - Updated: [Tesla Mod v2.17.0b3 (By hypery11)](https://github.com/hypery11/flipper-tesla-fsd)
 - Updated: [NFC Magic v2.3 (By gornekich)](https://github.com/flipperdevices/flipperzero-firmware/pull/1966) Use per-UID cached keys before dictionary attacks and for Gen2 probing; retain RM ISO15693 support. [NFC Magic: accept Gen 4 config dumps of 30 and 31 bytes (By mishamyte)](https://github.com/xMasterX/all-the-plugins/pull/274)
@@ -307,6 +305,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Thermometer v0.2.1 (By niki-timofe)](https://github.com/niki-timofe/flipperzero-app-onewire)
 - Added: [CatDriver v1.0 (By EVL87)](https://github.com/EVL87/catwardrive) `Req: ESP32`
 - Added: [Wifi Radio v1.0 (By thecoolguy2001)](https://github.com/thecoolguy2001/flipper-wifi-radio) `Req: ESP32`
+- ESP Flasher: [Comes with Marauder v1.19.2 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.19.2)
 
 <a name="release"></a>
 
@@ -336,7 +335,7 @@ This software is for experimental purposes only and is not meant for any illegal
 ## New on MNTM RM Branch!
 
 - TLDR: More Assets, Game Mode, RM Passport & Many more apps! Extra NFC, RFID & SubGHz features!
-- ESP Flasher: [Comes with Marauder v1.19.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.19.0)
+- ESP Flasher: [Comes with Marauder v1.19.2 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.19.0)
 - Animations: [Asset Packs for RM HERE](https://github.com/RogueMaster/awesome-flipperzero-withModules/tree/rogue_main/RM_AssetPacks)
 - Animations: [PREVIEW "RM Minimal" animations (build default)](https://www.patreon.com/posts/animation-rm-77441581) or [OTHER SETS](https://www.patreon.com/RogueMaster?filters[tag]=Animations)
 - Archive: Open MP3 from File Browser, thanks to [MP3 Player v3.5 (By coolshrimp)](https://github.com/coolshrimp/flipperzero-mp3-player)
