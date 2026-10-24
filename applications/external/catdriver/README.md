@@ -18,7 +18,7 @@ Advanced Wi-Fi and Bluetooth Low Energy wardriving application for Flipper Zero 
 - NMEA GPS module (such as NEO-6M or ATGM336H) connected to pins 15 (TX) and 16 (RX)
 
 ## Firmware Configuration
-For Dual UART support (ESP32 and GPS running simultaneously), enable the GPS protocol on pins 15 and 16 at 9600 baud (available in Momentum firmware under Settings -> Protocols -> GPS).
+For Dual UART support (ESP32 and GPS running simultaneously), enable the GPS protocol on pins 15 and 16 at 9600 baud (available in CFW firmware under Settings -> Protocols -> GPS).
 
 ## ESP32 Firmware
 Firmware source and pre-compiled binaries are provided in the GitHub repository releases.
