@@ -33,8 +33,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Last Synced/Checked CFW, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-10-24 13:30 EST`
 - Added: [Keylogger v1.0 (By dagnazty)](https://github.com/dagnazty/Flipper_Keylogger)
 - Updated: [SigRoam Wardriving v0.9.1 (By pingequalab)](https://github.com/pingequalab/sigroam-wardriving) `Req: ESP32`
-- Updated: [Seed Capturer v1.1 (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/64d285c8e2a7eeef5f34cd5988d8506e2d730743)
 - Sub-GHz: [Fix a received Nice O-Code frame being saved as if its installer code were FFFF - opening it from the list decoded the remote to nonsense instead of pointing at the Nice O-Code app, and offered to send it. Affected both the 72bit and the 112bit frames (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/d920ae3532fe86323ac8d564abee68edc6578765)
+- Updated: [Seed Capturer v1.2 (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/64d285c8e2a7eeef5f34cd5988d8506e2d730743) [Can decode a saved RAW `.sub` file instead of capturing over the air, and uses an external CC1101 module when one is plugged in (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/aa47284e599dec2a4a9b5c71595c0db1dc7a7c7e) [Now supports **BFT Mitto** remotes on 433.92 MHz, the same way as Erreka - capture the hops and recover the Seed in qUnleashed (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/0d295f581c1e34cd56e2e590ea85625a64c2b724)
 
 <a name="release"></a>
 
@@ -857,7 +857,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [SD Info v0.1 (By Sladkisnovraper)](https://github.com/Sladkisnovraper/SD-Info-For-Flipper-Zero)
 - [SD SPI v0.5 (By Gl1tchub)](https://github.com/Gl1tchub/Flipperzero-SD-SPI) `Req: External SD Board`
 - [Security+ PIN v1.0 (By zero-mega & xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/e6ded9b108454b30a3e710295e6d2b7fd146e188)
-- [Seed Capturer v1.1 (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/64d285c8e2a7eeef5f34cd5988d8506e2d730743)
+- [Seed Capturer v1.2 (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/64d285c8e2a7eeef5f34cd5988d8506e2d730743)
 - [Segment Clock v1.2 (By Sladkisnovraper)](https://github.com/Sladkisnovraper/Segment-Clock-For-Flipper-Zero)
 - [Sentry Safe v2.0 (By H4ckd4ddy)](https://github.com/H4ckd4ddy/flipperzero-sentry-safe-plugin) ([Pin Out](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/sentry_safe) from [UberGuidoZ](https://github.com/UberGuidoZ/)
 - [Seos compatible v1.3 (By bettse)](https://github.com/bettse/seos_compatible)
