@@ -1,7 +1,0 @@
-dist/
-.vscode/
-*.fap
-*.elf
-__pycache__/
-samples/
-.DS_Store

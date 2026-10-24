@@ -3,6 +3,7 @@
 It mirrors the C code step by step (float32, same xorshift32 random numbers),
 so tests can compare both, and it renders previews of what the Flipper plays.
 """
+
 import numpy as np
 
 E, H, EP = 32, 80, 16  # must match model.py and composer_model.h
@@ -35,7 +36,9 @@ class Reference:
 
     def matvec(self, name, bias, x):
         q, s = self.w[name].astype(f32), self.w[name + "_scale"]
-        with np.errstate(all="ignore"):  # spurious FP flags from Accelerate's matmul on Apple silicon
+        with np.errstate(
+            all="ignore"
+        ):  # spurious FP flags from Accelerate's matmul on Apple silicon
             out = (q @ x.astype(f32)).astype(f32) * s
         return out + self.w[bias] if bias else out
 
@@ -68,13 +71,18 @@ class Reference:
             return None
         temperature = max(temperature, 0.05)
         beat, bar = self.pos % BAR, self.pos // BAR
-        x = (self.style + self.deq("cm_emb_pitch")[self.prev_p] + self.deq("cm_emb_dur")[self.prev_d]
-             + self.deq("cm_emb_beat")[beat] + self.deq("cm_emb_bar")[bar]).astype(f32)
+        x = (
+            self.style
+            + self.deq("cm_emb_pitch")[self.prev_p]
+            + self.deq("cm_emb_dur")[self.prev_d]
+            + self.deq("cm_emb_beat")[beat]
+            + self.deq("cm_emb_bar")[bar]
+        ).astype(f32)
         gi = self.matvec("cm_gru_w_ih", "cm_gru_b_ih", x)
         gh = self.matvec("cm_gru_w_hh", "cm_gru_b_hh", self.h)
         r = 1 / (1 + np.exp(-(gi[:H] + gh[:H])))
-        z = 1 / (1 + np.exp(-(gi[H:2 * H] + gh[H:2 * H])))
-        n = np.tanh(gi[2 * H:] + r * gh[2 * H:])
+        z = 1 / (1 + np.exp(-(gi[H : 2 * H] + gh[H : 2 * H])))
+        n = np.tanh(gi[2 * H :] + r * gh[2 * H :])
         self.h = ((1 - z) * n + z * self.h).astype(f32)
         self.pitch_logits = self.matvec("cm_head_pitch_w", "cm_head_pitch_b", self.h)
         p = self.sample(self.pitch_logits, None, temperature, rand)
@@ -83,7 +91,9 @@ class Reference:
         fits = [beat + d <= BAR for d in DURATIONS]
         dt = 1 + (temperature - 1) * 0.5 if temperature > 1 else temperature
         d = self.sample(self.dur_logits, fits, dt, rand)
-        if self.pos + DURATIONS[d] >= BAR * BARS:  # last note resolves to the nearest tonic
+        if (
+            self.pos + DURATIONS[d] >= BAR * BARS
+        ):  # last note resolves to the nearest tonic
             p = 18 if 12 <= self.prev_p < P_COUNT else 6
         self.prev_p, self.prev_d = p, d
         self.pos += DURATIONS[d]

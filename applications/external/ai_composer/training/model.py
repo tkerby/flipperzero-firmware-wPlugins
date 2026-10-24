@@ -6,6 +6,7 @@ musical context; one head predicts the next pitch, a second head predicts its
 duration given that pitch. The style vector is a weighted sum of learned style
 embeddings, so styles can be mixed at generation time.
 """
+
 import torch
 import torch.nn as nn
 
@@ -42,8 +43,13 @@ class Composer(nn.Module):
         self.head_dur = nn.Linear(H + EP, D_VOCAB)
 
     def inputs(self, prev_p, prev_d, beat, bar, style_vec):
-        return (self.emb_pitch(prev_p) + self.emb_dur(prev_d) + self.emb_beat(beat)
-                + self.emb_bar(bar) + style_vec)
+        return (
+            self.emb_pitch(prev_p)
+            + self.emb_dur(prev_d)
+            + self.emb_beat(beat)
+            + self.emb_bar(bar)
+            + style_vec
+        )
 
     def style_vector(self, weights):
         """weights: (batch, n_styles) mixing weights, rows sum to 1."""

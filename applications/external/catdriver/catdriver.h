@@ -113,7 +113,7 @@ typedef struct {
     ScanMode scan_mode;
     AppLanguage language;
     uint8_t menu_selected_button; // 0: ALL, 1: WIFI, 2: BLE, 3: Settings, 4: About
-    uint8_t menu_last_card;       // 0..3: remembers last selected card
+    uint8_t menu_last_card; // 0..3: remembers last selected card
 
     bool pressedButton;
     ViewState view_state;

@@ -37,7 +37,17 @@ def decode_and_save(raw: bytes, out_path: str) -> None:
     # landscape layout; this undoes that for a vertical-orientation app.
     # Drop -rotate for a horizontal-orientation view (e.g. REM Pod).
     subprocess.run(
-        ["magick", pbm_path, "-rotate", "90", "-filter", "point", "-resize", "600%", out_path],
+        [
+            "magick",
+            pbm_path,
+            "-rotate",
+            "90",
+            "-filter",
+            "point",
+            "-resize",
+            "600%",
+            out_path,
+        ],
         check=True,
     )
 

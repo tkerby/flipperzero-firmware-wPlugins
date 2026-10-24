@@ -31,7 +31,8 @@ void ghost_icon_draw(Canvas* canvas, int cx, int top_y, int w, int h) {
         int boundary = left_edge + (ew * i) / notch_count;
         int notch_w = boundary - prev_boundary;
         int notch_cx = (prev_boundary + boundary) / 2;
-        canvas_draw_triangle(canvas, notch_cx, bottom_y, (size_t)notch_w, 6, CanvasDirectionBottomToTop);
+        canvas_draw_triangle(
+            canvas, notch_cx, bottom_y, (size_t)notch_w, 6, CanvasDirectionBottomToTop);
         prev_boundary = boundary;
     }
 

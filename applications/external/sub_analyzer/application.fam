@@ -2,6 +2,7 @@ App(
     appid="sub_analyzer",
     name="Sub Analyzer",
     apptype=FlipperAppType.EXTERNAL,
+    targets=["f7"],
     entry_point="sub_analyzer_app",
     stack_size=8 * 1024,
     fap_icon="sub_analyzer.png",

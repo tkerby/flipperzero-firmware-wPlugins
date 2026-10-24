@@ -2,6 +2,7 @@
 
 usage: python train.py [--per-style N] [--epochs N] [--out composer.pt]
 """
+
 import argparse
 import random
 import time
@@ -40,7 +41,7 @@ def dataset(per_style, seed):
 
 def batches(items, size, device):
     for i in range(0, len(items), size):
-        chunk = items[i:i + size]
+        chunk = items[i : i + size]
         length = max(len(seq[0]) for _, seq in chunk)
         fields = [torch.zeros(len(chunk), length, dtype=torch.long) for _ in range(6)]
         mask = torch.zeros(len(chunk), length, dtype=torch.bool)
@@ -59,7 +60,9 @@ def loss_on(model, items, device, size=512):
     with torch.no_grad():
         for (pp, pd, beat, bar, np_, nd), mask, style in batches(items, size, device):
             lp, ld, _ = model(pp, pd, beat, bar, style, np_)
-            l = F.cross_entropy(lp[mask], np_[mask], reduction="sum") + F.cross_entropy(ld[mask], nd[mask], reduction="sum")
+            l = F.cross_entropy(lp[mask], np_[mask], reduction="sum") + F.cross_entropy(
+                ld[mask], nd[mask], reduction="sum"
+            )
             total += l.item()
             count += mask.sum().item()
     model.train()
@@ -85,15 +88,22 @@ def main():
     for epoch in range(a.epochs):
         t0 = time.time()
         rng.shuffle(train_items)
-        for (pp, pd, beat, bar, np_, nd), mask, style in batches(train_items, 128, device):
+        for (pp, pd, beat, bar, np_, nd), mask, style in batches(
+            train_items, 128, device
+        ):
             lp, ld, _ = model(pp, pd, beat, bar, style, np_)
-            loss = F.cross_entropy(lp[mask], np_[mask]) + F.cross_entropy(ld[mask], nd[mask])
+            loss = F.cross_entropy(lp[mask], np_[mask]) + F.cross_entropy(
+                ld[mask], nd[mask]
+            )
             opt.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             opt.step()
         sched.step()
-        print(f"epoch {epoch + 1:2d} | val loss/note {loss_on(model, val_items, device):.3f} | {time.time() - t0:.0f}s", flush=True)
+        print(
+            f"epoch {epoch + 1:2d} | val loss/note {loss_on(model, val_items, device):.3f} | {time.time() - t0:.0f}s",
+            flush=True,
+        )
     torch.save(model.cpu().state_dict(), a.out)
     print("saved", a.out)
 

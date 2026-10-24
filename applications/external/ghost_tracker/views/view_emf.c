@@ -92,7 +92,8 @@ static int emf_level_from_ripple_mv(float ripple_mv) {
  * this buffer" - far cheaper than a full FFT when we only care about one
  * (or two) known frequencies. Returns an approximate peak amplitude, in the
  * same units as the input samples. */
-static float emf_goertzel_magnitude(const float* samples, int n, float sample_rate_hz, float target_hz) {
+static float
+    emf_goertzel_magnitude(const float* samples, int n, float sample_rate_hz, float target_hz) {
     int k = (int)(0.5f + ((float)n * target_hz) / sample_rate_hz);
     float omega = (2.0f * EMF_GOERTZEL_PI * (float)k) / (float)n;
     float coeff = 2.0f * cosf(omega);
@@ -121,10 +122,10 @@ static float emf_measure_mains_ripple_mv(FuriHalAdcHandle* adc_handle) {
         furi_delay_us(EMF_GPIO_SAMPLE_PERIOD_US);
     }
 
-    float mag_50 =
-        emf_goertzel_magnitude(samples, EMF_GPIO_BUFFER_SIZE, EMF_GPIO_SAMPLE_RATE_HZ, EMF_MAINS_FREQ_A_HZ);
-    float mag_60 =
-        emf_goertzel_magnitude(samples, EMF_GPIO_BUFFER_SIZE, EMF_GPIO_SAMPLE_RATE_HZ, EMF_MAINS_FREQ_B_HZ);
+    float mag_50 = emf_goertzel_magnitude(
+        samples, EMF_GPIO_BUFFER_SIZE, EMF_GPIO_SAMPLE_RATE_HZ, EMF_MAINS_FREQ_A_HZ);
+    float mag_60 = emf_goertzel_magnitude(
+        samples, EMF_GPIO_BUFFER_SIZE, EMF_GPIO_SAMPLE_RATE_HZ, EMF_MAINS_FREQ_B_HZ);
     return mag_50 > mag_60 ? mag_50 : mag_60;
 }
 
@@ -300,7 +301,8 @@ static void emf_view_draw_callback(Canvas* canvas, void* model) {
     } else {
         snprintf(val_buf, sizeof(val_buf), "%.1fmV", (double)m->display_value);
     }
-    canvas_draw_str_aligned(canvas, w / 2, h - 10, AlignCenter, AlignBottom, level_words[m->level]);
+    canvas_draw_str_aligned(
+        canvas, w / 2, h - 10, AlignCenter, AlignBottom, level_words[m->level]);
     canvas_draw_str_aligned(canvas, w / 2, h - 1, AlignCenter, AlignBottom, val_buf);
 }
 
@@ -309,9 +311,9 @@ static bool emf_view_input_callback(InputEvent* event, void* context) {
     if(event->type != InputTypeShort) return false;
 
     if(event->key == InputKeyLeft || event->key == InputKeyRight) {
-        instance->requested_source =
-            instance->requested_source == EmfSourceInternal ? EmfSourceExternal :
-                                                                EmfSourceInternal;
+        instance->requested_source = instance->requested_source == EmfSourceInternal ?
+                                         EmfSourceExternal :
+                                         EmfSourceInternal;
         return true;
     }
     /* Back is intentionally not consumed: it must bubble up to the app's
@@ -338,7 +340,8 @@ static void emf_view_enter_callback(void* context) {
 static void emf_view_exit_callback(void* context) {
     EmfView* instance = context;
     instance->running = false;
-    furi_thread_join(instance->thread); /* blocks until the worker releases everything and returns */
+    furi_thread_join(
+        instance->thread); /* blocks until the worker releases everything and returns */
 }
 
 EmfView* emf_view_alloc(void) {

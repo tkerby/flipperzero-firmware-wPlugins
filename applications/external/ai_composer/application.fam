@@ -12,8 +12,8 @@ App(
     ],
     fap_icon="icon.png",
     fap_category="Media",
-    fap_version="1.0",
     fap_author="TheProductAgency",
     fap_weburl="https://github.com/TheProductAgency/flipper-ai-composer",
+    fap_version="1.0",
     fap_description="A tiny neural network that writes new melodies on the Flipper",
 )

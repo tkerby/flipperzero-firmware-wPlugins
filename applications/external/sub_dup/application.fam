@@ -2,6 +2,7 @@ App(
     appid="sub_dup_finder",
     name="Sub Duplicate Finder",
     apptype=FlipperAppType.EXTERNAL,
+    targets=["f7"],
     sources=[
         "main.c",
         "logic.c",

@@ -17,4 +17,7 @@ View* splash_view_get_view(SplashView* instance);
  * immediately) once the splash is done being shown, either via timeout or
  * an early key press. May be called more than once if both race; the
  * caller should treat it idempotently. */
-void splash_view_set_done_callback(SplashView* instance, SplashDoneCallback callback, void* context);
+void splash_view_set_done_callback(
+    SplashView* instance,
+    SplashDoneCallback callback,
+    void* context);

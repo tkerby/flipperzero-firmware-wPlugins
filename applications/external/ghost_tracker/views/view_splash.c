@@ -70,7 +70,10 @@ static void splash_view_exit_callback(void* context) {
     furi_timer_stop(instance->timer);
 }
 
-void splash_view_set_done_callback(SplashView* instance, SplashDoneCallback callback, void* context) {
+void splash_view_set_done_callback(
+    SplashView* instance,
+    SplashDoneCallback callback,
+    void* context) {
     instance->done_callback = callback;
     instance->done_callback_context = context;
 }
@@ -81,8 +84,7 @@ SplashView* splash_view_alloc(void) {
     instance->done_sent = false;
     instance->done_callback = NULL;
     instance->done_callback_context = NULL;
-    instance->timer =
-        furi_timer_alloc(splash_timer_callback, FuriTimerTypeOnce, instance);
+    instance->timer = furi_timer_alloc(splash_timer_callback, FuriTimerTypeOnce, instance);
 
     view_set_context(instance->view, instance);
     view_set_orientation(instance->view, ViewOrientationVertical);

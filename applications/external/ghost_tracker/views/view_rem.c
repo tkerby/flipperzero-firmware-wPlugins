@@ -11,10 +11,10 @@
 #define REM_ADC_GPIO    (&gpio_ext_pc1)
 #define REM_ADC_CHANNEL FuriHalAdcChannel2
 
-#define REM_SENS_MIN      0
-#define REM_SENS_MAX      100
-#define REM_SENS_DEFAULT  50
-#define REM_SENS_STEP     10
+#define REM_SENS_MIN     0
+#define REM_SENS_MAX     100
+#define REM_SENS_DEFAULT 50
+#define REM_SENS_STEP    10
 
 /* Raw ADC-count peak-to-peak jitter needed to trigger an alert.
  * Tune these to your actual antenna length/environment.
@@ -156,12 +156,14 @@ static void rem_view_draw_callback(Canvas* canvas, void* model) {
         canvas_draw_str_aligned(canvas, w / 2, h / 2 + 6, AlignCenter, AlignCenter, "ALERT!");
     } else if(m->speaker_busy) {
         canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str_aligned(canvas, w / 2, h / 2 - 8, AlignCenter, AlignCenter, "STATUS: CLEAR");
+        canvas_draw_str_aligned(
+            canvas, w / 2, h / 2 - 8, AlignCenter, AlignCenter, "STATUS: CLEAR");
         canvas_draw_str_aligned(
             canvas, w / 2, h / 2 + 8, AlignCenter, AlignCenter, "(speaker busy)");
     } else {
         canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str_aligned(canvas, w / 2, h / 2 - 8, AlignCenter, AlignCenter, "STATUS: CLEAR");
+        canvas_draw_str_aligned(
+            canvas, w / 2, h / 2 - 8, AlignCenter, AlignCenter, "STATUS: CLEAR");
         canvas_set_font(canvas, FontSecondary);
         canvas_draw_str_aligned(
             canvas, w / 2, h / 2 + 10, AlignCenter, AlignCenter, "MONITORING...");
@@ -235,7 +237,8 @@ static void rem_view_enter_callback(void* context) {
 static void rem_view_exit_callback(void* context) {
     RemView* instance = context;
     instance->running = false;
-    furi_thread_join(instance->thread); /* blocks until the worker releases ADC+speaker and returns */
+    furi_thread_join(
+        instance->thread); /* blocks until the worker releases ADC+speaker and returns */
 }
 
 RemView* rem_view_alloc(void) {

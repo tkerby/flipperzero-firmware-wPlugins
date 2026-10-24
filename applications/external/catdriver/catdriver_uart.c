@@ -190,7 +190,10 @@ static void uart_parse_esp(void* context, char* line) {
                 ctx->recent_aps[ctx->recent_count] = ap;
                 ctx->recent_count++;
             } else {
-                memmove(&ctx->recent_aps[0], &ctx->recent_aps[1], (RECENT_APS_SIZE - 1) * sizeof(AccessPoint));
+                memmove(
+                    &ctx->recent_aps[0],
+                    &ctx->recent_aps[1],
+                    (RECENT_APS_SIZE - 1) * sizeof(AccessPoint));
                 ctx->recent_aps[RECENT_APS_SIZE - 1] = ap;
             }
         }

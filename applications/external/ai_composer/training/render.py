@@ -1,11 +1,20 @@
 """Render melodies as square-wave WAV files, close to the Flipper's piezo sound."""
+
 import math
 import struct
 import wave
 
 RATE = 22050
-TEMPO = {"chiptune": 150, "blues": 96, "classical": 100, "folk": 120, "game": 132,
-         "phonk": 136, "hiphop": 90, "jazz": 140}
+TEMPO = {
+    "chiptune": 150,
+    "blues": 96,
+    "classical": 100,
+    "folk": 120,
+    "game": 132,
+    "phonk": 136,
+    "hiphop": 90,
+    "jazz": 140,
+}
 TONIC_MIDI = 72  # C5, the range where the Flipper speaker sounds best
 
 

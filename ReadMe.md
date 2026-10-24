@@ -301,6 +301,12 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [SigRoam Wardriving v0.8 (By pingequalab)](https://github.com/pingequalab/sigroam-wardriving) `Req: ESP32`
 - Updated: [Hotspot Arcade v1.10.1 (By tarikbc)](https://github.com/tarikbc/hotspot-arcade) `Req: ESP32`
 - Sub-GHz: [Nice O-Code now counts like a real remote - the field on air is a scrambled press count, so the old +1 jumped a random distance and the gate stopped opening after a few presses. `Cnt` is the plain count now wherever it is shown or typed. Plain Nice One and Nice FloR-S are untouched (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/6dcf8b822b2cfea6ad790d91aec4a1e39860c18e)
+- Added: [AI Composer v1.0 (By TheProductAgency)](https://github.com/TheProductAgency/flipper-ai-composer)
+- Added: [WMBus Decoder v1.0 (By maresmar)](https://github.com/maresmar/wmbus-decoder)
+- Added: [Ghost Tracker v1.0 (By Zinetick)](https://github.com/Zinetick/ghost_tracker)
+- Added: [Thermometer v0.2.1 (By niki-timofe)](https://github.com/niki-timofe/flipperzero-app-onewire)
+- Added: [CatDriver v1.0 (By EVL87)](https://github.com/EVL87/catwardrive) `Req: ESP32`
+- Added: [Wifi Radio v1.0 (By thecoolguy2001)](https://github.com/thecoolguy2001/flipper-wifi-radio) `Req: ESP32`
 
 <a name="release"></a>
 
@@ -610,6 +616,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [AC Fujitsu General Remote v1.0 (By j-stud-res)](https://github.com/j-stud-res/flipper-ac-fujitsu-general-remote)
 - [Access Audit v1.13 (By matthewkayne)](https://github.com/matthewkayne/flipper-access-audit)
 - [Agentic Remote USB/BT v0.28 (By Wet-wr-Labs)](https://github.com/Wet-wr-Labs/claupper)
+- [AI Composer v1.0 (By TheProductAgency)](https://github.com/TheProductAgency/flipper-ai-composer)
 - [Air Level v1.0 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/vgm/air_level) `Req: Video Game Module By Flipper Devices`
 - [Air Stats v1.0 (By thevan4)](https://github.com/thevan4/flipper-air-stats) Req: [See App Readme For Supported Modules](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/applications/external/air_stats/README.md)
 - [Alcohol Calc v1.0 (By vtlklr)](https://github.com/vtlklr/alcohol_calc)
@@ -680,6 +687,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [CANBUS v1.1.6.2 (By ElectronicCats)](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) `Req: CANBUS By ElectronicCats`
 - [Canon Intervalometer v1.0 (By TravisCG)](https://github.com/TravisCG/canonivm)
 - [Carrier AC v1.0 (By xMasterX)](https://github.com/xMasterX/flipper_ac)
+- [CatDriver v1.0 (By EVL87)](https://github.com/EVL87/catwardrive) `Req: ESP32`
 - [CCID Emu v1.0 (By kidbomb)](https://github.com/kidbomb/flipper-ccid-app)
 - [CCID Emulator v1.1 (By barkandbite)](https://github.com/barkandbite/flipper_suite)
 - [Cerberus v1.1 (By at0m-b0mb)](https://github.com/at0m-b0mb/flipper-cerberus)
@@ -836,6 +844,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Gemini IA v1.1 (By d4rks1d33 & jamisonderek)](https://github.com/d4rks1d33/Gemini-Flipper)
 - [Genie Recorder v3.2 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/subghz/apps/genie-recorder)
 - [Ghost ESP v1.8.3 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
+- [Ghost Tracker v1.0 (By Zinetick)](https://github.com/Zinetick/ghost_tracker)
 - [GhostBook v0.6 (By digitard)](https://github.com/digitard/ghostbook)
 - [GhostTag v2.0 (By at0m-b0mb)](https://github.com/at0m-b0mb/GhostTag-FlipperZero) `Req: ESP32`
 - [Gitphin v1.2 (By Adhamura)](https://github.com/Adhamura/gitphin)
@@ -1188,6 +1197,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Text Viewer v1.7 (By WillyJL)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/ae4fc4a54febccb44b010c4025a99c2edef9a7f0)
 - [The C Prog. Language v0.2 (By armixz)](https://github.com/armixz/Flipper-Zero-The-C-Programming-Language)
 - [Theme Manager v1.6 (By Hoasker)](https://github.com/Hoasker/flipper-theme-manager)
+- [Thermometer v0.2.1 (By niki-timofe)](https://github.com/niki-timofe/flipperzero-app-onewire)
 - [Time Dilation Calculator v1.0 (By ejfox)](https://github.com/ejfox/flipper-space-calculators)
 - [Time Tracker v1.0.3 (By MassivDash)](https://github.com/MassivDash/flipper-tracker)
 - [Timed Remote v0.1 (By anders-dc)](https://github.com/anders-dc/timed-remote)
@@ -1251,10 +1261,12 @@ This software is for experimental purposes only and is not meant for any illegal
 - [WiFi (Marauder) v0.7.12 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-firmware-with-wifi-marauder-companion) `Req: ESP32` with [ESP32 MARAUDER Firmware](https://github.com/justcallmekoko/ESP32Marauder/releases/latest)
 - [Wifi Internet Watch v1.2 (By DruzhininPavel)](https://github.com/DruzhininPavel/wifi-internet-watch-flipper) `Req: ESP32`
 - [Wifi Mapping (By carvilsi)](https://github.com/carvilsi/flipper0-wifi-map/tree/main) `Req: ESP32`
+- [Wifi Radio v1.0 (By thecoolguy2001)](https://github.com/thecoolguy2001/flipper-wifi-radio) `Req: ESP32`
 - [Wii EC Analyzer v1.1 (By csBlueChip)](https://github.com/csBlueChip/FlipperZero_WiiEC)
 - [WikiFlip v1.3 (By RogerF5-Security)](https://github.com/RogerF5-Security/WikiFlip)
 - [Wire Tester v1.1 (By unixispower)](https://gitlab.com/unixispower/flipper-wire-tester)
 - [wM-Buster v1.1.1 (By i12bp8)](https://github.com/i12bp8/wmbuster)
+- [WMBus Decoder v1.0 (By maresmar)](https://github.com/maresmar/wmbus-decoder)
 - [WoL Flipper v1.1 (By keetsta)](https://github.com/keetsta/wol-flipper) `Req: ESP32`
 - [WS2812B LED Tester v1.9 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/gpio/ws2812b_tester)
 - [Xbox Post Code Reader v0.14 (By coolshrimp)](https://github.com/coolshrimp/flipperzero-xbox-post-code-reader)

@@ -79,7 +79,8 @@ static bool menu_view_input_callback(InputEvent* event, void* context) {
 
     if(event->key == InputKeyOk) {
         int index;
-        with_view_model(instance->view, MenuViewModel * model, { index = model->selected_index; }, false);
+        with_view_model(
+            instance->view, MenuViewModel * model, { index = model->selected_index; }, false);
         if(instance->select_callback) {
             instance->select_callback(instance->select_callback_context, (uint32_t)index);
         }

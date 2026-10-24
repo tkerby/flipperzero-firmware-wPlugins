@@ -2,6 +2,7 @@ App(
     appid="subghz_scheduler",
     name="Sub-GHz Scheduler",
     apptype=FlipperAppType.EXTERNAL,
+    targets=["f7"],
     entry_point="scheduler_app",
     stack_size=3 * 1024,
     fap_icon_assets="icons",

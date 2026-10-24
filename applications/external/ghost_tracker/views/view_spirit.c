@@ -137,7 +137,8 @@ static void spirit_view_draw_callback(Canvas* canvas, void* model) {
     canvas_draw_str_aligned(canvas, w / 2, 11, AlignCenter, AlignTop, "RF SWEEP");
 
     char freq_buf[16];
-    snprintf(freq_buf, sizeof(freq_buf), "%lu.%02lu", m->freq_hz / 1000000, (m->freq_hz / 10000) % 100);
+    snprintf(
+        freq_buf, sizeof(freq_buf), "%lu.%02lu", m->freq_hz / 1000000, (m->freq_hz / 10000) % 100);
     canvas_set_font(canvas, FontPrimary);
     canvas_draw_str_aligned(canvas, w / 2, h / 2 - 14, AlignCenter, AlignCenter, freq_buf);
     canvas_set_font(canvas, FontSecondary);
@@ -227,7 +228,8 @@ static void spirit_view_enter_callback(void* context) {
 static void spirit_view_exit_callback(void* context) {
     SpiritView* instance = context;
     instance->running = false;
-    furi_thread_join(instance->thread); /* blocks until the worker releases everything and returns */
+    furi_thread_join(
+        instance->thread); /* blocks until the worker releases everything and returns */
 }
 
 SpiritView* spirit_view_alloc(void) {

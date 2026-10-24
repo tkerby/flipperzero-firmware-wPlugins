@@ -173,21 +173,23 @@ static void input_callback(InputEvent* input_event, void* ctx) {
     furi_message_queue_put(queue, &event, FuriWaitForever);
 }
 
-static const uint8_t icon_all_bits[] = {
-    0x04, 0x08, 0x0c, 0x0c, 0x18, 0x06, 0x12, 0x12, 0x24, 0x09, 0xc4, 0x08, 0xc0, 0x00, 0xc0, 0x00, 0xc4, 0x08, 0x24, 0x09, 0x12, 0x12, 0x18, 0x06, 0x0c, 0x0c, 0x04, 0x08
-};
+static const uint8_t icon_all_bits[] = {0x04, 0x08, 0x0c, 0x0c, 0x18, 0x06, 0x12, 0x12, 0x24, 0x09,
+                                        0xc4, 0x08, 0xc0, 0x00, 0xc0, 0x00, 0xc4, 0x08, 0x24, 0x09,
+                                        0x12, 0x12, 0x18, 0x06, 0x0c, 0x0c, 0x04, 0x08};
 
-static const uint8_t icon_wifi_bits[] = {
-    0x00, 0x00, 0xf8, 0x07, 0xfc, 0x0f, 0x06, 0x18, 0xe0, 0x01, 0xf0, 0x03, 0x18, 0x06, 0x00, 0x00, 0xc0, 0x00, 0xe0, 0x01, 0xe0, 0x01, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00
-};
+static const uint8_t icon_wifi_bits[] = {0x00, 0x00, 0xf8, 0x07, 0xfc, 0x0f, 0x06,
+                                         0x18, 0xe0, 0x01, 0xf0, 0x03, 0x18, 0x06,
+                                         0x00, 0x00, 0xc0, 0x00, 0xe0, 0x01, 0xe0,
+                                         0x01, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-static const uint8_t icon_ble_bits[] = {
-    0x60, 0x00, 0xe0, 0x00, 0xe0, 0x01, 0x62, 0x03, 0x64, 0x06, 0x68, 0x06, 0x70, 0x03, 0x70, 0x03, 0x68, 0x06, 0x64, 0x06, 0x62, 0x03, 0xe0, 0x01, 0xe0, 0x00, 0x60, 0x00
-};
+static const uint8_t icon_ble_bits[] = {0x60, 0x00, 0xe0, 0x00, 0xe0, 0x01, 0x62, 0x03, 0x64, 0x06,
+                                        0x68, 0x06, 0x70, 0x03, 0x70, 0x03, 0x68, 0x06, 0x64, 0x06,
+                                        0x62, 0x03, 0xe0, 0x01, 0xe0, 0x00, 0x60, 0x00};
 
-static const uint8_t icon_gear_bits[] = {
-    0xe0, 0x01, 0xf0, 0x03, 0xe4, 0x09, 0xcc, 0x0c, 0xfe, 0x1f, 0x7e, 0x1e, 0x9e, 0x1e, 0x5e, 0x1e, 0x9e, 0x1f, 0xfe, 0x1f, 0xcc, 0x0c, 0xe4, 0x09, 0xf0, 0x03, 0xe0, 0x01
-};
+static const uint8_t icon_gear_bits[] = {0xe0, 0x01, 0xf0, 0x03, 0xe4, 0x09, 0xcc,
+                                         0x0c, 0xfe, 0x1f, 0x7e, 0x1e, 0x9e, 0x1e,
+                                         0x5e, 0x1e, 0x9e, 0x1f, 0xfe, 0x1f, 0xcc,
+                                         0x0c, 0xe4, 0x09, 0xf0, 0x03, 0xe0, 0x01};
 
 static void draw_menu_screen(Canvas* canvas, Context* ctx) {
     canvas_set_font(canvas, FontPrimary);
@@ -242,7 +244,8 @@ static void draw_menu_screen(Canvas* canvas, Context* ctx) {
         canvas_set_color(canvas, ColorBlack);
         canvas_draw_rframe(canvas, left_x, card_y, card_w, card_h, 2);
     }
-    canvas_draw_xbm(canvas, left_x + (card_w - 14) / 2, card_y + 2, 14, 14, card_info[left_card_idx].icon_bits);
+    canvas_draw_xbm(
+        canvas, left_x + (card_w - 14) / 2, card_y + 2, 14, 14, card_info[left_card_idx].icon_bits);
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str_aligned(
         canvas,
@@ -250,7 +253,8 @@ static void draw_menu_screen(Canvas* canvas, Context* ctx) {
         card_y + card_h - 2,
         AlignCenter,
         AlignBottom,
-        (ctx->language == LangES) ? card_info[left_card_idx].label_es : card_info[left_card_idx].label_en);
+        (ctx->language == LangES) ? card_info[left_card_idx].label_es :
+                                    card_info[left_card_idx].label_en);
     canvas_set_color(canvas, ColorBlack);
 
     // Draw Right Card at X=67
@@ -264,7 +268,13 @@ static void draw_menu_screen(Canvas* canvas, Context* ctx) {
         canvas_set_color(canvas, ColorBlack);
         canvas_draw_rframe(canvas, right_x, card_y, card_w, card_h, 2);
     }
-    canvas_draw_xbm(canvas, right_x + (card_w - 14) / 2, card_y + 2, 14, 14, card_info[right_card_idx].icon_bits);
+    canvas_draw_xbm(
+        canvas,
+        right_x + (card_w - 14) / 2,
+        card_y + 2,
+        14,
+        14,
+        card_info[right_card_idx].icon_bits);
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str_aligned(
         canvas,
@@ -272,7 +282,8 @@ static void draw_menu_screen(Canvas* canvas, Context* ctx) {
         card_y + card_h - 2,
         AlignCenter,
         AlignBottom,
-        (ctx->language == LangES) ? card_info[right_card_idx].label_es : card_info[right_card_idx].label_en);
+        (ctx->language == LangES) ? card_info[right_card_idx].label_es :
+                                    card_info[right_card_idx].label_en);
     canvas_set_color(canvas, ColorBlack);
 
     // Draw About at bottom (centered)
@@ -310,19 +321,23 @@ static void draw_settings_screen(Canvas* canvas, Context* ctx) {
         canvas_set_color(canvas, ColorBlack);
         canvas_draw_rbox(canvas, en_x, en_y, en_w, en_h, 3);
         canvas_set_color(canvas, ColorWhite);
-        canvas_draw_str_aligned(canvas, en_x + en_w / 2, en_y + en_h / 2, AlignCenter, AlignCenter, "English");
+        canvas_draw_str_aligned(
+            canvas, en_x + en_w / 2, en_y + en_h / 2, AlignCenter, AlignCenter, "English");
 
         canvas_set_color(canvas, ColorBlack);
         canvas_draw_rframe(canvas, es_x, es_y, es_w, es_h, 3);
-        canvas_draw_str_aligned(canvas, es_x + es_w / 2, es_y + es_h / 2, AlignCenter, AlignCenter, "Espanol");
+        canvas_draw_str_aligned(
+            canvas, es_x + es_w / 2, es_y + es_h / 2, AlignCenter, AlignCenter, "Espanol");
     } else {
         canvas_set_color(canvas, ColorBlack);
         canvas_draw_rframe(canvas, en_x, en_y, en_w, en_h, 3);
-        canvas_draw_str_aligned(canvas, en_x + en_w / 2, en_y + en_h / 2, AlignCenter, AlignCenter, "English");
+        canvas_draw_str_aligned(
+            canvas, en_x + en_w / 2, en_y + en_h / 2, AlignCenter, AlignCenter, "English");
 
         canvas_draw_rbox(canvas, es_x, es_y, es_w, es_h, 3);
         canvas_set_color(canvas, ColorWhite);
-        canvas_draw_str_aligned(canvas, es_x + es_w / 2, es_y + es_h / 2, AlignCenter, AlignCenter, "Espanol");
+        canvas_draw_str_aligned(
+            canvas, es_x + es_w / 2, es_y + es_h / 2, AlignCenter, AlignCenter, "Espanol");
         canvas_set_color(canvas, ColorBlack);
     }
 
@@ -336,13 +351,11 @@ static void draw_about_screen(Canvas* canvas, Context* ctx) {
         canvas_draw_str_aligned(canvas, 64, 11, AlignCenter, AlignBottom, "CAT DRIVING");
 
         canvas_set_font(canvas, FontSecondary);
-        canvas_draw_str_aligned(canvas, 64, 22, AlignCenter, AlignBottom, "(wardrive ESP32 + GPS)");
+        canvas_draw_str_aligned(
+            canvas, 64, 22, AlignCenter, AlignBottom, "(wardrive ESP32 + GPS)");
         canvas_draw_str(canvas, 0, 34, "Hardware: ESP32 S3 + NEO 6M V2");
         canvas_draw_str(
-            canvas,
-            0,
-            46,
-            (ctx->language == LangES) ? "Desarrollador: EVL87" : "Developer: EVL87");
+            canvas, 0, 46, (ctx->language == LangES) ? "Desarrollador: EVL87" : "Developer: EVL87");
 
         elements_button_left(canvas, (ctx->language == LangES) ? "Menu" : "Menu");
         elements_button_right(canvas, ">");
@@ -374,10 +387,7 @@ static void draw_about_screen(Canvas* canvas, Context* ctx) {
         // Page 3: Credit to Sil333033
         canvas_set_font(canvas, FontPrimary);
         canvas_draw_str(
-            canvas,
-            0,
-            11,
-            (ctx->language == LangES) ? "Creditos [3/3]" : "Credits [3/3]");
+            canvas, 0, 11, (ctx->language == LangES) ? "Creditos [3/3]" : "Credits [3/3]");
 
         canvas_set_font(canvas, FontSecondary);
         canvas_draw_str(
@@ -428,10 +438,12 @@ static void draw_access_point(Canvas* canvas, Context* ctx) {
             display_auth = "OWE";
         }
         furi_string_printf(string, "Sec:%s", display_auth);
-        canvas_draw_str_aligned(canvas, 78, 35, AlignLeft, AlignBottom, furi_string_get_cstr(string));
+        canvas_draw_str_aligned(
+            canvas, 78, 35, AlignLeft, AlignBottom, furi_string_get_cstr(string));
 
         furi_string_printf(string, "CH:%d", ap.channel);
-        canvas_draw_str_aligned(canvas, 3, 47, AlignLeft, AlignBottom, furi_string_get_cstr(string));
+        canvas_draw_str_aligned(
+            canvas, 3, 47, AlignLeft, AlignBottom, furi_string_get_cstr(string));
     }
 
     furi_string_printf(string, "%d", ap.packetRxCount);
@@ -470,11 +482,7 @@ static void draw_scan_screen(Canvas* canvas, Context* ctx) {
     canvas_set_font(canvas, FontSecondary);
 
     // Only %d/%d at top left (no mode label to prevent collision with BSSID)
-    furi_string_printf(
-        string,
-        "%d/%d",
-        ctx->recent_index + 1,
-        ctx->recent_count);
+    furi_string_printf(string, "%d/%d", ctx->recent_index + 1, ctx->recent_count);
 
     canvas_draw_str_aligned(canvas, 3, 12, AlignLeft, AlignBottom, furi_string_get_cstr(string));
 
@@ -497,9 +505,7 @@ static void draw_gps_screen(Canvas* canvas, Context* ctx) {
         canvas_draw_str(canvas, 0, 10, furi_string_get_cstr(string));
 
         furi_string_printf(
-            string,
-            "%f",
-            isnan(ctx->gps_data.longitude) ? 0 : (double)ctx->gps_data.longitude);
+            string, "%f", isnan(ctx->gps_data.longitude) ? 0 : (double)ctx->gps_data.longitude);
         canvas_draw_str(canvas, 0, 20, furi_string_get_cstr(string));
 
         furi_string_printf(string, "%d sats", ctx->gps_data.satelites);
