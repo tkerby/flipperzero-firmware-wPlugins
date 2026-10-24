@@ -490,8 +490,6 @@ static void join_draw(SigRoamApp* app) {
     uint8_t i;
     uint8_t target;
     uint32_t sig;
-    const char* header;
-    bool took_header;
 
     if(app == NULL || app->var_list == NULL || s_phase == PhPass) {
         return;
@@ -519,17 +517,10 @@ static void join_draw(SigRoamApp* app) {
         }
     }
     join_compose();
-    header = "Wi-Fi";
-    took_header = false;
     s_menu_n = 0u;
     variable_item_list_reset(list);
     for(i = 0u; i < s_line_n; i++) {
         if(s_line_kind[i] == (uint8_t)SrJoinRowInfo && strcmp(s_line_text[i], "Wi-Fi") == 0) {
-            continue;
-        }
-        if(s_line_kind[i] == (uint8_t)SrJoinRowInfo && !took_header) {
-            header = s_line_text[i];
-            took_header = true;
             continue;
         }
         if(s_menu_n >= (uint8_t)JOIN_ROWS) {
@@ -541,10 +532,8 @@ static void join_draw(SigRoamApp* app) {
     if(s_menu_n == 0u) {
         s_menu_line[0] = 0u;
         s_menu_n = 1u;
-        variable_item_list_set_header(list, "Wi-Fi");
-        variable_item_list_add(list, header, 1u, NULL, app);
+        variable_item_list_add(list, "Wi-Fi", 1u, NULL, app);
     } else {
-        variable_item_list_set_header(list, header);
         for(i = 0u; i < s_menu_n; i++) {
             uint8_t line = s_menu_line[i];
             VariableItem* item;
