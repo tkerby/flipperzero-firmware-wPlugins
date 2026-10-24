@@ -6,6 +6,12 @@ All notable changes to Hotspot Arcade are documented here. The format is based o
 
 ## [Unreleased]
 
+### Fixed
+
+- **Battleship firing boards render after both players place their ships.** The
+  turn-label element no longer shadows the translation function, which stopped
+  both boards from rendering (#34). Adds a browser regression for both players.
+
 ## [1.10.0] - 2026-09-10
 
 ### Added
