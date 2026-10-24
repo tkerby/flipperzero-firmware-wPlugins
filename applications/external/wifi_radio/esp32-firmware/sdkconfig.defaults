@@ -1,0 +1,102 @@
+CONFIG_IDF_TARGET="esp32s2"
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
+CONFIG_FREERTOS_HZ=1000
+CONFIG_ESP_WIFI_SOFTAP_SUPPORT=y
+CONFIG_LWIP_MAX_SOCKETS=16
+CONFIG_HTTPD_MAX_REQ_HDR_LEN=1024
+
+# Console on the S2's native USB, not UART0.
+#
+# UART0 is the only port the devboard brings out to the Flipper's header, so it
+# has to belong entirely to the link — a log line emitted mid-frame corrupts
+# that frame. Moving the console to USB also means the board enumerates on a
+# computer, so it can be monitored like any other dev board instead of being a
+# silent brick. With no USB host attached the ROM driver's FIFO fill returns 0
+# and the write is rolled back, so logging never blocks on the Flipper.
+# Console OFF. See "The app's USB console is the fault" at the end of this file.
+CONFIG_ESP_CONSOLE_NONE=y
+
+# PSRAM. The official devboard is an ESP32-S2-WROVER, which carries 2 MB of
+# external RAM that this build was ignoring entirely -- leaving 27 KB of free
+# internal heap at idle, a 9.7 KB largest block, and a Wi-Fi driver too starved
+# to transmit at more than ~1.5 KB/s. The 64 KB audio ring moves out here and
+# the internal heap goes back to the network stack.
+#
+# IGNORE_NOTFOUND keeps a module WITHOUT PSRAM booting instead of panicking, so
+# this cannot turn a working board into a dead one. Note it also disables
+# SPIRAM_TRY_ALLOCATE_WIFI_LWIP, so the Wi-Fi buffers stay internal either way;
+# the win here is the internal RAM we stop occupying, not where Wi-Fi lands.
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_USE_MALLOC=y
+CONFIG_SPIRAM_IGNORE_NOTFOUND=y
+
+# Skip the boot-time PSRAM test, and back the brownout detector off its most
+# sensitive setting. Both are about USB, not about memory.
+#
+# Enabling PSRAM made the board's USB unreliable: it would enumerate as a device
+# with zero interfaces, or not appear at all, and flashing became a coin flip.
+# Two independent causes, both introduced by PSRAM:
+#
+#  1. MEMTEST walks all 2 MB on every boot, before app_main and therefore before
+#     the USB console exists. A host that starts enumerating on power-up can give
+#     up before the chip is ready to answer.
+# MEMTEST buys nothing on hardware already known good, and the 64 KB ring keeps
+# its external home either way.
+#
+# The brownout level is left at the IDF default of 7 ON PURPOSE. The numbering is
+# INVERTED from what it looks like: 7 is 2.51 V and 2 is 3.27 V, so a HIGHER
+# level is a LOWER threshold and therefore LESS likely to trip. Moving it to 4
+# (2.92 V) to "make it less sensitive" did the opposite -- with PSRAM's current
+# draw on a USB-only rail the chip reset constantly, and a reset mid-enumeration
+# is what leaves the board's USB dead. Do not lower this number.
+CONFIG_SPIRAM_MEMTEST=n
+
+# NOTHING may be written to the USB CDC endpoint, ever.
+#
+# The console lives on USB CDC, and log writes are the ONLY thing this firmware
+# ever hands to the USB peripheral -- audited: no USB or CDC API is called
+# anywhere in main/, and no code touches GPIO19/20 (the S2's D-/D+). So the log
+# is the whole exposure, and the board's behaviour tracks it exactly: freshly
+# reset it enumerated with 5 interfaces and a working port, then fell to
+# "interfaces: 0" within two minutes and never came back. An idle station was
+# printing a heartbeat every five seconds into an endpoint that the host had
+# enumerated but no process had opened, with nothing draining the TX queue.
+#
+# Throttling that drip was tried first and is not enough: less traffic into a
+# queue nobody reads still fills it. So the log is turned off outright, at every
+# level that can reach the endpoint -- app, bootloader, and the ROM's own printf.
+#
+# (An earlier version of this file kept ESP_CONSOLE_USB_CDC enabled to preserve
+# buttonless "--before usb_reset" flashing. That turned out to be the bug -- see
+# the end of this file -- and the ROM's own USB download mode flashes fine, so
+# the app does not need to present a USB device for us to reach the chip.)
+#
+# Diagnostics do not depend on this: /status carries the link counters and heap,
+# and the LED reports liveness.
+CONFIG_LOG_DEFAULT_LEVEL_NONE=y
+CONFIG_BOOTLOADER_LOG_LEVEL_NONE=y
+CONFIG_ESP_CONSOLE_USB_CDC_SUPPORT_ETS_PRINTF=n
+
+
+# The app's USB console is the fault
+#
+# Measured, not guessed. With the app running, the board was invisible to the
+# host: no port, no descriptor, and ZERO USB attach events in macOS's
+# IOUSBHostFamily log. Holding BOOT through power-on to reach ROM download mode
+# -- which runs none of our code -- enumerated immediately and perfectly:
+#
+#     /dev/cu.usbmodem01  VID:PID=303A:0002  SER=0
+#     esptool: MAC c0:4e:30:60:0f:94, stub flasher running, flash 4MB
+#
+# Same board, same cable, same port, same instant. So the USB hardware is fine
+# and the app is what breaks it. The board also reset ~3x on every USB plug-in
+# and never on Flipper power -- i.e. only when a host was present to enumerate
+# -- then settled once the host gave up retrying.
+#
+# Turning the log level off was not enough, because the console is still
+# INITIALISED even when nothing is ever written to it. This switches the console
+# off outright, so the app never touches the USB peripheral at all.
+#
+# Flashing does not depend on this: hold BOOT through power-on and the ROM
+# presents cu.usbmodem01 for esptool, or use ESP Flasher over the Flipper's
+# header. Logs are not lost either -- /status carries the counters over WiFi.

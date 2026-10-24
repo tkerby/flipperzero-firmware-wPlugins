@@ -1,0 +1,24 @@
+# ESP-IDF build output -- 136 MB of regenerable objects.
+esp32-firmware/build/
+sdkconfig.old
+
+# ufbt build output and the editor config it generates.
+dist/
+.vscode/
+.ufbt/
+
+# Test audio. Tracks live on the Flipper's SD card at /ext/music and are the
+# user's own files -- none of them belong in the repo or the catalog bundle.
+*.mp3
+*.wav
+*.m4a
+*.flac
+*.aac
+*.ogg
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
