@@ -1,0 +1,30 @@
+name: Auto-Close Pull Requests
+
+on:
+  pull_request_target:
+    types: [opened, reopened]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  close-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close PR and Leave Comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '👋 Thank you for your interest! This repository is configured to not accept Pull Requests or external code contributions.\n\nIf you have suggestions, feedback, questions, or comments, please join the **[Discussions](https://github.com/' + context.repo.owner + '/' + context.repo.repo + '/discussions)** or open an **[Issue](https://github.com/' + context.repo.owner + '/' + context.repo.repo + '/issues)**.'
+            });
+            await github.rest.pulls.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              state: 'closed'
+            });
