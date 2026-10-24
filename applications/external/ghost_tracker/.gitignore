@@ -1,0 +1,5 @@
+dist/
+.vscode/
+__pycache__/
+*.pyc
+.claude/settings.local.json
