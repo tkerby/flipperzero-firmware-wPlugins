@@ -56,5 +56,3 @@ void success_failure_view_set_params(
     const char* right_button_text,
     SuccessFailureButtonCallback right_callback,
     void* context);
-
-

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <furi.h>          // For FuriCore types
-#include <gui/canvas.h>    // For Canvas type
-#include <gui/elements.h>  // Should declare elements_go_back_button
-#include <gui/view.h>      // For View type
+#include <furi.h> // For FuriCore types
+#include <gui/canvas.h> // For Canvas type
+#include <gui/elements.h> // Should declare elements_go_back_button
+#include <gui/view.h> // For View type
 
 // Forward declaration of the ProgressView structure
 typedef struct ProgressView ProgressView;
@@ -60,4 +60,3 @@ void progress_view_reset(ProgressView* progress_view);
  * @param progress_view Pointer to the ProgressView.
  */
 void progress_view_set_force_stop(ProgressView* progress_view);
-

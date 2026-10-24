@@ -43,8 +43,7 @@ void payload_manager_set_primary_payload_path(PayloadManager* manager, const cha
  * @return True if primary payload phase is considered successful, false otherwise.
  */
 bool payload_manager_execute_primary_phase(
-    PayloadManager* manager, 
+    PayloadManager* manager,
     bool use_usb,
     void (*progress_view_set_status_callback)(void* ctx, const char* status),
-    void* progress_view_ctx
-); 
+    void* progress_view_ctx);

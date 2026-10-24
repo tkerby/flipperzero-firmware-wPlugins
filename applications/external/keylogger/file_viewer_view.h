@@ -1,9 +1,9 @@
 #pragma once
 
-#include <furi.h>          // For FuriCore types
-#include <gui/canvas.h>    // For Canvas type (used by elements)
-#include <gui/elements.h>  // For elements_go_back_button
-#include <gui/view.h>      // For View system
+#include <furi.h> // For FuriCore types
+#include <gui/canvas.h> // For Canvas type (used by elements)
+#include <gui/elements.h> // For elements_go_back_button
+#include <gui/view.h> // For View system
 
 // Forward declaration
 typedef struct FileViewerView FileViewerView;
@@ -40,7 +40,10 @@ void file_viewer_view_set_directory_path(FileViewerView* file_viewer_view, const
  * @param file_path The path to the file to read in chunks.
  * @param file_name The name of the file being displayed (for title or context).
  */
-void file_viewer_view_set_file_content(FileViewerView* file_viewer_view, const char* file_path, const char* file_name);
+void file_viewer_view_set_file_content(
+    FileViewerView* file_viewer_view,
+    const char* file_path,
+    const char* file_name);
 
 /**
  * Callback type for when a file is selected in the viewer (if in file listing mode).
@@ -54,6 +57,7 @@ typedef void (*FileViewerFileSelectedCallback)(void* context, const char* file_p
  * @param callback The callback function.
  * @param context Context to be passed to the callback.
  */
-void file_viewer_view_set_file_selected_callback(FileViewerView* file_viewer_view, FileViewerFileSelectedCallback callback, void* context);
-
-
+void file_viewer_view_set_file_selected_callback(
+    FileViewerView* file_viewer_view,
+    FileViewerFileSelectedCallback callback,
+    void* context);

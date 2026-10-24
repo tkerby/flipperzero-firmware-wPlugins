@@ -31,6 +31,7 @@ This software is for experimental purposes only and is not meant for any illegal
 
 - Last Synced/Checked OFW, changes in [commits](https://github.com/flipperdevices/flipperzero-firmware/commits/dev): `2026-10-24 13:30 EST`
 - Last Synced/Checked CFW, changes in [changelog](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/CHANGELOG.md): `2026-10-24 13:30 EST`
+- Added: [Keylogger v1.0 (By dagnazty)](https://github.com/dagnazty/Flipper_Keylogger)
 
 <a name="release"></a>
 
@@ -644,6 +645,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Kelvinator AC v1.0 (By xMasterX)](https://github.com/xMasterX/all-the-plugins/tree/213baa6e872d1db597a25d2c16e81406e9634440/non_catalog_apps/kelvinator_ac_remote)
 - [Key Copier v1.5 (By zinongli)](https://github.com/zinongli/KeyCopier)
 - [Key Wizard v1.3 (By vazgen3201)](https://github.com/vazgen3201/flipper-key-wizard)
+- [Keylogger v1.0 (By dagnazty)](https://github.com/dagnazty/Flipper_Keylogger)
 - [Kindle Click v0.4 (By zuyan9)](https://github.com/zuyan9/Flipper-Zero-Kindle-Click)
 - [KneeFlip Rehab v0.1 (By daryalok)](https://github.com/daryalok/KneeFlip-Rehab)
 - [Kota v0.2 (By cobanov)](https://github.com/cobanov/kota)

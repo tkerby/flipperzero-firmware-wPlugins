@@ -20,24 +20,32 @@ static bool setup_usb_hid_mode(PayloadManager* manager);
 static void restore_usb_mode(PayloadManager* manager);
 static uint16_t char_to_hid(char c);
 static bool read_line_from_file(File* file, char* buffer, size_t buffer_size);
-static bool execute_ducky_line(const char* line, void (*progress_callback)(void* ctx, const char* status), void* progress_ctx, int* default_delay_ms, const char** last_line);
-static bool execute_payload_file(const char* payload_path, void (*progress_view_set_status_callback)(void* ctx, const char* status), void* progress_view_ctx);
+static bool execute_ducky_line(
+    const char* line,
+    void (*progress_callback)(void* ctx, const char* status),
+    void* progress_ctx,
+    int* default_delay_ms,
+    const char** last_line);
+static bool execute_payload_file(
+    const char* payload_path,
+    void (*progress_view_set_status_callback)(void* ctx, const char* status),
+    void* progress_view_ctx);
 
 PayloadManager* payload_manager_alloc(KeyloggerApp* app_context) {
     PayloadManager* manager = malloc(sizeof(PayloadManager));
     if(!manager) {
         return NULL;
     }
-    
+
     manager->app = app_context;
     manager->primary_payload_path_str = furi_string_alloc();
     if(!manager->primary_payload_path_str) {
         free(manager);
         return NULL;
     }
-    
+
     manager->usb_if_prev = NULL;
-    
+
     return manager;
 }
 
@@ -45,12 +53,12 @@ void payload_manager_free(PayloadManager* manager) {
     if(!manager) {
         return;
     }
-    
+
     // Ensure USB mode is restored before freeing
     restore_usb_mode(manager);
-    
+
     if(manager->primary_payload_path_str) {
-    furi_string_free(manager->primary_payload_path_str);
+        furi_string_free(manager->primary_payload_path_str);
     }
     free(manager);
 }
@@ -69,7 +77,11 @@ void payload_manager_set_primary_payload_path(PayloadManager* manager, const cha
     FuriString* filename_str = furi_string_alloc();
     if(path && path[0] != '\0') {
         path_extract_filename(manager->primary_payload_path_str, filename_str, true);
-        FURI_LOG_I(TAG, "Primary payload set to: %s (full path: %s)", furi_string_get_cstr(filename_str), path);
+        FURI_LOG_I(
+            TAG,
+            "Primary payload set to: %s (full path: %s)",
+            furi_string_get_cstr(filename_str),
+            path);
     } else {
         FURI_LOG_I(TAG, "Primary payload cleared.");
     }
@@ -79,22 +91,22 @@ void payload_manager_set_primary_payload_path(PayloadManager* manager, const cha
 // Setup USB HID mode programmatically
 static bool setup_usb_hid_mode(PayloadManager* manager) {
     FURI_LOG_I(TAG, "Setting up USB HID mode...");
-    
+
     // Store current USB interface
     manager->usb_if_prev = (FuriHalUsbInterface*)furi_hal_usb_get_config();
-    
+
     // Set USB to HID mode
     furi_hal_usb_unlock();
     bool usb_set_result = furi_hal_usb_set_config(&usb_hid, NULL);
-    
+
     if(!usb_set_result) {
         FURI_LOG_E(TAG, "Failed to set USB HID mode");
         return false;
     }
-    
+
     // Wait for USB to be ready
     furi_delay_ms(1000);
-    
+
     FURI_LOG_I(TAG, "USB HID mode enabled successfully");
     return true;
 }
@@ -131,15 +143,19 @@ static uint16_t keyword_to_hid(const char* keyword) {
     if(strcmp(keyword, "PAGEUP") == 0) return HID_KEYBOARD_PAGE_UP;
     if(strcmp(keyword, "PAGEDOWN") == 0) return HID_KEYBOARD_PAGE_DOWN;
     if(strcmp(keyword, "UPARROW") == 0 || strcmp(keyword, "UP") == 0) return HID_KEYBOARD_UP_ARROW;
-    if(strcmp(keyword, "DOWNARROW") == 0 || strcmp(keyword, "DOWN") == 0) return HID_KEYBOARD_DOWN_ARROW;
-    if(strcmp(keyword, "LEFTARROW") == 0 || strcmp(keyword, "LEFT") == 0) return HID_KEYBOARD_LEFT_ARROW;
-    if(strcmp(keyword, "RIGHTARROW") == 0 || strcmp(keyword, "RIGHT") == 0) return HID_KEYBOARD_RIGHT_ARROW;
+    if(strcmp(keyword, "DOWNARROW") == 0 || strcmp(keyword, "DOWN") == 0)
+        return HID_KEYBOARD_DOWN_ARROW;
+    if(strcmp(keyword, "LEFTARROW") == 0 || strcmp(keyword, "LEFT") == 0)
+        return HID_KEYBOARD_LEFT_ARROW;
+    if(strcmp(keyword, "RIGHTARROW") == 0 || strcmp(keyword, "RIGHT") == 0)
+        return HID_KEYBOARD_RIGHT_ARROW;
     if(strcmp(keyword, "CAPSLOCK") == 0) return HID_KEYBOARD_CAPS_LOCK;
     if(strcmp(keyword, "NUMLOCK") == 0) return HID_KEYBOARD_LOCK_NUM_LOCK;
     if(strcmp(keyword, "SCROLLLOCK") == 0) return HID_KEYBOARD_LOCK_SCROLL_LOCK;
     if(strcmp(keyword, "PRINTSCREEN") == 0) return HID_KEYBOARD_PRINT_SCREEN;
     if(strcmp(keyword, "PAUSE") == 0 || strcmp(keyword, "BREAK") == 0) return HID_KEYBOARD_PAUSE;
-    if(strcmp(keyword, "MENU") == 0 || strcmp(keyword, "APP") == 0) return HID_KEYBOARD_APPLICATION;
+    if(strcmp(keyword, "MENU") == 0 || strcmp(keyword, "APP") == 0)
+        return HID_KEYBOARD_APPLICATION;
     if(strcmp(keyword, "F1") == 0) return HID_KEYBOARD_F1;
     if(strcmp(keyword, "F2") == 0) return HID_KEYBOARD_F2;
     if(strcmp(keyword, "F3") == 0) return HID_KEYBOARD_F3;
@@ -162,30 +178,30 @@ static bool read_line_from_file(File* file, char* buffer, size_t buffer_size) {
     if(!file || !buffer || buffer_size == 0) {
         return false;
     }
-    
+
     size_t pos = 0;
     uint8_t ch;
     bool found_line = false;
-    
+
     while(pos < buffer_size - 1) {
         uint16_t bytes_read = storage_file_read(file, &ch, 1);
         if(bytes_read != 1) {
             // End of file or error
             break;
         }
-        
+
         found_line = true; // We read at least one character from the file
-        
+
         if(ch == '\n') {
             // End of line
             break;
         }
-        
+
         if(ch != '\r') { // Skip carriage return
             buffer[pos++] = ch;
         }
     }
-    
+
     buffer[pos] = '\0';
     return found_line; // Return true if we read any character from file (including empty lines)
 }
@@ -212,7 +228,6 @@ static bool execute_ducky_line(
     void* progress_ctx,
     int* default_delay_ms,
     const char** last_line) {
-
     if(!line) return true;
 
     size_t len = strlen(line);
@@ -256,7 +271,8 @@ static bool execute_ducky_line(
         if(*last_line) {
             FURI_LOG_I(TAG, "REPEAT %d times: %s", count, *last_line);
             for(int i = 0; i < count; i++) {
-                execute_ducky_line(*last_line, progress_callback, progress_ctx, default_delay_ms, last_line);
+                execute_ducky_line(
+                    *last_line, progress_callback, progress_ctx, default_delay_ms, last_line);
                 if(*default_delay_ms > 0) furi_delay_ms(*default_delay_ms);
             }
         }
@@ -284,7 +300,8 @@ static bool execute_ducky_line(
     }
 
     // GUI / WINDOWS / SUPER — with any key argument
-    if(strncmp(line, "GUI", 3) == 0 || strncmp(line, "WINDOWS", 7) == 0 || strncmp(line, "SUPER", 5) == 0) {
+    if(strncmp(line, "GUI", 3) == 0 || strncmp(line, "WINDOWS", 7) == 0 ||
+       strncmp(line, "SUPER", 5) == 0) {
         const char* arg = strchr(line, ' ');
         furi_hal_hid_kb_release_all();
         furi_delay_ms(50);
@@ -357,33 +374,32 @@ static bool execute_ducky_line(
 static bool execute_payload_file(
     const char* payload_path,
     void (*progress_view_set_status_callback)(void* ctx, const char* status),
-    void* progress_view_ctx
-) {
+    void* progress_view_ctx) {
     if(!payload_path || strlen(payload_path) == 0) {
         FURI_LOG_E(TAG, "Empty payload path");
         return false;
     }
-    
+
     FURI_LOG_I(TAG, "Executing DuckyScript payload: %s", payload_path);
-    
+
     // Open and read the payload file
     Storage* storage = furi_record_open(RECORD_STORAGE);
     if(!storage) {
         FURI_LOG_E(TAG, "Failed to open storage");
         return false;
     }
-    
+
     File* file = storage_file_alloc(storage);
     if(!file) {
         FURI_LOG_E(TAG, "Failed to allocate file");
         furi_record_close(RECORD_STORAGE);
         return false;
     }
-    
+
     bool success = false;
     if(storage_file_open(file, payload_path, FSAM_READ, FSOM_OPEN_EXISTING)) {
         FURI_LOG_I(TAG, "Successfully opened payload file");
-        
+
         furi_hal_hid_kb_release_all();
 
         char line_buffer[256];
@@ -397,15 +413,19 @@ static bool execute_payload_file(
             line_count++;
             FURI_LOG_D(TAG, "Line %d: '%s'", line_count, line_buffer);
 
-            if(!execute_ducky_line(line_buffer, progress_view_set_status_callback, progress_view_ctx, &default_delay_ms, &last_line_ptr)) {
+            if(!execute_ducky_line(
+                   line_buffer,
+                   progress_view_set_status_callback,
+                   progress_view_ctx,
+                   &default_delay_ms,
+                   &last_line_ptr)) {
                 FURI_LOG_E(TAG, "Failed at line %d: %s", line_count, line_buffer);
                 success = false;
                 break;
             }
 
             // Store last line for REPEAT (skip REM/REPEAT/DEFAULT_DELAY)
-            if(strncmp(line_buffer, "REM", 3) != 0 &&
-               strncmp(line_buffer, "REPEAT", 6) != 0 &&
+            if(strncmp(line_buffer, "REM", 3) != 0 && strncmp(line_buffer, "REPEAT", 6) != 0 &&
                strncmp(line_buffer, "DEFAULT_DELAY", 13) != 0 &&
                strncmp(line_buffer, "DEFAULTDELAY", 12) != 0) {
                 strncpy(last_line_buffer, line_buffer, sizeof(last_line_buffer) - 1);
@@ -414,46 +434,48 @@ static bool execute_payload_file(
 
             if(default_delay_ms > 0) furi_delay_ms(default_delay_ms);
         }
-        
+
         FURI_LOG_I(TAG, "File reading completed. Total lines processed: %d", line_count);
-        
+
         // Release all keys when done
         furi_hal_hid_kb_release_all();
-        
+
         storage_file_close(file);
-        
+
         if(success) {
             FURI_LOG_I(TAG, "DuckyScript execution completed successfully");
             if(progress_view_set_status_callback) {
-                progress_view_set_status_callback(progress_view_ctx, "DuckyScript executed successfully");
+                progress_view_set_status_callback(
+                    progress_view_ctx, "DuckyScript executed successfully");
             }
         } else {
             FURI_LOG_E(TAG, "DuckyScript execution failed");
             if(progress_view_set_status_callback) {
-                progress_view_set_status_callback(progress_view_ctx, "DuckyScript execution failed");
+                progress_view_set_status_callback(
+                    progress_view_ctx, "DuckyScript execution failed");
             }
         }
     } else {
         FURI_LOG_E(TAG, "Failed to open payload file: %s", payload_path);
         if(progress_view_set_status_callback) {
-            progress_view_set_status_callback(progress_view_ctx, "Error: Could not open payload file");
+            progress_view_set_status_callback(
+                progress_view_ctx, "Error: Could not open payload file");
         }
     }
 
-    storage_file_free(file); 
+    storage_file_free(file);
     furi_record_close(RECORD_STORAGE);
 
     return success;
 }
 
 bool payload_manager_execute_primary_phase(
-    PayloadManager* manager, 
+    PayloadManager* manager,
     bool use_usb,
     void (*progress_view_set_status_callback)(void* ctx, const char* status),
-    void* progress_view_ctx
-) {
+    void* progress_view_ctx) {
     furi_assert(manager);
-    
+
     if(!use_usb) {
         FURI_LOG_W(TAG, "Bluetooth BadUSB not supported in this implementation");
         if(progress_view_set_status_callback) {
@@ -461,7 +483,7 @@ bool payload_manager_execute_primary_phase(
         }
         return false;
     }
-    
+
     if(furi_string_empty(manager->primary_payload_path_str)) {
         FURI_LOG_E(TAG, "No primary payload path set");
         if(progress_view_set_status_callback) {
@@ -474,7 +496,7 @@ bool payload_manager_execute_primary_phase(
     if(progress_view_set_status_callback) {
         progress_view_set_status_callback(progress_view_ctx, "Setting up USB HID mode...");
     }
-    
+
     if(!setup_usb_hid_mode(manager)) {
         FURI_LOG_E(TAG, "Failed to setup USB HID mode");
         if(progress_view_set_status_callback) {
@@ -486,11 +508,10 @@ bool payload_manager_execute_primary_phase(
     if(progress_view_set_status_callback) {
         progress_view_set_status_callback(progress_view_ctx, "Executing DuckyScript...");
     }
-    
+
     // Use the internal function to execute the payload
     return execute_payload_file(
         furi_string_get_cstr(manager->primary_payload_path_str),
         progress_view_set_status_callback,
-        progress_view_ctx
-    );
+        progress_view_ctx);
 }

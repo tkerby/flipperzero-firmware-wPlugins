@@ -6,7 +6,8 @@
 #include "progress_view.h" // For ProgressView type
 
 #define EXFIL_BUFFER_SIZE 2048 // Max size of exfiltrated data in one go
-#define DATA_TIMEOUT_MS 300000 // Timeout for no new data during exfil (5 minutes for LED transmission)
+#define DATA_TIMEOUT_MS \
+    300000 // Timeout for no new data during exfil (5 minutes for LED transmission)
 
 // Structure to hold exfiltration process state
 typedef struct {
@@ -47,8 +48,7 @@ bool keystroke_exfil_start_capture(
     const char* output_filename,
     void (*progress_view_set_status_callback)(void* cb_ctx, const char* status),
     void* progress_view_cb_context,
-    ProgressView* progress_view
-);
+    ProgressView* progress_view);
 
 /**
  * Get the target file path from the exfil context.
@@ -56,4 +56,3 @@ bool keystroke_exfil_start_capture(
  * @return Const char pointer to the target file path string.
  */
 const char* keystroke_exfil_get_target_path(KeystrokeExfilContext* context);
-

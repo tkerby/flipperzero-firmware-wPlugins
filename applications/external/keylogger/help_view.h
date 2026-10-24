@@ -1,9 +1,9 @@
 #pragma once
 
-#include <furi.h>          // For FuriCore types
-#include <gui/canvas.h>    // For Canvas type (used by elements)
-#include <gui/elements.h>  // For elements_go_back_button
-#include <gui/view.h>      // For View system, and view_is_active
+#include <furi.h> // For FuriCore types
+#include <gui/canvas.h> // For Canvas type (used by elements)
+#include <gui/elements.h> // For elements_go_back_button
+#include <gui/view.h> // For View system, and view_is_active
 
 // Forward declaration
 typedef struct HelpView HelpView;
@@ -34,4 +34,3 @@ View* help_view_get_view(HelpView* help_view);
  * @param text The help text to display.
  */
 void help_view_set_text(HelpView* help_view, const char* text);
-

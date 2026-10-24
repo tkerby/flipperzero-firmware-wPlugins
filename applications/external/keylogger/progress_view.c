@@ -27,28 +27,28 @@ typedef struct {
 // Draw callback for the progress view
 static void progress_view_draw_callback(Canvas* canvas, void* model) {
     ProgressViewModel* m = model;
-    
+
     canvas_clear(canvas);
     canvas_set_font(canvas, FontPrimary);
-    
+
     // Consistent header like other views
     canvas_draw_str_aligned(canvas, 64, 6, AlignCenter, AlignCenter, "Flipper Keylogger");
-    
+
     // Status subheader
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str_aligned(canvas, 64, 16, AlignCenter, AlignCenter, "Executing Payload...");
-    
+
     // Main content area with proper spacing
     canvas_set_font(canvas, FontSecondary);
     if(m->status_text) {
         // Split status text into lines and display with proper spacing
         const char* text = m->status_text;
         uint8_t y_offset = 28;
-        
+
         // Simple line splitting by looking for \n
         const char* line_start = text;
         const char* line_end = strchr(line_start, '\n');
-        
+
         while(line_start && *line_start) {
             if(line_end) {
                 // Extract line
@@ -57,7 +57,8 @@ static void progress_view_draw_callback(Canvas* canvas, void* model) {
                 if(line_length < 127) {
                     strncpy(line_buffer, line_start, line_length);
                     line_buffer[line_length] = '\0';
-                    canvas_draw_str_aligned(canvas, 64, y_offset, AlignCenter, AlignTop, line_buffer);
+                    canvas_draw_str_aligned(
+                        canvas, 64, y_offset, AlignCenter, AlignTop, line_buffer);
                 }
                 line_start = line_end + 1;
                 line_end = strchr(line_start, '\n');
@@ -72,15 +73,16 @@ static void progress_view_draw_callback(Canvas* canvas, void* model) {
     } else {
         canvas_draw_str_aligned(canvas, 64, 32, AlignCenter, AlignTop, "Processing...");
     }
-    
+
     // Simple progress animation in footer area
     uint32_t anim_frame = (furi_get_tick() - m->start_time) / 300 % 4;
     const char* anim_chars[] = {"|", "/", "-", "\\"};
     FuriString* anim_str = furi_string_alloc();
     furi_string_printf(anim_str, "Working %s", anim_chars[anim_frame]);
-    canvas_draw_str_aligned(canvas, 64, 58, AlignCenter, AlignBottom, furi_string_get_cstr(anim_str));
+    canvas_draw_str_aligned(
+        canvas, 64, 58, AlignCenter, AlignBottom, furi_string_get_cstr(anim_str));
     furi_string_free(anim_str);
-    
+
     // REMOVED: Back button hint during execution to prevent user confusion
     // BadUSB operations cannot be safely interrupted
 }
@@ -89,7 +91,7 @@ static void progress_view_draw_callback(Canvas* canvas, void* model) {
 static bool progress_view_input_callback(InputEvent* event, void* context) {
     UNUSED(event);
     UNUSED(context);
-    
+
     // CRITICAL: Block ALL input during execution to prevent interruption
     // BadUSB operations must complete without interruption
     // The navigation callback in the main app handles this, but we also
@@ -102,31 +104,31 @@ ProgressView* progress_view_alloc() {
     if(!progress_view) {
         return NULL;
     }
-    
+
     progress_view->view = view_alloc();
     if(!progress_view->view) {
         free(progress_view);
         return NULL;
     }
-    
-    view_set_context(progress_view->view, progress_view); 
+
+    view_set_context(progress_view->view, progress_view);
     view_allocate_model(progress_view->view, ViewModelTypeLocking, sizeof(ProgressViewModel));
     view_set_draw_callback(progress_view->view, progress_view_draw_callback);
     view_set_input_callback(progress_view->view, progress_view_input_callback);
-    
+
     ProgressViewModel* model = view_get_model(progress_view->view);
     if(!model) {
         view_free(progress_view->view);
         free(progress_view);
         return NULL;
     }
-    
+
     model->status_text = NULL;
     model->is_running = true;
     model->start_time = furi_get_tick();
     model->bytes_transferred = 0;
-    view_commit_model(progress_view->view, false); 
-    
+    view_commit_model(progress_view->view, false);
+
     return progress_view;
 }
 
@@ -194,4 +196,3 @@ void progress_view_set_force_stop(ProgressView* progress_view) {
     model->is_running = false;
     view_commit_model(progress_view->view, true);
 }
-
