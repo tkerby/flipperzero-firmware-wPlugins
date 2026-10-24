@@ -139,6 +139,8 @@ bool sr_bt_line_split_invalid(const char* line, size_t len);
 
 bool sr_bt_split_is_preset(uint32_t kb);
 const char* sr_bt_split_label(unsigned i);
+/* Info row under the sizes. kept is true after the board has sent Band:. */
+const char* sr_bt_split_reboot_label(bool kept);
 uint32_t sr_bt_split_kb(unsigned i);
 
 /* Cursor after the Split menu is rebuilt: the active preset, the `Now:` row

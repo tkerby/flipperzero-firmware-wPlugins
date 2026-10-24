@@ -227,7 +227,7 @@ int test_dialect_run(void) {
     CHECK(g_model.illegal_trans == illegal0);
 
     /* 2026-10-20 lite Qual previous sample: +8 → 3592. */
-    CHECK(sizeof(SrModel) == 3592);
+    CHECK(sizeof(SrModel) == 3608);
 
     return sr_test_failures;
 }

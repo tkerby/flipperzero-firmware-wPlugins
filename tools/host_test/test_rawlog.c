@@ -378,7 +378,7 @@ int test_rawlog_run(void) {
      * 2026-09-16 T6.5 half B: +SrRadioInfo(2)+pad(2)+radio_rev(4) = +8 → 3416.
      * 2026-09-18 SHOW_INFO clear: +wifi_stop_rev(4)+pad(4) = +8 → 3424.
      * 2026-10-20 lite Qual previous sample: +8 → 3592. */
-    CHECK(sizeof(SrModel) == 3592);
+    CHECK(sizeof(SrModel) == 3608);
 
     empty = test_empty_render();
     lens = test_lens();

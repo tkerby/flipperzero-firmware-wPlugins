@@ -366,7 +366,11 @@ static void tools_show_split(SigRoamApp* app) {
     submenu_add_item(
         app->submenu, "Applies to next scan", (uint32_t)ItemApply, tools_item, app);
     submenu_add_item(
-        app->submenu, "Board reboot: 1024 KB", (uint32_t)ItemReboot, tools_item, app);
+        app->submenu,
+        sr_bt_split_reboot_label(app->model.band_rev != 0u),
+        (uint32_t)ItemReboot,
+        tools_item,
+        app);
     {
         int cur = sr_bt_split_cursor(s_split_known, s_split_kb, s_split_pick);
 

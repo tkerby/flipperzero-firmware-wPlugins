@@ -827,6 +827,10 @@ const char* sr_bt_split_label(unsigned i) {
     return k_split_label[i];
 }
 
+const char* sr_bt_split_reboot_label(bool kept) {
+    return kept ? "Kept after reboot" : "Board reboot: 1024 KB";
+}
+
 uint32_t sr_bt_split_kb(unsigned i) {
     if(i >= 6u) {
         return 0u;

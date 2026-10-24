@@ -276,7 +276,7 @@ jobs:
             echo ""
             echo "If the Flipper says the app does not match its firmware, use the other file."
             echo ""
-            echo "Scout Lite board tools, start recovery, and the upload status line need [Scout Lite Firmware v1.0.0](https://github.com/pingequalab/ESP32Marauder/releases/tag/scout-lite-v1.0.0) or later. Other Marauder builds keep the generic pages."
+            echo "Scout Lite board tools, start recovery, and the upload status line need [Scout Lite Firmware v1.0.0](https://github.com/pingequalab/ESP32Marauder/releases/tag/scout-lite-v1.0.0) or later. The 2.4 GHz and 5 GHz counts, and a split size kept after reboot, need [v1.1.0](https://github.com/pingequalab/ESP32Marauder/releases/tag/scout-lite-v1.1.0). Other Marauder builds keep the generic pages."
             echo ""
             if [ -f CHANGELOG.md ]; then
               echo "See [CHANGELOG.md](CHANGELOG.md) for the full change list."

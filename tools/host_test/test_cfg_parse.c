@@ -59,6 +59,7 @@ static void test_cfg_lines(void) {
 
     CHECK((unsigned)SrEventRank == 13u);
     CHECK((unsigned)SrEventCfg == 14u);
+    CHECK((unsigned)SrEventBand == 15u);
     CHECK(sizeof(SrEvent) == 240u);
 
     memset(ssid32, 'A', 32u);
@@ -218,11 +219,51 @@ static void test_pending_gate(void) {
         false);
 }
 
+static void test_band_line(void) {
+    SrParser parser;
+    SrEvent ev;
+    SrModel m;
+    const char* ok = "Band: w24=14 w5=26";
+    const char* zero = "Band: w24=0 w5=0";
+
+    memset(&parser, 0, sizeof(parser));
+    CHECK(feed(&parser, ok, strlen(ok), &ev) == SrParseOk);
+    CHECK(ev.kind == SrEventBand);
+    CHECK(ev.u.band.w24 == 14u);
+    CHECK(ev.u.band.w5 == 26u);
+
+    memset(&parser, 0, sizeof(parser));
+    CHECK(feed(&parser, zero, strlen(zero), &ev) == SrParseOk);
+    CHECK(ev.u.band.w24 == 0u);
+    CHECK(ev.u.band.w5 == 0u);
+
+    memset(&parser, 0, sizeof(parser));
+    CHECK(feed(&parser, "Band: w24=1", strlen("Band: w24=1"), &ev) == SrParseUnknown);
+    CHECK(ev.kind == SrEventUnknown);
+    CHECK(feed(&parser, "Band: w24=1 w5=2 ", strlen("Band: w24=1 w5=2 "), &ev) == SrParseUnknown);
+    CHECK(feed(&parser, "Band: w24=1 w5=", strlen("Band: w24=1 w5="), &ev) == SrParseUnknown);
+
+    sr_model_init(&m, &g_bloom, NULL);
+    CHECK(m.band_rev == 0u);
+    memset(&ev, 0, sizeof(ev));
+    ev.kind = SrEventBand;
+    ev.u.band.w24 = 4u;
+    ev.u.band.w5 = 11u;
+    CHECK(sr_model_apply(&m, &ev, 20u) == true);
+    CHECK(m.band_rev == 1u);
+    CHECK(m.band.w24 == 4u);
+    CHECK(m.band.w5 == 11u);
+    sr_model_reset_session(&m, false);
+    CHECK(m.band_rev == 1u);
+    CHECK(m.band.w24 == 4u);
+}
+
 int test_cfg_parse_run(void) {
     sr_test_failures = 0;
     test_prefixes();
     test_cfg_lines();
     test_cfg_line();
     test_pending_gate();
+    test_band_line();
     return sr_test_failures;
 }

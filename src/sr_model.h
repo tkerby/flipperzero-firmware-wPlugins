@@ -113,6 +113,8 @@ typedef struct {
      * Sits in the pad after cfg. Cleared on reset_session. */
     bool band_partial;
     uint32_t cfg_rev;      /* Incremented on each SrEventCfg; 0 = never seen */
+    SrBandInfo band;       /* Last strict Band: snapshot; board counts, not local ap_24 */
+    uint32_t band_rev;     /* Incremented on each SrEventBand; 0 = never seen */
 
     char last_unknown[SR_RAW_LINE_MAX + 1];
     size_t last_unknown_len;

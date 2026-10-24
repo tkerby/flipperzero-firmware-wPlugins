@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8] — 2026-10-23
+
+For Scout Lite running [Scout Lite Firmware v1.1.0](https://github.com/pingequalab/ESP32Marauder/releases/tag/scout-lite-v1.1.0). v0.7 behavior stays on older board firmware.
+
+### Added
+
+- Scout Lite Dash uses the board's `Band: w24=` / `w5=` counts when that line is present.
+
+### Changed
+
+- The app description and About page no longer say the survey is passive or receive-only. Wardrive still transmits while it hops channels.
+- Split size: after the board has sent `Band:`, the Split page says the size is kept after reboot. Older firmware still shows that a reboot returns it to 1024 KB.
+
 ## [0.7] — 2026-10-21
 
 For Scout Lite running [Scout Lite Firmware v1.0.0](https://github.com/pingequalab/ESP32Marauder/releases/tag/scout-lite-v1.0.0). Other Marauder builds keep the generic pages.

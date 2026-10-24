@@ -57,6 +57,7 @@ static const char kQual[] = "Qual: ";
 static const char kUp[] = "Up: ";
 static const char kRank[] = "Rank: ";
 static const char kCfg[] = "Cfg: ";
+static const char kBand[] = "Band: ";
 
 typedef struct {
     const char* p;
@@ -834,6 +835,32 @@ static bool cfg_parse(const char* line, size_t len, SrCfgInfo* out) {
     return true;
 }
 
+/*
+ * "Band: w24=<u32> w5=<u32>". Both fields required. p != len rejects a tail.
+ * A short line falls through to Unknown so older firmware is unchanged.
+ */
+static bool band_parse(const char* line, size_t len, SrBandInfo* out) {
+    size_t p = sizeof(kBand) - 1U;
+    uint32_t w24 = 0;
+    uint32_t w5 = 0;
+
+    if(line == NULL || out == NULL || len < p || memcmp(line, kBand, p) != 0) {
+        return false;
+    }
+    if(!scan_lit(line, len, &p, "w24=", 4U) || !scan_u32(line, len, &p, &w24)) {
+        return false;
+    }
+    if(!scan_lit(line, len, &p, " w5=", 4U) || !scan_u32(line, len, &p, &w5)) {
+        return false;
+    }
+    if(p != len) {
+        return false;
+    }
+    out->w24 = w24;
+    out->w5 = w5;
+    return true;
+}
+
 static bool probe_n(const char* line, size_t len, SrFirmwareInfo* out) {
     static const char kFw[] = "Firmware: ";
     static const char kVer[] = "Version: ";
@@ -1141,6 +1168,11 @@ static SrParseResult
 
     if(cfg_parse(line, len, &out->u.cfg)) {
         out->kind = SrEventCfg;
+        return SrParseOk;
+    }
+
+    if(band_parse(line, len, &out->u.band)) {
+        out->kind = SrEventBand;
         return SrParseOk;
     }
 
