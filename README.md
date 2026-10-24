@@ -103,7 +103,7 @@ uses (a high-Z antenna node), not an RC charge-time circuit.
 
 ## Future: optional TEA5767 FM module for Spirit Box
 
-Not implemented yet (user is buying the module later) — researched and planned so
+Not implemented yet researched and planned so
 it's ready to build once the hardware is in hand.
 
 A TEA5767 would let Spirit Box sweep **real FM broadcast** (76-108MHz) with actual
