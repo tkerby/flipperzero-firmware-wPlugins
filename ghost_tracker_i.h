@@ -4,6 +4,7 @@
 #include <gui/gui.h>
 #include <gui/view_dispatcher.h>
 
+#include "views/view_splash.h"
 #include "views/view_menu.h"
 #include "views/view_emf.h"
 #include "views/view_spirit.h"
@@ -16,11 +17,17 @@ typedef enum {
     GhostTrackerViewSpirit,
     GhostTrackerViewRem,
     GhostTrackerViewAbout,
+    GhostTrackerViewSplash,
 } GhostTrackerViewId;
+
+typedef enum {
+    GhostTrackerCustomEventSplashDone,
+} GhostTrackerCustomEvent;
 
 typedef struct {
     Gui* gui;
     ViewDispatcher* view_dispatcher;
+    SplashView* splash_view;
     MenuView* menu_view;
 
     EmfView* emf_view;

@@ -10,12 +10,32 @@ static void ghost_tracker_menu_select_callback(void* context, uint32_t index) {
     view_dispatcher_switch_to_view(app->view_dispatcher, view_id);
 }
 
+static void ghost_tracker_splash_done_callback(void* context) {
+    GhostTrackerApp* app = context;
+    /* Called from either the GUI thread (key press) or the timer service
+     * thread (timeout) - send_custom_event is safe from both; the actual
+     * view switch happens on the dispatcher's own thread below. */
+    view_dispatcher_send_custom_event(app->view_dispatcher, GhostTrackerCustomEventSplashDone);
+}
+
+static bool ghost_tracker_custom_event_callback(void* context, uint32_t event) {
+    GhostTrackerApp* app = context;
+    if(event == GhostTrackerCustomEventSplashDone && app->current_view == GhostTrackerViewSplash) {
+        app->current_view = GhostTrackerViewMenu;
+        view_dispatcher_switch_to_view(app->view_dispatcher, GhostTrackerViewMenu);
+    }
+    return true;
+}
+
 static bool ghost_tracker_navigation_callback(void* context) {
     GhostTrackerApp* app = context;
 
     if(app->current_view == GhostTrackerViewMenu) {
         /* Already at the top-level menu: back exits the app. */
         view_dispatcher_stop(app->view_dispatcher);
+    } else if(app->current_view == GhostTrackerViewSplash) {
+        /* Back during the splash just skips it, same as any other key. */
+        ghost_tracker_splash_done_callback(app);
     } else {
         app->current_view = GhostTrackerViewMenu;
         view_dispatcher_switch_to_view(app->view_dispatcher, GhostTrackerViewMenu);
@@ -32,6 +52,13 @@ static GhostTrackerApp* ghost_tracker_app_alloc(void) {
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_navigation_event_callback(
         app->view_dispatcher, ghost_tracker_navigation_callback);
+    view_dispatcher_set_custom_event_callback(
+        app->view_dispatcher, ghost_tracker_custom_event_callback);
+
+    app->splash_view = splash_view_alloc();
+    splash_view_set_done_callback(app->splash_view, ghost_tracker_splash_done_callback, app);
+    view_dispatcher_add_view(
+        app->view_dispatcher, GhostTrackerViewSplash, splash_view_get_view(app->splash_view));
 
     app->menu_view = menu_view_alloc();
     menu_view_set_select_callback(app->menu_view, ghost_tracker_menu_select_callback, app);
@@ -54,7 +81,7 @@ static GhostTrackerApp* ghost_tracker_app_alloc(void) {
     view_dispatcher_add_view(
         app->view_dispatcher, GhostTrackerViewAbout, about_view_get_view(app->about_view));
 
-    app->current_view = GhostTrackerViewMenu;
+    app->current_view = GhostTrackerViewSplash;
 
     return app;
 }
@@ -62,6 +89,9 @@ static GhostTrackerApp* ghost_tracker_app_alloc(void) {
 static void ghost_tracker_app_free(GhostTrackerApp* app) {
     view_dispatcher_remove_view(app->view_dispatcher, GhostTrackerViewAbout);
     about_view_free(app->about_view);
+
+    view_dispatcher_remove_view(app->view_dispatcher, GhostTrackerViewSplash);
+    splash_view_free(app->splash_view);
 
     view_dispatcher_remove_view(app->view_dispatcher, GhostTrackerViewRem);
     rem_view_free(app->rem_view);
@@ -87,7 +117,7 @@ int32_t ghost_tracker_app(void* p) {
     GhostTrackerApp* app = ghost_tracker_app_alloc();
 
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
-    view_dispatcher_switch_to_view(app->view_dispatcher, GhostTrackerViewMenu);
+    view_dispatcher_switch_to_view(app->view_dispatcher, GhostTrackerViewSplash);
 
     view_dispatcher_run(app->view_dispatcher);
 
