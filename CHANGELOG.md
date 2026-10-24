@@ -6,11 +6,15 @@ All notable changes to Hotspot Arcade are documented here. The format is based o
 
 ## [Unreleased]
 
+## [1.10.1] - 2026-10-24
+
 ### Fixed
 
 - **Battleship firing boards render after both players place their ships.** The
   turn-label element no longer shadows the translation function, which stopped
   both boards from rendering (#34). Adds a browser regression for both players.
+
+Firmware remains v22. This release updates the phone client; no board reflash is required.
 
 ## [1.10.0] - 2026-09-10
 
@@ -709,7 +713,8 @@ an official ESP32-S2 WiFi dev board. No internet and no app install required.
   for previewing the web client through lobby, trivia, and Connect Four in a desktop browser.
 - **CI**: a build workflow that compiles all three parts on every push and pull request.
 
-[Unreleased]: https://github.com/tarikbc/hotspot-arcade/compare/v1.10.0...HEAD
+[Unreleased]: https://github.com/tarikbc/hotspot-arcade/compare/v1.10.1...HEAD
+[1.10.1]: https://github.com/tarikbc/hotspot-arcade/compare/v1.10.0...v1.10.1
 [1.10.0]: https://github.com/tarikbc/hotspot-arcade/compare/v1.9.0...v1.10.0
 [1.1.2]: https://github.com/tarikbc/hotspot-arcade/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/tarikbc/hotspot-arcade/compare/v1.1.0...v1.1.1
