@@ -299,6 +299,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Sub-GHz: [Add Nero Radio normal and long-range rolling frame capture/save/load/replay, improve static frame details, and recognize shorter stop gaps. Rolling support replays captures; it does not generate new rolling codes. (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/44ef0b91eafeb59215626cffb2cac9be1fc2f310)
 - Updated: [Flipper Lotto v1.0 (By molykima)](https://github.com/molykima/Flipper-Lottery-Number-Generator)
 - Updated: [SigRoam Wardriving v0.8 (By pingequalab)](https://github.com/pingequalab/sigroam-wardriving) `Req: ESP32`
+- Updated: [Hotspot Arcade v1.10.1 (By tarikbc)](https://github.com/tarikbc/hotspot-arcade) `Req: ESP32`
 
 <a name="release"></a>
 
@@ -497,7 +498,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Heap Defence v1.4 (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/fc776446de9fdd553b221c02668b925b689378d8)
 - [Hirn - Crack Color Codes v0.2 (By fgreil)](https://github.com/fgreil/mitzi-hirn)
 - [Hold em v1.1 (By code-phreak)](https://github.com/code-phreak/flipper-holdem)
-- [Hotspot Arcade v1.10.0 (By tarikbc)](https://github.com/tarikbc/hotspot-arcade) `Req: ESP32`
+- [Hotspot Arcade v1.10.1 (By tarikbc)](https://github.com/tarikbc/hotspot-arcade) `Req: ESP32`
 - [Hunter Killer v1.0 (By josephburnett)](https://github.com/josephburnett/hunter-flipper)
 - [Impostor v0.1.3 (By Endika)](https://github.com/Endika/flipper-impostor-game)
 - [Infinite Tic Tac Toe v0.1 (By kdiller713)](https://github.com/kdiller713/public-FlipperApps/tree/main/infinite_tic_tac_toe)
