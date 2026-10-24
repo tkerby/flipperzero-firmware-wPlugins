@@ -256,6 +256,8 @@ static void test_split_home_row(void) {
     CHECK(strcmp(row, "3 files, 1 not uploaded") == 0);
     CHECK(sr_bt_del_all_detail(3u, UINT32_MAX, row, sizeof(row)) == false);
 
+    CHECK(strcmp(sr_bt_split_reboot_label(false), "Board reboot: 1024 KB") == 0);
+    CHECK(strcmp(sr_bt_split_reboot_label(true), "Kept after reboot") == 0);
     CHECK(sr_bt_split_is_preset(0u) == true);
     CHECK(sr_bt_split_is_preset(1024u) == true);
     CHECK(sr_bt_split_is_preset(1000u) == false);

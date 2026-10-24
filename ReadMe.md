@@ -273,7 +273,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - RFID: [Verify the key and password block before enabling T5577 protection, report distinct outcomes, and bound verification reads (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/commit/1672f7c54d146114d7ecdb57043661f9456dd292)
 - API: [Advance F7 to 88.22 for T5577 block/file APIs and the worker password setter, retaining existing RM exports and T5577 controls (By mishamyte; RM compatibility adaptation)](https://github.com/DarkFlippers/unleashed-firmware/commit/1672f7c54d146114d7ecdb57043661f9456dd292)
 - Fixes: [Reject unset password writes, enforce verification deadlines on empty/overrun buffers, preserve dump files when opening fails, and correct long decimal exponent cancellation. (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/4d0a0c89c7555ae0fc5436a4a72361f96571a308)
-- Updated: [SigRoam Wardriving v0.7 (By pingequalab)](https://github.com/pingequalab/sigroam-wardriving) `Req: ESP32`
 - Updated: [5Ghost Wifi Lab v2.8.1 (By pingequalab)](https://github.com/pingequalab/5ghost-wifi-lab) `Req: BW15` (Version Only)
 - OFW: [fix typos in user visible strings #4479 (By 4aia)](https://github.com/flipperdevices/flipperzero-firmware/pull/4479)
 - SubGHz Apps: [Scheduler v3.4, Playlist, Quac and Cross Remote: use held-button protocol transmissions, let RAW files complete, and reset rolling-code/custom-button state between sends; Scheduler now saves updated counters (By xMasterX)](https://github.com/xMasterX/all-the-plugins/commit/6a81d05018a09f4963982c52d63689e88d02b85a)
@@ -299,6 +298,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - RFID: [Improve T5577 Saved navigation, return to the original folder after rename/delete, remove the directory pre-scan, show clearer file errors, and keep tag-test backups from changing the selected folder. (By mishamyte)](https://github.com/DarkFlippers/unleashed-firmware/pull/1189)
 - Sub-GHz: [Add Nero Radio normal and long-range rolling frame capture/save/load/replay, improve static frame details, and recognize shorter stop gaps. Rolling support replays captures; it does not generate new rolling codes. (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/44ef0b91eafeb59215626cffb2cac9be1fc2f310)
 - Updated: [Flipper Lotto v1.0 (By molykima)](https://github.com/molykima/Flipper-Lottery-Number-Generator)
+- Updated: [SigRoam Wardriving v0.8 (By pingequalab)](https://github.com/pingequalab/sigroam-wardriving) `Req: ESP32`
 
 <a name="release"></a>
 
@@ -1127,7 +1127,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [SI4713 Tuner v0.1 (By rullinoiz)](https://github.com/rullinoiz/flipper-si4713) `Req: SI4713`
 - [Sig Diary WIP v0.1 (By C0d3-5t3w)](https://github.com/C0d3-5t3w/flipper-sigdiary)
 - [Signal Generator v1.2 (By nminaylov)-OFW](https://github.com/flipperdevices/flipperzero-firmware/pull/1793)
-- [SigRoam Wardriving v0.7 (By pingequalab)](https://github.com/pingequalab/sigroam-wardriving) `Req: ESP32`
+- [SigRoam Wardriving v0.8 (By pingequalab)](https://github.com/pingequalab/sigroam-wardriving) `Req: ESP32`
 - [Simultanious UHF RFID Reader v1.1.2 (By RileyHaffner)](https://github.com/haffnerriley/Simultaneous-UHF-RFID-FlipperZero) `Req: M6e Nano UHF RFID Reader & Raspberry Pi Zero`
 - [Skeleton App v1.1 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/ui/skeleton_app)
 - [SKIDcity v1.2 (By H4W9)](https://github.com/H4W9/SKIDcity_App)

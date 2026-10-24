@@ -49,7 +49,7 @@
  *  b10 │ SigRoam Wardriving v0.7                    │  full 128, 105 px
  *      ├─────────────────────────┬──────────────────┤
  *  b20 │ by PINGEQUA Lab         │ I_sr1g_qr        │  74 px
- *  b30 │ Receive-only.           │ 37x37 (x=91,     │
+ *  b30 │ Wi-Fi survey.           │ 37x37 (x=91,     │
  *  b40 │ No attack.              │     y=13..49)    │
  *  b50 │ 2.4/5G + GNSS           │ (clears by x)    │
  *      ├─────────────────────────┴──────────────────┤
@@ -58,12 +58,12 @@
  *
  * Three INDEPENDENT clearances -- do not conflate them:
  *    (1) Row 1 is full width. One string, normal FontSecondary advance:
- *        "SigRoam Wardriving v" SR_FAP_VERSION = 105 px (fits 128).
+ *        "SigRoam Wardriving v" SR_FAP_VERSION = 105 px (fits 128; 0.8 is one digit).
  *    (2) Rows 2-5 overlap the code in y, so width must be <= 91 px.
  *        Longest remaining body line is still inside 91 px. Maker 74 px.
  *        "passive 2.4/5G + GNSS" as one row 5 string does not fit the QR
  *        column (21 chars vs documented 89 px / 18 char Marauder line).
- *        Receive-only. is the passive claim; row 5 is the radio/GNSS line.
+ *        Row 3 is "Wi-Fi survey."; row 5 is the radio/GNSS line.
  *        String elements are **not clipped**.
  *    (3) Row 6 clears the code by **y** -- cap 53 sits below QR bottom 49.
  *        60 + descent (about 2) = 62 < 64: flush with the bottom but inside.
@@ -112,14 +112,9 @@ static void sigroam_scene_about_fill_conflict(SigRoamApp* app) {
         "Settings > System >\n"
         "Log Device to Off\n"
         "\n"
-        "Receive-only. No\n"
-        "attack features.\n"
-        "It only listens.\n"
-        "\n"
-        "passive 2.4/5G\n"
-        "+ GNSS.\n"
-        "Need Scout Lite\n"
-        "running SigRoam.\n"
+        "No attack features.\n"
+        "2.4/5G + GNSS.\n"
+        "Needs Scout Lite.\n"
         "\n" SR_BRAND_URL "\n");
 }
 
@@ -140,11 +135,11 @@ void sigroam_scene_about_on_enter(void* context) {
 
         /* Rows 2-5 overlap the code in y: width must be <= SR_ABOUT_QR_X (91). */
         sigroam_scene_about_line(app, 20, SR_BRAND_LINE);
-        sigroam_scene_about_line(app, 30, "Receive-only.");
+        sigroam_scene_about_line(app, 30, "Wi-Fi survey.");
         sigroam_scene_about_line(app, 40, "No attack.");
 
-        /* Row 5: radio/GNSS capability. "passive" is Receive-only. above.
-         * Full "passive 2.4/5G + GNSS" does not fit the 91 px QR column. */
+        /* Row 5: radio/GNSS. The long "2.4/5G + GNSS" form stays on this row.
+         * Do not put receive-only or passive on this page. */
         sigroam_scene_about_line(app, 50, "2.4/5G + GNSS");
 
         /* Row 6 full width: cap y=53 sits below the code (y=13..49).

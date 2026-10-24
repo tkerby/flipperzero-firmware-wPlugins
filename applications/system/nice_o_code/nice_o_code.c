@@ -656,8 +656,7 @@ static bool
          * the new remote keeps it and enrols itself with it. */
         const uint32_t cert = nice_o_cert(app);
         if(ok && cert) {
-            uint8_t cert_data[3] = {
-                (uint8_t)(cert >> 16), (uint8_t)(cert >> 8), (uint8_t)cert};
+            uint8_t cert_data[3] = {(uint8_t)(cert >> 16), (uint8_t)(cert >> 8), (uint8_t)cert};
             ok = flipper_format_rewind(fff) &&
                  flipper_format_insert_or_update_hex(fff, "Cert", cert_data, sizeof(cert_data));
         }

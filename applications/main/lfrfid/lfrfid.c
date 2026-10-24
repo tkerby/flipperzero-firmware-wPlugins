@@ -391,8 +391,7 @@ bool lfrfid_run_t5577_app(LfRfid* app) {
     // one the user never asked for, and the answer is "App Not Found" where it could say which
     // app is missing and how to get it. Checking first also saves closing this app to find out.
     if(!storage_file_exists(app->storage, T5577_APP_PATH)) {
-        lfrfid_say(
-            app, "No T5577 app", "Install the T5577 app\nfrom your RM build\nSD resources");
+        lfrfid_say(app, "No T5577 app", "Install the T5577 app\nfrom your RM build\nSD resources");
         return false;
     }
 

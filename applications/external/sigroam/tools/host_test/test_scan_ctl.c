@@ -479,8 +479,9 @@ int test_scan_ctl_run(void) {
      * 2026-09-16 T6.5 half B: +SrRadioInfo(2)+pad(2)+radio_rev(4) = +8 → 3416.
      * 2026-09-18 SHOW_INFO clear: +wifi_stop_rev(4)+pad(4) = +8 → 3424.
      * SrEvent still 240 (radio arm is 2 B).
-     * 2026-10-20 lite Qual previous sample: +8 → 3592. SrEvent stays 240. */
-    CHECK(sizeof(SrModel) == 3592);
+     * 2026-10-20 lite Qual previous sample: +8 → 3592. SrEvent stays 240.
+     * 2026-10-23 Band: +16 → 3608. SrEvent stays 240. */
+    CHECK(sizeof(SrModel) == 3608);
     CHECK(sizeof(SrModel) <= 4096);
     CHECK(sizeof(SrParser) == 452);
     CHECK(sizeof(SrEvent) == 240);

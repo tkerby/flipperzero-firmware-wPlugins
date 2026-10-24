@@ -88,9 +88,15 @@ static void dash_fill(SigRoamApp* app, SrDashModel* snap) {
         snap->ap_wifi = app->model.sess.ap;
         snap->ap_ble = app->model.sess.ble;
     }
-    /* 0/0 hides the band row; a partial split would not add up to AP. */
-    snap->ap_24 = app->model.band_partial ? 0u : app->model.ap_24;
-    snap->ap_5 = app->model.band_partial ? 0u : app->model.ap_5;
+    /* 0/0 hides the band row. A Band: line is the board's own split.
+     * Without it, a partial local split would not add up to AP. */
+    if(app->model.band_rev != 0u) {
+        snap->ap_24 = app->model.band.w24;
+        snap->ap_5 = app->model.band.w5;
+    } else {
+        snap->ap_24 = app->model.band_partial ? 0u : app->model.ap_24;
+        snap->ap_5 = app->model.band_partial ? 0u : app->model.ap_5;
+    }
     snap->unique_est = app->model.unique_est;
     snap->with_gps_fix = app->model.with_gps_fix;
 

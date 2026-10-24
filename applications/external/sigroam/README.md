@@ -50,7 +50,7 @@ One radio covers 2.4 GHz and 5 GHz, not both at once. 5 GHz here is scan and enu
 
 **Probe.** Reads the board and shows PINGEQUA Scout Lite, GPS, and the card. Open it when the board does not answer.
 
-**Board tools.** Ignore list, logs on the card, and split size. The ignore list does not hide a network from the air. It only skips that name in the SD log. A split size lasts until the board reboots, then it returns to 1024 KB.
+**Board tools.** Ignore list, logs on the card, and split size. The ignore list does not hide a network from the air. It only skips that name in the SD log. On Scout Lite firmware v1.1.0 or later, a split size is saved and kept after reboot. On v1.0.0, a reboot returns it to 1024 KB.
 
 The menu also has Rank, Raw log, Settings, and About.
 

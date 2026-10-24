@@ -761,7 +761,7 @@ int test_gps_sample_run(void) {
      * SrModel 3536 → 3584, SrDashModel 712 → 736.
      * 2026-10-20 lite Qual previous sample: SrModel +8 → 3592.
      * SrDashModel qual_prev_gga/ggafix/seen after sess_seen: +12 → 748. */
-    CHECK(sizeof(SrModel) == 3592);
+    CHECK(sizeof(SrModel) == 3608);
     CHECK(sizeof(SrDashModel) == 748);
     CHECK(sizeof(SrDashModel) <= 768);
     CHECK(sizeof(SrGpsSampleCtx) == 20);

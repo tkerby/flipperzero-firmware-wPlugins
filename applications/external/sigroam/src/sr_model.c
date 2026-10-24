@@ -409,6 +409,10 @@ bool sr_model_apply(SrModel* m, const SrEvent* ev, uint32_t tick_ms) {
         m->cfg = ev->u.cfg;
         m->cfg_rev++;
         return true;
+    case SrEventBand:
+        m->band = ev->u.band;
+        m->band_rev++;
+        return true;
     case SrEventUnknown:
         return apply_unknown(m, &ev->u.unknown);
     default:
