@@ -439,5 +439,70 @@ int test_marauder_join_run(void) {
         CHECK(sr_join_receipt() == SrJoinReceiptPending);
     }
 
+    /* Keep the stronger AP when the table is full. 2.4 rows arrive first. */
+    {
+        char row[64];
+        unsigned i;
+        int8_t rssi = 0;
+        bool saw = false;
+
+        sr_join_listen(SrJoinListenList);
+        sr_join_observe("#list -a", strlen("#list -a"));
+        for(i = 0u; i < (unsigned)SR_JOIN_AP_CAP; i++) {
+            CHECK(snprintf(row, sizeof(row), "[%u][CH:1] Weak%u -90", i, i) > 0);
+            sr_join_observe(row, strlen(row));
+        }
+        sr_join_observe("[40][CH:36] OP-5G -40", strlen("[40][CH:36] OP-5G -40"));
+        sr_join_observe("0 selected", strlen("0 selected"));
+        CHECK(sr_join_ap_count() == (size_t)SR_JOIN_AP_CAP);
+        CHECK(sr_join_ap_matches(40u, "OP-5G") == true);
+        CHECK(sr_join_ap_matches(0u, "Weak0") == false);
+        for(i = 0u; i < (unsigned)sr_join_ap_count(); i++) {
+            uint16_t index = 0u;
+            char ssid[SR_JOIN_SSID_MAX + 1u];
+
+            CHECK(sr_join_ap_at(i, &index, ssid, sizeof(ssid)) == true);
+            if(index == 40u) {
+                CHECK(sr_join_ap_rssi(i, &rssi) == true);
+                CHECK(rssi == -40);
+                saw = true;
+            }
+        }
+        CHECK(saw == true);
+        sr_join_listen(SrJoinListenSaved);
+        sr_join_observe("wifi count 1", strlen("wifi count 1"));
+        sr_join_observe("wifi 0 OP-5G", strlen("wifi 0 OP-5G"));
+        sr_join_observe("wifi end", strlen("wifi end"));
+        CHECK(sr_join_saved_end() == true);
+        CHECK(sr_join_saved_count() == 1u);
+        {
+            char saved[SR_JOIN_SSID_MAX + 1u];
+            CHECK(sr_join_saved_at(0u, saved, sizeof(saved)) == true);
+            CHECK(strcmp(saved, "OP-5G") == 0);
+        }
+    }
+
+    {
+        char b[21];
+        char long_name[] = "0123456789abcdef0123456789abcdef";
+
+        CHECK(sr_join_fmt_ap(true, "OP-5G", -42, b, sizeof(b)));
+        CHECK(strlen(b) == 20u);
+        CHECK(b[0] == '*');
+        CHECK(memcmp(b + 2, "OP-5G", 5) == 0);
+        CHECK(memcmp(b + 17, "-42", 3) == 0);
+        CHECK(sr_join_fmt_ap(false, "Cafe", -67, b, sizeof(b)));
+        CHECK(b[0] == ' ');
+        CHECK(memcmp(b + 2, "Cafe", 4) == 0);
+        CHECK(memcmp(b + 17, "-67", 3) == 0);
+        CHECK(sr_join_fmt_known("OP-5G", b, sizeof(b)));
+        CHECK(strcmp(b, "* OP-5G") == 0);
+        CHECK(sr_join_fmt_ap(false, long_name, -100, b, sizeof(b)));
+        CHECK(strlen(b) == 20u);
+        CHECK(memcmp(b + 16, "-100", 4) == 0);
+        CHECK(sr_join_fmt_known("", b, sizeof(b)));
+        CHECK(strcmp(b, "* (hidden)") == 0);
+    }
+
     return sr_test_failures;
 }

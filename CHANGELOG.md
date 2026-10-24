@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9] — 2026-10-24
+
+For Scout Lite running [Scout Lite Firmware v1.1.0](https://github.com/pingequalab/ESP32Marauder/releases/tag/scout-lite-v1.1.0). Listing already-saved Wi-Fi names needs the `sigroam wifi` command, which v1.1.0 does not have. Scan nearby, join, and Upload still work on v1.1.0.
+
+### Changed
+
+- The home menu is Dashboard, Upload, Rank, Board tools, Settings, and About. Probe and Raw log are under Settings.
+- Wi-Fi opens from Upload. Saved names are listed first. Scan nearby is a separate step. The list uses the same menu as Settings: the name on the left, the signal on the right.
+- Board tools shows Ignore list and Logs on card. Split size is inside Logs.
+
 ## [0.8] — 2026-10-23
 
 For Scout Lite running [Scout Lite Firmware v1.1.0](https://github.com/pingequalab/ESP32Marauder/releases/tag/scout-lite-v1.1.0). v0.7 behavior stays on older board firmware.

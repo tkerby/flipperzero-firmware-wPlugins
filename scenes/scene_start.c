@@ -1,30 +1,17 @@
 #include "../sigroam.h"
 
 /*
- * Ordering rationale (T4.10: Wardrive was folded into the Dash tab's OK key, so the main
- * menu no longer has a separate Start/Stop page):
- *   D-1 Code layering: the pages that handle Tick are the continuous-observation pages
- *       (dash/raw); the zero-Tick ones are static pages (settings/about). Observation pages
- *       must come before static ones, which immediately rules out About first.
- *   D-2 Pain-point table in plan section 1: of 5 pain points, 3 land on Dashboard and 1
- *       used to land on Wardrive (now folded into the Dash tab).
- *   D-3 Task flow: Probe (once per outing) -> Dashboard (Start/Stop plus repeated checking)
- *       -> Raw (only on anomalies) -> Settings -> About.
- * What settles the ranking: while a scan runs, Back returns to the main menu without stopping
- * the scan (Stop is triggered only by OK on the Dash tab),
- * so the live dashboard must be reachable exactly when it needs looking at -- hence Dashboard first.
- *
- * The enum values deliberately match the display order (not required -- set_selected_item
- * matches on the index field, see the start_selected comment in sigroam.h); it just makes the
- * code line up with the screen at a glance.
+ * Home is the outing path. Dashboard stays first: Back from a running scan returns
+ * here without stopping (Stop is OK on the Dash tab).
+ * Probe firmware and Raw log are under Settings. Wi-Fi is saved once and opens
+ * from Upload. About stays last.
+ * Enum values match display order. set_selected_item matches the index field.
  */
 typedef enum {
     SigRoamStartItemDash = 0,
-    SigRoamStartItemProbe,
     SigRoamStartItemUpload,
-    SigRoamStartItemTools,
     SigRoamStartItemRank,
-    SigRoamStartItemRaw,
+    SigRoamStartItemTools,
     SigRoamStartItemSettings,
     SigRoamStartItemAbout,
 } SigRoamStartItem;
@@ -58,19 +45,11 @@ void sigroam_scene_start_on_enter(void* context) {
     submenu_add_item(
         app->submenu, "Dashboard", SigRoamStartItemDash, sigroam_start_submenu_callback, app);
     submenu_add_item(
-        app->submenu,
-        "Probe firmware",
-        SigRoamStartItemProbe,
-        sigroam_start_submenu_callback,
-        app);
-    submenu_add_item(
         app->submenu, "Upload", SigRoamStartItemUpload, sigroam_start_submenu_callback, app);
-    submenu_add_item(
-        app->submenu, "Board tools", SigRoamStartItemTools, sigroam_start_submenu_callback, app);
     submenu_add_item(
         app->submenu, "Rank", SigRoamStartItemRank, sigroam_start_submenu_callback, app);
     submenu_add_item(
-        app->submenu, "Raw log", SigRoamStartItemRaw, sigroam_start_submenu_callback, app);
+        app->submenu, "Board tools", SigRoamStartItemTools, sigroam_start_submenu_callback, app);
     submenu_add_item(
         app->submenu, "Settings", SigRoamStartItemSettings, sigroam_start_submenu_callback, app);
     submenu_add_item(
@@ -100,16 +79,8 @@ bool sigroam_scene_start_on_event(void* context, SceneManagerEvent event) {
             scene_manager_next_scene(app->scene_manager, SigRoamSceneAbout);
             return true;
         }
-        if(event.event == SigRoamStartItemProbe) {
-            scene_manager_next_scene(app->scene_manager, SigRoamSceneProbe);
-            return true;
-        }
         if(event.event == SigRoamStartItemDash) {
             scene_manager_next_scene(app->scene_manager, SigRoamSceneDash);
-            return true;
-        }
-        if(event.event == SigRoamStartItemRaw) {
-            scene_manager_next_scene(app->scene_manager, SigRoamSceneRaw);
             return true;
         }
         if(event.event == SigRoamStartItemUpload) {

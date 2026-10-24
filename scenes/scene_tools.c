@@ -59,6 +59,7 @@ enum {
     ItemHint = 103,
     ItemMore = 200,
     ItemAll = 201,
+    ItemSplitGo = 202,
     ItemSplit = 300,
     ItemNow = 310,
     ItemApply = 311,
@@ -83,6 +84,7 @@ static bool s_split_known;
 static bool s_log_sent;
 static char s_cmd[96];
 static char s_banner[32];
+static char s_head[32];
 static char s_add[SR_BT_SSID_MAX + 1u];
 static char s_rm_ssid[SR_BT_SSID_MAX + 1u];
 static char s_rm_name[SR_MAU_LOG_NAME_MAX + 1u];
@@ -226,7 +228,6 @@ static void tools_show_menu(SigRoamApp* app) {
     submenu_set_header(app->submenu, "Board tools");
     submenu_add_item(app->submenu, "Ignore list", 0u, tools_item, app);
     submenu_add_item(app->submenu, "Logs on card", 1u, tools_item, app);
-    submenu_add_item(app->submenu, "Split size", 2u, tools_item, app);
     s_page = (uint8_t)PgMenu;
     view_dispatcher_switch_to_view(app->view_dispatcher, SigRoamViewSubmenu);
 }
@@ -293,7 +294,7 @@ static void tools_show_ignore(SigRoamApp* app) {
 
     s_row_n = 0u;
     submenu_reset(app->submenu);
-    submenu_set_header(app->submenu, s_banner[0] != '\0' ? s_banner : "Ignore list");
+    submenu_set_header(app->submenu, s_banner[0] != '\0' ? s_banner : "Skips SD log only");
     for(i = 0u; i < sr_bt_ignore_count(); i++) {
         if(!sr_bt_ignore_item(i, &ord, ssid, sizeof(ssid))) {
             continue;
@@ -312,7 +313,6 @@ static void tools_show_ignore(SigRoamApp* app) {
     if(sr_bt_ignore_count() > 0u) {
         submenu_add_item(app->submenu, "Clear all", (uint32_t)ItemClear, tools_item, app);
     }
-    submenu_add_item(app->submenu, "Skips SD log only", (uint32_t)ItemHint, tools_item, app);
     s_page = (uint8_t)PgIgnore;
     view_dispatcher_switch_to_view(app->view_dispatcher, SigRoamViewSubmenu);
 }
@@ -326,20 +326,27 @@ static void tools_show_logs(SigRoamApp* app) {
     bool sent = false;
 
     s_row_n = 0u;
+    extra = sr_mau_logs_extra();
     submenu_reset(app->submenu);
-    submenu_set_header(app->submenu, s_banner[0] != '\0' ? s_banner : "Logs on card");
+    if(s_banner[0] != '\0') {
+        submenu_set_header(app->submenu, s_banner);
+    } else if(extra != SR_MAU_LOGS_UNKNOWN && sr_bt_log_more(extra, s_head, sizeof(s_head))) {
+        submenu_set_header(app->submenu, s_head);
+    } else {
+        submenu_set_header(app->submenu, "Logs on card");
+    }
     for(i = 0u; sr_mau_logs_slot(i, name, sizeof(name), &size, &sent); i++) {
         if(!sr_bt_log_row(name, size, sent, row, sizeof(row))) {
             continue;
         }
         submenu_add_item(app->submenu, tools_keep(row), i, tools_item, app);
     }
-    extra = sr_mau_logs_extra();
-    if(extra != SR_MAU_LOGS_UNKNOWN && sr_bt_log_more(extra, row, sizeof(row))) {
-        submenu_add_item(app->submenu, tools_keep(row), (uint32_t)ItemMore, tools_item, app);
-    }
     if(sr_mau_logs_matches() > 0u) {
         submenu_add_item(app->submenu, "Delete all logs", (uint32_t)ItemAll, tools_item, app);
+    }
+    submenu_add_item(app->submenu, "Split size", (uint32_t)ItemSplitGo, tools_item, app);
+    if(s_page == (uint8_t)PgSplit) {
+        submenu_set_selected_item(app->submenu, (uint32_t)ItemSplitGo);
     }
     s_page = (uint8_t)PgLogs;
     view_dispatcher_switch_to_view(app->view_dispatcher, SigRoamViewSubmenu);
@@ -348,14 +355,18 @@ static void tools_show_logs(SigRoamApp* app) {
 static void tools_show_split(SigRoamApp* app) {
     unsigned i;
     char row[28];
+    int cur;
 
     s_row_n = 0u;
-    submenu_reset(app->submenu);
-    submenu_set_header(app->submenu, "Split size");
     if(s_split_known && !sr_bt_split_is_preset(s_split_kb)) {
-        snprintf(row, sizeof(row), "Now: %lu KB", (unsigned long)s_split_kb);
-        submenu_add_item(app->submenu, tools_keep(row), (uint32_t)ItemNow, tools_item, app);
+        snprintf(s_head, sizeof(s_head), "Now: %lu KB", (unsigned long)s_split_kb);
+    } else {
+        const char* note = sr_bt_split_reboot_label(app->model.band_rev != 0u);
+
+        snprintf(s_head, sizeof(s_head), "%s", note != NULL ? note : "Split size");
     }
+    submenu_reset(app->submenu);
+    submenu_set_header(app->submenu, s_head);
     for(i = 0u; i < 6u; i++) {
         const char* label = sr_bt_split_label(i);
         bool mark = s_split_known && sr_bt_split_kb(i) == s_split_kb;
@@ -363,21 +374,11 @@ static void tools_show_split(SigRoamApp* app) {
         snprintf(row, sizeof(row), "%s%s", mark ? "* " : "", label != NULL ? label : "");
         submenu_add_item(app->submenu, tools_keep(row), (uint32_t)ItemSplit + i, tools_item, app);
     }
-    submenu_add_item(
-        app->submenu, "Applies to next scan", (uint32_t)ItemApply, tools_item, app);
-    submenu_add_item(
-        app->submenu,
-        sr_bt_split_reboot_label(app->model.band_rev != 0u),
-        (uint32_t)ItemReboot,
-        tools_item,
-        app);
-    {
-        int cur = sr_bt_split_cursor(s_split_known, s_split_kb, s_split_pick);
-
-        submenu_set_selected_item(
-            app->submenu,
-            cur == SR_BT_SPLIT_CUR_NOW ? (uint32_t)ItemNow : (uint32_t)ItemSplit + (uint32_t)cur);
+    cur = sr_bt_split_cursor(s_split_known, s_split_kb, s_split_pick);
+    if(cur == SR_BT_SPLIT_CUR_NOW || cur < 0) {
+        cur = 0;
     }
+    submenu_set_selected_item(app->submenu, (uint32_t)ItemSplit + (uint32_t)cur);
     s_page = (uint8_t)PgSplit;
     view_dispatcher_switch_to_view(app->view_dispatcher, SigRoamViewSubmenu);
 }
@@ -552,8 +553,6 @@ static void tools_on_item(SigRoamApp* app, uint32_t index) {
         } else if(index == 1u) {
             s_banner[0] = '\0';
             tools_start_ls(app);
-        } else if(index == 2u) {
-            tools_start_reply(app, sr_bt_split_query_cmd(), (uint8_t)WaitSplit);
         }
         return;
     }
@@ -586,6 +585,10 @@ static void tools_on_item(SigRoamApp* app, uint32_t index) {
     }
     if(s_page == (uint8_t)PgLogs) {
         if(index == (uint32_t)ItemMore) {
+            return;
+        }
+        if(index == (uint32_t)ItemSplitGo) {
+            tools_start_reply(app, sr_bt_split_query_cmd(), (uint8_t)WaitSplit);
             return;
         }
         if(index == (uint32_t)ItemAll) {
@@ -828,8 +831,12 @@ bool sigroam_scene_tools_on_event(void* context, SceneManagerEvent event) {
             tools_back_list(app);
             return true;
         }
-        if(s_page == (uint8_t)PgIgnore || s_page == (uint8_t)PgLogs || s_page == (uint8_t)PgSplit ||
-           s_wait != (uint8_t)WaitNone) {
+        if(s_page == (uint8_t)PgSplit) {
+            tools_stop_tx();
+            tools_show_logs(app);
+            return true;
+        }
+        if(s_page == (uint8_t)PgIgnore || s_page == (uint8_t)PgLogs || s_wait != (uint8_t)WaitNone) {
             tools_stop_tx();
             sr_bt_reset();
             sr_mau_logs_reset();

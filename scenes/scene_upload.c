@@ -455,8 +455,7 @@ static void sigroam_scene_upload_draw(SigRoamApp* app, bool force) {
     widget_add_button_element(
         app->widget, GuiButtonTypeCenter, "Upload", sigroam_scene_upload_button, app);
     if(upload_lite(app)) {
-        if(app->model.cfg_rev != 0u && app->model.cfg.home == 0u &&
-           sr_mau_allow_go((unsigned)app->model.session, sr_mau_up_in_flight())) {
+        if(sr_mau_allow_go((unsigned)app->model.session, sr_mau_up_in_flight())) {
             widget_add_button_element(
                 app->widget, GuiButtonTypeLeft, "WiFi", sigroam_scene_upload_button, app);
         }

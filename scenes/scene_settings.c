@@ -16,6 +16,27 @@ static const char* const k_source_text[SR_SETTINGS_SOURCE_CHOICES] = {
 static const char* const k_off_on[2] = {"Off", "On"};
 static const char* const k_backlight[2] = {"Auto", "Always"};
 
+enum {
+    SetBaud = 0,
+    SetSource,
+    SetSound,
+    SetVibro,
+    SetLight,
+    SetStealth,
+    SetApply,
+    SetProbe,
+    SetRaw,
+    SetDebug,
+    SetNew,
+};
+
+static uint8_t s_settings_row;
+
+enum {
+    SettingsEvProbe = 1,
+    SettingsEvRaw = 2,
+};
+
 static void settings_refresh_apply(SigRoamApp* app) {
     const char* text = "now";
 
@@ -113,6 +134,19 @@ static void settings_debug_changed(VariableItem* item) {
     variable_item_set_current_value_text(item, k_off_on[idx]);
 }
 
+static void settings_enter(void* context, uint32_t index) {
+    SigRoamApp* app = context;
+
+    if(app == NULL) {
+        return;
+    }
+    if(index == (uint32_t)SetProbe) {
+        view_dispatcher_send_custom_event(app->view_dispatcher, (uint32_t)SettingsEvProbe);
+    } else if(index == (uint32_t)SetRaw) {
+        view_dispatcher_send_custom_event(app->view_dispatcher, (uint32_t)SettingsEvRaw);
+    }
+}
+
 static void settings_newnet_changed(VariableItem* item) {
     SigRoamApp* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
@@ -180,6 +214,19 @@ void sigroam_scene_settings_on_enter(void* context) {
     variable_item_set_current_value_index(item, bidx);
     variable_item_set_current_value_text(item, k_off_on[bidx]);
 
+    /* Everyday rows end at Apply. settings_refresh_apply uses the pointer, not the position. */
+    app->var_item_apply = variable_item_list_add(list, "Apply", 1, NULL, app);
+    variable_item_set_current_value_index(app->var_item_apply, 0);
+    settings_refresh_apply(app);
+
+    item = variable_item_list_add(list, "Probe firmware", 1, NULL, app);
+    variable_item_set_current_value_index(item, 0);
+    variable_item_set_current_value_text(item, ">");
+
+    item = variable_item_list_add(list, "Raw log", 1, NULL, app);
+    variable_item_set_current_value_index(item, 0);
+    variable_item_set_current_value_text(item, ">");
+
     bidx = app->settings.debug_rows ? 1u : 0u;
     item = variable_item_list_add(list, "Debug rows", 2, settings_debug_changed, app);
     variable_item_set_current_value_index(item, bidx);
@@ -190,19 +237,34 @@ void sigroam_scene_settings_on_enter(void* context) {
     variable_item_set_current_value_index(item, bidx);
     variable_item_set_current_value_text(item, k_off_on[bidx]);
 
-    /* Apply must stay last: settings_refresh_apply recognizes only the app->var_item_apply entry. */
-    app->var_item_apply = variable_item_list_add(list, "Apply", 1, NULL, app);
-    variable_item_set_current_value_index(app->var_item_apply, 0);
-    settings_refresh_apply(app);
-
-    variable_item_list_set_selected_item(list, 0);
+    variable_item_list_set_enter_callback(list, settings_enter, app);
+    if(s_settings_row > (uint8_t)SetNew) {
+        s_settings_row = 0u;
+    }
+    variable_item_list_set_selected_item(list, s_settings_row);
     view_dispatcher_switch_to_view(app->view_dispatcher, SigRoamViewVarList);
 }
 
 bool sigroam_scene_settings_on_event(void* context, SceneManagerEvent event) {
-    UNUSED(context);
-    UNUSED(event);
-    /* Back not consumed → scene_manager pops to Start. Save is in on_exit. */
+    SigRoamApp* app = context;
+
+    if(event.type == SceneManagerEventTypeBack) {
+        s_settings_row = 0u;
+        return false;
+    }
+    if(event.type != SceneManagerEventTypeCustom) {
+        return false;
+    }
+    if(event.event == (uint32_t)SettingsEvProbe) {
+        s_settings_row = (uint8_t)SetProbe;
+        scene_manager_next_scene(app->scene_manager, SigRoamSceneProbe);
+        return true;
+    }
+    if(event.event == (uint32_t)SettingsEvRaw) {
+        s_settings_row = (uint8_t)SetRaw;
+        scene_manager_next_scene(app->scene_manager, SigRoamSceneRaw);
+        return true;
+    }
     return false;
 }
 

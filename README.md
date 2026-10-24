@@ -50,9 +50,9 @@ One radio covers 2.4 GHz and 5 GHz, not both at once. 5 GHz here is scan and enu
 
 **Probe.** Reads the board and shows PINGEQUA Scout Lite, GPS, and the card. Open it when the board does not answer.
 
-**Board tools.** Ignore list, logs on the card, and split size. The ignore list does not hide a network from the air. It only skips that name in the SD log. On Scout Lite firmware v1.1.0 or later, a split size is saved and kept after reboot. On v1.0.0, a reboot returns it to 1024 KB.
+**Board tools.** Ignore list and logs on the card. Split size is on the logs page. The ignore list does not hide a network from the air. It only skips that name in the SD log. On Scout Lite firmware v1.1.0 or later, a split size is saved and kept after reboot. On v1.0.0, a reboot returns it to 1024 KB.
 
-The menu also has Rank, Raw log, Settings, and About.
+The home menu is Dashboard, Upload, Rank, Board tools, Settings, and About. Probe and Raw log are under Settings. Wi-Fi is opened from Upload.
 
 ## Install and start
 
@@ -79,7 +79,7 @@ The app does not upload over the Flipper radio, and it does not store the CSV on
 
 Restart the board. It reads both files at boot and deletes them. Check that they are gone. Do not post the files, or a serial log, in an issue.
 
-**Wi-Fi.** The board does not import a network from the card. If Upload says there is no saved Wi-Fi, press WiFi and join the network in the app. The board saves that connection and uses it when you press Upload.
+**Wi-Fi.** The board does not import a network from the card. If Upload says there is no saved Wi-Fi, press WiFi. Saved names are listed when the board answers `sigroam wifi`. Scout Lite firmware v1.1.0 does not have that command, so the list starts empty there; Scan nearby still joins a network and the board saves it for Upload.
 
 You can still copy a CSV off the Scout Lite card and upload it at [WiGLE](https://wigle.net/).
 

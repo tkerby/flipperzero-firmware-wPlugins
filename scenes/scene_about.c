@@ -58,7 +58,7 @@
  *
  * Three INDEPENDENT clearances -- do not conflate them:
  *    (1) Row 1 is full width. One string, normal FontSecondary advance:
- *        "SigRoam Wardriving v" SR_FAP_VERSION = 105 px (fits 128; 0.8 is one digit).
+ *        "SigRoam Wardriving v" SR_FAP_VERSION = 105 px (fits 128; 0.9 is one digit).
  *    (2) Rows 2-5 overlap the code in y, so width must be <= 91 px.
  *        Longest remaining body line is still inside 91 px. Maker 74 px.
  *        "passive 2.4/5G + GNSS" as one row 5 string does not fit the QR
