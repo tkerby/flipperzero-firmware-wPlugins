@@ -10,6 +10,6 @@ App(
     fap_category="GPIO",
     fap_author="PINGEQUA_Lab",
     fap_weburl="https://github.com/pingequalab/sigroam-wardriving",
-    fap_version="0.8",
+    fap_version="0.9.1",
     fap_description="Dual-band Wi-Fi and GNSS survey for Scout Lite",
 )

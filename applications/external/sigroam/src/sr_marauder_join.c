@@ -137,7 +137,44 @@ static bool take_uint(const char* s, size_t n, size_t* i, unsigned* out) {
     return true;
 }
 
+static int8_t parse_rssi(const char* line, size_t len, size_t at) {
+    int v = 0;
+    int sign = 1;
+    bool any = false;
+
+    if(at < len && line[at] == '-') {
+        sign = -1;
+        at++;
+    }
+    while(at < len && line[at] >= '0' && line[at] <= '9') {
+        any = true;
+        v = v * 10 + (line[at] - '0');
+        if(v > 127) {
+            v = 127;
+        }
+        at++;
+    }
+    if(!any) {
+        return 0;
+    }
+    v *= sign;
+    if(v < -128) {
+        v = -128;
+    }
+    return (int8_t)v;
+}
+
 bool sr_join_parse_ap(const char* line, size_t len, uint16_t* index, char* ssid, size_t ssid_cap) {
+    return sr_join_parse_ap_rssi(line, len, index, ssid, ssid_cap, NULL);
+}
+
+bool sr_join_parse_ap_rssi(
+    const char* line,
+    size_t len,
+    uint16_t* index,
+    char* ssid,
+    size_t ssid_cap,
+    int8_t* rssi) {
     size_t i = 0u;
     unsigned idx = 0u;
     unsigned channel = 0u;
@@ -193,6 +230,9 @@ bool sr_join_parse_ap(const char* line, size_t len, uint16_t* index, char* ssid,
     }
     if(rssi_at == rest) {
         *index = (uint16_t)idx;
+        if(rssi != NULL) {
+            *rssi = parse_rssi(line, len, rssi_at);
+        }
         return true;
     }
     if(line[rssi_at - 1u] != ' ') {
@@ -208,6 +248,9 @@ bool sr_join_parse_ap(const char* line, size_t len, uint16_t* index, char* ssid,
     }
     ssid[copy_n] = '\0';
     *index = (uint16_t)idx;
+    if(rssi != NULL) {
+        *rssi = parse_rssi(line, len, rssi_at);
+    }
     return true;
 }
 
@@ -381,7 +424,11 @@ typedef struct {
     char essid[SR_SSID_MAX + 1u];
     size_t n;
     uint16_t index[SR_JOIN_AP_CAP];
+    int8_t rssi[SR_JOIN_AP_CAP];
     char ssid[SR_JOIN_AP_CAP][SR_JOIN_SSID_MAX + 1u];
+    bool saved_end;
+    size_t saved_n;
+    char saved[5][SR_JOIN_SSID_MAX + 1u];
 } JoinListen;
 
 static JoinListen g_listen;
@@ -406,9 +453,15 @@ void sr_join_listen(unsigned mode) {
     g_listen.essid_len = 0u;
     g_listen.essid[0] = '\0';
     g_listen.n = 0u;
+    g_listen.saved_end = false;
+    g_listen.saved_n = 0u;
     for(i = 0u; i < (size_t)SR_JOIN_AP_CAP; i++) {
         g_listen.index[i] = 0u;
+        g_listen.rssi[i] = 0;
         g_listen.ssid[i][0] = '\0';
+    }
+    for(i = 0u; i < 5u; i++) {
+        g_listen.saved[i][0] = '\0';
     }
 }
 
@@ -503,12 +556,69 @@ void sr_join_observe(const char* line, size_t len) {
             g_listen.saw_end = true;
             return;
         }
-        if(g_listen.n < (size_t)SR_JOIN_AP_CAP &&
-           sr_join_parse_ap(
-               line, len, &index, g_listen.ssid[g_listen.n], sizeof(g_listen.ssid[0]))) {
-            g_listen.index[g_listen.n] = index;
-            g_listen.n++;
+        {
+            int8_t rssi = 0;
+            char ssid[SR_JOIN_SSID_MAX + 1u];
+            size_t slot = g_listen.n;
+
+            ssid[0] = '\0';
+            if(!sr_join_parse_ap_rssi(line, len, &index, ssid, sizeof(ssid), &rssi)) {
+                return;
+            }
+            if(g_listen.n >= (size_t)SR_JOIN_AP_CAP) {
+                size_t weak = 0u;
+                size_t i;
+
+                for(i = 1u; i < (size_t)SR_JOIN_AP_CAP; i++) {
+                    if(g_listen.rssi[i] < g_listen.rssi[weak]) {
+                        weak = i;
+                    }
+                }
+                if(rssi <= g_listen.rssi[weak]) {
+                    return;
+                }
+                slot = weak;
+            } else {
+                g_listen.n++;
+            }
+            g_listen.index[slot] = index;
+            g_listen.rssi[slot] = rssi;
+            memcpy(g_listen.ssid[slot], ssid, sizeof(ssid));
         }
+        return;
+    }
+    if(g_listen.mode == SrJoinListenSaved) {
+        static const char kWifi[] = "wifi ";
+        static const char kEnd[] = "wifi end";
+        static const char kCount[] = "wifi count";
+        unsigned idx = 0u;
+        size_t i = sizeof(kWifi) - 1u;
+        size_t n;
+
+        if(eq(line, len, kEnd)) {
+            g_listen.saved_end = true;
+            return;
+        }
+        if(starts(line, len, kCount) || !starts(line, len, kWifi)) {
+            return;
+        }
+        if(!take_uint(line, len, &i, &idx)) {
+            return;
+        }
+        if(i < len && line[i] == ' ') {
+            i++;
+        }
+        if(i >= len || g_listen.saved_n >= 5u) {
+            return;
+        }
+        n = len - i;
+        if(n > (size_t)SR_JOIN_SSID_MAX) {
+            n = (size_t)SR_JOIN_SSID_MAX;
+        }
+        memcpy(g_listen.saved[g_listen.saved_n], line + i, n);
+        g_listen.saved[g_listen.saved_n][n] = '\0';
+        g_listen.saved_n++;
+        (void)idx;
         return;
     }
     if(g_listen.mode != SrJoinListenJoin) {
@@ -573,6 +683,44 @@ size_t sr_join_ap_count(void) {
     return g_listen.n;
 }
 
+bool sr_join_saved_end(void) {
+    return g_listen.saved_end;
+}
+
+size_t sr_join_saved_count(void) {
+    return g_listen.saved_n;
+}
+
+bool sr_join_saved_at(size_t i, char* ssid, size_t ssid_cap) {
+    size_t n;
+    size_t c;
+
+    if(i >= g_listen.saved_n || ssid == NULL || ssid_cap == 0u) {
+        return false;
+    }
+    n = 0u;
+    while(g_listen.saved[i][n] != '\0' && n < (size_t)SR_JOIN_SSID_MAX) {
+        n++;
+    }
+    c = n;
+    if(c >= ssid_cap) {
+        c = ssid_cap - 1u;
+    }
+    if(c > 0u) {
+        memcpy(ssid, g_listen.saved[i], c);
+    }
+    ssid[c] = '\0';
+    return true;
+}
+
+bool sr_join_ap_rssi(size_t i, int8_t* rssi) {
+    if(i >= g_listen.n || rssi == NULL) {
+        return false;
+    }
+    *rssi = g_listen.rssi[i];
+    return true;
+}
+
 bool sr_join_ap_at(size_t i, uint16_t* index, char* ssid, size_t ssid_cap) {
     size_t n;
     size_t c;
@@ -617,4 +765,72 @@ bool sr_join_ap_matches(uint16_t index, const char* ssid) {
 bool sr_join_using_matches(const char* ssid) {
     return ssid != NULL && g_listen.have_essid && !g_listen.essid_rejected &&
            strcmp(g_listen.essid, ssid) == 0;
+}
+
+static const char* join_fmt_name(const char* ssid) {
+    if(ssid == NULL || ssid[0] == '\0') {
+        return "(hidden)";
+    }
+    return ssid;
+}
+
+bool sr_join_fmt_known(const char* ssid, char* dst, size_t cap) {
+    const char* src;
+    size_t i = 0u;
+
+    if(dst == NULL || cap < 4u) {
+        return false;
+    }
+    src = join_fmt_name(ssid);
+    dst[0] = '*';
+    dst[1] = ' ';
+    while(src[i] != '\0' && (2u + i) < 20u && (2u + i + 1u) < cap) {
+        dst[2u + i] = src[i];
+        i++;
+    }
+    dst[2u + i] = '\0';
+    return true;
+}
+
+bool sr_join_fmt_ap(bool known, const char* ssid, int8_t rssi, char* dst, size_t cap) {
+    char rssi_s[5];
+    const char* src;
+    size_t rssi_n;
+    size_t name_n;
+    size_t i;
+    size_t pos;
+    int wr;
+
+    if(dst == NULL || cap < 21u) {
+        if(dst != NULL && cap > 0u) {
+            dst[0] = '\0';
+        }
+        return false;
+    }
+    wr = snprintf(rssi_s, sizeof(rssi_s), "%d", (int)rssi);
+    if(wr <= 0 || wr > 4) {
+        dst[0] = '\0';
+        return false;
+    }
+    rssi_n = (size_t)wr;
+    if(2u + 1u + rssi_n > 20u) {
+        dst[0] = '\0';
+        return false;
+    }
+    src = join_fmt_name(ssid);
+    name_n = 20u - 2u - 1u - rssi_n;
+    dst[0] = known ? '*' : ' ';
+    dst[1] = ' ';
+    pos = 2u;
+    for(i = 0u; i < name_n && src[i] != '\0'; i++) {
+        dst[pos++] = src[i];
+    }
+    while(pos + rssi_n < 20u) {
+        dst[pos++] = ' ';
+    }
+    for(i = 0u; i < rssi_n; i++) {
+        dst[pos++] = rssi_s[i];
+    }
+    dst[pos] = '\0';
+    return pos == 20u;
 }

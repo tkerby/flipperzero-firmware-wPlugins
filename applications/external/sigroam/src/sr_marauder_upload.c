@@ -86,7 +86,7 @@ _Static_assert(sizeof("on WiGLE") - 1u <= SR_MAU_COLS, "on WiGLE");
 _Static_assert(sizeof("WiGLE rejected") - 1u <= SR_MAU_COLS, "WiGLE rejected");
 _Static_assert(sizeof("try again") - 1u <= SR_MAU_COLS, "try again");
 _Static_assert(sizeof("Can't reach WiGLE") - 1u <= SR_MAU_COLS, "Can't reach WiGLE");
-_Static_assert(sizeof("try again later") - 1u <= SR_MAU_COLS, "try again later");
+_Static_assert(sizeof("no internet on Wi-Fi") - 1u <= SR_MAU_COLS, "no internet on Wi-Fi");
 _Static_assert(sizeof("WiGLE timed out") - 1u <= SR_MAU_COLS, "WiGLE timed out");
 _Static_assert(sizeof("Board low on RAM") - 1u <= SR_MAU_COLS, "Board low on RAM");
 _Static_assert(sizeof("Log not on card") - 1u <= SR_MAU_COLS, "Log not on card");
@@ -230,6 +230,17 @@ static void mau_keep_ok(void) {
     g_mau.file_ok = true;
     if(g_mau.name[0] != '\0') {
         mau_put(g_mau.ok_name, g_mau.name);
+    }
+    /* This file is still open, so an earlier attempt of it is not final.
+     * n_fail counts only files already closed. */
+    if(g_mau.n_fail == 0u) {
+        g_mau.file_fail = false;
+        g_mau.saw_fail = false;
+        g_mau.fail_reply = false;
+        g_mau.fail_route = false;
+        g_mau.fail_ram = false;
+        g_mau.fail_file = false;
+        mau_clear(g_mau.fail_name);
     }
 }
 
@@ -600,7 +611,9 @@ void sr_mau_up_lines(unsigned session, char* line1, char* line2) {
         break;
     case MauNoRoute:
         mau_put(line1, "Can't reach WiGLE");
-        mau_put(line2, "try again later");
+        /* The AP associated. The TCP session to api.wigle.net did not.
+         * Name the link, not a button. */
+        mau_put(line2, "no internet on Wi-Fi");
         break;
     case MauNoReply:
         mau_put(line1, "WiGLE timed out");

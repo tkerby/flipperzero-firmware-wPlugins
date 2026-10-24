@@ -33,7 +33,11 @@ enum {
     SR_JOIN_CHECK_TIMEOUT_MS = 30000
 };
 /* One dual-band sweep. channel_hop_delay defaults to 1 (WiFiScan.h:400).
- * HAS_DUAL_BAND HOP_DELAY is 250 (configs.h). dual_band_channels has 51 entries (WiFiScan.h). */
+ * HAS_DUAL_BAND HOP_DELAY is 250 (configs.h). dual_band_channels has 51 entries (WiFiScan.h).
+ * The first 14 entries are 2.4 GHz. Show the list once those have been hopped. */
+enum {
+    SR_JOIN_SHOW_MS = 14 * 250
+};
 enum {
     SR_JOIN_SWEEP_MS = 51 * 250
 };
@@ -43,6 +47,7 @@ enum {
     SrJoinListenScan,
     SrJoinListenList,
     SrJoinListenJoin,
+    SrJoinListenSaved,
 };
 
 /* A completed join -a has reached WL_CONNECTED in v1.17.0. The info echo
@@ -68,6 +73,14 @@ bool sr_join_password_ok(const char* password);
 size_t sr_join_build(unsigned index, const char* password, char* dst, size_t cap);
 
 bool sr_join_parse_ap(const char* line, size_t len, uint16_t* index, char* ssid, size_t ssid_cap);
+/* Same row. rssi may be NULL. A missing value is 0. */
+bool sr_join_parse_ap_rssi(
+    const char* line,
+    size_t len,
+    uint16_t* index,
+    char* ssid,
+    size_t ssid_cap,
+    int8_t* rssi);
 bool sr_join_is_list_end(const char* line, size_t len);
 bool sr_join_is_scan_banner(const char* line, size_t len);
 bool sr_join_is_using(const char* line, size_t len);
@@ -109,7 +122,17 @@ void sr_join_expect_index(uint16_t index);
 void sr_join_expect_check(void);
 size_t sr_join_ap_count(void);
 bool sr_join_ap_at(size_t i, uint16_t* index, char* ssid, size_t ssid_cap);
+bool sr_join_ap_rssi(size_t i, int8_t* rssi);
+/* `sigroam wifi` name list. Passwords are never part of this. */
+bool sr_join_saved_end(void);
+size_t sr_join_saved_count(void);
+bool sr_join_saved_at(size_t i, char* ssid, size_t ssid_cap);
 /* Valid only after a complete, echoed list -a response. Exact index and SSID. */
 bool sr_join_ap_matches(uint16_t index, const char* ssid);
 /* Valid after Using SSID is observed during join. */
 bool sr_join_using_matches(const char* ssid);
+
+/* Screen rows, at most 20 columns. dst is NUL-ended when cap > 0. */
+bool sr_join_fmt_known(const char* ssid, char* dst, size_t cap);
+/* Exactly 20 columns: mark, SSID, right-aligned rssi. */
+bool sr_join_fmt_ap(bool known, const char* ssid, int8_t rssi, char* dst, size_t cap);

@@ -286,6 +286,19 @@ int test_marauder_upload_run(void) {
     sr_mau_up_reset();
     sr_mau_up_on_send();
     feed("Uploading wardrive_2.log...");
+    feed("[WIGLE] No response bytes received");
+    feed("Timeout reached");
+    feed("[UPLOAD] WiGLE upload failed");
+    feed("[UPLOAD] WiGLE upload succeeded");
+    feed("Upload OK");
+    feed("Upload complete");
+    lines(0u, a, b);
+    CHECK(strcmp(a, "Sent to WiGLE") == 0);
+    CHECK(strcmp(b, "wardrive_2.log") == 0);
+
+    sr_mau_up_reset();
+    sr_mau_up_on_send();
+    feed("Uploading wardrive_2.log...");
     feed("[UPLOAD] WiGLE upload failed");
     feed("WiGLE failed");
     feed("Upload complete");
@@ -313,7 +326,7 @@ int test_marauder_upload_run(void) {
     feed("Upload complete");
     lines(0u, a, b);
     CHECK(strcmp(a, "Can't reach WiGLE") == 0);
-    CHECK(strcmp(b, "try again later") == 0);
+    CHECK(strcmp(b, "no internet on Wi-Fi") == 0);
 
     sr_mau_up_reset();
     sr_mau_up_on_send();
