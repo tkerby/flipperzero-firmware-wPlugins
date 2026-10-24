@@ -300,6 +300,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Flipper Lotto v1.0 (By molykima)](https://github.com/molykima/Flipper-Lottery-Number-Generator)
 - Updated: [SigRoam Wardriving v0.8 (By pingequalab)](https://github.com/pingequalab/sigroam-wardriving) `Req: ESP32`
 - Updated: [Hotspot Arcade v1.10.1 (By tarikbc)](https://github.com/tarikbc/hotspot-arcade) `Req: ESP32`
+- Sub-GHz: [Nice O-Code now counts like a real remote - the field on air is a scrambled press count, so the old +1 jumped a random distance and the gate stopped opening after a few presses. `Cnt` is the plain count now wherever it is shown or typed. Plain Nice One and Nice FloR-S are untouched (By xMasterX)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/6dcf8b822b2cfea6ad790d91aec4a1e39860c18e)
 
 <a name="release"></a>
 
