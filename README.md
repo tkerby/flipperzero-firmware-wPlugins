@@ -12,7 +12,9 @@ Three tools, plus an in-app wiring reference:
   played through the speaker
 - **REM Pod** — capacitive proximity detector via a bare copper-wire antenna
 
-Targets **Unleashed Firmware**, built with `ufbt`.
+Developed and tested primarily on **Unleashed Firmware**, built with `ufbt`. It's also
+verified to build cleanly against the **official Flipper firmware release SDK** (no
+Unleashed-exclusive APIs are used), so it works on stock firmware too.
 
 ## Build
 
