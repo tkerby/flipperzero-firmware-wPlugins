@@ -129,13 +129,9 @@ static const ConfirmDef confirm_force_crash = {
 };
 static const ConfirmDef confirm_ir_dazzler = {
     .header = "IR Dazzler Warning",
-    .text = "Continuous IR heats LEDs\n"
-            "and draws more current.\n"
-            "Check board limits first,\n"
-            "especially Poltergeist\n"
-            "from Rabbit-Labs.\n"
-            "Stop if the board gets hot.\n\n"
-            "OK: Start. Back: Cancel.",
+    .text = "The Rabbit-Labs Poltergeist\n"
+            "can draw too much current,\n"
+            "use at your own risk.",
 };
 
 typedef struct {
