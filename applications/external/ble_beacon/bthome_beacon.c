@@ -1,4 +1,4 @@
-﻿#include <furi.h>
+#include <furi.h>
 #include <furi_hal.h>
 #include <furi_hal_bt.h>
 #include <furi_hal_power.h>
@@ -8,8 +8,7 @@
 #include "ble_beacon_icons.h"
 
 #define BEACON_UPDATE_INTERVAL_MS 2000
-#define BEACON_TYPE_COUNT         6
-#define DEVICE_NAME               "Flipper"
+#define BEACON_TYPE_COUNT         8
 #define EXIT_SPLASH_DURATION_MS   2500
 #define INTRO_SPLASH_DURATION_MS  2000
 
@@ -17,9 +16,11 @@ typedef enum {
     BeaconTypeBthomeV2,
     BeaconTypeBthomeV1,
     BeaconTypeIbeacon,
+    BeaconTypeIbeaconFz,
     BeaconTypeEddystoneTlm,
     BeaconTypeAtc1441,
     BeaconTypeMibeacon,
+    BeaconTypeOepl,
 } BeaconType;
 
 typedef enum {
@@ -35,9 +36,11 @@ static const char* beacon_type_names[BEACON_TYPE_COUNT] = {
     "BTHome V2 Tag",
     "BTHome V1 Tag",
     "iBeacon Tag",
+    "iBeacon FZ Tag",
     "Eddystone TLM Tag",
     "ATC1441 Tag",
     "MiBeacon Tag",
+    "OEPL Tag",
 };
 
 static const bool beacon_has_simulated_humidity[BEACON_TYPE_COUNT] = {
@@ -45,6 +48,8 @@ static const bool beacon_has_simulated_humidity[BEACON_TYPE_COUNT] = {
     false,
     false,
     false,
+    false,
+    true,
     true,
     true,
 };
@@ -68,8 +73,19 @@ static const char* info_lines[] = {
     "",
     "Supported formats:",
     "BTHome v1/v2, iBeacon,",
-    "Eddystone TLM, ATC1441,",
-    "and MiBeacon.",
+    "iBeacon FZ, Eddystone",
+    "TLM, ATC1441, MiBeacon,",
+    "and OEPL.",
+    "",
+    "Short advertised names:",
+    "FZ BTH2, FZ BTH1, FZ,",
+    "FZ EDDY, FZ ATC, FZMI,",
+    "and FZ OEPL.",
+    "",
+    "iBeacon Tag uses Flags",
+    "and has no name.",
+    "iBeacon FZ Tag uses the",
+    "name FZ and no Flags.",
     "",
     "Real Flipper data:",
     "Battery level, voltage,",
@@ -226,11 +242,35 @@ static void put_u32(uint8_t* payload, uint8_t* p, uint32_t value) {
     payload[(*p)++] = (uint8_t)((value >> 24) & 0xFF);
 }
 
-static void put_device_name(uint8_t* payload, uint8_t* p) {
-    payload[(*p)++] = sizeof(DEVICE_NAME); // Length + AD type
+static const char* get_device_name(BeaconType type) {
+    switch(type) {
+    case BeaconTypeBthomeV2:
+        return "FZ BTH2";
+    case BeaconTypeBthomeV1:
+        return "FZ BTH1";
+    case BeaconTypeIbeaconFz:
+        return "FZ";
+    case BeaconTypeEddystoneTlm:
+        return "FZ EDDY";
+    case BeaconTypeAtc1441:
+        return "FZ ATC";
+    case BeaconTypeMibeacon:
+        return "FZMI";
+    case BeaconTypeOepl:
+        return "FZ OEPL";
+    default:
+        return "FZ";
+    }
+}
+
+static void put_device_name(uint8_t* payload, uint8_t* p, BeaconType type) {
+    const char* name = get_device_name(type);
+    uint8_t name_len = strlen(name);
+
+    payload[(*p)++] = name_len + 1; // Length + AD type
     payload[(*p)++] = 0x09; // Complete Local Name
-    memcpy(&payload[*p], DEVICE_NAME, sizeof(DEVICE_NAME) - 1);
-    *p += sizeof(DEVICE_NAME) - 1;
+    memcpy(&payload[*p], name, name_len);
+    *p += name_len;
 }
 
 static uint8_t build_bthome(const AppState* state, uint8_t* payload, bool use_v2) {
@@ -269,36 +309,40 @@ static uint8_t build_bthome(const AppState* state, uint8_t* payload, bool use_v2
 
     payload[service_len_index] = p - service_len_index - 1;
 
-    put_device_name(payload, &p);
+    put_device_name(payload, &p, state->type);
 
     return p;
 }
 
-static uint8_t build_ibeacon(uint8_t* payload) {
+static uint8_t build_ibeacon(const AppState* state, uint8_t* payload, bool use_name) {
+    UNUSED(state);
+
     static const uint8_t proximity_uuid[16] = {
-        0xE2,
-        0xC5,
-        0x6D,
-        0xB5,
-        0xDF,
-        0xFB,
-        0x48,
-        0xD2,
-        0xB0,
-        0x60,
-        0xD0,
-        0xF5,
-        0xA7,
-        0x10,
-        0x96,
-        0xE6,
+        0xFA,
+        0xCA,
+        0xDE,
+        0xFA,
+        0xDE,
+        0xCA,
+        0xFE,
+        0xED,
+        0xBE,
+        0xEF,
+        0xFA,
+        0xCA,
+        0xDE,
+        0xDE,
+        0xCA,
+        0xDE,
     };
 
     uint8_t p = 0;
 
-    payload[p++] = 0x02;
-    payload[p++] = 0x01;
-    payload[p++] = 0x06;
+    if(!use_name) {
+        payload[p++] = 0x02;
+        payload[p++] = 0x01;
+        payload[p++] = 0x06;
+    }
 
     payload[p++] = 0x1A;
     payload[p++] = 0xFF;
@@ -309,9 +353,13 @@ static uint8_t build_ibeacon(uint8_t* payload) {
     memcpy(&payload[p], proximity_uuid, sizeof(proximity_uuid));
     p += sizeof(proximity_uuid);
 
-    put_u16(payload, &p, 0x0001); // Major
-    put_u16(payload, &p, 0x0001); // Minor
+    put_u16(payload, &p, 0xFACA); // Major
+    put_u16(payload, &p, 0xDEFA); // Minor
     payload[p++] = (uint8_t)-59; // RSSI at 1 m
+
+    if(use_name) {
+        put_device_name(payload, &p, BeaconTypeIbeaconFz);
+    }
 
     return p;
 }
@@ -338,7 +386,7 @@ static uint8_t build_eddystone_tlm(const AppState* state, uint8_t* payload) {
     put_u32(payload, &p, state->telemetry.advertising_count);
     put_u32(payload, &p, state->telemetry.uptime_seconds);
 
-    put_device_name(payload, &p);
+    put_device_name(payload, &p, state->type);
 
     return p;
 }
@@ -350,7 +398,7 @@ static uint8_t build_atc1441(const AppState* state, uint8_t* payload) {
     payload[p++] = 0x01;
     payload[p++] = 0x06;
 
-    payload[p++] = 0x11;
+    payload[p++] = 0x10; // 1 type byte + 15 data bytes
     payload[p++] = 0x16;
     put_u16(payload, &p, 0x181A); // Environmental Sensing UUID
 
@@ -367,7 +415,7 @@ static uint8_t build_atc1441(const AppState* state, uint8_t* payload) {
     put_u16(payload, &p, state->telemetry.voltage_mv);
     payload[p++] = (uint8_t)(state->telemetry.advertising_count & 0xFF);
 
-    put_device_name(payload, &p);
+    put_device_name(payload, &p, state->type);
 
     return p;
 }
@@ -375,7 +423,11 @@ static uint8_t build_atc1441(const AppState* state, uint8_t* payload) {
 static uint8_t build_mibeacon(const AppState* state, uint8_t* payload) {
     uint8_t p = 0;
 
-    payload[p++] = 0x14;
+    payload[p++] = 0x02;
+    payload[p++] = 0x01;
+    payload[p++] = 0x06;
+
+    payload[p++] = 0x15; // 1 type byte + 20 data bytes
     payload[p++] = 0x16;
     put_u16(payload, &p, 0xFE95); // Xiaomi service UUID
 
@@ -394,7 +446,49 @@ static uint8_t build_mibeacon(const AppState* state, uint8_t* payload) {
     payload[p++] = 0x0A; // Battery level
     payload[p++] = state->telemetry.battery_percent;
 
-    put_device_name(payload, &p);
+    put_device_name(payload, &p, state->type);
+
+    return p;
+}
+
+static uint8_t build_oepl(const AppState* state, uint8_t* payload) {
+    uint8_t p = 0;
+
+    payload[p++] = 0x02;
+    payload[p++] = 0x01;
+    payload[p++] = 0x06;
+
+    payload[p++] = 0x0E; // Manufacturer Specific Data length
+    payload[p++] = 0xFF; // Manufacturer Specific Data type
+
+    // OpenEPaperLink / ATC BLE OEPL manufacturer ID 0x1337.
+    payload[p++] = 0x37;
+    payload[p++] = 0x13;
+
+    // OEPL advertising format version 2.
+    payload[p++] = 0x02;
+
+    // Hardware type.
+    // 0x0000 is enough for OEPL AP registration as an ATC BLE OEPL tag.
+    // Replace it with a real display hw_type to support image updates.
+    put_u16(payload, &p, 0x0000);
+
+    // Firmware version.
+    put_u16(payload, &p, 0x0100);
+
+    // Capabilities.
+    put_u16(payload, &p, 0x0000);
+
+    // Battery voltage, millivolts.
+    put_u16(payload, &p, state->telemetry.voltage_mv);
+
+    // Temperature, whole degrees Celsius, int8.
+    payload[p++] = (uint8_t)(state->telemetry.battery_temp_centi_c / 100);
+
+    // Advertising counter.
+    payload[p++] = (uint8_t)(state->telemetry.advertising_count & 0xFF);
+
+    put_device_name(payload, &p, state->type);
 
     return p;
 }
@@ -410,7 +504,11 @@ static bool build_payload(const AppState* state, uint8_t* payload, uint8_t* leng
         break;
 
     case BeaconTypeIbeacon:
-        *length = build_ibeacon(payload);
+        *length = build_ibeacon(state, payload, false);
+        break;
+
+    case BeaconTypeIbeaconFz:
+        *length = build_ibeacon(state, payload, true);
         break;
 
     case BeaconTypeEddystoneTlm:
@@ -423,6 +521,10 @@ static bool build_payload(const AppState* state, uint8_t* payload, uint8_t* leng
 
     case BeaconTypeMibeacon:
         *length = build_mibeacon(state, payload);
+        break;
+
+    case BeaconTypeOepl:
+        *length = build_oepl(state, payload);
         break;
 
     default:
@@ -539,7 +641,7 @@ static void draw_splash_screen(Canvas* canvas) {
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str_aligned(canvas, text_center_x, 36, AlignCenter, AlignCenter, "SIMULATOR");
 
-    canvas_draw_str_aligned(canvas, text_center_x, 48, AlignCenter, AlignCenter, "V1.0");
+    canvas_draw_str_aligned(canvas, text_center_x, 48, AlignCenter, AlignCenter, "V1.1");
 }
 
 static void draw_main_screen(Canvas* canvas, BthomeApp* app) {
@@ -654,7 +756,7 @@ static void draw_exit_splash_screen(Canvas* canvas) {
     canvas_draw_str_aligned(canvas, 64, 16, AlignCenter, AlignTop, "BLE Beacon");
 
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignTop, "Simulator v1.0");
+    canvas_draw_str_aligned(canvas, 64, 30, AlignCenter, AlignTop, "Simulator v1.1");
 
     canvas_draw_str_aligned(canvas, 64, 46, AlignCenter, AlignTop, "LAB-66 (C) Siarhei Besarab");
 }

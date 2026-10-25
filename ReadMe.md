@@ -35,6 +35,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [SigRoam Wardriving v0.9.1 (By pingequalab)](https://github.com/pingequalab/sigroam-wardriving) `Req: ESP32`
 - Sub-GHz: [Fix a received Nice O-Code frame being saved as if its installer code were FFFF - opening it from the list decoded the remote to nonsense instead of pointing at the Nice O-Code app, and offered to send it. Affected both the 72bit and the 112bit frames (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/d920ae3532fe86323ac8d564abee68edc6578765)
 - Updated: [Seed Capturer v1.2 (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/64d285c8e2a7eeef5f34cd5988d8506e2d730743) [Can decode a saved RAW `.sub` file instead of capturing over the air, and uses an external CC1101 module when one is plugged in (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/aa47284e599dec2a4a9b5c71595c0db1dc7a7c7e) [Now supports **BFT Mitto** remotes on 433.92 MHz, the same way as Erreka - capture the hops and recover the Seed in qUnleashed (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/0d295f581c1e34cd56e2e590ea85625a64c2b724)
+- Updated: [Flipper Lotto v1.0 (By molykima)](https://github.com/molykima/Flipper-Lottery-Number-Generator)
+- Updated: [BLE Beacon v1.1 (By steanlab)](https://github.com/steanlab/BLE-Beacon)
 
 <a name="release"></a>
 
@@ -383,7 +385,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Big Clock v1.3 (By Eris-Margeta)](https://github.com/Eris-Margeta/flipper-apps)
 - [BioVault v0.1 (By flamebarke)](https://github.com/flamebarke/biovault-flipper)
 - [BlackJack Counter v1.0 (By grugnoymeme)](https://github.com/grugnoymeme/flipperzero-blackjack_counter-fap)
-- [BLE Beacon v1.0 (By steanlab)](https://github.com/steanlab/BLE-Beacon)
+- [BLE Beacon v1.1 (By steanlab)](https://github.com/steanlab/BLE-Beacon)
 - [BLE Clicker v1.0 (By random1st)](https://github.com/random1st/flipper-ble-clicker)
 - [BLE Killer v1.1 (By H4lo)](https://github.com/H4lo/flipper_zero_ble_killer) `Req: ESP32`
 - [BLE Scanner v1.0 (By barkandbite)](https://github.com/barkandbite/flipper_suite) `Req: ESP32`
