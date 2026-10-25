@@ -1,20 +1,18 @@
-#include "core/string.h"
-#include <inttypes.h>
-#include "gui/canvas.h"
 #include <furi.h>
 #include <furi_hal_random.h>
 #include <furi_hal_power.h>
 #include <furi/core/log.h>
 #include <furi/core/string.h>
-#include <core/core_defines.h>
+#include <furi/core/core_defines.h>
 #include <gui/gui.h>
+#include <gui/view_dispatcher.h>
+#include <gui/scene_manager.h>
 #include <gui/modules/submenu.h>
 #include <gui/modules/text_box.h>
-#include <gui/scene_manager.h>
-#include <gui/view_dispatcher.h>
 #include <gui/view.h>
+#include <gui/canvas.h>
 #include <m-array.h>
-#include <stdint.h>
+#include <inttypes.h>
 
 #define TAG "Lottery"
 
@@ -91,25 +89,25 @@ typedef struct LottoApp {
     numbersArr_t ball_numbers;
 } LottoApp;
 
-void lotto_max_submenu_callback(void* context, uint32_t eventID) {
+static void lotto_max_submenu_callback(void* context, uint32_t eventID) {
     LottoApp* instance = context;
 
     view_dispatcher_send_custom_event(instance->view_dispatcher, eventID);
 }
 
-void six_forty_nine_submenu_callback(void* context, uint32_t eventID) {
+static void six_forty_nine_submenu_callback(void* context, uint32_t eventID) {
     LottoApp* instance = context;
 
     view_dispatcher_send_custom_event(instance->view_dispatcher, eventID);
 }
 
-void about_submenu_callback(void* context, uint32_t eventID) {
+static void about_submenu_callback(void* context, uint32_t eventID) {
     LottoApp* instance = context;
 
     view_dispatcher_send_custom_event(instance->view_dispatcher, eventID);
 }
 
-void lotto_app_winning_number_scene_draw_callback(Canvas* canvas, void* model) {
+static void lotto_app_winning_number_scene_draw_callback(Canvas* canvas, void* model) {
     LottoAppModel* model_instance = model;
     numbersArr_ptr arr_ptr = model_instance->ball_numbers_ptr;
     uint32_t ball_amount, ball_gap, ball_pos_x;
@@ -134,7 +132,7 @@ void lotto_app_winning_number_scene_draw_callback(Canvas* canvas, void* model) {
     }
 }
 
-void lotto_app_main_menu_on_enter(void* context) {
+static void lotto_app_main_menu_on_enter(void* context) {
     LottoApp* instance = context;
 
     submenu_set_header(instance->sub_menu, "Lottery Number Picker");
@@ -158,7 +156,7 @@ void lotto_app_main_menu_on_enter(void* context) {
     view_dispatcher_switch_to_view(instance->view_dispatcher, LottoAppViewSubmenu);
 }
 
-bool lotto_app_main_menu_on_event(void* context, SceneManagerEvent event) {
+static bool lotto_app_main_menu_on_event(void* context, SceneManagerEvent event) {
     LottoApp* instance = context;
 
     switch(event.type) {
@@ -223,10 +221,11 @@ static void selection_sort(numbersArr_t arr) {
 }
 
 /* a brief explaination of why the function below works:
- * it's important that the new number we generate is compared the rest of the array to 
- * ensure no duplicates exist! if the newly generated number does not get compared to the 
- * rest of the array, it's possible it won't be a duplicate of element at index j but instead
- * a duplicate of a value earlier in the array that has an index < j
+ * we generate a new number and then compare that newly generate number
+ * to the previous elements in the array, if the value is not the same then
+ * it cannot be a duplicate, if it is the same value then it's a duplicate
+ * and we must re-generate a new number until it is not a duplicate
+ * once we know it is not a duplicate, we push it onto the array
  */
 
 static void generate_numbers(LottoApp* instance) {
@@ -239,52 +238,49 @@ static void generate_numbers(LottoApp* instance) {
 
     numbersArr_reserve(arr_ptr, length);
 
+    // iterate ball_amount times
     for(size_t i = 0; i < length; ++i) {
-        // generate a random number and push it onto the top of array (at index i)
-        numbersArr_push_back(arr_ptr, generate_number(smallest_number, largest_number));
+        uint32_t generated_number = generate_number(smallest_number, largest_number);
 
-        // query the value of the element we just pushed onto the array
-        uint32_t current_element_value = *numbersArr_get(arr_ptr, i);
+        // loop runs for as long as the elements currently in the array
+        for(size_t j = 0; j < numbersArr_size(instance->ball_numbers);) {
+            uint32_t current_element_value = *numbersArr_get(arr_ptr, j);
 
-        // loop starting from i = 0 and check to see if the number we just generated exists earlier on in the array
-        // loop goes until the inner loop is 1 element behind the element at index i
-        for(size_t j = 0; j < i;) {
-            uint32_t earlier_element_value = *numbersArr_get(arr_ptr, j);
-
-            // if this evaluates to true it means the number we just generated is some kind of duplicate
-            // so change generate another number and set j = 0 so we can ensure the newly generated number also isn't a duplicate
-            if(current_element_value == earlier_element_value) {
-                uint32_t new_generated_number = generate_number(smallest_number, largest_number);
-                *numbersArr_get(instance->ball_numbers, i) = new_generated_number;
-                current_element_value = new_generated_number;
-                j = 0;
+            // duplicate value was generated! Re-generate number
+            if(current_element_value == generated_number) {
+                generated_number = generate_number(smallest_number, largest_number);
+                j = 0; // reset j so we can compare the re-generated number starting from the beginning of the array
             } else {
-                ++j;
+                ++j; // current element was not a duplicate, move onto the next element
             }
         }
+        // if we got here that means generated_number can't be any kind of duplicate
+        // so we can safely push it onto our ball_numbers array
+        numbersArr_push_back(arr_ptr, generated_number);
+
         FURI_LOG_I(TAG, "Generated a Number!");
     }
 
-    FURI_LOG_I(TAG, "Generated all numbers sucessfully!");
+    FURI_LOG_I(TAG, "Generated All Numbers Sucessfully!");
 
     selection_sort(arr_ptr);
-    FURI_LOG_I(TAG, "sorted elements sucessfully");
+    FURI_LOG_I(TAG, "Sorted Elements Sucessfully!");
 }
 
-void lotto_app_main_menu_on_exit(void* context) {
+static void lotto_app_main_menu_on_exit(void* context) {
     LottoApp* instance = context;
 
     submenu_reset(instance->sub_menu);
 }
 
-void lotto_app_winning_numbers_menu_on_enter(void* context) {
+static void lotto_app_winning_numbers_menu_on_enter(void* context) {
     LottoApp* instance = context;
 
     generate_numbers(instance);
     view_dispatcher_switch_to_view(instance->view_dispatcher, LottoAppViewDisplayNumbers);
 }
 
-bool lotto_app_winning_numbers_menu_on_event(void* context, SceneManagerEvent event) {
+static bool lotto_app_winning_numbers_menu_on_event(void* context, SceneManagerEvent event) {
     LottoApp* instance = context;
     UNUSED(instance);
 
@@ -297,14 +293,14 @@ bool lotto_app_winning_numbers_menu_on_event(void* context, SceneManagerEvent ev
     return false;
 }
 
-void lotto_app_winning_numbers_on_exit(void* context) {
+static void lotto_app_winning_numbers_on_exit(void* context) {
     LottoApp* instance = context;
 
     numbersArr_reset(instance->ball_numbers); // note: this changes the size but NOT the capacity
     instance->ticket_data = NULL;
 }
 
-void lotto_app_about_on_enter(void* context) {
+static void lotto_app_about_on_enter(void* context) {
     LottoApp* instance = context;
     text_box_set_text(
         instance->about_info_box,
@@ -318,7 +314,7 @@ void lotto_app_about_on_enter(void* context) {
     view_dispatcher_switch_to_view(instance->view_dispatcher, LottoAppViewTextBox);
 }
 
-bool lotto_app_about_on_event(void* context, SceneManagerEvent event) {
+static bool lotto_app_about_on_event(void* context, SceneManagerEvent event) {
     UNUSED(context);
 
     switch(event.type) {
@@ -353,32 +349,32 @@ void (*lotto_app_on_exit_handlers[])(void*) = {
     lotto_app_about_on_exit,
 };
 
-const SceneManagerHandlers lotto_app_scene_handlers = {
+static const SceneManagerHandlers lotto_app_scene_handlers = {
     .on_enter_handlers = lotto_app_on_enter_handlers,
     .on_event_handlers = lotto_app_on_event_handlers,
     .on_exit_handlers = lotto_app_on_exit_handlers,
     .scene_num = MAX_SCENES,
 };
 
-bool lotto_app_dispatcher_on_custom_event(void* context, uint32_t eventID) {
+static bool lotto_app_dispatcher_on_custom_event(void* context, uint32_t eventID) {
     LottoApp* instance = context;
 
     return scene_manager_handle_custom_event(instance->scene_manager, eventID);
 }
 
-void lotto_app_dispatcher_on_tick_event(void* context) {
+static void lotto_app_dispatcher_on_tick_event(void* context) {
     LottoApp* instance = context;
 
     return scene_manager_handle_tick_event(instance->scene_manager);
 }
 
-bool lotto_app_dispatcher_on_navigation_event(void* context) {
+static bool lotto_app_dispatcher_on_navigation_event(void* context) {
     LottoApp* instance = context;
 
     return scene_manager_handle_back_event(instance->scene_manager);
 }
 
-LottoApp* allocate_lotto_app() {
+static LottoApp* allocate_lotto_app() {
     LottoApp* instance = malloc(sizeof(LottoApp));
 
     instance->view_dispatcher = view_dispatcher_alloc();
@@ -426,7 +422,7 @@ LottoApp* allocate_lotto_app() {
     return instance;
 }
 
-void deallocate_lotto_app(LottoApp* instance) {
+static void deallocate_lotto_app(LottoApp* instance) {
     view_dispatcher_remove_view(instance->view_dispatcher, LottoAppViewSubmenu);
     view_dispatcher_remove_view(instance->view_dispatcher, LottoAppViewDisplayNumbers);
     view_dispatcher_remove_view(instance->view_dispatcher, LottoAppViewTextBox);
