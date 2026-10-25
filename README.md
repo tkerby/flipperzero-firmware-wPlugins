@@ -156,8 +156,7 @@ apps/Bluetooth/ble_beacon.fap
 
 ## Author
 
-**Siarhei Besarab**  
-aka **steanlab**
+**Siarhei Besarab** aka **steanlab**
 
 - Telegram: [t.me/lab66](https://t.me/lab66)
 - GitHub: [github.com/steanlab](https://github.com/steanlab)
