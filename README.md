@@ -1,202 +1,177 @@
 # BLE Beacon Simulator for Flipper Zero
 
-**BLE Beacon Simulator** is a Flipper Zero application that turns the device into a configurable Bluetooth Low Energy (BLE) beacon for testing BLE scanners, smart-home integrations, and mobile applications.
+**BLE Beacon Simulator** turns a Flipper Zero into a configurable, unencrypted Bluetooth Low Energy advertising beacon.
 
-The app was originally created as a second test sensor for debugging [BTHome Logger](https://github.com/steanlab/BTHome-Logger), an Android application that decodes BTHome v1 and v2 advertisements into human-readable readings. Instead of buying a second physical thermometer, the Flipper Zero can emulate one.
+The app is designed as a companion for the **BTHome Logger** Android application, but it can also be used independently for testing BLE scanners, smart-home integrations, widgets, dashboards, and mobile applications.
 
-It has since grown into a more general BLE beacon simulator. It is useful for developers, makers, home-automation enthusiasts, firmware testers, and anyone working with BLE sensors, smart-home integrations, or Bluetooth advertising formats.
+## Supported beacon types
 
-## What it does
+The application supports the following beacon formats:
 
-The application broadcasts unencrypted BLE advertisements from the Flipper Zero. You can switch between several common beacon formats and inspect live Flipper telemetry on the screen.
+| Beacon type | Advertised name | Real Flipper data | Simulated data |
+|---|---|---|---|
+| BTHome V2 | `FZ BTH2` | Battery, voltage, current, temperatures | None |
+| BTHome V1 | `FZ BTH1` | Battery, voltage, current, temperatures | None |
+| iBeacon | `FZ` | None | UUID, Major, Minor, RSSI |
+| Eddystone TLM | `FZ EDDY` | Battery voltage, temperature | Uptime, advertising count |
+| ATC1441 | `FZ ATC` | Battery, voltage, temperature | Humidity, MAC, counter |
+| MiBeacon | `FZMI` | Battery, temperature | Humidity, MAC, product ID |
+| OEPL | `FZ OEPL` | Battery voltage, temperature | Hardware type, firmware version, counter |
 
-Supported beacon types:
+## New in version 1.1
 
-- **BTHome V2**
-- **BTHome V1**
-- **iBeacon**
-- **Eddystone TLM**
-- **ATC1441**
-- **MiBeacon**
+### OEPL tag support
 
-The device advertises with the local name Flipper` where the selected advertising format has enough space for it.
+A new **OEPL Tag** mode was added.
 
-## Why it is useful
+When selected, Flipper Zero advertises itself as an **ATC BLE OEPL** compatible tag using manufacturer ID `0x1337` and OEPL advertising format version 2.
 
-Testing a BTHome receiver, Android widget, Home Assistant integration, or BLE scanner usually requires a real sensor that continuously broadcasts temperature, humidity, battery, and voltage data.
+An OpenEPaperLink Access Point with BLE scanning enabled should detect the device and register it as an ATC BLE OEPL tag.
 
-This app provides a convenient software-based test transmitter:
+Expected AP log output:
 
-- Test a BTHome decoder without a second hardware sensor.
-- Generate repeatable BLE advertisements for mobile-app debugging.
-- Check how a scanner handles different beacon formats.
-- Simulate a temperature and humidity sensor for smart-home testing.
-- Verify that a widget or logger correctly updates when new advertisements arrive.
-- Experiment with BTHome v1, BTHome v2, iBeacon, Eddystone TLM, ATC1441, and MiBeacon formats.
+```text
+ATC BLE OEPL Detected
+Version 2 ATC_BLE_OEPL Received
+```
+
+The OEPL advertisement contains:
+
+- OEPL manufacturer ID `0x1337`
+- OEPL protocol version `2`
+- Hardware type
+- Firmware version
+- Capabilities
+- Battery voltage
+- Temperature
+- Advertising counter
+
+By default, the hardware type is set to `0x0000`. This is enough for the OEPL Access Point to register Flipper as an ATC BLE OEPL tag. To support actual image uploads, replace the hardware type with the value corresponding to a real display model.
+
+### Short advertised names
+
+All beacon types now use short, human-readable advertised names:
+
+```text
+FZ BTH2
+FZ BTH1
+FZ
+FZ EDDY
+FZ ATC
+FZMI
+FZ OEPL
+```
+
+The short names allow the Complete Local Name field to fit into the 31-byte legacy BLE advertising payload.
+
+### iBeacon changes
+
+The iBeacon now uses a unique, human-readable UUID:
+
+```text
+FACADEFA-DECA-FEED-BEEF-FACADEDECADE
+```
+
+It also uses:
+
+```text
+Major: FACA
+Minor: DEFA
+```
+
+This makes the Flipper iBeacon easy to distinguish from other iBeacons in applications such as nRF Connect.
+
+The iBeacon advertisement does not include the standard Flags AD structure. This was necessary to fit the short device name `FZ` into the 31-byte advertising payload. The iBeacon manufacturer data remains valid, but some BLE scanners may display the device with fewer classification details.
+
+### ATC1441 fix
+
+The Service Data length for the ATC1441 advertisement was corrected from `0x11` to `0x10`.
+
+The previous value was one byte too long, which could cause BLE scanners to reject or incorrectly parse the advertisement.
+
+### MiBeacon fix
+
+The Service Data length for the MiBeacon advertisement was corrected from `0x14` to `0x15`.
+
+The previous value was one byte too short, which could cause BLE scanners to reject or incorrectly parse the advertisement.
+
+With the shortened name `FZMI`, the complete MiBeacon advertisement now fits exactly into the 31-byte legacy advertising payload.
 
 ## Real and simulated data
 
-The Flipper Zero provides real battery and power-management telemetry. Some fields required by certain beacon formats are not physically available on the device, so they are clearly simulated.
+The application uses real Flipper Zero telemetry where possible:
 
-| Data | Source |
-|---|---|
-| Battery level | Real Flipper battery percentage |
-| Battery voltage | Real Fuel Gauge measurement |
-| Battery current | Real Fuel Gauge measurement |
-| Battery temperature | Real Fuel Gauge temperature |
-| Charger / board temperature | Real charger IC temperature |
-| Humidity | Simulated: 42–48% |
-| iBeacon UUID | Static test UUID |
-| iBeacon major / minor | Static test values |
-| iBeacon measured RSSI | Static test value: -59 dBm |
-| Advertising counter | Incremented on every update |
-| Uptime | Incremented on every update |
-
-The simulated humidity changes slightly between advertising updates, which makes it useful for checking that a receiver updates its UI correctly.
-
-## Beacon formats
-
-### BTHome V2
-
-Broadcasts an unencrypted BTHome V2 advertisement using service UUID 0xFCD2.
-
-Included data:
-
-- Battery level
+- Battery charge level
 - Battery voltage
 - Battery current
 - Battery temperature
 - Charger temperature
 
-This is the recommended format for testing [BTHome Logger](https://github.com/steanlab/BTHome-Logger) and Home Assistant-style BTHome integrations.
+Some beacon formats require values that Flipper Zero cannot measure directly. In that case, the application simulates them:
 
-### BTHome V1
-
-Broadcasts an unencrypted BTHome V1 advertisement using service UUID 0x181C.
-
-It contains the same telemetry fields as BTHome V2 and is useful for testing older BTHome receivers and custom parsers.
-
-### iBeacon
-
-Broadcasts an Apple iBeacon advertisement with:
-
-- Proximity UUID: e2c56db5-dffb-48d2-b060-d0f5a71096e6
-- Major: 1
-- Minor: 1
-- Measured RSSI at 1 m: -59 dBm
-
-### Eddystone TLM
-
-Broadcasts an Eddystone Telemetry frame using the Eddystone service UUID 0xFEAA.
-
-Included data:
-
-- Battery voltage
-- Battery temperature
-- Advertising count
-- Uptime in seconds
-
-### ATC1441
-
-Emulates the advertising format used by ATC1441 / PVVX-flashed Xiaomi thermometer sensors.
-
-Included data:
-
-- Temperature
-- Simulated humidity
-- Battery level
-- Battery voltage
-- Advertising counter
-
-This format is useful for testing receivers intended for custom Xiaomi thermometer firmware.
-
-### MiBeacon
-
-Emulates a simplified unencrypted Xiaomi MiBeacon advertisement.
-
-Included data:
-
-- Temperature
-- Simulated humidity
-- Battery level
-
-The product ID is intended to be replaced with the ID of a real Xiaomi device when full receiver compatibility is required.
-
-## User interface
-
-The main screen shows the selected beacon type, live telemetry, and the advertising status. When the beacon is active, an `ADV` indicator and a blinking Bluetooth symbol appear at the top of the screen.
+- Humidity for ATC1441 and MiBeacon
+- iBeacon UUID, Major, Minor, and RSSI
+- OEPL hardware type, firmware version, and capabilities
+- Eddystone TLM uptime and advertising counter
 
 ## Controls
 
-| Button | Action |
+| Control | Action |
 |---|---|
-| Left | Previous beacon type |
-| Right | Next beacon type |
-| Up, short press | Select **Info** |
-| Down, short press | Select **Help** |
-| Up, long press | Open the Info screen |
-| Down, long press | Open the Help screen |
-| OK | Start or stop the beacon; opens Info or Help if selected |
-| Back | Open the exit confirmation screen |
+| `Left` / `Right` | Change beacon type |
+| `Up`, short press | Select **Info** |
+| `Down`, short press | Select **Help** |
+| `Up`, hold | Open **Info** |
+| `Down`, hold | Open **Help** |
+| `OK` | Open the selected screen or start / stop the beacon |
+| `Back` | Open the exit menu |
 
-The beacon is not started automatically. Press OK to begin advertising.
+## Exit menu
 
-## Info screen
+When pressing `Back` on the main screen, the application shows an exit confirmation:
 
-The Info screen explains which values are simulated and which values come from the Flipper hardware.
+- `Left`: return to the application
+- `Right`: exit the application
 
-It includes:
+## Installation
 
-- Simulated humidity range
-- Static iBeacon UUID, major, minor, and RSSI values
-- List of real Flipper telemetry values
-- BLE local name
+Build the application with [uFBT](https://github.com/flipperdevices/flipperzero-ufbt):
 
-Use Up and Down to scroll through the text. Press OK or Back to return to the main screen.
+```bash
+ufbt
+```
 
-## Help screen
+Then copy the resulting `.fap` file to the Flipper Zero applications directory:
 
-The Help screen contains a short reference for all controls.
+```text
+apps/Bluetooth/ble_beacon.fap
+```
 
-Use Up and Down to scroll through the text. Press OK or Back to return to the main screen.
+## Notes
 
-## Exit screen
-
-Pressing Back on the main screen opens an exit confirmation dialog. If you select **Yes**, the app shows a short exit splash screen. After the splash screen, the application stops BLE advertising, releases all resources, and exits cleanly.
-
-## Technical details
-
-- The application uses the Flipper Zero extra BLE beacon API.
-- Advertising interval: 1000 ms.
-- Advertising channels: 37, 38, and 39.
-- Address type: random static address.
-- Advertising update interval: 2000 ms.
-- All supported advertisements are unencrypted.
-- The BLE advertising payload is limited to 31 bytes, which determines which fields and local names fit into each beacon format.
-
-## Related project
-
-- [BTHome Logger for Android](https://github.com/steanlab/BTHome-Logger) — an Android application for receiving and decoding unencrypted BTHome v1 and v2 advertisements.
+- The application advertises unencrypted BLE beacons only.
+- It does not connect to other devices and does not provide a GATT server.
+- The OEPL mode registers the device as an ATC BLE OEPL tag, but image upload requires a valid display hardware type.
+- The iBeacon mode is intended for testing and identification, not for cloning another person’s AirTag or Find My accessory.
 
 ## Author
 
-**Siarhei Besarab (steanlab)**  
-LAB-66
+**Siarhei Besarab**  
+aka **steanlab**
 
-## Contacts
+- Telegram: [t.me/lab66](https://t.me/lab66)
+- GitHub: [github.com/steanlab](https://github.com/steanlab)
+- LinkedIn: [@steanlab](https://www.linkedin.com/in/steanlab)
+- Mastodon: [@lab66](https://mastodon.social/@lab66)
 
-* **LAB-66:** [t.me/lab66](https://t.me/lab66)
-* **LinkedIn:** [@steanlab](https://www.linkedin.com/in/steanlab)
-* **Mastodon:** [@lab66](https://mastodon.social/@lab66)
+## Support
 
-## Support Development
+If you find this project useful, you can support the developer:
 
-If this database tool is useful for your academic, educational, laboratory, or hardware projects, you can support its development:
+- Patreon: [@steanlab](https://www.patreon.com/steanlab)
+- PayPal: [@steanlab](https://www.paypal.com/paypalme/steanlab)
+- Revolut: [@steanlab](https://revolut.com)
 
-* [PayPal](https://paypal.me/steanlab)
-* [Revolut](https://revolut.me/steanlab)
-* [GitHub Sponsors](https://github.com/sponsors/steanlab)
-* [Donorbox](https://donorbox.org/donations-for-lab-66)
-* Crypto Bitcoin (BTC): bc1qe5dmykh247nnycz8tjlfp3te67kftsmc8uxz5k, Ethereum (ETH): 0x3Aa313FA17444db70536A0ec5493F3aaA49C9CBf, Z-CASH (ZEC): t1LrYwjGn84gG4fWRs3ajaHZdaK2VWi5gFk
+## Special thanks
 
-*Thank you for supporting independent science and open-source tools.*
+Thanks to the **Flipper Zero Team** and **Pavel Zhouner** for providing lab equipment.
