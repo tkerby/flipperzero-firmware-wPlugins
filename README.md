@@ -1,4 +1,21 @@
-# CatDriver (Wardrive Wi-Fi + BLE + GPS) 🐾📡
+<p align="center">
+  <img src="assets/catdriver_logo_final.jpg" alt="CatDriver Logo" width="340"/>
+</p>
+
+<h1 align="center">CatDriver (Wardrive Wi-Fi + BLE + GPS) 🐾📡</h1>
+
+<p align="center">
+  <b>Advanced Wardriving Suite for Flipper Zero + ESP32-S3 + GPS</b><br>
+  Captura y exportación estandarizada WiGLE CSV 1.4 de redes Wi-Fi 2.4 GHz y dispositivos BLE con geolocalización satelital en tiempo real.
+</p>
+
+<p align="center">
+  <a href="https://github.com/EVL87/catwardrive/releases/tag/v1.0"><img src="https://img.shields.io/badge/Release-v1.0-orange.svg" alt="Release v1.0"></a>
+  <a href="https://github.com/EVL87/catwardrive/blob/FlipperZeroApps/LICENSE"><img src="https://img.shields.io/badge/License-GPL--3.0-blue.svg" alt="License"></a>
+  <a href="https://github.com/flipperdevices/flipper-application-catalog/pull/1341"><img src="https://img.shields.io/badge/Flipper%20Lab-PR%20%231341-yellow.svg" alt="Flipper Lab PR"></a>
+</p>
+
+---
 
 **CatDriver** es una aplicación avanzada y optimizada de wardriving para **Flipper Zero** junto a la placa **Electronic Cats Marauder Add-on V1.1 (ESP32-S3)** y módulo **GPS NEO-6M V2**.
 
