@@ -21,7 +21,3 @@ ScanMode key_scanner_get_mode(KeyScanner* scanner);
 KeyCategory key_scanner_get_current_phase(KeyScanner* scanner);
 
 bool key_scanner_poll_step(KeyScanner* scanner, DetectedKey* out_key);
-void key_scanner_simulate_detection(
-    KeyScanner* scanner,
-    KeyCategory category,
-    DetectedKey* out_key);
