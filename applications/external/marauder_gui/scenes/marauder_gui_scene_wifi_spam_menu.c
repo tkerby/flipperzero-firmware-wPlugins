@@ -16,8 +16,7 @@ void marauder_gui_scene_wifi_spam_menu_on_enter(void* context) {
     for(size_t i = 0; i < count; i++) {
         marauder_wifi_spam_menu_items[i].label_tr = marauder_gui_wifi_spam_type_label(i);
         marauder_wifi_spam_menu_items[i].label_en = marauder_gui_wifi_spam_type_label_en(i);
-        marauder_wifi_spam_menu_items[i].description_tr =
-            marauder_gui_wifi_spam_type_description(i);
+        marauder_wifi_spam_menu_items[i].description_tr = marauder_gui_wifi_spam_type_description(i);
         marauder_wifi_spam_menu_items[i].description_en =
             marauder_gui_wifi_spam_type_description_en(i);
     }

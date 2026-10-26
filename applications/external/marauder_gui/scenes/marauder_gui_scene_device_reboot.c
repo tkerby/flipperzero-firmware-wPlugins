@@ -22,7 +22,8 @@ void marauder_gui_scene_device_reboot_on_enter(void* context) {
     MarauderGuiApp* app = context;
 
     widget_reset(app->widget);
-    widget_add_string_element(app->widget, 64, 2, AlignCenter, AlignTop, FontPrimary, "Reboot");
+    widget_add_string_element(
+        app->widget, 64, 2, AlignCenter, AlignTop, FontPrimary, "Reboot");
     widget_add_text_box_element(
         app->widget,
         0,

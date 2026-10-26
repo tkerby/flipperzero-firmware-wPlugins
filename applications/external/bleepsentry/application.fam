@@ -1,0 +1,16 @@
+App(
+    appid="bleepsentry",
+    name="Bleepsentry",
+    apptype=FlipperAppType.EXTERNAL,
+    targets=["f7"],
+    entry_point="bleepsentry_app",
+    stack_size=2 * 1024,
+    sources=["*.c*", "!tests"],
+    fap_icon="bleepsentry.png",
+    fap_icon_assets="images",
+    fap_category="Sub-GHz",
+    fap_author="hdyrawan",
+    fap_weburl="https://github.com/hdyrawan/bleepsentry",
+    fap_version="1.0",
+    fap_description="Passive RF anomaly sentry for red-team recon and TSCM bug sweeps",
+)

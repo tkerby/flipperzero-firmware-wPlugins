@@ -99,8 +99,7 @@ void marauder_gui_scene_wifi_attack_on_enter(void* context) {
         marauder_uart_send_line(app->uart, cmd);
     }
 
-    marauder_uart_send_line(
-        app->uart, marauder_wifi_ap_attack_types[app->wifi_ap_attack_type].command);
+    marauder_uart_send_line(app->uart, marauder_wifi_ap_attack_types[app->wifi_ap_attack_type].command);
 
     app->attack_active = true;
 }

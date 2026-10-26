@@ -1,0 +1,16 @@
+App(
+    appid="canfdhs",
+    name="CAN-FD-HS",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="usb_can_app_start",
+    stack_size=1 * 1024,
+    fap_icon_assets="assets",
+    fap_libs=["assets"],
+    fap_icon="icon.png",
+    sources=["*.c","*.cpp"],
+    fap_category="GPIO",
+    fap_author="SERMA Safety and Security",
+    fap_weburl="https://github.com/serma-safety-security/Flipper-Zero-CAN-FD-HS-SW",
+    fap_version="0.1",
+    fap_description="USB-to-CAN FD bridge for SERMA CAN FD boards, with USB loopback and CAN test modes.",
+)

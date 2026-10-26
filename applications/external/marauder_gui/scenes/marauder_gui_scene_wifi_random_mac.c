@@ -15,9 +15,8 @@ static void marauder_gui_scene_wifi_random_mac_redraw(MarauderGuiApp* app) {
         AlignCenter,
         AlignTop,
         FontPrimary,
-        app->wifi_mac_random_is_ap ?
-            marauder_gui_text(app, "Rastgele AP MAC", "Random AP MAC") :
-            marauder_gui_text(app, "Rastgele Istemci MAC", "Random Client MAC"));
+        app->wifi_mac_random_is_ap ? marauder_gui_text(app, "Rastgele AP MAC", "Random AP MAC") :
+                                      marauder_gui_text(app, "Rastgele Istemci MAC", "Random Client MAC"));
     widget_add_text_box_element(
         app->widget,
         0,
@@ -27,7 +26,7 @@ static void marauder_gui_scene_wifi_random_mac_redraw(MarauderGuiApp* app) {
         AlignCenter,
         AlignTop,
         app->last_uart_line[0] != '\0' ? app->last_uart_line :
-                                         marauder_gui_text(app, "Gonderiliyor...", "Sending..."),
+                                          marauder_gui_text(app, "Gonderiliyor...", "Sending..."),
         false);
 }
 

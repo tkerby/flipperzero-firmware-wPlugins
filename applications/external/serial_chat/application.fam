@@ -1,0 +1,13 @@
+App(
+    appid="serial_chat",
+    name="Serial Chat",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="serial_chat_app",
+    stack_size=8 * 1024,
+    fap_icon="icons/serial_chat_10px.png",
+    fap_category="GPIO",
+    fap_author="Osman Gokce",
+    fap_weburl="https://github.com/osmangokc",
+    fap_version="1.0",
+    fap_description="UART Serial Chat for Flipper Zero",
+)

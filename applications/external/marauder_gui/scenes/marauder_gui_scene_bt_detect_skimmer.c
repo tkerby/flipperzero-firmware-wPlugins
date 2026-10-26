@@ -13,14 +13,12 @@ static bool marauder_gui_scene_bt_detect_skimmer_is_match(const char* line) {
 static void marauder_gui_scene_bt_detect_skimmer_uart_line(MarauderGuiApp* app, const char* line) {
     if(!marauder_gui_scene_bt_detect_skimmer_is_match(line)) return;
     marauder_gui_log_scan_append(app, line);
-    marauder_gui_log_scan_redraw(
-        app, marauder_gui_text(app, "Skimmer Tespiti", "Skimmer Detection"));
+    marauder_gui_log_scan_redraw(app, marauder_gui_text(app, "Skimmer Tespiti", "Skimmer Detection"));
 }
 
 static void marauder_gui_scene_bt_detect_skimmer_start(MarauderGuiApp* app) {
     marauder_uart_send_line(app->uart, "sniffskim");
-    marauder_gui_log_scan_redraw(
-        app, marauder_gui_text(app, "Skimmer Tespiti", "Skimmer Detection"));
+    marauder_gui_log_scan_redraw(app, marauder_gui_text(app, "Skimmer Tespiti", "Skimmer Detection"));
 }
 
 void marauder_gui_scene_bt_detect_skimmer_on_enter(void* context) {

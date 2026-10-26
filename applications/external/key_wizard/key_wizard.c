@@ -55,7 +55,7 @@ static const struct {
     const char* proto;
     const char* uid;
 } QUICK_KEYS[] = {
-    {KeyCategoryIButton, "Dallas Universal", "Dallas", "FF FF FF FF FF FF FF 01"},
+    {KeyCategoryIButton, "Dallas Universal", "DS1990", "01 FF FF FF FF FF FF 2F"},
     {KeyCategoryLFRFID, "EM4100 Universal", "EM4100", "00 00 00 00 00"},
     {KeyCategoryIButton, "Cyfral Master", "Cyfral", "01 23 45 67 89 AB CD EF"},
     {KeyCategoryNFC, "Mifare Blank", "Mifare Classic", "DE AD BE EF"},
@@ -248,21 +248,21 @@ static void draw_screen_quick_keys(Canvas* canvas, KeyWizardApp* app) {
 }
 
 static const char* const about_lines[] = {
-    "Key Wizard v1.2.0",
+    "Key Wizard v1.3",
     "Multi-Reader Sorter",
     "-------------------",
     "Supported Technologies:",
-    "• 125 kHz RFID",
+    "- 125 kHz RFID",
     "  EM4100, HID, Indala",
-    "• 13.56 MHz NFC",
+    "- 13.56 MHz NFC",
     "  Mifare, NTAG, ISO14443",
-    "• 1-Wire iButton",
+    "- 1-Wire iButton",
     "  Dallas, Cyfral, Metakom",
     "-------------------",
     "Direct Asset Saving:",
-    "• /ext/lfrfid/*.rfid",
-    "• /ext/nfc/*.nfc",
-    "• /ext/ibutton/*.ibtn",
+    "- /ext/lfrfid/*.rfid",
+    "- /ext/nfc/*.nfc",
+    "- /ext/ibutton/*.ibtn",
     "-------------------",
     "Author:",
     "Vazgen Grigoryan",
@@ -479,7 +479,7 @@ int32_t key_wizard_app(void* p) {
                                 memcpy(app->state.current_key.data, rom, 8);
                                 app->state.current_key.data_len = 8;
                             } else {
-                                uint8_t rom[8] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01};
+                                uint8_t rom[8] = {0x01, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2F};
                                 memcpy(app->state.current_key.data, rom, 8);
                                 app->state.current_key.data_len = 8;
                             }

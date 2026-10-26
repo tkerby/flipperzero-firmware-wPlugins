@@ -6,8 +6,7 @@
    "ip: port" line whenever an open one is found - raw lines, log-scan pattern. This can take a
    very long time (every port, 100ms timeout each) - the user is expected to just Back out once
    they've seen enough. */
-static void
-    marauder_gui_scene_wifi_port_scan_status_uart_line(MarauderGuiApp* app, const char* line) {
+static void marauder_gui_scene_wifi_port_scan_status_uart_line(MarauderGuiApp* app, const char* line) {
     if(line[0] == '\0') return;
     marauder_gui_log_scan_append(app, line);
     marauder_gui_log_scan_redraw(app, "Port Scan");

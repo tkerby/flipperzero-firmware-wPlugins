@@ -1,0 +1,15 @@
+App(
+    appid="onkyo_remote",
+    name="Onkyo Remote",
+    apptype=FlipperAppType.EXTERNAL,
+    targets=["f7"],
+    entry_point="onkyo_remote_app",
+    stack_size=2 * 1024,
+    fap_icon="images/onkyo_10px.png",
+    fap_icon_assets="images",
+    fap_category="Infrared",
+    fap_author="gergely-xyz",
+    fap_weburl="https://github.com/gergely-xyz/OnkyoRemote",
+    fap_version="1.0",
+    fap_description="IR remote for the Onkyo GX-30ARC",
+)

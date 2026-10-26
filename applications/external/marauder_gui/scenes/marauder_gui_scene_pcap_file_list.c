@@ -20,8 +20,7 @@ void marauder_gui_scene_pcap_file_list_on_enter(void* context) {
     app->wifi_list_marquee_tick = 0;
     app->wifi_list_marquee_hold = 0;
     app->wifi_list_marquee_delay = 0;
-    app->wifi_scan_frozen =
-        true; /* no live scan here - suppress the WifiList "(Back:Stop)" hint */
+    app->wifi_scan_frozen = true; /* no live scan here - suppress the WifiList "(Back:Stop)" hint */
     app->wifi_list_show_selected_count = false;
     app->wifi_list_frozen_label = marauder_gui_text(app, "Kayitli PCAP'ler", "Saved PCAPs");
     app->wifi_list_empty_label =
@@ -33,8 +32,7 @@ void marauder_gui_scene_pcap_file_list_on_enter(void* context) {
         char name[64];
         while(app->ap_count < MARAUDER_AP_LIST_MAX &&
               storage_dir_read(dir, &info, name, sizeof(name))) {
-            if(!(info.flags & FSF_DIRECTORY) &&
-               marauder_gui_scene_pcap_file_list_has_pcap_ext(name)) {
+            if(!(info.flags & FSF_DIRECTORY) && marauder_gui_scene_pcap_file_list_has_pcap_ext(name)) {
                 strncpy(app->ap_list[app->ap_count], name, MARAUDER_LINE_MAX - 1);
                 app->ap_list[app->ap_count][MARAUDER_LINE_MAX - 1] = '\0';
                 app->ap_count++;
@@ -54,10 +52,7 @@ bool marauder_gui_scene_pcap_file_list_on_event(void* context, SceneManagerEvent
 
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event < app->ap_count) {
-            strncpy(
-                app->pcap_view_filename,
-                app->ap_list[event.event],
-                sizeof(app->pcap_view_filename) - 1);
+            strncpy(app->pcap_view_filename, app->ap_list[event.event], sizeof(app->pcap_view_filename) - 1);
             app->pcap_view_filename[sizeof(app->pcap_view_filename) - 1] = '\0';
             scene_manager_next_scene(app->scene_manager, MarauderGuiScenePcapView);
         }

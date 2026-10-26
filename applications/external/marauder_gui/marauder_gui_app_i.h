@@ -13,8 +13,8 @@
 #include "marauder_gui_pcap_index.h"
 #include "scenes/marauder_gui_scene.h"
 
-#define MARAUDER_AP_LIST_MAX          32
-#define MARAUDER_LINE_MAX             96
+#define MARAUDER_AP_LIST_MAX 32
+#define MARAUDER_LINE_MAX    96
 /* Max distinct SSIDs the pcap-filter SSID picker can track at once - capped at the same size as
    MARAUDER_AP_LIST_MAX since that list (unique SSIDs seen in the file) is built the same way. */
 #define MARAUDER_PCAP_SSID_FILTER_MAX MARAUDER_AP_LIST_MAX

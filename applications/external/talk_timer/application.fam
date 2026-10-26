@@ -1,0 +1,15 @@
+App(
+    appid="talk_timer",
+    name="Talk Timer",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="talk_timer_app",
+    stack_size=4 * 1024,
+    fap_icon="talk_timer.png",
+    fap_icon_assets="images",
+    fap_libs=["ble_profile"],
+    fap_category="Tools",
+    fap_author="Manoah Ruiz Rodriguez",
+    fap_weburl="https://github.com/Mableton/talk_timer",
+    fap_version="1.0",
+    fap_description="Presentation clicker with discreet talk timer via USB or Bluetooth HID",
+)

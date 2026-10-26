@@ -67,8 +67,7 @@ bool marauder_gui_scene_wifi_attack_menu_on_event(void* context, SceneManagerEve
     bool consumed = false;
 
     if(event.type == SceneManagerEventTypeCustom &&
-       event.event <
-           sizeof(marauder_wifi_attack_menu_items) / sizeof(marauder_wifi_attack_menu_items[0])) {
+       event.event < sizeof(marauder_wifi_attack_menu_items) / sizeof(marauder_wifi_attack_menu_items[0])) {
         if(event.event == WIFI_ATTACK_MENU_EVIL_PORTAL_INDEX) {
             scene_manager_next_scene(app->scene_manager, MarauderGuiSceneWifiProbeSniff);
         } else {

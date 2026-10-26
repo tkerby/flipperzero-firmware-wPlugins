@@ -65,8 +65,7 @@ static void marauder_pcap_view_ensure_visible(MarauderGuiApp* app) {
         return;
     }
     while(app->pcap_index_count > 0 &&
-          marauder_pcap_view_count_matches(
-              app, app->pcap_view_scroll_offset, app->pcap_view_selected) >
+          marauder_pcap_view_count_matches(app, app->pcap_view_scroll_offset, app->pcap_view_selected) >
               PCAP_VIEW_VISIBLE_ROWS) {
         size_t next = marauder_pcap_view_next_match(app, app->pcap_view_scroll_offset);
         if(next >= app->pcap_index_count) break;
@@ -74,11 +73,10 @@ static void marauder_pcap_view_ensure_visible(MarauderGuiApp* app) {
     }
 }
 
-static void
-    marauder_pcap_view_format_row(MarauderGuiApp* app, size_t idx, char* out, size_t out_size) {
+static void marauder_pcap_view_format_row(MarauderGuiApp* app, size_t idx, char* out, size_t out_size) {
     const MarauderPcapIndexEntry* e = &app->pcap_index[idx];
-    const char* type_label = marauder_pcap_frame_type_label(
-        (MarauderPcapFrameType)e->frame_type, app->language == MarauderLanguageEnglish);
+    const char* type_label =
+        marauder_pcap_frame_type_label((MarauderPcapFrameType)e->frame_type, app->language == MarauderLanguageEnglish);
     if(e->ssid[0]) {
         snprintf(out, out_size, "%u %s %s", (unsigned)idx, type_label, e->ssid);
     } else {
@@ -118,8 +116,7 @@ static void marauder_pcap_table_draw_callback(Canvas* canvas, void* model) {
     FuriString* h = furi_string_alloc_set_str(header);
     elements_scrollable_text_line(canvas, 2, 9, canvas_width(canvas) - 4, h, 0, false);
     furi_string_free(h);
-    canvas_draw_line(
-        canvas, 0, PCAP_VIEW_HEADER_HEIGHT, canvas_width(canvas), PCAP_VIEW_HEADER_HEIGHT);
+    canvas_draw_line(canvas, 0, PCAP_VIEW_HEADER_HEIGHT, canvas_width(canvas), PCAP_VIEW_HEADER_HEIGHT);
 
     canvas_set_font(canvas, FontSecondary);
 
@@ -134,8 +131,7 @@ static void marauder_pcap_table_draw_callback(Canvas* canvas, void* model) {
 
     size_t idx = app->pcap_view_scroll_offset;
     for(size_t row = 0; row < PCAP_VIEW_VISIBLE_ROWS && idx < app->pcap_index_count; row++) {
-        while(idx < app->pcap_index_count && !marauder_pcap_view_matches(app, idx))
-            idx++;
+        while(idx < app->pcap_index_count && !marauder_pcap_view_matches(app, idx)) idx++;
         if(idx >= app->pcap_index_count) break;
 
         int32_t y = PCAP_VIEW_HEADER_HEIGHT + (int32_t)((row + 1) * PCAP_VIEW_ROW_HEIGHT) - 2;
@@ -175,8 +171,7 @@ static bool marauder_pcap_table_input_callback(InputEvent* event, void* context)
        that hides the now-meaningless type/SSID rows and shows only those two). */
     if(app->pcap_index_count == 0) {
         if(event->key == InputKeyRight) {
-            view_dispatcher_send_custom_event(
-                app->view_dispatcher, MARAUDER_WIFI_LIST_PROCEED_CUSTOM_EVENT);
+            view_dispatcher_send_custom_event(app->view_dispatcher, MARAUDER_WIFI_LIST_PROCEED_CUSTOM_EVENT);
             return true;
         }
         return false;
@@ -199,8 +194,7 @@ static bool marauder_pcap_table_input_callback(InputEvent* event, void* context)
         app->pcap_view_marquee_hold = 0;
         app->pcap_view_marquee_delay = PCAP_VIEW_MARQUEE_DELAY_TICKS;
     } else if(event->key == InputKeyRight) {
-        view_dispatcher_send_custom_event(
-            app->view_dispatcher, MARAUDER_WIFI_LIST_PROCEED_CUSTOM_EVENT);
+        view_dispatcher_send_custom_event(app->view_dispatcher, MARAUDER_WIFI_LIST_PROCEED_CUSTOM_EVENT);
         return true;
     } else if(event->key == InputKeyOk && event->type == InputTypeShort) {
         /* Row index itself as the event value - same convention as the WifiList/Menu views. */
@@ -244,8 +238,7 @@ static void marauder_gui_scene_pcap_view_tick(MarauderGuiApp* app) {
 void marauder_gui_scene_pcap_view_on_enter(void* context) {
     MarauderGuiApp* app = context;
 
-    bool same_file = app->pcap_index &&
-                     strcmp(app->pcap_index_loaded_filename, app->pcap_view_filename) == 0;
+    bool same_file = app->pcap_index && strcmp(app->pcap_index_loaded_filename, app->pcap_view_filename) == 0;
 
     if(!same_file) {
         if(!app->pcap_index) {
@@ -265,27 +258,20 @@ void marauder_gui_scene_pcap_view_on_enter(void* context) {
             size_t free_heap = memmgr_get_free_heap();
             size_t budget_entries = (free_heap / 3) / sizeof(MarauderPcapIndexEntry);
             size_t capacity = (budget_entries < MARAUDER_PCAP_INDEX_CAPACITY) ?
-                                  budget_entries :
-                                  MARAUDER_PCAP_INDEX_CAPACITY;
+                                   budget_entries :
+                                   MARAUDER_PCAP_INDEX_CAPACITY;
             if(capacity >= MARAUDER_PCAP_INDEX_MIN_CAPACITY) {
                 app->pcap_index_capacity = capacity;
-                app->pcap_index =
-                    malloc(sizeof(MarauderPcapIndexEntry) * app->pcap_index_capacity);
+                app->pcap_index = malloc(sizeof(MarauderPcapIndexEntry) * app->pcap_index_capacity);
             }
         }
 
         char path[128];
         snprintf(path, sizeof(path), "%s/%s", MARAUDER_GUI_PCAP_DIR, app->pcap_view_filename);
         app->pcap_index_count = marauder_pcap_index_build(
-            app->storage,
-            path,
-            app->pcap_index,
-            app->pcap_index_capacity,
-            &app->pcap_index_truncated);
+            app->storage, path, app->pcap_index, app->pcap_index_capacity, &app->pcap_index_truncated);
         strncpy(
-            app->pcap_index_loaded_filename,
-            app->pcap_view_filename,
-            sizeof(app->pcap_index_loaded_filename) - 1);
+            app->pcap_index_loaded_filename, app->pcap_view_filename, sizeof(app->pcap_index_loaded_filename) - 1);
         app->pcap_index_loaded_filename[sizeof(app->pcap_index_loaded_filename) - 1] = '\0';
 
         /* Fresh file: show everything until the user narrows it down. */

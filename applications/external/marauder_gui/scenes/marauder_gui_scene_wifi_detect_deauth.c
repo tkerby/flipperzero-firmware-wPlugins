@@ -2,8 +2,7 @@
 
 /* One line per detected frame: "<rssi> Ch: <n> <src_mac> -> <dst_mac>" (see WiFiScan.cpp's
    beaconSnifferCallback for WIFI_SCAN_DEAUTH) - no list -X flag, so just log the raw stream. */
-static void
-    marauder_gui_scene_wifi_detect_deauth_uart_line(MarauderGuiApp* app, const char* line) {
+static void marauder_gui_scene_wifi_detect_deauth_uart_line(MarauderGuiApp* app, const char* line) {
     if(line[0] == '\0') return;
     marauder_gui_log_scan_append(app, line);
     marauder_gui_log_scan_redraw(app, "Deauth Sniff");

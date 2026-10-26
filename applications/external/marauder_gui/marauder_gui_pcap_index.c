@@ -34,11 +34,8 @@ const char* marauder_pcap_frame_type_label(MarauderPcapFrameType type, bool engl
    Control field after the MAC header). SSID is the first tagged parameter (tag 0) in Beacon/
    Probe Resp, right after their 12-byte fixed fields (timestamp+interval+capabilities); Probe
    Req has no fixed fields, so its tagged parameters start immediately after the MAC header. */
-MarauderPcapFrameType marauder_pcap_classify_frame(
-    const uint8_t* data,
-    size_t len,
-    char* ssid_out,
-    size_t ssid_out_size) {
+MarauderPcapFrameType
+    marauder_pcap_classify_frame(const uint8_t* data, size_t len, char* ssid_out, size_t ssid_out_size) {
     if(ssid_out && ssid_out_size) ssid_out[0] = '\0';
     if(!data || len < 2) return MarauderPcapFrameOther;
 
@@ -109,7 +106,7 @@ size_t marauder_pcap_index_build(
         return 0;
     }
     uint32_t magic = (uint32_t)global_header[0] | ((uint32_t)global_header[1] << 8) |
-                     ((uint32_t)global_header[2] << 16) | ((uint32_t)global_header[3] << 24);
+                      ((uint32_t)global_header[2] << 16) | ((uint32_t)global_header[3] << 24);
     if(magic != PCAP_MAGIC_LE) {
         storage_file_close(file);
         storage_file_free(file);
@@ -132,13 +129,11 @@ size_t marauder_pcap_index_build(
     uint32_t offset = PCAP_GLOBAL_HEADER_SIZE;
 
     while(count < out_capacity) {
-        if(storage_file_read(file, record_header, sizeof(record_header)) !=
-           sizeof(record_header)) {
+        if(storage_file_read(file, record_header, sizeof(record_header)) != sizeof(record_header)) {
             break; /* EOF or short read - done */
         }
         uint32_t incl_len = (uint32_t)record_header[8] | ((uint32_t)record_header[9] << 8) |
-                            ((uint32_t)record_header[10] << 16) |
-                            ((uint32_t)record_header[11] << 24);
+                             ((uint32_t)record_header[10] << 16) | ((uint32_t)record_header[11] << 24);
 
         if(incl_len > PCAP_MAX_SANE_INCL_LEN ||
            (uint64_t)offset + PCAP_RECORD_HEADER_SIZE + incl_len > file_size) {
@@ -154,8 +149,8 @@ size_t marauder_pcap_index_build(
         size_t to_read = (incl_len < sizeof(packet_buf)) ? incl_len : sizeof(packet_buf);
         size_t got = storage_file_read(file, packet_buf, to_read);
         if(got > 0) {
-            entry->frame_type = (uint8_t)marauder_pcap_classify_frame(
-                packet_buf, got, entry->ssid, sizeof(entry->ssid));
+            entry->frame_type = (uint8_t)
+                marauder_pcap_classify_frame(packet_buf, got, entry->ssid, sizeof(entry->ssid));
         }
         /* Skip whatever we didn't read into packet_buf (packet longer than our peek window). */
         if(incl_len > to_read) {
@@ -168,8 +163,7 @@ size_t marauder_pcap_index_build(
 
     if(count == out_capacity) {
         /* Peek one more record header to tell "exactly full" from "there was more". */
-        if(storage_file_read(file, record_header, sizeof(record_header)) ==
-           sizeof(record_header)) {
+        if(storage_file_read(file, record_header, sizeof(record_header)) == sizeof(record_header)) {
             if(out_truncated) *out_truncated = true;
         }
     }
@@ -235,7 +229,7 @@ void marauder_pcap_live_parser_feed(
             i += take;
             if(p->hdr_len >= PCAP_RECORD_HEADER_SIZE) {
                 uint32_t incl_len = (uint32_t)p->hdr[8] | ((uint32_t)p->hdr[9] << 8) |
-                                    ((uint32_t)p->hdr[10] << 16) | ((uint32_t)p->hdr[11] << 24);
+                                     ((uint32_t)p->hdr[10] << 16) | ((uint32_t)p->hdr[11] << 24);
                 p->hdr_len = 0;
                 p->peek_len = 0;
                 p->body_consumed = 0;

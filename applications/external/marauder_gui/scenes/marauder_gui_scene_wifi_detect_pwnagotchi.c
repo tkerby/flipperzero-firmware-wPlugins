@@ -6,8 +6,7 @@
    "Pwnd #: <count>" (see WiFiScan.cpp's processPwnagotchiBeacon(), no list -X flag covers
    this) - so we hold the name until its matching count line arrives, then log one combined
    entry. */
-static void
-    marauder_gui_scene_wifi_detect_pwnagotchi_uart_line(MarauderGuiApp* app, const char* line) {
+static void marauder_gui_scene_wifi_detect_pwnagotchi_uart_line(MarauderGuiApp* app, const char* line) {
     if(strncmp(line, "Name: ", 6) == 0) {
         strncpy(app->pending_pwn_name, line + 6, sizeof(app->pending_pwn_name) - 1);
         app->pending_pwn_name[sizeof(app->pending_pwn_name) - 1] = '\0';

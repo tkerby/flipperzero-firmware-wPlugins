@@ -9,14 +9,8 @@ enum {
    reads the same regardless of which language is currently active. Only the description changes
    language, like everywhere else. */
 static const MarauderMenuItem marauder_device_language_items[] = {
-    {"Turkce",
-     "Turkce",
-     "Tum menuler, basliklar ve durum yazilari Turkce olur.",
-     "All menus, titles and status text will be in Turkish."},
-    {"English",
-     "English",
-     "Tum menuler, basliklar ve durum yazilari Ingilizce olur.",
-     "All menus, titles and status text will be in English."},
+    {"Turkce", "Turkce", "Tum menuler, basliklar ve durum yazilari Turkce olur.", "All menus, titles and status text will be in Turkish."},
+    {"English", "English", "Tum menuler, basliklar ve durum yazilari Ingilizce olur.", "All menus, titles and status text will be in English."},
 };
 
 void marauder_gui_scene_device_language_on_enter(void* context) {
@@ -27,7 +21,7 @@ void marauder_gui_scene_device_language_on_enter(void* context) {
         sizeof(marauder_device_language_items) / sizeof(marauder_device_language_items[0]),
         marauder_gui_text(app, "Dil", "Language"));
     app->menu_selected = (app->language == MarauderLanguageEnglish) ? DeviceLanguageIndexEnglish :
-                                                                      DeviceLanguageIndexTurkish;
+                                                                       DeviceLanguageIndexTurkish;
 }
 
 bool marauder_gui_scene_device_language_on_event(void* context, SceneManagerEvent event) {

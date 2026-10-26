@@ -61,9 +61,8 @@ static void marauder_gui_scene_wifi_packet_count_redraw(MarauderGuiApp* app) {
         AlignCenter,
         AlignTop,
         FontPrimary,
-        app->wifi_scan_frozen ?
-            marauder_gui_text(app, "Paket Sayaci (Durdu)", "Packet Counter (Stopped)") :
-            marauder_gui_text(app, "Paket Sayaci", "Packet Counter"));
+        app->wifi_scan_frozen ? marauder_gui_text(app, "Paket Sayaci (Durdu)", "Packet Counter (Stopped)") :
+                                 marauder_gui_text(app, "Paket Sayaci", "Packet Counter"));
     widget_add_string_element(
         app->widget, 64, 16, AlignCenter, AlignTop, FontSecondary, marauder_packet_count_target);
     widget_add_string_element(
@@ -102,8 +101,7 @@ static void marauder_gui_scene_wifi_packet_count_uart_line(MarauderGuiApp* app, 
     marauder_packet_count_target[name_len] = '\0';
 
     const char* value = sep + 1;
-    while(*value == ' ')
-        value++;
+    while(*value == ' ') value++;
     strncpy(marauder_packet_count_value, value, sizeof(marauder_packet_count_value) - 1);
     marauder_packet_count_value[sizeof(marauder_packet_count_value) - 1] = '\0';
 

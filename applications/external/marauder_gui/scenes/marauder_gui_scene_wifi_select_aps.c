@@ -18,8 +18,8 @@
    broadcastCustomBeacon) - so leaving several APs checked here and firing one of those from the
    next menu already attacks all of them, no per-AP looping needed on our end. */
 
-#define WIFI_SELECT_APS_REFRESH_TICKS       15 /* ~1.5s at the app's 100ms tick period */
-#define WIFI_SELECT_APS_MARQUEE_TICKS       3
+#define WIFI_SELECT_APS_REFRESH_TICKS 15 /* ~1.5s at the app's 100ms tick period */
+#define WIFI_SELECT_APS_MARQUEE_TICKS 3
 #define WIFI_SELECT_APS_MARQUEE_DELAY_TICKS 30
 
 static void marauder_gui_scene_wifi_select_aps_uart_line(MarauderGuiApp* app, const char* line) {
@@ -81,8 +81,7 @@ void marauder_gui_scene_wifi_select_aps_on_enter(void* context) {
     app->wifi_list_scanning_label = marauder_gui_text(app, "AP Araniyor..", "Searching AP..");
     app->wifi_list_empty_label = marauder_gui_text(app, "AP araniyor...", "Searching for AP...");
     app->wifi_list_show_selected_count = true;
-    app->wifi_list_frozen_label =
-        marauder_gui_text(app, "Durdu (Sag:Saldir)", "Stopped (Right:Attack)");
+    app->wifi_list_frozen_label = marauder_gui_text(app, "Durdu (Sag:Saldir)", "Stopped (Right:Attack)");
 
     app->uart_line_handler = marauder_gui_scene_wifi_select_aps_uart_line;
     app->tick_handler = marauder_gui_scene_wifi_select_aps_tick;
@@ -108,8 +107,7 @@ bool marauder_gui_scene_wifi_select_aps_on_event(void* context, SceneManagerEven
                     marauder_uart_send_line(app->uart, "stopscan");
                     marauder_gui_wifi_list_redraw(app);
                 }
-                scene_manager_next_scene(
-                    app->scene_manager, MarauderGuiSceneWifiSelectApsAttackMenu);
+                scene_manager_next_scene(app->scene_manager, MarauderGuiSceneWifiSelectApsAttackMenu);
             }
             consumed = true;
         } else if(event.event < app->ap_count) {

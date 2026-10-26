@@ -110,10 +110,8 @@ void marauder_gui_scene_device_settings_on_enter(void* context) {
         marauder_device_settings_relabel(i);
         marauder_device_settings_items[i].label_tr = marauder_device_settings_labels_tr[i];
         marauder_device_settings_items[i].label_en = marauder_device_settings_labels_en[i];
-        marauder_device_settings_items[i].description_tr =
-            marauder_device_settings[i].description_tr;
-        marauder_device_settings_items[i].description_en =
-            marauder_device_settings[i].description_en;
+        marauder_device_settings_items[i].description_tr = marauder_device_settings[i].description_tr;
+        marauder_device_settings_items[i].description_en = marauder_device_settings[i].description_en;
     }
 
     marauder_gui_menu_set_items(

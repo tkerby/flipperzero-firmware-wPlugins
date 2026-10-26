@@ -1,0 +1,15 @@
+App(
+    appid="key_copier_italia",
+    name="Key Copier Italia",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="main_key_copier_app",
+    stack_size=4 * 1024,
+    fap_icon="icon.png",
+    fap_icon_assets="assets",
+    fap_icon_assets_symbol="key_copier",
+    fap_category="Tools",
+    fap_author="Torron",
+    fap_weburl="https://github.com/Maranello89/KeyCopier-Italia",
+    fap_version="1.0",
+    fap_description="Measure, save and load physical-key profiles, including experimental CISA-style profiles.",
+)

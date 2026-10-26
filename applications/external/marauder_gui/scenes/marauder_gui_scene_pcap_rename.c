@@ -20,7 +20,8 @@ static void marauder_gui_scene_pcap_rename_callback(void* context) {
 void marauder_gui_scene_pcap_rename_on_enter(void* context) {
     MarauderGuiApp* app = context;
 
-    strncpy(app->pcap_rename_buffer, app->pcap_view_filename, sizeof(app->pcap_rename_buffer) - 1);
+    strncpy(
+        app->pcap_rename_buffer, app->pcap_view_filename, sizeof(app->pcap_rename_buffer) - 1);
     app->pcap_rename_buffer[sizeof(app->pcap_rename_buffer) - 1] = '\0';
     size_t len = strlen(app->pcap_rename_buffer);
     if(len > 5 && strcmp(app->pcap_rename_buffer + len - 5, ".pcap") == 0) {
@@ -53,11 +54,7 @@ bool marauder_gui_scene_pcap_rename_on_event(void* context, SceneManagerEvent ev
             char new_name[64];
             char new_path[128];
             snprintf(
-                old_path,
-                sizeof(old_path),
-                "%s/%s",
-                MARAUDER_GUI_PCAP_DIR,
-                app->pcap_view_filename);
+                old_path, sizeof(old_path), "%s/%s", MARAUDER_GUI_PCAP_DIR, app->pcap_view_filename);
             snprintf(new_name, sizeof(new_name), "%s.pcap", app->pcap_rename_buffer);
             snprintf(new_path, sizeof(new_path), "%s/%s", MARAUDER_GUI_PCAP_DIR, new_name);
 
@@ -70,8 +67,7 @@ bool marauder_gui_scene_pcap_rename_on_event(void* context, SceneManagerEvent ev
                     app->pcap_index_loaded_filename,
                     app->pcap_view_filename,
                     sizeof(app->pcap_index_loaded_filename) - 1);
-                app->pcap_index_loaded_filename[sizeof(app->pcap_index_loaded_filename) - 1] =
-                    '\0';
+                app->pcap_index_loaded_filename[sizeof(app->pcap_index_loaded_filename) - 1] = '\0';
             }
         }
         scene_manager_previous_scene(app->scene_manager);

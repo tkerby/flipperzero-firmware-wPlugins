@@ -1,0 +1,23 @@
+App(
+    appid="drop_detect",
+    name="FliPort",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="drop_detect_app",
+    stack_size=2 * 1024,
+    fap_icon="fliport_10px.png",
+    fap_icon_assets="images",
+    sources=[
+        "drop_detect_app.c",
+        "views/drop_view.c",
+        "views/idle_view.c",
+        "views/walking_view.c",
+        "views/fidget_view.c",
+        "datarecord.c",
+        "driver/ICM42688P.c"
+    ],
+    fap_category="Tools",
+    fap_author="FliPort",
+    fap_weburl="https://github.com/TheRealLuro/Flipper-zero-drop-detector.-",
+    fap_version="0.3",
+    fap_description="IMU drop / idle / walking / fidget sample collector for training a Flipper-side motion classifier.",
+)
