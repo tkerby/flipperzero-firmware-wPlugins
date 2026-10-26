@@ -38,6 +38,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Flipper Lotto v1.0 (By molykima)](https://github.com/molykima/Flipper-Lottery-Number-Generator)
 - Updated: [BLE Beacon v1.1 (By steanlab)](https://github.com/steanlab/BLE-Beacon)
 - [`Nice O-Code` - `New remote` now mints a serial the gate is certain to enrol, picking from the 1024 that keep the captured remote's certificate consistent instead of any of 2^28 (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/c66f01dce74d3aaf45b212b2ec67f4c47cf979fa)
+- Updated: [InfraFi v2.0 (By amd989)](https://github.com/amd989/InfraFi)
 
 <a name="release"></a>
 
@@ -624,7 +625,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Image Scroller v0.1 (By fgreil)](https://github.com/fgreil/mitzi-scroller)
 - [Image Viewer v0.1 (By polioan)](https://github.com/polioan/flipper-zero-image-viewer)
 - [INA Meter v0.8 (By cepetr)](https://github.com/cepetr/flipper-tina)
-- [InfraFi v1.2 (By amd989)](https://github.com/amd989/InfraFi)
+- [InfraFi v2.0 (By amd989)](https://github.com/amd989/InfraFi)
 - [Infrared Playback v0.2 (By kdiller713)](https://github.com/kdiller713/public-FlipperApps)
 - [Internet Bridge v0.5 (By mete888)](https://github.com/mete888/flipper_usb_to_wifi)
 - [Internet Time Screen v0.2 (By sureserverman)](https://github.com/sureserverman/internet-time-screen)
