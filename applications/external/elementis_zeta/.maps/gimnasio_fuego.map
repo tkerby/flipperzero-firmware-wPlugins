@@ -1,0 +1,291 @@
+# Gimnasio Fuego (C7, contract 53), 17 x 24, interior. The forge: BIG light stone slabs (`slab_<i%2><j%2>`, never small tiles), the two back walls, braziers (animated flames) in the dead ends of the lanes and beside the leader, and
+# the QUIZ MACHINES: the hall is cut by SIX walls (j = 19, 16, 13, 10, 7, 4), each with one door (a key-door actor that vanishes with its flag, `gate=yes`) at the right (i = 13) or the left (i = 3) end alternately, so the
+# way is a serpentine of lanes. Beside every door a machine (OK) asks a yes / no question in the four languages: the right answer opens the door at once; a wrong one makes the lane's toll trainer fight (a win opens it too, a loss is the
+# blackout). PROFESOR BRASA (script NPC, the camera cuts to him) waits at the top (8,2): a win = the Medalla Brasa (flag 86, `badge_brasa`, the card's 7th badge) + Disc 10 (flag 861).
+@map gimnasio_fuego
+@size 17 24
+@interior yes
+@bg 0
+@fill slab_11
+@flag quiz_d1 862        # the door of quiz machine 1 is open (the answer was right, or the toll trainer lost)
+@flag quiz_d2 863        # the door of quiz machine 2 is open (the answer was right, or the toll trainer lost)
+@flag quiz_d3 864        # the door of quiz machine 3 is open (the answer was right, or the toll trainer lost)
+@flag quiz_d4 865        # the door of quiz machine 4 is open (the answer was right, or the toll trainer lost)
+@flag quiz_d5 866        # the door of quiz machine 5 is open (the answer was right, or the toll trainer lost)
+@flag quiz_d6 867        # the door of quiz machine 6 is open (the answer was right, or the toll trainer lost)
+@flag brasa_disc 861       # Profesor Brasa handed over the Fire disc (a full bag keeps it clear)
+@spawn door 8 22 N
+@legend
+  .  tile=none object=gym_wall_j
+  a  tile=slab_11
+  b  tile=slab_10
+  c  tile=slab_01
+  d  tile=slab_00
+  e  tile=air_0
+  f  tile=none object=gym_wall_i
+  g  tile=slab_10 object=brazier
+  h  tile=slab_11 object=brazier
+  i  tile=slab_01 object=brazier
+  j  tile=mat
+  k  tile=none object=wall_corner
+  l  tile=slab_00 face=SW id=brasa npc=brasa script=brasa
+  m  tile=slab_10 face=S gate=yes hide_flag=quiz_d6 id=door6 npc=keydoor text=gym.door
+  n  tile=none object=quiz_machine interact=look script=quiz6
+  o  tile=slab_00 face=W id=toll6 npc=ladron_s script=toll6
+  p  tile=none object=quiz_machine interact=look script=quiz5
+  q  tile=slab_11 face=S gate=yes hide_flag=quiz_d5 id=door5 npc=keydoor text=gym.door
+  r  tile=slab_01 face=E id=toll5 npc=comefuego_s script=toll5
+  s  tile=slab_10 face=S gate=yes hide_flag=quiz_d4 id=door4 npc=keydoor text=gym.door
+  t  tile=none object=quiz_machine interact=look script=quiz4
+  u  tile=slab_00 face=W id=toll4 npc=cientifico_s script=toll4
+  v  tile=none object=quiz_machine interact=look script=quiz3
+  w  tile=slab_11 face=S gate=yes hide_flag=quiz_d3 id=door3 npc=keydoor text=gym.door
+  x  tile=slab_01 face=E id=toll3 npc=comefuego_s script=toll3
+  y  tile=slab_10 face=S gate=yes hide_flag=quiz_d2 id=door2 npc=keydoor text=gym.door
+  z  tile=none object=quiz_machine interact=look script=quiz2
+  A  tile=slab_00 face=W id=toll2 npc=cientifico_s script=toll2
+  B  tile=none object=quiz_machine interact=look script=quiz1
+  C  tile=slab_11 face=S gate=yes hide_flag=quiz_d1 id=door1 npc=keydoor text=gym.door
+  D  tile=slab_01 face=E id=toll1 npc=comefuego_s script=toll1
+@grid
+  k...............e
+  facacaiacaiacacae
+  fbdbdbdblbdbdbdbe
+  facacacacacacacae
+  f..mn...........e
+  facacacacacacache
+  fbdbdbdbdbdbdbobe
+  f...........pq..e
+  fgdbdbdbdbdbdbdbe
+  faracacacacacacae
+  f..st...........e
+  facacacacacacache
+  fbdbdbdbdbdbdbube
+  f...........vw..e
+  fgdbdbdbdbdbdbdbe
+  faxacacacacacacae
+  f..yz...........e
+  facacacacacacache
+  fbdbdbdbdbdbdbAbe
+  f...........BC..e
+  fgdbdbdbdbdbdbdbe
+  faDacacacacacacae
+  fbdgdbdbdbdbdgdbe
+  ceeeeeeejjeeeeeee
+@warp j -> isla_ceniza_sur spawn=gym_door
+@script quiz1 interact
+    jf quiz_d1 done
+    ask gym.q1
+    jv 0 1 right
+    say gym.wrong
+    say tr.comefuego_g1.pre
+    battle comefuego_g1 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    say gym.won
+    jmp open
+  right:
+    say gym.right
+  open:
+    sfx door
+    setf quiz_d1
+    end
+  done:
+    say gym.off
+@end
+@script toll1 npc
+    jf quiz_d1 done
+    say gym.toll.wait
+    end
+  done:
+    say tr.comefuego_g1.after
+@end
+@script quiz2 interact
+    jf quiz_d2 done
+    ask gym.q2
+    jv 0 0 right
+    say gym.wrong
+    say tr.cientifico_g2.pre
+    battle cientifico_g2 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    say gym.won
+    jmp open
+  right:
+    say gym.right
+  open:
+    sfx door
+    setf quiz_d2
+    end
+  done:
+    say gym.off
+@end
+@script toll2 npc
+    jf quiz_d2 done
+    say gym.toll.wait
+    end
+  done:
+    say tr.cientifico_g2.after
+@end
+@script quiz3 interact
+    jf quiz_d3 done
+    ask gym.q3
+    jv 0 1 right
+    say gym.wrong
+    say tr.comefuego_g3.pre
+    battle comefuego_g3 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    say gym.won
+    jmp open
+  right:
+    say gym.right
+  open:
+    sfx door
+    setf quiz_d3
+    end
+  done:
+    say gym.off
+@end
+@script toll3 npc
+    jf quiz_d3 done
+    say gym.toll.wait
+    end
+  done:
+    say tr.comefuego_g3.after
+@end
+@script quiz4 interact
+    jf quiz_d4 done
+    ask gym.q4
+    jv 0 1 right
+    say gym.wrong
+    say tr.cientifico_g4.pre
+    battle cientifico_g4 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    say gym.won
+    jmp open
+  right:
+    say gym.right
+  open:
+    sfx door
+    setf quiz_d4
+    end
+  done:
+    say gym.off
+@end
+@script toll4 npc
+    jf quiz_d4 done
+    say gym.toll.wait
+    end
+  done:
+    say tr.cientifico_g4.after
+@end
+@script quiz5 interact
+    jf quiz_d5 done
+    ask gym.q5
+    jv 0 0 right
+    say gym.wrong
+    say tr.comefuego_g5.pre
+    battle comefuego_g5 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    say gym.won
+    jmp open
+  right:
+    say gym.right
+  open:
+    sfx door
+    setf quiz_d5
+    end
+  done:
+    say gym.off
+@end
+@script toll5 npc
+    jf quiz_d5 done
+    say gym.toll.wait
+    end
+  done:
+    say tr.comefuego_g5.after
+@end
+@script quiz6 interact
+    jf quiz_d6 done
+    ask gym.q6
+    jv 0 0 right
+    say gym.wrong
+    say tr.ladron_g6.pre
+    battle ladron_g6 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    say gym.won
+    jmp open
+  right:
+    say gym.right
+  open:
+    sfx door
+    setf quiz_d6
+    end
+  done:
+    say gym.off
+@end
+@script toll6 npc
+    jf quiz_d6 done
+    say gym.toll.wait
+    end
+  done:
+    say tr.ladron_g6.after
+@end
+# Profesor Brasa. The camera cuts to him; his challenge, the fight (trainer brasa: Cindermeer 42, Cindibex 40, Blazibex 42, Pyromeer 47); a win = his speech, the Medalla Brasa (flag 86, the trainer card's
+# 7th badge, a flame), what it is, then Disc 10 (Inferno = Inferno; a full bag keeps brasa_disc clear and he hands it over the next time you talk to him). A loss is the blackout. Afterwards a last line.
+@script brasa npc
+    jf badge_brasa after
+    npc_face_hero brasa
+    cam_npc brasa
+    say gym.brasa.pre
+    battle brasa 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    say gym.brasa.win
+    setf badge_brasa
+    say gym.brasa.badge
+    say gym.brasa.about
+    call brasa_gift
+    cam_hero
+    end
+  after:
+    npc_face_hero brasa
+    cam_npc brasa
+    jf brasa_disc said
+    call brasa_gift
+    cam_hero
+    end
+  said:
+    say gym.brasa.after
+    cam_hero
+@end
+@script brasa_gift called
+    say gym.brasa.disc
+    give_item disc_10 1
+    jv 0 0 full
+    item_var 0 disc_10
+    say gl.gift
+    setf brasa_disc
+    say gym.brasa.disc_about
+    end
+  full:
+    say gl.found.full
+@end

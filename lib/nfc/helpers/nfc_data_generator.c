@@ -2,11 +2,13 @@
 
 #include <furi/furi.h>
 #include <furi_hal_random.h>
+#include <nfc/protocols/felica/felica.h>
 #include <nfc/protocols/iso14443_3a/iso14443_3a.h>
 #include <nfc/protocols/mf_classic/mf_classic.h>
 #include <nfc/protocols/mf_ultralight/mf_ultralight.h>
 #include <nfc/protocols/mf_plus/mf_plus.h>
 #include <nfc/protocols/mf_plus/mf_plus_i.h> // set_* accessors for the blank-format fill
+#include <nfc/protocols/texkom/texkom_i.h> // texkom_make_blank(), generator-only
 #include <toolbox/simple_array.h>
 
 #define NXP_MANUFACTURER_ID (0x04)
@@ -496,6 +498,47 @@ static void nfc_generate_mf_classic_4k_7b_uid(NfcDevice* nfc_device) {
     nfc_generate_mf_classic(nfc_device, 7, MfClassicType4k);
 }
 
+// Factory-register defaults for a blank (post-0th issuance) FeliCa Lite-S.
+// See flipperdevices/flipperzero-firmware PR #4371 (dogtopus).
+static const uint8_t pmm_felica_lite_s[] = {0x00, 0xF1, 0x00, 0x00, 0x00, 0x01, 0x43, 0x00};
+static const uint8_t default_mc_felica_lite_s[] =
+    {0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+static const uint8_t default_wcnt_felica_lite_s[] = {0x00, 0xFE, 0xFF};
+
+static void nfc_generate_felica_lite_s(NfcDevice* nfc_device) {
+    FelicaData* data = felica_alloc();
+    felica_reset(data);
+    data->workflow_type = FelicaLite;
+
+    // Sony FeliCa Lite-S manufacturer code, followed by six random bytes.
+    // Note the wire order: 0x2E01 is stored as 01 2E in IDm.
+    uint8_t idm[FELICA_IDM_SIZE] = {0x01, 0x2E};
+    furi_hal_random_fill_buf(&idm[2], FELICA_IDM_SIZE - 2);
+    memcpy(data->idm.data, idm, sizeof(idm));
+    memcpy(data->pmm.data, pmm_felica_lite_s, sizeof(pmm_felica_lite_s));
+
+    // Follow the upstream blank-template convention: 26 of 28 blocks readable.
+    data->blocks_total = FELICA_BLOCKS_TOTAL_COUNT;
+    data->blocks_read = 26;
+
+    FelicaFileSystem* fs = &data->data.fs;
+    memset(fs->reg.data, 0xFF, sizeof(fs->reg.data));
+    memcpy(fs->id.data, idm, sizeof(idm));
+    memcpy(fs->d_id.data, idm, sizeof(idm));
+    memcpy(&fs->d_id.data[FELICA_IDM_SIZE], pmm_felica_lite_s, sizeof(pmm_felica_lite_s));
+    fs->sys_c.data[0] = 0x88;
+    fs->sys_c.data[1] = 0xB4;
+    memcpy(fs->mc.data, default_mc_felica_lite_s, sizeof(default_mc_felica_lite_s));
+    memcpy(fs->wcnt.data, default_wcnt_felica_lite_s, sizeof(default_wcnt_felica_lite_s));
+
+    // Reading MAC_A without authentication returns status 01B2.
+    fs->mac_a.SF1 = 0x01;
+    fs->mac_a.SF2 = 0xB2;
+
+    nfc_device_set_data(nfc_device, NfcProtocolFelica, data);
+    felica_free(data);
+}
+
 // MIFARE Plus ATS historical bytes per product. Only the type/size nibbles are load-bearing for
 // detection (see mf_plus_type_from_ats): S/X mask their size with 2F 2F and differ by the caps
 // byte's SVC bit; SE reveals 21 30. The trailing CRC16 floats between configs -- the SE value is a
@@ -710,10 +753,45 @@ static bool nfc_data_generator_type_is_mf_plus(NfcDataGeneratorType type) {
     return type >= NfcDataGeneratorTypeMfPlusSE_4b && type <= NfcDataGeneratorTypeMfPlusEV2_4k_7b;
 }
 
-// Handler-based table for the Ultralight/NTAG and Classic types, whose per-variant layouts are
-// bespoke. The MIFARE Plus types are parametric and dispatched from mf_plus_generator_configs, so
-// this table intentionally stops before them.
-static const NfcDataGenerator nfc_data_generator[NfcDataGeneratorTypeMfPlusSE_4b] = {
+/**
+ * @brief Blank key of one Texkom variant, with a random UID.
+ *
+ * There is nothing else to seed: a Texkom frame is the variant markers, the UID and a checksum
+ * over it, and texkom_set_uid() keeps the checksum right.
+ */
+static void nfc_generate_texkom(NfcDevice* nfc_device, TexkomType type) {
+    TexkomData* data = texkom_alloc();
+
+    furi_check(texkom_make_blank(data, type));
+
+    // Only the length is wanted here - the variant decides how long its UID is.
+    size_t uid_len = 0;
+    texkom_get_uid(data, &uid_len);
+
+    uint8_t uid[TEXKOM_UID_SIZE];
+    furi_hal_random_fill_buf(uid, uid_len);
+    furi_check(texkom_set_uid(data, uid, uid_len));
+
+    nfc_device_set_data(nfc_device, NfcProtocolTexkom, data);
+    texkom_free(data);
+}
+
+static void nfc_generate_texkom_tk13(NfcDevice* nfc_device) {
+    nfc_generate_texkom(nfc_device, TexkomTypeTk13);
+}
+
+static void nfc_generate_texkom_tk17(NfcDevice* nfc_device) {
+    nfc_generate_texkom(nfc_device, TexkomTypeTk17);
+}
+
+static void nfc_generate_texkom_mmbit(NfcDevice* nfc_device) {
+    nfc_generate_texkom(nfc_device, TexkomTypeMmbit);
+}
+
+// Handler-based table for every type whose per-variant layout is bespoke. The MIFARE Plus types
+// are parametric and dispatched from mf_plus_generator_configs instead, so their stretch of this
+// table is a deliberate hole that nfc_data_generator_type_is_mf_plus() keeps anyone out of.
+static const NfcDataGenerator nfc_data_generator[NfcDataGeneratorTypeNum] = {
     [NfcDataGeneratorTypeMfUltralight] =
         {
             .name = "Mifare Ultralight",
@@ -813,6 +891,27 @@ static const NfcDataGenerator nfc_data_generator[NfcDataGeneratorTypeMfPlusSE_4b
         {
             .name = "Mifare Classic 4k 7byte UID",
             .handler = nfc_generate_mf_classic_4k_7b_uid,
+        },
+
+    [NfcDataGeneratorTypeFelicaLiteS] =
+        {
+            .name = "FeliCa Lite-S",
+            .handler = nfc_generate_felica_lite_s,
+        },
+    [NfcDataGeneratorTypeTexkomTk13] =
+        {
+            .name = "Texkom TK13",
+            .handler = nfc_generate_texkom_tk13,
+        },
+    [NfcDataGeneratorTypeTexkomTk17] =
+        {
+            .name = "Texkom TK17",
+            .handler = nfc_generate_texkom_tk17,
+        },
+    [NfcDataGeneratorTypeTexkomMmbit] =
+        {
+            .name = "Texkom MMBIT",
+            .handler = nfc_generate_texkom_mmbit,
         },
 };
 

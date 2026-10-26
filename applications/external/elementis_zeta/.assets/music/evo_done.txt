@@ -1,0 +1,8 @@
+title Evolution complete - a triumphant call and a shimmering major chord with a bright top
+tempo 170
+vol 200
+inst lead v=255,255,215,185,170
+inst maj arp=0,4,7 rate=2
+inst spark arp=0,4,7 rate=1 lvl=0.8
+l16
+@lead o5 c8 c e8 g8 o6 c4 @maj o5 g2 @spark o6 c=40

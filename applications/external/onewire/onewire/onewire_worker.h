@@ -1,0 +1,48 @@
+#pragma once
+
+#include "onewire_device.h"
+#include "devices/registry.h"
+
+// Delay between readings in log mode
+#define ONEWIRE_WORKER_LOG_INTERVAL_MS (10 * 1000)
+
+typedef enum {
+    // Init states
+    OneWireWorkerNone,
+    OneWireWorkerReady,
+
+    // Main states
+    OneWireWorkerSearch,
+    OneWireWorkerLog,
+
+    // Transition
+    OneWireWorkerStateStop,
+} OneWireWorkerState;
+
+typedef enum {
+    OneWireWorkerEventReserved = 50,
+    OneWireWorkerEventDeviceFound,
+    OneWireWorkerEventReadStart,
+
+    // Sensors read
+    OneWireWorkerEventReadSuccess,
+    OneWireWorkerEventReadError,
+    OneWireWorkerEventUnsupportedDeviceError
+
+} OneWireWorkerEvent;
+
+typedef void (*OneWireWorkerCallback)(OneWireWorkerEvent event, void* context);
+
+typedef struct OneWireWorker OneWireWorker;
+
+OneWireWorker* onewire_worker_alloc();
+void onewire_worker_free(OneWireWorker* instance);
+
+void onewire_worker_start(
+    OneWireWorker* instance,
+    OneWireWorkerState state,
+    OneWireDeviceData* device_data,
+    OneWireWorkerCallback callback,
+    void* context);
+
+void onewire_worker_stop(OneWireWorker* instance);

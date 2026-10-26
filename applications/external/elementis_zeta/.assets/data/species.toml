@@ -1,0 +1,2382 @@
+# Nucleo species ("Elementis"). Species id = position in this file (1-based; 0 = none).
+# Name text key = gl.sp.<id>. Base stats [hp, atk, def, spd, spc] (one Special stat).
+# growth: medium_fast | medium_slow | fast | slow. evolve = [level, "species"].
+# evolve_stone = { thunder = "voltgecko" } (optional, C4-B, contract 36): evolves when that stone is used on it from the bag (never by level; exclusive with `evolve`).
+#        Keys: moon | fire | water | thunder | leaf (the Spanish item keys luna / fuego / agua / trueno / hoja are accepted too). SEVERAL stones may be listed
+#        (the role: { water = "tidebara", fire = "embara", thunder = "voltbara" }), one target per stone. Compiled by tools/regc.py into files/evostone.bin.
+# evolve_trade = "species" (optional, IR LINK, contract 45): evolves right after a TRADE over the infrared link; exclusive with `evolve` and
+#        `evolve_stone`. Compiled by tools/regc.py into files/evostone.bin (a record whose stone index is 5, ST_TRADE). C6 wired the first one: Trancelf -> Somnarch (-> a creature); the IR link made Tuskmash -> Tuskumo (a creature -> a creature); contract 74 (F2) wires the last two ones: Rockroll -> Bouldrum (a creature -> a creature) and Shroudle -> Gloomshroud (a creature -> a creature).
+# evolve_friend = [level, "species"] (optional, contract 65): evolves at a LEVEL-UP at that level or later when its friendship is 220 or more (happiness evolutions); the level is the old plain
+#        threshold, kept as the floor. Exclusive with `evolve`, `evolve_stone` and `evolve_trade`. reg.bin keeps the level + target (evo_level / evo_to) and evostone.bin gets one record {species, ST_FRIEND, target}.
+#        Used by hatchkip -> shellbrute and dashkip -> dashmark. Friendship: nucleo/battle_core.h bc_friend, contract section 65.
+# learn = [[level, "move"], ...] (level 1 entries are the starting moves; <= 12 entries).
+# tm = ["disc_01", ...] (optional, C2-S1): the technique discs (items.toml kind = "disc") this species can learn; regc packs them into a 24-bit mask.
+# When a creature is created at level L it gets the last 4 moves with level <= L (oldest replaced first).
+#
+# art = "<folder>" (optional): picture folder under assets/art/elementis/ with the PixelLab 8-direction PNGs; tools/monc.py
+# builds nucleo/files/mon.bin from south-west.png (front) and north-east.png (back). Swapping final art = changing the folder.
+# art_dark_cut = N (optional, default 70): luminance at or below which a pixel of the picture becomes black in the 4-gray
+# mapping (tools/monc.py). A very dark creature needs a lower value (muncrit 45) or it turns into a black blob. regc ignores it.
+#
+# height (metres) / weight (kilograms), both required for the Registro (contract 30, tools/regc.py -> files/reginfo.bin, 0.1 resolution). The Registro
+# description is the global text key gl.rg.<species id> in the four text files (2 pages of <= 2 lines; block "# --- C2-S2 Registro ---").
+# reg = N (optional): sort key of the Registro list (default = the species id; the number shown is the rank 1..N, ties by id).
+#
+# Balance reference: starters sum to 249-254 (one Special) at stage 1 and 325 at stage 2.
+
+[embercub]
+art = "embercub_c"
+art_dark_cut = 45
+types = ["fire"]
+base = [36, 53, 39, 68, 57]
+growth = "medium_slow"
+base_exp = 62
+catch_rate = 45
+height = 0.5
+weight = 7.5
+evolve = [16, "flarewolf"]
+learn = [[1, "claw"], [1, "growl"], [7, "ember"], [13, "quick"], [19, "slash"], [22, "fury"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_10", "disc_12", "disc_14", "disc_16", "disc_17", "disc_18", "disc_24", "disc_25", "disc_26", "disc_27", "disc_29", "disc_32", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+[flarewolf]
+art = "flarewolf_c"
+art_dark_cut = 45
+types = ["fire"]
+base = [60, 69, 60, 77, 61]
+growth = "medium_slow"
+base_exp = 142
+catch_rate = 45
+height = 1.1
+weight = 32.0
+evolve = [36, "pyrewolf"]
+learn = [[1, "claw"], [1, "growl"], [1, "ember"], [1, "quick"], [19, "slash"], [24, "fury"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_10", "disc_12", "disc_14", "disc_16", "disc_17", "disc_18", "disc_24", "disc_25", "disc_26", "disc_27", "disc_29", "disc_32", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+[puddlet]
+art = "puddlet_c"
+art_dark_cut = 45
+types = ["water"]
+base = [45, 47, 58, 44, 56]
+growth = "medium_slow"
+base_exp = 63
+catch_rate = 45
+height = 0.5
+weight = 8.1
+evolve = [16, "tidalux"]
+learn = [[1, "bump"], [1, "wag"], [8, "jet"], [10, "bubble"], [13, "harden"], [18, "bite"], [35, "headlong"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_06", "disc_14", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_24", "disc_25", "disc_26", "disc_27", "disc_32", "disc_34", "disc_35", "disc_36", "disc_41", "disc_45", "disc_50"]
+
+[tidalux]
+art = "tidalux_c"
+art_dark_cut = 45
+types = ["water"]
+base = [61, 64, 76, 60, 67]
+growth = "medium_slow"
+base_exp = 142
+catch_rate = 45
+height = 1.0
+weight = 27.5
+evolve = [36, "tidalgard"]
+learn = [[1, "bump"], [1, "wag"], [1, "jet"], [10, "bubble"], [13, "harden"], [18, "bite"], [39, "headlong"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_06", "disc_14", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_24", "disc_25", "disc_26", "disc_27", "disc_32", "disc_34", "disc_35", "disc_36", "disc_41", "disc_45", "disc_50"]
+
+[sprouton]
+art = "sprouton_c"
+art_dark_cut = 45
+types = ["grass"]
+base = [47, 51, 52, 45, 59]
+growth = "medium_slow"
+base_exp = 64
+catch_rate = 45
+height = 0.6
+weight = 6.4
+evolve = [16, "thornbuck"]
+learn = [[1, "bump"], [1, "growl"], [7, "lash"], [13, "venomdust"], [19, "spore"], [34, "swell"]]
+tm = ["disc_03", "disc_05", "disc_06", "disc_12", "disc_16", "disc_17", "disc_18", "disc_27", "disc_28", "disc_34", "disc_35", "disc_36", "disc_45", "disc_50"]
+
+[thornbuck]
+art = "thornbuck_c"
+art_dark_cut = 45
+types = ["grass"]
+base = [57, 64, 66, 58, 83]
+growth = "medium_slow"
+base_exp = 142
+catch_rate = 45
+height = 1.1
+weight = 34.0
+evolve = [36, "grovestag"]
+learn = [[1, "seedleech"], [1, "bump"], [1, "growl"], [1, "lash"], [13, "venomdust"], [19, "spore"], [27, "rack"]]
+tm = ["disc_01", "disc_03", "disc_05", "disc_06", "disc_12", "disc_16", "disc_17", "disc_18", "disc_27", "disc_28", "disc_34", "disc_35", "disc_36", "disc_45", "disc_50"]
+
+# ---- Route 1 pair (M3-E): the Route 1 roles (a creature). Their evolutions (flitwing/skyrrow, munchmole) were added in M4-E.
+# base stats on purpose (Route 1 must feel like Route 1): both pairs sum to 216 / 218.
+
+# small songbird: white body, dark wings, three-feather crest. role. learnset: Gust 1, Dust Kick 5, Dash Strike 12,
+# Whirlwind 19 (no such effect here: claw instead, the talons). Flap = Gust (Flying 40, 35 PP); Dust Kick = Dust Kick (accuracy -1).
+[flitter]
+art = "flitter_c"
+types = ["normal", "flying"]
+base = [44, 48, 36, 55, 32]
+growth = "medium_slow"
+base_exp = 55
+catch_rate = 255
+height = 0.3
+weight = 1.8
+evolve = [18, "flitwing"]
+learn = [[1, "flap"], [5, "dustkick"], [12, "quick"], [19, "claw"]]
+tm = ["disc_03", "disc_06", "disc_11", "disc_13", "disc_17", "disc_18", "disc_27", "disc_34", "disc_35", "disc_36", "disc_40", "disc_44", "disc_45", "disc_50"]
+
+# chubby dark hamster-mole with a white belly and cheeks. role. learnset: Tackle 1, Tail Whip 1, Dash Strike 7, Chomp 14
+# (Steady Gaze 23 is past the level-20 slice and Chomp's 80 power is bite here).
+[muncrit]
+art = "muncrit_c"
+art_dark_cut = 45
+types = ["normal"]
+base = [26, 59, 38, 69, 22]
+growth = "medium_fast"
+base_exp = 57
+catch_rate = 255
+height = 0.3
+weight = 3.5
+evolve = [20, "munchmole"]
+learn = [[1, "bump"], [1, "wag"], [7, "quick"], [14, "bite"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_04", "disc_06", "disc_16", "disc_17", "disc_18", "disc_19", "disc_21", "disc_27", "disc_30", "disc_32", "disc_34", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# ======================================================================================================================
+# M4-E: the rest of the roster (appended; ids 9+. Never reorder: saves store species ids). stats on purpose.
+# Evolution levels follow; the evolution SYSTEM itself arrives in M5 (data only now). Art folders under assets/art/elementis/.
+# ======================================================================================================================
+
+# ---- Forest bugs. Evolutions 7 and 10.
+[grubbit]
+art = "grubbit_c"
+art_dark_cut = 45
+types = ["bug"]
+base = [49, 28, 32, 47, 16]
+growth = "medium_fast"
+base_exp = 53
+catch_rate = 255
+height = 0.4
+weight = 3.0
+evolve = [7, "grubshell"]
+learn = [[1, "bump"], [1, "silkshot"]]
+
+[grubshell]
+art = "grubshell_c"
+art_dark_cut = 45
+types = ["bug"]
+base = [54, 16, 60, 28, 21]
+growth = "medium_fast"
+base_exp = 72
+catch_rate = 120
+height = 0.6
+weight = 9.5
+evolve = [10, "lanternmoth"]
+learn = [[1, "bump"], [1, "silkshot"], [7, "harden"]]
+
+# role. Confusion 12, Venom Mist 15, Numb Pollen 16, Drowsy Dust 17 (bug-type moves here are physical, so
+# the Psychic Confusion becomes the Grass `glimmer` with a 10% confusion chance, using the Special stat).
+[lanternmoth]
+art = "lanternmoth_c"
+art_dark_cut = 45
+types = ["bug", "flying"]
+base = [57, 41, 52, 72, 77]
+growth = "medium_fast"
+base_exp = 160
+catch_rate = 45
+height = 1.0
+weight = 11.0
+learn = [[1, "bump"], [1, "silkshot"], [1, "harden"], [12, "glimmer"], [15, "venomdust"], [16, "pollen"], [17, "spore"], [26, "gale"], [26, "flap"]]
+tm = ["disc_03", "disc_05", "disc_06", "disc_07", "disc_08", "disc_11", "disc_13", "disc_17", "disc_18", "disc_22", "disc_27", "disc_28", "disc_33", "disc_34", "disc_35", "disc_36", "disc_40", "disc_45", "disc_50"]
+
+# ---- Forest stingers. Evolutions 7 and 10.
+[stingle]
+art = "stingle_c"
+art_dark_cut = 45
+types = ["bug", "poison"]
+base = [38, 37, 33, 53, 15]
+growth = "medium_fast"
+base_exp = 52
+catch_rate = 255
+height = 0.3
+weight = 3.2
+evolve = [7, "stinglet"]
+learn = [[1, "needle"], [1, "silkshot"]]
+tm = ["disc_03"]
+
+[stinglet]
+art = "stinglet_c"
+art_dark_cut = 45
+types = ["bug", "poison"]
+base = [41, 29, 53, 32, 22]
+growth = "medium_fast"
+base_exp = 71
+catch_rate = 120
+height = 0.6
+weight = 10.0
+evolve = [10, "velvex"]
+learn = [[1, "needle"], [1, "silkshot"], [1, "harden"]]
+tm = ["disc_03"]
+
+# role. Peck Frenzy 1, Steady Gaze 1, Spear Thrust 20, Rage 25, Needle Rain 30, Agility 35.
+[velvex]
+art = "velvex_c"
+art_dark_cut = 45
+types = ["bug", "poison"]
+base = [62, 84, 37, 73, 50]
+growth = "medium_fast"
+base_exp = 159
+catch_rate = 45
+height = 1.1
+weight = 29.5
+learn = [[1, "pecking"], [1, "needle"], [1, "silkshot"], [1, "focus"], [20, "lance"], [25, "fury"], [30, "needlevolley"], [35, "sprint"]]
+tm = ["disc_03", "disc_05", "disc_06", "disc_12", "disc_17", "disc_18", "disc_22", "disc_27", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# ---- Forest spark gecko. -> a creature is a Spark Gem (C4-B: evolve_stone below; no level evolution).
+# Thundershock 1, Growl 1, Numbing Hum 9, Dash Strike 16, Swift 26, Agility 33, Thunder 43.
+[zaphid]
+art = "zaphid_c"
+art_dark_cut = 45
+types = ["electric"]
+base = [38, 58, 26, 86, 54]
+growth = "medium_fast"
+base_exp = 82
+catch_rate = 190
+height = 0.3
+weight = 2.1
+evolve_stone = { thunder = "voltgecko" }
+learn = [[1, "zap"], [1, "growl"], [9, "numb"], [16, "quick"], [33, "sprint"], [40, "arc"]]
+tm = ["disc_01", "disc_03", "disc_04", "disc_06", "disc_14", "disc_16", "disc_17", "disc_18", "disc_23", "disc_24", "disc_26", "disc_27", "disc_30", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_46", "disc_50"]
+
+[voltgecko]
+art = "voltgecko_c"
+art_dark_cut = 45
+types = ["electric"]
+base = [64, 93, 52, 103, 87]
+growth = "medium_fast"
+base_exp = 122
+catch_rate = 75
+height = 0.7
+weight = 9.8
+learn = [[1, "zap"], [1, "numb"], [1, "quick"], [1, "arc"], [33, "sprint"]]
+tm = ["disc_01", "disc_03", "disc_04", "disc_06", "disc_14", "disc_16", "disc_17", "disc_18", "disc_22", "disc_23", "disc_24", "disc_26", "disc_27", "disc_30", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_46", "disc_50"]
+
+# ---- Rock family. at 25, a creature BY TRADE (contract 74: `evolve_trade`; it was level 40).
+# Tackle 1, Curl Up 11, Pebble Toss 16, Blow Up 21 (no such effect), Harden 26, Earthquake 31, Explosion 36.
+[pebblump]
+art = "pebblump_c"
+art_dark_cut = 45
+types = ["rock", "ground"]
+base = [36, 77, 103, 19, 34]
+growth = "medium_slow"
+base_exp = 86
+catch_rate = 255
+height = 0.4
+weight = 20.0
+evolve = [25, "rockroll"]
+learn = [[1, "bump"], [11, "curl"], [16, "pebble"], [21, "blowup"], [26, "harden"], [31, "rumble"], [36, "detonate"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_tierra", "disc_10", "disc_16", "disc_17", "disc_18", "disc_24", "disc_25", "disc_26", "disc_27", "disc_31", "disc_32", "disc_34", "disc_36", "disc_37", "disc_38", "disc_45", "disc_47", "disc_48", "disc_50"]
+
+[rockroll]
+art = "rockroll_c"
+art_dark_cut = 45
+types = ["rock", "ground"]
+base = [57, 99, 111, 31, 41]
+growth = "medium_slow"
+base_exp = 134
+catch_rate = 120
+height = 1.0
+weight = 105.0
+evolve_trade = "bouldrum"   # contract 74 (F2): -> a creature is a TRADE evolution (the IR link: Club de Enlace); it was level 40 here
+learn = [[1, "bump"], [1, "curl"], [16, "pebble"], [21, "blowup"], [26, "harden"], [31, "rumble"], [36, "flatten"], [43, "detonate"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_tierra", "disc_10", "disc_16", "disc_17", "disc_18", "disc_24", "disc_25", "disc_26", "disc_27", "disc_31", "disc_32", "disc_34", "disc_36", "disc_37", "disc_38", "disc_45", "disc_47", "disc_48", "disc_50"]
+
+[bouldrum]
+art = "bouldrum_c"
+art_dark_cut = 45
+types = ["rock", "ground"]
+base = [77, 114, 127, 47, 58]
+growth = "medium_slow"
+base_exp = 177
+catch_rate = 45
+height = 1.7
+weight = 310.0
+learn = [[1, "bump"], [1, "curl"], [16, "pebble"], [21, "blowup"], [26, "harden"], [31, "rumble"], [36, "flatten"], [43, "detonate"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_tierra", "disc_10", "disc_14", "disc_16", "disc_17", "disc_18", "disc_22", "disc_24", "disc_25", "disc_26", "disc_27", "disc_31", "disc_32", "disc_34", "disc_36", "disc_37", "disc_38", "disc_45", "disc_47", "disc_48", "disc_50"]
+
+# ---- Gym leader's star (role; stats 35/45/160/70/30, medium_fast, exp 108, catch 45). No evolution in M5.
+# (L14): Tackle, Screech, Bind, Pebble Toss -> bump, wag, pebble, mace at level 14.
+[boulderback]
+art = "boulderback_c"
+art_dark_cut = 45
+types = ["rock", "ground"]
+base = [40, 50, 150, 55, 30]
+growth = "medium_fast"
+base_exp = 108
+catch_rate = 45
+height = 1.3
+weight = 260.0
+learn = [[1, "bump"], [1, "wag"], [8, "pebble"], [12, "mace"], [18, "harden"], [27, "flatten"], [33, "rumble"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_tierra", "disc_16", "disc_17", "disc_18", "disc_27", "disc_31", "disc_32", "disc_34", "disc_36", "disc_38", "disc_41", "disc_45", "disc_47", "disc_48", "disc_50"]
+
+# ---- Route 1 evolutions. Flitter 18 / 36, Muncrit 20.
+# Gust 1, Dust Kick 5, Dash Strike 12, Whirlwind 19, Swoop 28, Agility 36, Parrot 44.
+[flitwing]
+art = "flitwing_c"
+art_dark_cut = 45
+types = ["normal", "flying"]
+base = [66, 63, 59, 69, 47]
+growth = "medium_slow"
+base_exp = 113
+catch_rate = 120
+height = 0.9
+weight = 15.0
+evolve = [36, "skyrrow"]
+learn = [[1, "flap"], [5, "dustkick"], [12, "quick"], [19, "claw"], [28, "swoop"], [49, "parrot"]]
+tm = ["disc_03", "disc_06", "disc_11", "disc_13", "disc_17", "disc_18", "disc_27", "disc_34", "disc_35", "disc_36", "disc_40", "disc_44", "disc_45", "disc_50"]
+
+[skyrrow]
+art = "skyrrow_c"
+art_dark_cut = 45
+types = ["normal", "flying"]
+base = [87, 85, 72, 88, 67]
+growth = "medium_slow"
+base_exp = 172
+catch_rate = 45
+height = 1.5
+weight = 38.0
+learn = [[1, "flap"], [5, "dustkick"], [12, "quick"], [19, "claw"], [28, "swoop"], [36, "sprint"], [46, "skyleap"]]
+tm = ["disc_03", "disc_06", "disc_11", "disc_13", "disc_17", "disc_18", "disc_22", "disc_27", "disc_34", "disc_35", "disc_36", "disc_40", "disc_44", "disc_45", "disc_50"]
+
+# role. Dash Strike 7, Chomp 14, Steady Gaze 23, Fang Crush 34 (-> bite, focus, chomp).
+[munchmole]
+art = "munchmole_c"
+art_dark_cut = 45
+types = ["normal"]
+base = [52, 84, 57, 100, 46]
+growth = "medium_fast"
+base_exp = 116
+catch_rate = 127
+height = 0.7
+weight = 18.5
+learn = [[1, "bump"], [1, "wag"], [7, "quick"], [14, "bite"], [23, "focus"], [34, "chomp"], [41, "fangbreak"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_04", "disc_06", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_27", "disc_30", "disc_32", "disc_34", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# ---- Starter finals, evolving at 36 from the middle stage.
+# Mane Blaze 38; a creature: Headlong 35, Torrent 42; a creature: Thorn Rack 27, Antler Bloom 48 (compressed to <= 40 here).
+[pyrewolf]
+art = "pyrewolf_c"
+eclipse_art = "pyrewolf_eclipse_c"   # contract 67: the Eclipse Form's art folder (96 x 96, 8 rotations; tools/monc.py bakes its four battle pictures into mon.bin after the trainer pictures). The forms are numbered in species.toml order: pyrewolf 1, tidalgard 2, grovestag 3
+art_dark_cut = 45
+types = ["fire"]
+base = [75, 80, 75, 104, 90]
+growth = "medium_slow"
+base_exp = 209
+catch_rate = 45
+height = 1.7
+weight = 78.5
+learn = [[1, "scowl"], [1, "claw"], [1, "growl"], [1, "ember"], [1, "quick"], [19, "slash"], [36, "mane"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_tierra", "disc_10", "disc_12", "disc_14", "disc_16", "disc_17", "disc_18", "disc_22", "disc_24", "disc_25", "disc_26", "disc_27", "disc_29", "disc_31", "disc_32", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+[tidalgard]
+art = "tidalgard_c"
+eclipse_art = "tidalgard_eclipse_c"
+art_dark_cut = 45
+types = ["water"]
+base = [75, 86, 103, 74, 89]
+growth = "medium_slow"
+base_exp = 210
+catch_rate = 45
+height = 1.5
+weight = 120.0
+learn = [[1, "bump"], [1, "wag"], [1, "jet"], [10, "bubble"], [13, "harden"], [18, "bite"], [36, "wavewall"], [42, "headlong"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_06", "disc_tierra", "disc_14", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_24", "disc_25", "disc_26", "disc_27", "disc_31", "disc_32", "disc_34", "disc_35", "disc_36", "disc_41", "disc_45", "disc_50"]
+
+[grovestag]
+art = "grovestag_c"
+eclipse_art = "grovestag_eclipse_c"
+art_dark_cut = 45
+types = ["grass"]
+base = [76, 78, 86, 77, 105]
+growth = "medium_slow"
+base_exp = 208
+catch_rate = 45
+height = 1.9
+weight = 112.0
+learn = [[1, "seedleech"], [1, "bump"], [1, "growl"], [1, "lash"], [13, "venomdust"], [19, "spore"], [27, "rack"], [38, "bloom"], [43, "swell"]]
+tm = ["disc_01", "disc_03", "disc_05", "disc_06", "disc_12", "disc_16", "disc_17", "disc_18", "disc_22", "disc_27", "disc_28", "disc_34", "disc_35", "disc_36", "disc_45", "disc_50"]
+
+# ======================================================================================================================
+# C2 (Chapter 2, appended: ids 27+. Never reorder). The 13 approved creatures of the design notes (ids 27..39, art in
+# assets/art/elementis/<name>_c) and the LEVEL evolutions (ids 40..49; their battle art is approved and wired: `art = "<name>_c"`; a species without `art` is drawn
+# as nothing by the loader) plus Gleamlet (id 50, appended last: the pre-evolution of Gleamjell, only in Nerea's team in C2). Stone / trade evolutions (lunelle, lullabun, gleamjell, the 3rd stages of the
+# roles) arrive with the stones in C4. stats and learnsets on purpose (Monte Eco -> Ciudad Marea roster).
+# ======================================================================================================================
+# ---- Monte Eco: the cave bat-moth. Sap Bite 1, Supersonic 10, Bite 15, Hollow Gaze 21, Swoop 28, Whiteveil 36.
+[echolet]
+art = "echolet_c"
+art_dark_cut = 45
+types = ["poison", "flying"]
+base = [37, 47, 30, 57, 43]
+growth = "medium_fast"
+base_exp = 54
+catch_rate = 255
+height = 0.6
+weight = 4.5
+evolve = [22, "echowing"]
+learn = [[1, "sapbite"], [10, "sonar"], [15, "bite"], [21, "needle"], [28, "swoop"], [36, "whiteveil"]]
+tm = ["disc_03", "disc_05", "disc_06", "disc_11", "disc_13", "disc_17", "disc_18", "disc_27", "disc_34", "disc_36", "disc_40", "disc_45", "disc_50"]
+
+# ---- Monte Eco, rare: the moon-stone floater (role; evolves by stone in C4). Pound 1, Growl 1, Sing 13, Double Slap 18, Minimize 24, Wildcard 31, Curl Up 39.
+[lunelle]
+art = "lunelle_c"
+art_dark_cut = 45
+types = ["normal"]
+base = [74, 41, 45, 32, 64]
+growth = "fast"
+base_exp = 68
+catch_rate = 150
+height = 0.6
+weight = 7.0
+evolve_stone = { moon = "lunarelle" }
+learn = [[1, "bump"], [1, "growl"], [13, "lullaby"], [18, "slash"], [24, "mirage"], [31, "flatten"], [39, "curl"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_04", "disc_06", "disc_07", "disc_08", "disc_10", "disc_14", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_24", "disc_25", "disc_26", "disc_27", "disc_28", "disc_30", "disc_33", "disc_34", "disc_35", "disc_36", "disc_37", "disc_41", "disc_45", "disc_46", "disc_49", "disc_50"]
+
+# ---- Monte Eco: the mossy snail. Scratch 1, Numb Pollen 13, Sap Bite 20, Spore 25, Slash 29, Growth 34.
+[shellfern]
+art = "shellfern_c"
+art_dark_cut = 45
+types = ["bug", "grass"]
+base = [38, 67, 58, 23, 51]
+growth = "medium_fast"
+base_exp = 70
+catch_rate = 190
+height = 0.3
+weight = 5.4
+evolve = [24, "ferncairn"]
+learn = [[1, "claw"], [13, "pollen"], [20, "sapbite"], [25, "spore"], [29, "slash"], [34, "harden"]]
+tm = ["disc_03", "disc_05", "disc_06", "disc_12", "disc_16", "disc_17", "disc_18", "disc_27", "disc_28", "disc_32", "disc_34", "disc_35", "disc_36", "disc_41", "disc_45", "disc_50"]
+
+# ---- Rutas 3 - 4: the grumpy long-beak. Peck 1, Growl 1, Leer 9, Peck Frenzy 15, Parrot 22, Spear Peck 29, Agility 36.
+[jabbird]
+art = "jabbird_c"
+art_dark_cut = 45
+types = ["normal", "flying"]
+base = [44, 57, 27, 72, 34]
+growth = "medium_fast"
+base_exp = 58
+catch_rate = 255
+height = 0.4
+weight = 2.5
+evolve = [20, "jabhawk"]
+learn = [[1, "peck"], [1, "growl"], [9, "wag"], [15, "quick"], [22, "swoop"], [29, "spearpeck"], [36, "sprint"]]
+tm = ["disc_03", "disc_06", "disc_11", "disc_13", "disc_17", "disc_18", "disc_27", "disc_34", "disc_36", "disc_40", "disc_44", "disc_45", "disc_50"]
+
+# ---- Ruta 3: the singing cloud-bunny (role; evolves by stone in C4). Sing 1, Pound 4, Disable 9, Curl Up 14, Double Slap 19, Rest 24, Heavy Slam 29.
+[lullabun]
+art = "lullabun_c"
+art_dark_cut = 45
+types = ["normal"]
+base = [111, 40, 23, 19, 29]
+growth = "fast"
+base_exp = 76
+catch_rate = 170
+height = 0.5
+weight = 3.2
+evolve_stone = { moon = "lulladream" }
+learn = [[1, "lullaby"], [4, "bump"], [9, "sonar"], [14, "curl"], [19, "bite"], [29, "nap"], [29, "flatten"], [39, "reckless"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_04", "disc_06", "disc_07", "disc_08", "disc_10", "disc_14", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_24", "disc_25", "disc_26", "disc_27", "disc_28", "disc_30", "disc_33", "disc_34", "disc_35", "disc_36", "disc_41", "disc_45", "disc_46", "disc_49", "disc_50"]
+
+# ---- Ruta 3: the quill hedgehog (roles; the 3rd stage needs a stone in C4). Leer 1, Tackle 1, Spike Ram 8, Needle Jab 14, Steady Gaze 21, Peck Frenzy 29.
+[quillix]
+art = "quillix_c"
+art_dark_cut = 45
+types = ["poison"]
+base = [50, 61, 36, 53, 37]
+growth = "medium_slow"
+base_exp = 60
+catch_rate = 235
+height = 0.5
+weight = 8.0
+evolve = [16, "quillord"]
+learn = [[1, "scowl"], [1, "wag"], [1, "bump"], [8, "spikeram"], [14, "needle"], [21, "focus"], [29, "chomp"]]
+tm = ["disc_01", "disc_03", "disc_04", "disc_06", "disc_15", "disc_16", "disc_17", "disc_18", "disc_21", "disc_27", "disc_30", "disc_34", "disc_35", "disc_36", "disc_41", "disc_45", "disc_50"]
+
+# ---- Ruta 4: the sand skink. Scratch 1, Dust Kick 10, Slash 17, Needle Jab 24, Swift 31, Rake Swipes 38.
+[dunedil]
+art = "dunedil_c"
+art_dark_cut = 45
+types = ["ground"]
+base = [54, 72, 89, 37, 26]
+growth = "medium_fast"
+base_exp = 93
+catch_rate = 255
+height = 0.7
+weight = 12.0
+evolve = [22, "dunedrake"]
+learn = [[1, "claw"], [10, "dustkick"], [17, "slash"], [24, "bite"], [31, "flatten"], [38, "rakeswipe"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_tierra", "disc_12", "disc_16", "disc_17", "disc_18", "disc_24", "disc_26", "disc_27", "disc_31", "disc_32", "disc_34", "disc_36", "disc_40", "disc_41", "disc_45", "disc_48", "disc_50"]
+
+# ---- Ruta 4: the dry-hood snake. Wrap 1, Leer 4, Needle Jab 10, Bite 17, Cold Stare 24, Screech 31, Acid 38.
+[coilisp]
+art = "coilisp_c"
+art_dark_cut = 45
+types = ["poison"]
+base = [32, 64, 48, 57, 36]
+growth = "medium_fast"
+base_exp = 62
+catch_rate = 255
+height = 1.5
+weight = 6.5
+evolve = [22, "hoodcoil"]
+learn = [[1, "scowl"], [1, "coil"], [1, "squeeze"], [4, "wag"], [10, "needle"], [17, "bite"], [24, "coldeye"], [31, "shrill"], [38, "sourspit"]]
+tm = ["disc_03", "disc_05", "disc_06", "disc_tierra", "disc_16", "disc_17", "disc_18", "disc_27", "disc_31", "disc_32", "disc_34", "disc_36", "disc_41", "disc_45", "disc_48", "disc_50"]
+
+# ---- Rutas 24 - 25, rare: the dozing fairy on a smoke cushion (roles; role needs a trade link, later).
+# only knows Teleport (which has no effect here: Mirage, the evasion trick, instead) and learns Confusion as a creature at 16.
+# art_dark_cut 25 + art_split: the PixelLab picture is very dark; cuts by quantiles keep face / cap / body readable (the design notes, 9).
+[dozelf]
+art = "dozelf_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["psychic"]
+base = [28, 23, 12, 86, 109]
+growth = "medium_slow"
+base_exp = 73
+catch_rate = 200
+height = 0.7
+weight = 8.0
+evolve = [16, "trancelf"]
+learn = [[1, "blink"], [1, "mirage"], [8, "reverb"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_07", "disc_08", "disc_14", "disc_16", "disc_17", "disc_18", "disc_24", "disc_25", "disc_26", "disc_27", "disc_33", "disc_34", "disc_35", "disc_36", "disc_37", "disc_41", "disc_45", "disc_46", "disc_49", "disc_50"]
+
+# ---- Rutas 24 - 25: the mossy bulb (roles; the 3rd stage needs a stone in C4). Absorb 1, Venom Mist 15, Numb Pollen 17, Drowsy Dust 19, Acid 24, Petal Waltz 33.
+[mossbud]
+art = "mossbud_c"
+art_dark_cut = 45
+types = ["grass", "poison"]
+base = [42, 53, 58, 26, 71]
+growth = "medium_slow"
+base_exp = 78
+catch_rate = 255
+height = 0.4
+weight = 5.2
+evolve = [21, "mossbloom"]
+learn = [[1, "sip"], [1, "lash"], [15, "venomdust"], [17, "pollen"], [19, "spore"], [24, "sourspit"], [33, "petalwaltz"], [33, "rack"]]
+tm = ["disc_03", "disc_05", "disc_06", "disc_12", "disc_17", "disc_18", "disc_27", "disc_28", "disc_34", "disc_35", "disc_36", "disc_45", "disc_50"]
+
+# ---- Gimnasio de Agua: Nerea's star, the evolved crystal jelly (role; Gleamlet, id 50, evolves into it with a stone in C4). Tackle 1, Water Gun 17, Harden 22, Recover 27, Swift 32, Glass Beam 37.
+# (role: stats 60/75/85/115/100.) (Water Gun comes at 10 so that the level 18-21 gym creatures have attacks; no Recover / Swift in the engine.)
+[gleamjell]
+art = "gleamjell_c"
+art_dark_cut = 45
+types = ["water"]
+base = [63, 71, 89, 112, 104]
+growth = "slow"
+base_exp = 207
+catch_rate = 60
+height = 0.9
+weight = 12.0
+learn = [[1, "bump"], [10, "jet"], [17, "bubble"], [22, "harden"], [23, "glint"], [37, "glassbeam"]]
+tm = ["disc_02", "disc_03", "disc_04", "disc_06", "disc_07", "disc_08", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_27", "disc_30", "disc_33", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_46", "disc_49", "disc_50"]
+
+# ---- Fossils of Monte Eco (roles; revived in C7). Scratch 1, Harden 1, Absorb 34, Slash 39, Leer 44.
+[trilobite]
+art = "trilobite_c"
+art_dark_cut = 45
+types = ["rock", "water"]
+base = [26, 84, 87, 57, 41]
+growth = "medium_fast"
+base_exp = 119
+catch_rate = 45
+height = 0.5
+weight = 11.0
+evolve = [40, "trilothorn"]
+learn = [[1, "claw"], [1, "harden"], [34, "jet"], [39, "slash"]]
+tm = ["disc_02", "disc_03", "disc_06", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_27", "disc_34", "disc_35", "disc_36", "disc_45", "disc_50"]
+
+# Water Gun 1, Withdraw 1, Spike Ram 34, Leer 39.
+[sealily]
+art = "sealily_c"
+art_dark_cut = 45
+types = ["rock", "grass"]
+base = [39, 43, 103, 31, 87]
+growth = "medium_fast"
+base_exp = 120
+catch_rate = 45
+height = 0.4
+weight = 7.5
+evolve = [40, "crinolith"]
+learn = [[1, "retreat"], [1, "lash"], [1, "harden"], [34, "mace"], [39, "wag"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_06", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_27", "disc_34", "disc_35", "disc_36", "disc_45", "disc_50"]
+
+# ---- Level evolutions (ids 40..49, art wired) ----
+# role (Swoop 28, Whiteveil 36 -> Shrill)
+[echowing]
+art = "echowing_c"
+art_dark_cut = 45
+types = ["poison", "flying"]
+base = [79, 84, 67, 86, 79]
+growth = "medium_fast"
+base_exp = 171
+catch_rate = 90
+height = 1.4
+weight = 12.0
+learn = [[1, "sapbite"], [1, "sonar"], [1, "bite"], [21, "needle"], [28, "swoop"], [36, "shrill"]]
+tm = ["disc_03", "disc_05", "disc_06", "disc_11", "disc_13", "disc_17", "disc_18", "disc_22", "disc_27", "disc_34", "disc_36", "disc_40", "disc_45", "disc_50"]
+
+# role
+[ferncairn]
+art = "ferncairn_c"
+art_dark_cut = 45
+types = ["bug", "grass"]
+base = [64, 93, 82, 26, 77]
+growth = "medium_fast"
+base_exp = 128
+catch_rate = 75
+height = 1.0
+weight = 28.0
+learn = [[1, "claw"], [1, "pollen"], [1, "sapbite"], [25, "spore"], [29, "slash"], [30, "sporecloud"], [34, "harden"]]
+tm = ["disc_03", "disc_05", "disc_06", "disc_12", "disc_16", "disc_17", "disc_18", "disc_22", "disc_27", "disc_28", "disc_32", "disc_34", "disc_35", "disc_36", "disc_41", "disc_45", "disc_50"]
+
+# role
+[jabhawk]
+art = "jabhawk_c"
+art_dark_cut = 45
+types = ["normal", "flying"]
+base = [61, 94, 68, 104, 59]
+growth = "medium_fast"
+base_exp = 162
+catch_rate = 90
+height = 1.2
+weight = 14.0
+learn = [[1, "scowl"], [1, "peck"], [1, "growl"], [1, "wag"], [15, "quick"], [22, "swoop"], [29, "spearpeck"], [36, "sprint"], [40, "skyleap"]]
+tm = ["disc_03", "disc_06", "disc_11", "disc_13", "disc_17", "disc_18", "disc_22", "disc_27", "disc_34", "disc_36", "disc_40", "disc_44", "disc_45", "disc_50"]
+
+# role
+[quillord]
+art = "quillord_c"
+art_dark_cut = 45
+types = ["poison"]
+base = [58, 75, 55, 63, 53]
+growth = "medium_slow"
+base_exp = 118
+catch_rate = 120
+height = 0.9
+weight = 19.5
+evolve_stone = { moon = "quilltyrant" }
+learn = [[1, "scowl"], [1, "wag"], [1, "bump"], [1, "spikeram"], [14, "needle"], [21, "focus"], [29, "chomp"], [36, "haymaker"], [41, "augerhorn"], [50, "twinkick"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_04", "disc_06", "disc_15", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_27", "disc_30", "disc_34", "disc_35", "disc_36", "disc_41", "disc_45", "disc_50"]
+
+# role
+[dunedrake]
+art = "dunedrake_c"
+art_dark_cut = 45
+types = ["ground"]
+base = [79, 96, 114, 63, 52]
+growth = "medium_fast"
+base_exp = 163
+catch_rate = 90
+height = 1.4
+weight = 29.5
+learn = [[1, "claw"], [1, "dustkick"], [17, "slash"], [24, "bite"], [31, "flatten"], [38, "haymaker"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_tierra", "disc_12", "disc_16", "disc_17", "disc_18", "disc_22", "disc_24", "disc_26", "disc_27", "disc_31", "disc_32", "disc_34", "disc_36", "disc_40", "disc_41", "disc_45", "disc_48", "disc_50"]
+
+# role
+[hoodcoil]
+art = "hoodcoil_c"
+art_dark_cut = 45
+types = ["poison"]
+base = [63, 81, 70, 77, 67]
+growth = "medium_fast"
+base_exp = 147
+catch_rate = 90
+height = 2.6
+weight = 52.0
+learn = [[1, "scowl"], [1, "coil"], [1, "squeeze"], [1, "wag"], [1, "needle"], [17, "bite"], [24, "coldeye"], [31, "shrill"], [38, "sourspit"]]
+tm = ["disc_03", "disc_05", "disc_06", "disc_tierra", "disc_16", "disc_17", "disc_18", "disc_22", "disc_27", "disc_31", "disc_32", "disc_34", "disc_36", "disc_41", "disc_45", "disc_48", "disc_50"]
+
+# role (Disable 20 -> Sonar, Dream Ray 27 -> Dream Ray, Psychic 38 -> Mindstorm)
+[trancelf]
+art = "trancelf_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["psychic"]
+base = [37, 32, 26, 105, 124]
+growth = "medium_slow"
+base_exp = 145
+catch_rate = 100
+height = 1.2
+weight = 16.0
+evolve_trade = "somnarch"
+learn = [[1, "blink"], [1, "mirage"], [1, "reverb"], [20, "sonar"], [24, "warpgaze"], [27, "dreamray"], [31, "mend"], [38, "mindstorm"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_07", "disc_08", "disc_14", "disc_16", "disc_17", "disc_18", "disc_24", "disc_25", "disc_26", "disc_27", "disc_32", "disc_33", "disc_34", "disc_35", "disc_36", "disc_37", "disc_41", "disc_45", "disc_46", "disc_49", "disc_50"]
+
+# role
+[mossbloom]
+art = "mossbloom_c"
+art_dark_cut = 45
+types = ["grass", "poison"]
+base = [56, 62, 67, 43, 89]
+growth = "medium_slow"
+base_exp = 132
+catch_rate = 120
+height = 0.8
+weight = 8.6
+evolve_stone = { leaf = "bloomoss" }
+learn = [[1, "sip"], [1, "lash"], [1, "venomdust"], [1, "pollen"], [19, "spore"], [24, "sourspit"], [33, "rack"], [38, "petalwaltz"]]
+tm = ["disc_03", "disc_05", "disc_06", "disc_12", "disc_17", "disc_18", "disc_27", "disc_28", "disc_34", "disc_35", "disc_36", "disc_45", "disc_50"]
+
+# role
+[trilothorn]
+art = "trilothorn_c"
+art_dark_cut = 45
+types = ["rock", "water"]
+base = [64, 111, 102, 77, 74]
+growth = "medium_fast"
+base_exp = 201
+catch_rate = 45
+height = 1.3
+weight = 40.5
+learn = [[1, "sip"], [1, "claw"], [1, "harden"], [34, "jet"], [39, "slash"]]
+tm = ["disc_02", "disc_03", "disc_06", "disc_11", "disc_12", "disc_14", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_24", "disc_26", "disc_27", "disc_34", "disc_35", "disc_36", "disc_41", "disc_45", "disc_50"]
+
+# role
+[crinolith]
+art = "crinolith_c"
+art_dark_cut = 45
+types = ["rock", "grass"]
+base = [66, 64, 122, 57, 119]
+growth = "medium_fast"
+base_exp = 199
+catch_rate = 45
+height = 1.0
+weight = 35.0
+learn = [[1, "retreat"], [1, "lash"], [1, "harden"], [34, "mace"], [39, "wag"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_06", "disc_15", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_24", "disc_26", "disc_27", "disc_34", "disc_35", "disc_36", "disc_41", "disc_45", "disc_50"]
+
+# ---- Gimnasio de Agua: Nerea's first jelly, the small crystal polyp (id 50: the pre-evolution of Gleamjell; the design notes "Gleamlet").
+# Tackle 1, Water Gun 17, Harden 22, Recover 27, Swift 32, Glass Beam 37 (same ladder as Gleamjell; Water Gun at 10 so level 18 has attacks).
+# Takes the old Gleamjell base stats (stats 30/45/55/85/70). In C2 it only appears in Nerea's team.
+[gleamlet]
+art = "gleamlet_c"
+art_dark_cut = 45
+types = ["water"]
+base = [27, 49, 59, 81, 72]
+growth = "slow"
+base_exp = 106
+catch_rate = 225
+height = 0.4
+weight = 4.0
+evolve_stone = { water = "gleamjell" }
+learn = [[1, "bump"], [10, "jet"], [17, "bubble"], [22, "harden"], [37, "glassbeam"]]
+tm = ["disc_02", "disc_03", "disc_04", "disc_06", "disc_07", "disc_08", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_27", "disc_30", "disc_33", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_46", "disc_49", "disc_50"]
+
+# ======================================================================================================================
+# C3 (Chapter 3, appended: ids 51..61. Never reorder). The six approved creatures of the design notes (art in assets/art/elementis/<name>_c) with their
+# stage-2 forms (level evolutions; every line keeps the picture of its stage). roles and base stats on purpose (a creature,
+# a creature). The first Fighting line (ramplet / ibexer) and the Disc 04 users are here.
+# ======================================================================================================================
+
+# role. Scratch 1, Growl 1, Bite 12, Pilfer 17, Screech 24, Rake Swipes 33 (slash here).
+[glintail]
+art = "glintail_c"
+art_dark_cut = 45
+types = ["normal"]
+base = [36, 48, 31, 87, 44]
+growth = "medium_fast"
+base_exp = 69
+catch_rate = 255
+height = 0.4
+weight = 4.2
+evolve = [28, "lustrel"]
+learn = [[1, "claw"], [1, "growl"], [12, "bite"], [17, "pilfer"], [24, "shrill"], [33, "slash"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_04", "disc_06", "disc_16", "disc_17", "disc_18", "disc_19", "disc_23", "disc_27", "disc_30", "disc_34", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# role
+[lustrel]
+art = "lustrel_c"
+art_dark_cut = 45
+types = ["normal"]
+base = [61, 74, 57, 111, 69]
+growth = "medium_fast"
+base_exp = 148
+catch_rate = 90
+height = 1.0
+weight = 32.0
+learn = [[1, "claw"], [1, "growl"], [12, "bite"], [17, "pilfer"], [24, "shrill"], [33, "slash"], [44, "flatten"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_04", "disc_06", "disc_16", "disc_17", "disc_18", "disc_19", "disc_22", "disc_23", "disc_27", "disc_30", "disc_34", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# role, the first Fighting line. Scratch 1, Leer 1, Chop 15, Rake Swipes 21, Steady Gaze 27, Hurl Down 33, Rampage 39.
+[ramplet]
+art = "ramplet_c"
+art_dark_cut = 30
+types = ["fighting"]
+base = [36, 85, 31, 72, 31]
+growth = "medium_fast"
+base_exp = 74
+catch_rate = 190
+height = 0.5
+weight = 28.0
+evolve = [28, "ibexer"]
+learn = [[1, "scowl"], [1, "claw"], [1, "wag"], [15, "chop"], [21, "ramhead"], [27, "focus"], [33, "clinch"], [39, "rampage"]]
+tm = ["disc_01", "disc_03", "disc_04", "disc_06", "disc_14", "disc_16", "disc_17", "disc_18", "disc_23", "disc_24", "disc_25", "disc_26", "disc_27", "disc_30", "disc_32", "disc_34", "disc_36", "disc_37", "disc_40", "disc_41", "disc_45", "disc_48", "disc_50"]
+
+# role
+[ibexer]
+art = "ibexer_c"
+art_dark_cut = 30
+types = ["fighting"]
+base = [68, 101, 58, 98, 64]
+growth = "medium_fast"
+base_exp = 149
+catch_rate = 75
+height = 1.1
+weight = 36.0
+learn = [[1, "rakeswipe"], [1, "scowl"], [1, "claw"], [1, "wag"], [1, "chop"], [15, "trip"], [21, "ramhead"], [27, "focus"], [37, "clinch"], [46, "rampage"], [46, "flatten"]]
+tm = ["disc_01", "disc_03", "disc_04", "disc_06", "disc_14", "disc_16", "disc_17", "disc_18", "disc_22", "disc_23", "disc_24", "disc_25", "disc_26", "disc_27", "disc_30", "disc_32", "disc_34", "disc_36", "disc_37", "disc_40", "disc_41", "disc_45", "disc_48", "disc_50"]
+
+# role (contract 73: Lockout, the Disable role, replaces the stand-in Supersonic at 12). Pound 1, Hypnosis 1, Disable 12, Confusion 17, Headbutt 24, Toxic Cloud 29, Psychic 32, Meditate 37.
+[mesmoli]
+art = "mesmoli_c"
+art_dark_cut = 45
+types = ["psychic"]
+base = [64, 52, 49, 38, 86]
+growth = "medium_fast"
+base_exp = 66
+catch_rate = 190
+height = 0.9
+weight = 28.0
+evolve = [26, "mesmaris"]
+learn = [[1, "bump"], [1, "lullaby"], [12, "lockout"], [17, "reverb"], [24, "ramhead"], [29, "venomdust"], [32, "mindstorm"], [37, "harden"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_07", "disc_08", "disc_14", "disc_16", "disc_17", "disc_18", "disc_24", "disc_25", "disc_26", "disc_27", "disc_33", "disc_34", "disc_35", "disc_36", "disc_37", "disc_41", "disc_43", "disc_45", "disc_46", "disc_49", "disc_50"]
+
+# role
+[mesmaris]
+art = "mesmaris_c"
+art_dark_cut = 45
+types = ["psychic"]
+base = [82, 75, 74, 66, 118]
+growth = "medium_fast"
+base_exp = 165
+catch_rate = 75
+height = 1.6
+weight = 70.0
+learn = [[1, "bump"], [1, "lullaby"], [1, "lockout"], [17, "reverb"], [24, "ramhead"], [29, "venomdust"], [32, "mindstorm"], [37, "harden"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_07", "disc_08", "disc_14", "disc_16", "disc_17", "disc_18", "disc_22", "disc_24", "disc_25", "disc_26", "disc_27", "disc_33", "disc_34", "disc_35", "disc_36", "disc_37", "disc_41", "disc_43", "disc_45", "disc_46", "disc_49", "disc_50"]
+
+# role. Scratch 1, Growl 1, Dig 19, Dust Kick 24, Slash 31, Earthquake 40.
+[drillroot]
+art = "drillroot_c"
+art_dark_cut = 45
+types = ["ground"]
+base = [14, 58, 21, 92, 48]
+growth = "medium_fast"
+base_exp = 81
+catch_rate = 255
+height = 0.2
+weight = 0.8
+evolve = [26, "augeroot"]
+learn = [[1, "claw"], [1, "growl"], [19, "burrow"], [24, "dustkick"], [31, "slash"], [40, "rumble"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_tierra", "disc_16", "disc_17", "disc_18", "disc_27", "disc_31", "disc_32", "disc_34", "disc_36", "disc_45", "disc_48", "disc_50"]
+
+# role
+[augeroot]
+art = "augeroot_c"
+art_dark_cut = 35
+types = ["ground"]
+base = [30, 83, 53, 124, 67]
+growth = "medium_fast"
+base_exp = 153
+catch_rate = 50
+height = 0.7
+weight = 33.0
+learn = [[1, "claw"], [1, "growl"], [19, "burrow"], [24, "dustkick"], [35, "slash"], [47, "rumble"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_tierra", "disc_16", "disc_17", "disc_18", "disc_22", "disc_27", "disc_31", "disc_32", "disc_34", "disc_36", "disc_45", "disc_48", "disc_50"]
+
+# role. Tackle 1, Screech 1, Sonic Boom 17, Blow Up 22, Light Veil 29, Swift 36, Explosion 43 (no self-destruct effect: the zap and the numbing wave).
+[spoolt]
+art = "spoolt_c"
+art_dark_cut = 30
+types = ["electric"]
+base = [37, 27, 52, 104, 53]
+growth = "medium_fast"
+base_exp = 103
+catch_rate = 190
+height = 0.5
+weight = 10.4
+evolve = [30, "voltspool"]
+learn = [[1, "bump"], [1, "shrill"], [17, "zap"], [22, "blowup"], [22, "numb"], [29, "veil"], [43, "detonate"]]
+tm = ["disc_03", "disc_04", "disc_06", "disc_17", "disc_27", "disc_30", "disc_33", "disc_34", "disc_35", "disc_36", "disc_38", "disc_40", "disc_45", "disc_46", "disc_47", "disc_50"]
+
+# role
+[voltspool]
+art = "voltspool_c"
+art_dark_cut = 45
+types = ["electric"]
+base = [57, 53, 67, 143, 76]
+growth = "medium_fast"
+base_exp = 150
+catch_rate = 60
+height = 1.2
+weight = 66.6
+learn = [[1, "shockpulse"], [1, "bump"], [1, "shrill"], [1, "zap"], [22, "blowup"], [22, "numb"], [29, "veil"], [36, "streak"], [43, "arc"], [50, "detonate"]]
+tm = ["disc_03", "disc_04", "disc_06", "disc_17", "disc_22", "disc_27", "disc_30", "disc_33", "disc_34", "disc_35", "disc_36", "disc_38", "disc_40", "disc_41", "disc_45", "disc_46", "disc_47", "disc_50"]
+
+# role (the trade). Peck 1, Dust Kick 1, Leer 7, Peck Frenzy 15, Sharpen 23, Agility 31, Slash 39. No evolution.
+[otterock]
+art = "otterock_c"
+art_dark_cut = 45
+types = ["water"]
+base = [48, 62, 58, 60, 59]
+growth = "medium_fast"
+base_exp = 94
+catch_rate = 45
+height = 0.8
+weight = 15.0
+learn = [[1, "bump"], [1, "jet"], [7, "wag"], [15, "pebble"], [23, "sharpen"], [31, "sprint"], [39, "slash"]]
+tm = ["disc_02", "disc_03", "disc_06", "disc_11", "disc_12", "disc_13", "disc_16", "disc_17", "disc_18", "disc_27", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# ======================================================================================================================
+# C4 (Chapter 4, appended: ids 62..79, never reorder; contract 39). The 18 approved creatures of the design notes (art in assets/art/elementis/<name>_c). stats,
+# base exp / catch rates and learnsets on purpose (Tunel Oscuro -> Pueblo Bruma -> Metropolis Neon roster), without the effects the engine lacks (Dream Feast, Shade's fixed damage, Blow Up,
+# Explosion, Roar, the trapping of Cinder Spin). Stone finals of the existing lines come at the end (ids 76..79).
+# ======================================================================================================================
+# ---- the sheet ghosts (a creature). Lick 1, Hollow Gaze 1, Shade 1, Hypnosis 27, Dream Feast 35.
+[wispsheet]
+art = "wispsheet_c"
+art_dark_cut = 45
+types = ["ghost", "poison"]
+base = [26, 38, 27, 77, 104]
+growth = "medium_slow"
+base_exp = 95
+catch_rate = 190
+height = 1.3
+weight = 0.1
+evolve = [25, "shroudle"]
+learn = [[1, "wisplick"], [1, "hollowgaze"], [1, "shade"], [27, "drowse"], [35, "nightmeal"], [35, "dreamray"]]
+tm = ["disc_03", "disc_04", "disc_05", "disc_06", "disc_07", "disc_08", "disc_27", "disc_30", "disc_34", "disc_36", "disc_38", "disc_43", "disc_45", "disc_47", "disc_50"]
+
+[shroudle]
+art = "shroudle_c"
+art_dark_cut = 45
+types = ["ghost", "poison"]
+base = [48, 53, 42, 98, 112]
+growth = "medium_slow"
+base_exp = 126
+catch_rate = 90
+height = 1.6
+weight = 0.1
+evolve_trade = "gloomshroud"   # contract 74 (F2): -> a creature is a TRADE evolution (the IR link: Club de Enlace); it was level 38 here
+learn = [[1, "wisplick"], [1, "hollowgaze"], [1, "shade"], [29, "drowse"], [38, "nightmeal"], [38, "dreamray"]]
+tm = ["disc_03", "disc_04", "disc_05", "disc_06", "disc_07", "disc_08", "disc_27", "disc_30", "disc_34", "disc_36", "disc_38", "disc_43", "disc_45", "disc_47", "disc_50"]
+
+[gloomshroud]
+art = "gloomshroud_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["ghost", "poison"]
+base = [58, 68, 57, 106, 133]
+growth = "medium_slow"
+base_exp = 190
+catch_rate = 45
+height = 1.5
+weight = 40.5
+learn = [[1, "wisplick"], [1, "hollowgaze"], [1, "shade"], [29, "drowse"], [38, "nightmeal"], [38, "dreamray"], [45, "mindstorm"]]
+tm = ["disc_01", "disc_03", "disc_04", "disc_05", "disc_06", "disc_07", "disc_08", "disc_14", "disc_16", "disc_17", "disc_18", "disc_22", "disc_24", "disc_25", "disc_26", "disc_27", "disc_30", "disc_34", "disc_36", "disc_37", "disc_38", "disc_41", "disc_43", "disc_45", "disc_47", "disc_50"]
+
+# ---- the eggshell bird (a creature). Stone Sling 1, Growl 1, Leer 10, Steady Gaze 13, Rampage 21, Bone Spin 25, Rage 31.
+[hatchkip]
+art = "hatchkip_c"
+art_dark_cut = 45
+types = ["ground"]
+base = [53, 53, 98, 32, 36]
+growth = "medium_fast"
+base_exp = 87
+catch_rate = 190
+height = 0.4
+weight = 6.5
+evolve_friend = [28, "shellbrute"]
+learn = [[1, "slingstone"], [1, "growl"], [10, "wag"], [13, "focus"], [21, "flatten"], [25, "scowl"], [25, "burrow"], [31, "ramhead"], [38, "rampage"], [43, "bonespin"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_06", "disc_tierra", "disc_10", "disc_14", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_24", "disc_25", "disc_26", "disc_27", "disc_31", "disc_32", "disc_34", "disc_36", "disc_41", "disc_45", "disc_50"]
+
+[shellbrute]
+art = "shellbrute_c"
+art_dark_cut = 45
+types = ["ground"]
+base = [56, 77, 115, 47, 53]
+growth = "medium_fast"
+base_exp = 124
+catch_rate = 75
+height = 1.0
+weight = 45.0
+learn = [[1, "scowl"], [1, "slingstone"], [1, "growl"], [1, "wag"], [13, "focus"], [21, "flatten"], [25, "burrow"], [31, "ramhead"], [41, "rampage"], [43, "rumble"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_06", "disc_tierra", "disc_10", "disc_14", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_24", "disc_25", "disc_26", "disc_27", "disc_31", "disc_32", "disc_34", "disc_36", "disc_41", "disc_45", "disc_50"]
+
+# ---- the gift of the Neon mansion (a creature and its three forms). Tackle 1, Dust Kick 1, Dash Strike 27, Tail Whip 31, Bite 37, Rush 45.
+[mimbara]
+art = "mimbara_c"
+art_dark_cut = 45
+types = ["normal"]
+base = [59, 53, 52, 57, 62]
+growth = "medium_fast"
+base_exp = 92
+catch_rate = 45
+height = 0.3
+weight = 6.5
+evolve_stone = { water = "tidebara", fire = "embara", thunder = "voltbara" }
+learn = [[1, "bump"], [1, "dustkick"], [27, "quick"], [31, "wag"], [37, "bite"], [45, "slamrush"], [45, "ramhead"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_16", "disc_17", "disc_18", "disc_27", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# role
+[tidebara]
+art = "tidebara_c"
+art_dark_cut = 45
+types = ["water"]
+base = [134, 69, 57, 61, 114]
+growth = "medium_fast"
+base_exp = 196
+catch_rate = 45
+height = 1.0
+weight = 29.0
+learn = [[1, "bump"], [1, "dustkick"], [27, "quick"], [31, "jet"], [37, "wag"], [42, "bite"], [48, "harden"], [54, "glassbeam"], [65, "wavewall"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_06", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_27", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# role
+[embara]
+art = "embara_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["fire"]
+base = [61, 133, 57, 61, 113]
+growth = "medium_fast"
+base_exp = 196
+catch_rate = 45
+height = 0.9
+weight = 25.0
+learn = [[1, "bump"], [1, "dustkick"], [27, "quick"], [31, "ember"], [37, "wag"], [42, "bite"], [48, "growl"], [54, "cinderspin"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_10", "disc_16", "disc_17", "disc_18", "disc_22", "disc_27", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# role
+[voltbara]
+art = "voltbara_c"
+art_dark_cut = 45
+types = ["electric"]
+base = [62, 68, 57, 134, 106]
+growth = "medium_fast"
+base_exp = 197
+catch_rate = 45
+height = 0.8
+weight = 24.5
+learn = [[1, "bump"], [1, "dustkick"], [27, "quick"], [31, "zap"], [37, "wag"], [42, "numb"], [54, "sprint"], [65, "arc"]]
+tm = ["disc_01", "disc_03", "disc_04", "disc_06", "disc_16", "disc_17", "disc_18", "disc_22", "disc_27", "disc_30", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_46", "disc_50"]
+
+# ---- the desert sentinel (a creature). Bite 1, Roar 1, Ember 18, Leer 23, Rush 30, Agility 39, Mane Blaze 50.
+[cindermeer]
+art = "cindermeer_c"
+art_dark_cut = 45
+types = ["fire"]
+base = [52, 75, 42, 58, 48]
+growth = "slow"
+base_exp = 91
+catch_rate = 190
+height = 0.7
+weight = 19.0
+evolve_stone = { fire = "pyromeer" }
+learn = [[1, "bellow"], [1, "bite"], [1, "growl"], [18, "ember"], [23, "wag"], [30, "slamrush"], [30, "ramhead"], [39, "sprint"], [50, "mane"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_10", "disc_16", "disc_17", "disc_18", "disc_27", "disc_29", "disc_32", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+[pyromeer]
+art = "pyromeer_c"
+art_dark_cut = 45
+types = ["fire"]
+base = [86, 105, 83, 92, 83]
+growth = "slow"
+base_exp = 213
+catch_rate = 75
+height = 1.9
+weight = 155.0
+learn = [[1, "slamrush"], [1, "scowl"], [1, "bellow"], [1, "bite"], [1, "growl"], [1, "ember"], [1, "wag"], [30, "ramhead"], [39, "sprint"], [50, "mane"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_10", "disc_16", "disc_17", "disc_18", "disc_22", "disc_27", "disc_29", "disc_32", "disc_33", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# ---- the greenhouse sundew (a creature). Constrict 1, Bind 1, Absorb 29, Venom Mist 32, Numb Pollen 35, Drowsy Dust 39, Slam 45, Growth 49.
+[dewlash]
+art = "dewlash_c"
+art_dark_cut = 45
+types = ["grass"]
+base = [68, 57, 110, 58, 97]
+growth = "medium_fast"
+base_exp = 87
+catch_rate = 45
+height = 1.0
+weight = 35.0
+learn = [[1, "cinch"], [1, "tendril"], [1, "squeeze"], [1, "wag"], [29, "lash"], [32, "venomdust"], [35, "pollen"], [39, "spore"], [45, "flatten"], [49, "swell"], [49, "harden"]]
+tm = ["disc_03", "disc_05", "disc_06", "disc_12", "disc_16", "disc_17", "disc_18", "disc_22", "disc_27", "disc_28", "disc_34", "disc_36", "disc_41", "disc_45", "disc_50"]
+
+# ---- the rusty keg (a creature). Tackle 1, Smog 32, Ooze 37, Smokescreen 40, Blow Up 45, Whiteveil 48, Explosion 53.
+[smogkeg]
+art = "smogkeg_c"
+art_dark_cut = 45
+types = ["poison"]
+base = [37, 68, 98, 31, 63]
+growth = "medium_fast"
+base_exp = 114
+catch_rate = 190
+height = 0.6
+weight = 1.0
+evolve = [35, "twinkeg"]
+learn = [[1, "bump"], [32, "fumes"], [37, "sourspit"], [40, "blowup"], [40, "dustkick"], [48, "detonate"], [48, "harden"]]
+tm = ["disc_03", "disc_04", "disc_06", "disc_10", "disc_27", "disc_30", "disc_34", "disc_36", "disc_38", "disc_45", "disc_47", "disc_50"]
+
+[twinkeg]
+art = "twinkeg_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["poison"]
+base = [61, 93, 116, 58, 89]
+growth = "medium_fast"
+base_exp = 173
+catch_rate = 60
+height = 1.2
+weight = 9.5
+learn = [[1, "bump"], [1, "fumes"], [37, "sourspit"], [40, "dustkick"], [43, "blowup"], [48, "harden"], [53, "detonate"], [53, "flatten"]]
+tm = ["disc_03", "disc_04", "disc_06", "disc_10", "disc_22", "disc_27", "disc_30", "disc_34", "disc_36", "disc_38", "disc_45", "disc_47", "disc_50"]
+
+# ---- the stone finals of the existing lines (the lunar gem, the frond gem)
+# role
+[lunarelle]
+art = "lunarelle_c"
+art_dark_cut = 45
+types = ["normal"]
+base = [100, 66, 69, 58, 88]
+growth = "fast"
+base_exp = 129
+catch_rate = 25
+height = 1.3
+weight = 40.0
+learn = [[1, "wildcard"], [1, "shrink"], [1, "twinslap"], [1, "bump"], [1, "growl"], [1, "lullaby"], [1, "mirage"], [24, "slash"], [31, "flatten"], [39, "curl"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_04", "disc_06", "disc_07", "disc_08", "disc_10", "disc_14", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_24", "disc_25", "disc_26", "disc_27", "disc_28", "disc_30", "disc_33", "disc_34", "disc_35", "disc_36", "disc_37", "disc_41", "disc_45", "disc_46", "disc_49", "disc_50"]
+
+# role
+[lulladream]
+art = "lulladream_c"
+art_dark_cut = 45
+types = ["normal"]
+base = [144, 66, 41, 47, 53]
+growth = "fast"
+base_exp = 109
+catch_rate = 50
+height = 1.0
+weight = 12.0
+learn = [[1, "twinslap"], [1, "lullaby"], [1, "sonar"], [1, "bump"], [1, "curl"], [19, "bite"], [29, "flatten"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_04", "disc_06", "disc_07", "disc_08", "disc_10", "disc_14", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_24", "disc_25", "disc_26", "disc_27", "disc_28", "disc_30", "disc_33", "disc_34", "disc_35", "disc_36", "disc_41", "disc_45", "disc_46", "disc_49", "disc_50"]
+
+# role
+[quilltyrant]
+art = "quilltyrant_c"
+art_dark_cut = 45
+types = ["poison", "ground"]
+base = [78, 95, 75, 83, 71]
+growth = "medium_slow"
+base_exp = 195
+catch_rate = 45
+height = 1.4
+weight = 62.0
+learn = [[1, "rampage"], [1, "wag"], [1, "bump"], [1, "spikeram"], [1, "needle"], [21, "focus"], [29, "chomp"], [36, "haymaker"], [43, "rumble"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_04", "disc_06", "disc_tierra", "disc_10", "disc_14", "disc_15", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_23", "disc_24", "disc_25", "disc_26", "disc_27", "disc_30", "disc_31", "disc_34", "disc_35", "disc_36", "disc_41", "disc_45", "disc_48", "disc_50"]
+
+# role
+[bloomoss]
+art = "bloomoss_c"
+art_dark_cut = 45
+types = ["grass", "poison"]
+base = [72, 76, 88, 53, 105]
+growth = "medium_slow"
+base_exp = 184
+catch_rate = 45
+height = 1.2
+weight = 18.6
+learn = [[1, "petalwaltz"], [1, "lash"], [1, "venomdust"], [1, "pollen"], [1, "spore"], [24, "sourspit"], [33, "rack"], [45, "bloom"]]
+tm = ["disc_03", "disc_05", "disc_06", "disc_12", "disc_16", "disc_17", "disc_18", "disc_22", "disc_27", "disc_28", "disc_34", "disc_35", "disc_36", "disc_45", "disc_50"]
+
+
+# ======================================================================================================================================================
+# C5a (contract 47): the 21 species of chapter 5 (the design notes): the sea and the fishing rods, the sleeping creature, the Reserva's exclusives, the poison leader's Slickslime.
+# base stats / catch rates / growth rates of the role on purpose.
+# types only (no Dark: Stormgill is Water / Flying like a creature). Urchip, Urchlord, Wombamma and Tarbog use the user's lighter typecast (`art_dark_cut = 25`, `art_split`).
+# ======================================================================================================================================================
+# role. Splash 1, Tackle 15 (a creature has no other move). Flop = Splash (does nothing).
+[flopfin]
+art = "flopfin_c"
+art_dark_cut = 45
+types = ["water"]
+base = [16, 14, 58, 77, 23]
+growth = "slow"
+base_exp = 20
+catch_rate = 255
+height = 0.9
+weight = 10.0
+evolve = [20, "stormgill"]
+learn = [[1, "flop"], [15, "bump"]]
+tm = []
+
+# role (Water / Flying: has no Dark type). Bite 20, Wyrm Rage 25, Leer 32, Torrent 41, Mega Beam 52.
+[stormgill]
+art = "stormgill_c"
+art_dark_cut = 45
+types = ["water", "flying"]
+base = [99, 121, 75, 78, 103]
+growth = "slow"
+base_exp = 214
+catch_rate = 45
+height = 6.5
+weight = 235.0
+learn = [[1, "scowl"], [1, "flop"], [1, "bump"], [20, "bite"], [25, "wyrmrage"], [32, "wag"], [41, "torrent"], [52, "megabeam"]]
+tm = ["disc_02", "disc_03", "disc_04", "disc_06", "disc_10", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_27", "disc_29", "disc_30", "disc_34", "disc_35", "disc_36", "disc_41", "disc_45", "disc_50"]
+
+# role. Acid 1, Supersonic 7, Wrap 13, Needle Jab 18, Water Gun 22, Constrict 27, Barrier 33, Screech 40 (Torrent 40 for the line).
+[urchip]
+art = "urchip_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["water", "poison"]
+base = [37, 37, 32, 72, 104]
+growth = "slow"
+base_exp = 105
+catch_rate = 190
+height = 0.9
+weight = 45.5
+evolve = [30, "urchlord"]
+learn = [[1, "sourspit"], [7, "sonar"], [13, "squeeze"], [18, "needle"], [22, "jet"], [27, "curl"], [33, "shrill"], [40, "torrent"]]
+tm = ["disc_02", "disc_03", "disc_05", "disc_06", "disc_12", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_27", "disc_34", "disc_35", "disc_36", "disc_41", "disc_45", "disc_50"]
+
+# role.
+[urchlord]
+art = "urchlord_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["water", "poison"]
+base = [84, 66, 61, 103, 124]
+growth = "slow"
+base_exp = 205
+catch_rate = 60
+height = 1.6
+weight = 55.0
+learn = [[1, "coil"], [1, "sourspit"], [1, "sonar"], [1, "squeeze"], [18, "needle"], [22, "jet"], [27, "curl"], [35, "shrill"], [43, "torrent"]]
+tm = ["disc_02", "disc_03", "disc_05", "disc_06", "disc_12", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_27", "disc_34", "disc_35", "disc_36", "disc_41", "disc_45", "disc_50"]
+
+# role. Bubble 1, Leer 20, Pincer 25, Shear 30, Stomp 35, Club Smash 40, Harden 45.
+[clubrimp]
+art = "clubrimp_c"
+art_dark_cut = 45
+types = ["water"]
+base = [27, 101, 93, 54, 21]
+growth = "medium_fast"
+base_exp = 115
+catch_rate = 225
+height = 0.4
+weight = 6.5
+evolve = [28, "smashrimp"]
+learn = [[1, "scowl"], [1, "bubble"], [1, "wag"], [20, "pincer"], [21, "snip"], [25, "shear"], [28, "ramhead"], [30, "trample"], [34, "clubsmash"], [40, "harden"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_06", "disc_12", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_27", "disc_34", "disc_36", "disc_45", "disc_50"]
+
+# role.
+[smashrimp]
+art = "smashrimp_c"
+art_dark_cut = 45
+types = ["water"]
+base = [58, 127, 119, 73, 53]
+growth = "medium_fast"
+base_exp = 206
+catch_rate = 60
+height = 1.2
+weight = 65.0
+learn = [[1, "scowl"], [1, "bubble"], [1, "wag"], [1, "pincer"], [1, "ramhead"], [34, "trample"], [35, "clubsmash"], [41, "harden"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_06", "disc_12", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_27", "disc_34", "disc_36", "disc_45", "disc_50"]
+
+# role. Bubble 1, Hypnosis 16, Water Gun 19, Double Slap 25, Heavy Slam 31, Amnesia 38, Torrent 45.
+[skipgoby]
+art = "skipgoby_c"
+art_dark_cut = 45
+types = ["water"]
+base = [36, 54, 44, 87, 43]
+growth = "medium_slow"
+base_exp = 77
+catch_rate = 255
+height = 0.6
+weight = 12.4
+evolve = [25, "gobyhop"]
+learn = [[1, "bubble"], [16, "drowse"], [19, "jet"], [25, "claw"], [31, "heavyslam"], [38, "daydream"], [45, "torrent"]]
+tm = ["disc_02", "disc_03", "disc_06", "disc_07", "disc_08", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_27", "disc_34", "disc_36", "disc_41", "disc_45", "disc_50"]
+
+# role: the Tide Gem makes the Gobrawl.
+[gobyhop]
+art = "gobyhop_c"
+art_dark_cut = 45
+types = ["water"]
+base = [61, 68, 68, 87, 46]
+growth = "medium_slow"
+base_exp = 131
+catch_rate = 120
+height = 1.0
+weight = 20.0
+evolve_stone = { water = "gobrawl" }
+learn = [[1, "bubble"], [1, "drowse"], [1, "jet"], [26, "claw"], [33, "heavyslam"], [41, "daydream"], [49, "torrent"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_06", "disc_07", "disc_08", "disc_tierra", "disc_14", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_24", "disc_25", "disc_26", "disc_27", "disc_31", "disc_34", "disc_36", "disc_37", "disc_41", "disc_45", "disc_50"]
+
+# role (Water / Fighting).
+[gobrawl]
+art = "gobrawl_c"
+art_dark_cut = 45
+types = ["water", "fighting"]
+base = [86, 82, 98, 72, 65]
+growth = "medium_slow"
+base_exp = 185
+catch_rate = 45
+height = 1.3
+weight = 54.0
+learn = [[1, "twinslap"], [1, "jet"], [1, "drowse"], [1, "clinch"], [1, "heavyslam"], [43, "daydream"], [53, "torrent"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_06", "disc_07", "disc_08", "disc_tierra", "disc_14", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_24", "disc_25", "disc_26", "disc_27", "disc_31", "disc_34", "disc_36", "disc_37", "disc_41", "disc_45", "disc_50"]
+
+# role (Water / Psychic). Confusion 1, Disable 18, Headbutt 22, Growl 27, Water Gun 33, Amnesia 40, Psychic 48.
+[lazatee]
+art = "lazatee_c"
+art_dark_cut = 45
+types = ["water", "psychic"]
+base = [86, 68, 61, 18, 42]
+growth = "medium_fast"
+base_exp = 99
+catch_rate = 190
+height = 1.1
+weight = 34.0
+evolve = [37, "sagatee"]
+learn = [[1, "reverb"], [1, "growl"], [18, "wag"], [22, "ramhead"], [33, "jet"], [40, "daydream"], [48, "mindstorm"]]
+tm = ["disc_02", "disc_03", "disc_04", "disc_06", "disc_07", "disc_08", "disc_tierra", "disc_10", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_23", "disc_27", "disc_31", "disc_32", "disc_33", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_46", "disc_49", "disc_50"]
+
+# role.
+[sagatee]
+art = "sagatee_c"
+art_dark_cut = 45
+types = ["water", "psychic"]
+base = [92, 70, 113, 26, 83]
+growth = "medium_fast"
+base_exp = 164
+catch_rate = 75
+height = 1.7
+weight = 80.0
+learn = [[1, "reverb"], [1, "growl"], [1, "jet"], [1, "ramhead"], [37, "curl"], [44, "daydream"], [55, "mindstorm"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_04", "disc_06", "disc_07", "disc_08", "disc_tierra", "disc_10", "disc_14", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_23", "disc_24", "disc_25", "disc_26", "disc_27", "disc_31", "disc_32", "disc_33", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_46", "disc_49", "disc_50"]
+
+# role: the sleeping creature of Rutas 12 and 16 (level 30, woken with the Flauta Clara). Headbutt, Amnesia, Rest, Heavy Slam, Harden 35, Reckless 41, Mega Beam 48.
+[slumberth]
+art = "slumberth_c"
+art_dark_cut = 45
+types = ["normal"]
+base = [164, 107, 68, 27, 62]
+growth = "slow"
+base_exp = 154
+catch_rate = 25
+height = 2.1
+weight = 460.0
+learn = [[1, "nap"], [1, "ramhead"], [1, "daydream"], [1, "heavyslam"], [1, "curl"], [35, "harden"], [41, "flatten"], [48, "reckless"], [48, "megabeam"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_04", "disc_06", "disc_07", "disc_08", "disc_tierra", "disc_10", "disc_14", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_23", "disc_24", "disc_25", "disc_26", "disc_27", "disc_28", "disc_30", "disc_31", "disc_34", "disc_35", "disc_36", "disc_37", "disc_38", "disc_41", "disc_45", "disc_48", "disc_50"]
+
+# role (rare, the Reserva). Pound, Double Slap, Sing 12, Growl 24, Minimize 30, Curl Up 38, Light Veil 44, Reckless 48.
+[lambalm]
+art = "lambalm_c"
+art_dark_cut = 45
+types = ["normal"]
+base = [248, 9, 9, 48, 108]
+growth = "fast"
+base_exp = 255
+catch_rate = 30
+height = 0.8
+weight = 12.5
+learn = [[1, "twinslap"], [1, "bump"], [1, "growl"], [12, "lullaby"], [24, "curl"], [30, "veil"], [38, "shrink"], [38, "mirage"], [44, "flatten"], [54, "reckless"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_04", "disc_05", "disc_06", "disc_07", "disc_08", "disc_10", "disc_14", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_24", "disc_25", "disc_26", "disc_27", "disc_28", "disc_30", "disc_33", "disc_34", "disc_35", "disc_36", "disc_37", "disc_39", "disc_41", "disc_42", "disc_45", "disc_46", "disc_49", "disc_50"]
+
+# role (the Reserva). Fist Shower, Rage, Bite 26, Tail Whip 31, Haymaker 36, Leer 41, Wobble Fist 46.
+[wombamma]
+art = "wombamma_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["normal"]
+base = [109, 92, 83, 86, 36]
+growth = "medium_fast"
+base_exp = 176
+catch_rate = 45
+height = 2.0
+weight = 75.0
+learn = [[1, "fury"], [1, "meteorfist"], [1, "bump"], [1, "claw"], [26, "bite"], [31, "wag"], [36, "haymaker"], [41, "growl"], [46, "wobblefist"], [46, "chop"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_04", "disc_06", "disc_tierra", "disc_10", "disc_14", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_24", "disc_25", "disc_26", "disc_27", "disc_30", "disc_31", "disc_34", "disc_36", "disc_41", "disc_45", "disc_48", "disc_50"]
+
+# role (Bug / Flying, the Reserva). Dash Strike 1, Leer 1, Steady Gaze 17, Mirage 20, Slash 24, Sharpen 29, Agility 35.
+[razorfly]
+art = "razorfly_c"
+art_dark_cut = 45
+types = ["bug", "flying"]
+base = [73, 115, 77, 105, 51]
+growth = "medium_fast"
+base_exp = 187
+catch_rate = 45
+height = 1.5
+weight = 48.0
+learn = [[1, "quick"], [1, "wag"], [17, "focus"], [20, "mirage"], [24, "slash"], [29, "sharpen"], [35, "sprint"]]
+tm = ["disc_03", "disc_06", "disc_12", "disc_17", "disc_18", "disc_22", "disc_27", "disc_34", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# role (the Reserva). Tackle 1, Tail Whip 1, Rage 21, Spike Ram 28, Scary Face 35, Peck Frenzy 44.
+[gnucharge]
+art = "gnucharge_c"
+art_dark_cut = 45
+types = ["normal"]
+base = [78, 104, 100, 107, 66]
+growth = "slow"
+base_exp = 211
+catch_rate = 45
+height = 1.4
+weight = 88.4
+learn = [[1, "bump"], [1, "wag"], [21, "trample"], [21, "growl"], [28, "spikeram"], [35, "shrill"], [44, "fury"], [44, "flatten"], [51, "slamrush"]]
+tm = ["disc_01", "disc_03", "disc_04", "disc_06", "disc_tierra", "disc_10", "disc_15", "disc_16", "disc_17", "disc_18", "disc_20", "disc_21", "disc_22", "disc_27", "disc_30", "disc_31", "disc_34", "disc_36", "disc_41", "disc_45", "disc_50"]
+
+# role: the FIRST Dragon line (fished with the Supercana in the Reserva). Wrap 1, Leer 1, Numbing Hum 10, Agility 20, Slam 30, Wyrm Rage 40, Mega Beam 50.
+[reefling]
+art = "reefling_c"
+art_dark_cut = 45
+types = ["dragon"]
+base = [37, 62, 41, 54, 53]
+growth = "slow"
+base_exp = 67
+catch_rate = 45
+height = 1.8
+weight = 3.3
+evolve = [30, "reefcoil"]
+learn = [[1, "scowl"], [1, "coil"], [1, "squeeze"], [1, "wag"], [10, "numb"], [20, "sprint"], [30, "flatten"], [40, "wyrmrage"], [50, "megabeam"]]
+tm = ["disc_02", "disc_03", "disc_04", "disc_06", "disc_10", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_27", "disc_29", "disc_30", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_46", "disc_50"]
+
+# role.
+[reefcoil]
+art = "reefcoil_c"
+art_dark_cut = 45
+types = ["dragon"]
+base = [57, 87, 63, 72, 74]
+growth = "slow"
+base_exp = 144
+catch_rate = 45
+height = 4.0
+weight = 16.5
+evolve = [55, "reefdragon"]
+learn = [[1, "scowl"], [1, "coil"], [1, "squeeze"], [1, "wag"], [1, "numb"], [1, "sprint"], [30, "flatten"], [40, "wyrmrage"], [50, "megabeam"]]
+tm = ["disc_02", "disc_03", "disc_04", "disc_06", "disc_10", "disc_15", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_27", "disc_29", "disc_30", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_46", "disc_50"]
+
+# role (Dragon / Flying).
+[reefdragon]
+art = "reefdragon_c"
+art_dark_cut = 45
+types = ["dragon", "flying"]
+base = [93, 137, 98, 77, 104]
+growth = "slow"
+base_exp = 218
+catch_rate = 45
+height = 2.2
+weight = 210.0
+learn = [[1, "scowl"], [1, "coil"], [1, "squeeze"], [1, "wag"], [1, "numb"], [1, "sprint"], [30, "flatten"], [40, "wyrmrage"], [50, "megabeam"]]
+tm = ["disc_02", "disc_03", "disc_04", "disc_06", "disc_10", "disc_11", "disc_15", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_27", "disc_29", "disc_30", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_46", "disc_50"]
+
+# role (Kai's). Toxic Cloud 1, Pound 1, Disable 30, Ooze 33, Minimize 37, Screech 42, Acid Veil 48.
+[slickslime]
+art = "slickslime_c"
+art_dark_cut = 45
+types = ["poison"]
+base = [84, 84, 52, 21, 37]
+growth = "medium_fast"
+base_exp = 90
+catch_rate = 190
+height = 0.9
+weight = 30.0
+evolve = [38, "tarbog"]
+learn = [[1, "fumes"], [1, "bump"], [33, "ooze"], [37, "mirage"], [42, "shrill"], [48, "acidveil"]]
+tm = ["disc_01", "disc_03", "disc_04", "disc_05", "disc_06", "disc_10", "disc_16", "disc_27", "disc_30", "disc_34", "disc_36", "disc_38", "disc_45", "disc_47", "disc_50"]
+
+# role.
+[tarbog]
+art = "tarbog_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["poison"]
+base = [101, 108, 73, 54, 68]
+growth = "medium_fast"
+base_exp = 157
+catch_rate = 75
+height = 1.2
+weight = 45.0
+learn = [[1, "toxcloud"], [1, "fumes"], [1, "bump"], [1, "ooze"], [1, "mirage"], [45, "shrill"], [53, "acidveil"]]
+tm = ["disc_01", "disc_03", "disc_04", "disc_05", "disc_06", "disc_10", "disc_16", "disc_22", "disc_27", "disc_30", "disc_34", "disc_36", "disc_38", "disc_45", "disc_47", "disc_50"]
+
+# ----------------------------------------------------------------------------------------------------------------------
+# C6 (contract 49): the creatures of arc, ids 101 .. 108 (positions). Stats / catch rates / growth / learnsets = their role (without the effects the engine lacks).
+# ----------------------------------------------------------------------------------------------------------------------
+# role (the dojo's gift, to choose). Twin Kick 1, Meditate 1, Roll Kick 33, Jump Kick 38, Steady Gaze 43, High Kick 48, Mega Kick 53.
+[kickaroo]
+art = "kickaroo_c"
+art_dark_cut = 45
+types = ["fighting"]
+base = [54, 117, 56, 83, 39]
+growth = "medium_fast"
+base_exp = 139
+catch_rate = 45
+height = 1.5
+weight = 49.8
+learn = [[1, "twinkick"], [1, "trip"], [1, "meditate"], [28, "rollkick"], [38, "jumpkick"], [43, "focus"], [48, "highkick"], [53, "megakick"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_04", "disc_06", "disc_14", "disc_16", "disc_17", "disc_18", "disc_24", "disc_25", "disc_26", "disc_27", "disc_34", "disc_36", "disc_37", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# role (the dojo's gift, to choose). Fist Shower 1, Agility 1, Fire Fist 33, Ice Fist 38, Bolt Fist 43, Haymaker 48, Counter 53.
+[jabadillo]
+art = "jabadillo_c"
+art_dark_cut = 45
+types = ["fighting"]
+base = [54, 109, 76, 73, 32]
+growth = "medium_fast"
+base_exp = 140
+catch_rate = 45
+height = 1.4
+weight = 50.2
+learn = [[1, "meteorfist"], [1, "chop"], [1, "sprint"], [28, "firefist"], [38, "icefist"], [43, "bolfist"], [48, "haymaker"], [53, "clinch"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_04", "disc_06", "disc_14", "disc_16", "disc_17", "disc_18", "disc_24", "disc_25", "disc_26", "disc_27", "disc_34", "disc_36", "disc_37", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# role (the Torre Vertice's gift). Water Gun 1, Growl 1, Sing 16, Mist 20, Heavy Slam 25, Hollow Gaze 31, Frost Beam 38, Torrent 46. The first Water / Ice creature.
+[glacielle]
+art = "glacielle_c"
+art_dark_cut = 45
+types = ["water", "ice"]
+base = [134, 82, 76, 58, 98]
+growth = "slow"
+base_exp = 219
+catch_rate = 45
+height = 2.5
+weight = 220.0
+learn = [[1, "jet"], [1, "growl"], [16, "lullaby"], [20, "frostmist"], [25, "heavyslam"], [31, "hollowgaze"], [38, "frostbeam"], [46, "torrent"]]
+tm = ["disc_02", "disc_03", "disc_04", "disc_06", "disc_07", "disc_08", "disc_15", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_27", "disc_28", "disc_29", "disc_30", "disc_34", "disc_35", "disc_36", "disc_41", "disc_45", "disc_50"]
+
+# role (the in-game trade near Cenit: for a creature). Confusion 1, Barrier 1, Light Veil 15, Reflect 23, Meditate 31, Substitute 39.
+[mirrimime]
+art = "mirrimime_c"
+art_dark_cut = 45
+types = ["psychic"]
+base = [36, 49, 68, 86, 96]
+growth = "medium_fast"
+base_exp = 136
+catch_rate = 45
+height = 1.3
+weight = 54.5
+learn = [[1, "wardwall"], [1, "reverb"], [1, "veil"], [23, "mirage"], [31, "meditate"], [39, "dreamray"], [47, "decoy"]]
+tm = ["disc_01", "disc_03", "disc_04", "disc_06", "disc_07", "disc_08", "disc_14", "disc_16", "disc_17", "disc_18", "disc_22", "disc_24", "disc_25", "disc_26", "disc_27", "disc_28", "disc_30", "disc_33", "disc_34", "disc_35", "disc_36", "disc_37", "disc_41", "disc_45", "disc_46", "disc_50"]
+
+# role (Trancelf's final form, BY TRADE: `evolve_trade` on Trancelf; has no other way). Dra. Sena's ace. Its own picture typecast (the design notes).
+[somnarch]
+art = "somnarch_c"
+art_dark_cut = 30
+art_split = [0.3, 0.65]
+types = ["psychic"]
+base = [59, 46, 41, 123, 131]
+growth = "medium_slow"
+base_exp = 186
+catch_rate = 50
+height = 1.5
+weight = 48.0
+learn = [[1, "blink"], [1, "mirage"], [1, "reverb"], [1, "sonar"], [27, "dreamray"], [38, "mindstorm"], [50, "daydream"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_07", "disc_08", "disc_14", "disc_16", "disc_17", "disc_18", "disc_22", "disc_24", "disc_25", "disc_26", "disc_27", "disc_32", "disc_33", "disc_34", "disc_35", "disc_36", "disc_37", "disc_41", "disc_45", "disc_46", "disc_49", "disc_50"]
+
+# role (the routes around Cenit). Tackle 1, Disable 1, Venom Mist 24, Sap Bite 27, Numb Pollen 30, Dream Ray 35, Drowsy Dust 38, Psychic 43.
+[mothmist]
+art = "mothmist_c"
+art_dark_cut = 45
+types = ["bug", "poison"]
+base = [62, 59, 52, 47, 35]
+growth = "medium_fast"
+base_exp = 75
+catch_rate = 190
+height = 1.0
+weight = 30.0
+evolve = [31, "veilmoth"]
+learn = [[1, "bump"], [1, "silkshot"], [24, "venomdust"], [27, "sapbite"], [30, "pollen"], [35, "dreamray"], [38, "spore"], [43, "mindstorm"]]
+tm = ["disc_03", "disc_05", "disc_06", "disc_07", "disc_08", "disc_17", "disc_18", "disc_27", "disc_28", "disc_34", "disc_35", "disc_36", "disc_45", "disc_50"]
+
+# role.
+[veilmoth]
+art = "veilmoth_c"
+art_dark_cut = 45
+types = ["bug", "poison"]
+base = [73, 68, 63, 87, 85]
+growth = "medium_fast"
+base_exp = 138
+catch_rate = 75
+height = 1.5
+weight = 12.5
+learn = [[1, "bump"], [1, "silkshot"], [1, "venomdust"], [1, "sapbite"], [30, "pollen"], [35, "dreamray"], [38, "spore"], [43, "mindstorm"]]
+tm = ["disc_03", "disc_05", "disc_06", "disc_07", "disc_08", "disc_11", "disc_13", "disc_17", "disc_18", "disc_22", "disc_27", "disc_28", "disc_33", "disc_34", "disc_35", "disc_36", "disc_40", "disc_45", "disc_50"]
+
+# role (the casino's prize from C6: Metropolis Neon's prize counter). Tackle 1, Sharpen 1, Typecast 1, Dream Ray 23, Recover 28, Agility 35, Trinity 42.
+[pixelix]
+art = "pixelix_c"
+art_dark_cut = 45
+types = ["normal"]
+base = [69, 57, 73, 37, 78]
+growth = "medium_fast"
+base_exp = 130
+catch_rate = 45
+height = 0.8
+weight = 36.5
+learn = [[1, "bump"], [1, "sharpen"], [1, "typecast"], [23, "dreamray"], [35, "sprint"], [42, "trinity"], [42, "streak"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_04", "disc_06", "disc_07", "disc_08", "disc_17", "disc_18", "disc_20", "disc_21", "disc_22", "disc_27", "disc_30", "disc_33", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_46", "disc_49", "disc_50"]
+
+
+# ======================================================================================================================================================
+# C8 (contract 51): the Ground gym's role (Director Varo's Clubtail and Anklord; the design notes). base stats / catch rates / growth rate of the role (a creature).
+# learnsets without the effects the engine lacks: Spike Ram = spikeram, Stomp = ramhead, Tail Whip = wag, Peck Frenzy = mace (a rock move), Auger Horn = burrow, Rush = heavyslam.
+# ======================================================================================================================================================
+# role
+[clubtail]
+art = "clubtail_c"
+art_dark_cut = 45
+types = ["ground", "rock"]
+base = [75, 81, 99, 22, 33]
+growth = "slow"
+base_exp = 135
+catch_rate = 120
+height = 1.0
+weight = 115.0
+evolve = [42, "anklord"]
+learn = [[1, "spikeram"], [1, "ramhead"], [30, "wag"], [35, "mace"], [40, "burrow"], [50, "scowl"], [50, "heavyslam"], [55, "slamrush"]]
+tm = ["disc_01", "disc_03", "disc_04", "disc_06", "disc_tierra", "disc_10", "disc_15", "disc_16", "disc_17", "disc_18", "disc_27", "disc_30", "disc_31", "disc_32", "disc_34", "disc_36", "disc_41", "disc_45", "disc_48", "disc_50"]
+
+# role
+[anklord]
+art = "anklord_c"
+art_dark_cut = 45
+types = ["ground", "rock"]
+base = [102, 134, 124, 35, 48]
+growth = "slow"
+base_exp = 204
+catch_rate = 60
+height = 1.9
+weight = 120.0
+learn = [[1, "pecking"], [1, "trample"], [1, "wag"], [1, "spikeram"], [1, "ramhead"], [1, "mace"], [48, "burrow"], [64, "slamrush"], [64, "heavyslam"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_04", "disc_06", "disc_tierra", "disc_10", "disc_14", "disc_15", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_23", "disc_24", "disc_25", "disc_26", "disc_27", "disc_30", "disc_31", "disc_32", "disc_34", "disc_36", "disc_41", "disc_45", "disc_48", "disc_50"]
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# C7 (contract 53): Routes 19 - 21, the Islas Escarcha, Isla Ceniza and the Power Plant. Species ids 111 .. 133 (23 species; the maintainer renumbers on merge).
+# base stats / catch rates / growth for their roles, learnsets without the effects the engine lacks (the design notes). `art_dark_cut = 25` + `art_split = [0.35, 0.75]` for the very dark pictures.
+# ----------------------------------------------------------------------------------------------------------------------
+# role: the beluga calf of the Islas Escarcha
+[belubub]
+art = "belubub_c"
+types = ["water"]
+base = [62, 49, 52, 47, 73]
+growth = "medium_fast"
+base_exp = 100
+catch_rate = 190
+height = 1.0
+weight = 90.0
+evolve = [34, "belugrand"]
+learn = [[1, "ramhead"], [1, "growl"], [11, "snowpuff"], [30, "auroraray"], [35, "drowse"], [40, "heavyslam"], [45, "slamrush"], [50, "frostbeam"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_06", "disc_15", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_23", "disc_27", "disc_34", "disc_36", "disc_41", "disc_45", "disc_50"]
+
+# role
+[belugrand]
+art = "belugrand_c"
+types = ["water", "ice"]
+base = [87, 75, 77, 72, 99]
+growth = "medium_fast"
+base_exp = 176
+catch_rate = 75
+height = 1.7
+weight = 120.0
+learn = [[1, "ramhead"], [1, "growl"], [30, "auroraray"], [35, "drowse"], [44, "heavyslam"], [50, "slamrush"], [50, "frostbeam"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_06", "disc_15", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_23", "disc_27", "disc_34", "disc_36", "disc_41", "disc_45", "disc_50"]
+
+# role: the barnacle (the Tide Gem makes the fortress)
+[barnacub]
+art = "barnacub_c"
+types = ["water"]
+base = [28, 68, 97, 36, 48]
+growth = "slow"
+base_exp = 97
+catch_rate = 190
+height = 0.3
+weight = 4.0
+evolve_stone = { water = "barnaclad" }
+learn = [[1, "retreat"], [1, "bump"], [1, "harden"], [18, "sonar"], [23, "squeeze"], [30, "auroraray"], [39, "growl"], [50, "frostbeam"]]
+tm = ["disc_02", "disc_03", "disc_06", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_27", "disc_33", "disc_34", "disc_35", "disc_36", "disc_38", "disc_40", "disc_45", "disc_47", "disc_49", "disc_50"]
+
+# role
+[barnaclad]
+art = "barnaclad_c"
+types = ["water", "ice"]
+base = [45, 100, 177, 72, 81]
+growth = "slow"
+base_exp = 203
+catch_rate = 60
+height = 1.5
+weight = 132.0
+learn = [[1, "snapshell"], [1, "retreat"], [1, "harden"], [1, "sonar"], [1, "squeeze"], [1, "auroraray"], [50, "quillshot"], [50, "frostbeam"]]
+tm = ["disc_02", "disc_03", "disc_06", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_27", "disc_33", "disc_34", "disc_35", "disc_36", "disc_38", "disc_40", "disc_45", "disc_47", "disc_49", "disc_50"]
+
+# role: the baby squid (dark picture)
+[inkit]
+art = "inkit_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["water"]
+base = [28, 36, 73, 58, 74]
+growth = "medium_fast"
+base_exp = 83
+catch_rate = 225
+height = 0.4
+weight = 8.0
+evolve = [32, "inkrake"]
+learn = [[1, "bubble"], [19, "dustkick"], [24, "growl"], [30, "jet"], [37, "sprint"], [45, "torrent"]]
+tm = ["disc_02", "disc_03", "disc_06", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_27", "disc_34", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# role
+[inkrake]
+art = "inkrake_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["water"]
+base = [52, 68, 98, 82, 91]
+growth = "medium_fast"
+base_exp = 155
+catch_rate = 75
+height = 1.5
+weight = 25.0
+learn = [[1, "soot"], [1, "bubble"], [1, "dustkick"], [1, "growl"], [1, "jet"], [41, "sprint"], [52, "torrent"]]
+tm = ["disc_02", "disc_03", "disc_06", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_27", "disc_34", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# role: the flying fish (dark picture)
+[glidefin]
+art = "glidefin_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["water"]
+base = [42, 69, 63, 65, 47]
+growth = "medium_fast"
+base_exp = 111
+catch_rate = 225
+height = 0.6
+weight = 15.0
+evolve = [33, "soarfin"]
+learn = [[1, "peck"], [1, "wag"], [19, "sonar"], [24, "spikeram"], [30, "pincer"], [37, "cascade"], [45, "spearpeck"], [54, "sprint"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_06", "disc_15", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_27", "disc_34", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# role
+[soarfin]
+art = "soarfin_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["water"]
+base = [84, 88, 64, 66, 77]
+growth = "medium_fast"
+base_exp = 170
+catch_rate = 60
+height = 1.3
+weight = 39.0
+learn = [[1, "peck"], [1, "wag"], [1, "sonar"], [1, "spikeram"], [30, "pincer"], [39, "cascade"], [48, "spearpeck"], [54, "sprint"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_06", "disc_15", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_27", "disc_34", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# role: the puzzled platypus pup (dark picture)
+[plattypuzz]
+art = "plattypuzz_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["water"]
+base = [47, 55, 45, 57, 46]
+growth = "medium_fast"
+base_exp = 80
+catch_rate = 190
+height = 0.8
+weight = 19.0
+evolve = [33, "plattymind"]
+learn = [[1, "claw"], [28, "wag"], [31, "lockout"], [36, "reverb"], [43, "rakeswipe"], [43, "pincer"], [52, "torrent"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_06", "disc_14", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_23", "disc_24", "disc_25", "disc_26", "disc_27", "disc_32", "disc_34", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# role
+[plattymind]
+art = "plattymind_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["water", "psychic"]
+base = [76, 84, 75, 85, 77]
+growth = "medium_fast"
+base_exp = 174
+catch_rate = 75
+height = 1.7
+weight = 77.0
+learn = [[1, "claw"], [1, "wag"], [1, "lockout"], [1, "reverb"], [39, "pincer"], [48, "rakeswipe"], [52, "torrent"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_06", "disc_07", "disc_08", "disc_14", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_23", "disc_24", "disc_25", "disc_26", "disc_27", "disc_32", "disc_34", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# role: only by trade (Isla Ceniza's lab)
+[frostiva]
+art = "frostiva_c"
+types = ["ice", "psychic"]
+base = [61, 52, 31, 99, 91]
+growth = "medium_fast"
+base_exp = 137
+catch_rate = 45
+height = 1.4
+weight = 40.6
+learn = [[1, "sweetkiss"], [1, "bump"], [1, "lullaby"], [18, "wisplick"], [23, "pincer"], [31, "icefist"], [39, "heavyslam"], [47, "rampage"], [47, "flatten"], [58, "whiteout"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_06", "disc_07", "disc_08", "disc_14", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_24", "disc_25", "disc_26", "disc_27", "disc_33", "disc_34", "disc_35", "disc_36", "disc_37", "disc_41", "disc_45", "disc_50"]
+
+# role (dark picture)
+[voltaboon]
+art = "voltaboon_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["electric"]
+base = [68, 80, 60, 105, 89]
+growth = "medium_fast"
+base_exp = 156
+catch_rate = 45
+height = 1.1
+weight = 30.0
+learn = [[1, "scowl"], [1, "quick"], [1, "growl"], [34, "zap"], [37, "shrill"], [42, "bolfist"], [49, "veil"], [54, "stormbolt"]]
+tm = ["disc_01", "disc_03", "disc_04", "disc_06", "disc_07", "disc_08", "disc_14", "disc_16", "disc_17", "disc_18", "disc_22", "disc_24", "disc_25", "disc_26", "disc_27", "disc_30", "disc_33", "disc_34", "disc_35", "disc_36", "disc_37", "disc_40", "disc_41", "disc_45", "disc_46", "disc_50"]
+
+# role
+[bellowkiln]
+art = "bellowkiln_c"
+types = ["fire"]
+base = [69, 98, 54, 90, 88]
+growth = "medium_fast"
+base_exp = 167
+catch_rate = 45
+height = 1.3
+weight = 44.5
+learn = [[1, "ember"], [36, "growl"], [39, "sonar"], [43, "firefist"], [48, "dustkick"], [52, "fumes"], [55, "mane"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_07", "disc_08", "disc_10", "disc_14", "disc_16", "disc_17", "disc_18", "disc_22", "disc_24", "disc_25", "disc_26", "disc_27", "disc_33", "disc_34", "disc_36", "disc_37", "disc_41", "disc_45", "disc_50"]
+
+# role (Transform has no effect in this engine: it keeps a few harmless tricks)
+[origamorph]
+art = "origamorph_c"
+types = ["normal"]
+base = [45, 50, 45, 53, 45]
+growth = "medium_fast"
+base_exp = 61
+catch_rate = 35
+height = 0.3
+weight = 4.0
+learn = [[1, "bump"], [1, "harden"], [16, "flop"], [24, "curl"], [32, "streak"], [40, "sharpen"]]
+tm = []
+
+# role: the ember ibex kid (dark picture)
+[cindibex]
+art = "cindibex_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["fire"]
+base = [47, 81, 59, 87, 68]
+growth = "medium_fast"
+base_exp = 152
+catch_rate = 190
+height = 1.0
+weight = 30.0
+evolve = [40, "blazibex"]
+learn = [[1, "ember"], [30, "wag"], [32, "trample"], [32, "ramhead"], [35, "growl"], [39, "cinderspin"], [43, "slamrush"], [43, "heavyslam"], [48, "sprint"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_10", "disc_15", "disc_16", "disc_17", "disc_18", "disc_27", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# role
+[blazibex]
+art = "blazibex_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["fire"]
+base = [69, 97, 73, 105, 76]
+growth = "medium_fast"
+base_exp = 192
+catch_rate = 60
+height = 1.7
+weight = 95.0
+learn = [[1, "trample"], [1, "ember"], [1, "wag"], [1, "ramhead"], [1, "growl"], [39, "cinderspin"], [47, "slamrush"], [47, "heavyslam"], [55, "sprint"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_10", "disc_15", "disc_16", "disc_17", "disc_18", "disc_22", "disc_27", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# role: revived from the Ambar fosil found in the mansion (dark picture)
+[archaeon]
+art = "archaeon_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["rock", "flying"]
+base = [84, 102, 68, 134, 58]
+growth = "slow"
+base_exp = 202
+catch_rate = 45
+height = 1.8
+weight = 59.0
+learn = [[1, "swoop"], [1, "sprint"], [33, "sonar"], [38, "bite"], [45, "slamrush"], [45, "heavyslam"], [54, "megabeam"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_tierra", "disc_10", "disc_11", "disc_13", "disc_17", "disc_18", "disc_22", "disc_27", "disc_29", "disc_34", "disc_35", "disc_36", "disc_40", "disc_44", "disc_45", "disc_50"]
+
+# role: the legendary of the Islas Escarcha (L50)
+[aurowl]
+art = "aurowl_c"
+types = ["ice", "flying"]
+base = [93, 81, 97, 81, 129]
+growth = "slow"
+base_exp = 215
+catch_rate = 3
+height = 1.7
+weight = 55.0
+learn = [[1, "peck"], [1, "frostbeam"], [42, "whiteout"], [50, "auroraray"], [55, "sprint"], [60, "veil"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_06", "disc_11", "disc_13", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_27", "disc_34", "disc_35", "disc_36", "disc_40", "disc_44", "disc_45", "disc_50"]
+
+# role: the legendary of the Central Electrica (L50; dark picture)
+[fulgurion]
+art = "fulgurion_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["electric", "flying"]
+base = [93, 94, 80, 104, 122]
+growth = "slow"
+base_exp = 216
+catch_rate = 3
+height = 1.6
+weight = 52.0
+learn = [[1, "zap"], [1, "spearpeck"], [42, "stormbolt"], [50, "arc"], [55, "sprint"], [60, "veil"]]
+tm = ["disc_01", "disc_03", "disc_04", "disc_06", "disc_11", "disc_13", "disc_17", "disc_18", "disc_22", "disc_27", "disc_30", "disc_34", "disc_35", "disc_36", "disc_40", "disc_44", "disc_45", "disc_46", "disc_50"]
+# ======================================================================================================================================================
+# C9 (contract 56): the creatures of Ruta 22 - 23, the Senda de Campeones (Senda de Campeones), the Cueva Secreta and the fill-in of the older zones (the design notes): role, a creature,
+# role, role, roles, role, a creature, with the base stats / catch rates / growth rates of the role. Ids = positions: 111 .. 127 here;
+# the merge with C7 (species 111 .. 133) moves them to 134 .. 150 (everything names them by key, never by number). Learnsets are without the effects the engine lacks.
+# The dark pictures use the light typecast (art_dark_cut = 25, art_split = [0.35, 0.75]).
+# ======================================================================================================================================================
+# role (Fighting). Chop 1, Leg Sweep 20, Leer 25, Steady Gaze 32, Hurl Down 39, Submission 46.
+[tuskid]
+art = "tuskid_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["fighting"]
+base = [67, 83, 53, 33, 38]
+growth = "medium_slow"
+base_exp = 88
+catch_rate = 180
+height = 0.8
+weight = 19.5
+evolve = [28, "tuskmash"]
+learn = [[1, "chop"], [1, "growl"], [20, "trip"], [25, "coldeye"], [32, "focus"], [39, "rollkick"], [46, "clinch"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_tierra", "disc_10", "disc_14", "disc_16", "disc_17", "disc_18", "disc_24", "disc_25", "disc_26", "disc_27", "disc_31", "disc_32", "disc_34", "disc_36", "disc_37", "disc_41", "disc_45", "disc_48", "disc_50"]
+
+# role (evolves by TRADE into Tuskumo: IR link, contract 45)
+[tuskmash]
+art = "tuskmash_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["fighting"]
+base = [77, 96, 74, 47, 53]
+growth = "medium_slow"
+base_exp = 146
+catch_rate = 90
+height = 1.4
+weight = 70.5
+evolve_trade = "tuskumo"
+learn = [[1, "scowl"], [1, "chop"], [1, "growl"], [1, "trip"], [1, "focus"], [36, "heave"], [39, "rollkick"], [46, "clinch"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_tierra", "disc_10", "disc_14", "disc_16", "disc_17", "disc_18", "disc_24", "disc_25", "disc_26", "disc_27", "disc_31", "disc_32", "disc_34", "disc_36", "disc_37", "disc_41", "disc_45", "disc_48", "disc_50"]
+
+# role
+[tuskumo]
+art = "tuskumo_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["fighting"]
+base = [86, 133, 84, 57, 68]
+growth = "medium_slow"
+base_exp = 193
+catch_rate = 45
+height = 1.9
+weight = 130.0
+learn = [[1, "scowl"], [1, "chop"], [1, "trip"], [1, "focus"], [1, "clinch"], [36, "heave"], [55, "highkick"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_tierra", "disc_10", "disc_14", "disc_16", "disc_17", "disc_18", "disc_22", "disc_24", "disc_25", "disc_26", "disc_27", "disc_31", "disc_32", "disc_34", "disc_36", "disc_37", "disc_41", "disc_45", "disc_48", "disc_50"]
+
+# role (Rock / Ground, the Senda's and the tunnel's rare cave giant). Tackle 1, Screech 1, Hold Fast 15, Pebble Toss 19, Rage 25, Slam 33, Harden 43.
+[cragodile]
+art = "cragodile_c"
+art_dark_cut = 45
+types = ["rock", "ground"]
+base = [32, 41, 165, 72, 26]
+growth = "medium_fast"
+base_exp = 108
+catch_rate = 45
+height = 3.5
+weight = 210.0
+learn = [[1, "bump"], [1, "shrill"], [15, "harden"], [19, "pebble"], [25, "slingstone"], [33, "flatten"], [43, "burrow"], [50, "heavyslam"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_tierra", "disc_16", "disc_17", "disc_18", "disc_27", "disc_31", "disc_32", "disc_34", "disc_36", "disc_38", "disc_41", "disc_45", "disc_47", "disc_48", "disc_50"]
+
+# role (Normal / Flying). Peck 1, Growl 1, Peck Frenzy 20, Spear Peck 24, Rage 30, Trinity 37, Agility 45.
+[dashkip]
+art = "dashkip_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["normal", "flying"]
+base = [32, 82, 48, 73, 39]
+growth = "medium_fast"
+base_exp = 96
+catch_rate = 190
+height = 1.0
+weight = 18.0
+evolve_friend = [31, "dashmark"]
+learn = [[1, "peck"], [1, "growl"], [20, "quick"], [24, "spearpeck"], [30, "focus"], [37, "streak"], [45, "sprint"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_13", "disc_16", "disc_17", "disc_18", "disc_27", "disc_34", "disc_35", "disc_36", "disc_41", "disc_44", "disc_45", "disc_49", "disc_50"]
+
+# role
+[dashmark]
+art = "dashmark_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["normal", "flying"]
+base = [64, 108, 73, 104, 58]
+growth = "medium_fast"
+base_exp = 158
+catch_rate = 45
+height = 1.8
+weight = 85.2
+learn = [[1, "pecking"], [1, "peck"], [1, "growl"], [1, "quick"], [1, "spearpeck"], [37, "streak"], [45, "trinity"], [45, "sprint"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_13", "disc_16", "disc_17", "disc_18", "disc_22", "disc_27", "disc_34", "disc_35", "disc_36", "disc_41", "disc_44", "disc_45", "disc_49", "disc_50"]
+
+# role (Grass / Psychic; the frond gem). Barrage 1, Hypnosis 1, Reflect 25, Sap Seed 28, Numb Pollen 32, Venom Mist 37, Solar Beam 42, Drowsy Dust 48.
+[pinecub]
+art = "pinecub_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["grass", "psychic"]
+base = [57, 36, 77, 43, 62]
+growth = "slow"
+base_exp = 98
+catch_rate = 90
+height = 0.4
+weight = 2.5
+evolve_stone = { leaf = "pinekeeper" }
+learn = [[1, "pelt"], [1, "rack"], [1, "drowse"], [25, "veil"], [28, "siphon"], [32, "pollen"], [37, "venomdust"], [42, "bloom"], [48, "spore"]]
+tm = ["disc_03", "disc_05", "disc_06", "disc_07", "disc_08", "disc_17", "disc_18", "disc_27", "disc_33", "disc_34", "disc_35", "disc_36", "disc_38", "disc_39", "disc_45", "disc_47", "disc_50"]
+
+# role
+[pinekeeper]
+art = "pinekeeper_c"
+art_dark_cut = 45
+types = ["grass", "psychic"]
+base = [92, 99, 82, 57, 121]
+growth = "slow"
+base_exp = 212
+catch_rate = 45
+height = 2.0
+weight = 120.0
+learn = [[1, "pelt"], [1, "rack"], [1, "drowse"], [1, "ramhead"], [1, "veil"], [42, "bloom"], [48, "spore"]]
+tm = ["disc_03", "disc_05", "disc_06", "disc_07", "disc_08", "disc_17", "disc_18", "disc_22", "disc_27", "disc_28", "disc_33", "disc_34", "disc_35", "disc_36", "disc_38", "disc_39", "disc_45", "disc_47", "disc_50"]
+
+# role (an in-game trade on Ruta 18). Wrap 1, Supersonic 1, Stomp 7, Disable 15, Curl Up 23, Slam 31, Screech 39.
+[tonguard]
+art = "tonguard_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["normal"]
+base = [86, 58, 71, 26, 63]
+growth = "medium_fast"
+base_exp = 127
+catch_rate = 45
+height = 1.2
+weight = 65.5
+learn = [[1, "coil"], [1, "squeeze"], [1, "sonar"], [7, "trample"], [7, "ramhead"], [15, "coldeye"], [23, "curl"], [31, "flatten"], [39, "shrill"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_04", "disc_06", "disc_tierra", "disc_10", "disc_12", "disc_14", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_24", "disc_25", "disc_26", "disc_27", "disc_30", "disc_31", "disc_34", "disc_36", "disc_41", "disc_45", "disc_50"]
+
+# role (Bug). Vice Grip 1, Hurl Down 25, Shear 30, Steady Gaze 36, Harden 43, Slash 49, Sharpen 54.
+[pitlion]
+art = "pitlion_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["bug"]
+base = [68, 121, 104, 81, 52]
+growth = "slow"
+base_exp = 200
+catch_rate = 45
+height = 1.5
+weight = 55.0
+learn = [[1, "pincer"], [25, "chop"], [30, "clinch"], [36, "focus"], [43, "harden"], [49, "slash"], [54, "sharpen"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_tierra", "disc_12", "disc_16", "disc_17", "disc_18", "disc_22", "disc_24", "disc_26", "disc_27", "disc_34", "disc_36", "disc_45", "disc_50"]
+
+# role (Fire; the flame gem). Ember 1, Tail Whip 1, Dash Strike 16, Roar 21, Hollow Gaze 28, Mane Blaze 35, Cinder Spin 42.
+[flarechick]
+art = "flarechick_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["fire"]
+base = [34, 44, 36, 61, 70]
+growth = "medium_fast"
+base_exp = 63
+catch_rate = 190
+height = 0.6
+weight = 9.9
+evolve_stone = { fire = "pyreacock" }
+learn = [[1, "ember"], [1, "wag"], [16, "quick"], [21, "shrill"], [28, "hollowgaze"], [35, "mane"], [42, "cinderspin"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_10", "disc_16", "disc_17", "disc_18", "disc_27", "disc_32", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# role
+[pyreacock]
+art = "pyreacock_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["fire"]
+base = [70, 77, 71, 104, 103]
+growth = "medium_fast"
+base_exp = 178
+catch_rate = 75
+height = 1.4
+weight = 19.9
+learn = [[1, "bellow"], [1, "ember"], [1, "wag"], [1, "quick"], [1, "shrill"], [35, "mane"], [42, "cinderspin"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_10", "disc_16", "disc_17", "disc_18", "disc_22", "disc_27", "disc_32", "disc_34", "disc_35", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# role (Electric). Tackle 1, Sonic Boom 21, Static Touch 25, Supersonic 29, Numbing Hum 35, Swift 41, Screech 47.
+[coilet]
+art = "coilet_c"
+art_dark_cut = 45
+types = ["electric"]
+base = [21, 39, 74, 47, 91]
+growth = "medium_fast"
+base_exp = 89
+catch_rate = 190
+height = 0.3
+weight = 6.0
+evolve = [30, "teslarch"]
+learn = [[1, "bump"], [21, "sonar"], [25, "zap"], [29, "shrill"], [35, "numb"], [41, "streak"], [47, "shrill"]]
+tm = ["disc_03", "disc_04", "disc_06", "disc_17", "disc_18", "disc_27", "disc_30", "disc_33", "disc_34", "disc_35", "disc_36", "disc_40", "disc_45", "disc_46", "disc_50"]
+
+# role
+[teslarch]
+art = "teslarch_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["electric"]
+base = [54, 57, 92, 72, 117]
+growth = "medium_fast"
+base_exp = 161
+catch_rate = 60
+height = 1.0
+weight = 60.0
+learn = [[1, "shockpulse"], [1, "bump"], [1, "sonar"], [1, "zap"], [1, "numb"], [41, "streak"], [47, "arc"]]
+tm = ["disc_03", "disc_04", "disc_06", "disc_17", "disc_18", "disc_22", "disc_27", "disc_30", "disc_33", "disc_34", "disc_35", "disc_36", "disc_40", "disc_45", "disc_46", "disc_50"]
+
+# role (the Senda de Campeones' legend, L50, `legend=` with npc=ignicondor_ow; contract 52). Peck 1, Cinder Spin 1, Leer 51, Agility 55, Zenith Dive 60.
+[ignicondor]
+art = "ignicondor_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["fire", "flying"]
+base = [95, 96, 94, 87, 122]
+growth = "slow"
+base_exp = 217
+catch_rate = 3
+height = 2.0
+weight = 60.0
+learn = [[1, "peck"], [1, "ember"], [1, "cinderspin"], [1, "mane"], [51, "coldeye"], [55, "sprint"], [60, "zenithdive"], [60, "swoop"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_10", "disc_11", "disc_13", "disc_17", "disc_18", "disc_22", "disc_27", "disc_34", "disc_35", "disc_36", "disc_40", "disc_44", "disc_45", "disc_50"]
+
+# role (the mythical gift of Profesora Lin when the Registro is complete, L30). Pound 1, Transform 10, Haymaker 20, Wildcard 30, Psychic 40. Learns every disc.
+[genesa]
+art = "genesa_c"
+art_dark_cut = 45
+types = ["psychic"]
+base = [96, 103, 96, 103, 97]
+growth = "medium_slow"
+base_exp = 64
+catch_rate = 45
+height = 0.4
+weight = 4.0
+learn = [[1, "bump"], [10, "refold"], [20, "flatten"], [30, "mindwave"], [40, "mindstorm"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_04", "disc_05", "disc_06", "disc_07", "disc_08", "disc_tierra", "disc_10", "disc_11", "disc_12", "disc_13", "disc_14", "disc_15", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_23", "disc_24", "disc_25", "disc_26", "disc_27", "disc_28", "disc_29", "disc_30", "disc_31", "disc_32", "disc_33", "disc_34", "disc_35", "disc_36", "disc_37", "disc_38", "disc_39", "disc_40", "disc_41", "disc_42", "disc_43", "disc_44", "disc_45", "disc_46", "disc_47", "disc_48", "disc_49", "disc_50"]
+
+# role (the Cueva Secreta's legend, L70, after the champion; `legend=` with npc=arkegen_ow). Confusion 1, Disable 1, Swift 1, Barrier 1, Psychic 66, Recover 70, Mist 75, Amnesia 81.
+[arkegen]
+art = "arkegen_c"
+art_dark_cut = 45
+types = ["psychic"]
+base = [109, 113, 87, 127, 157]
+growth = "slow"
+base_exp = 220
+catch_rate = 3
+height = 2.0
+weight = 122.0
+learn = [[1, "reverb"], [1, "daydream"], [1, "streak"], [1, "veil"], [66, "mindstorm"], [70, "mindwave"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_04", "disc_05", "disc_06", "disc_07", "disc_08", "disc_tierra", "disc_10", "disc_14", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_23", "disc_24", "disc_25", "disc_26", "disc_27", "disc_28", "disc_30", "disc_33", "disc_34", "disc_35", "disc_36", "disc_37", "disc_38", "disc_41", "disc_45", "disc_46", "disc_49", "disc_50"]
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Extra species (contract 58; the design notes, approved 2026-10-15): the pair of the Quillix line and the role. Ids 147 .. 152 (appended after Arkegen).
+# stats / growth / catch rates of the roles: stats 55/47/52/41/40 -> stats 70/62/67/56/55 (16) -> stats 90/82/87/76/75 (Lunar Gem, Poison / Ground);
+# stats 50/75/35/40/70 -> stats 65/90/50/55/85 (21) -> stats 80/105/65/70/100 (Frond Gem). `art_dark_cut = 25` + `art_split = [0.35, 0.75]` for the dark pictures.
+# ----------------------------------------------------------------------------------------------------------------------
+# role: the soft-quilled hedgehog (the pair of Quillix)
+[quillia]
+art = "quillia_c"
+types = ["poison"]
+base = [58, 45, 56, 37, 35]
+growth = "medium_slow"
+base_exp = 59
+catch_rate = 235
+height = 0.4
+weight = 7.0
+evolve = [16, "quillara"]
+learn = [[1, "wag"], [1, "bump"], [12, "spikeram"], [17, "needle"], [23, "focus"], [30, "chomp"], [38, "haymaker"], [43, "twinkick"]]
+tm = ["disc_01", "disc_03", "disc_04", "disc_06", "disc_16", "disc_17", "disc_18", "disc_21", "disc_27", "disc_30", "disc_34", "disc_35", "disc_36", "disc_41", "disc_45", "disc_50"]
+
+# role
+[quillara]
+art = "quillara_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["poison"]
+base = [73, 60, 64, 57, 52]
+growth = "medium_slow"
+base_exp = 117
+catch_rate = 120
+height = 0.8
+weight = 20.0
+evolve_stone = { moon = "quillqueen" }
+learn = [[1, "wag"], [1, "bump"], [1, "spikeram"], [17, "needle"], [23, "focus"], [30, "chomp"], [38, "haymaker"], [41, "rakeswipe"], [50, "twinkick"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_04", "disc_06", "disc_15", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_27", "disc_30", "disc_34", "disc_35", "disc_36", "disc_41", "disc_45", "disc_50"]
+
+# role
+[quillqueen]
+art = "quillqueen_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["poison", "ground"]
+base = [93, 78, 91, 73, 71]
+growth = "medium_slow"
+base_exp = 194
+catch_rate = 45
+height = 1.3
+weight = 60.0
+learn = [[1, "wag"], [1, "bump"], [1, "spikeram"], [1, "needle"], [23, "focus"], [30, "chomp"], [38, "haymaker"], [43, "rumble"]]
+tm = ["disc_01", "disc_02", "disc_03", "disc_04", "disc_06", "disc_tierra", "disc_10", "disc_14", "disc_15", "disc_16", "disc_17", "disc_18", "disc_19", "disc_20", "disc_21", "disc_22", "disc_23", "disc_24", "disc_25", "disc_26", "disc_27", "disc_30", "disc_31", "disc_34", "disc_35", "disc_36", "disc_41", "disc_45", "disc_48", "disc_50"]
+
+# role: the sundew sprout
+[droselet]
+art = "droselet_c"
+types = ["grass", "poison"]
+base = [53, 71, 38, 42, 66]
+growth = "medium_slow"
+base_exp = 84
+catch_rate = 255
+height = 0.4
+weight = 4.0
+evolve = [21, "drosaura"]
+learn = [[1, "swell"], [1, "lash"], [1, "wag"], [13, "squeeze"], [15, "venomdust"], [18, "spore"], [21, "pollen"]]
+tm = ["disc_03", "disc_05", "disc_06", "disc_12", "disc_17", "disc_18", "disc_27", "disc_28", "disc_34", "disc_35", "disc_36", "disc_45", "disc_50"]
+
+# role
+[drosaura]
+art = "drosaura_c"
+types = ["grass", "poison"]
+base = [62, 94, 53, 57, 82]
+growth = "medium_slow"
+base_exp = 151
+catch_rate = 120
+height = 0.9
+weight = 6.4
+evolve_stone = { leaf = "droserath" }
+learn = [[1, "coil"], [1, "swell"], [1, "lash"], [1, "wag"], [1, "squeeze"], [15, "venomdust"], [18, "spore"], [21, "pollen"], [24, "sourspit"], [33, "rack"]]
+tm = ["disc_03", "disc_05", "disc_06", "disc_12", "disc_17", "disc_18", "disc_27", "disc_28", "disc_34", "disc_35", "disc_36", "disc_45", "disc_50"]
+
+# role
+[droserath]
+art = "droserath_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["grass", "poison"]
+base = [83, 101, 61, 72, 96]
+growth = "medium_slow"
+base_exp = 191
+catch_rate = 45
+height = 1.7
+weight = 15.5
+learn = [[1, "lash"], [1, "spore"], [1, "pollen"], [1, "sourspit"], [1, "rack"], [13, "coil"]]
+tm = ["disc_03", "disc_05", "disc_06", "disc_12", "disc_16", "disc_17", "disc_18", "disc_22", "disc_27", "disc_28", "disc_34", "disc_35", "disc_36", "disc_45", "disc_50"]
+
+# ----------------------------------------------------------------------------------------------------------------------
+# B2 (contract 66; the design notes section 2): the AFFINITY EMBLEMS, ids 153 .. 156 (appended after Droserath). The player picks Solar or Lunar at the start of the game;
+# the Solar emblem (Scarabeam -> Kheprion) and the Lunar one (Lunashell -> Selentor) are a PAIR of assets/data/affinity.toml: Scarabeam is the wild slot a Solar player meets, Lunashell the one a
+# Lunar player meets in the very same slot (a Solar player cannot find the Lunar line without a trade, and the other way round). balance of a version-mascot two-stage line that evolves
+# at 34 (stats 55/70/45/60/50 -> stats 90/110/80/95/80; stats 80/85/95/25/30 -> stats 105/130/120/40/45): 275 -> 440 for the Solar line, 290 -> 440 for the Lunar one.
+# ----------------------------------------------------------------------------------------------------------------------
+# Solar emblem, stage 1: the sacred dung beetle that rolls a little sun (Bug / Fire)
+[scarabeam]
+art = "scarabeam_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["bug", "fire"]
+base = [55, 62, 68, 42, 48]
+growth = "medium_slow"
+base_exp = 90
+catch_rate = 120
+height = 0.5
+weight = 6.0
+evolve = [34, "kheprion"]
+learn = [[1, "bump"], [1, "harden"], [9, "ember"], [15, "sapbite"], [21, "lance"], [27, "cinderspin"], [32, "firefist"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_12", "disc_16", "disc_17", "disc_18", "disc_24", "disc_27", "disc_34", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# Solar emblem, stage 2: the regal beetle that holds a great solar disc between its horns
+[kheprion]
+art = "kheprion_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["bug", "fire"]
+base = [85, 95, 105, 70, 85]
+growth = "medium_slow"
+base_exp = 190
+catch_rate = 45
+height = 1.6
+weight = 55.0
+learn = [[1, "lance"], [1, "ember"], [1, "sapbite"], [1, "harden"], [34, "mane"], [40, "firefist"], [46, "slamrush"], [54, "inferno"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_10", "disc_12", "disc_16", "disc_17", "disc_18", "disc_22", "disc_24", "disc_26", "disc_27", "disc_32", "disc_34", "disc_36", "disc_40", "disc_41", "disc_45", "disc_50"]
+
+# Lunar emblem, stage 1: the young tortoise with a crescent-moon shell and little stars (Rock / Psychic)
+[lunashell]
+art = "lunashell_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["rock", "psychic"]
+base = [65, 48, 85, 30, 62]
+growth = "medium_slow"
+base_exp = 90
+catch_rate = 120
+height = 0.6
+weight = 20.0
+evolve = [34, "selentor"]
+learn = [[1, "bump"], [1, "harden"], [9, "pebble"], [15, "reverb"], [21, "mace"], [27, "wardwall"], [32, "mindwave"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_07", "disc_12", "disc_16", "disc_17", "disc_18", "disc_24", "disc_27", "disc_33", "disc_34", "disc_35", "disc_36", "disc_45", "disc_50"]
+
+# Lunar emblem, stage 2: the elder whose shell carries the phases of the moon and a full moon set in it
+[selentor]
+art = "selentor_c"
+art_dark_cut = 25
+art_split = [0.35, 0.75]
+types = ["rock", "psychic"]
+base = [95, 70, 125, 40, 110]
+growth = "medium_slow"
+base_exp = 190
+catch_rate = 45
+height = 1.8
+weight = 160.0
+learn = [[1, "mace"], [1, "reverb"], [1, "pebble"], [1, "wardwall"], [34, "mindwave"], [40, "landslide"], [46, "mindstorm"], [54, "nap"]]
+tm = ["disc_01", "disc_03", "disc_06", "disc_07", "disc_08", "disc_tierra", "disc_12", "disc_14", "disc_16", "disc_17", "disc_18", "disc_22", "disc_24", "disc_26", "disc_27", "disc_33", "disc_34", "disc_35", "disc_36", "disc_37", "disc_38", "disc_45", "disc_47", "disc_48", "disc_49", "disc_50"]
+
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Contract 73: the Transform role (a creature), id 157. A living sheet of crumpled paper that refolds itself into the shape of any creature it has seen. numbers: base 48 in every stat,
+# catch rate 35, base exp 61. Learns only Refold (Transform); no evolution. Habitat: the Mansion Neon floors, the Cueva Secreta (Arkegen's cave) and two late routes (the maps' encounter tables).
+[foldling]
+art = "foldling_c"
+types = ["normal"]
+base = [51, 52, 45, 50, 45]
+growth = "medium_fast"
+base_exp = 61
+catch_rate = 35
+height = 0.3
+weight = 0.2
+learn = [[1, "refold"]]
+tm = []
+

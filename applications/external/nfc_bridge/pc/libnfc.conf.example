@@ -1,0 +1,18 @@
+# libnfc config for the Flipper in "PN532 serial" mode.
+# Save as /etc/nfc/libnfc.conf (or ~/.config/nfc/libnfc.conf).
+#
+# The Flipper shows up as TWO serial ports while the app runs; the PN532 bridge is
+# the SECOND one (the first is the normal Flipper CLI). Check with:
+#   ls -l /dev/serial/by-id/      (or dmesg | tail)
+# and put that device below, e.g. /dev/ttyACM1.
+
+allow_autoscan = false
+allow_intrusive_scan = false
+log_level = 1
+
+device.name = "Flipper PN532"
+device.connstring = "pn532_uart:/dev/ttyACM1"
+
+# Then:
+#   nfc-list
+#   nfc-mfclassic r a u dump.mfd        # read a MIFARE Classic with default keys

@@ -1,0 +1,64 @@
+# Casa de las Puas (Pueblo Cantera), 9 x 7, interior (F2, contract 74; map id 180). column = i, row = j. A hedgehog lover's room: round cushions (stools) on the floor, a bed, bookshelves and a planter of prickly pears.
+# In-game trade (quillix -> quillia): he wants a QUILLIX and gives a QUILLIA whose nickname is the fixed ASCII text `tr_pua.nick` (the same in all four languages: the trade idiom of casa_mimo,
+# contract 32.5). Flag 928 = the trade was done.
+@map casa_puas
+@size 9 7
+@interior yes
+@flag pua_done 928
+@var pua_res 5
+@var pua_want 6
+@var pua_give 7
+@bg 3
+@fill floor_wood
+@spawn door 4 5 N
+@legend
+  .  tile=floor_wood
+  C  tile=none object=wall_corner
+  w  tile=none object=wall_j
+  y  tile=none object=wall_win_j
+  |  tile=none object=wall_i
+  q  tile=none object=wall_win_i
+  B  object=bookshelf interact=look text=casa.books
+  b  object=bed
+  S  object=stool
+  P  object=planter
+  G  npc=chica id=trader face=SW script=trader
+  m  tile=mat
+@grid
+  Cwywwyyww
+  |B.B.P..b
+  |...G...b
+  |.S...S..
+  q........
+  |.S......
+  |...mm...
+@warp m -> pueblo_cantera spawn=puas_door
+@script trader npc
+    npc_face_hero trader
+    setv pua_want sp:quillix
+    setv pua_give sp:quillia
+    name_var 0 pua_want
+    name_var 1 pua_give
+    jf pua_done after
+    say tr_pua.hello
+    ask trueque.ask
+    jv 0 1 go
+    say trueque.no
+    end
+  go:
+    trade quillix quillia tr_pua.nick pua_res
+    jv pua_res 1 done
+    jv pua_res 255 cancel
+    say trueque.wrong
+    end
+  cancel:
+    say trueque.no
+    end
+  done:
+    setf pua_done
+    say trueque.done
+    end
+  after:
+    name_var 0 pua_give
+    say trueque.after
+@end

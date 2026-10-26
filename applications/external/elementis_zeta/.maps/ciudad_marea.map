@@ -1,0 +1,138 @@
+# Ciudad Marea (C2, contract 31), 24 x 24. column = i, row = j. The road from Ruta 4 arrives at the WEST edge (i = 0, rows 18..19), the north gate
+# (an arch, j = 0..1) leads to Ruta 24, the bridge of five trainers. Look (the user's variant A of tools/c2_mock.py): a HARBOUR: wet cobbles and wooden boardwalks along a canal that crosses the
+# town (boats moored in it, a one-tile plank bridge with rails), the iron anchor monument in the north plaza, harbour lamps, a moored boat, barrels, bollards and
+# crates round the edge (no trees, no grass). Gym (door g, north plaza), Centro (door z) and tienda (door T) in the south town; three townsfolk; the RIVAL ambushes the player in front of the
+# north gate (the step triggers X: fight; flag 45 shows him, flag 46 = beaten and gone).
+# C9 (contract 56): the CUEVA SECRETA's HATCH (D, (0,4): a square of boardwalk planks in the west border between two crates: the Cueva Secreta across the river): the harbour guard (V, (1,4)) holds the only cell in front of it
+# until the hero is the champion (flag league_champion, 968: he hides then); spawn `cueva_door` (3,4). (No new sprite: this is the biggest map of the game.)
+@map ciudad_marea
+@size 24 24
+@interior no
+@area ciudad_marea
+@fly 3 ciudad_marea 4 15 face=S   # the Planeador lands here, in front of the Centro door; slot 3 = visited flag 987 (contract 46.1)
+@bg 0
+@fill wet2
+@spawn west 1 18 E              # arriving from Ruta 4
+@spawn north 10 1 S             # arriving from Ruta 24 (also keeps the gate triggers reachable for mapc)
+@spawn gym_door 16 4 S          # in front of the gym door
+@spawn centro_door 4 15 S       # in front of the Centro door
+@spawn tienda_door 17 15 S      # in front of the tienda door
+@spawn south 10 22 N            # arriving from Ruta 5 (C3: the south exit is open)
+@spawn east 22 6 W              # C4a: arriving from Ruta 9 (the pocket behind the cuttable bush)
+@spawn bici_door 21 18 N        # C4a: in front of the bike shop's door
+@spawn cueva_door 3 4 SE        # C9: coming back up the Cueva Secreta's hatch (two steps from it: the cell in front, (1,4), is the guard's)
+@spawn almacen_door 20 15 S      # (contract 80): in front of the robbed warehouse's door (Disc 32's house)
+@flag rival2_here 45          # the rival shows up in front of the north gate
+@flag rival2_gone 46             # ... and was beaten
+@legend
+  .  tile=wet2                     # wet cobbles (2 variants)
+  d  tile=deck_bl_0                # boardwalk planks along the canal, water to its south
+  u  tile=deck_tr_0                # the south quay, water to its north
+  w  tile=canal_o                  # the canal (2 frames)
+  v  tile=canal_o
+  k  tile=plank_tl_br object=bridge_rails_j   # the one-tile plank bridge over the canal
+  _  tile=none
+  H  object=crate_plain
+  x  object=barrel
+  b  object=bollard
+  o  tile=deck_bl_0 object=bollard
+  O  tile=deck_tr_0 object=bollard
+  l  object=lamp_s                 # harbour lamp
+  Y  object=anchor                 # the iron anchor monument
+  B  tile=canal_o object=boat_s    # moored fishing boat (2 x 1)
+  C  tile=canal_o object=boat_s
+  A  tile=wet2 object=arch         # the north gate
+  R  tile=wet2 object=arch npc=rival id=rival face=S script=rival_talk show_flag=45 hide_flag=46
+  n  tile=wet2
+  X  tile=wet2 interact=step script=rival_ambush
+  E  tile=wet2
+  y  tile=wet2                     # C3: the south gate to Ruta 5
+  c  tile=wet2 cut=yes             # C4a: the cuttable bush that closes the pocket of the east gate (Ruta 9; the crates at (22,5) and (22,7) close the sides)
+  e  tile=wet2                     # C4a: the east gate to Ruta 9
+  j  tile=wet2 door=mart_f         # C4a: the bike shop (the same building as the tienda: no new sprite in the bank)
+  q  tile=wet2 object=sign interact=look text=marea.bike.sign
+  G  object=gym_marea
+  g  door=gym_marea
+  Z  object=center_f
+  z  door=center_f
+  M  object=mart_f
+  T  door=mart_f
+  S  object=sign interact=look text=marea.sign
+  s  object=sign interact=look text=marea.gym.sign
+  a  npc=vecino_m id=npc_a face=SE text=marea.npc.a
+  p  npc=vecino_m id=npc_b face=NE text=marea.npc.b
+  r  npc=vecino_m id=npc_c face=NW text=marea.npc.c
+  D  tile=deck_bl_0                # C9: the Cueva Secreta's hatch (a plank square in the west border; no new sprite: this is the biggest map)
+  V  tile=wet2 npc=vecino_m id=cave_guard face=SE script=cave_guard hide_flag=league_champion gate=yes   # C9: the harbour guard in front of the hatch
+  f  tile=deck_tr_0
+  J  tile=wet2 door=mart_f         # (contract 80): the robbed warehouse (almacen_asaltado): the same building as the tienda / bike shop, shut up and plundered (its sign says so)
+  Q  object=sign interact=look text=extra.dig.sign
+  I  tile=deck_tr_0 hidden=growth_seed   # hidden (contract 80, hidden items)
+@grid
+  __________n_____________
+  HHxHHHHHHxARHxHHbHHxHHHH
+  x.........XX...GGG.....H
+  H..............GgG.....H
+  DV......l.....s........H
+  H.....................HH
+  b..........Y.l.......c.e
+  H....a................HH
+  H...l..............l...b
+  HdodddddoddddddodddddodH
+  HwwwwwwwwwwkwwwwCCwwwwwH
+  HvvvvBBvvvvkvvvvvvvvvvvH
+  HuOuuuuuuuuuuuuuuuuuIOfH
+  H..ZZZ..........MM.MM..H
+  x..ZzZ......x.x.MT.MJ..b
+  H.................Q....x
+  H.....Sl....l.......MM.H
+  x.................lrMj.H
+  E........p............qx
+  E......................H
+  H......................H
+  H.......x..x...........H
+  b......................H
+  HHbHHHHHHxyyHHHHbHHHHHHH
+
+@warp E -> ruta_4 spawn=east
+@warp n -> ruta_24 spawn=south
+@warp g -> gimnasio_marea spawn=door
+@warp z -> centro_marea spawn=door
+@warp T -> tienda_marea spawn=door
+@warp y -> ruta_5 spawn=north
+@warp e -> ruta_9 spawn=west
+@warp D -> cueva_secreta_1 spawn=south
+@warp j -> tienda_bicis spawn=door
+@warp J -> almacen_asaltado spawn=door
+# The rival: when the player steps in front of the north gate the first time he appears on the arch, talks, fights (trainer rival_marea: the stage-2 counter of the
+# starter + Flitwing 18, Dozelf 15, Muncrit 15) and leaves for Ingeniero Teo's. A lost fight is the normal blackout; he then stays on the arch and talking to him fights again.
+@script rival_ambush step if !rival2_gone
+    setf rival2_here
+    cam_npc rival
+    wait 400
+    npc_face_hero rival
+    say marea.rival.hey
+    cam_hero
+    call rival_fight
+@end
+@script rival_talk npc
+    npc_face_hero rival
+    say marea.rival.again
+    call rival_fight
+@end
+@script rival_fight called
+    battle 20 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    say marea.rival.lose
+    say marea.rival.next
+    setf rival2_gone
+@end
+# The harbour guard (C9): the hatch behind him leads to the Cueva Secreta, which only the champion may enter (he hides once flag league_champion is set: the Hall of Legacy was entered).
+@script cave_guard npc
+    npc_face_hero cave_guard
+    say marea.cave.guard
+    npc_face cave_guard SE
+@end

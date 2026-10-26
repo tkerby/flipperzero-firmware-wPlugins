@@ -1,0 +1,106 @@
+# Escondite Vertice, B4F (villain hideout B4F, C4b, contract 41), 14 x 12, interior. The boss floor: reached ONLY by the elevator (Hoist Key). Steel plates, cable walls, consoles along the back wall, a desk; a grunt in the hall
+# and DIRECTOR VARO (varo, `trainer varo varo` music: boulderback 25, dunedrake 24, shellbrute 29) behind his desk: the camera cuts to him; after the fight he flees (flag 804) and the LENTE ESPECTRAL (`lente`, flag 805) lies where he stood.
+@map escondite_4
+@size 14 12
+@interior yes
+@area escondite_vertice
+@bg 3
+@fill metal_00
+@spawn lift 3 9 NW
+@flag varo_beaten 804
+@flag lente_given 805
+@legend
+  .  tile=metal_00
+  a  tile=none object=cable_wall_j
+  b  tile=none object=cable_wall_i
+  c  tile=metal_11
+  d  tile=metal_01 object=crate_stack
+  e  tile=metal_11 object=console
+  f  tile=metal_01
+  g  tile=metal_10
+  h  tile=metal_10 item=vit_spc
+  i  tile=metal_11 object=crate_v
+  j  tile=metal_11 npc=varo id=varo face=S script=varo hide_flag=804
+  k  tile=metal_11 npc=item_bag id=lente_drop face=S script=take_lente show_flag=804 hide_flag=805
+  l  tile=metal_10 object=barrel
+  m  tile=metal_00 object=table
+  n  tile=metal_10 object=table
+  o  tile=metal_11 npc=vertice id=g1 face=N trainer=vertice_b4 range=3 text=tr.vertice_b4.pre after=tr.vertice_b4.after
+  p  tile=metal_01 object=crate_plain
+  q  tile=metal_00 object=barrel
+  r  tile=metal_01 object=console interact=look script=lift
+  s  tile=metal_01 object=crate_v
+  t  tile=metal_10 item=prime_salve
+@grid
+  aaaaaaaaaaaaaa
+  bcdedefcfededc
+  bg.g.g.g.g.g.h
+  bifcfcfjfkfcfc
+  bl.g.gmnmg.g.g
+  bcfcfcfcfcfcfc
+  bg.g.g.g.g.g.g
+  bcfcfofcfcfcpc
+  bg.g.g.g.g.gqg
+  bcrcfcfcfcfcsc
+  bt.g.g.g.g.g.g
+  bcfcfcfcfcfcfc
+# The elevator panel: a three-row floor list (B1F, B2F, B4F); the row of this floor does nothing.
+@var floor 7
+@script lift interact
+    has_item llave_polea 3
+    jv 3 1 ride
+    say hide.lift.locked
+    say hide.lift.locked2
+    end
+  ride:
+    say hide.lift.on
+    say gl.c4a.elev.ask
+    elevator floor gl.c4a.floor.b1 gl.c4a.floor.b2 gl.c4a.floor.b4
+    jv floor 255 stay
+    jv floor 0 to0
+    jv floor 1 to1
+    jv floor 2 stay
+  to0:
+    sfx door
+    warp escondite_1 spawn=lift
+    end
+  to1:
+    sfx door
+    warp escondite_2 spawn=lift
+    end
+  stay:
+    end
+@end
+# Director Varo. The camera cuts to him; his speech; the fight (trainer varo: Boulderback 25, Dunedrake 24, Shellbrute 29); a loss is the blackout.
+# A win: he gives up the hideout and flees (he walks off to the east), the NPC is hidden for good (flag 804) and the LENTE ESPECTRAL (his ghost scope) lies where he stood (script take_lente).
+@script varo npc
+    npc_face_hero varo
+    cam_npc varo
+    say hide.varo.pre
+    battle 90 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    say hide.varo.win
+    say hide.varo.win2
+    npc_walk varo SE 5
+    npc_hide varo
+    setf varo_beaten
+    cam_hero
+    say hide.varo.gone
+    say hide.varo.lente
+    end
+@end
+# The Lente Espectral on the floor: a full bag keeps it there (flag 805 only when taken).
+@script take_lente npc
+    give_item lente 1
+    jv 0 0 full
+    item_var 0 lente
+    say gl.gift
+    setf lente_given
+    say hide.lente.about
+    end
+  full:
+    say gl.found.full
+@end

@@ -1,0 +1,32 @@
+# Pasadizo 2, south hut (C4a, contract 39), 8 x 7, interior. column = i, row = j. The way out to Ruta 7: a copy of the C3 rest stop (pasadizo_s) with another traveller, a vending machine, a television and the
+# ladder (4,1) up to the tunnel.
+@map pasadizo2_s
+@size 8 7
+@interior yes
+@bg 3
+@fill floor_wood
+@spawn door 3 5 N
+@spawn ladder 4 2 S
+@legend
+  .  tile=floor_wood
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  object=machine text=pasadizo2.vending interact=look
+  f  object=tv text=obj.tv interact=look
+  g  door=rope_ladder
+  h  object=bench
+  i  object=flowerbed
+  j  npc=vecino_m id=guest face=W text=pasadizo2.guest
+  k  tile=mat
+@grid
+  abbbcbbb
+  def.g.hi
+  d.......
+  d.....h.
+  d.....j.
+  d......i
+  d..kk...
+@warp g -> pasadizo2 spawn=south
+@warp k -> ruta_7 spawn=hut_door

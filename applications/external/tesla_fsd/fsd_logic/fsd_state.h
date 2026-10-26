@@ -10,6 +10,8 @@
  */
 
 #include "fsd_types.h" // TeslaHWVersion, OpMode, CANFRAME
+#include "fsd_perf.h" // FSDPerf — read-only performance read-out state (ESP32 dashboard)
+#include "fsd_tpms.h" // FSDTpms — read-only tyre pressure state (0x219)
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -19,6 +21,15 @@ typedef enum {
     SpeedLimitSource_Vision,
     SpeedLimitSource_Acc,
 } SpeedLimitSource;
+
+// Acceleration Mode override setting (#211). OFF = pass-through; otherwise the
+// UI_pedalMap value sent on 0x334 is (mode - 1): 0 CHILL, 1 STANDARD, 2
+// PERFORMANCE, as the car's touchscreen names them. Older signal lists call
+// pedal map 1 SPORT, hence ACCEL_MODE_SPORT.
+#define ACCEL_MODE_OFF         0u
+#define ACCEL_MODE_CHILL       1u
+#define ACCEL_MODE_SPORT       2u
+#define ACCEL_MODE_PERFORMANCE 3u
 
 typedef struct FSDState {
     TeslaHWVersion hw_version;
@@ -45,6 +56,8 @@ typedef struct FSDState {
         // scheme (no handsOnLevel flip; torque centred at
         // 0 Nm with live variance) to pass the 2026.14.x
         // content preflight. Default off — see #100.
+    int8_t nag_torque_dir; // EPAS-faithful torque direction -1/+1, 0 = none yet
+        // (+1); held near centre — fsd_steer_nag_dir()
     uint32_t nag_echo_count;
     bool nag_demand_active; // true while handsOnLevel == 0 or 3 — edge-detect source for on-demand grip pulse
     bool continuous_ap; // re-enable AP after AP drops while turn signal is active
@@ -59,9 +72,29 @@ typedef struct FSDState {
     bool bms_seen;
     float pack_voltage_v;
     float pack_current_a;
-    float soc_percent;
-    int8_t batt_temp_min_c;
+    float soc_percent; // 0x292 BMS figure
+    uint8_t ui_soc; // 0x33A: the SOC on the car's own screen, 0..100 (fsd_bms.h)
+    bool ui_soc_seen; // a 0x33A has decoded
+    int8_t batt_temp_min_c; // last plausible 0x312 reading (fsd_bms.h)
     int8_t batt_temp_max_c;
+    bool batt_temp_ok; // a plausible reading has been stored
+    uint32_t batt_temp_ms; // ms clock of that reading (fsd_bms_temp_fresh)
+    uint32_t batt_temp_rejected; // 0x312 frames whose temps failed the plausibility gate
+
+    // live wheel speeds (read-only sniff, 0x175 ESP_wheelSpeeds — Party CAN)
+    bool wheel_speed_seen;
+    float wheel_speed_fl_kph;
+    float wheel_speed_fr_kph;
+    float wheel_speed_rl_kph;
+    float wheel_speed_rr_kph;
+
+    // live tyre pressures (read-only sniff, 0x219 VCSEC_TPMSData — Vehicle CAN)
+    FSDTpms tpms;
+
+    // Read-only performance read-out (ESP32 web dashboard). Derived only from
+    // frames already received (0x257 speed, 0x175 wheels, 0x312 batt temp);
+    // transmits nothing. Inert on the Flipper build.
+    FSDPerf perf;
 
     // precondition trigger (writes 0x082 periodically)
     bool precondition;
@@ -81,6 +114,23 @@ typedef struct FSDState {
     uint8_t track_stability_pct; // Stability Assist 0-100; default 30 (safety margin + fun)
     bool track_post_cooling; // UI_trackPostCooling, default false
     bool track_cmp_overclock; // UI_trackCmpOverclock (max cooling), default false
+
+    // --- Acceleration Mode override (0x334 UI_powertrainControl, #211, ESP32) ---
+    // Rewrite UI_pedalMap (byte0 bits 5-6) on the car's own 0x334, keep its
+    // counter, recompute the checksum. A new value latches only at standstill;
+    // Off, a blocked TX gate or a touchscreen change while moving drop back to
+    // pass-through at once. The touchscreen keeps showing the driver's mode.
+    uint8_t accel_mode; // setting: ACCEL_MODE_OFF (default) / _CHILL / _SPORT / _PERFORMANCE
+    uint8_t accel_mode_applied; // latched value going out; ACCEL_MODE_OFF = pass-through
+    bool accel_mode_pending; // setting != latch, waiting for standstill
+    uint8_t accel_car_map; // car's own UI_pedalMap as last received (0..2)
+    bool accel_car_seen; // a valid 0x334 has been parsed
+    uint32_t accel_frames_modified; // 0x334 frames rewritten
+    uint32_t accel_bad_frames; // 0x334 left alone: wrong DLC, bad checksum or pedal map 3
+    uint16_t di_speed_raw; // 0x257 DI_vehicleSpeed raw (4095 = SNA); kph = raw*0.08-40, signed
+    uint8_t di_gear; // 0x118 DI_gear (1 = P, 7 = SNA)
+    bool di_gear_seen; // a 0x118 with a valid checksum has been parsed
+    uint32_t last_gear_tick_ms; // ms clock of that frame (standstill-gate freshness)
 
     uint8_t traction_ctrl_mode; // 0..7 (from 0x118)
     uint8_t rear_defrost_state; // 0=sna 1=on 2=off (from 0x343)
@@ -105,9 +155,11 @@ typedef struct FSDState {
     uint8_t
         ap_inject_count; // AP-enable frames modified this engagement (Minimal Inject burst budget;
     // reset to 0 on disengage, das_ap_state < DAS_APSTATE_ENGAGED)
-    uint8_t das_ap_state; // DAS_autopilotState: 0=UNAVAIL 1=UNAVAILABLE/AVAIL-flicker
-        // 2=AVAILABLE (offered, NOT engaged) 3=ACTIVE_NOMINAL (first
-        // engaged) 6=active 8/9=aborting/aborted
+    uint8_t das_ap_state; // DAS_autopilotState (byte0 low nibble on 0x39B/0x399):
+        // 0=DISABLED 1=UNAVAILABLE 2=AVAILABLE (offered, NOT engaged)
+        // 3=ACTIVE_NOMINAL (first engaged) 4=ACTIVE_RESTRICTED 5=ACTIVE_NAV
+        // 6=ACTIVE_FSD (also steady engaged on newer fw) 8=ABORTING
+        // 9=ABORTED 14=FAULT 15=SNA. Engaged = 3..6.
     uint32_t
         ap_unstable_tick_ms; // ms clock when das_ap_state was last < DAS_APSTATE_ENGAGED (AP-first stability debounce)
 
@@ -185,14 +237,19 @@ typedef struct FSDState {
         // (gate for the 0x399 hands-on fallback on HW4 trims
         //  that never broadcast 0x39B, e.g. Juniper RWD on Bus 6)
 
-    // --- HW4 0x39B byte0 AP-state auto-fallback (#116) ---
-    // Highland (China MIC, fw 2026.20) ships an 8-byte HW4 0x39B but carries
-    // DAS_autopilotState in byte0 low nibble (HW3 position) while byte1[7:4] is
-    // pinned at 1 the whole drive. Detect that signature and latch this car to the
-    // byte0 reading for the session (re-detected each power cycle via memset init).
-    uint8_t das_hw4_byte0_pin_count; // consecutive (byte1[7:4]==1 && byte0>=2) frames
-    bool das_hw4_byte1_moved; // sticky: byte1[7:4] ever seen != 1 (standard HW4)
-    bool das_hw4_use_byte0; // one-way latch: read AP-state from byte0 low nibble
+    // --- In-car Autopark TX pause (#180, fsd_autopark.h) ---
+    // Highland runs in-car Autopark at DAS_autopilotState 6 with the autopark
+    // bits set in 0x39B/0x399 byte3 bits0-2. Injecting during that window throws
+    // AEB/traction/stability/regen warnings, so all TX pauses for the episode.
+    bool autopark_ready; // byte3 bit0 DAS_autoparkReady
+    bool autopark_parked; // byte3 bit1 DAS_autoParked
+    bool autopark_waiting_brake; // byte3 bit2 DAS_autoparkWaitingForBrake
+    uint32_t
+        autopark_maneuver_last_ms; // ms clock a maneuver bit (autoParked / waitingForBrake) was last seen set
+    uint8_t autopark_prev_ap_state; // das_ap_state at the previous fsd_autopark_update
+    bool autopark_episode; // inside a detected Autopark episode (state 6)
+    bool autopark_evidence; // this episode has seen a maneuver bit (20 vs 12 km/h release)
+    bool autopark_tx_block; // episode AND not confirmed driving -> pause every TX
 
     // --- GTW autopilot tier (from 0x7FF mux=2 on mixed bus) ---
     int8_t gtw_autopilot_tier; // -1 = not yet read
@@ -219,6 +276,22 @@ typedef struct FSDState {
     bool speed_profile_locked; // when true, follow distance won't override profile
     uint8_t hw4_offset; // HW4 mux=2 speed offset override (0 = no override)
 
+    // --- HW3 0x3FD speed fields (#209) ---
+    // Default is pass-through: with FSD unlock only bit46 is set on mux0; the
+    // car's own FSD profile (mux0 bits 49-50) and FSD max-speed offset (mux2
+    // bits 6-13) go out as received. hw3_speed_override restores the legacy
+    // write (follow-distance profile + Autopilot offset x5), which pinned the
+    // FSD offset to the Autopilot one and ignored the follow-distance stalk.
+    bool hw3_speed_override; // opt-in, default OFF
+    uint8_t hw3_car_profile; // read-only: mux0 bits 49-50 as received
+    uint8_t hw3_sent_profile; // same field after the handler (== car unless written)
+    uint8_t hw3_car_offset; // read-only: mux2 bits 6-13 raw as received
+    uint8_t hw3_sent_offset; // same field after the handler (== car unless written)
+    bool hw3_profile_seen; // a HW3 mux0 has been read
+    bool hw3_offset_seen; // a HW3 mux2 has been read
+    uint8_t follow_distance; // 0x3F8 follow-distance raw (byte5 bits 7:5)
+    bool follow_distance_seen;
+
     // --- DAS_control (0x2B9) — ACC / longitudinal state ---
     uint8_t das_acc_state; // 0-15 (0=cancel, 3=hold, 4=ACC_ON, 9=pause)
     float das_set_speed_kph; // set cruise speed (0.1 kph resolution)
@@ -241,8 +314,11 @@ typedef struct FSDState {
     bool ui_high_beam;
     bool ui_warning_seen;
 
-    // --- steering angle (0x129) ---
-    float steering_angle_deg;
+    // --- steering angle (0x129 SCCM_steeringAngleSensor, fsd_steer.h) ---
+    float steering_angle_deg; // last valid angle; read only while fsd_steer_known()
+    bool steering_angle_seen; // a 0x129 (or the Signal Map steering id) has been parsed
+    bool steering_angle_valid; // the last one carried a valid angle
+    uint32_t steering_angle_ms; // ms clock of the last valid angle
 
     // --- DAS_steeringControl (0x488) ---
     float das_steer_angle_req; // DAS requested angle
@@ -276,15 +352,23 @@ typedef struct FSDState {
     // reduced detection. See the omission notes in fsd_handler.c.
     bool assist_telemetry_off;
 
-    // --- energy consumption (0x33A, read-only) ---
-    float energy_wh_per_km;
-    bool energy_seen;
+    // --- Charge-port type (0x25D CP_status, Vehicle CAN; #228) ---
+    // Read-only decode is always on (even Listen-Only); the rewrite is opt-in.
+    bool cp_status_seen; // an 8-byte 0x25D has been decoded (false => tap carries no CP_status)
+    uint8_t cp_type; // CP_type the car reports: 0 US_TESLA 1 EURO_IEC 2 GB 3 IEC_CCS
+    uint8_t cp_plug_state; // FsdCpPlugState from the last 0x25D (plug guard read-out)
+    uint32_t cp_status_ms; // when the last 8-byte 0x25D arrived (stale read-out)
+    // EU CP Type rewrite: when on, re-send each received US-type 0x25D with
+    // CP_type=IEC_CCS on the bus it arrived on, so EU Superchargers show in nav.
+    // Opt-in, default OFF. Plug guard (no rewrite while a cable is present /
+    // charging) is enforced per frame, so it is safe to persist. Experimental.
+    bool cp_type_eu_rewrite;
+    uint32_t cp_type_tx_count; // copies sent (diagnostics)
 
     // --- extras: write toggles (BETA, Service mode only) ---
     bool extra_hazard_lights;
     bool extra_wiper_off;
     bool extra_park_inject; // inject a PARK stalk press
-    uint8_t extra_steering_mode; // 0=no change, 1=comfort 2=standard 3=sport (GTW_epasTuneRequest)
     bool extra_highbeam_strobe; // rapid PULL/IDLE toggle on SCCM_leftStalk
     bool extra_turn_left; // inject left turn signal
     bool extra_turn_right; // inject right turn signal
@@ -298,11 +382,15 @@ typedef struct FSDState {
 
     bool ignore_ota; // allow TX while Tesla OTA is detected
     bool china_mode; // bypass FSD UI selection check for China vehicles
+    bool signal_map_das_missing; // ESP32: a configured Signal Map DAS id never showed
+        // up on the tapped bus -> nag killer silently paused (#100)
 
-    // OTA detection debounce (from 0x318)
+    // OTA detection debounce (from 0x318) — used by both builds via fsd_ota.h
     uint8_t ota_raw_state; // raw GTW_updateInProgress bits [1:0]
     uint8_t ota_assert_count; // consecutive "in-progress" samples
     uint8_t ota_clear_count; // consecutive "not in-progress" samples
+    uint8_t ota_last_byte6; // previous 0x318 byte6 (flag vs rolling counter)
+    bool ota_last_valid; // ota_last_byte6 holds a real sample
 
     // per-ID seen counters (wiring/diagnostics)
     uint32_t seen_gtw_car_state; // 0x318
@@ -314,12 +402,14 @@ typedef struct FSDState {
 
     bool bms_output; // print BMS data to serial
     uint32_t sleep_idle_ms; // CAN silence before deep sleep
+    bool mcp_rx_task; // read the MCP2515 from its own task (opt-in, NVS)
 
     // Wi-Fi (ESP32 web dashboard)
     char wifi_ssid[33]; // max 32 chars + null
     char wifi_pass[65]; // max 64 chars + null
     char wifi_sta_ssid[33]; // optional station SSID
     char wifi_sta_pass[65]; // optional station password
+    char wifi_hostname[32]; // station hostname: DNS label, max 31 chars + null
     bool wifi_hidden;
 
     // 2026.14.x firmware warning (persisted in NVS on ESP32)

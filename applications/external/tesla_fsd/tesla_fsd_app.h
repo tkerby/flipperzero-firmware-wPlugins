@@ -111,11 +111,7 @@ typedef struct {
 
     // extras toggles (BETA — need on-vehicle verification per CAN ID)
     bool extra_hazard_lights;
-    bool extra_rear_window_heat;
     bool extra_auto_wipers_off;
-    bool extra_fold_mirrors;
-    bool extra_rear_fog;
-    uint8_t extra_steering_mode; // 0=no change, 1=comfort, 2=standard, 3=sport (Chassis CAN)
     bool extra_highbeam_strobe; // rapid high beam flash (Party CAN 0x249)
     bool extra_turn_left; // inject left turn signal
     bool extra_turn_right; // inject right turn signal
@@ -130,9 +126,14 @@ int32_t tesla_fsd_main(void* p);
 // 0x39B/0x399, so let the owner relocate the read without a firmware fallback.
 // The configurable-mapping mechanism itself lives in the shared core
 // (cfg_das_id + fsd_apply_signal_config); this only picks a position.
-//   0 Auto           — cfg_das_id = 0, auto-detect (default)
-//   1 0x39B b0 (HW4) — live DAS state in byte0 low nibble (Juniper-style)
-//   2 0x39B b1 (HW4) — standard HW4 byte1 high nibble
+//   0 Auto           — cfg_das_id = 0, use the standard parsers (default). These
+//                      now read DAS_autopilotState from 0x39B/0x399 byte0 low
+//                      nibble (opendbc party BO_923), which is correct for every
+//                      car we have data for (#177) — leave this on unless a tap is
+//                      genuinely non-standard.
+//   1 0x39B b0 (HW4) — DAS state pinned to byte0 low nibble (same as Auto's HW4 read)
+//   2 0x39B b1 (old) — legacy byte1 high-nibble decode; manual fallback only, wrong
+//                      on the real cars (byte1 is DAS_fusedSpeedLimit)
 //   3 0x399 b0 (HW3) — HW3 / Legacy byte0 low nibble
 #define SIGNAL_MAP_COUNT 4
 
@@ -148,7 +149,7 @@ static inline void signal_map_apply(FSDState* state, uint8_t idx) {
         state->cfg_apstate_shift = 0;
         state->cfg_apstate_mask = 0x0F;
         break;
-    case 2: // 0x39B byte1 high nibble (standard HW4)
+    case 2: // 0x39B byte1 high nibble — OLD decode, manual fallback only (#177)
         state->cfg_das_id = 0x39B;
         state->cfg_apstate_byte = 1;
         state->cfg_apstate_shift = 4;

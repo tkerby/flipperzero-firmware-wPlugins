@@ -1,0 +1,125 @@
+# Naming keyboard (task K, contract 11.6). Read by tools/mkfont.py: it adds every key to the language's font charset and writes
+# nucleo/files/lang/<dir>/kb.bin (the grid pages as font codes + a code <-> Unicode table of the non-ASCII characters).
+#
+#  - `rows` x `cols` is the grid; every page is `rows` strings of exactly `cols` characters (one character per cell).
+#    "¤" (U+00A4) = an empty cell (the cursor skips it); "␣" (U+2423) = the space key.
+#  - `cmd` = "bottom": the command row (page switch, end) is the last row under the grid, with the prompt and the name
+#    slots on the first line; "top": the commands share the first line with the name slots (no room for a row).
+#  - `max_name` / `max_nick`: longest player / rival name and creature nickname, in characters. mkfont checks that the
+#    widest key times the limit fits the lint's name token (`name_px`) and `var_px[0]` of langs.toml, so no text, plate or
+#    list ever overflows.
+#  - `hidden`: characters that are not keys but are always in the table / font, so a name typed in another language
+#    survives a language switch (es <-> en lose nothing).
+#  - the characters of the suggested names (gl.name.p* / r*) are added to the table automatically.
+#  - Names are stored as Unicode (PartyState v3); only the non-ASCII part of the table is needed to convert them to the
+#    codes of the language in use.
+
+[es]
+cols = 10
+rows = 4
+cmd = "bottom"
+max_name = 7
+max_nick = 10
+hidden = ""
+[[es.page]]
+rows = ["ABCDEFGHIJ",
+        "KLMNÑOPQRS",
+        "TUVWXYZÁÉÍ",
+        "ÓÚÜ␣.-'!?,"]
+[[es.page]]
+rows = ["abcdefghij",
+        "klmnñopqrs",
+        "tuvwxyzáéí",
+        "óúü␣.-'!?,"]
+[[es.page]]
+rows = ["0123456789",
+        ".,-'!?:;/&",
+        "()+*#@%=¿¡",
+        "␣¤¤¤¤¤¤¤¤¤"]
+
+[en]
+cols = 10
+rows = 4
+cmd = "bottom"
+max_name = 7
+max_nick = 10
+hidden = "ÁÉÍÓÚÜÑáéíóúüñ¿¡"
+[[en.page]]
+rows = ["ABCDEFGHIJ",
+        "KLMNOPQRST",
+        "UVWXYZ␣.-'",
+        "!?,/:&()+#"]
+[[en.page]]
+rows = ["abcdefghij",
+        "klmnopqrst",
+        "uvwxyz␣.-'",
+        "!?,/:&()+#"]
+[[en.page]]
+rows = ["0123456789",
+        ".,-'!?:;/&",
+        "()+*#@%=␣¤",
+        "¤¤¤¤¤¤¤¤¤¤"]
+
+# Japanese: the gojuon table with the consonant lines as columns (a ka sa ta na ha ma ya ra wa) and the vowels as rows, like
+# page 2 / 4 = the voiced (dakuten / handakuten) forms, the small kana, digits and a few marks. Page labels are the
+# first kana of the page they lead to.
+[ja]
+cols = 10
+rows = 5
+cmd = "top"
+max_name = 5
+max_nick = 6
+hidden = ""
+[[ja.page]]
+rows = ["あかさたなはまやらわ",
+        "いきしちにひみ¤りを",
+        "うくすつぬふむゆるん",
+        "えけせてねへめ¤れー",
+        "おこそとのほもよろ・"]
+[[ja.page]]
+rows = ["がざだばぱぁっ05！",
+        "ぎじぢびぴぃゃ16？",
+        "ぐずづぶぷぅゅ27〜",
+        "げぜでべぺぇょ38␣",
+        "ごぞどぼぽぉゎ49¤"]
+[[ja.page]]
+rows = ["アカサタナハマヤラワ",
+        "イキシチニヒミ¤リヲ",
+        "ウクスツヌフムユルン",
+        "エケセテネヘメ¤レー",
+        "オコソトノホモヨロ・"]
+[[ja.page]]
+rows = ["ガザダバパァッ05！",
+        "ギジヂビピィャ16？",
+        "グズヅブプゥュ27〜",
+        "ゲゼデベペェョ38␣",
+        "ゴゾドボポォヮ49ヴ"]
+
+# Simplified Chinese: 96 common name characters over 3 pages (fun / elements, surnames, given names) + a Latin page.
+[zh]
+cols = 8
+rows = 4
+cmd = "top"
+max_name = 3
+max_nick = 4
+hidden = ""
+[[zh.page]]
+rows = ["小大明华龙凤宇晨",
+        "阳雨星子一乐安天",
+        "云海心文月山川木",
+        "火水金土风雷电日"]
+[[zh.page]]
+rows = ["王李张刘陈杨赵黄",
+        "周吴徐孙马朱胡林",
+        "何高梁郑罗宋白青",
+        "志伟杰强磊军洋勇"]
+[[zh.page]]
+rows = ["俊辉超鹏飞峰刚建",
+        "国平光荣秀英丽婷",
+        "雪梅芳玲娜燕红莉",
+        "倩洁静欣怡佳慧晶"]
+[[zh.page]]
+rows = ["ABCDEFGH",
+        "IJKLMNOP",
+        "QRSTUVWX",
+        "YZ␣.-'!?"]

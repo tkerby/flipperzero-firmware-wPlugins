@@ -1,0 +1,14 @@
+App(
+    appid="hanzi_cards",
+    name="Hanzi Cards",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="hanzi_cards_app",
+    stack_size=4 * 1024,
+    fap_icon="icon.png",
+    fap_file_assets="assets",
+    fap_category="Tools",
+    fap_author="rseufert",
+    fap_weburl="https://github.com/rseufert/hanzi_cards",
+    fap_version="0.4",
+    fap_description="Mandarin flashcards: HSK 1-4, simplified or traditional, pinyin, tone sounds and a tone quiz",
+)

@@ -1,0 +1,24 @@
+title Gimnasio Voltio - the electric gym: the gym's growing pulse, but it buzzes (an octave jump on every sixteenth), a tritone zaps against it, a chromatic climb and a snare roll; E minor
+tempo 150
+vol 235
+meter 4/4
+inst p1 v=120,80,60
+inst p2 v=170,120,90
+inst p3 v=220,160,120
+inst p4 v=255,200,150
+inst zap arp=-12,-6,0 rate=1 lvl=0.9
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+inst snr drum=a6 noise=25 seed=8 fall=12
+l16
+# --- the buzz alone, twice
+@p1 o4 [ e >e< ]8 |
+@p1 o4 [ e >e< ]8 |
+# --- the beat comes in (kick on every beat)
+@p2 o4 [ !kick:e >e< e >e< ]4 |
+@p2 o4 [ !kick:e >e< e >e< ]4 |
+# --- the tritone zaps (B flat against E)
+@p3 o4 [ !kick:e >e< b- >e< ]4 |
+@p3 o4 [ !kick:e >e< b- >e< ]3 @zap o5 e4 |
+# --- the climb, chromatic, and a snare roll
+@p4 o4 e f f+ g g+ a b- b >c c+ d d+ e f f+ g< |
+[ !snr16 ]8 [ !snr16 ]8

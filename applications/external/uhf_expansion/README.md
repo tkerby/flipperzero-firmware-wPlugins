@@ -13,22 +13,28 @@ UHF RFID Reader/Writer expansion for Flipper Zero, communicating over UART bridg
 - **Feature Menu** — Opens after reader detection with six focused entries
 - **TID Decoder** — Automatically pauses on one tag and shows scrollable MDID/model details
 - **EPC Fuzzing** — Generates incremental EPC variants with explicit verified writes
-- **Persistent Settings** — Configure sound, 0–20 dBm RF power, and a startup tool
+- **EPC ASCII** — Captures one tag, edits up to 12 printable ASCII characters, and writes a 96-bit EPC
+- **EPC Filter** — Enter an ASCII substring to show and beep only for matching inventory tags (case insensitive); Back edits the filter and Right toggles a list-only view
+- **Persistent Settings** — Separate app settings from reader indicator and 0–20 dBm RF power settings
 - **Paged EPC List** — Browse scanned tags page by page, with truncated preview
 - **Tag Details** — View full EPC, RSSI, and PC (Protocol Control) bits for each tag
 - **Tag Memory Actions** — Read and write EPC, TID, and User Data on compatible tags
+- **TID-Changeable Tag Support** — Reads short and 128-bit TID banks with automatic window fallback and EPC-filter recovery
+- **Tag Protection Actions** — Erase writable banks and reversibly lock or unlock EPC, TID, and User memory
+- **Access Keys** — Keep four reusable 32-bit access-password slots in the app data directory, shown directly in the key list
+- **RGB LED Feedback** — Blue/magenta blinking during single-tag reads and writes, with green/cyan success and red failure flashes
 - **Save CSV Records** — Export scanned tags to CSV file on SD card
-- **About Page** — Version info and project links
+- **About Page** — Project details and a second page with reader firmware, temperature, power, and UUID
 
 ## Screenshots
 
-| Main menu | TID Decoder |
-|:--:|:--:|
-| ![Main menu](images/01.png) | ![TID Decoder](images/05.png) |
-| **Tag operations** | **Tag Inventory** |
-| ![Tag operations](images/04.png) | ![Tag Inventory](images/03.png) |
-| **UHF Radar** | **EPC Fuzzing** |
-| ![UHF Radar](images/02.png) | ![EPC Fuzzing](images/06.png) |
+| Main Menu | UHF Radar | Tag Inventory |
+|:--:|:--:|:--:|
+| ![Main menu with six feature tiles](images/01.png) | ![UHF radar with tag count and reader telemetry](images/02.png) | ![Inventory list of scanned EPC tags](images/03.png) |
+
+| Tag Memory | TID Decoder | EPC Fuzzing |
+|:--:|:--:|:--:|
+| ![Tag memory viewer with read, edit and write actions](images/04.png) | ![TID decoder showing tag manufacturer and model](images/05.png) | ![EPC fuzzing with incremental tag data](images/06.png) |
 
 ## Hardware Setup
 
@@ -64,7 +70,8 @@ Install **UHF Expansion** directly from the
 git clone https://github.com/mtoolstec/fz-uhf-expansion.git
 cd fz-uhf-expansion
 
-# Build and install
+# Update the SDK to match the current official firmware, then build and install
+ufbt update --channel release
 ufbt build
 ufbt launch
 ```
@@ -81,10 +88,16 @@ Requirements:
 - [ufbt](https://pypi.org/project/ufbt/) — Flipper Zero build tool (`pip install ufbt`)
 
 ```bash
+ufbt update --channel release
 ufbt build
 ```
 
-The compiled `.fap` will be at `build/uhf_expansion.fap`.
+The compiled `.fap` will be at `dist/uhf_expansion.fap`.
+
+After upgrading Flipper firmware, rebuild and replace the installed FAP: an older
+binary may target a different firmware API. The source has been built and passed
+`APPCHK` with the official 1.5.1 SDK (target 7, API 88.2). This verifies SDK
+compatibility; reader operation still requires testing on the device.
 
 ## Publishing a New Catalog Version
 
@@ -103,11 +116,21 @@ Catalog bundle, updates the Catalog fork, and opens the upstream pull request.
 
 1. Connect your UHF module as described in [Hardware Setup](#hardware-setup)
 2. Open **Apps → GPIO → UHF Expansion**
-3. Choose **UHF Radar**, **Tag Inventory**, **TID Decoder**, **EPC Fuzzing**, **Settings**, or **About Us**
+3. Choose **UHF Radar**, **Inventory**, **Tag Tools**, **EPC Tools**, **Saved Tags**, or **Settings**. Tag Tools groups TID Decoder, Tag Control and Access Keys; EPC Tools groups EPC ASCII, EPC Filter and EPC Fuzzing; Settings groups App Settings, Reader Settings and About.
 4. In UHF Radar or Tag Inventory, press **OK** to start/stop inventory scanning
 5. Navigate the tag list with **Up/Down**
 6. Press **OK** on a tag to view details
 7. Use the submenu to save or clear tag records
+8. Open **Tag Control** after EPC Fuzzing to erase, lock, or unlock one presented tag
+9. Open the separate **Access Keys** tool to select or edit an Access Password slot
+10. Set **EPC Display** to **ASCII** to show printable ASCII EPCs in Tag Inventory
+11. Use **EPC ASCII** to capture one tag, edit up to 12 characters, and write the 96-bit EPC with Right
+
+> **Key storage:** Access-password slots are stored locally on the SD card and
+> shown in plain text in the Access Keys list for verification. They are not
+> hardware-backed secrets.
+> Set a non-zero Access Password on the tag before locking. The Tag Control
+> recovery action can initialize it on tags whose current password is zero.
 
 ## Protocol
 

@@ -6,11 +6,11 @@ App(
     targets=["f7"],
     stack_size=6 * 1024,
     fap_icon="icon.png",
-    sources=["src/*.cpp", "src/ui/*.cpp"],
+    sources=["src/*.cpp", "src/ui/*.cpp", "src/magic/*.cpp"],
     fap_libs=["mbedtls"],
     fap_category="NFC",
     fap_author="DanTheMan827",
     fap_weburl="https://github.com/DanTheMan827/bambu-rfid-flipper",
-    fap_version="0.2.0",
+    fap_version="0.3.0",
     fap_description="Read, save, browse, and inspect Bambu Lab filament RFID tags.",
 )

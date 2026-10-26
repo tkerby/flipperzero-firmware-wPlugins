@@ -1,0 +1,114 @@
+# Ruta 8 (C4a, contract 39), 34 x 16. column = i, row = j. Pueblo Bruma arrives at the EAST edge (i = 33, rows 7..8); the road runs west past the passage hut (door (15,5), the second underground
+# passage to Ruta 7) to the CLOSED GATE of Ciudad Cenit (the gatehouse across the road at (2..3,7..8) and its guard: Cenit opens in chapter 6). Look (the user's mock "Rutas 7 y 8"): the city OUTSKIRTS: an asphalt road
+# (a mix of plain and dashed-lane tiles), a sidewalk on both sides, chain-link fences, road signs, street lamps, mowed lawn with tall-grass patches. Four trainers (two gamblers, a lass, a mechanic) watch the road.
+@map ruta_8
+@size 34 16
+@interior no
+@area ruta_8
+@flag cenit_gates 837   # a guard got a drink: every gate of Ciudad Cenit is open (contract 49)
+@bg 0
+@fill lawn
+@spawn east 32 7 W
+@spawn hut_door 15 6 S
+@encounters grass rate=20
+  cindermeer 21 25 25   # C9 (contract 56): weight lowered to make room for the fill-in (the table still adds up to 100)
+  ramplet 21 25 15   # C9 (contract 56): weight lowered to make room for the fill-in (the table still adds up to 100)
+  lullabun 21 25 20
+  mossbud 21 25 20
+  lunelle 21 24 5
+  mothmist 21 25 10   # C6 (contract 49): around Ciudad Cenit (the evolved one, rare, only here)
+  veilmoth 24 27 5
+@end
+# Open ground (contract 63, normal route): a step onto plain ground (not tall grass, water, a door, a ledge, an arrow floor) rolls this table when rand8 < 4 (4/256 per step).
+@open_rate 4
+# Roaming wild creatures (contract 55, rollout in 63): 3 creatures of this table wander the open ground (not the tall grass); touching one starts that wild battle.
+@roam 3 table=grass period=1800
+@spawn cenit 1 7 SE
+@legend
+  .  tile=lawn
+  a  object=chain_i
+  b  object=chain_j
+  c  object=dry_bush
+  d  object=house_f
+  e  tile=tall_grass
+  f  npc=chica id=t3 face=S trainer=chica_r8 range=3 text=tr.chica_r8.pre after=tr.chica_r8.after
+  g  object=lamp_h
+  h  npc=jugador id=t1 face=S trainer=jugador_r8a range=3 text=tr.jugador_r8a.pre after=tr.jugador_r8a.after
+  i  door=house_f
+  j  object=road_sign text=ruta8.hut.sign interact=look
+  k  tile=sidewalk object=chain_j
+  l  tile=sidewalk
+  m  tile=sidewalk object=road_sign text=ruta8.gate.sign interact=look
+  n  tile=asph object=chain_j
+  o  tile=asph
+  p  tile=asph object=gatehouse
+  q  tile=asph npc=guardia id=guard2 face=W script=gate_guard2 show_flag=cenit_gates   # the guard's friend, aside once the gates are open
+  r  tile=asph
+  s  tile=tall_grass npc=mecanico id=t4 face=N trainer=mecanico_r8 range=3 text=tr.mecanico_r8.pre after=tr.mecanico_r8.after
+  t  tile=tall_grass npc=jugador id=t2 face=N trainer=jugador_r8b range=3 text=tr.jugador_r8b.pre after=tr.jugador_r8b.after
+  u  item=rich_salve
+  v  item=luna
+  W  tile=asph                        # the lane into Ciudad Cenit (east gate)
+  U  tile=asph npc=guardia id=guard face=SE script=gate_guard hide_flag=cenit_gates gate=yes   # the thirsty guard
+  H  tile=lawn hidden=prime_salve   # hidden (contract 80, hidden items)
+@grid
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  b..bH............................b
+  b..b.............................b
+  b..b..aaaaaaa.......aaaaaaaaaaa..b
+  b..bpp....c...dd......eeeee.f..c.b
+  b..bpp..g.h...di.j..g.eeeee....g.b
+  klkklmllllllllllllllllllllllllllll
+  WoooUqooooooooooooooooooooooooooor
+  nonnooooooooooooooooooooooooooooor
+  klkkllllllllllllllllllllllllllllll
+  b..b.......g...........g.........b
+  b..b.eeese...c...eeeeet.......c..b
+  b..bueeeee.c.....eeeeee...c......b
+  b..b.eeeee.......eeeeee.......v..b
+  b..b.............................b
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+@warp i -> pasadizo2_n spawn=door
+@warp r -> pueblo_bruma spawn=west
+@warp W -> ciudad_cenit_sur spawn=east
+# The thirsty guard: ANY drink of the Neon store opens all the gates (flag 837); he walks aside and his friend (show_flag) greets the hero.
+@script gate_guard npc
+    npc_face_hero guard
+    jnf badge_toxina nobadge
+    say cenit.guard.thirsty
+    has_item spring_water 0
+    jv 0 1 d_water
+    has_item fizzy_pop 0
+    jv 0 1 d_soda
+    has_item citrus_cooler 0
+    jv 0 1 d_lemon
+    say cenit.guard.none
+    end
+  d_water:
+    item_var 0 spring_water
+    take_item spring_water 1
+    jmp thanks
+  d_soda:
+    item_var 0 fizzy_pop
+    take_item fizzy_pop 1
+    jmp thanks
+  d_lemon:
+    item_var 0 citrus_cooler
+    take_item citrus_cooler 1
+  thanks:
+    sfx item
+    say cenit.guard.give
+    say cenit.guard.open
+    npc_walk guard SE 1
+    npc_face guard NW
+    setf cenit_gates
+    end
+  nobadge:
+    say cenit.guard.badge
+    end
+@end
+@script gate_guard2 npc
+    npc_face_hero guard2
+    say cenit.guard.after
+@end
+

@@ -1,0 +1,100 @@
+# Meseta Cumbre (C9, contract 56), 22 x 18. column = i, row = j. The Senda's exit arrives at the SOUTH edge (10..11, 17); the League hall (door (10,3)) stands at the north; the Planeador lands in front of the door (slot 10).
+# Look: the user's approved MESETA scene (tools/c9_mock.py): a big light MARBLE plaza (2 x 2 slabs with a soft vein), the winged-crown statue in the middle, league banners and harbour-style lamps, stone walls at the back and pickets at the front.
+@map meseta_cumbre
+@size 22 18
+@interior no
+@area meseta_cumbre
+@fly 10 meseta_cumbre 10 4 face=S   # the Planeador lands here, in front of the hall's door; slot 10 = visited flag 994 (contract 46.1)
+@bg 0
+@fill marb_00
+@spawn south 10 16 N
+@spawn lobby_door 10 4 S
+@spawn ruins_door 4 2 S      # D1 (contract 68): the way out of the Ruinas del Origen (in front of the sealed slab's passage)
+@legend
+  0  tile=marb_00 object=pillar
+  1  tile=marb_10 object=stonewall_j
+  2  tile=marb_00 object=stonewall_j
+  3  tile=marb_10 object=pillar
+  4  tile=marb_01 object=stonewall_i
+  5  tile=marb_11 
+  6  tile=marb_01 
+  7  tile=marb_11 object=fence_i
+  8  tile=marb_00 object=stonewall_i
+  9  tile=marb_10 
+  a  tile=marb_00 
+  b  tile=marb_10 object=vflag
+  c  tile=marb_10 object=gym
+  d  tile=marb_00 object=gym
+  e  tile=marb_00 object=vflag
+  f  tile=marb_10 object=fence_i
+  g  tile=marb_11 object=gym
+  h  tile=marb_01 door=gym
+  i  tile=marb_01 object=lamp_h
+  j  tile=marb_01 object=sign text=ms.sign interact=look
+  k  tile=marb_11 object=lamp_h
+  l  tile=marb_10 npc=guardia id=guide face=SW script=guide
+  m  tile=marb_01 object=vflag
+  n  tile=marb_11 object=vflag
+  o  tile=marb_01 object=lstatue
+  p  tile=marb_00 object=lamp_h
+  q  tile=marb_10 npc=vecino_m id=tourist face=NW script=tourist
+  R  tile=marb_00                            # D1 (contract 68): the passage in the back wall (a warp to the Ruinas del Origen) behind the sealed slab
+  S  tile=marb_01 npc=seal id=seal face=S solid=yes gate=yes script=seal_door hide_flag=ruins_open   # D1: the sealed slab, gone for good once the eight fragments opened it
+  r  tile=marb_10 object=lamp_h
+  s  tile=marb_01 object=pillar
+  t  tile=marb_11 object=fence_j
+  u  tile=marb_01 object=fence_j
+  v  tile=marb_01 
+  w  tile=marb_11 
+  x  tile=marb_11 object=pillar
+@grid
+  0123R32121212121212123
+  4565S56565656565656567
+  89a9a9abacdca9e9a9a9af
+  456565656ghg6565656567
+  89a9a9a9a9a9a9a9a9a9af
+  456565i5j565656k656567
+  89a9a9a9a9a9ala9a9a9af
+  4565m565656565656n6567
+  89a9a9a9a9a9a9a9a9a9af
+  4565656565o56565656567
+  89a9a9a9a9a9a9a9a9a9af
+  4565656565656565656567
+  89a9a9pqa9a9a9ara9a9af
+  4565656565656565656567
+  89a9e9a9a9a9a9a9aba9af
+  4565656565656565656567
+  89a9a9a9a9a9a9a9a9a9af
+  stututututvwututututux
+@warp v -> senda_3 spawn=north
+@warp w -> senda_3 spawn=north
+@warp h -> liga_lobby spawn=door
+@warp R -> ruinas_origen spawn=in
+@script guide npc
+    npc_face_hero guide
+    say ms.guide
+@end
+# D1 (contract 68): the sealed gate (an old carved slab in the back wall, eight sockets): it opens when the player holds all eight Origin Fragments (the story flags frag_1 .. frag_8: the bag's count is only a display).
+@script seal_door npc
+    say ms.seal
+    jnf frag_1 no
+    jnf frag_2 no
+    jnf frag_3 no
+    jnf frag_4 no
+    jnf frag_5 no
+    jnf frag_6 no
+    jnf frag_7 no
+    jnf frag_8 no
+    sfx door
+    say ms.seal.open
+    setf ruins_open
+    end
+  no:
+    say ms.seal.no
+@end
+# D1: the tourist's second piece of gossip: the hidden cave of the Piedra Eclipse (a clue; the first line is the old one).
+@script tourist npc
+    npc_face_hero tourist
+    say ms.tourist
+    say d1.hint.ms
+@end

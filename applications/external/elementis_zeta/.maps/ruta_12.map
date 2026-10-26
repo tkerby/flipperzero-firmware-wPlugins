@@ -1,0 +1,151 @@
+# Ruta 12 (C5a, contract 47), 22 x 40. column = i, row = j. Pueblo Bruma's south gate arrives at the NORTH edge (i = 9..10, j = 0), Ruta 13 is the SOUTH edge (i = 9..10, j = 39).
+# Look (the user's mock "Ruta 12"): a long WOODEN PIER over the open SEA (planks across, bollards, a net rack and lobster traps, sailboats and rocks in the water): the north half hugs the shore (grass, tall grass,
+# trees on the west, the sea on the east), the south half crosses a bay (water on both sides, two lanes, then ONE lane). The FISHING GURU waits at the start of the pier (the Caña vieja, flag 830); three fishermen
+# stand on the lanes (they look up the lane); the SLEEPING CREATURE (Slumberth L30) fills the single plank of the narrow stretch until the Flauta Clara wakes it.
+# Wild: grass table, `water` (surfing, C5b) and the three fishing tables (the reed rod = Flopfin).
+@map ruta_12
+@size 22 40
+@interior no
+@area ruta_12
+@flag cana_vieja_given 830     # the fishing guru gave the Caña vieja (script guru)
+@bg 0
+@fill grass
+@spawn north 10 1 S
+@spawn south 10 38 N
+@encounters grass rate=20
+  mossbud 27 29 30
+  flitter 26 28 20
+  shellfern 27 29 20
+  flitwing 27 29 20
+  mossbloom 27 29 10
+@end
+# Open ground (contract 63, normal route): a step onto plain ground (not tall grass, water, a door, a ledge, an arrow floor) rolls this table when rand8 < 4 (4/256 per step).
+@open_rate 4
+# Roaming wild creatures (contract 55, rollout in 63): 3 creatures of this table wander the open ground (not the tall grass); touching one starts that wild battle.
+@roam 3 table=grass period=1800
+@encounters water rate=15
+  urchip 27 31 50
+  skipgoby 27 31 20
+  clubrimp 27 31 15
+  flopfin 23 27 15
+@end
+@encounters fish_old
+  flopfin 5 5 100
+@end
+@encounters fish_good
+  flopfin 10 10 25
+  skipgoby 10 10 30
+  clubrimp 10 10 25
+  lazatee 10 10 20
+@end
+@encounters fish_super
+  clubrimp 15 20 30
+  skipgoby 15 20 25
+  lazatee 15 20 20
+  urchip 15 20 15
+  flopfin 15 20 10
+@end
+@legend
+  .  tile=grass
+  A  object=net_rack
+  B  npc=mama id=npc_b face=N text=ruta12.npc.b
+  C  object=flowerbed
+  D  object=sign text=ruta12.sign interact=look
+  E  object=trap
+  F  object=bollard
+  G  item=rich_salve
+  H  item=ward_spray
+  I  npc=vecino_m id=npc_a face=SE text=ruta12.npc.a
+  a  tile=sea_tr
+  b  tile=sea_o
+  c  tile=sea_bl
+  d  tile=sea_o object=sea_rock_b
+  e  tile=sea_tl_tr
+  f  tile=sea_tl
+  g  tile=sea_o object=sea_rock_a
+  h  tile=sea_o object=sailboat
+  i  tile=path
+  j  tile=path
+  k  tile=path
+  l  tile=plank_o
+  m  tile=plank_o npc=pescador_s id=guru face=SE script=guru
+  n  tile=plank_o object=sign text=ruta12.pier interact=look
+  o  tile=plank_o object=bollard
+  p  tile=plank_o npc=pescador id=f1 face=S trainer=pescador_r12a range=2 text=tr.pescador_r12a.pre after=tr.pescador_r12a.after
+  q  tile=plank_tl
+  r  tile=plank_tl npc=pescador id=f3 face=S trainer=pescador_r12c range=2 text=tr.pescador_r12c.pre after=tr.pescador_r12c.after
+  s  tile=plank_br
+  t  tile=plank_br object=bollard
+  u  tile=plank_br npc=pescador id=f2 face=W trainer=pescador_r12b range=2 text=tr.pescador_r12b.pre after=tr.pescador_r12b.after
+  v  tile=plank_br object=trap
+  w  tile=plank_tl_br
+  x  tile=plank_tl_br sleeper=slumberth level=30 npc=slumberth face=S
+  y  object=tree
+  z  tile=tall_grass
+  J  tile=grass item=disc_23
+  K  tile=grass hidden=grand_ward   # F2 (contract 74): a hidden item
+@grid
+  yyyyyyyyyiiyyyyyyyyyyy
+  y.y..y...jjy.y.y.y.y.y
+  y.K....y.jj...........
+  y..y.I...jjeaaaaaaaaaa
+  y.......Cjjfbbbbbbbbbb
+  y.zzzz...jjfbbbbbbbbbb
+  yyzzzz..Djjfbbbbbbbbbb
+  y.zzzz.y.jjfbbbbbbbbbb
+  y.zzzz...lsfbbbbbbbbbb
+  yCzzzz...lsfbbbbbbbbbb
+  y........msfbbbhbbbbbb
+  y..zzzzz.nsfbbbbbbbbbb
+  yG.zzzzAAlsfbbbbbbbbbb
+  y..zzzzz.osfbbbbbbbbbb
+  y..zzzzzElsfbbbbbbbbbb
+  y.yzzzzz.lsfbbbbbbbbbb
+  y.....y.Fpsfbbbbbbbbbb
+  y....CJ..lsfbbgbbbbbbb
+  aaaaaaaaaqsfbbbbbbbbbb
+  bbbbbbbbbqsfbbbbbbbbbb
+  bbbbbbbbbqtfbbbbbbbbbb
+  bbbbbbbbbqsfbbbbbbbbbb
+  bbbbbbbbbqufbbbbbbbbbb
+  bbbbbbbbbqsfbbbbbbbbbb
+  bbbbdbbbbqsfbbbbbbhbbb
+  bbbbbbbbbqvfbbbbbbbbbb
+  bbbbbbbbbqsfbbbbbbbbbb
+  bbbbbbbbbrsfbbbbbbbbbb
+  bbbbbbbbbqsfbbbbbbbbbb
+  bbbbbbbbbawfbbbbbbbbbb
+  bbbbbbbbbbwfbbdbbbbbbb
+  bbbbbbbbbbxfbbbbbbbbbb
+  bbbbbbbbbbwfbbbbbbbbbb
+  ccccccccccwfbbbbbbbgbb
+  y........jjfbbbbbbbbbb
+  y...zzzzzjjfbbbbbbbbbb
+  yH.yzBzzzjjfbbbbbbbbbb
+  y...zzzzzjjfbbbbbbbbbb
+  yy....y..jjfbbbbbbbbbb
+  y........kkfbbbbbbbbbb
+@warp i -> pueblo_bruma spawn=south
+@warp k -> ruta_13 spawn=east
+# The fishing guru: the first talk gives the CAÑA VIEJA (a full bag keeps flag 830 clear and he gives it at the next talk).
+@script guru npc
+    npc_face_hero guru
+    jf cana_vieja_given said
+    say ruta12.guru.a
+    call guru_gift
+    end
+  said:
+    say ruta12.guru.after
+@end
+@script guru_gift called
+    say ruta12.guru.b
+    give_item cana_junco 1
+    jv 0 0 full
+    item_var 0 cana_junco
+    say gl.gift
+    setf cana_vieja_given
+    say ruta12.guru.about
+    end
+  full:
+    say gl.found.full
+@end

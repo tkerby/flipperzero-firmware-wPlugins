@@ -1,0 +1,3 @@
+title Low HP warning (two soft beeps)
+vol 130
+o6 e=5 r=4 e=5

@@ -1,0 +1,63 @@
+# Ruta 9 (C4a, contract 39), 36 x 16. column = i, row = j. Ciudad Marea's east gate (through the cuttable bush) arrives at the WEST edge (i = 0, rows 7..8); Ruta 10 is the east edge
+# (i = 35, rows 11..12). Look (the user's mock "Ruta 9"): green HILLS (grass + earth slopes on the border), a dry packed-earth trail, DRY-STONE WALLS round the fields, cuttable bushes (one closes a walled
+# pocket with a Rich Salve), boulders and rocks, tall-grass patches (the wild table). Six trainers look across the trail along the diagonals, two items.
+@map ruta_9
+@size 36 16
+@interior no
+@area ruta_9
+@bg 0
+@fill grass
+@spawn west 1 7 E
+@spawn east 34 11 W
+@encounters grass rate=20
+  ramplet 15 19 35
+  jabbird 15 19 30
+  quillix 15 19 20
+  coilisp 15 19 15
+@end
+# Open ground (contract 63, normal route): a step onto plain ground (not tall grass, water, a door, a ledge, an arrow floor) rolls this table when rand8 < 4 (4/256 per step).
+@open_rate 4
+# Roaming wild creatures (contract 55, rollout in 63): 3 creatures of this table wander the open ground (not the tall grass); touching one starts that wild battle.
+@roam 3 table=grass period=1800
+@legend
+  .  tile=grass
+  a  tile=earth object=slope
+  b  object=stonewall_j
+  c  object=rock
+  d  npc=cazabichos id=t3 face=S trainer=cazabichos_r9 range=3 text=tr.cazabichos_r9.pre after=tr.cazabichos_r9.after
+  e  object=boulder
+  f  item=rich_salve
+  g  cut=yes
+  h  tile=mtrail
+  i  tile=tall_grass
+  j  object=stonewall_i
+  k  npc=chica id=t2 face=W trainer=chica_r9a range=3 text=tr.chica_r9a.pre after=tr.chica_r9a.after
+  l  npc=explorador id=t1 face=S trainer=explorador_r9a range=3 text=tr.explorador_r9a.pre after=tr.explorador_r9a.after
+  m  tile=mtrail
+  n  npc=montanista id=t4 face=E trainer=montanista_r9 range=3 text=tr.montanista_r9.pre after=tr.montanista_r9.after
+  o  item=antidote
+  p  object=sign text=ruta9.sign interact=look
+  q  npc=explorador id=t5 face=S trainer=explorador_r9b range=3 text=tr.explorador_r9b.pre after=tr.explorador_r9b.after
+  r  tile=mtrail
+  s  npc=mecanico id=t6 face=N trainer=mecanico_r9 range=3 text=tr.mecanico_r9.pre after=tr.mecanico_r9.after
+  t  tile=grass item=disc_33
+  H  tile=grass hidden=vigor_drop   # F2 (contract 74): a hidden item
+@grid
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  a.b....b....c.d.e..................a
+  a.b.f..g.hhhhhhhhhhhhhh...iiiii....a
+  a.b....b.hhhhhhhhhhhhhh...iiiii....a
+  a.jjjjjj.hh.k........hh...iiiii.e..a
+  a....l...hh..jjjjjj..hh...iiiii....a
+  mhhhhhhhhhh..........hh............a
+  mhhhhhhhhhh........n.hhe......o..cpa
+  aH...........b.iiiii.hh.jjjjjjj....a
+  a..iiiii...c.b.iiiii.hh...q........a
+  a..iiiii.....b.iiiii.hhhhhhhhhhhhhhr
+  a..iiiii.....b.iiiii.hhhhhhhhhhhhhhr
+  a............te.....c..........s...a
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+@warp m -> ciudad_marea spawn=east
+@warp r -> ruta_10 spawn=west

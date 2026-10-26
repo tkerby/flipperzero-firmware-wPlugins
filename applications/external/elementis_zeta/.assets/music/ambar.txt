@@ -1,0 +1,30 @@
+title Ambar - the seaside town at the edge of the savanna: a relaxed calypso on marimba in A major (a 3+3+2 tune that lilts on the chords A, D, E), a woodblock tock, a shaker whisper on the off-beats and a lazy answer in the second half
+tempo 100
+vol 235
+meter 4/4
+inst mar dec=6 sus=0.06 slow
+inst marl dec=9 sus=0.1 lvl=0.9 slow
+inst shk drum=c8 noise=30 seed=3 v=90,60,40 d=0,0,0
+inst tock drum=g6 v=200,110 d=0,-30
+l8
+@mar
+# --- A: the tune (A, D, E, A): the 3+3+2 call
+o5 e4. e4. c+4 |
+o5 f+4. f+4. d4 |
+o5 g+4. g+4. e4 |
+o5 c+4 e4 a2 |
+# --- A answered a step higher (F# minor, D, E7, A)
+o5 a4. a4. f+4 |
+o5 a4. a4. >d4< |
+o5 g+4 b4 >e4 d4< |
+o5 a4.!shk e4. !tock4 |
+# --- B: the lazy answer, a lilt that climbs the chord and rests between (D, A, E, A)
+@marl
+o5 d8 f+8 a8 r8 f+8 d8 !shk4 |
+o5 c+8 e8 a8 r8 e8 c+8 !shk4 |
+o5 b8 g+8 e8 r8 g+8 b8 !shk4 |
+o5 a8 e8 c+8 e8 a2 |
+o5 d8 f+8 a8 >d8< a8 f+8 d4 |
+o5 c+8 f+8 a8 >c+8< a8 f+8 c+4 |
+o5 b8 g+8 e8 d8 e4 g+4 |
+@mar o5 a2. !tock4 |

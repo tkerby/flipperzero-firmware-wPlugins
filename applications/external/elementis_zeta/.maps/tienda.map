@@ -1,0 +1,54 @@
+# Tienda de Ciudad Nodo (interior, Mart): the shopkeeper behind the counter. First visit = the parcel errand (
+# Parcel): he hands over the parcel for Profesora Lin (give_item parcel, flag parcel_given); the shop stays closed to you until Lin
+# has it (flag parcel_delivered, set in villa_lab.map); then `shop ciudad_nodo` (assets/data/shops.toml). column = i, row = j.
+@map tienda
+@size 9 7
+@interior yes
+@bg 3
+@fill floor_wood
+@spawn door 4 5 N
+@flag parcel_given 40
+@flag parcel_delivered 41
+@legend
+  .  tile=floor_wood
+  C  tile=none object=wall_corner
+  w  tile=none object=wall_j
+  y  tile=none object=wall_win_j
+  |  tile=none object=wall_i
+  q  tile=none object=wall_win_i
+  K  object=counter
+  E  object=shelf
+  V  npc=tendero id=clerk face=SW script=clerk
+  m  tile=mat
+@grid
+  Cwywwwyww
+  |.EEE.EE.
+  |...V....
+  |.KKK....
+  |.......E
+  |........
+  |...mm...
+@warp m -> ciudad_nodo spawn=tienda_door
+@script clerk npc
+    jf parcel_delivered open
+    jf parcel_given wait
+    ask nodo.shop.ask
+    jv 0 1 yes
+    say nodo.shop.no
+    end
+  yes:
+    give_item parcel 1
+    jv 0 0 full
+    say nodo.shop.got
+    setf parcel_given
+    say nodo.shop.thanks
+    end
+  full:
+    say gl.found.full
+    end
+  wait:
+    say nodo.shop.wait
+    end
+  open:
+    shop ciudad_nodo
+@end

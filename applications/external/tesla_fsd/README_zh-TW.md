@@ -7,7 +7,7 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/hypery11/flipper-tesla-fsd?style=flat-square&logo=github)](https://github.com/hypery11/flipper-tesla-fsd/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/hypery11/flipper-tesla-fsd?style=flat-square&logo=github)](https://github.com/hypery11/flipper-tesla-fsd/network)
-[![GitHub release](https://img.shields.io/github/v/release/hypery11/flipper-tesla-fsd?style=flat-square&logo=github)](https://github.com/hypery11/flipper-tesla-fsd/releases)
+[![GitHub release](https://img.shields.io/github/v/release/hypery11/flipper-tesla-fsd?include_prereleases&style=flat-square&logo=github)](https://github.com/hypery11/flipper-tesla-fsd/releases)
 [![Downloads](https://img.shields.io/github/downloads/hypery11/flipper-tesla-fsd/total?style=flat-square&logo=github)](https://github.com/hypery11/flipper-tesla-fsd/releases)
 [![Last commit](https://img.shields.io/github/last-commit/hypery11/flipper-tesla-fsd?style=flat-square&logo=github)](https://github.com/hypery11/flipper-tesla-fsd/commits/main)
 [![Open issues](https://img.shields.io/github/issues/hypery11/flipper-tesla-fsd?style=flat-square&logo=github)](https://github.com/hypery11/flipper-tesla-fsd/issues)
@@ -15,7 +15,6 @@
 [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue?style=flat-square)](LICENSE)
 [![Build](https://img.shields.io/badge/build-ufbt-brightgreen?style=flat-square)](https://github.com/flipperdevices/flipperzero-ufbt)
 [![Flipper target](https://img.shields.io/badge/Flipper%20target-7%20%2F%20API%2087.1-orange?style=flat-square)](https://github.com/flipperdevices/flipperzero-firmware)
-[![Tracked on FSD CAN Mod Hub](https://img.shields.io/badge/tracked%20on-FSD%20CAN%20Mod%20Hub-orange?style=flat-square)](https://fsdcanmod.com/project/hypery11-flipper-zero)
 
 > **開源 Tesla CAN bus 工具組，支援 Flipper Zero 與 ESP32。** FSD 區域鎖繞過、給 VIN 被封禁車輛的 TLSSC Restore、帶擬真扭力變化的 nag killer、GTW Config Replay、BMS 即時儀表板，以及橫跨 Model 3、Model Y、Model S、Model X 的 30+ 個 CAN handler。支援 HW3、HW4 與 Legacy HW1/HW2。$200+ 的 S3XY Commander 的免費替代方案 — 搭配 [ESP32 移植版](https://github.com/hypery11/flipper-tesla-fsd/tree/main/esp32) 總成本最低只要 **$14**。
 
@@ -51,11 +50,11 @@
 ## 功能
 
 ### 核心 FSD
-- 從 `GTW_carConfig`（`0x398`）自動偵測 HW3/HW4；當所接的匯流排上沒有 `0x398` 時，改用 `0x3FD`/`0x399`/`0x3EE` 備援偵測
+- 從 `GTW_carConfig`（`0x398`）自動偵測 HW3/HW4；當所接的匯流排上沒有 `0x398` 時，ESP32 改用 `0x39B`/`0x399`/`0x3FD`/`0x3EE` 備援偵測
 - **Legacy→HW3 自動升級**（Palladium Model S/X）— 先偵測到 `das_hw=0`，之後當 `0x3FD` 出現在匯流排上時升級
 - 透過修改 `UI_autopilotControl`（`0x3FD` / `0x3EE`）的 bit 來解鎖 FSD
 - **Legacy 模式**，支援 HW1/HW2（Model S/X 2016-2019）
-- 速度檔位預設最快，並從跟車距離撥桿同步
+- 速度檔位預設最快，並從跟車距離撥桿同步（HW4 / Legacy）。HW3 上保留車輛自己的 FSD 速度偏移和檔位；ESP32 的 **HW3 Speed Override** 開關可恢復舊的跟車距離 / Autopilot 偏移寫入（[#209](https://github.com/hypery11/flipper-tesla-fsd/issues/209)）
 
 ### TLSSC Restore（v2.10+）
 - 在 **VIN 被封禁** 的車輛上恢復交通號誌與停車標誌控制
@@ -72,10 +71,10 @@
 
 ### Nag Killer（v2.1+）
 - DAS 感知閘門 — 只在 DAS 真的要求手扶方向盤時才回應，DAS 滿足時零匯流排流量
-- 擬真扭力變化 — 在 1.00-2.40 Nm 之間用 xorshift32 PRNG 隨機漫步，每 5-9 秒有一次到 3.10-3.30 Nm 的握力脈衝
+- 擬真扭力變化 — 在 1.00-1.80 Nm 之間用 xorshift32 PRNG 隨機漫步，每 5-9 秒有一次握力脈衝。自 v2.16-beta.11 起所有 nag 路徑都有 ±1.8 Nm 上限，所以握力脈衝最高 1.80 Nm（[#122](https://github.com/hypery11/flipper-tesla-fsd/issues/122)）
 - **按需握力脈衝（v2.15+）** — 當 `handsOnLevel` 升到提醒需求狀態（0 即將 / 3 升級）時，立即發出一次握力脈衝並重置週期排程。補上 v2.14 及更早版本在排程脈衝之間可能出現的 2 秒黃色升級空窗
 - 在 `0x370` 做 EPAS counter+1 回應，並抑制 level 0（提醒即將出現）與 level 3（升級警報）
-- **請接 Party CAN（X179 pin 2/3）給 nag killer。** `0x370` 在 Party CAN — 不在 Vehicle CAN（9/10），而閘道器轉送的 Chassis 副本（13/14）會觸發 2026.14.x preflight。已在 HW4 2026.20 上以接 2/3 確認可用（[#100](https://github.com/hypery11/flipper-tesla-fsd/issues/100)）。接錯線對的單 CAN 板子沒有東西可回應 — 這是「nag killer 在 HW4 上沒反應」最常見的原因。用車上的 **Service Mode → CAN Port** 頁面確認你這條線束上哪一對是 Party；見 [HARDWARE.md](HARDWARE.md)。
+- **請接 Party CAN（X179 pin 2/3）給 nag killer。** `0x370` 在 Party CAN — 不在 Vehicle CAN（9/10），而 Chassis CAN 上的副本（部分線束的 13/14）會觸發 2026.14.x preflight。已在 HW4 2026.20 上以接 2/3 確認可用（[#100](https://github.com/hypery11/flipper-tesla-fsd/issues/100)）。接錯線對的單 CAN 板子沒有東西可回應 — 這是「nag killer 在 HW4 上沒反應」最常見的原因。對照車輛的線路圖（車上有 **Service Mode → CAN Port** 頁面的也可在那裡查看）確認你這條線束上哪一對是 Party；見 [HARDWARE.md](HARDWARE.md)。
 
 ### AP-First 模式（v2.14+，給 2026.14.x 韌體）
 - Tesla 2026.14.x 新增了 preflight 檢查，若 CAN 注入已在進行就擋下 AP/TACC 接管
@@ -87,27 +86,35 @@
 - 悲觀預設：大多數 14.x 韌體使用者要到自動轉向在行駛中脫離時才知道自己受影響。這個警告會在他們啟用任何 TX 功能之前先提醒到。
 - 可透過 **On 14.x?** 設定開關（Flipper）或橫幅上的 **Dismiss** 按鈕（ESP32，存在 NVS）退出。若你確定是 pre-14.x 韌體就可關閉。
 - 地區注意：執法強度因市場而異。部分地區（沒有 Tesla 直營的市場）似乎執法較不積極。14.x / 2026.20 的即時追蹤見 [#122](https://github.com/hypery11/flipper-tesla-fsd/issues/122)。
-- **「2026.14.x / .20 / .26.x 還能解鎖 FSD 嗎？」** 簡短答案：不行——啟用 preflight 加上鏈外區域鎖擋住了,但 nag killer / TLSSC / Summon EU / 擷取仍可用。完整說明見釘選的 [FSD-on-14.x FAQ (#168)](https://github.com/hypery11/flipper-tesla-fsd/discussions/168),frame 級證明見 [#163](https://github.com/hypery11/flipper-tesla-fsd/discussions/163)。
+- **「2026.14.x / .20 / .26.x 還能解鎖 FSD 嗎？」** 簡短答案：不行——啟用 preflight 加上鏈外區域鎖擋住了，但 nag killer / TLSSC / Summon EU / 擷取仍可用。完整說明見 [FSD-on-14.x FAQ (#168)](https://github.com/hypery11/flipper-tesla-fsd/discussions/168)，frame 級證明見 [#163](https://github.com/hypery11/flipper-tesla-fsd/discussions/163)。
 
 ### 診斷（唯讀，不需要 FSD）
-- BMS 即時儀表板：電池組電壓、電流、SoC、溫度範圍、**能耗（Wh/km）**
+- BMS 即時儀表板：電池組電壓、電流、SoC（`0x292` 的 BMS 數值，ESP32 另有 `0x33A` 的車上顯示數值）、溫度範圍
+- **效能面板（ESP32 網頁儀表板，唯讀，需手動開啟）：** 加速 / 煞車計時（0-50、0-60 mph、0-100、100-0 km/h，並記錄本次工作階段最佳成績）、估算縱向 G（由車速 dv/dt 得出，無 IMU）、輪胎滑移率、電池組溫度 / 功率。車速與估算 G 在任何有 `0x257` 的匯流排上都可用；輪胎滑移需要 Party CAN（`0x175`）；溫度與功率需要在 Vehicle CAN 上接到 BMS 幀。不發送任何內容
 - 車速、方向盤角度、馬達扭力、煞車狀態
 - DAS 狀態：autopilot 狀態、手扶提醒等級、變換車道狀態、盲點警示、FCW、視覺限速
 - GTW autopilot 層級回讀（NONE/HIGHWAY/ENHANCED/SELF_DRIVING/BASIC）
-- OTA 偵測含防抖 — 韌體更新期間自動暫停 TX，除非明確啟用 Ignore OTA 覆寫
+- OTA 偵測含防抖 — 韌體更新期間自動暫停 TX，除非明確啟用 Ignore OTA 覆寫。只有穩定的「安裝中」值才算數；新車的 `0x318` byte6 是循環計數器，不會再誤觸（[#183](https://github.com/hypery11/flipper-tesla-fsd/issues/183)）
+- 自動停車暫停 — 車子執行車內自動停車（Autopark）期間暫停所有 TX，結束後恢復；FSD 啟用中不受影響（[#180](https://github.com/hypery11/flipper-tesla-fsd/issues/180)）
 
 ### CAN Capture + 測試設定檔（v2.16+）
 - **CAN Capture** — 將每個收到的 frame 以 candump 格式錄到 SD 卡（`apps_data/tesla_mod/captures/`）。唯讀；在任何車上執行都安全。可餵給 `tools/tesla_crc_cracker.py`。
 - **Send Test** — 從 SD 卡載入使用者自訂的 `.cantest` 文字設定檔並重播你自己的 frame。預設為 dry-run；傳送硬性限制在 **停妥、靜止** 的車（fail-closed），且每個 frame 前都會重新檢查。結果會記錄以利回報 bug。格式與流程：[docs/cantest-format.md](docs/cantest-format.md)，範例：[examples/example.cantest](examples/example.cantest)。
 
 ### 額外解鎖（v2.16+，選用，預設關閉）
+
+目前只在 ESP32 儀表板上 — Flipper 選單還沒有這些開關，所以 Flipper 不會設 summon bit（bit47）。
+
 - **Summon EU Unlock** — `0x3FD` mux1：清掉 bit19（EU AP 限制）並設 bit47（summon-enable），在受 EU 限制的車上開放召喚（Summon）
 - **Continue on Green** — `0x3FD` mux0 bit39 `UI_fsdContinueOnGreenWithCIPV` — 在有前車的情況下，不用撥桿確認就通過綠燈；搭配 TLSSC 使用
 - **右駕（RHD）覆寫** — `0x3F8` bit41 `UI_drivingSide` = RHD。僅限右駕市場
 - **AP 分支／層級選擇器** — `0x3FD` mux1 bits 40-42 `UI_apmv3Branch`：Live / Stage / Dev / Stage2 / EAP / Demo。實驗性，非持久化的 UI 提示 — 停止注入後即還原
 - **可調 Track Mode** — `0x313` `UI_trackModeSettings`：操控平衡（Handling Balance）+ 穩定輔助（Stability Assist）+ 收車後冷卻，校驗和會重算。走 Vehicle 匯流排；預設為 rotation 100 / stability 30%，非 Performance 車型也可用
+- **加速模式（實驗性）** — `0x334` `UI_powertrainControl` 的 `UI_pedalMap`（byte0 bits 5-6）：Off（原樣轉送）/ Chill / Standard / Performance，寫進車輛自己的 frame，counter 保留、校驗和重算。新模式只在靜止時切換；切回 Off，或行駛中在中控螢幕上改了模式，會立刻回到原樣轉送。中控螢幕仍顯示你自己的設定。`0x334` 在 Vehicle 和 Chassis CAN 上，不在 OBD-II 的 Party CAN 上。只改踏板對應，不改驅動單元的額定功率。尚未實車驗證。點子來自 [ColinM-sys/tesla-can-boost](https://github.com/ColinM-sys/tesla-can-boost)（[#211](https://github.com/hypery11/flipper-tesla-fsd/issues/211)）
 
 ### 設定（執行時開關）
+
+大多數開關兩個版本都有。僅 Flipper：GTW Config Replay、Emerg. Vehicle、ScrollPress AP、Nav FSD Route、Lane Graph、Tier Override、Dev Mode、Hands-Off、Force LHD、MCP Crystal。僅 ESP32：FSD Unlock（`0x3FD` FSD bit 的總開關，預設關閉）、HW3 Speed Override、Ignore OTA、Abort Guard、Continuous AP、China Mode、右駕（RHD）、上面的額外解鎖，以及 Hardware 選擇器（Flipper 則在主選單用 Force HW3/HW4/Legacy）。
 
 **穩定（已上車測試）：**
 
@@ -134,7 +141,7 @@
 | **Lane Graph** | `0x3FD` mux1 bit45 | UI_showLaneGraph — 在非 FSD 層級顯示車道視覺化 |
 | **Tier Override** | `0x7FF` mux=2 | 強制 GTW_autopilot 為 SELF_DRIVING（比 GTW Config Replay 更激進 — 主動寫入而非重播） |
 | **Dev Mode** | `0x3F8` bit5 | UI_dasDeveloper 旗標 |
-| **右駕（RHD）** | `0x3F8` bit41 | `UI_drivingSide` = RHD（設 bit41、清 bit40 — 與舊的 LHD 探針互斥）。僅限右駕市場。誠實說明：先前的 Force-LHD 探針**實測無效** — 在被封禁的右駕 HW3 / 2026.2.6 上，值 0/1/2 都讓 FSD 停在 LHD 側（[#66](https://github.com/hypery11/flipper-tesla-fsd/issues/66)）；RHD 現在改以「請求的行駛方向」覆寫出貨 |
+| **右駕（RHD）** | `0x3F8` bit41 | `UI_drivingSide` = RHD（設 bit41、清 bit40 — 與舊的 LHD 探針互斥）。僅限右駕市場。誠實說明：先前的 Force-LHD 探針**實測無效** — 在被封禁的右駕 HW3 / 2026.2.6 上，值 0/1/2 都讓 FSD 停在 LHD 側（[#66](https://github.com/hypery11/flipper-tesla-fsd/issues/66)）；RHD 現在改以「請求的行駛方向」覆寫出貨（ESP32；Flipper 選單仍是舊的 Force LHD 開關） |
 | **Hands-Off** | `0x3F8` bit14 | UI 層的手扶停用（第二條 nag 向量） |
 | **Telemetry Off** | `0x3F8` bits 19/42/43/44/55 + `0x3FD` mux1 bits 48/50 | 清掉可觸及的遙測啟用旗標（0x3F8 上的 clip / trip / road-segment，0x3FD 上的座艙攝影機 / 中國）。實驗性 — **只涵蓋可觸及的旗標，不含 Vehicle 匯流排 ECU 日誌上傳，也不保證免於封禁。** 僅在拔掉 SIM 卡時使用 |
 
@@ -148,7 +155,9 @@
 | **Soft Engage** | Steer-jerk 緩解（[#108](https://github.com/hypery11/flipper-tesla-fsd/issues/108)）。把啟動邊緣的注入壓住，直到方向盤回到中心 ±5° 內。需要匯流排上有 `0x129`（方向盤角度）；沒有就退化成只有 AP-First。直路抽動已大致被 Abort Guard 取代。 |
 | **Nag Burst** | 以爆發／暫停方式回放 `0x370`（約 1 秒開 / 1.5 秒關），而非連續（[#122](https://github.com/hypery11/flipper-tesla-fsd/issues/122)）。休息期被認為是一些在野裝置能躲過更嚴格 14.x nag 偵測的原因。搭配 ±1.8 Nm 轉向扭力上限。 |
 | **EPAS-faithful（Mode-C）** | 模擬真實 EPAS 的 demand-state 扭力模型，不去翻 `handsOnLevel`（[#100](https://github.com/hypery11/flipper-tesla-fsd/issues/100)）。用於標準 nag 抑制會觸發 preflight 的車。**尚未上車確認。** |
-| **Signal Map**（ESP32 → 進階） | 自訂 nag 抑制讀取 AP-state／hands-on／方向盤的位置：`id + byte/shift/mask`（[#122](https://github.com/hypery11/flipper-tesla-fsd/issues/122)）。用於 `0x39B`/`0x399` 佈局不同的車型變體。有新鮮度閘門 — 設錯會 fail-closed。DAS id 留 `0` 為自動偵測。 |
+| **Instant Engage** | Steer-jerk／啟動延遲 A/B（[#108](https://github.com/hypery11/flipper-tesla-fsd/issues/108)、[#129](https://github.com/hypery11/flipper-tesla-fsd/issues/129)）。開啟 AP-First 時，AP 一接管（DAS 狀態 ≥ 3）就注入，不等 1 秒的穩定防抖。AP 只是可用（狀態 2）時仍會壓住。 |
+| **Minimal Inject** | 窄路 steer-jerk 探針（[#108](https://github.com/hypery11/flipper-tesla-fsd/issues/108)）。每次接管開始時只注入一小段（5 個 frame），之後停止直到車子脫離。可與 Instant Engage 疊加。 |
+| **Signal Map**（ESP32 → 進階） | 自訂 nag 抑制讀取 AP-state／hands-on／方向盤的位置：`id + byte/shift/mask`（[#122](https://github.com/hypery11/flipper-tesla-fsd/issues/122)）。用於 `0x39B`/`0x399` 佈局不同的車型變體。有新鮮度閘門 — 設錯會 fail-closed，且對應的 DAS id 一直沒出現在匯流排上時儀表板會警告。mask 為 `0` 的欄位會被忽略。DAS id 留 `0` 為自動偵測。Flipper 則是預設選單（Auto / `0x39B` b0 / `0x39B` b1 / `0x399` b0）。 |
 
 **硬體：**
 
@@ -162,8 +171,8 @@
 | Tesla HW | 修改的 Bits | 速度檔位 |
 |----------|------------|----------|
 | Legacy（HW1/HW2） | bit46 | 3 段（0-2） |
-| HW3 | bit46 | 3 段（0-2） |
-| HW4（FSD V14+） | bit46 + bit60、bit47 | 5 段（0-4） |
+| HW3 | bit46 | 車輛自己的（開啟 HW3 Speed Override 時 3 段） |
+| HW4（FSD V14+） | bit46 + bit60 | 5 段（0-4） |
 
 ---
 
@@ -179,7 +188,7 @@
 
 ### ESP32（$14 起）
 
-功能完整的 ESP32 移植版，內建 WiFi 網頁儀表板、NVS 設定保存、深度睡眠與出廠重設。與 Flipper app 相同的 CAN 邏輯。
+功能完整的 ESP32 移植版，內建 WiFi 網頁儀表板、NVS 設定保存、深度睡眠與出廠重設。核心 CAN 邏輯與 Flipper app 相同；少數開關只在其中一個版本上（見設定）。
 
 ESP32 韌體會依偵測到的硬體版本對應 AP/DAS 狀態來源：
 
@@ -194,14 +203,17 @@ ESP32 韌體會依偵測到的硬體版本對應 AP/DAS 狀態來源：
 | M5Stack ATOM Lite + ATOMIC CAN | ~$14 | `m5stack-atom` |
 | Lilygo T-CAN485 | ~$15 | `esp32-lilygo` |
 | Waveshare ESP32-S3-RS485-CAN | ~$18 | `waveshare-s3-can` |
+| LilyGO TTGO T-Display + MCP2515 | ~$20 | `ttgo-tdisplay` |
+| LilyGO T-2CAN（雙 CAN） | ~$24 | `lilygo-t2can` |
+| LilyGO T-2CAN FD（雙 CAN，MCP2518FD） | ~$25 | `lilygo-t2can-fd` |
 | 通用 ESP32 + MCP2515 | ~$6 | `esp32-mcp2515` |
 
 設定見 [`esp32/README.md`](https://github.com/hypery11/flipper-tesla-fsd/tree/main/esp32)，完整對照＋接線圖＋X179 針腳見 [`HARDWARE.md`](HARDWARE.md)。
 
 ### 接點
 
-- **OBD-II**（方向盤柱下方）— Party CAN。部分 Model 3/Y 車款在 Drive 檔可能靜默。
-- **X179**（副駕駛座腳踢板後方）— 建議使用。Pin 13/14 = Bus 6（混合轉送，在所有模式下都保持活動）。20-pin 與 26-pin 針腳見 [`HARDWARE.md`](HARDWARE.md)。
+- **OBD-II** — Party CAN。2019+ Model 3／2020 至 2024 年 4 月的 Model Y 位於後中控台區域，需要 Tesla 專用轉接線；2024+ Juniper／較新的 Highland 在那裡改用 DoIP（乙太網路），不是 CAN。部分 Model 3/Y 車款在 Drive 檔可能靜默。
+- **X179**（後中控台後方）— 建議使用。針腳與匯流排的對應依線束而異，接線前請先對照車輛的線路圖（車上有 **Service Mode → CAN Port** 頁面的也可在那裡查看）。20-pin 與 26-pin 針腳以及 Tesla 電路參考資料的連結見 [`HARDWARE.md`](HARDWARE.md)。
 
 <p align="center">
   <img src="images/wiring_diagram.png" alt="接線圖" width="700">
@@ -216,7 +228,10 @@ ESP32 韌體會依偵測到的硬體版本對應 AP/DAS 狀態來源：
 第一次接觸、不太懂技術？選你的硬體 — 兩條路徑都不用命令列：
 
 **Flipper Zero**
-1. 打開 [Releases](https://github.com/hypery11/flipper-tesla-fsd/releases)，從最新版本下載 `tesla_mod.fap`。
+
+最簡單的方式是 Flipper 官方應用程式目錄：在 Flipper 手機 app 裡打開 **Apps** 搜尋 **Tesla Mod**，或從 [lab.flipper.net/apps/tesla_mod](https://lab.flipper.net/apps/tesla_mod) 安裝。目錄裡的版本跟著穩定版發布，可能落後於測試版；想用測試版，請自己複製 Releases 裡的 `.fap`：
+
+1. 打開 [Releases](https://github.com/hypery11/flipper-tesla-fsd/releases)，下載你要的版本的 `tesla_mod.fap`（測試版標示為 Pre-release）。
 2. 接上 Flipper，打開 [qFlipper](https://flipperzero.one/update)（官方桌面 app）。
 3. 把 `tesla_mod.fap` 複製到 SD 卡的 `apps/GPIO/`。
 4. 在 Flipper 上：**Apps → GPIO → Tesla Mod**。
@@ -250,7 +265,7 @@ ufbt
 ```bash
 git clone https://github.com/hypery11/flipper-tesla-fsd.git
 cd flipper-tesla-fsd/esp32
-pio run -e m5stack-atom    # 或：esp32-lilygo、waveshare-s3-can、esp32-mcp2515
+pio run -e m5stack-atom    # 或：esp32-lilygo、waveshare-s3-can、esp32-mcp2515、ttgo-tdisplay、lilygo-t2can、lilygo-t2can-fd
 ```
 
 ---
@@ -258,9 +273,9 @@ pio run -e m5stack-atom    # 或：esp32-lilygo、waveshare-s3-can、esp32-mcp25
 ## 使用方式
 
 1. 把 CAN Add-On 插上 Flipper Zero（或燒錄 ESP32）
-2. 用 CAN-H/CAN-L 透過 OBD-II 或 X179 pin 13/14 接到車輛
+2. 用 CAN-H/CAN-L 透過 OBD-II 或 X179 接到車輛（X179 哪幾腳是哪條匯流排，看車輛的線路圖；車上有 Service Mode → CAN Port 的也可在那裡查看）
 3. 開啟 app：`Apps > GPIO > Tesla Mod`
-4. 選 **「Auto Detect & Start」**（或手動 Force HW3/HW4）
+4. 選 **「Auto Detect & Start」**（或手動 Force HW3/HW4/Legacy）
 5. 等待偵測（最多 8 秒）— Palladium S/X 會自動從 Legacy 升級到 HW3
 6. 當車上啟用 TLSSC 開關時，app 就會自動開始修改 frame
 
@@ -305,7 +320,6 @@ pio run -e m5stack-atom    # 或：esp32-lilygo、waveshare-s3-can、esp32-mcp25
 |--------|------|------|------|
 | `0x331` | `DAS_autopilotConfig` | TX | TLSSC Restore — 將層級設為 SELF_DRIVING |
 | `0x370` | `EPAS3P_sysStatus` | TX | Nag killer — counter+1 回應帶擬真扭力 |
-| `0x399` | `ISA_speedLimit` / `DAS_status` | TX/RX | ESP32 依 HW 而定：Legacy/HW3 在此讀 DAS 狀態；HW4 用於 ISA 限速提示音抑制 |
 | `0x3FD` | `UI_autopilotControl` | TX | FSD 解鎖 — bit46/60（HW3/HW4）、TLSSC bit38、lane graph bit45 |
 | `0x3F8` | `UI_driverAssistControl` | TX | Nav FSD route、hands-off、dev mode、RHD 行駛方向（bit41）、telemetry-off（beta） |
 | `0x3EE` | `UI_autopilotControl` | TX | FSD 解鎖 — Legacy HW1/HW2 |
@@ -313,16 +327,17 @@ pio run -e m5stack-atom    # 或：esp32-lilygo、waveshare-s3-can、esp32-mcp25
 | `0x7FF` | `GTW_carConfig` | TX | GTW Config Replay + 主動層級覆寫 |
 | `0x082` | `UI_tripPlanning` | TX | 電池預熱觸發 |
 | `0x313` | `UI_trackModeSettings` | TX | Track Mode — 操控平衡／穩定／冷卻（校驗和重算；Vehicle 匯流排） |
+| `0x334` | `UI_powertrainControl` | TX | 加速模式 — `UI_pedalMap` byte0 bits 5-6，只在靜止時設定（校驗和重算、counter 保留；Vehicle / Chassis 匯流排） |
 | `0x398` | `GTW_carConfig` | RX | HW 版本偵測 |
 | `0x318` | `GTW_carState` | RX | OTA 偵測（自動暫停 TX） |
-| `0x399` | `DAS_status`（HW3/Legacy）/ `ISA_speedLimit`（HW4） | RX/TX | 依 HW 分派：pre-Highland HW3 讀為 DAS_status（AP 狀態＋手扶）；HW4 保留提示音抑制寫入路徑 |
-| `0x39B` | `DAS_status` | RX | HW4 + Highland HW3 — AP 狀態（給 AP-First）、nag 等級、變換車道、盲點 |
+| `0x399` | `DAS_status`（HW3/Legacy）/ `ISA_speedLimit`（HW4） | RX/TX | 依 HW 分派，兩個 app 相同：pre-Highland HW3 與 Legacy 讀為 DAS_status（AP 狀態＋手扶）；HW4 用於 Suppress Chime 改寫，車子沒有送 `0x39B` 時也從這裡讀手扶等級 |
+| `0x39B` | `DAS_status` | RX | HW4 + Highland HW3 — AP 狀態（byte0 低 4 位，給 AP-First）、自動停車旗標（Autopark 暫停）、nag 等級、變換車道、盲點 |
 | `0x132` | `BMS_hvBusStatus` | RX | 電池組電壓／電流 |
-| `0x292` | `BMS_socStatus` | RX | 充電狀態 |
-| `0x312` | `BMS_thermalStatus` | RX | 電池溫度 |
-| `0x33A` | `UI_ratedConsumption` | RX | 能耗（Wh/km） |
+| `0x292` | `BMS_socStatus` | RX | 充電狀態：`BMS_socUI`（bit 10，0.1 %），BMS 給顯示用的數值；兩個 app 都讀這個 |
+| `0x312` | `BMS_thermalStatus` | RX | 電池溫度（部分車型的欄位位置未確認，不合理的讀數會隱藏） |
+| `0x33A` | `UI_range` | RX | 車上螢幕顯示的電量（ESP32 電池卡片） |
 
-完整 42 個 handler 清單（18 TX、24 RX）見 [`fsd_logic/fsd_handler.h`](fsd_logic/fsd_handler.h)。
+完整 40 個 handler 清單（17 TX、23 RX）見 [`fsd_logic/fsd_handler.h`](fsd_logic/fsd_handler.h)。
 
 ---
 
@@ -338,13 +353,10 @@ FSD 功能（TLSSC、交通號誌／停車標誌控制）需要來自 Tesla 的 
 Tesla 自 2026 年 4 月起在伺服器端封禁 VIN。封禁會把 `GTW_autopilot` 層級從 SELF_DRIVING 降到 ENHANCED，並移除 TLSSC 開關。**TLSSC Restore** 功能（0x331）可在 Palladium 與 HW4 上恢復停車標誌／交通號誌控制。完整研究見 [issue #18](https://github.com/hypery11/flipper-tesla-fsd/issues/18)。**GTW Config Replay**（0x7FF，前稱「Ban Shield」）可即時重播先前學到的健康設定，但只在 CAN 廣播層 — 不會還原底層的 NVRAM 或伺服器端狀態。
 
 **Flipper Zero vs ESP32 — 該買哪個？**
-ESP32 更便宜（$14 vs $200+），有 WiFi 儀表板、NVS 保存與深度睡眠。Flipper 更便攜，且有內建螢幕。兩者跑相同的 CAN 邏輯。如果你還沒有 Flipper，選 ESP32。
+ESP32 更便宜（$14 vs $200+），有 WiFi 儀表板、NVS 保存與深度睡眠。Flipper 更便攜，且有內建螢幕。兩者跑相同的核心 CAN 邏輯（少數開關只在其中一個版本上，見設定）。如果你還沒有 Flipper，選 ESP32。
 
 **支援 Model S / Model X 嗎？**
 支援。Palladium S/X（2021+）已確認可用 TLSSC Restore。2021 前、做了 HW3 retrofit 的 S/X 透過 Legacy→HW3 自動升級可用。HW1/HW2 Model S/X 走 Legacy 模式（`0x3EE`）。Model S/X 使用不同的 BMS CAN ID — BMS 儀表板可能顯示錯誤數值。
-
-**這會不會把車搞壞（brick）？**
-只動 UI 設定 frame。不會寫入煞車、轉向或動力系統。App 預設以 Listen-Only 模式開機。完整 TX 面清單見 [SECURITY.md](SECURITY.md)。
 
 **一定要 Flipper CAN Add-On 嗎？**
 給 Flipper：是的，任何 MCP2515 模組（Electronic Cats、通用板子）都行。給 ESP32：多數支援的板子有內建 CAN 收發器（M5Stack ATOMIC CAN、Lilygo T-CAN485、Waveshare S3）。
@@ -355,7 +367,7 @@ ESP32 更便宜（$14 vs $200+），有 WiFi 儀表板、NVS 保存與深度睡�
 
 | 專案 | 是什麼 | 硬體 |
 |------|--------|------|
-| [ev-open-can-tools](https://github.com/ev-open-can-tools/ev-open-can-tools) | 上游社群專案。開發活動在 GitHub 上（v3.0.x，GPL-3.0）。前身是 GitLab 上的 `Tesla-OPEN-CAN-MOD`；該群組已改名為 `ev-open-can-tools`，GitLab repo 現已停擺（0 個開啟中的 issue/MR，最後一次 commit 2026-04-25）— 請追蹤 GitHub repo。 | RP2040 CAN、Feather M4、ESP32 |
+| [ev-open-can-tools](https://github.com/ev-open-can-tools/ev-open-can-tools) | 上游社群專案。開發活動在 GitHub 上（穩定版 v3.1.x，v4.0 測試中，GPL-3.0）。前身是 GitLab 上的 `Tesla-OPEN-CAN-MOD`；該群組已改名為 `ev-open-can-tools`，GitLab repo 現已停擺（0 個開啟中的 issue/MR，最後一次 commit 2026-04-25）— 請追蹤 GitHub repo。 | RP2040 CAN、Feather M4、ESP32 |
 | [dzid26/ESP32-DualCAN](https://github.com/dzid26/ESP32-DualCAN) | 「Dorky Commander」— S3XY Commander 的開源硬體替代品 | ESP32 + dual CAN |
 | [tuncasoftbildik/tesla-can-mod](https://github.com/tuncasoftbildik/tesla-can-mod) | Arduino 參考實作，附 frame template | Arduino + MCP2515 |
 | [tumik/S3XY-candump](https://github.com/tumik/S3XY-candump) | 透過 S3XY Commander（Panda 協議）的 Python CAN dump 工具 | Commander dongle |
@@ -365,8 +377,8 @@ ESP32 更便宜（$14 vs $200+），有 WiFi 儀表板、NVS 保存與深度睡�
 - [commaai/opendbc](https://github.com/commaai/opendbc) — Tesla CAN 訊號資料庫
 - [ElectronicCats/flipper-MCP2515-CANBUS](https://github.com/ElectronicCats/flipper-MCP2515-CANBUS) — Flipper 用 MCP2515 驅動
 - 社群貢獻者 — 本專案賴以運作的實車測試、擷取與研究：
-  - **協議、nag killer 與 2026.14.x：** @jewelrylin（T-2CAN 雙匯流排擷取、frame-content preflight 測試、X179 Service Mode 針腳圖）、@DrStrangeglovebox（`0x370` 參考擷取 + HW4 雙 CAN 資料 + 安全發現）、@ssw0209-sys（Mode-C 轉向扭力參考 + HW4 14.x 測試）、@0xAccretion（HW4 Highland 中規 MIC DAS 佈局發現，#116/#117）、@dunckencn（國行 HW3 start-after-AP 驗證、steer-jerk 與 bus-off 回報）、@kristopf007（HW4 14.x 實車測試）
-  - **功能、擷取與 PR：** @JakNo（ScrollPress AP / `0x3C2`）、@vrs11（Continuous AP）、@sqladm1n（RTC 擷取日誌 PR + 匯流排/接線排查）、@DmitroPanteliuk（全速率 `0x229` 擷取）、@se7en7777777（`0x485` / Highland / 校驗和分析）、@RoyRakete（TLSSC 封禁車組合）、@mamixsystem（post-SOP10 連接器參考;frame 級 14.x FSD-engage 決定性調查，#163）、@p0sixturtle（Summon / tier-selector 線索，#139）、@dahua910（RHD 需求，#66）、@HamzaObaidat（劇院模式 `0x118` 研究，#149）、@fboulegue（EU / 新線束 Juniper 回報，#143/#109/#110）、@densen2014（ESP32 HW 選擇器建議 #110、TLSSC bit38 開關 PR #159、Summon 行駛中安全防護建議 #160）
+  - **協議、nag killer 與 2026.14.x：** @jewelrylin（T-2CAN 雙匯流排擷取、frame-content preflight 測試、X179 Service Mode 針腳圖）、@DrStrangeglovebox（`0x370` 參考擷取 + HW4 雙 CAN 資料 + 安全發現）、@ssw0209-sys（Mode-C 轉向扭力參考 + HW4 14.x 測試）、@0xAccretion（HW4 Highland 中規 MIC DAS 佈局發現，#116/#117）、@dunckencn（國行 HW3 start-after-AP 驗證、steer-jerk 與 bus-off 回報）、@kristopf007（HW4 14.x 實車測試）、@anoblekman（Highland HW4 DAS 解碼 + 車內自動停車安全發現，#177/#180）、@SkyRaax（在 Party CAN 2/3 上跑 nag killer，HW4 2026.20，#100）、@LonelyCheese09（有標註的 HW3 2026.14.6 nag 擷取，促成 EPAS-faithful 修正，#122）、@jim608（有標註的 HW3 2026.14.6 nag 擷取，促成 EPAS-faithful 修正，#121/#122）、@weigibbor（2026.20 中規 MIC 擷取 + 區域鎖層級 TX 測試，#117）、@7hf6cfqzkb-png（啟動延遲回報，促成 Instant Engage，#129）、@cquanu（第一個 2026.14.2 不相容回報，#52）、@deftdawg（按需握力脈衝的測試與整合，#70；TTGO T-Display 測試回報）、@zdenekbouresh（DAS 感知 nag 閘門，移植自 ev-open-can-tools PR #5）
+  - **功能、擷取與 PR：** @JakNo（ScrollPress AP / `0x3C2`）、@vrs11（Continuous AP；T-2CAN 多 ID 擷取過濾，#210）、@sqladm1n（RTC 擷取日誌 PR + 匯流排/接線排查）、@DmitroPanteliuk（全速率 `0x229` 擷取）、@se7en7777777（`0x485` / Highland / 校驗和分析）、@RoyRakete（TLSSC 封禁車組合）、@mamixsystem（post-SOP10 連接器參考；frame 級 14.x FSD-engage 決定性調查，#163）、@p0sixturtle（Summon / tier-selector 線索，#139）、@dahua910（RHD 需求，#66）、@HamzaObaidat（劇院模式 `0x118` 研究，#149）、@fboulegue（EU / 新線束 Juniper 回報，#143/#109/#110）、@densen2014（ESP32 HW 選擇器建議 #110、TLSSC bit38 開關 PR #159、Summon 行駛中安全防護建議 #160）、@Tesla234987234sdf（Palladium OTA 誤鎖回報 + 擷取，#183/#175；`0x25D` 歐規充電埠類型的發現與實車驗證，#228）、@tommybsb-lab（ATOM Lite / Juniper 實測回報，促成 Signal Map 修正，#100）、@sb1089（HW3 2026.26 nag 擷取，#122）、@ukinora（獨立的 `0x318` 循環計數器分析；來自其 fork 的 `0x3C2` 匯流排提示、`canstat`、12 V／重啟原因判斷邏輯、TPMS 基礎、`0x33A` 車上 SOC 解碼、車速 SNA 防護、時鐘回繞修正、電源記錄修正寫入與按時間分段的黑盒子儲存，#218/#237/#251）、@adrianpadure99（網頁燒錄器「can't fetch」回報，#176）、@danpadure（市區 Autopark 暫停誤觸回報，以及找出 `0x129` 轉向角與走走停停 Autopark 問題的黑盒子紀錄，#176；HW3 FSD 速度偏移回報，#209）、@Jclevy-CN（HW4 speed profile 清掉 bit 63 的 bug + 實車 A/B，#59；ESP32 強化構想來自其 fork）、@siksndavis（ESP32 缺少 Precondition 開關的回報，#192）、@maslyankov（M5Stack ATOM Matrix + GPIO 39 按鈕，PR #46）、@BenjaminFaal（Juniper 上的 `0x485` 換檔 frame，#43）、@jangshik（ESP32 Wi-Fi AP+STA 需求 #101、T-2CAN 設定 #96）、@TzCoMe（Telemetry Off 背後的遙測關閉研究）、@0n3-70uch（用示波器量出 2024 年 4 月後 26-pin 接頭的針腳，#52）、@TianzeWang（Tesla SOP8/SOP9 電路參考資料，#52）、@Tikernel（Model Y Juniper HW4 2026.2.11 中國正向相容性資料）、@LeeSSXX（Momentum / Xtreme 編譯錯誤回報，#17）、@nobless（Acceleration Mode 需求，#211；captive portal 回報 + fork 可靠性線索，#218/#219；beta.38 儀表板 / Wi-Fi 回歸問題回報，以及在 T-2CAN 上用 macOS 與 iOS 確認 beta.40，#223/#225；2024-07 Fremont Model Y 18/19 擷取，以及促成 `0x129` 轉向角修正的日誌與黑盒子紀錄，#211；TPMS、hostname、CAN Bus 卡片與電池相關需求，#237/#225/#251–#254；提供 T-2CAN FD 板並完成第一次 FD 測試，#206；拍下車上胎壓畫面，確定了 TPMS 的車輪順序，#237）、@olschmalz-cyber（beta.38 Wi-Fi 反覆斷線回報、用四台裝置測試確認問題出在板子上，並在兩塊板子上確認 beta.40 修復，#230）、@pirozhkov095-ctrl（修復後第一筆實機 stack／heap 讀數，#230）、@vanyasvl（最早的 Boost 需求，#63）、@ColinM-sys（tesla-can-boost，Acceleration Mode 的 pedal map 構想來源）、@i520e3e4（zh-Hans + zh-Hant 網頁儀表板翻譯，#205；T-2CAN FD 需求，#206）、@mxkr303（2020 Model 3 SOP4 X120 Party CAN 接線記錄，#191）
   - **封禁研究、平台測試、ESP32、bug 修復：** @THER4iN、@MiniCS、@kp43h8、@gauner1986、@dmagyar、@ViPiMP、@marcobellinoroci-source、@danpadure、@bruvv、@Symness、@hkloudou、@nagotti、@patatman、@JordanzhaoD
 - `Starmixcraft/tesla-fsd-can-mod` — 原始 CanFeather FSD 研究（GitLab repo 已被移除；鏡像在 [Karolynaz/waymo-fsd-can-mod](https://github.com/Karolynaz/waymo-fsd-can-mod)）
 

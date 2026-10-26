@@ -1,0 +1,91 @@
+# Senda de Campeones, floor 3 (C9, contract 56), 28 x 22, a cave. The ladder from floor 2 arrives in the SW hall (ladder (3,19), spawn from_2); the boulder (5,17) is pushed east along row 17 into the pit (12,17)
+# (7 pushes); that opens the GATE OF ROCKS (13,2) in the exit corridor (the step trigger (13,3)); the exit (13,0) leads to the Meseta Cumbre. The route goes round: the east hall (20..26,12..20), the corridor north (23,9..11) into IGNICONDOR'S
+# chamber (22..26,2..8: the legend, L50, `legend=ignicondor`), then west through the connector (20..21,6) into the north hall and the exit corridor. Three trainers.
+@map senda_3
+@size 28 22
+@interior no
+@cave yes
+@area senda_campeones
+@bg 0
+@fill rockg
+@spawn from_2 4 19 E
+@spawn north 13 1 S
+@flag ignicondor_gone 912                 # Ignicondor was beaten or caught (the legend NPC's hide flag; Run keeps it)
+@flag senda_pit3 908                  # the pit of floor 3 (a boulder filled it)
+@flag senda3_open 911                  # the gate of floor 3 opened (set by the step trigger once the pit is filled)
+@flag beaten_elite_s3a 921
+@flag beaten_karateka_s3b 922
+@flag beaten_elite_s3c 923
+@encounters grass rate=14
+  tuskid 40 44 5
+  tuskmash 43 46 15
+  cragodile 40 44 10
+  echowing 42 46 20
+  rockroll 42 46 5
+  dashmark 43 46 10
+  bouldrum 44 47 25
+  kickaroo 42 45 10
+@end
+# Open ground (contract 63, wild zone): a step onto plain ground (not tall grass, water, a door, a ledge, an arrow floor) rolls this table when rand8 < 8 (8/256 per step).
+@open_rate 8
+# Roaming wild creatures (contract 55, rollout in 63): 3 creatures of this table wander the whole walkable floor (grass included); touching one starts that wild battle.
+@roam 3 table=grass area=,. period=1800
+@legend
+  .  tile=rockg
+  ,  tile=rockf
+  W  tile=none object=swall
+  r  tile=none object=srubble
+  _  tile=none
+  f  tile=rockg object=torch
+  a  tile=rockg object=stalag_a
+  b  tile=rockg boulder=yes
+  h  tile=rockg hole=senda_pit3
+  G  tile=rockg npc=rock_gate id=gate3 face=S solid=yes gate=yes hide_flag=senda3_open text=sd.gate
+  t  tile=rockf interact=step script=gate3_check
+  L  tile=rockf door=rope_ladder
+  n  tile=rockf
+  i  item=prime_salve
+  j  item=ultra_cristal
+  k  item=ward_spray
+  l  item=vit_spc
+  A  tile=rockg npc=elite_s id=elite_s3a face=NE trainer=elite_s3a range=3 text=tr.elite_s3a.pre after=tr.elite_s3a.after beaten_flag=beaten_elite_s3a
+  B  tile=rockg npc=karateka_s id=karateka_s3b face=NW trainer=karateka_s3b range=3 text=tr.karateka_s3b.pre after=tr.karateka_s3b.after beaten_flag=beaten_karateka_s3b
+  C  tile=rockg npc=elite_s id=elite_s3c face=NE trainer=elite_s3c range=3 text=tr.elite_s3c.pre after=tr.elite_s3c.after beaten_flag=beaten_elite_s3c
+  Z  tile=rockf legend=ignicondor level=50 npc=ignicondor_ow face=SW hide_flag=ignicondor_gone
+  c  tile=rockg item=disc_47
+  H  tile=rockg hidden=growth_seed   # hidden (contract 80, hidden items)
+@grid
+  ____________Wnr_____________
+  ____________W,r______WWWWWW_
+  ____________WGr______W.....r
+  _______WWWWWWtWWWWWW_W.....r
+  _______Wf..........frW..Z..r
+  _______W.j..........WW.....r
+  _______W...................r
+  _______W............rW.....r
+  _______W.....C..A...rWf....r
+  _______W............r_W.rrr_
+  _______W..a.........r_W.r___
+  ________rrrrrrrrrrrWWWW.WWW_
+  ___________________Wf....cfr
+  __WWWWWWWWW________W.......r
+  __Wfi.....fr_______W.......r
+  __W........r_______W.......r
+  __W........WWWWWWWWW.......r
+  __W..b......h..........B...r
+  __W........rrrrrrrrW.......r
+  __WL,,.....r_______W......lr
+  __Wa,......r_______W....H.ar
+  ___rrrrrrrr_________rrrrrrr_
+@warp n -> meseta_cumbre spawn=south
+@warp L -> senda_2 spawn=from_3
+# The gate of floor 3 (the Senda's switch, Senda de Campeones boulder switches): a boulder pushed onto the pit fills it (flag senda_pit3, engine); the step trigger in front of the gate opens it the moment the hero
+# stands there (a wall of rocks that crumbles); the gate's own hide flag keeps it open for good.
+@script gate3_check step if senda_pit3
+    jf senda3_open done
+    sfx door
+    npc_hide gate3
+    setf senda3_open
+  done:
+    end
+@end

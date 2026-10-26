@@ -1,0 +1,51 @@
+# Casa del Guardian (C5a, contract 47; C5b, contract 48), 9 x 7, interior. column = i, row = j. The Reserva's warden: he says so; with the GOLD DENTURES (`dentadura`, found in the
+# Reserva's area 3) in the bag he takes them and gives the EMPUJE module (flag 91 = `mod_empuje`, flag 836 = the exchange is done: a disc). A glass case with nothing in it, shelves of old photographs, a table.
+@map casa_guardian
+@size 9 7
+@interior yes
+@bg 3
+@fill floor_wood
+@spawn door 4 5 N
+@flag empuje_given 836
+@legend
+  .  tile=floor_wood
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  object=bookshelf text=casa.photos interact=look
+  f  object=vitrina text=guardian.case interact=look
+  h  object=table
+  i  npc=guardian id=warden face=SW script=warden
+  j  object=candle_s
+  k  tile=mat
+@grid
+  abbcbbcbb
+  de.f...e.
+  d........
+  d..hi....
+  d.j......
+  d........
+  d...kk...
+@warp k -> ciudad_ambar spawn=guardian_door
+# The warden: without the Gold Dentures he tells his story; with them he takes them (the key item leaves the bag) and gives the EMPUJE module (flag 91). A done exchange only repeats a last line.
+@script warden npc
+    npc_face_hero warden
+    jf empuje_given after
+    has_item dentadura 0
+    jv 0 1 teeth
+    say guardian.a
+    end
+  teeth:
+    say guardian.b
+    take_item dentadura 0
+    sfx item
+    setf mod_empuje
+    say guardian.got
+    say guardian.about
+    say guardian.about2
+    setf empuje_given
+    end
+  after:
+    say guardian.after
+@end

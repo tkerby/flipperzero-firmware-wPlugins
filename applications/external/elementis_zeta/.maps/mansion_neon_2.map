@@ -1,0 +1,56 @@
+# Mansion de Neon, top floor (C4a, contract 39), 10 x 8, interior. column = i, row = j. A sunny study at the top of the stairs (door cell (8,3), back down to 1F). The owner (`mama`) cannot keep her pet Mimbara
+# she asks whether you will take it and gives it at level 25 (`give mimbara 25`; flag 77 = given; a full party keeps the flag clear: come back with room).
+@map mansion_neon_2
+@size 10 8
+@interior yes
+@bg 3
+@fill floor_wood
+@spawn stairs 8 4 N
+@flag mimbara_given 77
+@legend
+  .  tile=floor_wood
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  object=bookshelf text=mansion.top.books interact=look
+  f  object=bookshelf text=mansion.top.books2 interact=look
+  g  tile=none object=wall_win_i
+  h  object=escalator
+  i  object=table
+  j  door=escalator
+  k  npc=mama id=owner face=W script=owner
+  l  object=flowerbed
+@grid
+  abbcbbcbbb
+  def.......
+  g.......h.
+  d...i...j.
+  g....k....
+  dl........
+  d.....l...
+  d.........
+@warp j -> mansion_neon spawn=stairs
+# The owner: she cannot keep Mimbara; whoever takes it gets it at level 25 (once, flag 77). A full party: she asks you to come back with room (the flag stays clear).
+@script owner npc
+    npc_face_hero owner
+    jf mimbara_given after
+    say mansion.owner.hi
+    say mansion.owner.story
+    ask mansion.owner.ask
+    jv 0 1 yes
+    say mansion.owner.no
+    end
+  yes:
+    give mimbara 25
+    jv 0 1 got
+    say mansion.owner.full
+    end
+  got:
+    setf mimbara_given
+    say mansion.owner.given
+    say mansion.owner.hint
+    end
+  after:
+    say mansion.owner.after
+@end

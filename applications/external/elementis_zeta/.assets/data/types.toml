@@ -1,0 +1,140 @@
+# Nucleo type table + effectiveness chart (15 types).
+# Type id = index in this list (0..14). Physical/special is decided by the TYPE:
+# the first 8 types are physical, the last 7 special. Name text key = gl.ty.<id>.
+[[type]]
+id = "normal"
+physical = true
+[[type]]
+id = "fighting"
+physical = true
+[[type]]
+id = "flying"
+physical = true
+[[type]]
+id = "poison"
+physical = true
+[[type]]
+id = "ground"
+physical = true
+[[type]]
+id = "rock"
+physical = true
+[[type]]
+id = "bug"
+physical = true
+[[type]]
+id = "ghost"
+physical = true
+[[type]]
+id = "fire"
+physical = false
+[[type]]
+id = "water"
+physical = false
+[[type]]
+id = "grass"
+physical = false
+[[type]]
+id = "electric"
+physical = false
+[[type]]
+id = "psychic"
+physical = false
+[[type]]
+id = "ice"
+physical = false
+[[type]]
+id = "dragon"
+physical = false
+
+# Effectiveness rows [attacking type, defending type, multiplier in tenths: 20 / 5 / 0].
+# ORDER MATTERS: a move walks the rows top to bottom and, for each
+# row whose attacker matches, applies it once if the row's defender equals either defender type;
+# damage is truncated after every row, so dual types give the same numbers as.
+# Pairs not listed are 1x (so ice -> fire is 1x).
+# FIX: ghost -> psychic is 2x here (had 0x by mistake); the row keeps its original position.
+[chart]
+rows = [
+  ["water", "fire", 20],
+  ["fire", "grass", 20],
+  ["fire", "ice", 20],
+  ["grass", "water", 20],
+  ["electric", "water", 20],
+  ["water", "rock", 20],
+  ["ground", "flying", 0],
+  ["water", "water", 5],
+  ["fire", "fire", 5],
+  ["electric", "electric", 5],
+  ["ice", "ice", 5],
+  ["grass", "grass", 5],
+  ["psychic", "psychic", 5],
+  ["fire", "water", 5],
+  ["grass", "fire", 5],
+  ["water", "grass", 5],
+  ["electric", "grass", 5],
+  ["normal", "rock", 5],
+  ["normal", "ghost", 0],
+  ["ghost", "ghost", 20],
+  ["fire", "bug", 20],
+  ["fire", "rock", 5],
+  ["water", "ground", 20],
+  ["electric", "ground", 0],
+  ["electric", "flying", 20],
+  ["grass", "ground", 20],
+  ["grass", "bug", 5],
+  ["grass", "poison", 5],
+  ["grass", "flying", 5],
+  ["grass", "rock", 20],
+  ["grass", "dragon", 5],
+  ["ice", "water", 5],
+  ["ice", "grass", 20],
+  ["ice", "ground", 20],
+  ["ice", "flying", 20],
+  ["ice", "dragon", 20],
+  ["fighting", "normal", 20],
+  ["fighting", "poison", 5],
+  ["fighting", "flying", 5],
+  ["fighting", "psychic", 5],
+  ["fighting", "bug", 5],
+  ["fighting", "rock", 20],
+  ["fighting", "ice", 20],
+  ["fighting", "ghost", 0],
+  ["poison", "grass", 20],
+  ["poison", "poison", 5],
+  ["poison", "ground", 5],
+  ["poison", "bug", 20],
+  ["poison", "rock", 5],
+  ["poison", "ghost", 5],
+  ["ground", "fire", 20],
+  ["ground", "electric", 20],
+  ["ground", "bug", 5],
+  ["ground", "grass", 5],
+  ["ground", "rock", 20],
+  ["ground", "poison", 20],
+  ["flying", "electric", 5],
+  ["flying", "fighting", 20],
+  ["flying", "bug", 20],
+  ["flying", "grass", 20],
+  ["flying", "rock", 5],
+  ["psychic", "fighting", 20],
+  ["psychic", "poison", 20],
+  ["bug", "fire", 5],
+  ["bug", "grass", 20],
+  ["bug", "fighting", 5],
+  ["bug", "flying", 5],
+  ["bug", "psychic", 20],
+  ["bug", "ghost", 5],
+  ["bug", "poison", 20],
+  ["rock", "fire", 20],
+  ["rock", "fighting", 5],
+  ["rock", "ground", 5],
+  ["rock", "flying", 20],
+  ["rock", "bug", 20],
+  ["rock", "ice", 20],
+  ["ghost", "normal", 0],
+  ["ghost", "psychic", 20],
+  ["fire", "dragon", 5],
+  ["water", "dragon", 5],
+  ["electric", "dragon", 5],
+  ["dragon", "dragon", 20],
+]

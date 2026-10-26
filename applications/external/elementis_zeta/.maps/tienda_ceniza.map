@@ -1,0 +1,29 @@
+# Tienda de Isla Ceniza (C7, contract 53, Mart): the shopkeeper behind the counter, the shop opens at once: `shop isla_ceniza`. Same layout as the Ambar tienda.
+@map tienda_ceniza
+@size 9 7
+@interior yes
+@bg 3
+@fill floor_wood
+@spawn door 4 5 N
+@legend
+  .  tile=floor_wood
+  a  tile=none object=wall_j
+  b  tile=none object=wall_i
+  c  tile=floor_wood object=shelf
+  d  tile=floor_wood object=counter
+  e  tile=none object=wall_win_j
+  f  tile=mat
+  g  tile=none object=wall_corner
+  h  tile=floor_wood face=SW id=clerk npc=tendero script=clerk
+@grid
+  gaeaaaeaa
+  b.ccc.cc.
+  b...h....
+  b.ddd....
+  b.......c
+  b........
+  b...ff...
+@warp f -> isla_ceniza spawn=tienda_door
+@script clerk npc
+    shop isla_ceniza
+@end

@@ -22,6 +22,8 @@ typedef CANFRAME CanFrame;
 
 // ── Full FSD state (shared with the Flipper build) ────────────────────────────
 #include "../../fsd_logic/fsd_state.h"
+// DAS engaged helper + in-car Autopark TX pause (#180), shared header-only.
+#include "../../fsd_logic/fsd_autopark.h"
 
 // ── API ───────────────────────────────────────────────────────────────────────
 
@@ -63,17 +65,32 @@ bool fsd_ap_first_allows(const FSDState *state, uint32_t now_ms);
 // Configurable signal-mapping context freshness window (#122).
 #define NAG_CTX_FRESH_MS 1000u
 
+// Signal Map watchdog (#100): when a DAS id is configured but the standard
+// parsers are skipped, an id that never appears on the tapped bus silently
+// pauses the nag killer (fsd_das_ctx_fresh fails closed). Surface it after this
+// long without that id. Also the boot grace before the check can fire.
+#define SIGNAL_MAP_DAS_MISS_MS 3000u
+
 /** Apply configurable signal mapping (#122): extract DAS/steering from the
- *  user-configured positions when cfg_*_id is set, and stamp the freshness clock. */
+ *  user-configured positions when cfg_*_id is set, and stamp the freshness clock.
+ *  Steering: cfg_steer_id 0x129 is decoded as SCCM_steeringAngleSensor
+ *  (fsd_steer_update(), validity-aware), any other id as a signed 16-bit angle
+ *  at bytes cfg_steer_hi / cfg_steer_lo, 0.1 deg per bit (hi == lo: not mapped). */
 void fsd_apply_signal_config(FSDState *state, const CanFrame *frame, uint32_t now_ms);
 /** True if the DAS context is fresh (auto mode always true; configured requires
  *  a cfg-DAS frame within NAG_CTX_FRESH_MS). */
 bool fsd_das_ctx_fresh(const FSDState *state, uint32_t now_ms);
+/** True when a Signal Map DAS id is configured but hasn't been seen within
+ *  SIGNAL_MAP_DAS_MISS_MS (auto mode / boot grace return false). Pure — the
+ *  caller owns the one-shot log + status flag (#100). */
+bool fsd_signal_map_das_missing(const FSDState *state, uint32_t now_ms);
 
 /** Soft-Engage gate (steer-jerk mitigation, #108). Returns true if injection may
- *  proceed: soft_engage off, already latched, or wheel within SOFT_ENGAGE_ANGLE_DEG
- *  of centre (latches it on). Mutates soft_engage_latched; reset it when AP drops. */
-bool fsd_soft_engage_allows(FSDState *state);
+ *  proceed: soft_engage off, already latched, wheel within SOFT_ENGAGE_ANGLE_DEG
+ *  of centre, or no 0x129 ever seen (the last two latch it on). Holds while 0x129
+ *  is present but no fresh valid angle is known. Mutates soft_engage_latched;
+ *  reset it when AP drops. */
+bool fsd_soft_engage_allows(FSDState *state, uint32_t now_ms);
 
 // DAS_autopilotState: 2 = AVAILABLE (offered, not engaged), 3 = first genuinely
 // engaged state. AP-First gates injection at >= ENGAGED so it never fires while
@@ -92,8 +109,16 @@ void fsd_abort_guard_update(FSDState *state);
  *  on AND an abort was latched this engagement. */
 bool fsd_abort_guard_allows(const FSDState *state);
 
-/** Parse SCCM_steeringAngleSensor (0x129) -> steering_angle_deg. */
-void fsd_handle_steering_angle(FSDState *state, const CanFrame *frame);
+/** Parse DI_speed (0x257) -> vehicle_speed_kph / di_speed_raw / ui_speed / speed_seen (#180). */
+void fsd_handle_di_speed(FSDState *state, const CanFrame *frame);
+
+/** Feed the just-parsed 0x257 speed to the Performance read-out (fsd_perf.h),
+ *  skipping SNA / above-max-valid raw values. */
+void fsd_perf_on_speed(FSDState *state, uint32_t now_ms);
+
+/** Parse SCCM_steeringAngleSensor (0x129) -> steering_angle_deg + validity/freshness
+ *  (fsd_logic/fsd_steer.h). */
+void fsd_handle_steering_angle(FSDState *state, const CanFrame *frame, uint32_t now_ms);
 
 /** Read GTW_carConfig (0x398) to detect HW version.
  *  Returns TeslaHW_Unknown if frame is not 0x398 or version unrecognised. */
@@ -114,6 +139,32 @@ bool fsd_handle_driver_assist_override(FSDState *state, CanFrame *frame);
  *  additive checksum. Master opt-in (state->track_mode_inject). The byte6 counter
  *  is left untouched. Returns true if the frame was modified and should be re-sent. */
 bool fsd_handle_track_mode_inject(FSDState *state, CanFrame *frame);
+
+// Acceleration Mode override (#211): standstill = |DI_vehicleSpeed| at or under
+// ACCEL_STANDSTILL_KPH from a 0x257 no older than ACCEL_CTX_FRESH_MS; with no
+// usable speed, a fresh 0x118 DI_gear = P. Nothing fresh = not stopped.
+#define ACCEL_STANDSTILL_KPH 1.0f
+#define ACCEL_CTX_FRESH_MS   1000u
+
+/** Parse DI_systemStatus (0x118) DI_gear for the Acceleration Mode standstill
+ *  gate. Frames with a wrong DLC or bad checksum are ignored. Stamps
+ *  last_gear_tick_ms = now_ms on a valid frame. Returns true if parsed. */
+bool fsd_handle_di_gear(FSDState *state, const CanFrame *frame, uint32_t now_ms);
+
+/** True when the car is known to be stopped (see ACCEL_STANDSTILL_KPH). Pure. */
+bool fsd_accel_standstill(const FSDState *state, uint32_t now_ms);
+
+/** Acceleration Mode override on UI_powertrainControl (0x334). Validates the
+ *  frame (DLC 8, checksum, pedal map 0..2), records the car's own pedal map,
+ *  updates the standstill latch and rewrites UI_pedalMap + checksum (counter
+ *  kept) when the latched mode differs from the car's. Off, a blocked TX gate
+ *  or a touchscreen change while moving drop to pass-through immediately.
+ *  Returns true if the frame was modified and should be re-sent. */
+bool fsd_handle_accel_mode(FSDState *state, CanFrame *frame, uint32_t now_ms);
+
+/** Pedal map going out on 0x334 for the dashboard read-out: -1 before a valid
+ *  0x334, the car's own map when passing through or TX is blocked. */
+int fsd_accel_sent_map(const FSDState *state);
 
 /** Modify DAS_autopilotControl (0x3FD) for HW3/HW4.
  *  Returns true if frame was modified and should be re-sent. */
@@ -144,11 +195,20 @@ void fsd_handle_esp_status(FSDState *state, const CanFrame *frame);
 /** Parse BMS_hvBusStatus (0x132) — updates pack_voltage_v / pack_current_a. */
 void fsd_handle_bms_hv(FSDState *state, const CanFrame *frame);
 
-/** Parse BMS_socStatus (0x292) — updates soc_percent. */
+/** Parse BMS_socStatus (0x292) — updates soc_percent from BMS_socUI (fsd_bms.h). */
 void fsd_handle_bms_soc(FSDState *state, const CanFrame *frame);
 
-/** Parse BMS_thermalStatus (0x312) — updates batt_temp_min/max_c. */
-void fsd_handle_bms_thermal(FSDState *state, const CanFrame *frame);
+/** Parse UI_range (0x33A) — ui_soc, the SOC on the car's own screen (#251).
+ *  Leaves soc_percent (0x292) alone. */
+void fsd_handle_ui_range(FSDState *state, const CanFrame *frame);
+
+/** Parse BMS_thermalStatus (0x312) — updates batt_temp_min/max_c when plausible
+ *  (fsd_logic/fsd_bms.h); now_ms stamps batt_temp_ms. */
+void fsd_handle_bms_thermal(FSDState *state, const CanFrame *frame, uint32_t now_ms);
+
+/** Parse ESP_wheelSpeeds (0x175, Party CAN) — updates the four wheel_speed_*_kph
+ *  (read-only, feeds the dashboard wheel-slip read-out). */
+void fsd_handle_wheel_speeds(FSDState *state, const CanFrame *frame);
 
 /** Build a UI_tripPlanning (0x082) frame to trigger active battery heating. */
 void fsd_build_precondition_frame(CanFrame *frame);
@@ -186,3 +246,15 @@ void fsd_handle_vcfront_lighting(FSDState *state, const CanFrame *frame);
 
 /** Build GearLever / right stalk 0x229 with rolling counter and CRC byte. */
 bool fsd_build_gear_lever_frame(CanFrame *frame, uint8_t gear_pos, uint8_t counter);
+
+/** Charge-port type (0x25D CP_status, Vehicle CAN, #228). Read-only decode runs
+ *  in every mode: an 8-byte frame updates cp_type / cp_plug_state / cp_status_seen
+ *  and stamps cp_status_ms with now_ms, so the dashboard shows what the car
+ *  reports and when it stopped reporting it. When cp_type_eu_rewrite is on and
+ *  TX is allowed, a US-type frame (CP_type 0) that is unplugged is rewritten to
+ *  IEC_CCS in place and the function returns true so the caller re-sends it on
+ *  the bus it arrived on; the caller counts it in cp_type_tx_count once the send
+ *  has gone out. Returns false (no rewrite) for a short/6-byte 0x25D, a
+ *  frame already EU or any non-US type, or any plug state other than unplugged
+ *  (fail closed). Source: fsd_logic/fsd_cp_status.h. */
+bool fsd_handle_cp_type_rewrite(FSDState *state, CanFrame *frame, uint32_t now_ms);

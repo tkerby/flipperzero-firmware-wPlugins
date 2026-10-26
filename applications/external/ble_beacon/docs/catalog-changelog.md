@@ -1,0 +1,12 @@
+v1.0.0:
+- Initial release
+- Added BTHome v1 and v2 beacon simulation
+- Added iBeacon, Eddystone TLM, ATC1441, and MiBeacon simulation
+- Added real Flipper battery and temperature telemetry
+- Added simulated humidity and iBeacon fields
+- Added Info and Help screens with scrolling
+- Added startup and exit splash screens
+- Added exit confirmation menu
+- Added BLE local name Flipper to supported advertising formats
+- Fixed BLE beacon crash caused by missing beacon configuration
+- Fixed immediate closing of Info and Help screens

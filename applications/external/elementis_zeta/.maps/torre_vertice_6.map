@@ -1,0 +1,97 @@
+# Torre Vertice, 6F (a corporation 11F: Varo and the president, C6, contract 49), 16 x 12, interior. column = i, row = j. The arrival hall (rows 1..4) holds a last grunt; the wall of row 5 is shut by the fourth card-key
+# door (4,5) (flag 846): below it DIRECTOR VARO waits (script `varo`, trainer varo_vtx: Quillord 37, Wombamma 35, Dunedrake 37, Quilltyrant 41; a win: flag 852, he leaves with his agents, the grunts of the city are gone);
+# the PRESIDENT's office (10..15,1..4) is shut by the fifth card-key door (12,5) (flag 847): before Varo falls he asks for help, after it he gives the CRISTAL MAESTRO (Master Crystal, flag 853).
+@map torre_vertice_6
+@size 16 12
+@interior yes
+@area torre_vertice
+@flag varo_vtx 852   # Director Varo was beaten in the tower
+@flag maestro_given 853   # the president gave the Master Crystal (a full bag keeps it clear)
+@flag kd4 846   # card-key door 4 (6F, Varo) opened
+@flag kd5 847   # card-key door 5 (6F, the president's office) opened
+@bg 0
+@fill carpet_00
+@spawn down 2 3 S
+@legend
+  .  tile=carpet_11
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  tile=carpet_01 object=escalator
+  f  tile=carpet_01
+  g  tile=carpet_10
+  h  tile=carpet_00 door=escalator
+  i  tile=carpet_00 object=desk
+  j  tile=carpet_10 object=desk
+  k  tile=carpet_00
+  l  tile=carpet_00 object=planter
+  m  tile=carpet_01 npc=vertice id=t6a face=W trainer=vertice_t6a range=4 text=tr.vertice_t6a.pre after=tr.vertice_t6a.after
+  n  tile=carpet_11 npc=presidente id=pres face=SW script=president
+  o  tile=carpet_10 object=planter
+  p  tile=carpet_01 keydoor=chip_acceso hide_flag=kd4
+  q  tile=carpet_01 keydoor=chip_acceso hide_flag=kd5
+  r  tile=carpet_11 object=orb
+  s  tile=carpet_01 object=orb
+  t  tile=carpet_10 npc=varo id=varo face=NW script=varo hide_flag=varo_vtx gate=yes
+  u  tile=carpet_11 object=desk
+  v  tile=carpet_01 object=desk
+  w  tile=carpet_00 item=disc_12
+@grid
+  abbbcbbbbcbbbcbb
+  d.e.f.f.fdf.f.f.
+  dghgijkgkdkglgkg
+  d.f.f.m.fdf.fnf.
+  dokgkgkgkdkgkgkg
+  dbbbpbbbbbbbqbbb
+  dgkgkgkgkgkgkgwg
+  d.f.f.f.f.frf.s.
+  dgkgkgktkgkgkgkg
+  d.f.f.fuv.f.f.f.
+  dokgkgkgkgkgkglg
+  d.f.f.f.f.f.f.f.
+@warp h -> torre_vertice_5 spawn=up
+# Director Varo: the camera cuts to him; the fight (trainer varo_vtx); a win: his words, he walks away and is gone (flag 852: the grunts of Cenit leave, the president can
+# be thanked), a loss is the blackout.
+@script varo npc
+    npc_face_hero varo
+    cam_npc varo
+    say vtx.varo.pre
+    battle varo_vtx 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    say vtx.varo.win
+    npc_walk varo SE 4
+    npc_hide varo
+    setf varo_vtx
+    cam_hero
+    say vtx.varo.gone
+@end
+# The president: before Varo falls he asks for help; after it he thanks the hero and gives the CRISTAL MAESTRO (a full bag keeps flag 853 clear and he hands
+# it over at the next talk).
+@script president npc
+    npc_face_hero pres
+    jf varo_vtx freed
+    say vtx.pres.help
+    end
+  freed:
+    jf maestro_given said
+    say vtx.pres.thanks
+    call maestro_gift
+    end
+  said:
+    say vtx.pres.after
+@end
+@script maestro_gift called
+    give_item cristal_maestro 1
+    jv 0 0 full
+    item_var 0 cristal_maestro
+    say gl.gift
+    setf maestro_given
+    say vtx.pres.give
+    end
+  full:
+    say gl.found.full
+@end

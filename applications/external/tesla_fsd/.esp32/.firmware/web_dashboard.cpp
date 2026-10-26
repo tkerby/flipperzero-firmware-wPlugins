@@ -4,6 +4,10 @@
  * HTTP  :80  → serves the embedded HTML page
  * WS    :81  → pushes JSON state every 1 s; receives control commands
  *
+ * The WS is the primary link. GET /api/status and POST /api/cmd carry the same
+ * state and commands over plain HTTP for clients whose WebSocket never
+ * delivers (the iOS/macOS captive-portal sheet).
+ *
  * All HTML/CSS/JS is embedded as a raw-string literal — no external CDN.
  * State is shared with the CAN task. Reads copy a locked snapshot; writes use
  * the same FreeRTOS critical section as the CAN/button side.
@@ -16,6 +20,15 @@
 #include "capability.h"
 #include "profile_match.h"
 #include "prefs.h"
+#include "ota_verify.h"
+#include "power_log.h"
+#include "loop_health.h"
+#include "captive_portal.h"
+#include "web_cmd.h"
+#include "web_origin.h"
+#include "page_send.h"
+#include "../../fsd_logic/fsd_cp_status.h"  // CP_status stale read-out (#228)
+#include "../../fsd_logic/fsd_bms.h"        // 0x312 pack-temperature freshness
 #include <WebServer.h>
 #include <WebSocketsServer.h>
 #include <WiFi.h>
@@ -23,10 +36,13 @@
 #include <Update.h>
 #include <esp_ota_ops.h>
 #include <esp_partition.h>
+#include <esp_rom_crc.h>
+#include <lwip/sockets.h>
+#include <errno.h>
 
 // ── Module state ──────────────────────────────────────────────────────────────
 static FSDState  *g_state = nullptr;   // shared with main
-static CanDriver **g_can_buses = nullptr; // for setListenOnly()
+static CanDriver **g_can_buses = nullptr; // mode switch, error split, pre-reboot quiesce
 static uint8_t g_can_count = 0;
 static portMUX_TYPE *g_state_mux = nullptr;
 
@@ -38,10 +54,34 @@ static uint32_t g_last_rx     = 0;
 static uint32_t g_last_fps_ms = 0;
 static uint32_t g_last_can_seen_ms = 0;
 static float    g_fps         = 0.0f;
+static bool     g_debug       = false;  // serial `debug`: per-push JSON size
+
+// CAN Bus card reset (#252). The card shows each counter minus its value at
+// the last reset; the counters themselves stay cumulative for everything else
+// that reads them (black box, capture meta, Tap Check, power log, canstat).
+struct CanCounts {
+    uint32_t rx, tx, rx_missed, bus_error, tx_failed;
+};
+static CanCounts g_can_base[CAN_BUS_COUNT] = {};  // each driver at the reset
+static uint32_t  g_rx_base      = 0;               // FSDState rx_count at the reset
+static bool      g_can_reset    = false;
+static uint32_t  g_can_reset_ms = 0;
 
 #define CAN_VEHICLE_ALIVE_MS 3000u
 #define OTA_ESP32_IMAGE_MAGIC 0xE9u
 #define OTA_AUTH_USER "admin"
+// Longest command is wifi_cfg: ~90 bytes of JSON around two SSIDs (32) and two
+// passphrases (64) = ~282, up to ~480 when every character needs a backslash
+// (\" or \\). The parser works in place, so this only bounds the work.
+#define WEB_CMD_MAX_LEN 767u
+// Page body limits (page_send.h). The gzip page is 8-9 send-buffer fills
+// (5760 bytes each), one per round trip: 40-250 ms at the 5-30 ms of a phone
+// on the SoftAP, over 1 s at the 100+ ms of in-car Wi-Fi in power save. A
+// client still taking data goes on; one that took nothing for STALL_MS has
+// gone (a round trip that long is not a working link). MAX_MS caps a client
+// that only ever takes a trickle.
+#define PAGE_SEND_STALL_MS 400u
+#define PAGE_SEND_MAX_MS   3000u
 
 static void state_enter() {
     if (g_state_mux) portENTER_CRITICAL(g_state_mux);
@@ -93,6 +133,9 @@ static bool download_auth_ok() {
 
 // ── Embedded HTML/CSS/JS ──────────────────────────────────────────────────────
 // Tesla dark theme; mobile-first (max 480 px); WebSocket on :81
+// String literals and #if defined(...) blocks only: gen_web_page.py gzips the
+// page at build time and stops the build on a macro in it (FW_VERSION and the
+// like reach the page through the status JSON).
 static const char WEB_HTML[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html lang="en">
@@ -110,7 +153,8 @@ static const char WEB_HTML[] PROGMEM = R"rawliteral(
   --bg:#0a0a1a;--card:#111827;--card2:#1a1f35;
   --accent:#00d4aa;--accent2:#00b894;
   --red:#ff6b6b;--yellow:#ffd93d;--blue:#4dabf7;
-  --border:#1e293b;--text:#e2e8f0;--text2:#94a3b8;--text3:#475569
+  --border:#1e293b;--text:#e2e8f0;--text2:#94a3b8;--text3:#475569;
+  --muted:#7d8ba1  /* hint text: between text2 and text3, 4.7:1 on card2 */
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   background:var(--bg);color:var(--text);min-height:100vh}
@@ -194,9 +238,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 .row+.row{border-top:1px solid rgba(255,255,255,.04)}
 .lbl{color:var(--text2);font-size:.85em}
 .hint{display:block;color:var(--text2);opacity:.62;font-size:.82em;line-height:1.35;margin-top:2px;max-width:20em}
-details select{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:4px 6px;border-radius:4px;font-size:.85em;flex:none}
+details select,select.sel{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:4px 6px;border-radius:4px;font-size:.85em;flex:none}
 details input{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:4px;border-radius:4px;text-align:right;width:60px}
 details input.cgn{width:38px;margin-left:4px}
+details input:disabled{opacity:.45}
 
 /* ── Pills ── */
 .pill{display:inline-flex;align-items:center;gap:5px;
@@ -228,12 +273,21 @@ details input.cgn{width:38px;margin-left:4px}
 .sb{background:var(--card2);border-radius:10px;padding:10px 12px}
 .sb .sv{font-size:1.15em;font-weight:700;font-variant-numeric:tabular-nums}
 .sb .sl{font-size:.64em;color:var(--text3);margin-top:2px}
+.tg{display:grid;grid-template-columns:auto repeat(4,1fr);gap:6px 10px;align-items:baseline;
+  text-align:right;font-variant-numeric:tabular-nums}
+.tg .tu,.tg .th{color:var(--text3);font-size:.72em}
+.tg .tu{text-align:left}
+.tg.stale{color:var(--text3)}
+.btn-mini{background:var(--card2);border:1px solid var(--border);color:var(--text2);
+  padding:4px 10px;border-radius:6px;font-size:.72em;font-weight:600;cursor:pointer}
+.btn-mini:active{opacity:.75}
 
 /* ── Controls ── */
 .btn-main{width:100%;padding:14px;border:none;border-radius:12px;
   font-size:.95em;font-weight:700;cursor:pointer;letter-spacing:.04em;
   transition:opacity .2s;margin-bottom:10px}
 .btn-main:active{opacity:.75}
+.btn-main:disabled{opacity:.45;cursor:default}
 .btn-act{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000}
 .btn-stop{background:rgba(255,107,107,.14);color:var(--red);
   border:1px solid rgba(255,107,107,.3)}
@@ -288,6 +342,21 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
 .test-btn:disabled{opacity:.4;color:var(--text3);border-color:var(--border);background:var(--card2)}
 .metric{font-size:.95em;font-weight:700;font-variant-numeric:tabular-nums}
 .metric small{font-size:.72em;color:var(--text3);font-weight:600}
+
+/* ── In-page dialog + toast ── */
+.dlg{display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:100;
+  align-items:center;justify-content:center;padding:16px;background:rgba(5,6,16,.8)}
+.dlg.show{display:flex}
+.dlg-box{width:100%;max-width:400px;max-height:100%;overflow:auto;background:var(--card);
+  border:1px solid var(--border);border-radius:16px;padding:18px 16px 16px;
+  box-shadow:0 12px 40px rgba(0,0,0,.55)}
+.dlg-msg{font-size:.9em;line-height:1.45;overflow-wrap:anywhere;word-break:break-word}
+.dlg-msg div+div{margin-top:8px}
+.toast{display:none;position:fixed;left:16px;right:16px;bottom:16px;z-index:90;
+  max-width:448px;margin:0 auto;padding:11px 14px;border-radius:12px;text-align:center;
+  font-size:.8em;line-height:1.4;color:var(--red);background:var(--card2);
+  border:1px solid rgba(255,107,107,.45);box-shadow:0 8px 28px rgba(0,0,0,.5)}
+.toast.show{display:block}
 </style>
 </head>
 <body>
@@ -330,6 +399,16 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
 <!-- OTA Warning -->
 <div id="otaBanner" class="ota">&#9888;&#xFE0F; OTA UPDATE IN PROGRESS &mdash; CAN TX SUSPENDED</div>
 
+<!-- Autopark Warning (#180) -->
+<div id="autoparkBanner" class="ota">&#9888;&#xFE0F; IN-CAR AUTOPARK &mdash; CAN TX PAUSED</div>
+
+<!-- Signal Map watchdog (#100) -->
+<div id="sigmapWarn" class="warn14x"><div class="w-row"><div class="w-msg">
+  <strong>&#9888;&#xFE0F; Signal Map DAS id not seen on this bus.</strong>
+  The configured DAS id isn't arriving, so AP-state can't be read and the nag
+  killer is paused. Set <b>DAS id 0</b> for auto, or fix the mapping / tap.
+</div></div></div>
+
 <!-- 2026.14.x Firmware Warning -->
 <div id="warn14x" class="warn14x">
   <div class="w-row">
@@ -363,6 +442,10 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
     <span class="lbl">Hardware</span>
     <span class="pill off" id="hwVer"><span class="pd"></span>--</span>
   </div>
+  <div class="row" id="rowHw3Spd" style="display:none">
+    <span class="lbl">HW3 Speed<span class="hint">car &rarr; sent</span></span>
+    <span id="hw3Spd" style="font-size:.8em;color:var(--text2)">--</span>
+  </div>
   <div class="row">
     <span class="lbl">NAG Killer</span>
     <span class="pill off" id="nagSt"><span class="pd"></span>--</span>
@@ -370,6 +453,10 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
   <div class="row">
     <span class="lbl">CAN Vehicle</span>
     <span class="pill off" id="canVeh"><span class="pd"></span>--</span>
+  </div>
+  <div class="row">
+    <span class="lbl">Charge Port<span class="hint">0x25D CP_status &mdash; Vehicle CAN only</span></span>
+    <span style="font-size:.8em;color:var(--text2)"><span id="cpStale" style="display:none;color:var(--yellow);margin-right:6px">Stale</span><span id="cpType">--</span></span>
   </div>
 </div>
 
@@ -393,25 +480,110 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
       </svg>
       <div class="soc-val">
         <span class="soc-num" id="bSoc">--</span>
-        <span class="soc-lbl">SOC</span>
+        <span class="soc-lbl">Pack SOC</span>
       </div>
     </div>
     <div class="hg">
       <div><div class="hv" id="bVolt">--</div><div class="hl">Voltage</div></div>
       <div><div class="hv" id="bCurr">--</div><div class="hl">Current</div></div>
-      <div><div class="hv" id="bTemp">--</div><div class="hl">Temp</div></div>
+      <div><div class="hv" id="bTemp">--</div><div class="hl">Pack temp min~max</div></div>
+    </div>
+  </div>
+  <div class="row" id="rowCarSoc" style="display:none">
+    <span class="lbl">Car SOC<br><small style="color:var(--muted)">the % on the car's screen (0x33A)</small></span>
+    <span id="bCarSoc" style="font-variant-numeric:tabular-nums">--</span>
+  </div>
+</div>
+
+<!-- Tyre pressure (read-only, 0x219); shown once the frame reaches this tap.
+     The switch folds it, per browser like Performance (#237). -->
+<div class="card" id="tpmsCard" style="display:none">
+  <!-- Too narrow for title, pill and switch (320 px): the pill and switch
+       move to a line of their own instead of the title breaking. -->
+  <div class="card-head" style="flex-wrap:wrap"><div class="icon ic-b">T</div><h2 style="white-space:nowrap">Tyre Pressure</h2>
+    <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
+      <span class="pill off" id="tpmsSt"><span class="pd"></span>--</span>
+      <label class="sw"><input type="checkbox" id="swTpms" onchange="tpToggle(this.checked)"><span class="sl2"></span></label>
+    </span>
+  </div>
+  <div id="tpOff" class="log-info" style="display:none;margin-bottom:0">
+    Read-only read-out of the tyre pressures the car sends on 0x219 &mdash; it transmits
+    nothing. Turn on to show them.
+  </div>
+  <div id="tpBody">
+    <div class="tg" id="tpGrid"></div>
+    <div class="row" id="rowTpAge" style="display:none">
+      <span class="lbl">Since last reading</span>
+      <span id="tpAge" style="font-variant-numeric:tabular-nums">--</span>
+    </div>
+    <div class="row" id="rowTpTgt" style="display:none">
+      <span class="lbl">Car's target</span>
+      <span id="tpTgt" style="font-size:.8em;color:var(--text2)">--</span>
+    </div>
+    <div class="row">
+      <span class="lbl">Unit</span>
+      <select id="selTpUnit" class="sel" onchange="tpSetUnit(this.value)">
+        <option value="bar">bar</option>
+        <option value="psi">psi</option>
+      </select>
+    </div>
+    <div class="log-info" id="tpOrder" style="display:none">Columns follow the order the car sends them. Which wheel each one belongs to is not confirmed yet.</div>
+    <div class="log-info" id="tpNone" style="display:none">0x219 is arriving on this tap, but the car is not reporting a pressure in it.</div>
+    <div class="log-info" id="tpForm" style="display:none">This 0x219 has a length this firmware does not read yet. A capture of it would help.</div>
+  </div>
+</div>
+
+<!-- Performance (read-only, opt-in) -->
+<div class="card">
+  <div class="card-head"><div class="icon ic-b">P</div><h2>Performance</h2>
+    <label class="sw" style="margin-left:auto"><input type="checkbox" id="swPerf" onchange="perfToggle(this.checked)"><span class="sl2"></span></label>
+  </div>
+  <div id="perfOff" class="log-info" style="margin-bottom:0">
+    Read-only read-out derived from frames already on the bus &mdash; it transmits
+    nothing. Enable to show acceleration / braking timers, an estimated G (no IMU),
+    wheel slip and pack temperature / power. Speed &amp; est. G need any tap
+    carrying 0x257; wheel slip needs Party CAN (0x175); temp &amp; power need a
+    Vehicle-CAN tap (BMS).
+  </div>
+  <div id="perfBody" style="display:none">
+    <div class="row"><span class="lbl">Vehicle speed</span><span id="pfSpeed" style="color:var(--text2)">--</span></div>
+    <div class="sg">
+      <div class="sb"><div class="sv" id="pf050">--</div><div class="sl">0-50 km/h</div><div class="sl"><span>best</span> <span id="pf050b">--</span></div></div>
+      <div class="sb"><div class="sv" id="pf060mph">--</div><div class="sl">0-60 mph</div><div class="sl"><span>best</span> <span id="pf060mphb">--</span></div></div>
+      <div class="sb"><div class="sv" id="pf0100">--</div><div class="sl">0-100 km/h</div><div class="sl"><span>best</span> <span id="pf0100b">--</span></div></div>
+      <div class="sb"><div class="sv" id="pf1000">--</div><div class="sl">100-0 km/h brake</div><div class="sl"><span>best</span> <span id="pf1000b">--</span></div></div>
+    </div>
+    <div class="sg">
+      <div class="sb"><div class="sv" id="pfG">--</div><div class="sl">Est. long. G</div><div class="sl"><span>peak</span> <span id="pfGpk">--</span></div></div>
+      <div class="sb"><div class="sv" id="pfSlip">--</div><div class="sl">Wheel slip</div></div>
+      <div class="sb"><div class="sv" id="pfPow">--</div><div class="sl">Pack power</div></div>
+      <div class="sb"><div class="sv" id="pfTemp">--</div><div class="sl">Pack temp</div><div class="sl">unconfirmed on some cars</div></div>
+    </div>
+    <div class="row" style="gap:12px"><span class="lbl" style="white-space:nowrap">Battery advisory</span><span id="pfAdv" style="font-size:.8em;color:var(--text2);text-align:right">--</span></div>
+    <div class="log-info" style="margin-top:8px;font-size:.76em">
+      G is estimated from dv/dt of vehicle speed (no IMU). Timers auto-arm leaving a
+      standstill, lock at the target, and reset at the next standstill; best time is
+      kept per session. Temp / power need a Vehicle-CAN tap; wheel slip needs 0x175.
     </div>
   </div>
 </div>
 
 <!-- CAN Stats -->
 <div class="card">
-  <div class="card-head"><div class="icon ic-d">C</div><h2>CAN Bus</h2></div>
+  <div class="card-head"><div class="icon ic-d">C</div><h2>CAN Bus</h2>
+    <button type="button" class="btn-mini" style="margin-left:auto" onclick="canReset()">Reset</button>
+  </div>
   <div class="sg">
     <div class="sb"><div class="sv" id="rxCnt">0</div><div class="sl">RX Frames</div></div>
     <div class="sb"><div class="sv" id="txCnt">0</div><div class="sl">TX Frames</div></div>
-    <div class="sb"><div class="sv" id="crcErr">0</div><div class="sl">TX Errors</div></div>
+    <div class="sb"><div class="sv" id="crcErr">0</div><div class="sl">CAN Errors</div><div class="sl" id="crcSplit"><span style="white-space:nowrap">RX missed</span>&nbsp;0 &middot; <span style="white-space:nowrap">bus</span>&nbsp;0 &middot; <span style="white-space:nowrap">TX fail</span>&nbsp;0</div></div>
     <div class="sb"><div class="sv" id="fps">0.0</div><div class="sl">Frames/s</div></div>
+  </div>
+  <!-- Per bus, on boards with two controllers (#253) -->
+  <div class="tg" id="canBuses" style="display:none;margin-top:12px"></div>
+  <div class="row" style="padding-bottom:0;margin-top:4px">
+    <span class="lbl" id="canSinceL">Since boot</span>
+    <span id="canSince" style="font-size:.8em;color:var(--text2);font-variant-numeric:tabular-nums">--</span>
   </div>
 </div>
 
@@ -438,6 +610,10 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
   <div class="row">
     <span class="lbl">FSD Unlock</span>
     <label class="sw"><input type="checkbox" id="swFsdUnlock" onchange="cmd('fsd_unlock',this.checked)"><span class="sl2"></span></label>
+  </div>
+  <div class="row">
+    <span class="lbl">HW3 Speed Override (legacy)<br><small style="color:var(--muted)">Writes the follow-distance profile and Autopilot offset into the FSD speed fields. Off = the car's own FSD offset and profile are left alone.</small></span>
+    <label class="sw"><input type="checkbox" id="swHw3Spd" onchange="cmd('hw3_speed_override',this.checked)"><span class="sl2"></span></label>
   </div>
   <div class="row">
     <span class="lbl">NAG Killer</span>
@@ -476,7 +652,7 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
     <label class="sw"><input type="checkbox" id="swAbrt" onchange="cmd('abort_guard',this.checked)"><span class="sl2"></span></label>
   </div>
   <div class="row">
-    <span class="lbl">BMS Display</span>
+    <span class="lbl">BMS Display<span class="hint">Prints voltage, current, power, SoC and pack temperature to the USB serial log once a second. The dashboard shows them either way.</span></span>
     <label class="sw"><input type="checkbox" id="swBms" onchange="cmd('bms',this.checked)"><span class="sl2"></span></label>
   </div>
   <div class="row">
@@ -490,6 +666,10 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
   <div class="row" id="rowChime">
     <span class="lbl">Suppress Chime</span>
     <label class="sw"><input type="checkbox" id="swChime" onchange="cmd('suppress_speed_chime',this.checked)"><span class="sl2"></span></label>
+  </div>
+  <div class="row">
+    <span class="lbl">Precondition<br><small style="color:var(--muted)">battery preheat trigger (0x082)</small></span>
+    <label class="sw"><input type="checkbox" id="swPrecond" onchange="cmd('precondition',this.checked)"><span class="sl2"></span></label>
   </div>
   <div class="row">
     <span class="lbl">TLSSC Restore</span>
@@ -529,6 +709,25 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
   </div>
   <div class="row" style="display:block">
     <div style="display:flex;align-items:center;justify-content:space-between">
+      <span class="lbl">Acceleration Mode (experimental)<br><small style="color:var(--muted)">Rewrites the pedal map on 0x334. The touchscreen keeps showing your own setting; a new mode only switches at standstill.</small></span>
+      <select id="selAccel" onchange="cmd('accel_mode',parseInt(this.value,10))">
+        <option value="0">Off</option>
+        <option value="1" translate="no">Chill</option>
+        <option value="2" translate="no">Standard</option>
+        <option value="3" translate="no">Performance</option>
+      </select>
+    </div>
+    <div id="accelSt" style="font-size:12px;color:var(--muted);margin-top:4px">--</div>
+  </div>
+  <div class="row" style="display:block">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <span class="lbl">EU Charge-Port Type (experimental)<br><small style="color:var(--muted)">Re-sends 0x25D on the Vehicle bus with CP_type set to IEC CCS so EU Superchargers show in nav. Held while a cable is plugged in or charging. Experimental.</small></span>
+      <label class="sw"><input type="checkbox" id="swCpType" onchange="cmd('cp_type_eu_rewrite',this.checked)"><span class="sl2"></span></label>
+    </div>
+    <div id="cpTypeSt" style="font-size:12px;color:var(--muted);margin-top:4px">--</div>
+  </div>
+  <div class="row" style="display:block">
+    <div style="display:flex;align-items:center;justify-content:space-between">
       <span class="lbl">Track Mode (experimental)<br><small style="color:var(--muted)">Experimental &mdash; Vehicle-bus; not car-validated. Defaults to rear-biased (rotation 100) + 30% stability &mdash; fun with a safety margin. Raise stability for stock feel.</small></span>
       <label class="sw"><input type="checkbox" id="swTrkMode" onchange="cmd('track_mode_inject',this.checked)"><span class="sl2"></span></label>
     </div>
@@ -557,13 +756,14 @@ input:checked+.sl2:before{transform:translateX(20px);background:#fff}
     <details>
       <summary class="lbl" style="cursor:pointer">Signal Map (advanced, 14.x)</summary>
       <div style="font-size:11px;color:var(--muted);margin:6px 0 8px">Override where the nag killer reads AP-state / hands-on / steering. Leave DAS id <b>0</b> for auto-detect. byte 0-7, shift 0-7, mask hex.</div>
-      <div style="display:grid;grid-template-columns:auto auto;gap:6px 10px;align-items:center;font-size:12px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;align-items:center;font-size:12px">
         <span>DAS id (0x..)</span><input id="cgDid" placeholder="0">
-        <span>AP-state byte/sh/mask</span><span><input id="cgApB" class="cgn"><input id="cgApS" class="cgn"><input id="cgApM" class="cgn" placeholder="0xF"></span>
-        <span>Hands-on byte/sh/mask</span><span><input id="cgHoB" class="cgn"><input id="cgHoS" class="cgn"><input id="cgHoM" class="cgn" placeholder="0xF"></span>
-        <span>Steer id (0x..)</span><input id="cgSid" placeholder="0">
-        <span>Steer hi/lo byte</span><span><input id="cgSHi" class="cgn"><input id="cgSLo" class="cgn"></span>
+        <span>AP-state byte/sh/mask</span><span style="white-space:nowrap"><input id="cgApB" class="cgn"><input id="cgApS" class="cgn"><input id="cgApM" class="cgn" placeholder="0xF"></span>
+        <span>Hands-on byte/sh/mask</span><span style="white-space:nowrap"><input id="cgHoB" class="cgn"><input id="cgHoS" class="cgn"><input id="cgHoM" class="cgn" placeholder="0xF"></span>
+        <span>Steer id (0x..)</span><input id="cgSid" placeholder="0" oninput="sigSteerUi()">
+        <span>Steer hi/lo byte</span><span style="white-space:nowrap"><input id="cgSHi" class="cgn"><input id="cgSLo" class="cgn"></span>
       </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px">Steer id 0 or 0x129: the car's 0x129 steering angle, read with its own layout and only while valid; hi/lo are not used. Another id: a signed 16-bit angle at the hi/lo bytes, 0.1&deg; per bit; hi = lo maps nothing.</div>
       <button onclick="saveSigCfg()" style="margin-top:8px;background:var(--accent);color:#000;border:0;padding:6px 12px;border-radius:4px;cursor:pointer">Save mapping</button>
     </details>
   </div>
@@ -588,6 +788,13 @@ R"rawliteral(
   <div class="row">
     <span class="lbl">CAN Dump</span>
     <label class="sw"><input type="checkbox" id="swDump" onchange="cmd('dump',this.checked)"><span class="sl2"></span></label>
+  </div>
+  <div class="row" id="mcpRxRow" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <span class="lbl">MCP2515 RX task (experimental)<br><small style="color:var(--muted)">Reads the MCP2515 from its own task into a 256-frame queue, so a slow loop pass no longer loses frames from its two receive buffers.</small></span>
+      <label class="sw"><input type="checkbox" id="swMcpRx" onchange="cmd('mcp_rx_task',this.checked)"><span class="sl2"></span></label>
+    </div>
+    <div id="mcpRxSt" style="font-size:12px;color:var(--muted);margin-top:4px">--</div>
   </div>
 )rawliteral"
 #if defined(BOARD_LILYGO)
@@ -632,9 +839,9 @@ R"rawliteral(
     <span class="lbl">Status</span>
     <span class="pill off" id="bbSt"><span class="pd"></span>Idle</span>
   </div>
-  <div class="row">
-    <span class="lbl">Storage</span>
-    <span id="bbStore" style="font-size:.78em;color:var(--text2)">--</span>
+  <div class="row" style="gap:12px">
+    <span class="lbl" style="white-space:nowrap">Storage</span>
+    <span id="bbStore" style="font-size:.78em;color:var(--text2);text-align:right">--</span>
   </div>
   <div id="bbVolatileWarn" class="log-info" style="display:none;margin:8px 0;color:var(--yellow)">
     &#9888;&#xFE0F; Volatile storage &mdash; download events before power-off; they are lost on reboot.
@@ -712,7 +919,11 @@ R"rawliteral(
     <span class="lbl">Network Password</span>
     <input type="password" id="wifiStaPass" maxlength="64" style="width:140px;background:var(--card2);border:1px solid var(--border);color:var(--text);padding:4px;border-radius:4px;text-align:right">
   </div>
-  <button class="btn-main btn-stop" onclick="saveWifi()" style="margin-top:12px">SAVE & RESTART WIFI</button>
+  <div class="row">
+    <span class="lbl">Hostname<br><small style="color:var(--muted)">name shown on your router</small></span>
+    <input type="text" id="wifiHost" maxlength="31" placeholder="tesla-fsd" autocomplete="off" autocapitalize="off" spellcheck="false" style="width:140px;background:var(--card2);border:1px solid var(--border);color:var(--text);padding:4px;border-radius:4px;text-align:right">
+  </div>
+  <button class="btn-main btn-stop" onclick="saveWifi(this)" style="margin-top:12px">SAVE & RESTART WIFI</button>
 </div>
 
 <!-- OTA Update -->
@@ -734,7 +945,7 @@ R"rawliteral(
   </div>
   <div id="otaRollbackInfo" class="ota-info">
     <b style="color:var(--blue)">Partition Safety</b><br>
-    OTA writes to the next app partition when available. Keep USB reflashing available as a recovery path.
+    OTA writes to the next app partition when available. The new image is kept only after 15 s of runtime; a crash or power cut before that restores the previous firmware. Keep USB reflashing available as a recovery path.
   </div>
 </div>
 
@@ -745,7 +956,7 @@ R"rawliteral(
     <span class="lbl">Dump Status</span>
     <span class="pill off" id="dumpSt"><span class="pd"></span>Idle</span>
   </div>
-  <button id="btnFmt" class="btn-main btn-stop" onclick="sdFormat()" style="margin-top:8px">FORMAT SD CARD</button>
+  <button id="btnFmt" class="btn-main btn-stop" onclick="sdFormat(this)" style="margin-top:8px">FORMAT SD CARD</button>
   <div id="fmtOut" style="font-size:.75em;color:var(--text2);margin-top:8px;display:none"></div>
 </div>
 
@@ -761,8 +972,20 @@ R"rawliteral(
     <span id="uptime" style="font-variant-numeric:tabular-nums">--</span>
   </div>
   <div class="row">
+    <span class="lbl">Power</span>
+    <span id="pwrInfo" style="font-size:.78em;color:var(--text2);text-align:right">--</span>
+  </div>
+  <div class="row">
     <span class="lbl">WiFi Clients</span>
     <span id="wifiCl">--</span>
+  </div>
+  <div class="row">
+    <span class="lbl">Memory</span>
+    <span id="memInfo" style="font-size:.78em;color:var(--text2)">--</span>
+  </div>
+  <div class="row">
+    <span class="lbl">Loop</span>
+    <span id="loopInfo" style="font-size:.78em;color:var(--text2);text-align:right">--</span>
   </div>
   <div class="row">
     <span class="lbl">OTA Partition</span>
@@ -774,34 +997,92 @@ R"rawliteral(
   </div>
 </details>
 
-<div class="foot">Tesla FSD ESP32 &middot;
-)rawliteral"
-#if defined(BOARD_TTGO_DISPLAY)
-R"rawliteral( TTGO T-Display + MCP2515)rawliteral"
-#else
-R"rawliteral( M5Stack ATOM Lite + ATOMIC CAN Base)rawliteral"
-#endif
-R"rawliteral(</div>
+<div class="foot">Tesla FSD ESP32<span id="footId"></span></div>
 <div class="foot">Free &amp; open source &middot; <a href="https://fsd.fkey.id/" target="_blank" rel="noopener">support the research</a></div>
 </div><!-- /wrap -->
 
+<!-- In-page alert / confirm + command-error toast -->
+<div id="uiDlg" class="dlg" role="alertdialog" aria-modal="true" aria-labelledby="uiDlgMsg">
+  <div class="dlg-box">
+    <div id="uiDlgMsg" class="dlg-msg"></div>
+    <div class="auth-actions">
+      <button type="button" id="uiDlgNo" class="btn-main btn-stop" onclick="dlgDone(false)">Cancel</button>
+      <button type="button" id="uiDlgYes" class="btn-main btn-blue" onclick="dlgDone(true)">OK</button>
+    </div>
+  </div>
+</div>
+<div id="uiToast" class="toast" role="alert"></div>
+
 <script>
 var ws,rt,busy=0,wifiOnce=false,authHeader='',authAction=null,restartAnchor=null;
+var wsRx=0,httpUp=true,stBusy=false,otaBusy=false;
 var httpLogAbort=null,httpLogReader=null,httpLogParts=[],httpLogBytes=0,httpLogStarted=0,httpLogRunning=false;
 var httpLogName='',httpLogReady=false,httpLogSaveUrl='';
 var httpLogAllowed=true;
 var HW=['Unknown','Legacy','HW3','HW4'];
+var CPT=['US Tesla','EU IEC','GB','IEC CCS'];   // CP_type (0x25D, #228)
 var CIRC=326.73;
 document.getElementById('deviceHost').textContent=location.host||location.hostname||'192.168.4.1';
 
+// ── In-page dialogs ──
+// Captive-portal sheets (iOS/macOS) ignore the native alert / confirm dialogs
+// (a confirm just returns false), so prompts are drawn in the page. One at a
+// time; later calls queue.
+var dlgQ=[],dlgCur=null,dlgPrev=null;
+function dlgShow(){
+  if(dlgCur||!dlgQ.length)return;
+  dlgCur=dlgQ.shift();
+  var m=document.getElementById('uiDlgMsg'),no=document.getElementById('uiDlgNo');
+  m.textContent='';
+  // One block per line: keeps the breaks and lets each line translate on its own.
+  String(dlgCur.msg).split('\n').forEach(function(l){
+    if(!l)return;
+    var p=document.createElement('div');p.textContent=l;m.appendChild(p);
+  });
+  no.style.display=dlgCur.ask?'':'none';
+  dlgPrev=document.activeElement;
+  document.getElementById('uiDlg').className='dlg show';
+  // Confirms open on Cancel: each one guards a destructive action.
+  (dlgCur.ask?no:document.getElementById('uiDlgYes')).focus();
+}
+function dlgDone(ok){
+  var c=dlgCur;if(!c)return;
+  dlgCur=null;
+  document.getElementById('uiDlg').className='dlg';
+  try{if(dlgPrev&&dlgPrev.focus)dlgPrev.focus();}catch(e){}
+  dlgPrev=null;
+  var f=ok?c.yes:c.no;
+  try{if(f)f();}finally{dlgShow();}
+}
+document.addEventListener('keydown',function(e){
+  if(!dlgCur)return;
+  var k=e.key||e.keyCode;
+  if(k==='Escape'||k==='Esc'||k===27){e.preventDefault();dlgDone(!dlgCur.ask);}
+  else if(k==='Tab'||k===9){
+    // Keep focus inside the dialog.
+    e.preventDefault();
+    var no=document.getElementById('uiDlgNo'),yes=document.getElementById('uiDlgYes');
+    ((dlgCur.ask&&document.activeElement===yes)?no:yes).focus();
+  }
+},true);
+function uiAlert(msg,done){dlgQ.push({msg:msg,ask:false,yes:done,no:done});dlgShow();}
+function uiConfirm(msg,onYes,onNo){dlgQ.push({msg:msg,ask:true,yes:onYes,no:onNo});dlgShow();}
+var toastT=0;
+function uiToast(msg){
+  var t=document.getElementById('uiToast');if(!t)return;
+  t.textContent=msg;t.className='toast show';
+  clearTimeout(toastT);toastT=setTimeout(function(){t.className='toast';},6000);
+}
+
 function initWifi(d){
-  if(wifiOnce)return;
+  if(wifiOnce||d.wifi_ssid===undefined)return;
   wifiOnce=true;
   document.getElementById('wifiSsid').value=d.wifi_ssid||'';
   document.getElementById('wifiPass').value=d.wifi_pass||'';
   document.getElementById('swWifiHid').checked=!!d.wifi_hidden;
   document.getElementById('wifiStaSsid').value=d.wifi_sta_ssid||'';
   document.getElementById('wifiStaPass').value=d.wifi_sta_pass||'';
+  document.getElementById('wifiHost').value=d.wifi_hostname||'';
 }
 
 function fmt(s){
@@ -809,8 +1090,81 @@ function fmt(s){
   return h+':'+(m<10?'0':'')+m+':'+(sc<10?'0':'')+sc;
 }
 function socCol(p){return p>60?'var(--accent)':p>30?'var(--yellow)':'var(--red)';}
+// Performance card (read-only, opt-in). Shown state persists per browser.
+var perfShow=false;
+try{perfShow=localStorage.getItem('perfShow')==='1'}catch(e){}
+function perfToggle(on){
+  perfShow=!!on;
+  try{localStorage.setItem('perfShow',perfShow?'1':'0')}catch(e){}
+  var b=document.getElementById('perfBody'),o=document.getElementById('perfOff');
+  if(b)b.style.display=perfShow?'':'none';
+  if(o)o.style.display=perfShow?'none':'';
+}
+function perfInit(){
+  var sw=document.getElementById('swPerf');
+  if(sw)sw.checked=perfShow;
+  perfToggle(perfShow);
+}
+function pfT(ms){return ms>0?(ms/1000).toFixed(2)+'s':'--';}
+function setTxt(id,t){var e=document.getElementById(id);if(e)e.textContent=t;}
+function renderPerf(d){
+  if(!perfShow||!d.perf)return;
+  var p=d.perf;
+  setTxt('pfSpeed',p.speed_ok?(p.speed||0).toFixed(1)+' km/h':'--');
+  // Timers: locked result if present, else the live run time while armed.
+  // Without a valid speed (SNA / stale) the run's progress is unknown: no
+  // live time and no "braking" then, only the locked results.
+  function cell(id,bid,t,best){
+    var e=document.getElementById(id);
+    setTxt(bid,pfT(best));
+    if(!e)return;
+    if(t>0){e.textContent=pfT(t);e.style.color='var(--accent)';}
+    else if(p.speed_ok&&p.armed&&p.run_ms>0){e.textContent=pfT(p.run_ms);e.style.color='var(--yellow)';}
+    else{e.textContent='--';e.style.color='';}
+  }
+  cell('pf050','pf050b',p.t50,p.best50);
+  cell('pf060mph','pf060mphb',p.t60mph,p.best60mph);
+  cell('pf0100','pf0100b',p.t100,p.best100);
+  var e1=document.getElementById('pf1000');
+  if(e1){
+    if(p.t1000>0){e1.textContent=pfT(p.t1000);e1.style.color='var(--accent)';}
+    else if(p.speed_ok&&p.brake_armed){e1.textContent='braking';e1.style.color='var(--yellow)';}
+    else{e1.textContent='--';e1.style.color='';}
+  }
+  setTxt('pf1000b',pfT(p.best1000));
+  // Estimated longitudinal G (no IMU).
+  setTxt('pfG',(p.g>=0?'+':'')+(p.g||0).toFixed(2)+'g');
+  setTxt('pfGpk','+'+(p.gpk||0).toFixed(2)+' / '+(p.gpkb||0).toFixed(2));
+  // Wheel slip (0x175, Party CAN).
+  var se=document.getElementById('pfSlip');
+  if(se){
+    if(p.slip_ok){se.textContent=(p.slip>=0?'+':'')+p.slip.toFixed(1)+'%';se.style.color=Math.abs(p.slip)>5?'var(--red)':'var(--accent)';}
+    else if(!p.wheel_seen){se.textContent='n/a';se.style.color='var(--text3)';}
+    else{se.textContent='--';se.style.color='';}
+  }
+  // Power + pack temp (BMS, Vehicle-CAN tap).
+  if(d.bms&&d.bms.seen){
+    setTxt('pfPow',(d.bms.voltage*d.bms.current/1000).toFixed(1)+' kW');
+    // Pack temp + advisory only from a fresh, plausible 0x312 reading (temp_ok).
+    var te=document.getElementById('pfTemp');
+    if(d.bms.temp_ok){
+      var tmax=d.bms.temp_max,tmin=d.bms.temp_min;
+      if(te){
+        te.textContent=tmin+'~'+tmax+'°C';
+        te.style.color=tmax>=45?'var(--red)':tmax>=35?'var(--yellow)':tmin<=5?'var(--yellow)':'var(--accent)';
+      }
+      setTxt('pfAdv',tmin<=5?'Cold pack — reduced regen and power until warmed':tmax>=45?'Hot pack — power may be limited':'Normal');
+    }else{
+      if(te){te.textContent='--';te.style.color='';}
+      setTxt('pfAdv','--');
+    }
+  }else{
+    setTxt('pfPow','--');setTxt('pfTemp','--');setTxt('pfAdv','No BMS frames (needs Vehicle-CAN tap)');
+  }
+}
 function pill(id,on,txt,warnClass){
   var e=document.getElementById(id);
+  if(!e)return;
   e.className='pill '+(warnClass||''+(on?'on':'off'));
   e.innerHTML='<span class="pd"></span>'+txt;
 }
@@ -830,6 +1184,7 @@ function updateControlsSummary(d){
   if(d.op_mode===1)items.push('Active');
   if(d.ignore_ota)items.push('Ignore OTA');
   if(d.fsd_unlock)items.push('FSD Unlock');
+  if(d.hw3_speed_override)items.push('HW3 Speed Override');
   if(d.nag_killer)items.push('NAG Killer');
   if(d.continuous_ap)items.push('Continuous AP');
   if(d.ap_first)items.push('AP-First');
@@ -838,9 +1193,13 @@ function updateControlsSummary(d){
   if(d.china_mode)items.push('China');
   if(d.isa_speed_enabled&&d.suppress_speed_chime)items.push('Chime');
   if(d.tlssc_restore)items.push('TLSSC');
+  if(d.precondition)items.push('Precond');
   if(d.assist_tlssc_bit38)items.push('TLSSC bit38');
+  if(d.accel_mode>0)items.push('Accel '+(['','Chill','Standard','Performance'][d.accel_mode]||'?'));
+  if(d.cp_type_eu_rewrite)items.push('EU CP Type');
   if(d.display_enabled)items.push('Display');
   if(d.can_dump)items.push('CAN Dump');
+  if(d.mcp_rx_task&&d.mcp_rx_task.on)items.push('MCP2515 RX task');
   e.textContent=items.length?items.join(', '):'Expand to setup';
   e.title=e.textContent;
 }
@@ -848,6 +1207,9 @@ function updateControlsSummary(d){
 var bbCaptures=-1,bbNew=false,bbNoteDismissed=false;
 try{bbNoteDismissed=localStorage.getItem('bbNote')==='1'}catch(e){}
 function bbEsc(s){return String(s==null?'':s).replace(/[<>&"]/g,function(c){return{'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]})}
+// The fixed words of a composed line in a text node of their own, which the
+// zh layer can translate (it matches whole text nodes).
+function sp(t){return '<span>'+t+'</span>';}
 function bbDismiss(){bbNoteDismissed=true;try{localStorage.setItem('bbNote','1')}catch(e){}var n=document.getElementById('bbNote');if(n)n.style.display='none';}
 function bbSeen(){bbNew=false;var bd=document.getElementById('bbBadge');if(bd)bd.style.display='none';}
 function bbSync(d){
@@ -855,7 +1217,7 @@ function bbSync(d){
   var sw=document.getElementById('swBlackbox');if(sw&&sw!==document.activeElement)sw.checked=!!b.enabled;
   pill('bbSt',b.enabled,b.armed?'Capturing':(b.enabled?'Armed':'Off'));
   var st=document.getElementById('bbStore');
-  if(st)st.textContent=(b.backend||'?')+' · '+(b.psram?'PSRAM':'internal')+' · '+((b.cap||0).toLocaleString())+' frames · '+(b.events||0)+' saved';
+  if(st)st.innerHTML=bbEsc(b.backend||'?')+' · '+(b.psram?'PSRAM':sp('internal RAM'))+' · '+((b.cap||0).toLocaleString())+' '+sp('frames')+' · '+(b.events||0)+' '+sp('saved');
   var vw=document.getElementById('bbVolatileWarn');if(vw)vw.style.display=b.volatile?'block':'none';
   var note=document.getElementById('bbNote');if(note)note.style.display=bbNoteDismissed?'none':'block';
   var da=document.getElementById('bbDelAll');if(da)da.style.display=(b.events>0)?'block':'none';
@@ -867,25 +1229,30 @@ function bbRefreshList(){
   fetch('/blackbox/list').then(function(r){return r.json()}).then(function(a){
     var el=document.getElementById('bbList');if(!el)return;
     if(!a||!a.length){el.innerHTML='<div style="font-size:.78em;color:var(--text3);padding:6px 0">No events recorded yet.</div>';return;}
-    a.sort(function(x,y){return (y.name||'').localeCompare(x.name||'')});
+    // Newest first: by event number (0 for names from before it existed).
+    a.sort(function(x,y){return ((y.seq||0)-(x.seq||0))||(y.name||'').localeCompare(x.name||'')});
     var h='';
     a.forEach(function(ev){
       var s=ev.summary||{},nm=encodeURIComponent(ev.name);
+      // Events saved by older firmware name a manual mark as a transition that
+      // did not happen ("MANUAL 2->2 @ t=..."): show the state once.
+      var det=String(s.detail||s.trigger||'event').replace(/^(\S+) (\d+)->\2 @/,'$1 AP state $2 @');
       h+='<div style="border-top:1px solid var(--border);padding:8px 0">';
-      h+='<div style="font-size:.8em;color:var(--text);font-family:monospace">'+bbEsc(s.detail||s.trigger||'event')+'</div>';
-      h+='<div style="font-size:.72em;color:var(--text3);margin:2px 0">'+bbEsc(s.hw||'')+' · '+(s.frames||0)+' frames · '+bbEsc((s.buses&&s.buses.dual_can)?'dual-CAN':'single')+'</div>';
+      h+='<div style="font-size:.8em;color:var(--text);font-family:monospace">'+bbEsc(det)+'</div>';
+      h+='<div style="font-size:.72em;color:var(--text3);margin:2px 0">'+bbEsc(s.hw||'')+' · '+(s.frames||0)+' '+sp('frames')+' · '+sp((s.buses&&s.buses.dual_can)?'dual-CAN':'single')+'</div>';
       h+='<div style="display:flex;gap:6px;margin-top:4px">';
       h+='<a class="btn-main btn-blue" style="padding:4px 10px;font-size:.7em;flex:0" href="/blackbox/get?name='+nm+'&type=log" onclick="bbSeen()">.log</a>';
       h+='<a class="btn-main btn-blue" style="padding:4px 10px;font-size:.7em;flex:0" href="/blackbox/get?name='+nm+'&type=json" onclick="bbSeen()">.json</a>';
-      h+='<button type="button" class="btn-main btn-stop" style="padding:4px 10px;font-size:.7em" onclick="bbDelete(\''+bbEsc(ev.name)+'\')">del</button>';
+      h+='<button type="button" class="btn-main btn-stop" style="padding:4px 10px;font-size:.7em;flex:none;width:auto;margin-left:auto" onclick="bbDelete(\''+bbEsc(ev.name)+'\')">del</button>';
       h+='</div></div>';
     });
     el.innerHTML=h;
   }).catch(function(){});
 }
 function bbDelete(n){cmd('blackbox_delete',n);setTimeout(bbRefreshList,400);}
-function bbDeleteAll(){if(confirm('Delete all recorded events from the device?')){cmd('blackbox_delete_all',true);bbSeen();setTimeout(bbRefreshList,400);}}
+function bbDeleteAll(){uiConfirm('Delete all recorded events from the device?',function(){cmd('blackbox_delete_all',true);bbSeen();setTimeout(bbRefreshList,400);});}
 // ── Tap capability checker (#125) ──
+// Per verdict (FSDCapVerdict): OK, dual-CAN, missing, present but nothing valid.
 var CAP_MSG={
   nag_killer:['0x370 + DAS state present — gates correctly',
               '0x370 here but no DAS state — dual-CAN recommended (read DAS on a second tap)',
@@ -898,18 +1265,31 @@ var CAP_MSG={
                   'no AP control frame to modify here'],
   soft_engage:['0x129 steering angle present',
                '',
-               'no 0x129 — degrades to AP-First-only'],
+               'no 0x129 — degrades to AP-First-only',
+               '0x129 present, no valid angle yet'],
   body_control:['Vehicle/body bus reachable — mirror/window/lights frames present (RX only; not proof of actuation)',
                 '',
                 'not on this tap — needs the X179 A-pillar (Vehicle-bus) tap']};
 function capRow(name,key,v){
-  var col=v===0?'var(--accent)':v===1?'var(--yellow)':'var(--red)';
-  var sym=v===0?'✓':v===1?'⚠':'✗';
-  var msg=(CAP_MSG[key]||['','',''])[v]||'';
+  var col=v===0?'var(--accent)':v===1?'var(--yellow)':v===3?'var(--text2)':'var(--red)';
+  var sym=v===0?'✓':v===1?'⚠':v===3?'–':'✗';
+  var msg=(CAP_MSG[key]||[])[v]||'';
   return '<div style="display:flex;gap:8px;padding:5px 0;border-top:1px solid var(--border)">'
     +'<span style="color:'+col+';font-weight:700;flex:0 0 14px">'+sym+'</span>'
-    +'<span style="flex:0 0 92px;font-size:.8em;color:var(--text)">'+name+'</span>'
+    +'<span style="flex:0 0 112px;white-space:nowrap;font-size:.8em;color:var(--text)">'+name+'</span>'
     +'<span style="font-size:.73em;color:var(--text3);line-height:1.3">'+msg+'</span></div>';
+}
+// bus_hint (FSDCapBusHint), the same as the firmware's English "hint" text.
+var CAP_BUS_HINT=['','looks Party-like','looks Chassis/Vehicle-like'];
+// vehicle_hint (0x3C2) is a hint about the bus, not a pass/fail, so no ✓/✗.
+var CAP_VEH_HINT=['no 0x3C2 and no body frames — no hint',
+  '0x3C2 seen — likely the Vehicle CAN pair (a hint, not a verdict)',
+  'body frames without 0x3C2 — likely a forwarded subset, not the Vehicle CAN pair (a hint, not a verdict)'];
+function capHintRow(name,v){
+  return '<div style="display:flex;gap:8px;padding:5px 0;border-top:1px solid var(--border)">'
+    +'<span style="color:var(--text3);font-weight:700;flex:0 0 14px">i</span>'
+    +'<span style="flex:0 0 112px;white-space:nowrap;font-size:.8em;color:var(--text)">'+name+'</span>'
+    +'<span style="font-size:.73em;color:var(--text3);line-height:1.3">'+(CAP_VEH_HINT[v]||'')+'</span></div>';
 }
 function capSync(d){
   var c=d.capability;if(!c)return;
@@ -924,21 +1304,24 @@ function capSync(d){
   var h='';
   buses.forEach(function(b){
     h+='<div style="margin-top:8px">';
-    if(dual)h+='<div style="font-size:.78em;color:var(--text2);font-weight:600;margin-bottom:2px">'+bbEsc(b.bus)+' &middot; '+(b.frames||0)+' frames</div>';
+    if(dual)h+='<div style="font-size:.78em;color:var(--text2);font-weight:600;margin-bottom:2px">'+bbEsc(b.bus)+' &middot; '+(b.frames||0)+' '+sp('frames')+'</div>';
     h+=capRow('Nag killer','nag_killer',b.nag_killer);
     h+=capRow('AP-First','ap_first',b.ap_first);
     h+=capRow('FSD activate','fsd_activation',b.fsd_activation);
     h+=capRow('Soft Engage','soft_engage',b.soft_engage);
     h+=capRow('Body/comfort bus','body_control',b.body_control);
     if(b.body_control===0){
-      var seen=[];
-      if(b.body_ui)seen.push('mirror/lock/horn');
-      if(b.body_window)seen.push('windows');
-      if(b.body_lights)seen.push('lights/turn');
-      if(b.body_door)seen.push('mirror read-back');
-      if(seen.length)h+='<div style="font-size:.7em;color:var(--text3);padding-top:3px">Reachable frames: '+seen.join(', ')+' (presence only — not proof injection actuates them).</div>';
+      // Which frames were seen comes per bus under "ids" (capability_status_json()).
+      var ids=b.ids||{},seen=[];
+      if(ids.body_ui)seen.push('mirror/lock/horn');
+      if(ids.body_window)seen.push('windows');
+      if(ids.body_lights)seen.push('lights/turn');
+      if(ids.body_door)seen.push('mirror read-back');
+      if(seen.length)h+='<div style="font-size:.7em;color:var(--text3);padding-top:3px">'+sp('Reachable frames:')+' '+seen.map(sp).join(sp(', '))+' '+sp('(presence only — not proof injection actuates them).')+'</div>';
     }
-    var hint=b.hint?('Best guess: '+bbEsc(b.hint)+' — confirm in Service Mode → CAN Port'):'';
+    if(typeof b.vehicle_hint==='number')h+=capHintRow('Bus hint',b.vehicle_hint);
+    var bh=CAP_BUS_HINT[b.bus_hint]||'';
+    var hint=bh?(sp('Best guess:')+' '+sp(bh)+' '+sp("— confirm with your car's wiring diagram (Service Mode → CAN Port where available)")):'';
     if(hint)h+='<div style="font-size:.7em;color:var(--text3);padding-top:5px">'+hint+'</div>';
     if(b.hw_unconfirmed)h+='<div style="font-size:.7em;color:var(--yellow);padding-top:3px">HW unconfirmed — 0x399 reading assumed; verdict may change once HW is detected.</div>';
     h+='</div>';
@@ -951,8 +1334,21 @@ function ring(p){
   b.style.stroke=socCol(p);
 }
 
+function focusId(){var a=document.activeElement;return a?a.id:'';}
+// Each section is guarded on its own, so a bad field in one cannot blank the
+// rest of the page. Device goes first: it has nothing to wait for.
+function sect(name,fn,d){try{fn(d);}catch(x){console.error('upd '+name,x);}}
 function upd(d){
   if(!d || Date.now() < busy) return;
+  sect('device',updDevice,d);
+  sect('status',updStatus,d);
+  sect('controls',updControls,d);
+  sect('can',updCan,d);
+  sect('battery',updBattery,d);
+  sect('tpms',updTpms,d);      // read-only
+  sect('perf',renderPerf,d);   // read-only, opt-in
+}
+function updStatus(d){
   // Status
   var apActive=!!d.ap_active;
   pill('fsdSt', apActive, apActive?'Active':'Waiting');
@@ -964,8 +1360,23 @@ function upd(d){
     hwEl.innerHTML='<span class="pd"></span>'+(HW[d.hw_version]||'?');
   }
 
+  // HW3 speed read-out (#209): car value -> value forwarded on 0x3FD; -1 = not seen
+  var h3r=document.getElementById('rowHw3Spd');
+  if(h3r){
+    h3r.style.display=d.hw_version===2?'flex':'none';
+    var h3v=function(c,o){return (c===undefined||c<0)?'--':c+'\u2192'+o;};
+    var h3t=document.getElementById('hw3Spd');
+    if(h3t)h3t.textContent='Profile '+h3v(d.hw3_car_profile,d.hw3_sent_profile)+' \u00b7 Offset '+h3v(d.hw3_car_offset,d.hw3_sent_offset)+' \u00b7 Follow '+((d.follow_distance===undefined||d.follow_distance<0)?'--':d.follow_distance);
+  }
+
   pill('nagSt', d.nag_killer, d.nag_killer?'ON':'OFF');
   pill('canVeh', d.can_vehicle_detected, d.can_vehicle_detected?'Detected':'No CAN Traffic');
+  // Charge-port type read-out (0x25D, #228): the car's own type, -- until seen,
+  // marked stale once CP_status has stopped arriving.
+  var cpEl=document.getElementById('cpType');
+  if(cpEl) cpEl.textContent=(d.cp_type===undefined||d.cp_type<0)?'--':(CPT[d.cp_type]||('type '+d.cp_type));
+  var cpSx=document.getElementById('cpStale');
+  if(cpSx) cpSx.style.display=(d.cp_stale&&d.cp_type>=0)?'inline':'none';
   pill('bmsSt', d.bms && d.bms.seen, (d.bms && d.bms.seen)?'Live':'Waiting Frames');
   var bF=document.getElementById('bmsFrames');
   if(bF) bF.textContent='HV:'+(d.bms_hv_seen||0)+' SOC:'+(d.bms_soc_seen||0)+' TH:'+(d.bms_thermal_seen||0);
@@ -977,10 +1388,19 @@ function upd(d){
     if(d.ota) otaB.innerHTML=d.ignore_ota?'&#9888;&#xFE0F; OTA UPDATE IN PROGRESS &mdash; TX ALLOWED BY IGNORE OTA':'&#9888;&#xFE0F; OTA UPDATE IN PROGRESS &mdash; CAN TX SUSPENDED';
   }
 
+  // Autopark banner (#180) — TX paused during an in-car Autopark episode
+  var apB=document.getElementById('autoparkBanner');
+  if(apB) apB.style.display=d.autopark_block?'block':'none';
+
+  // Signal Map watchdog banner (#100)
+  var smW=document.getElementById('sigmapWarn');
+  if(smW) smW.style.display=d.signal_map_das_missing?'block':'none';
+
   // 14.x firmware warning banner
   var w14x=document.getElementById('warn14x');
   if(w14x) w14x.style.display=d.firmware_14x_warning?'block':'none';
-
+}
+function updControls(d){
   // Mode button
   var act=d.op_mode===1;
   var btn=document.getElementById('btnMode');
@@ -995,6 +1415,7 @@ function upd(d){
   var hwSel=document.getElementById('selHwOverride');
   if(hwSel && d.hw_override!==undefined && document.activeElement!==hwSel) hwSel.value=String(d.hw_override);
   if(document.getElementById('swFsdUnlock')) document.getElementById('swFsdUnlock').checked=d.fsd_unlock;
+  if(document.getElementById('swHw3Spd')) document.getElementById('swHw3Spd').checked=d.hw3_speed_override;
   if(document.getElementById('swNag')) document.getElementById('swNag').checked=d.nag_killer;
   if(document.getElementById('swContinuousAp')) document.getElementById('swContinuousAp').checked=d.continuous_ap;
   if(document.getElementById('swApFirst')) document.getElementById('swApFirst').checked=d.ap_first;
@@ -1009,6 +1430,7 @@ function upd(d){
   if(document.getElementById('swFsd')) document.getElementById('swFsd').checked=d.force_fsd;
   if(document.getElementById('swChina')) document.getElementById('swChina').checked=d.china_mode;
   if(document.getElementById('swChime')) document.getElementById('swChime').checked=d.suppress_speed_chime;
+  if(document.getElementById('swPrecond')) document.getElementById('swPrecond').checked=d.precondition;
   if(document.getElementById('rowChime')) document.getElementById('rowChime').style.display=d.isa_speed_enabled?'flex':'none';
   if(document.getElementById('swTlssc')) document.getElementById('swTlssc').checked=d.tlssc_restore;
   if(document.getElementById('swSummon')) document.getElementById('swSummon').checked=d.summon_unlock;
@@ -1018,29 +1440,119 @@ function upd(d){
   if(document.getElementById('swTelOff')) document.getElementById('swTelOff').checked=d.assist_telemetry_off;
   var apmv3Sel=document.getElementById('selApmv3');
   if(apmv3Sel && d.apmv3_branch!==undefined && document.activeElement!==apmv3Sel) apmv3Sel.value=String(d.apmv3_branch);
+  // Acceleration Mode (#211): setting + car map -> map going out. Mode names as
+  // the car's own UI has them: pedal map 1 is Standard (SPORT in older signal
+  // lists). The fixed words sit in spans of their own for the i18n layer.
+  var acSel=document.getElementById('selAccel');
+  if(acSel && d.accel_mode!==undefined && document.activeElement!==acSel) acSel.value=String(d.accel_mode);
+  var acSt=document.getElementById('accelSt');
+  if(acSt && d.accel_car_map!==undefined){
+    var ACM=['CHILL','STANDARD','PERFORMANCE'], at;
+    if(d.accel_car_map<0) at=d.accel_bad>0?'0x334 not recognised ('+d.accel_bad+' rejected)':'no 0x334 on this bus yet';
+    else if(d.accel_sent_map===d.accel_car_map) at=sp('Car')+' '+ACM[d.accel_car_map]+' \u00b7 '+sp('pass-through');
+    else at=sp('Car')+' '+ACM[d.accel_car_map]+' \u2192 '+sp('sent')+' '+ACM[d.accel_sent_map];
+    // A new mode waits for standstill while the latched one keeps going out:
+    // name the waiting mode, so it is not read as the one being sent.
+    if(d.accel_pending) at+=' \u00b7 '+(ACM[d.accel_mode-1]||'?')+' '+sp('pending, applies at standstill');
+    else if(d.accel_mode>0 && !d.tx_allowed) at+=' \u00b7 '+sp('TX off');
+    acSt.innerHTML=at;
+  }
+  // EU Charge-Port Type (0x25D, #228): toggle + what the car reports and whether
+  // the rewrite is active or held off (and by which guard).
+  if(document.getElementById('swCpType')) document.getElementById('swCpType').checked=d.cp_type_eu_rewrite;
+  var cpSt=document.getElementById('cpTypeSt');
+  if(cpSt){
+    var ct;
+    if(d.cp_type===undefined||d.cp_type<0) ct='no CP_status on this tap (the 8-byte 0x25D, Vehicle CAN only)';
+    else if(d.cp_stale) ct='Stale: no CP_status from the car for '+(d.cp_age_s||0)+' s';
+    else{
+      ct='Car '+(CPT[d.cp_type]||('type '+d.cp_type));
+      if(d.cp_type_eu_rewrite){
+        if(d.cp_type!==0) ct+=' \u00b7 already EU, not rewritten';
+        else if(!d.tx_allowed) ct+=' \u00b7 TX off';
+        else if(d.cp_plug===1) ct+=' \u00b7 held \u2014 cable plugged in';
+        else if(d.cp_plug===2) ct+=' \u00b7 held \u2014 plug state unknown';
+        else ct+=' \u2192 IEC CCS';
+        if(d.cp_type_tx>0) ct+=' ('+d.cp_type_tx+' sent)';
+      }
+    }
+    cpSt.textContent=ct;
+  }
+  // MCP2515 receive task (opt-in): queue depth reached, frames lost on a full
+  // queue, and the chip's RX overflows the task saw. Only builds with an
+  // MCP2515 send mcp_rx_task; the row stays hidden on the others.
+  var mr=d.mcp_rx_task,mrSt=document.getElementById('mcpRxSt');
+  var mrRow=document.getElementById('mcpRxRow');
+  if(mrRow) mrRow.style.display=mr?'block':'none';
+  if(mr&&document.getElementById('swMcpRx')) document.getElementById('swMcpRx').checked=mr.on;
+  if(mr&&mrSt){
+    var mw=function(t){return '<span style="white-space:nowrap">'+t+'</span>';};
+    if(mr.run) mrSt.innerHTML=mw(mr.int?'Running, INT pin':'Running, 1 ms poll')+' \u00b7 '+mw('queue max')+'\u00a0'+mr.max+'/'+mr.len+' \u00b7 '+mw('lost on a full queue')+'\u00a0'+mr.drop+' \u00b7 '+mw('chip overflows')+'\u00a0'+mr.ovf;
+    else mrSt.innerHTML=mw(mr.on?'Waiting for the MCP2515':'Off (read from the loop)');
+  }
   if(document.getElementById('swTrkMode')) document.getElementById('swTrkMode').checked=d.track_mode_inject;
-  if(document.getElementById('trkRot')&&document.activeElement.id!=='trkRot'&&d.track_rotation_pct!==undefined){document.getElementById('trkRot').value=d.track_rotation_pct;var _tr=document.getElementById('trkRotV');if(_tr)_tr.textContent=d.track_rotation_pct;}
-  if(document.getElementById('trkStab')&&document.activeElement.id!=='trkStab'&&d.track_stability_pct!==undefined){document.getElementById('trkStab').value=d.track_stability_pct;var _ts=document.getElementById('trkStabV');if(_ts)_ts.textContent=d.track_stability_pct;}
+  if(document.getElementById('trkRot')&&focusId()!=='trkRot'&&d.track_rotation_pct!==undefined){document.getElementById('trkRot').value=d.track_rotation_pct;var _tr=document.getElementById('trkRotV');if(_tr)_tr.textContent=d.track_rotation_pct;}
+  if(document.getElementById('trkStab')&&focusId()!=='trkStab'&&d.track_stability_pct!==undefined){document.getElementById('trkStab').value=d.track_stability_pct;var _ts=document.getElementById('trkStabV');if(_ts)_ts.textContent=d.track_stability_pct;}
   if(document.getElementById('swTrkPC')) document.getElementById('swTrkPC').checked=d.track_post_cooling;
   if(document.getElementById('swTrkCO')) document.getElementById('swTrkCO').checked=d.track_cmp_overclock;
   if(document.getElementById('swDisp')) document.getElementById('swDisp').checked=!!d.display_enabled;
-  if(document.activeElement.id!=='dispBr' && document.getElementById('dispBr'))
-    document.getElementById('dispBr').value=d.display_brightness||50;
-  if(document.activeElement.id!=='dispTo' && document.getElementById('dispTo'))
-    document.getElementById('dispTo').value=d.display_timeout_s||60;
+  if(focusId()!=='dispBr' && document.getElementById('dispBr'))
+    document.getElementById('dispBr').value=d.display_brightness!==undefined?d.display_brightness:50;
+  if(focusId()!=='dispTo' && document.getElementById('dispTo'))
+    document.getElementById('dispTo').value=d.display_timeout_s!==undefined?d.display_timeout_s:60;
   if(document.getElementById('swDump')) document.getElementById('swDump').checked=!!d.can_dump;
 
-  if(document.activeElement.id!=='numSleep' && document.getElementById('numSleep'))
+  if(focusId()!=='numSleep' && document.getElementById('numSleep'))
     document.getElementById('numSleep').value=Math.floor((d.sleep_ms||0)/1000);
 
   updateControlsSummary(d);
   pill('dumpSt',d.can_dump,d.can_dump?'Recording':'Idle');
-
-  // CAN stats
+}
+// CAN Bus card. The counts are since the last reset (#252); the device keeps
+// the baseline, so every open dashboard shows the same reset.
+var canLast=null;
+function canStats(d){
   if(document.getElementById('rxCnt')) document.getElementById('rxCnt').textContent=(d.rx_count||0).toLocaleString();
   if(document.getElementById('txCnt')) document.getElementById('txCnt').textContent=(d.tx_count||0).toLocaleString();
   if(document.getElementById('crcErr')) document.getElementById('crcErr').textContent=d.crc_errors||0;
+  // One span per label, so each one translates on its own (and stays whole).
+  var cs=document.getElementById('crcSplit'),nw=function(t){return '<span style="white-space:nowrap">'+t+'</span>';};
+  if(cs) cs.innerHTML=nw('RX missed')+'\u00a0'+(d.rx_missed_count||0)+' · '+nw('bus')+'\u00a0'+(d.bus_error_count||0)+' · '+nw('TX fail')+'\u00a0'+(d.tx_failed_count||0);
   if(document.getElementById('fps')) document.getElementById('fps').textContent=(d.fps||0.0).toFixed(1);
+  var rs=d.can_reset_s;
+  setTxt('canSinceL',rs>=0?'Since reset':'Since boot');
+  setTxt('canSince',fmt(rs>=0?rs:(d.uptime_s||0)));
+  // Per bus (#253): only boards with two controllers send can_buses.
+  var g=document.getElementById('canBuses'),b=d.can_buses;
+  if(!g)return;
+  if(!b||b.length<2){g.style.display='none';return;}
+  var n=function(x,k){return x.up?(x[k]||0).toLocaleString():'--';};
+  var rows=[['RX Frames','rx'],['TX Frames','tx'],['RX missed','rx_missed'],['Bus errors','bus_error'],['TX fail','tx_failed']];
+  var h='<span></span>';
+  b.forEach(function(x){
+    h+='<span class="th">'+bbEsc(x.name)+' · '+bbEsc(x.drv)
+      +(x.up?'':'<br><span style="color:var(--yellow)">not detected</span>')+'</span>';
+  });
+  rows.forEach(function(r){
+    h+='<span class="tu">'+r[0]+'</span>';
+    b.forEach(function(x){h+='<span>'+n(x,r[1])+'</span>';});
+  });
+  g.style.gridTemplateColumns='auto repeat('+b.length+',1fr)';
+  g.innerHTML=h;
+  g.style.display='';
+}
+function canReset(){
+  uiConfirm('Reset the CAN Bus counters?\nRX, TX, the error counts and frames/s start again from zero on every open dashboard. Black-box, CAN captures and Tap Check keep their own counts.',function(){
+    cmd('can_counters_reset',true);
+    // Pushes are held for a moment after a command: show the zeros now.
+    if(canLast)canStats({can_reset_s:0,can_buses:(canLast.can_buses||[]).map(function(x){
+      return {name:x.name,drv:x.drv,up:x.up};
+    })});
+  });
+}
+function updCan(d){
+  canLast=d;
+  canStats(d);
   httpLogAllowed=true; // capture works in both modes — needed to log through an Activate (#108)
   if(!httpLogRunning)setHttpLogUi(false);
   if(!httpLogRunning){
@@ -1059,8 +1571,14 @@ function upd(d){
     document.getElementById('httpLogDrop').textContent=((d.http_can_stream&&d.http_can_stream.dropped)||0)+' frames / rx-missed '+((d.http_can_stream&&d.http_can_stream.rx_missed)||0);
   if(document.getElementById('httpLogFiltered'))
     document.getElementById('httpLogFiltered').textContent=((d.http_can_stream&&d.http_can_stream.filtered)||0)+' frames';
-
+}
+function updBattery(d){
   // Battery
+  // Car-displayed SOC (0x33A) can arrive without the BMS frames; shown when decoded.
+  var cs=d.bms&&d.bms.car_soc!=null?d.bms.car_soc:null;
+  var cr=document.getElementById('rowCarSoc');
+  if(cr) cr.style.display=cs==null?'none':'';
+  setTxt('bCarSoc',cs==null?'--':cs+'%');
   if(d.bms && d.bms.seen){
     var sn=document.getElementById('bSoc');
     if(sn){
@@ -1074,13 +1592,110 @@ function upd(d){
       ce.textContent=(d.bms.current>=0?'+':'')+d.bms.current.toFixed(1)+'A';
       ce.style.color=d.bms.current>=0?'var(--accent)':'var(--red)';
     }
-    if(document.getElementById('bTemp')) document.getElementById('bTemp').textContent=d.bms.temp_min+'~'+d.bms.temp_max+'\u00b0C';
+    if(document.getElementById('bTemp')) document.getElementById('bTemp').textContent=d.bms.temp_ok?d.bms.temp_min+'~'+d.bms.temp_max+'\u00b0C':'--';
   }
-
+}
+// Tyre pressure (read-only, 0x219). Columns are named as corners when every
+// slot has its own: the 5-byte form's location field, or the 7-byte form's
+// fixed FL, FR, RL, RR (#237). Otherwise they stay in the order the car sends.
+// The card shows up once 0x219 has been seen; its switch and the unit are kept
+// per browser, as the Performance card's switch is (#237).
+var TPOS=['FL','FR','RL','RR'];
+var tpShow=true,tpUnit='bar',tpLast=null;
+try{tpShow=localStorage.getItem('tpmsShow')!=='0';tpUnit=localStorage.getItem('tpmsUnit')==='psi'?'psi':'bar';}catch(e){}
+function tpToggle(on){
+  tpShow=!!on;
+  try{localStorage.setItem('tpmsShow',tpShow?'1':'0')}catch(e){}
+  var b=document.getElementById('tpBody'),o=document.getElementById('tpOff');
+  if(b)b.style.display=tpShow?'':'none';
+  if(o)o.style.display=tpShow?'none':'';
+}
+function tpSetUnit(u){
+  tpUnit=u==='psi'?'psi':'bar';
+  try{localStorage.setItem('tpmsUnit',tpUnit)}catch(e){}
+  if(tpLast)updTpms(tpLast);
+}
+function tpInit(){
+  var sw=document.getElementById('swTpms'),su=document.getElementById('selTpUnit');
+  if(sw)sw.checked=tpShow;
+  if(su)su.value=tpUnit;
+  tpToggle(tpShow);
+}
+// Age of a reading: seconds, then minutes, then h:mm:ss.
+function ageTxt(s){s=Math.max(0,Math.floor(s||0));return s<60?s+' s':s<3600?Math.floor(s/60)+' min':fmt(s);}
+function updTpms(d){
+  var c=document.getElementById('tpmsCard'),t=d.tpms,i;
+  if(!c)return;
+  if(!t||!t.seen){c.style.display='none';return;}
+  c.style.display='';
+  tpLast=d;
+  var mb=t.mbar||[],tc=t.temp||[],ps=t.pos||[],have=false,anyT=false;
+  for(i=0;i<4;i++){if(mb[i]!=null)have=true;if(tc[i]!=null)anyT=true;}
+  var known=t.dlc===5||t.dlc===7,stale=have&&!!t.stale;
+  pill('tpmsSt',have&&!stale,!have?'No reading':stale?'Stale':'Receiving');
+  var ord=[],used={};
+  for(i=0;i<4;i++){var p=ps[i];if(p==null||p<0||p>3||used[p])break;used[p]=1;ord[p]=i;}
+  var named=i===4;
+  if(!named)ord=[0,1,2,3];
+  var bar=function(m){return m==null?'--':(Math.round(m/10)/100).toFixed(2);};
+  var psi=function(m){return m==null?'--':(m*0.0145038).toFixed(1);};
+  var u=tpUnit==='psi'?psi:bar;
+  var h='<span></span>',ru='<span class="tu">'+tpUnit+'</span>',rt='<span class="tu">\u00b0C</span>';
+  ord.forEach(function(k,n){
+    h+='<span class="th">'+(named?TPOS[n]:String(n+1))+'</span>';
+    ru+='<span>'+u(mb[k])+'</span>';
+    rt+='<span>'+(tc[k]==null?'--':tc[k])+'</span>';
+  });
+  var g=document.getElementById('tpGrid');
+  if(g){g.innerHTML=h+ru+(anyT?rt:'');g.className='tg'+(stale?' stale':'');}
+  // When the shown values were last updated, yellow once they count as stale.
+  var ar=document.getElementById('rowTpAge'),ae=document.getElementById('tpAge');
+  if(ar)ar.style.display=have?'flex':'none';
+  if(have&&ae){ae.textContent=ageTxt(t.age_s);ae.style.color=stale?'var(--yellow)':'';}
+  var tg=(t.target||[]).filter(function(v){return v!=null;});
+  if(tg.length===2&&tg[0]===tg[1])tg=[tg[0]];
+  var tr=document.getElementById('rowTpTgt');
+  if(tr)tr.style.display=tg.length?'flex':'none';
+  if(tg.length)setTxt('tpTgt',tg.map(u).join(' / ')+' '+tpUnit);
+  var show=function(id,on){var e=document.getElementById(id);if(e)e.style.display=on?'':'none';};
+  show('tpOrder',have&&!named);
+  show('tpNone',!have&&known);
+  show('tpForm',!known);
+}
+function updDevice(d){
   // Device
-  if(document.getElementById('fwBuild')) document.getElementById('fwBuild').textContent=d.fw_build;
+  if(document.getElementById('fwBuild') && d.fw_build) document.getElementById('fwBuild').textContent=(d.fw_version?d.fw_version+' \u00b7 ':'')+d.fw_build;
+  if(d.board) setTxt('footId',' \u00b7 '+d.board+(d.fw_version?' \u00b7 '+d.fw_version:''));
   if(document.getElementById('uptime')) document.getElementById('uptime').textContent=fmt(d.uptime_s||0);
   if(document.getElementById('wifiCl')) document.getElementById('wifiCl').textContent=d.wifi_clients||0;
+  // Lowest free loop-task stack since boot + heap now / lowest. Red under 1 KB of stack.
+  var me=document.getElementById('memInfo');
+  if(me && d.stack_free!==undefined){
+    var kb=function(b){return ((b||0)/1024).toFixed(1)+' KB';};
+    me.textContent='stack '+kb(d.stack_free)+' \u00b7 heap '+kb(d.heap_free)+' (min '+kb(d.heap_min)+')';
+    me.style.color=d.stack_free<1024?'var(--red)':'var(--text2)';
+  }
+  // Longest loop() pass, the stage that took most of it, and passes over
+  // 25 ms: since the CAN Bus card's reset when there was one, else since boot.
+  var lo=document.getElementById('loopInfo'),lp=d.loop;
+  if(lo && lp){
+    var lr=d.can_reset_s>=0,lm=lr?lp.r_max_us:lp.max_us,ls=function(t){return '<span>'+t+'</span>';};
+    lo.innerHTML=ls('longest')+' '+(lm/1000).toFixed(1)+' ms ('+(lr?lp.r_stage:lp.stage)+') \u00b7 '+(lr?lp.r_slow:lp.slow)+' '+ls('over 25 ms')+(lr?' \u00b7 '+ls('since CAN reset'):'');
+    lo.style.color=lm>25000?'var(--yellow)':'var(--text2)';
+  }
+  // Power / reset log (#218). Codes mirror power_log.h (reset) and FsdPwrVerdict
+  // (12V). Each phrase sits in its own span so the i18n layer can translate it.
+  var pe=document.getElementById('pwrInfo');
+  if(pe && d.reset_reason!==undefined){
+    var RST=['Unknown reset','Power-on','Brownout','Panic','Watchdog','Software restart','Deep-sleep wake','External reset','USB reset'];
+    var PV=['Not known yet','Inconclusive (car never slept)','Switched (dies with the car)','Always-on (outlives the car)','Brownout (check wiring)','Crash (supply not implicated)','Inconclusive (USB powered)'];
+    var PVCOL=['var(--text2)','var(--text2)','var(--accent)','var(--yellow)','var(--red)','var(--text2)','var(--text2)'];
+    var rc=d.reset_reason,vc=d.power_verdict;
+    var h='<span>'+(RST[rc]||'?')+'</span> · 12V: <span style="color:'
+      +(PVCOL[vc]||'var(--text2)')+'">'+(PV[vc]||'?')+'</span>';
+    if(d.restart_count!==undefined) h+=' · <span>restarts since power-on</span> '+d.restart_count;
+    pe.innerHTML=h;
+  }
   var partEl=document.getElementById('otaPartInfo');
   if(partEl && d.ota_partition){
     var p=d.ota_partition;
@@ -1097,14 +1712,21 @@ function uploadFirmware(){
   var input=document.getElementById('otaFile');
   var file=input.files[0];
   if(!file)return;
-  if(!file.name.endsWith('.bin')){alert('Error: Please select a .bin firmware file');input.value='';return;}
+  function drop(){input.value='';}
+  if(!file.name.endsWith('.bin')){drop();uiAlert('Error: Please select a .bin firmware file');return;}
   var MAX_SIZE=16*1024*1024;
-  if(file.size>MAX_SIZE){alert('Error: Firmware file too large (max 16MB)');input.value='';return;}
-  if(file.size<32768 && !confirm('Warning: This file is very small ('+Math.round(file.size/1024)+' KB).\nAre you sure it is a valid ESP32 firmware?')){input.value='';return;}
-  if(!confirm('Flash firmware: '+file.name+' ('+Math.round(file.size/1024)+' KB)?\n\nDevice will reboot after update.')){input.value='';return;}
+  if(file.size>MAX_SIZE){drop();uiAlert('Error: Firmware file too large (max 16MB)');return;}
+  var kb=Math.round(file.size/1024);
+  function ask(){uiConfirm('Flash firmware: '+file.name+' ('+kb+' KB)?\n\nDevice will reboot after update.',function(){otaSend(input,file);},drop);}
+  if(file.size<32768)uiConfirm('Warning: This file is very small ('+kb+' KB).\nAre you sure it is a valid ESP32 firmware?',ask,drop);
+  else ask();
+}
+function otaSend(input,file){
   var prog=document.getElementById('otaProgress'),bar=document.getElementById('otaBar'),status=document.getElementById('otaStatus'),bytes=document.getElementById('otaBytes'),btn=document.getElementById('otaSelectBtn');
   prog.style.display='block';bar.style.width='0%';bar.style.background='var(--accent)';status.textContent='Uploading firmware...';status.style.color='var(--text2)';bytes.textContent='0 / '+Math.round(file.size/1024)+' KB';btn.disabled=true;btn.style.opacity='.5';
+  otaBusy=true;
   var xhr=new XMLHttpRequest();
+  xhr.addEventListener('loadend',function(){otaBusy=false;});
   xhr.upload.addEventListener('progress',function(e){if(e.lengthComputable){var pct=Math.round((e.loaded/e.total)*100);bar.style.width=pct+'%';status.textContent='Uploading: '+pct+'%';bytes.textContent=Math.round(e.loaded/1024)+' / '+Math.round(e.total/1024)+' KB';}});
   xhr.addEventListener('load',function(){btn.disabled=false;btn.style.opacity='1';if(xhr.status===200&&xhr.responseText==='OK'){bar.style.width='100%';status.textContent='Upload complete - rebooting...';status.style.color='var(--accent)';var c=8;var t=setInterval(function(){c--;bytes.textContent='Reconnecting in '+c+'s...';if(c<=0){clearInterval(t);location.reload();}},1000);}else{bar.style.background='var(--red)';status.textContent='Update failed';status.style.color='var(--red)';bytes.textContent='Server response: '+(xhr.responseText||xhr.statusText||'Unknown error');input.value='';}});
   xhr.addEventListener('error',function(){btn.disabled=false;btn.style.opacity='1';bar.style.background='var(--red)';status.textContent='Connection lost during upload';status.style.color='var(--red)';bytes.textContent='Check WiFi connection and try again';input.value='';});
@@ -1146,7 +1768,7 @@ function confirmRestart(){
 function requestRestart(){
   fetch('/restart',{headers:{Authorization:authHeader}}).then(function(r){
     if(!r.ok){authHeader='';requireAuth(function(){showRestartConfirm(restartAnchor);},restartAnchor);return;}
-    alert('Device restart triggered');
+    uiAlert('Device restart triggered');
     setTimeout(function(){location.reload();},8000);
   }).catch(function(){setTimeout(function(){location.reload();},8000);});
 }
@@ -1184,8 +1806,8 @@ function submitAuth(){
   authHeader='Basic '+btoa(user+':'+pass);
   if(!checkAuth()){
     authHeader='';
-    authFailed();
-    if(p){p.value='';p.focus();}
+    if(p)p.value='';
+    authFailed(p);
     return;
   }
   var action=authAction;
@@ -1205,46 +1827,114 @@ function checkAuth(){
   }
 }
 
-function authFailed(){
-  alert('Authentication failed');
+function authFailed(el){
   var input=document.getElementById('otaFile');
   if(input)input.value='';
+  uiAlert('Authentication failed',function(){if(el)el.focus();});
 }
 
-function sdFormat(){
-  if(!confirm('Format SD card? All data will be lost.'))return;
+// The device asks for the admin password before it wipes the card.
+function sdFormat(el){
+  requireAuth(function(){uiConfirm('Format SD card? All data will be lost.',sdFormatRun);},el);
+}
+function sdFormatRun(){
   var btn=document.getElementById('btnFmt');
   var out=document.getElementById('fmtOut');
   btn.disabled=true;btn.textContent='FORMATTING\u2026';
-  fetch('/sdformat').then(function(r){return r.json();}).then(function(d){
+  fetch('/sdformat',{method:'POST',headers:{Authorization:authHeader}}).then(function(r){
+    if(r.status===401){authHeader='';requireAuth(sdFormatRun,btn);return null;}
+    return r.json();
+  }).then(function(d){
+    if(!d)return;
+    if(d.err==='origin'&&d.url){location.replace(d.url);return;}
     out.style.display='block';
-    out.style.color=d.ok?'var(--accent)':'var(--red)';
-    out.textContent=d.msg+(d.ok?' \u2014 '+d.free_mb+' MB free':'');
+    var part=d.ok&&d.left>0;   // folders nested too deep, or deletes the card refused
+    out.style.color=part?'var(--yellow)':d.ok?'var(--accent)':'var(--red)';
+    out.textContent=(part?'Some files or folders could not be deleted (nested too deep, or refused by the card)':d.msg)
+      +(d.ok?' \u2014 '+d.free_mb+' MB free':'');
   }).catch(function(){
     out.style.display='block';out.style.color='var(--red)';out.textContent='Request failed';
   }).then(function(){
     btn.disabled=false;btn.textContent='FORMAT SD CARD';
   });
 }
-function saveWifi(){
+function saveWifi(b){
   var s=document.getElementById('wifiSsid').value;
   var p=document.getElementById('wifiPass').value;
   var h=document.getElementById('swWifiHid').checked;
   var ss=document.getElementById('wifiStaSsid').value;
   var sp=document.getElementById('wifiStaPass').value;
-  if(s.length<1){alert('SSID required');return;}
-  if(p!=='***' && p.length>0 && p.length<8){alert('Password must be empty or 8+ chars');return;}
-  if(sp!=='***' && ss.length>0 && sp.length>0 && sp.length<8){alert('Network password must be empty or 8+ chars');return;}
-  if(confirm('WiFi settings will be updated and the device will restart.')){
-    var b=document.activeElement; if(b&&b.tagName==='BUTTON'){b.disabled=true;b.textContent='SAVING...';}
-    cmd('wifi_cfg',{ssid:s,pass:p,hidden:h,sta_ssid:ss,sta_pass:sp});
-  }
+  var hn=document.getElementById('wifiHost').value.trim();
+  if(s.length<1){uiAlert('SSID required');return;}
+  if(p!=='***' && p.length>0 && p.length<8){uiAlert('Password must be empty or 8+ chars');return;}
+  if(sp!=='***' && ss.length>0 && sp.length>0 && sp.length<8){uiAlert('Network password must be empty or 8+ chars');return;}
+  // 64 characters are the key itself, in hex (web_wifi_pass_ok() in web_cmd.h).
+  if(p!=='***' && p.length===64 && !WIFI_HEX64.test(p)){uiAlert(WIFI_ERR.pass);return;}
+  if(sp!=='***' && ss.length>0 && sp.length===64 && !WIFI_HEX64.test(sp)){uiAlert(WIFI_ERR.sta_pass);return;}
+  if(hn && !/^[A-Za-z0-9]([A-Za-z0-9-]{0,29}[A-Za-z0-9])?$/.test(hn)){uiAlert(WIFI_ERR.host);return;}
+  uiConfirm('WiFi settings will be updated and the device will restart.',function(){
+    var t=b?b.textContent:'';
+    if(b){b.disabled=true;b.textContent='SAVING...';}
+    cmd('wifi_cfg',{ssid:s,pass:p,hidden:h,sta_ssid:ss,sta_pass:sp,host:hn},function(){
+      if(b){b.disabled=false;b.textContent=t;}
+    });
+  });
 }
-function cmd(c,v){
-  if(ws&&ws.readyState===1) {
-    ws.send(JSON.stringify({cmd:c,value:v}));
-    busy = Date.now() + 3000;
+// fetch() with a deadline, so a dead link fails in seconds instead of hanging.
+// Resolves with the body text; rejects on a network error, timeout or non-2xx
+// (with the reply body as .body).
+function fetchT(url,opt,ms){
+  var ac=window.AbortController?new AbortController():null,t=0;
+  if(ac){opt.signal=ac.signal;t=setTimeout(function(){ac.abort();},ms);}
+  return fetch(url,opt).then(function(r){
+    return r.text().then(function(s){
+      if(!r.ok){var x=new Error('HTTP '+r.status);x.body=s;throw x;}
+      return s;
+    });
+  }).then(function(s){clearTimeout(t);return s;},function(x){clearTimeout(t);throw x;});
+}
+// The WS only counts while it is delivering: the device pushes state at 1 Hz,
+// so an open socket that has gone quiet is treated like a closed one.
+function wsLive(){return !!ws&&ws.readyState===1&&Date.now()-wsRx<4000;}
+// Commands go over the WS when it is live, else as the same JSON over HTTP.
+// A command the device refuses is answered with {ok:false,err,cmd,field}: as
+// the HTTP reply, or as a WS frame of its own.
+var cmdFail={};
+function cmd(c,v,fail){
+  var m=JSON.stringify({cmd:c,value:v});
+  busy = Date.now() + 3000;
+  cmdFail[c]=fail;
+  if(wsLive()){ws.send(m);return;}
+  fetchT('/api/cmd',{method:'POST',headers:{'Content-Type':'application/json'},body:m},5000).catch(function(x){
+    console.error('cmd '+c,x);
+    var d=null;
+    try{d=JSON.parse(x.body);}catch(e){}
+    cmdRefused(d&&d.ok===false?d:{cmd:c});
+  });
+}
+var WIFI_BYTES='\nCharacters outside plain ASCII take 2 to 4 bytes each; control characters are not accepted.';
+var WIFI_HEX64=/^[0-9A-Fa-f]{64}$/;
+var WIFI_ERR={
+  ssid:'SSID must be 1 to 32 bytes.'+WIFI_BYTES,
+  pass:'Password must be empty, 8 to 63 bytes, or exactly 64 hex digits (0-9, a-f), which are the key itself.'+WIFI_BYTES,
+  sta_ssid:'Network name must be at most 32 bytes.'+WIFI_BYTES,
+  sta_pass:'Network password must be empty, 8 to 63 bytes, or exactly 64 hex digits (0-9, a-f), which are the key itself.'+WIFI_BYTES,
+  host:'Hostname must be 1 to 31 letters, digits or hyphens, and cannot start or end with a hyphen.'};
+// A command that did not take, refused by the device (d.err) or never
+// delivered: say so and undo what the page did for it.
+function cmdRefused(d){
+  busy=0;
+  // Loaded under a name the device does not take commands from (renamed
+  // since): reload from the address it gives.
+  if(d.err==='origin'&&d.url){location.replace(d.url);return;}
+  var fail=cmdFail[d.cmd];
+  if(d.cmd==='wifi_cfg'&&d.err){
+    var why=WIFI_ERR[d.field];
+    uiAlert('WiFi settings were not saved.'+(why?'\n'+why:''));
+  }else{
+    uiToast('Command failed — the device did not accept it. Check the connection and try again.');
   }
+  if(fail)fail();
 }
 function toggleMode(){ cmd('mode',null); }
 function gv(id){ var e=document.getElementById(id); return (e&&e.value.trim()!=='')?e.value.trim():'0'; }
@@ -1283,6 +1973,13 @@ function setSig(d){
   sv('cgDid',hx(d.cfg_das_id)); sv('cgApB',d.cfg_apb); sv('cgApS',d.cfg_aps); sv('cgApM',hx(d.cfg_apm));
   sv('cgHoB',d.cfg_hob); sv('cgHoS',d.cfg_hos); sv('cgHoM',hx(d.cfg_hom));
   sv('cgSid',hx(d.cfg_steer_id)); sv('cgSHi',d.cfg_shi); sv('cgSLo',d.cfg_slo);
+  sigSteerUi();
+}
+// Steer hi/lo are for a steering id other than 0x129; 0 (auto) and 0x129 read
+// 0x129 by its own layout (fsd_apply_signal_config()).
+function sigSteerUi(){
+  var id=parseInt(gv('cgSid'))||0,off=(id===0||id===0x129);
+  ['cgSHi','cgSLo'].forEach(function(n){var e=document.getElementById(n);if(e)e.disabled=off;});
 }
 
 function logInfo(text,color){
@@ -1415,7 +2112,7 @@ function startHttpLog(){
     return;
   }
   if(!window.ReadableStream){
-    alert('This browser does not support HTTP stream collection.');
+    uiAlert('This browser does not support HTTP stream collection.');
     return;
   }
   httpLogParts=[];
@@ -1484,27 +2181,79 @@ function auxPoll(){
 }
 setInterval(auxPoll,2500);
 
+function applyState(d){
+  if(!d)return;
+  try{initWifi(d);}catch(x){console.error('initWifi',x);}
+  upd(d);
+}
+// Connected = an open socket or a status poll that just succeeded.
+function link(){
+  var up=(!!ws&&ws.readyState===1)||httpUp;
+  document.getElementById('dot').className=up?'cdot':'cdot off';
+  document.getElementById('connErr').style.display=up?'none':'block';
+}
+
+// ── Status over HTTP ──
+// The WS push is the primary feed. GET /api/status covers the first paint and
+// any client where :81 never delivers (captive-portal sheets): polled only
+// while the socket is not live, so a healthy WS is never applied twice. Paused
+// during a firmware upload — the server is busy with it anyway.
+function statusPoll(){
+  if(stBusy||otaBusy||wsLive())return;
+  stBusy=true;
+  fetchT('/api/status',{cache:'no-store'},4000).then(function(s){
+    var d=JSON.parse(s);
+    httpUp=true;
+    if(!wsLive())applyState(d);
+  }).catch(function(){httpUp=false;}).then(function(){stBusy=false;link();});
+}
+
 function conn(){
-  ws=new WebSocket('ws://'+location.hostname+':81/');
+  // Some embedded browsers refuse to construct a WebSocket at all; HTTP carries on.
+  try{ws=new WebSocket('ws://'+location.hostname+':81/');}catch(x){ws=null;return;}
   ws.onopen=function(){
-    document.getElementById('dot').className='cdot';
-    document.getElementById('connErr').style.display='none';
+    wsRx=0;   // not live until this socket delivers its first frame
+    link();
     clearTimeout(rt);
     auxPoll();
   };
-  ws.onmessage=function(e){ try{var d=JSON.parse(e.data);initWifi(d);upd(d);}catch(x){} };
+  ws.onmessage=function(e){
+    wsRx=Date.now();
+    httpUp=false;   // polling stops while the WS delivers, so HTTP is unknown again
+    var d;
+    try{d=JSON.parse(e.data);}catch(x){console.error('ws frame',x);return;}
+    if(d&&d.ok===false){cmdRefused(d);return;}   // the answer to a command we sent
+    applyState(d);
+  };
   ws.onclose=function(){
-    document.getElementById('dot').className='cdot off';
-    document.getElementById('connErr').style.display='block';
+    link();
+    // A feed that was live just stopped: take over now, not at the next tick.
+    if(Date.now()-wsRx<4000)statusPoll();
     rt=setTimeout(conn,2000);
   };
   ws.onerror=function(){ ws.close(); };
 }
+perfInit();
+tpInit();
 conn();
+statusPoll();
+setInterval(statusPoll,2000);
 </script>
+)rawliteral"
+#include "web_i18n.inc"
+R"rawliteral(
 </body>
 </html>
 )rawliteral";
+
+// The same page gzip-compressed, written at build time by esp32/gen_web_page.py
+// from the literals above (into the build directory, not the source tree).
+#include "web_page_gz.h"
+static_assert(sizeof(WEB_HTML) - 1 == WEB_HTML_GZ_SRC_LEN,
+              "web_page_gz.h was made from a different page: see esp32/gen_web_page.py");
+// Set at init when WEB_HTML_GZ inflates to WEB_HTML (its gzip trailer: CRC-32
+// and length of the input); otherwise every client gets WEB_HTML.
+static bool g_page_gz_ok = false;
 
 // ── JSON helpers ──────────────────────────────────────────────────────────────
 static String json_escape(const char *s) {
@@ -1515,6 +2264,75 @@ static String json_escape(const char *s) {
         else                 out += *s;
     }
     return out;
+}
+
+// ── CAN counters since the last reset (#252, #253) ────────────────────────────
+// Controller behind each bus, as can_driver_create(CanBusId) picks it.
+static const char *can_driver_kind(uint8_t index) {
+#if defined(CAN_DRIVER_T2CAN_DUAL) && defined(BOARD_LILYGO_T2CAN_FD)
+    return index == 1 ? "MCP2518FD" : "TWAI";
+#elif defined(CAN_DRIVER_T2CAN_DUAL)
+    return index == 1 ? "MCP2515" : "TWAI";
+#elif defined(CAN_DRIVER_MCP2515)
+    (void)index;
+    return "MCP2515";
+#else
+    (void)index;
+    return "TWAI";
+#endif
+}
+
+// Up = the chip answered and begin() got it running ("down" is what every
+// driver reports for its filter mode while it is not installed).
+static bool can_driver_up(CanDriver *d) {
+    return d && d->hardwarePresent() && strcmp(d->acceptanceFilterMode(), "down") != 0;
+}
+
+static CanCounts can_counts(CanDriver *d) {
+    CanCounts c = {};
+    if (!d) return c;
+    c.rx        = d->rxCount();
+    c.tx        = d->txCount();
+    c.rx_missed = d->rxMissedCount();
+    c.bus_error = d->busErrorCount();
+    c.tx_failed = d->txFailedCount();
+    return c;
+}
+
+// The drivers' counters are cumulative: TWAI's carry across the reinstalls for
+// a mode switch or a capture filter (can_counters.h). Should one ever read
+// below its baseline it has restarted, and everything it holds is newer than
+// the reset.
+static uint32_t since_reset(uint32_t now, uint32_t &base) {
+    if (now < base) base = 0;
+    return now - base;
+}
+
+static CanCounts can_counts_since_reset(uint8_t i) {
+    CanCounts c = can_counts(g_can_buses[i]);
+    CanCounts &b = g_can_base[i];
+    c.rx        = since_reset(c.rx, b.rx);
+    c.tx        = since_reset(c.tx, b.tx);
+    c.rx_missed = since_reset(c.rx_missed, b.rx_missed);
+    c.bus_error = since_reset(c.bus_error, b.bus_error);
+    c.tx_failed = since_reset(c.tx_failed, b.tx_failed);
+    return c;
+}
+
+static void can_counters_reset() {
+    for (uint8_t i = 0; i < g_can_count && i < CAN_BUS_COUNT; i++)
+        g_can_base[i] = can_counts(g_can_buses[i]);
+    state_enter();
+    uint32_t rx = g_state->rx_count;
+    state_exit();
+    g_rx_base = rx;
+    // Frames/s is a one-second rate: start its window again.
+    g_last_rx     = rx;
+    g_last_fps_ms = millis();
+    g_fps         = 0.0f;
+    g_can_reset    = true;
+    g_can_reset_ms = millis();
+    loop_health_reset_window();
 }
 
 // ── JSON builder ──────────────────────────────────────────────────────────────
@@ -1528,19 +2346,62 @@ static String build_json() {
         can_vehicle_detected = (millis() - g_last_can_seen_ms) <= CAN_VEHICLE_ALIVE_MS;
     }
 
-    // BMS sub-object
-    char bms[128];
+    // BMS sub-object. Pack temperature only from a fresh, plausible 0x312
+    // reading (fsd_bms.h): temp_ok false -> null, the dashboard shows "--" and
+    // no advisory. temp_bad counts the 0x312 frames the plausibility gate refused.
+    // car_soc: the % on the car's screen (0x33A, #251), null until decoded; it can
+    // arrive without the BMS frames.
+    char bms[208];
+    char car_soc[8];
+    if (state.ui_soc_seen) snprintf(car_soc, sizeof(car_soc), "%u", (unsigned)state.ui_soc);
+    else strcpy(car_soc, "null");
     if (state.bms_seen) {
+        bool temp_ok = fsd_bms_temp_fresh(&state, millis());
+        char temp[64];
+        if (temp_ok)
+            snprintf(temp, sizeof(temp), "\"temp_min\":%d,\"temp_max\":%d,\"temp_age_s\":%lu",
+                     (int)state.batt_temp_min_c, (int)state.batt_temp_max_c,
+                     (unsigned long)((millis() - state.batt_temp_ms) / 1000u));
+        else
+            strcpy(temp, "\"temp_min\":null,\"temp_max\":null");
         snprintf(bms, sizeof(bms),
             "{\"seen\":true,\"voltage\":%.1f,\"current\":%.1f,"
-            "\"soc\":%.1f,\"temp_min\":%d,\"temp_max\":%d}",
+            "\"soc\":%.1f,\"car_soc\":%s,\"temp_ok\":%s,%s,\"temp_bad\":%lu}",
             state.pack_voltage_v,
             state.pack_current_a,
             state.soc_percent,
-            (int)state.batt_temp_min_c,
-            (int)state.batt_temp_max_c);
+            car_soc, temp_ok ? "true" : "false", temp,
+            (unsigned long)state.batt_temp_rejected);
     } else {
-        strcpy(bms, "{\"seen\":false}");
+        snprintf(bms, sizeof(bms), "{\"seen\":false,\"car_soc\":%s}", car_soc);
+    }
+
+    // Performance read-out sub-object (read-only; see fsd_logic/fsd_perf.h).
+    // Times in ms (0 = not captured this run / no best yet). Everything here is
+    // derived from frames already received (0x257 speed, 0x175 wheels, 0x312
+    // batt temp) — nothing is transmitted.
+    char perf[384];
+    {
+        const FSDPerf *p = &state.perf;
+        uint32_t run_ms = fsd_perf_accel_running_ms(p, millis());
+        float slip = 0.0f;
+        bool slip_ok = state.wheel_speed_seen &&
+            fsd_perf_wheel_slip_pct(state.wheel_speed_fl_kph, state.wheel_speed_fr_kph,
+                                    state.wheel_speed_rl_kph, state.wheel_speed_rr_kph, &slip);
+        snprintf(perf, sizeof(perf),
+            "{\"speed\":%.1f,\"speed_ok\":%s,\"armed\":%s,\"run_ms\":%lu,"
+            "\"t50\":%lu,\"t60mph\":%lu,\"t100\":%lu,"
+            "\"best50\":%lu,\"best60mph\":%lu,\"best100\":%lu,"
+            "\"brake_armed\":%s,\"t1000\":%lu,\"best1000\":%lu,"
+            "\"g\":%.2f,\"gpk\":%.2f,\"gpkb\":%.2f,"
+            "\"wheel_seen\":%s,\"slip_ok\":%s,\"slip\":%.1f}",
+            state.vehicle_speed_kph, fsd_speed_valid(&state, millis()) ? "true" : "false",
+            p->accel_armed ? "true" : "false", (unsigned long)run_ms,
+            (unsigned long)p->t_0_50_ms, (unsigned long)p->t_0_60mph_ms, (unsigned long)p->t_0_100_ms,
+            (unsigned long)p->best_0_50_ms, (unsigned long)p->best_0_60mph_ms, (unsigned long)p->best_0_100_ms,
+            p->brake_armed ? "true" : "false", (unsigned long)p->t_100_0_ms, (unsigned long)p->best_100_0_ms,
+            (double)p->g_est, (double)p->g_peak, (double)p->g_peak_brake,
+            state.wheel_speed_seen ? "true" : "false", slip_ok ? "true" : "false", (double)slip);
     }
 
     char ota_part[128] = {};
@@ -1561,6 +2422,21 @@ static String build_json() {
     char fps_s[12];
     snprintf(fps_s, sizeof(fps_s), "%.1f", g_fps);
 
+    // CAN counters since the last reset (#252), per bus and summed. The
+    // combined error count (legacy crc_errors key) and its per-cause split come
+    // from one read, so the dashboard tile always equals its breakdown. On a
+    // busy bus it is mostly rx_missed (controller RX-queue drops).
+    CanCounts bus[CAN_BUS_COUNT] = {};
+    CanCounts sum = {};
+    for (uint8_t i = 0; i < g_can_count && i < CAN_BUS_COUNT; i++) {
+        bus[i] = can_counts_since_reset(i);
+        sum.tx        += bus[i].tx;
+        sum.rx_missed += bus[i].rx_missed;
+        sum.bus_error += bus[i].bus_error;
+        sum.tx_failed += bus[i].tx_failed;
+    }
+    uint32_t err_total = sum.rx_missed + sum.bus_error + sum.tx_failed;
+
     String j;
     bool isa_speed_enabled = state.hw_version == TeslaHW_HW4;
     const char *ap_das_profile =
@@ -1568,11 +2444,13 @@ static String build_json() {
         (state.hw_version == TeslaHW_HW3) ? "HW3: DAS 0x399" :
         (state.hw_version == TeslaHW_Legacy) ? "Legacy: DAS 0x399" :
         "Waiting for HW detection";
-    // Core payload runs ~1.3-1.5 KB of scalar fields plus small bms/ota/
-    // http_can_stream objects — back near the beta.11 shape now that the heavy
-    // blackbox/capability/profile blocks fetch from /api/aux (#124). 1.5 KB
-    // avoids per-call String reallocs; build_json() runs on every WS push.
-    j.reserve(1536);
+    // About 3.1 KB on a T-2CAN in use: the scalar fields, the bms/perf/tpms/
+    // ota/http_can_stream/loop objects, can_buses and mcp_rx_task. The heavy
+    // blackbox/capability/profile blocks come from /api/aux (#124). With every
+    // counter at 4294967295 and both SSIDs at 32 escaped characters it is
+    // 3.9 KB (3.7 KB on the TTGO). Past the reserve the String reallocs every
+    // 16 bytes, and build_json() runs on every WS push.
+    j.reserve(4096);
     j  = "{";
     j += "\"fsd_enabled\":";   j += state.fsd_enabled                 ? "true" : "false"; j += ',';
     j += "\"ap_active\":";     j += state.ap_active                   ? "true" : "false"; j += ',';
@@ -1580,10 +2458,19 @@ static String build_json() {
     j += "\"hw_override\":";   j += (int)state.hw_override;            j += ',';
     j += "\"hw_version\":";    j += (int)state.hw_version;             j += ',';
     j += "\"ota\":";           j += state.tesla_ota_in_progress        ? "true" : "false"; j += ',';
+    j += "\"autopark_block\":"; j += state.autopark_tx_block            ? "true" : "false"; j += ',';
+    j += "\"signal_map_das_missing\":"; j += state.signal_map_das_missing ? "true" : "false"; j += ',';
     j += "\"ap_das_profile\":\""; j += ap_das_profile;                 j += "\",";
     j += "\"isa_speed_enabled\":"; j += isa_speed_enabled              ? "true" : "false"; j += ',';
     j += "\"ignore_ota\":";    j += state.ignore_ota                   ? "true" : "false"; j += ',';
     j += "\"fsd_unlock\":";    j += state.fsd_unlock                   ? "true" : "false"; j += ',';
+    j += "\"hw3_speed_override\":"; j += state.hw3_speed_override       ? "true" : "false"; j += ',';
+    // HW3 0x3FD speed read-out (#209): car value vs value forwarded, -1 = not seen yet
+    j += "\"hw3_car_profile\":";  j += state.hw3_profile_seen ? (int)state.hw3_car_profile  : -1; j += ',';
+    j += "\"hw3_sent_profile\":"; j += state.hw3_profile_seen ? (int)state.hw3_sent_profile : -1; j += ',';
+    j += "\"hw3_car_offset\":";   j += state.hw3_offset_seen  ? (int)state.hw3_car_offset   : -1; j += ',';
+    j += "\"hw3_sent_offset\":";  j += state.hw3_offset_seen  ? (int)state.hw3_sent_offset  : -1; j += ',';
+    j += "\"follow_distance\":";  j += state.follow_distance_seen ? (int)state.follow_distance : -1; j += ',';
     j += "\"nag_killer\":";    j += state.nag_killer                   ? "true" : "false"; j += ',';
     j += "\"continuous_ap\":"; j += state.continuous_ap                 ? "true" : "false"; j += ',';
     j += "\"ap_first\":";      j += state.ap_first                      ? "true" : "false"; j += ',';
@@ -1607,6 +2494,7 @@ static String build_json() {
     j += "\"force_fsd\":";     j += state.force_fsd                    ? "true" : "false"; j += ',';
     j += "\"china_mode\":";    j += state.china_mode                   ? "true" : "false"; j += ',';
     j += "\"suppress_speed_chime\":"; j += state.suppress_speed_chime  ? "true" : "false"; j += ',';
+    j += "\"precondition\":";  j += state.precondition                ? "true" : "false"; j += ',';
     j += "\"tlssc_restore\":"; j += state.tlssc_restore                ? "true" : "false"; j += ',';
     j += "\"summon_unlock\":"; j += state.summon_unlock                ? "true" : "false"; j += ',';
     j += "\"continue_on_green\":"; j += state.continue_on_green         ? "true" : "false"; j += ',';
@@ -1619,6 +2507,27 @@ static String build_json() {
     j += "\"track_stability_pct\":"; j += (int)state.track_stability_pct;  j += ',';
     j += "\"track_post_cooling\":"; j += state.track_post_cooling        ? "true" : "false"; j += ',';
     j += "\"track_cmp_overclock\":"; j += state.track_cmp_overclock       ? "true" : "false"; j += ',';
+    // Acceleration Mode (#211): setting, car's own 0x334 pedal map and the map
+    // going out (-1 = no valid 0x334 yet), pending = waiting for standstill.
+    j += "\"accel_mode\":";     j += (int)state.accel_mode;               j += ',';
+    j += "\"accel_car_map\":";  j += state.accel_car_seen ? (int)state.accel_car_map : -1; j += ',';
+    j += "\"accel_sent_map\":"; j += fsd_accel_sent_map(&state);           j += ',';
+    j += "\"accel_pending\":";  j += state.accel_mode_pending            ? "true" : "false"; j += ',';
+    j += "\"accel_bad\":";      j += state.accel_bad_frames;              j += ',';
+    // Charge-port type (0x25D, #228): what the car reports (-1 = no 0x25D on
+    // this tap yet), the plug-guard read-out, the opt-in rewrite + copies sent.
+    // cp_stale: no CP_status for a few seconds, cp_type / cp_plug are its last.
+    j += "\"cp_type\":";        j += state.cp_status_seen ? (int)state.cp_type : -1; j += ',';
+    j += "\"cp_plug\":";        j += (int)state.cp_plug_state;            j += ',';
+    {
+        uint32_t now_ms = millis();
+        j += "\"cp_stale\":";   j += fsd_cp_status_stale(state.cp_status_seen, state.cp_status_ms, now_ms)
+                                     ? "true" : "false"; j += ',';
+        j += "\"cp_age_s\":";   j += state.cp_status_seen ? (now_ms - state.cp_status_ms) / 1000u : 0u; j += ',';
+    }
+    j += "\"cp_type_eu_rewrite\":"; j += state.cp_type_eu_rewrite        ? "true" : "false"; j += ',';
+    j += "\"cp_type_tx\":";     j += state.cp_type_tx_count;              j += ',';
+    j += "\"tx_allowed\":";     j += fsd_can_transmit(&state)            ? "true" : "false"; j += ',';
     j += "\"firmware_14x_warning\":"; j += state.firmware_14x_warning  ? "true" : "false"; j += ',';
 #if defined(BOARD_TTGO_DISPLAY)
     j += "\"display_enabled\":"; j += state.display_enabled             ? "true" : "false"; j += ',';
@@ -1629,13 +2538,114 @@ static String build_json() {
     j += "\"bms_hv_seen\":";   j += state.seen_bms_hv;                 j += ',';
     j += "\"bms_soc_seen\":";  j += state.seen_bms_soc;                j += ',';
     j += "\"bms_thermal_seen\":"; j += state.seen_bms_thermal;          j += ',';
-    j += "\"rx_count\":";      j += state.rx_count;                    j += ',';
-    j += "\"tx_count\":";      j += state.tx_count;                    j += ',';
+    j += "\"rx_count\":";      j += since_reset(state.rx_count, g_rx_base); j += ',';
+    j += "\"tx_count\":";      j += sum.tx;                            j += ',';
     j += "\"tx_modified\":";   j += state.frames_modified;             j += ',';
-    j += "\"crc_errors\":";    j += state.crc_err_count;               j += ',';
+    j += "\"crc_errors\":";    j += err_total;                         j += ',';
+    j += "\"rx_missed_count\":"; j += sum.rx_missed;                   j += ',';
+    j += "\"bus_error_count\":"; j += sum.bus_error;                   j += ',';
+    j += "\"tx_failed_count\":"; j += sum.tx_failed;                   j += ',';
     j += "\"fps\":";           j += fps_s;                             j += ',';
+    // Seconds since the CAN Bus card was reset, -1 = counting since boot.
+    j += "\"can_reset_s\":";   j += g_can_reset ? (long)((millis() - g_can_reset_ms) / 1000u) : -1L; j += ',';
+    // Per bus (#253), on boards with two controllers; same counts as above.
+    if (g_can_count > 1) {
+        j += "\"can_buses\":[";
+        for (uint8_t i = 0; i < g_can_count && i < CAN_BUS_COUNT; i++) {
+            if (i) j += ',';
+            j += "{\"name\":\"";      j += can_bus_name((CanBusId)i);
+            j += "\",\"drv\":\"";     j += can_driver_kind(i);
+            j += "\",\"up\":";        j += can_driver_up(g_can_buses[i]) ? "true" : "false";
+            j += ",\"rx\":";          j += bus[i].rx;
+            j += ",\"tx\":";          j += bus[i].tx;
+            j += ",\"rx_missed\":";   j += bus[i].rx_missed;
+            j += ",\"bus_error\":";   j += bus[i].bus_error;
+            j += ",\"tx_failed\":";   j += bus[i].tx_failed;
+            j += '}';
+        }
+        j += "],";
+    }
+    // MCP2515 receive task (opt-in), on the builds with one; one per board.
+    for (uint8_t i = 0; i < g_can_count && i < CAN_BUS_COUNT; i++) {
+        CanRxTaskInfo t;
+        if (!g_can_buses[i] || !g_can_buses[i]->rxTaskInfo(t)) continue;
+        j += "\"mcp_rx_task\":{\"on\":"; j += t.wanted ? "true" : "false";
+        j += ",\"run\":";   j += t.running ? "true" : "false";
+        j += ",\"int\":";   j += t.int_pin ? "true" : "false";
+        j += ",\"len\":";   j += t.queue_len;
+        j += ",\"max\":";   j += t.high_water;
+        j += ",\"drop\":";  j += t.dropped;
+        j += ",\"ovf\":";   j += t.overflows;
+        j += ",\"stack\":"; j += t.stack_free;
+        j += "},";
+        break;
+    }
     j += "\"bms\":";           j += bms;                               j += ',';
+    // Tyre pressures (read-only 0x219, fsd_logic/fsd_tpms.h). Four slots in the
+    // order the car fills them: mbar, temp in deg C, pos 0 FL 1 FR 2 RL 3 RR;
+    // target = the car's own pair. null = not known.
+    {
+        const FSDTpms *t = &state.tpms;
+        j += "\"tpms\":{\"seen\":"; j += fsd_tpms_seen(t) ? "true" : "false";
+        if (fsd_tpms_seen(t)) {
+            uint32_t now_ms = millis();
+            j += ",\"src\":";   j += (int)t->source;
+            j += ",\"dlc\":";   j += (int)t->frame_dlc;
+            j += ",\"age_s\":"; j += fsd_tpms_age_ms(t, now_ms) / 1000u;
+            j += ",\"stale\":"; j += fsd_tpms_stale(t, now_ms) ? "true" : "false";
+            j += ",\"mbar\":[";
+            for (int i = 0; i < 4; i++) {
+                if (i) j += ',';
+                if (t->pressure[i] == FSD_TPMS_NA) j += "null";
+                else j += fsd_tpms_mbar(t->pressure[i]);
+            }
+            j += "],\"temp\":[";
+            for (int i = 0; i < 4; i++) {
+                if (i) j += ',';
+                if (t->temp[i] == FSD_TPMS_NA) j += "null";
+                else j += fsd_tpms_temp_c(t->temp[i]);
+            }
+            j += "],\"pos\":[";
+            for (int i = 0; i < 4; i++) {
+                if (i) j += ',';
+                if (t->pos[i] > FSD_TPMS_POS_RR) j += "null";
+                else j += (int)t->pos[i];
+            }
+            j += "],\"target\":[";
+            for (int i = 0; i < 2; i++) {
+                if (i) j += ',';
+                if (t->target[i] == FSD_TPMS_NA) j += "null";
+                else j += fsd_tpms_mbar(t->target[i]);
+            }
+            j += ']';
+        }
+        j += "},";
+    }
+    j += "\"perf\":";          j += perf;                              j += ',';
     j += "\"uptime_s\":";      j += uptime_s;                          j += ',';
+    // Power / reset log (#218): why the board last restarted, the 12V-feed
+    // verdict, and the restart count since power-on. Codes; the page maps them.
+    j += "\"reset_reason\":";  j += power_log_reset_code();            j += ',';
+    j += "\"power_verdict\":"; j += power_log_verdict_code();          j += ',';
+    j += "\"restart_count\":"; j += power_log_restart_count();         j += ',';
+    // Loop-task stack low-water mark (this runs on it) and heap, for field reports.
+    j += "\"stack_free\":";    j += (uint32_t)uxTaskGetStackHighWaterMark(nullptr); j += ',';
+    j += "\"heap_free\":";     j += (uint32_t)ESP.getFreeHeap();       j += ',';
+    j += "\"heap_min\":";      j += (uint32_t)ESP.getMinFreeHeap();    j += ',';
+    // Longest loop() pass, its slowest stage and passes over 25 ms
+    // (loop_health.h): since boot, and since the CAN Bus card's reset (r_*).
+    {
+        const LoopHealth &lh = loop_health();
+        j += "\"loop\":{\"max_us\":"; j += lh.boot.max_us;
+        j += ",\"stage\":\"";    j += loop_stage_name(lh.boot.max_stage);
+        j += "\",\"slow\":";     j += lh.boot.slow;
+        j += ",\"r_max_us\":";   j += lh.since.max_us;
+        j += ",\"r_stage\":\"";  j += loop_stage_name(lh.since.max_stage);
+        j += "\",\"r_slow\":";   j += lh.since.slow;
+        j += "},";
+    }
+    j += "\"fw_version\":\""   FW_VERSION "\",";
+    j += "\"board\":\""        BOARD_NAME "\",";
     j += "\"fw_build\":\"";    j += __DATE__;  j += ' '; j += __TIME__; j += "\",";
     j += "\"can_dump\":";      j += can_dump_active()                 ? "true" : "false"; j += ',';
     // blackbox/capability/profile moved OFF the hot WS state push (#124): they
@@ -1647,6 +2657,7 @@ static String build_json() {
     j += "\"wifi_hidden\":";  j += state.wifi_hidden                  ? "true" : "false"; j += ',';
     j += "\"wifi_sta_ssid\":\""; j += json_escape(state.wifi_sta_ssid); j += "\",";
     j += "\"wifi_sta_pass\":\""; j += state.wifi_sta_pass[0] ? "***" : ""; j += "\",";
+    j += "\"wifi_hostname\":\""; j += json_escape(state.wifi_hostname); j += "\",";
     j += "\"wifi_clients\":";  j += (int)WiFi.softAPgetStationNum();   j += ',';
     j += "\"http_can_stream\":{";
     j += "\"active\":";       j += http_can_stream_active()           ? "true" : "false"; j += ',';
@@ -1675,33 +2686,20 @@ static String build_aux_json() {
     return j;
 }
 
-// ── WebSocket event handler ───────────────────────────────────────────────────
-static void ws_event(uint8_t num, WStype_t type,
-                     uint8_t *payload, size_t length)
+// ── Command dispatcher ────────────────────────────────────────────────────────
+// Runs one dashboard command, {"cmd":"xxx","value":yyy}. The single command
+// table for both transports: WS TEXT frames and POST /api/cmd. The message is
+// parsed as JSON (web_cmd.h): a branch is picked by the value of "cmd" alone
+// and reads its value with cmd.boolean() / integer() / string(), which refuse
+// a value of the wrong type. The caller sends the reply and, for
+// WEB_CMD_RESTART, restarts the device afterwards.
+static WebCmdResult web_command(WebCmd &cmd, const uint8_t *payload, size_t length)
 {
-    if (type == WStype_CONNECTED) {
-        // Auto-run the tap capability check on connect (#125): the first few
-        // seconds answer "will the nag killer work on this tap?" before any
-        // guesswork. Pure RX — counting only.
-        capability_start(millis());
-        // Push current state immediately on connect
-        String json = build_json();
-        g_ws.sendTXT(num, json.c_str(), json.length());
-        return;
-    }
+    if (g_state == nullptr || length == 0) return WEB_CMD_BAD_JSON;
+    if (length > WEB_CMD_MAX_LEN) return WEB_CMD_TOO_LONG;
+    if (!web_cmd_parse((const char *)payload, length, &cmd)) return WEB_CMD_BAD_JSON;
 
-    if (type != WStype_TEXT || g_state == nullptr || length == 0) return;
-
-    // Use a slightly more robust way to find the value after the second colon
-    char buf[256] = {};
-    size_t n = (length < sizeof(buf) - 1) ? length : sizeof(buf) - 1;
-    memcpy(buf, payload, n);
-
-    // Find the "value" part of {"cmd":"xxx","value":yyy}
-    const char *vptr = strstr(buf, "\"value\":");
-    if (vptr) vptr = strstr(vptr, ":") + 1;
-
-    if (strstr(buf, "\"mode\"")) {
+    if (cmd.is("mode")) {
         FSDState saved;
         bool active = false;
         state_enter();
@@ -1719,11 +2717,10 @@ static void ws_event(uint8_t num, WStype_t type,
         http_can_stream_set_enabled(true);  // capture works in both modes now (#108)
         Serial.println(active ? "[Web] → Active mode" : "[Web] → Listen-Only mode");
         prefs_save(&saved);
-    } else if (strstr(buf, "\"hw_override\"")) {
+    } else if (cmd.is("hw_override")) {
         // Manual HW selection (#110): 0 = auto-detect, else pin the version.
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            int sel = atoi(vptr);
+        int sel;
+        if (cmd.integer(&sel)) {
             if (sel >= (int)TeslaHW_Unknown && sel <= (int)TeslaHW_HW4) {
                 TeslaHWVersion want = (TeslaHWVersion)sel;
                 FSDState saved;
@@ -1740,12 +2737,13 @@ static void ws_event(uint8_t num, WStype_t type,
                               (want == TeslaHW_HW3)    ? "HW3" :
                               (want == TeslaHW_Legacy) ? "Legacy" : "Auto");
                 prefs_save(&saved);
+            } else {
+                cmd.bad_value = true;
             }
         }
-    } else if (strstr(buf, "\"ignore_ota\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("ignore_ota")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->ignore_ota = enabled;
@@ -1754,10 +2752,9 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] Ignore OTA: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"fsd_unlock\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("fsd_unlock")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->fsd_unlock = enabled;
@@ -1766,10 +2763,20 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] FSD Unlock: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"nag\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("hw3_speed_override")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
+            FSDState saved;
+            state_enter();
+            g_state->hw3_speed_override = enabled;
+            saved = *g_state;
+            state_exit();
+            Serial.printf("[Web] HW3 Speed Override: %s\n", enabled ? "ON" : "OFF");
+            prefs_save(&saved);
+        }
+    } else if (cmd.is("nag")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->nag_killer = enabled;
@@ -1778,10 +2785,9 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] NAG Killer: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"continuous_ap\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("continuous_ap")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->continuous_ap = enabled;
@@ -1790,10 +2796,9 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] Continuous AP: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"ap_first\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("ap_first")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->ap_first = enabled;
@@ -1802,10 +2807,9 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] AP-First: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"ap_first_edge\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("ap_first_edge")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->ap_first_edge = enabled;
@@ -1814,10 +2818,9 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] Instant Engage: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"ap_first_minimal\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("ap_first_minimal")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->ap_first_minimal = enabled;
@@ -1826,10 +2829,9 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] Minimal Inject: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"nag_faithful\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("nag_faithful")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->nag_epas_faithful = enabled;
@@ -1838,10 +2840,9 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] Nag EPAS-faithful: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"soft_engage\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("soft_engage")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->soft_engage = enabled;
@@ -1850,10 +2851,9 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] Soft Engage: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"nag_burst\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("nag_burst")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->nag_burst = enabled;
@@ -1862,10 +2862,9 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] Nag Burst: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"abort_guard\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("abort_guard")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->abort_guard = enabled;
@@ -1875,15 +2874,11 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] Abort Guard: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"sig_cfg\"")) {
+    } else if (cmd.is("sig_cfg")) {
         // value is a 10-field CSV: das_id,apB,apS,apM,hoB,hoS,hoM,steer_id,sHi,sLo
         // ids accept 0x.. ; byte/shift 0-7, mask hex. (#122)
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':' || *vptr == '"') vptr++;
-            char csv[128] = {};
-            size_t ci = 0;
-            for (const char *p = vptr; *p && *p != '"' && *p != '}' && ci < sizeof(csv) - 1; p++)
-                csv[ci++] = *p;
+        char csv[128];
+        if (cmd.string(csv, sizeof(csv))) {
             long v[10]; int got = 0;
             char *tok = strtok(csv, ",");
             while (tok && got < 10) { v[got++] = strtol(tok, NULL, 0); tok = strtok(NULL, ","); }
@@ -1906,12 +2901,13 @@ static void ws_event(uint8_t num, WStype_t type,
                               (uint16_t)v[0], v[1], v[2], v[3], v[4], v[5], v[6],
                               (uint16_t)v[7], v[8], v[9]);
                 prefs_save(&saved);
+            } else {
+                cmd.bad_value = true;
             }
         }
-    } else if (strstr(buf, "\"blackbox_enable\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("blackbox_enable")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             blackbox_set_enabled(enabled);          // locks the state mux itself
             FSDState saved;
             state_enter();
@@ -1920,31 +2916,28 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] Black-box: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"capability_recheck\"")) {
+    } else if (cmd.is("capability_recheck")) {
         capability_start(millis());                 // re-run the tap check (#125)
         Serial.println("[Web] Capability: re-check");
-    } else if (strstr(buf, "\"blackbox_mark\"")) {
+    } else if (cmd.is("can_counters_reset")) {
+        can_counters_reset();                       // CAN Bus card only (#252)
+        Serial.println("[Web] CAN counters reset");
+    } else if (cmd.is("blackbox_mark")) {
         blackbox_mark(millis());                    // inject EVT_MANUAL + arm
         Serial.println("[Web] Black-box: manual mark");
-    } else if (strstr(buf, "\"blackbox_delete_all\"")) {
+    } else if (cmd.is("blackbox_delete_all")) {
         blackbox_delete_all();
         Serial.println("[Web] Black-box: delete all");
-    } else if (strstr(buf, "\"blackbox_delete\"")) {
-        const char *v = strstr(buf, "\"value\":\"");
-        if (v) {
-            v += 9;
-            char name[40];
-            size_t i = 0;
-            while (v[i] && v[i] != '\"' && i < sizeof(name) - 1) { name[i] = v[i]; i++; }
-            name[i] = '\0';
+    } else if (cmd.is("blackbox_delete")) {
+        char name[40];
+        if (cmd.string(name, sizeof(name))) {
             if (name[0]) { blackbox_delete(name); Serial.printf("[Web] Black-box: delete %s\n", name); }
         }
     }
 #if defined(BOARD_TTGO_DISPLAY)
-    else if (strstr(buf, "\"disp\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    else if (cmd.is("disp")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->display_enabled = enabled;
@@ -1953,11 +2946,10 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] Display: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"disp_br\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            uint8_t val = (uint8_t)atoi(vptr);
-            if (val > 100) val = 100;
+    } else if (cmd.is("disp_br")) {
+        int n;
+        if (cmd.integer_capped(&n, 0, 100)) {
+            uint8_t val = (uint8_t)n;
             FSDState saved;
             state_enter();
             g_state->display_brightness = val;
@@ -1966,10 +2958,12 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] Display Brightness: %u\n", val);
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"disp_to\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            uint32_t val = (uint32_t)atoi(vptr);
+    } else if (cmd.is("disp_to")) {
+        // 0 = never off; capped where the page's field stops, well short of
+        // the seconds * 1000 overflow in the timeout check.
+        int n;
+        if (cmd.integer_capped(&n, 0, 3600)) {
+            uint32_t val = (uint32_t)n;
             FSDState saved;
             state_enter();
             g_state->display_timeout_s = val;
@@ -1980,10 +2974,9 @@ static void ws_event(uint8_t num, WStype_t type,
         }
     }
 #endif
-    else if (strstr(buf, "\"bms\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    else if (cmd.is("bms")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->bms_output = enabled;
@@ -1992,10 +2985,9 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] BMS output: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"tlssc_restore\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("tlssc_restore")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->tlssc_restore = enabled;
@@ -2004,10 +2996,9 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] TLSSC Restore: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"14x_warning\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("14x_warning")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->firmware_14x_warning = enabled;
@@ -2016,10 +3007,9 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] 14.x Warning: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"force_fsd\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("force_fsd")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->force_fsd = enabled;
@@ -2028,10 +3018,9 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] Force FSD: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"china_mode\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("china_mode")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->china_mode = enabled;
@@ -2040,10 +3029,9 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] China Mode: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"suppress_speed_chime\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("suppress_speed_chime")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->suppress_speed_chime = enabled;
@@ -2052,10 +3040,20 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] Suppress Speed Chime: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"summon_unlock\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("precondition")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
+            FSDState saved;
+            state_enter();
+            g_state->precondition = enabled;
+            saved = *g_state;
+            state_exit();
+            Serial.printf("[Web] Precondition: %s\n", enabled ? "ON" : "OFF");
+            prefs_save(&saved);
+        }
+    } else if (cmd.is("summon_unlock")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->summon_unlock = enabled;
@@ -2064,10 +3062,9 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] Summon EU Unlock: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"continue_on_green\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("continue_on_green")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->continue_on_green = enabled;
@@ -2076,10 +3073,9 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] Continue on Green: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"assist_tlssc_bit38\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("assist_tlssc_bit38")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->assist_tlssc_bit38 = enabled;
@@ -2088,10 +3084,9 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] TLSSC bit38: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"assist_rhd_override\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("assist_rhd_override")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->assist_rhd_override = enabled;
@@ -2100,10 +3095,9 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] RHD Override: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"assist_telemetry_off\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("assist_telemetry_off")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->assist_telemetry_off = enabled;
@@ -2112,13 +3106,12 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] Telemetry Off: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"apmv3_branch\"")) {
+    } else if (cmd.is("apmv3_branch")) {
         // AP branch/tier selector (experimental, non-persistent): 0-5 select a
         // UI_apmv3Branch value, any other value (255 = Off) stores the 0xFF
         // sentinel so the handler leaves the frame untouched.
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            int sel = atoi(vptr);
+        int sel;
+        if (cmd.integer(&sel)) {
             uint8_t want = (sel >= 0 && sel <= 5) ? (uint8_t)sel : 0xFF;
             FSDState saved;
             state_enter();
@@ -2128,10 +3121,36 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] AP Branch/Tier: %d\n", want);
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"track_mode_inject\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("accel_mode")) {
+        // Acceleration Mode override (#211): 1 Chill / 2 Standard (ACCEL_MODE_SPORT)
+        // / 3 Performance, anything else = Off (pass-through). The handler
+        // latches a new value only at standstill; Off applies on the next 0x334.
+        int sel;
+        if (cmd.integer(&sel)) {
+            uint8_t want = (sel >= (int)ACCEL_MODE_CHILL && sel <= (int)ACCEL_MODE_PERFORMANCE)
+                               ? (uint8_t)sel : (uint8_t)ACCEL_MODE_OFF;
+            FSDState saved;
+            state_enter();
+            g_state->accel_mode = want;
+            saved = *g_state;
+            state_exit();
+            Serial.printf("[Web] Acceleration Mode: %u\n", (unsigned)want);
+            prefs_save(&saved);
+        }
+    } else if (cmd.is("cp_type_eu_rewrite")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
+            FSDState saved;
+            state_enter();
+            g_state->cp_type_eu_rewrite = enabled;
+            saved = *g_state;
+            state_exit();
+            Serial.printf("[Web] EU CP Type rewrite: %s\n", enabled ? "ON" : "OFF");
+            prefs_save(&saved);
+        }
+    } else if (cmd.is("track_mode_inject")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->track_mode_inject = enabled;
@@ -2140,11 +3159,10 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] Track Mode inject: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"track_rotation_pct\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            uint8_t val = (uint8_t)atoi(vptr);
-            if (val > 100) val = 100;
+    } else if (cmd.is("track_rotation_pct")) {
+        int n;
+        if (cmd.integer_capped(&n, 0, 100)) {
+            uint8_t val = (uint8_t)n;
             FSDState saved;
             state_enter();
             g_state->track_rotation_pct = val;
@@ -2153,11 +3171,10 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] Track Handling Balance: %u\n", val);
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"track_stability_pct\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            uint8_t val = (uint8_t)atoi(vptr);
-            if (val > 100) val = 100;
+    } else if (cmd.is("track_stability_pct")) {
+        int n;
+        if (cmd.integer_capped(&n, 0, 100)) {
+            uint8_t val = (uint8_t)n;
             FSDState saved;
             state_enter();
             g_state->track_stability_pct = val;
@@ -2166,10 +3183,9 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] Track Stability Assist: %u\n", val);
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"track_post_cooling\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("track_post_cooling")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->track_post_cooling = enabled;
@@ -2178,10 +3194,9 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] Track Post-drive Cooling: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"track_cmp_overclock\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool enabled = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("track_cmp_overclock")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
             g_state->track_cmp_overclock = enabled;
@@ -2190,140 +3205,306 @@ static void ws_event(uint8_t num, WStype_t type,
             Serial.printf("[Web] Track Compressor Overclock: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
         }
-    } else if (strstr(buf, "\"dump\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            bool want = (strncmp(vptr, "true", 4) == 0);
+    } else if (cmd.is("dump")) {
+        bool want;
+        if (cmd.boolean(&want)) {
             if (want) can_dump_start();
             else      can_dump_stop();
             Serial.printf("[Web] CAN Dump: %s\n", want ? "START" : "STOP");
         }
-    } else if (strstr(buf, "\"sleep\"")) {
-        if (vptr) {
-            while (*vptr == ' ' || *vptr == ':') vptr++;
-            uint32_t val = (uint32_t)atoi(vptr);
-            if (val >= 10000) { // minimum 10s
-                FSDState saved;
-                state_enter();
-                g_state->sleep_idle_ms = val;
-                saved = *g_state;
-                state_exit();
-                Serial.printf("[Web] Sleep timeout: %u ms\n", val);
-                prefs_save(&saved);
-            }
-        }
-    } else if (strstr(buf, "\"wifi_cfg\"")) {
-        // Find the "value":{ object start
-        const char *vobj = strstr(buf, "\"value\":");
-        if (vobj) {
+    } else if (cmd.is("mcp_rx_task")) {
+        bool enabled;
+        if (cmd.boolean(&enabled)) {
             FSDState saved;
             state_enter();
-            char *s = strstr(vobj, "\"ssid\":\"");
-            char *p = strstr(vobj, "\"pass\":\"");
-            char *h = strstr(vobj, "\"hidden\":");
-            char *ss = strstr(vobj, "\"sta_ssid\":\"");
-            char *sp = strstr(vobj, "\"sta_pass\":\"");
-            if (s) {
-                s += 8;
-                char *end = strchr(s, '\"');
-                if (end) {
-                    int len = end - s;
-                    if (len > 32) len = 32;
-                    if (memchr(s, '\\', len) == nullptr) {
-                        memcpy(g_state->wifi_ssid, s, len);
-                        g_state->wifi_ssid[len] = '\0';
-                    }
-                }
-            }
-            if (p) {
-                p += 8;
-                char *end = strchr(p, '\"');
-                if (end) {
-                    int len = end - p;
-                    if (len > 64) len = 64;
-                    if (memchr(p, '\\', len) == nullptr &&
-                        !(len == 3 && memcmp(p, "***", 3) == 0)) {
-                        memcpy(g_state->wifi_pass, p, len);
-                        g_state->wifi_pass[len] = '\0';
-                    }
-                }
-            }
-            if (h) {
-                h += 9;
-                while (*h == ' ' || *h == ':') h++;
-                if (strncmp(h, "true", 4) == 0) g_state->wifi_hidden = true;
-                else if (strncmp(h, "false", 5) == 0) g_state->wifi_hidden = false;
-            }
-            if (ss) {
-                ss += 12;
-                char *end = strchr(ss, '\"');
-                if (end) {
-                    int len = end - ss;
-                    if (len > 32) len = 32;
-                    if (memchr(ss, '\\', len) == nullptr) {
-                        memcpy(g_state->wifi_sta_ssid, ss, len);
-                        g_state->wifi_sta_ssid[len] = '\0';
-                    }
-                }
-            }
-            if (sp) {
-                sp += 12;
-                char *end = strchr(sp, '\"');
-                if (end) {
-                    int len = end - sp;
-                    if (len > 64) len = 64;
-                    if (memchr(sp, '\\', len) == nullptr &&
-                        !(len == 3 && memcmp(sp, "***", 3) == 0)) {
-                        memcpy(g_state->wifi_sta_pass, sp, len);
-                        g_state->wifi_sta_pass[len] = '\0';
-                    }
-                }
-            }
+            g_state->mcp_rx_task = enabled;
             saved = *g_state;
             state_exit();
-            Serial.printf("[Web] WiFi config: AP=\"%s\" STA=\"%s\" PASS=*** HIDDEN=%d\n",
-                saved.wifi_ssid, saved.wifi_sta_ssid, saved.wifi_hidden);
+            // Starts or stops at once; drivers without the task ignore it.
+            for (uint8_t i = 0; i < g_can_count; i++)
+                if (g_can_buses[i]) g_can_buses[i]->setRxTask(enabled);
+            Serial.printf("[Web] MCP2515 RX task: %s\n", enabled ? "ON" : "OFF");
             prefs_save(&saved);
-            delay(500);
-            ESP.restart();
+        }
+    } else if (cmd.is("sleep")) {
+        int n;
+        if (cmd.integer_capped(&n, 10000, INT32_MAX)) {   // minimum 10 s
+            uint32_t val = (uint32_t)n;
+            FSDState saved;
+            state_enter();
+            g_state->sleep_idle_ms = val;
+            saved = *g_state;
+            state_exit();
+            Serial.printf("[Web] Sleep timeout: %u ms\n", val);
+            prefs_save(&saved);
+        }
+    } else if (cmd.is("wifi_cfg")) {
+        // All or nothing: one field that does not validate rejects the whole
+        // message, nothing is saved and the device stays up. cmd.field names
+        // the field for the reply.
+        WebWifiCfg cfg;
+        cmd.field = web_wifi_parse(cmd.value, &cfg);
+        if (cmd.field) {
+            Serial.printf("[Web] WiFi config rejected: bad %s\n", cmd.field);
+            return WEB_CMD_BAD_VALUE;
+        }
+        FSDState saved;
+        state_enter();
+        if (cfg.has_ssid)     strlcpy(g_state->wifi_ssid, cfg.ssid, sizeof(g_state->wifi_ssid));
+        if (cfg.has_pass)     strlcpy(g_state->wifi_pass, cfg.pass, sizeof(g_state->wifi_pass));
+        if (cfg.has_hidden)   g_state->wifi_hidden = cfg.hidden;
+        if (cfg.has_sta_ssid) strlcpy(g_state->wifi_sta_ssid, cfg.sta_ssid, sizeof(g_state->wifi_sta_ssid));
+        if (cfg.has_sta_pass) strlcpy(g_state->wifi_sta_pass, cfg.sta_pass, sizeof(g_state->wifi_sta_pass));
+        if (cfg.has_host)     strlcpy(g_state->wifi_hostname, cfg.host[0] ? cfg.host : WIFI_HOSTNAME_DEFAULT,
+                                      sizeof(g_state->wifi_hostname));
+        saved = *g_state;
+        state_exit();
+        Serial.printf("[Web] WiFi config: AP=\"%s\" STA=\"%s\" PASS=*** HIDDEN=%d HOST=%s\n",
+            saved.wifi_ssid, saved.wifi_sta_ssid, saved.wifi_hidden, saved.wifi_hostname);
+        prefs_save(&saved);
+        return WEB_CMD_RESTART;
+    } else {
+        return WEB_CMD_UNKNOWN;
+    }
+    return cmd.bad_value ? WEB_CMD_BAD_VALUE : WEB_CMD_OK;
+}
+
+// The reply to a refused command, the same on both transports, e.g.
+// {"ok":false,"err":"bad_value","cmd":"wifi_cfg","field":"pass"}. "cmd" only
+// once the name matched one of the literals above, "field" only from
+// wifi_cfg; a value is never echoed, it may be a password.
+static String cmd_refusal(const WebCmd &cmd, WebCmdResult res) {
+    String j = "{\"ok\":false,\"err\":\"";
+    j += web_cmd_error(res);
+    j += '"';
+    if (res == WEB_CMD_BAD_VALUE) { j += ",\"cmd\":\""; j += cmd.name; j += '"'; }
+    if (cmd.field) { j += ",\"field\":\""; j += cmd.field; j += '"'; }
+    j += '}';
+    Serial.printf("[Web] command refused: %s\n", j.c_str());
+    return j;
+}
+
+// New WiFi settings are saved: restart to apply them. Called after the reply.
+static void restart_for_wifi() {
+    ota_verify_confirm("WiFi config restart");
+    can_shutdown_all(g_can_buses, g_can_count);
+    delay(500);
+    ESP.restart();
+}
+
+// ── Whose commands are taken (web_origin.h) ──────────────────────────────────
+// Text form of the names in WebOwnNames, filled in by own_names().
+struct OwnNamesText {
+    char ap[16];
+    char sta[16];
+    char host[sizeof(FSDState::wifi_hostname)];
+};
+
+// The addresses and hostname the device has right now.
+static WebOwnNames own_names(OwnNamesText &t) {
+    auto text = [](IPAddress ip, char *out) {
+        snprintf(out, 16, "%u.%u.%u.%u", ip[0], ip[1], ip[2], ip[3]);
+    };
+    t.ap[0] = t.sta[0] = '\0';
+    wifi_mode_t mode = WiFi.getMode();
+    if (mode == WIFI_MODE_AP || mode == WIFI_MODE_APSTA) text(WiFi.softAPIP(), t.ap);
+    if ((mode == WIFI_MODE_STA || mode == WIFI_MODE_APSTA) && WiFi.status() == WL_CONNECTED) {
+        text(WiFi.localIP(), t.sta);
+    }
+    state_enter();
+    memcpy(t.host, g_state->wifi_hostname, sizeof(t.host));
+    state_exit();
+    t.host[sizeof(t.host) - 1] = '\0';
+    return WebOwnNames{t.ap, t.sta, t.host};
+}
+
+// The dashboard at the address this client reached us on.
+static String home_url() {
+    return String("http://") + g_http.client().localIP().toString() + "/";
+}
+
+WebStreamAccess web_dashboard_stream_access(const char *origin, const char *host) {
+    if (g_state == nullptr) return WEB_STREAM_REFUSE;
+    OwnNamesText t;
+    return web_stream_access(origin, host, own_names(t));
+}
+
+// GETs that hand out state (status, aux, black-box captures) answer only
+// under our own names: a page on a rebound name is same-origin with them and
+// could read them. The page itself is sent to our address under any other
+// name (handle_root()), so the dashboard never gets this 403; like the one
+// from /api/cmd it names the address to use.
+static bool host_ours(const char *what) {
+    String host = g_http.hostHeader();
+    OwnNamesText t;
+    if (web_host_header_ours(host.c_str(), own_names(t))) return true;
+    Serial.printf("[Web] %s refused: Host %.64s\n", what, host.c_str());
+    g_http.send(403, "application/json",
+                String("{\"ok\":false,\"err\":\"host\",\"url\":\"") + home_url() + "\"}");
+    return false;
+}
+
+// WebSocket handshake, once for each request header the library does not
+// handle itself: a browser page that is not the dashboard is refused (the
+// library answers 400 and the page falls back to HTTP polling).
+static bool ws_header_ok(String name, String value) {
+    if (!name.equalsIgnoreCase("Origin")) return true;
+    OwnNamesText t;
+    if (web_ws_origin_ok(value.c_str(), own_names(t))) return true;
+    Serial.printf("[WS] connection refused: Origin %.64s\n", value.c_str());
+    return false;
+}
+
+// ── WebSocket event handler ───────────────────────────────────────────────────
+static void ws_event(uint8_t num, WStype_t type,
+                     uint8_t *payload, size_t length)
+{
+    if (type == WStype_CONNECTED) {
+        // Auto-run the tap capability check on connect (#125): the first few
+        // seconds answer "will the nag killer work on this tap?" before any
+        // guesswork. Pure RX — counting only.
+        capability_start(millis());
+        // Push current state immediately on connect
+        String json = build_json();
+        g_ws.sendTXT(num, json.c_str(), json.length());
+        return;
+    }
+
+    if (type == WStype_TEXT) {
+        // A refusal goes back to the sender; success needs no reply, the next
+        // state push shows it.
+        WebCmd cmd;
+        WebCmdResult res = web_command(cmd, payload, length);
+        if (res == WEB_CMD_RESTART) {
+            restart_for_wifi();
+        } else if (res != WEB_CMD_OK) {
+            String reply = cmd_refusal(cmd, res);
+            g_ws.sendTXT(num, reply.c_str(), reply.length());
         }
     }
 }
 
 // ── HTTP handlers ─────────────────────────────────────────────────────────────
-static void handle_root() {
-    g_http.setContentLength(sizeof(WEB_HTML) - 1);
-    g_http.send(200, "text/html", "");
-
-    const uint8_t *ptr = (const uint8_t *)WEB_HTML;
-    size_t left = sizeof(WEB_HTML) - 1;
+// The page body, after the headers. The loop task services no CAN while this
+// runs, so the socket is written directly and non-blocking (page_send.h);
+// WiFiClient::write() would wait up to 10 s per call for a client that has
+// gone. A client that takes nothing for PAGE_SEND_STALL_MS, or is not done in
+// PAGE_SEND_MAX_MS, gets a cut page and the connection is dropped (WebServer
+// lets go of it once this handler returns).
+static void send_page_body(const uint8_t *ptr, size_t len) {
     WiFiClient client = g_http.client();
-
-    uint32_t timeout_ms = millis();
-    while (left > 0 && client.connected()) {
-        size_t chunk = (left > 1460) ? 1460 : left;
-        size_t written = client.write(ptr, chunk);
-        if (written > 0) {
-            ptr += written;
-            left -= written;
-            timeout_ms = millis(); // Reset timeout
-        } else {
-            if (millis() - timeout_ms > 2000) break; // Prevent infinite loop
-            delay(10);
-        }
-        delay(2);
+    int fd = client.fd();
+    if (fd < 0) return;
+    size_t sent = page_send(ptr, len, PAGE_SEND_STALL_MS, PAGE_SEND_MAX_MS,
+        [fd](const uint8_t *p, size_t n) -> long {
+            int r = send(fd, p, n, MSG_DONTWAIT);
+            if (r >= 0) return r;
+            return (errno == EAGAIN || errno == EWOULDBLOCK) ? 0 : -1;
+        },
+        [fd](uint32_t ms) {
+            fd_set w;
+            FD_ZERO(&w);
+            FD_SET(fd, &w);
+            struct timeval tv = { (time_t)(ms / 1000u), (suseconds_t)((ms % 1000u) * 1000u) };
+            return select(fd + 1, nullptr, &w, nullptr, &tv) >= 0;
+        },
+        []() { return (uint32_t)millis(); });
+    if (sent < len) {
+        Serial.printf("[Web] page cut at %u of %u bytes: client too slow or gone\n",
+                      (unsigned)sent, (unsigned)len);
+        client.stop();
     }
+}
+
+static bool client_takes_gzip() {
+    String enc = g_http.header("Accept-Encoding");
+    enc.toLowerCase();
+    return enc.indexOf("gzip") >= 0;
+}
+
+static void handle_root() {
+    // The page is served under our own names only: its origin is what the
+    // WebSocket and /api/cmd check, and on the SoftAP every name resolves
+    // here (captive portal). Under any other name it is sent to our address.
+    OwnNamesText t;
+    if (!web_host_header_ours(g_http.hostHeader().c_str(), own_names(t))) {
+        g_http.sendHeader("Location", home_url(), true);
+        g_http.send(302, "text/plain", "");
+        return;
+    }
+    captive_portal_note_dashboard(g_http);   // portal "login" for Apple's probe (SoftAP only)
+    // Every browser sends Accept-Encoding: gzip and gets WEB_HTML_GZ, under a
+    // third of the bytes; any other client gets the page as it is.
+    bool gz = g_page_gz_ok && client_takes_gzip();
+    size_t len = gz ? sizeof(WEB_HTML_GZ) : sizeof(WEB_HTML) - 1;
+    g_http.sendHeader("Vary", "Accept-Encoding");
+    if (gz) g_http.sendHeader("Content-Encoding", "gzip");
+    g_http.setContentLength(len);
+    g_http.send(200, "text/html", "");
+    send_page_body(gz ? WEB_HTML_GZ : (const uint8_t *)WEB_HTML, len);
 }
 
 static void handle_status() {
     if (g_state == nullptr) { g_http.send(503, "application/json", "{}"); return; }
+    if (!host_ours("status")) return;
+    g_http.sendHeader("Cache-Control", "no-store");
     g_http.send(200, "application/json", build_json());
+}
+
+// A POST that changes something has to come from the dashboard's own page, as
+// on the WebSocket (web_origin.h); that also stops a rebound name, where the
+// request is not cross-site at all. Otherwise this sends a 403 that names the
+// address to load the dashboard from, and returns false.
+static bool post_from_dashboard(const char *what) {
+    String origin = g_http.header("Origin");
+    String host = g_http.hostHeader();
+    OwnNamesText t;
+    if (web_post_origin_ok(origin.c_str(), own_names(t))) return true;
+    Serial.printf("[Web] %s refused: Origin %.64s Host %.64s\n", what, origin.c_str(), host.c_str());
+    g_http.send(403, "application/json",
+                String("{\"ok\":false,\"err\":\"origin\",\"url\":\"") + home_url() + "\"}");
+    return false;
+}
+
+// Commands over HTTP, for clients without a working WebSocket. The body is the
+// same JSON text a WS frame carries and goes through the same dispatcher.
+// Content-Type must be application/json: a cross-site form or no-cors fetch
+// cannot send that without a CORS preflight, which this server never grants.
+// The Origin has to be the dashboard's own page (post_from_dashboard()).
+// Otherwise the reply is {"ok":true}, or a 400 with the reason the command
+// was refused.
+static void handle_cmd() {
+    if (g_state == nullptr) { g_http.send(503, "application/json", "{}"); return; }
+    if (!post_from_dashboard("command")) return;
+    String ctype = g_http.header("Content-Type");
+    ctype.toLowerCase();
+    if (!ctype.startsWith("application/json")) {
+        g_http.send(415, "text/plain", "Content-Type must be application/json");
+        return;
+    }
+    String body = g_http.arg("plain");
+    if (body.length() == 0) { g_http.send(400, "text/plain", "empty body"); return; }
+    if (body.length() > WEB_CMD_MAX_LEN) {
+        g_http.send(413, "text/plain", "command too long");
+        return;
+    }
+    // The reply carries the outcome, so the command runs first; a wifi_cfg
+    // restart waits until the reply has gone out.
+    WebCmd cmd;
+    WebCmdResult res = web_command(cmd, (const uint8_t *)body.c_str(), body.length());
+    if (res != WEB_CMD_OK && res != WEB_CMD_RESTART) {
+        g_http.send(400, "application/json", cmd_refusal(cmd, res));
+        return;
+    }
+    g_http.send(200, "application/json", "{\"ok\":true}");
+    if (res == WEB_CMD_RESTART) restart_for_wifi();
 }
 
 // On-demand aux status (blackbox/capability/profile). Polled by the dashboard
 // on a slow timer so these heavy blocks stay off the hot WS state push (#124).
 static void handle_aux() {
     if (g_state == nullptr) { g_http.send(503, "application/json", "{}"); return; }
+    if (!host_ours("aux")) return;
     g_http.sendHeader("Cache-Control", "no-store");
     g_http.send(200, "application/json", build_aux_json());
 }
@@ -2333,19 +3514,26 @@ static void handle_auth() {
     g_http.send(200, "text/plain", "OK");
 }
 
+// Wipes the card, so it takes what the other destructive routes take: a POST
+// from the dashboard's own page (a GET could be set off by an <img> on any
+// page) and the admin password.
 static void handle_sdformat() {
+    if (!post_from_dashboard("SD format")) return;
+    if (!require_admin_auth()) return;
     String result = sd_format_card();
     g_http.send(200, "application/json", result);
 }
 
 // ── Black-box (#124) ──────────────────────────────────────────────────────────
 static void handle_blackbox_list() {
+    if (!host_ours("black-box list")) return;
     if (!download_auth_ok()) return;
     g_http.sendHeader("Cache-Control", "no-store");
     g_http.send(200, "application/json", blackbox_list_json());
 }
 
 static void handle_blackbox_get() {
+    if (!host_ours("black-box download")) return;
     if (!download_auth_ok()) return;
     String name = g_http.arg("name");
     bool json = (g_http.arg("type") == "json");
@@ -2371,6 +3559,8 @@ static void handle_blackbox_get() {
 static void handle_restart() {
     if (!require_admin_auth()) return;
     g_http.send(200, "text/plain", "OK");
+    ota_verify_confirm("web restart");
+    can_shutdown_all(g_can_buses, g_can_count);
     delay(500);
     ESP.restart();
 }
@@ -2419,6 +3609,8 @@ static void handle_ota_upload() {
             return;
         }
 
+        // esp_ota_begin() refuses while the running image is still unconfirmed.
+        ota_verify_confirm("next web OTA");
         if (!Update.begin(max_size, U_FLASH)) {
             Update.printError(Serial);
             Serial.println("[OTA] ERROR: Update.begin() failed");
@@ -2513,6 +3705,7 @@ static void handle_ota_done() {
     Serial.println("[OTA] Firmware update successful!");
     Serial.println("[OTA] Rebooting in 2 seconds...");
 
+    can_shutdown_all(g_can_buses, g_can_count);
     delay(2000);
     ESP.restart();
 }
@@ -2531,27 +3724,51 @@ void web_dashboard_init(FSDState *state,
     g_last_rx     = state ? state->rx_count : 0;
     g_last_can_seen_ms = (state && state->rx_count > 0) ? millis() : 0;
 
+    // The gzip trailer holds the CRC-32 of what was compressed.
+    const uint8_t *gz_end = WEB_HTML_GZ + sizeof(WEB_HTML_GZ);
+    uint32_t gz_crc = (uint32_t)gz_end[-8] | ((uint32_t)gz_end[-7] << 8) |
+                      ((uint32_t)gz_end[-6] << 16) | ((uint32_t)gz_end[-5] << 24);
+    g_page_gz_ok = esp_rom_crc32_le(0, (const uint8_t *)WEB_HTML, sizeof(WEB_HTML) - 1) == gz_crc;
+    Serial.printf("[Web] page %u bytes, gzip %u bytes%s\n", (unsigned)(sizeof(WEB_HTML) - 1),
+                  (unsigned)sizeof(WEB_HTML_GZ), g_page_gz_ok ? "" : " (CRC mismatch, not sent)");
+
     g_http.on("/",           HTTP_GET,  handle_root);
     g_http.on("/api/status", HTTP_GET,  handle_status);
+    g_http.on("/api/cmd",    HTTP_POST, handle_cmd);
     g_http.on("/api/aux",    HTTP_GET,  handle_aux);
     g_http.on("/auth",       HTTP_GET,  handle_auth);
-    g_http.on("/sdformat",   HTTP_GET,  handle_sdformat);
+    g_http.on("/sdformat",   HTTP_POST, handle_sdformat);
     g_http.on("/blackbox/list", HTTP_GET, handle_blackbox_list);
     g_http.on("/blackbox/get",  HTTP_GET, handle_blackbox_get);
     g_http.on("/restart",    HTTP_GET,  handle_restart);
     g_http.on("/update",     HTTP_POST, handle_ota_done, handle_ota_upload);
+    // Captive portal: OS probe routes + catch-all onNotFound (SoftAP only).
+    // Registered last so the explicit routes above take precedence.
+    captive_portal_register_routes(g_http);
+    // WebServer keeps only the request headers named here (plus Authorization),
+    // and collectHeaders() replaces the list instead of adding to it. This is
+    // the last call before begin(), so it names every header a handler reads:
+    // Content-Type and Origin for /api/cmd, Origin for /sdformat, User-Agent
+    // for the captive portal's probes, Accept-Encoding for the page.
+    const char *collect[] = { "Content-Type", "Origin", "User-Agent", "Accept-Encoding" };
+    g_http.collectHeaders(collect, sizeof(collect) / sizeof(collect[0]));
     g_http.begin();
+    captive_portal_begin();
     http_can_stream_init();
 
     g_ws.begin();
     g_ws.onEvent(ws_event);
+    g_ws.onValidateHttpHeader(ws_header_ok, nullptr, 0);
 
     Serial.println("[Web] HTTP :80  WS :81 — ready");
 }
 
+void web_dashboard_set_debug(bool on) { g_debug = on; }
+
 void web_dashboard_update() {
     if (g_state == nullptr) return;   // init was never called (WiFi failed)
 
+    captive_portal_process();
     g_http.handleClient();
     g_ws.loop();
     http_can_stream_update();
@@ -2568,8 +3785,10 @@ void web_dashboard_update() {
         g_last_rx    = rx;
         g_last_fps_ms = now;
 
+        // Nobody on the WebSocket: skip the push. /api/status builds its own.
+        if (g_ws.connectedClients() == 0) return;
         String json = build_json();
-        Serial.printf("[WS] state json=%u bytes\n", (unsigned)json.length());
+        if (g_debug) Serial.printf("[WS] state json=%u bytes\n", (unsigned)json.length());
         g_ws.broadcastTXT(json.c_str(), json.length());
     }
 }

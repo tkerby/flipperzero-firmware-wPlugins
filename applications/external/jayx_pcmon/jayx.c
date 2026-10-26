@@ -288,7 +288,7 @@ static void jayx_handle_input(JayxApp* app, InputEvent* event) {
             view_port_update(app->view_port);
         } else if(event->key == InputKeyOk) {
             if(app->select_cursor == JayxTransportBt) {
-                /* Bluetooth not ready — show WIP message, do not start transport.
+                /* Bluetooth not ready - show WIP message, do not start transport.
                    jayx_transport_start() is intentionally never called for
                    JayxTransportBt; don't wire it up here without removing this gate. */
                 app->ui_state = JayxUiBtDev;

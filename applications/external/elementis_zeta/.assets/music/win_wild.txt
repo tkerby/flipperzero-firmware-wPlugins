@@ -1,0 +1,10 @@
+title Victory over a wild creature (once) - a quick run up and a bright chord that shimmers (G major)
+once
+tempo 156
+vol 200
+meter 4/4
+inst lead v=255,255,215,185,170
+inst maj arp=0,4,7 rate=2
+@lead
+o5 g16 b16 o6 d16 g16 b8 g8 a8 b8 d4 |
+@maj o5 g1 |

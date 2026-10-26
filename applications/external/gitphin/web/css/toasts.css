@@ -1,0 +1,9 @@
+/* ---- progress bar, toasts ---- */
+#prog{position:fixed;top:0;left:0;right:0;height:4px;z-index:200;pointer-events:none;opacity:0;transition:opacity 0s .2s;background:repeating-linear-gradient(90deg,var(--orange) 0 12px,transparent 12px 20px);background-size:20px 4px;animation:pg .5s steps(5) infinite}
+#prog.on{opacity:1}
+@keyframes pg{to{background-position:20px 0}}
+#toasts{position:fixed;right:var(--s4);bottom:var(--s4);display:flex;flex-direction:column;gap:var(--s2);z-index:150;max-width:min(420px,calc(100vw - 32px))}
+.toast{display:flex;gap:var(--s2);align-items:flex-start;background:var(--card);color:var(--fg);border:2px solid var(--bd);box-shadow:4px 4px 0 var(--shadow);padding:var(--s2) var(--s3);overflow-wrap:anywhere}
+.toast.err{border-color:var(--bad)}.toast.err .ic{color:var(--bad)}
+.toast.ok .ic{color:var(--ok)}
+.toast .ic{margin-top:3px}

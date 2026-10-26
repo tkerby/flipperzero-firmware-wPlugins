@@ -1,0 +1,124 @@
+# Ruta 22 (C9, contract 56), 28 x 14. column = i, row = j. Ciudad Nodo's west gate arrives at the EAST edge (i = 27, rows 6..7); the road to the League runs west along rows 6..7 (gravel) to the LEAGUE
+# GATEHOUSE (door (4,6)). Look: the League's road: gravel between low pine foothills, league banners (the crown on a flag) along the road, boulders, the gate sign. Wild creatures are the first routes'.
+# THE RIVAL (after the 8th badge): he waits beside the road (13,5); the step triggers across the road (16,6..7) start the scene (he walks up, talks, fights `rival_r22`), a win and he leaves for good (flag r22_done).
+@map ruta_22
+@size 28 14
+@interior no
+@area ruta_22
+@bg 0
+@fill grass
+@spawn east 26 7 W
+@spawn gate_door 5 7 NE
+@flag r22_done 904                # the rival of Ruta 22 was beaten (and left)
+@flag r22a_done 221               # (contract 80): the EARLY rival (after the parcel, before the 8th badge) was beaten (and left)
+@flag parcel_delivered 41         # Profesora Lin received the parcel (villa_lab.map): the early rival only exists from then on
+@encounters grass rate=25
+  muncrit 3 5 30
+  flitter 3 5 25
+  jabbird 3 5 25
+  ramplet 4 6 20
+@end
+# Open ground (contract 63, transit road): a step onto plain ground (not tall grass, water, a door, a ledge, an arrow floor) rolls this table when rand8 < 2 (2/256 per step).
+@open_rate 2
+# Roaming wild creatures (contract 55, rollout in 63): 2 creatures of this table wander the open ground (not the tall grass); touching one starts that wild battle.
+@roam 2 table=grass period=1800
+@legend
+  .  tile=grass
+  g  tile=tall_grass
+  r  tile=gravel
+  p  object=pine
+  o  object=rock
+  f  object=vflag
+  s  tile=grass object=road_sign text=r22.sign interact=look
+  S  tile=grass object=sign text=r22.gate interact=look
+  G  object=gate_liga
+  d  door=gate_liga
+  e  tile=gravel
+  R  tile=grass npc=rival_s id=rival face=SE script=rival_talk show_flag=badge_nucleo hide_flag=r22_done
+  t  tile=gravel interact=step script=rival_ambush
+  E  tile=grass npc=rival_s id=rival_a face=NE script=rival_a_talk show_flag=parcel_delivered hide_flag=r22a_done   # the early rival (first Route 22 fight): stands beside the road from the parcel on
+@grid
+  pppppppppppppppppppppppppppp
+  p.....gggggg...............p
+  p.....gggggg.o.............p
+  p..o..gggggg..o.........o..p
+  p.....gggggg...............p
+  p..GG...f....R......f...s..p
+  p..Gdrrrrrrrrrrrtrrrrrrrrrre
+  p..rrrrrrrrrrrrrtrrrrrrrrrre
+  p.....S.f....E......f......p
+  p.o.............ggggggg....p
+  p........gggg...ggggggg....p
+  p........gggg...ggggggg..o.p
+  p.....o..gggg...ggggggg....p
+  pppppppppppppppppppppppppppp
+@warp e -> ciudad_nodo spawn=west
+@warp d -> puerta_liga spawn=door
+# The rival (before Senda de Campeones): the hero crosses the road line, he walks up to the road, talks, fights (trainer rival_r22: the last form of the starter that beats the player's, L50, Skyrrow 47,
+# Somnarch 47, Clubtail 45, Pyromeer 45, Dewlash 45) and, beaten, says his two lines and walks away for good (flag r22_done). A lost fight is the blackout; he stays and talking to him fights again.
+@script rival_ambush step
+    jf badge_nucleo late
+    # (contract 80): BEFORE the 8th badge the step line starts the EARLY fight (first Route 22 rival: the parcel is delivered, the first gym may still be ahead): he walks along the road to the hero, talks, fights
+    # (trainer rival_r22a: the first-stage counter of the player's starter L8 + Flitter L9), and leaves for good (flag r22a_done). Before the parcel he is not there at all (show_flag parcel_delivered).
+    jf r22a_done nothing
+    jnf parcel_delivered nothing
+    cam_npc rival_a
+    wait 400
+    npc_walk rival_a SE 3
+    npc_walk rival_a NE 1
+    npc_face_hero rival_a
+    say extra.r22a.hey
+    cam_hero
+    call rival_a_fight
+    end
+  late:
+    npc_hide rival_a              # an early rival that was never met is gone for good once the 8th badge is in
+    setf r22a_done
+    jf r22_done nothing
+    cam_npc rival
+    wait 400
+    npc_walk rival SE 3
+    npc_walk rival SW 1
+    npc_face_hero rival
+    say r22.rival.hey
+    cam_hero
+    call rival_fight
+    end
+  nothing:
+    end
+@end
+@script rival_a_talk npc
+    npc_face_hero rival_a
+    say extra.r22a.again
+    call rival_a_fight
+@end
+@script rival_a_fight called
+    battle rival_r22a 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    say extra.r22a.lose
+    say extra.r22a.next
+    npc_walk rival_a NW 3
+    npc_hide rival_a
+    setf r22a_done
+@end
+@script rival_talk npc
+    npc_face_hero rival
+    say r22.rival.again
+    call rival_fight
+@end
+@script rival_fight called
+    battle rival_r22 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    say r22.rival.lose
+    say r22.rival.next
+    npc_walk rival NW 3
+    npc_walk rival SW 5
+    npc_hide rival
+    setf r22_done
+@end

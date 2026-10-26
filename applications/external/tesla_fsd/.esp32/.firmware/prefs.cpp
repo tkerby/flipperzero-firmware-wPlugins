@@ -1,12 +1,20 @@
 #include "prefs.h"
 #include "blackbox.h"   // BLACKBOX_DEFAULT_ENABLED
 #include <Preferences.h>
+#include <nvs.h>
 
 static Preferences g_prefs;
 static const char *NS = "fsd";
 
+bool prefs_namespace_exists(const char *ns) {
+    nvs_handle_t h;
+    if (nvs_open(ns, NVS_READONLY, &h) != ESP_OK) return false;
+    nvs_close(h);
+    return true;
+}
+
 void prefs_load(FSDState *state) {
-    g_prefs.begin(NS, /*readOnly=*/true);
+    if (prefs_namespace_exists(NS)) g_prefs.begin(NS, /*readOnly=*/true);
     if (!g_prefs.isKey("ok")) {
         Serial.println("[NVS] No saved settings found (first boot)");
         g_prefs.end();
@@ -24,6 +32,7 @@ void prefs_load(FSDState *state) {
     state->suppress_speed_chime     = g_prefs.getBool("chime",  true);
     state->ignore_ota               = g_prefs.getBool("ignota", false);
     state->fsd_unlock               = g_prefs.getBool("unlock", false);
+    state->hw3_speed_override       = g_prefs.getBool("hw3spd", false);  // legacy HW3 speed write (#209)
     state->force_fsd                = g_prefs.getBool("force",  false);
     state->china_mode               = g_prefs.getBool("china",  false);
     state->tlssc_restore            = g_prefs.getBool("tlssc",  false);
@@ -43,12 +52,16 @@ void prefs_load(FSDState *state) {
     state->track_stability_pct      = g_prefs.getUChar("tmStab", 30);
     state->track_post_cooling       = g_prefs.getBool("tmPC",   false);
     state->track_cmp_overclock      = g_prefs.getBool("tmCO",   false);
+    state->accel_mode               = g_prefs.getUChar("accel", ACCEL_MODE_OFF);  // Acceleration Mode (#211)
+    if (state->accel_mode > ACCEL_MODE_PERFORMANCE) state->accel_mode = ACCEL_MODE_OFF;
+    state->cp_type_eu_rewrite       = g_prefs.getBool("cpeu",   false);  // EU CP Type rewrite (#228)
 #if defined(BOARD_TTGO_DISPLAY)
     state->display_enabled          = g_prefs.getBool("disp",   true);
     state->display_brightness       = g_prefs.getUChar("disp_br", 50);
     state->display_timeout_s        = g_prefs.getUInt("disp_to",  60);
 #endif
     state->sleep_idle_ms            = g_prefs.getUInt("sleep",  SLEEP_IDLE_MS);
+    state->mcp_rx_task              = g_prefs.getBool("mcprx",  false);  // MCP2515 RX task
 
     // WiFi
     if (g_prefs.isKey("wss")) g_prefs.getString("wss").toCharArray(state->wifi_ssid, sizeof(state->wifi_ssid));
@@ -56,6 +69,7 @@ void prefs_load(FSDState *state) {
     state->wifi_hidden = g_prefs.getBool("wsh", false);
     if (g_prefs.isKey("stas")) g_prefs.getString("stas").toCharArray(state->wifi_sta_ssid, sizeof(state->wifi_sta_ssid));
     if (g_prefs.isKey("stap")) g_prefs.getString("stap").toCharArray(state->wifi_sta_pass, sizeof(state->wifi_sta_pass));
+    if (g_prefs.isKey("host")) g_prefs.getString("host").toCharArray(state->wifi_hostname, sizeof(state->wifi_hostname));
 
     state->op_mode = (OpMode)g_prefs.getUChar("mode", (uint8_t)OpMode_ListenOnly);
     // Manual HW selection (#110); TeslaHW_Unknown = auto-detect.
@@ -70,16 +84,16 @@ void prefs_load(FSDState *state) {
     state->cfg_handson_shift = g_prefs.getUChar("chos",   0);
     state->cfg_handson_mask  = g_prefs.getUChar("chom",   0x0F);
     state->cfg_steer_id      = g_prefs.getUShort("csid",  0);
-    state->cfg_steer_hi      = g_prefs.getUChar("cshi",   1);
+    state->cfg_steer_hi      = g_prefs.getUChar("cshi",   0);   // hi == lo: not mapped
     state->cfg_steer_lo      = g_prefs.getUChar("cslo",   0);
 
-    Serial.printf("[NVS] Loaded: FSDUnlock=%d NAG=%d ContinuousAP=%d IgnoreOTA=%d China=%d Chime=%d Summon=%d COG=%d TLSSC38=%d RHD=%d TelOff=%d APMv3=%d TrkMode=%d/%u/%u/%d/%d Sleep=%u AP=\"%s\" STA=\"%s\" HIDDEN=%d\n",
-                  state->fsd_unlock, state->nag_killer, state->continuous_ap, state->ignore_ota,
+    Serial.printf("[NVS] Loaded: FSDUnlock=%d HW3Spd=%d NAG=%d ContinuousAP=%d IgnoreOTA=%d China=%d Chime=%d Summon=%d COG=%d TLSSC38=%d RHD=%d TelOff=%d APMv3=%d TrkMode=%d/%u/%u/%d/%d Accel=%u Sleep=%u AP=\"%s\" STA=\"%s\" HIDDEN=%d\n",
+                  state->fsd_unlock, state->hw3_speed_override, state->nag_killer, state->continuous_ap, state->ignore_ota,
                   state->china_mode, state->suppress_speed_chime, state->summon_unlock,
                   state->continue_on_green, state->assist_tlssc_bit38, state->assist_rhd_override, state->assist_telemetry_off,
                   state->apmv3_branch, state->track_mode_inject, state->track_rotation_pct,
                   state->track_stability_pct, state->track_post_cooling, state->track_cmp_overclock,
-                  state->sleep_idle_ms, state->wifi_ssid, state->wifi_sta_ssid,
+                  state->accel_mode, state->sleep_idle_ms, state->wifi_ssid, state->wifi_sta_ssid,
                   state->wifi_hidden);
     g_prefs.end();
 }
@@ -106,6 +120,7 @@ void prefs_save(const FSDState *state) {
     g_prefs.putBool("chime",  state->suppress_speed_chime);
     g_prefs.putBool("ignota", state->ignore_ota);
     g_prefs.putBool("unlock", state->fsd_unlock);
+    g_prefs.putBool("hw3spd", state->hw3_speed_override);
     g_prefs.putBool("force",  state->force_fsd);
     g_prefs.putBool("china",  state->china_mode);
     g_prefs.putBool("tlssc",  state->tlssc_restore);
@@ -125,12 +140,15 @@ void prefs_save(const FSDState *state) {
     g_prefs.putUChar("tmStab",state->track_stability_pct);
     g_prefs.putBool("tmPC",   state->track_post_cooling);
     g_prefs.putBool("tmCO",   state->track_cmp_overclock);
+    g_prefs.putUChar("accel", state->accel_mode);   // Acceleration Mode (#211), 0 = Off
+    g_prefs.putBool("cpeu",   state->cp_type_eu_rewrite);  // EU CP Type rewrite (#228)
 #if defined(BOARD_TTGO_DISPLAY)
     g_prefs.putBool("disp",   state->display_enabled);
     g_prefs.putUChar("disp_br", state->display_brightness);
     g_prefs.putUInt("disp_to",  state->display_timeout_s);
 #endif
     g_prefs.putUInt("sleep",  state->sleep_idle_ms);
+    g_prefs.putBool("mcprx",  state->mcp_rx_task);  // MCP2515 RX task
 
     // WiFi
     g_prefs.putString("wss",  state->wifi_ssid);
@@ -138,6 +156,7 @@ void prefs_save(const FSDState *state) {
     g_prefs.putBool("wsh",    state->wifi_hidden);
     g_prefs.putString("stas", state->wifi_sta_ssid);
     g_prefs.putString("stap", state->wifi_sta_pass);
+    g_prefs.putString("host", state->wifi_hostname);
 
     g_prefs.putUChar("mode",  (uint8_t)state->op_mode);
     g_prefs.putUChar("hwov",  (uint8_t)state->hw_override);   // manual HW selection (#110)
@@ -154,13 +173,13 @@ void prefs_save(const FSDState *state) {
     g_prefs.putUChar("cshi",  state->cfg_steer_hi);
     g_prefs.putUChar("cslo",  state->cfg_steer_lo);
 
-    Serial.printf("[NVS] Saved: FSDUnlock=%d NAG=%d ContinuousAP=%d IgnoreOTA=%d China=%d Chime=%d Summon=%d COG=%d TLSSC38=%d RHD=%d TelOff=%d APMv3=%d TrkMode=%d/%u/%u/%d/%d Sleep=%u AP=\"%s\" STA=\"%s\" HIDDEN=%d\n",
-                  state->fsd_unlock, state->nag_killer, state->continuous_ap, state->ignore_ota,
+    Serial.printf("[NVS] Saved: FSDUnlock=%d HW3Spd=%d NAG=%d ContinuousAP=%d IgnoreOTA=%d China=%d Chime=%d Summon=%d COG=%d TLSSC38=%d RHD=%d TelOff=%d APMv3=%d TrkMode=%d/%u/%u/%d/%d Accel=%u Sleep=%u AP=\"%s\" STA=\"%s\" HIDDEN=%d\n",
+                  state->fsd_unlock, state->hw3_speed_override, state->nag_killer, state->continuous_ap, state->ignore_ota,
                   state->china_mode, state->suppress_speed_chime, state->summon_unlock,
                   state->continue_on_green, state->assist_tlssc_bit38, state->assist_rhd_override, state->assist_telemetry_off,
                   state->apmv3_branch, state->track_mode_inject, state->track_rotation_pct,
                   state->track_stability_pct, state->track_post_cooling, state->track_cmp_overclock,
-                  state->sleep_idle_ms, state->wifi_ssid, state->wifi_sta_ssid,
+                  state->accel_mode, state->sleep_idle_ms, state->wifi_ssid, state->wifi_sta_ssid,
                   state->wifi_hidden);
     g_prefs.end();
 }

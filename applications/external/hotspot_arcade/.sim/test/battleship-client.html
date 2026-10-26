@@ -1,0 +1,85 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Battleship client regression</title>
+<h1>Battleship client regression</h1>
+<p>Build the web client and WASM engine, then serve the repository with sim/serve.sh.</p>
+<pre id="result">Running...</pre>
+<div id="phones"></div>
+<script type="module">
+// Issue #34: placement works, but a translated turn label throws before either
+// firing board renders. Exercise both turn branches through the real WS handler.
+import { newEngine, lastToWs } from "./harness-lib.mjs";
+import { makeSocket, getSocket } from "../web/phones.js";
+
+const result = document.getElementById("result");
+const frames = [];
+const errors = [];
+let checks = 0;
+function check(ok, message) {
+  checks++;
+  if (!ok) throw new Error(message);
+}
+window.HA_HARNESS = {
+  connect: id => makeSocket(Number(id), () => {}, () => {}),
+};
+window.battleshipClientResult = null;
+try {
+  const engine = await newEngine();
+  engine.reset();
+  engine.join(1, "ALICE");
+  engine.join(2, "BOB");
+  engine.selectGame(12);
+  engine.input(1, { t: "challenge", to: 2 });
+  const placement = engine.input(2, { t: "accept", from: 1 });
+  const layout = "0,0,0;1,0,0;2,0,0;3,0,0;4,0,0";
+  engine.input(1, { t: "place", ships: layout });
+  const firing = engine.input(2, { t: "place", ships: layout });
+
+  for (const id of [1, 2]) {
+    try {
+      const frame = document.createElement("iframe");
+      frames.push(frame);
+      frame.width = "393";
+      frame.height = "852";
+      const loaded = new Promise((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error("Client load timed out")), 10000);
+        frame.onload = () => { clearTimeout(timer); resolve(); };
+      });
+      frame.src = "../../web/dist/index.html?harness=" + id;
+      document.getElementById("phones").appendChild(frame);
+      await loaded;
+      const w = frame.contentWindow;
+      const d = frame.contentDocument;
+      check(!!w.A && !!getSocket(id), "Real client and harness socket must load");
+      w.A.joined = true;
+      w.A.setLang("en");
+      const sendState = batch => getSocket(id).onmessage({
+        data: JSON.stringify(lastToWs(batch, id, "bs").msg),
+      });
+      sendState(placement);
+      check(d.getElementById("bs-place-grid").childElementCount === 100, "Placement grid must render");
+      sendState(firing);
+      check(!d.getElementById("bs-fire").classList.contains("hide"), "Firing view must be visible");
+      for (const grid of ["bs-track-grid", "bs-fleet-grid"]) {
+        check(d.getElementById(grid).childElementCount === 100, grid + " must contain 100 cells");
+      }
+      check(d.getElementById("bs-turn").textContent === (id === 1 ? "Your turn - fire!" : "ALICE's turn"),
+        "Turn label must resolve for both players");
+      check(d.getElementById("bs-ships").textContent === "You 5 | Them 5", "Ship counts must resolve");
+      check(d.getElementById("bs-fleet-grid").querySelectorAll(".ship").length === 17, "Own fleet must show 17 ship cells");
+      check(d.getElementById("bs-track-grid").classList.contains("waiting") === (id === 2),
+        "Only the waiting player's tracking grid must be dimmed");
+    } catch (error) {
+      errors.push("Player " + id + ": " + error.message);
+    }
+  }
+} catch (error) {
+  errors.push(error.message);
+} finally {
+  // Stop client timers and sockets after the isolated rendering checks.
+  frames.forEach(frame => frame.remove());
+  window.battleshipClientResult = { ok: errors.length === 0, checks, errors };
+  result.textContent = JSON.stringify(window.battleshipClientResult, null, 2);
+  document.title = (errors.length ? "FAIL" : "PASS") + ": Battleship client regression";
+}
+</script>

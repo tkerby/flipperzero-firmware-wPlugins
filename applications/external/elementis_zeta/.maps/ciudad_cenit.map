@@ -1,0 +1,97 @@
+# Ciudad Cenit, north half (C6, contract 49), 34 x 16. column = i, row = j. The city is TWO maps (one Cenit does not fit the heap budget: the three new buildings alone are 4.4 KB): this is the
+# NORTH half (`ciudad_cenit`: the NORTH gate (16..17,0) from Ruta 5, the Torre Vertice, the Centro, the tienda, the fortune-teller's house); the south half (`ciudad_cenit_sur`: the Fighting dojo, the psychic gym, the mime
+# trader's house, the EAST gate from Ruta 8 and the SOUTH gate from Ruta 6) is joined to it by the gap (16..17,15) of the south rail. A guard at each route lets the hero in once somebody gave him a drink: flag 837.
+# Look (the user's mock "Ciudad Cenit", tools/c6_mock.py): the psychic / cyberpunk city: BIG pale slabs with a faint concentric-ring inlay (`ring_<i%2><j%2>`, never small tiles), glass TOWERS (back sides: north and west
+# edges), low glass rails (front sides: south and east), floating ORBS on stands (animated) and street lamps. The Torre Vertice (door (15,6)), the Centro (door (25,4), the Planeador lands in front of it:
+# @fly slot 8), the tienda (door (29,4)), the fortune-teller's house (door (7,4): the fortune-teller, Disc 08). Three Team Vertice grunts (static art: they slide up to the hero) hold the streets until Varo falls (flag 852).
+@map ciudad_cenit
+@size 34 16
+@interior no
+@area ciudad_cenit
+@fly 8 ciudad_cenit 25 5 face=S   # the Planeador lands here, in front of the Centro door; slot 8 = visited flag 992 (contract 46.1)
+@flag varo_vtx 852   # Director Varo was beaten in the Torre Vertice: the street grunts are gone
+@bg 0
+@fill ring_00
+@spawn north 16 1 S
+@spawn south 16 14 N
+@spawn centro_door 25 5 S
+@spawn tienda_door 29 5 S
+@spawn torre_door 15 7 S
+@spawn psi_door 7 5 S
+@legend
+  .  tile=ring_00
+  a  tile=ring_00 object=glass_tower
+  b  tile=ring_10 object=glass_tower
+  c  tile=ring_00
+  d  tile=ring_10
+  e  tile=ring_01 object=glass_tower
+  f  tile=ring_11 object=glass_tower
+  g  tile=ring_01
+  h  tile=ring_11
+  i  tile=ring_10
+  j  tile=ring_00 object=sign text=cenit.sign interact=look
+  k  tile=ring_10 object=lamp_h
+  l  tile=ring_10 object=rail_i
+  m  tile=ring_01 object=house_f
+  n  tile=ring_11 object=house_f
+  o  tile=ring_01 object=lamp_h
+  p  tile=ring_01 object=center_f
+  q  tile=ring_11 object=center_f
+  r  tile=ring_01 object=mart_f
+  s  tile=ring_11 object=mart_f
+  t  tile=ring_11 object=rail_i
+  u  tile=ring_00 object=house_f
+  v  tile=ring_10 door=house_f
+  w  tile=ring_00 object=center_f
+  x  tile=ring_10 door=center_f
+  y  tile=ring_00 object=mart_f
+  z  tile=ring_10 door=mart_f
+  A  tile=ring_01 object=torre_vertice
+  B  tile=ring_11 object=torre_vertice
+  C  tile=ring_01 npc=vertice_s id=t1 face=NW trainer=vertice_c1 range=4 text=tr.vertice_c1.pre after=tr.vertice_c1.after hide_flag=varo_vtx
+  D  tile=ring_00 object=torre_vertice
+  E  tile=ring_10 door=torre_vertice
+  F  tile=ring_00 object=sign text=cenit.sign.torre interact=look
+  G  tile=ring_10 object=orb
+  H  tile=ring_01 npc=vertice_s id=t3 face=SE trainer=vertice_c3 range=4 text=tr.vertice_c3.pre after=tr.vertice_c3.after hide_flag=varo_vtx
+  I  tile=ring_00 object=planter
+  J  tile=ring_00 object=orb
+  K  tile=ring_10 npc=psiquico_s id=b1 face=W text=cenit.npc.b1 hide_flag=varo_vtx
+  L  tile=ring_00 object=lamp_h
+  M  tile=ring_01 object=planter
+  N  tile=ring_11 npc=psiquico_s id=a1 face=SW text=cenit.npc.a1 hide_flag=varo_vtx
+  O  tile=ring_01 npc=psiquico_s id=a2 face=SE text=cenit.npc.a2 show_flag=varo_vtx
+  P  tile=ring_11 npc=psiquico_s id=b2 face=S text=cenit.npc.b2 show_flag=varo_vtx
+  Q  tile=ring_00 npc=vertice_s id=t2 face=NE trainer=vertice_c2 range=4 text=tr.vertice_c2.pre after=tr.vertice_c2.after hide_flag=varo_vtx
+  R  tile=ring_10 object=planter
+  S  tile=ring_11 object=lamp_h
+  T  tile=ring_11 object=planter
+  U  tile=ring_01 object=rail_j
+  V  tile=ring_11 object=rail_j
+  W  tile=ring_01
+  X  tile=ring_11
+@grid
+  ababababababababcdabababababababab
+  efefefefefefefefghefefefefefefefef
+  ab.i.i.i.i.i.i.i.iji.k.i.i.i.i.i.l
+  efghghmnghohghghghghghghpqphrsghgt
+  ab.i.iuv.i.i.i.i.i.i.i.iwxwiyz.i.l
+  efghghghghghghABAhghChghghghghghgt
+  ab.i.i.i.i.i.iDEDiFi.i.G.i.G.i.i.l
+  efghghghohghHhghghghghghghghghghgt
+  ab.iIi.i.i.i.G.i.iJi.i.i.i.K.iLi.l
+  efghghghgfehghMhghghgNOhghgPghghgt
+  ab.i.i.i.baiQi.i.i.R.i.i.iIi.i.i.l
+  efghghghghghghghohghghghghghghghgt
+  ab.i.i.i.i.i.i.i.i.i.iJi.i.i.iLi.l
+  efghgSghghgTghghghghghghghghghghgt
+  ab.i.i.i.i.i.i.i.i.i.i.i.i.i.i.i.l
+  efUVUVUVUVUVUVUVWXUVUVUVUVUVUVUVUV
+@warp c -> ruta_5 spawn=cenit
+@warp d -> ruta_5 spawn=cenit
+@warp v -> casa_psiquico spawn=door
+@warp x -> centro_cenit spawn=door
+@warp z -> tienda_cenit spawn=door
+@warp E -> torre_vertice_1 spawn=door
+@warp W -> ciudad_cenit_sur spawn=north
+@warp X -> ciudad_cenit_sur spawn=north

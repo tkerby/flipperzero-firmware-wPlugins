@@ -1,0 +1,84 @@
+# Mansion Calcinada B1F (C7, contract 53), 24 x 18: the cellar of the experiment (a creature floor: wild Bellowkiln). Arrival from 3F at (20,4) with the statues ON: the key's room (west, behind the A door (6,5)) holds the LLAVE SECRETA, the last diary's
+# room (south-west, behind the B door (7,13)) opens when the statues are OFF (the statue (9,14) in the hall toggles them); the freight lift's ladder (20,12) goes up to the 1F back room (no way back through the doors needed). A burglar and a scientist, two diaries.
+@map mansion_calcinada_4
+@size 24 18
+@interior yes
+@area mansion_calcinada
+@bg 0
+@fill burnt_00
+@flag mansion_sw 860      # the statues' switch: ONE flag for the whole mansion, every statue toggles it (set = "on"); the A doors are shut while it is clear, the B doors while it is set
+@encounters grass rate=14
+  bellowkiln 38 42 25
+  cindermeer 38 41 20
+  cindibex 38 41 15
+  origamorph 38 41 15
+  smogkeg 38 40 10
+  tarbog 39 42 15
+  foldling 38 41 10
+@end
+@spawn from3 20 4 S
+@legend
+  .  tile=air_0
+  a  tile=none object=charwall
+  b  tile=burnt_01
+  c  tile=burnt_11
+  d  tile=burnt_00
+  e  tile=burnt_10
+  f  tile=ember_11
+  g  tile=ember_01
+  h  tile=ember_10
+  i  tile=ember_00
+  j  tile=burnt_00 object=rubble_c7
+  k  tile=burnt_10 object=rubble_c7
+  l  tile=burnt_00 object=crate_plain
+  m  tile=burnt_11 item=llave_ceniza
+  n  tile=burnt_11 object=bookshelf interact=look script=diary5
+  o  tile=burnt_01 door=stairs
+  p  tile=burnt_01 face=S gate=yes hide_flag=mansion_sw id=dk npc=bdoor text=mansion.door
+  q  tile=burnt_00 after=tr.ladron_b1.after face=SW id=t1 npc=ladron_s range=4 text=tr.ladron_b1.pre trainer=ladron_b1
+  r  tile=burnt_11 object=rubble_c7
+  s  tile=burnt_11 item=prime_salve
+  t  tile=burnt_10 after=tr.cientifico_b1.after face=NW id=t2 npc=cientifico_s range=4 text=tr.cientifico_b1.pre trainer=cientifico_b1
+  u  tile=burnt_00 door=rope_ladder
+  v  tile=burnt_11 face=S gate=yes id=dd npc=bdoor show_flag=mansion_sw text=mansion.door
+  w  tile=burnt_10 face=S id=s4 npc=statue_off script=statue
+  x  tile=burnt_11 object=bookshelf interact=look script=diary6
+  y  tile=burnt_01 item=disc_21
+@grid
+  ........................
+  ........................
+  ..aaaa..aaaaaaaa..aaaa..
+  .abmbc.abcbcbcbc.abnoc..
+  .adedeaajedededkaadede..
+  .abcbcpcbcbcbcbcbcbcbc..
+  .adede.adedeqede.adede..
+  .abcbc.abfgfgfbc.abrbc..
+  .adele.adhihihde.adede..
+  .......abfgfgfbc........
+  ..aaaa.adhihihde..aaaa..
+  .abcbs.abfgfgfbc.abcbc..
+  .adedeaadkdededtaadeue..
+  .abcbcbvbcgfgfgcbcbcbc..
+  .adede.adwihihle.adeje..
+  .ayxbc.abcbcbcbc.abcbc..
+  ........................
+  ........................
+@warp o -> mansion_calcinada_3 spawn=from_b
+@warp u -> mansion_calcinada_1 spawn=lift
+# A statue switch: every one of them toggles the SAME flag (mansion_sw): the A doors (boarded while it is clear) open, the B doors (boarded while it is set) shut, or the other way round.
+@script statue npc
+    sfx hit
+    jf mansion_sw off
+    setf mansion_sw
+    say mansion.sw.on
+    end
+  off:
+    clrf mansion_sw
+    say mansion.sw.off
+@end
+@script diary5 interact
+    say mansion.d5
+@end
+@script diary6 interact
+    say mansion.d6
+@end

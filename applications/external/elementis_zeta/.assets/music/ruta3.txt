@@ -1,0 +1,31 @@
+title Ruta 3 - the mountain trail: a brisk A mixolydian tune of open fifths and a skipping dotted step, a stamp on every bar, and a horn call whose echoes bounce off the rocks
+tempo 144
+vol 235
+meter 4/4
+inst step v=255,230,200,170
+inst horn att=1 vib=1 vdelay=8 vper=16 slow lvl=0.9
+inst ech1 v=150,120,90,70
+inst ech2 v=80,60,45
+inst stomp drum=c5 v=255,190,110 d=0,-35,-70
+l8
+@step
+# --- A: the call (E A A B, C# E), the answer falling down the scale (D C# B A), the G chord, and a falling run into a long note
+o5 !stomp:e a a b o6 c+4 e4 |
+o6 !stomp:d4 c+4 o5 b4 a4 |
+o5 !stomp:g b o6 d e f+4 e4 |
+o6 d c+ o5 b a @horn e2 @step |
+# --- A answered higher (D and F#), a falling run from G, then the horn call and two echoes that bounce back
+o5 !stomp:e a a b o6 d4 f+4 |
+o6 !stomp:g4 f+8 e8 d4 c+4 |
+o5 !stomp:b4 o6 c+8 d8 e4 d4 |
+@horn o6 a2 @ech1 a4 @ech2 a4 @step |
+# --- B: the climb with a skipping step (D, A, G, then up the scale)
+o5 !stomp:d8. e16 f+8. a16 o6 d4 o5 a4 |
+o5 !stomp:c+8. e16 a8. o6 c+16 e4 c+4 |
+o5 !stomp:b8. o6 d16 g8. f+16 e4 d4 |
+o5 !stomp:b o6 c+ d e f+4 e4 |
+# --- the climb again, higher, and the long E that leaps home
+o5 !stomp:d8. e16 f+8. a16 o6 d4 f+4 |
+o6 !stomp:e8. d16 c+8. o5 a16 o6 c+4 e4 |
+o6 !stomp:g8. f+16 e8. d16 c+4 o5 b4 |
+@horn o5 e1 @step |

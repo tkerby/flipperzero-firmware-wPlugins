@@ -82,6 +82,16 @@ bool desktop_scene_lock_menu_on_event(void* context, SceneManagerEvent event) {
             desktop_lock(desktop, false);
             consumed = true;
             break;
+        case DesktopLockMenuEventLockKeypadOff: {
+            desktop_scene_lock_menu_save_settings(desktop);
+            desktop_lock(desktop, false);
+            Power* power = furi_record_open(RECORD_POWER);
+            furi_delay_ms(500);
+            power_off(power);
+            furi_record_close(RECORD_POWER);
+            consumed = true;
+            break;
+        }
         case DesktopLockMenuEventLockPinCode:
             desktop_scene_lock_menu_save_settings(desktop);
             if(desktop_pin_code_is_set()) {
@@ -129,6 +139,10 @@ bool desktop_scene_lock_menu_on_event(void* context, SceneManagerEvent event) {
             break;
         case DesktopLockMenuEventStealthModeOff:
             desktop_set_stealth_mode_state(desktop, false);
+            break;
+        case DesktopLockMenuEventOpenQuickSettings:
+            scene_manager_next_scene(desktop->scene_manager, DesktopSceneQuickSettings);
+            consumed = true;
             break;
         default:
             break;

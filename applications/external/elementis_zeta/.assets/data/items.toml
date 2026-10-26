@@ -1,0 +1,672 @@
+# Nucleo items. Item id = position in this file (1-based; 0 = none). Name text key = gl.it.<id> (global).
+# Compiled by tools/regc.py into nucleo/files/items.bin (format: contract 14.1) and the IT_* defines of
+# nucleo/gen/reg_gen.h.
+#
+# kind = "catch": a capsule that captures a wild creature. ball = "crystal" (the ball
+#        numbers: random range 0..255, HP divisor 12) | "great" (0..200, divisor 8) | "ultra" (0..150, divisor 12) |
+#        "master" (always catches).
+# kind = "heal": restores `hp` points to one party member (hp = 255: full), not to a fainted one and not above max HP.
+# kind = "cure": cures one status of one party member (M4-A; Antidote / Limb Balm / Wake Salts / Cool Gel / Defrost).
+#        status = "psn" | "par" | "slp" | "brn" | "frz". Usable (in battle and in the bag screen) only on a living creature that
+#        has exactly that status; otherwise "no effect" and nothing is consumed. In battle it uses the turn.
+# kind = "repel" (C2-S1): used from the bag outside battle. `steps` = how many steps (1..255) no wild creature whose level is below the
+#        party's first non-fainted creature's level can appear. Stored in PartyState.reserved[0] (saved with the game).
+# kind = "rope" (C2-S1): Exit Wisp. Usable only in a cave map (mapc `@cave yes`, header flag MAPF_CAVE): warps to the last Centro.
+# kind = "disc" (C2-S1): a technique disc (single use). `move` = the move it teaches (moves.toml key). The disc's number (0..23, by
+#        its order among the disc items) is the bit that species.toml `tm = ["disc_01", ...]` sets for the species that can learn it
+#        (reg.bin species record: the u16 at byte 12 = bits 0..15, the byte at 15 = bits 16..23).
+# kind = "key": a key item. Listed in the bag, never usable, never tossed, never sold: no price. Exceptions (C4-B): `bici` is "used" from the
+#        bag (Usar = world_bike_toggle(), contract 35 / 36); the others have no use yet (`flauta` C5) or are read by the code (`lente`: the battle plugin,
+#        `cupon_bici`: the bike shop's script).
+# kind = "stone" (C4-B, contract 36): an evolution stone. `stone` = "moon" | "fire" | "water" | "thunder" | "leaf" (the index goes in items.bin arg; ST_* in reg_gen.h).
+#        Used from the bag on a party member: if its species lists that stone in species.toml `evolve_stone`, the stone is consumed and the evolution scene runs
+#        (it cannot be cancelled); otherwise "no effect" and nothing is consumed.
+# kind = "vitamin" (C4-B): +2560 stat EXP to ONE stat of one party member. `stat` = "hp" | "atk" | "def" | "spd" | "spc".
+# price = shop price (M4-B). ball 200, Salve 300, Antidote 100, Limb Balm 200, Wake Salts 250, Cool Gel 250.
+# The ids are POSITIONS (saves store them): append new items at the END, never reorder.
+
+[crystal]
+kind = "catch"
+ball = "crystal"
+price = 200
+
+[salve]
+kind = "heal"
+hp = 20
+price = 300
+
+[antidote]
+kind = "cure"
+status = "psn"
+price = 100
+
+[limb_balm]
+kind = "cure"
+status = "par"
+price = 200
+
+[wake_salts]
+kind = "cure"
+status = "slp"
+price = 250
+
+[cool_gel]
+kind = "cure"
+status = "brn"
+price = 250
+
+[parcel]
+kind = "key"
+
+# ----------------------------------------------------------------------------------------------------------------------
+# C2-S1 items (appended: ids 8+). Contract section 29.
+# ----------------------------------------------------------------------------------------------------------------------
+
+# Crystal Plus: the Crystal Plus numbers (random range 0..200, HP divisor 8)
+[crystal_plus]
+kind = "catch"
+ball = "great"
+price = 600
+
+[rich_salve]
+kind = "heal"
+hp = 50
+price = 700
+
+[ward_spray]
+kind = "repel"
+steps = 100
+price = 350
+
+[exit_wisp]
+kind = "rope"
+price = 550
+
+[disc_01]
+kind = "disc"
+move = "haymaker"
+price = 3000
+
+[disc_02]
+kind = "disc"
+move = "jet"
+price = 2000
+
+[disc_03]
+kind = "disc"
+move = "mirage"
+price = 2000
+
+# ----------------------------------------------------------------------------------------------------------------------
+# C2 key items (appended: ids 15+; contract 31). No price, never sold or tossed. The two fossils are the Monte Eco choice (only one can be taken,
+# trilobite or sea lily), revived in chapter C7; the ferry pass is Ingeniero Teo's thanks, used in chapter C3.
+# ----------------------------------------------------------------------------------------------------------------------
+[ferry_pass]
+kind = "key"
+
+[fossil_trilobite]
+kind = "key"
+
+[fossil_sealily]
+kind = "key"
+
+# ----------------------------------------------------------------------------------------------------------------------
+# C3 items (appended: id 18+; contract 34). Disc 04, the leader's gift of the Electric gym.
+# ----------------------------------------------------------------------------------------------------------------------
+[disc_04]
+kind = "disc"
+move = "arc"
+price = 3000
+
+# ----------------------------------------------------------------------------------------------------------------------
+# C4-C (contract 37): the Coin Purse. A key item: without it the casino coins cannot be bought, won or spent. Appended at the end (ids are saved).
+# ----------------------------------------------------------------------------------------------------------------------
+[estuche]
+kind = "key"
+
+# ----------------------------------------------------------------------------------------------------------------------
+# C4-B items (appended: ids 19+; contract 36). Gems: sold the Flame / Tide / Spark / Frond gems at 2,100 in the Metropolis Neon department store; the Lunar Gem
+# was never for sale (price 0 here too: it is found in the world; never bought or sold). Names: gl.it.<key>.
+# ----------------------------------------------------------------------------------------------------------------------
+[luna]
+kind = "stone"
+stone = "moon"
+
+[fuego]
+kind = "stone"
+stone = "fire"
+price = 2100
+
+[agua]
+kind = "stone"
+stone = "water"
+price = 2100
+
+[trueno]
+kind = "stone"
+stone = "thunder"
+price = 2100
+
+[hoja]
+kind = "stone"
+stone = "leaf"
+price = 2100
+
+# Key items. `lente` = the ghost scope (Lente Espectral): with it in the bag the ghosts of a MAPF_GHOSTS map are identified and fight normally.
+[lente]
+kind = "key"
+
+# The flute (no use yet, C5).
+[flauta]
+kind = "key"
+
+# The Bike Coupon: given by the club, exchanged for `bici` at the bike shop (a script).
+[cupon_bici]
+kind = "key"
+
+# The Bicycle: Usar toggles the bike (world_bike_toggle).
+[bici]
+kind = "key"
+
+# Tonics (HP / Attack / Defense / Speed / Special): +2560 stat EXP. never sold them (they were found); price 9,800.
+[vit_hp]
+kind = "vitamin"
+stat = "hp"
+price = 9800
+
+[vit_atk]
+kind = "vitamin"
+stat = "atk"
+price = 9800
+
+[vit_def]
+kind = "vitamin"
+stat = "def"
+price = 9800
+
+[vit_spd]
+kind = "vitamin"
+stat = "spd"
+price = 9800
+
+[vit_spc]
+kind = "vitamin"
+stat = "spc"
+price = 9800
+
+# Drinks (Fizzy Pop 60 HP / 300, Citrus Cooler 80 HP / 350) and the Prime Salve (200 HP / 1200).
+[spring_water]
+kind = "heal"
+hp = 50
+price = 200
+
+[fizzy_pop]
+kind = "heal"
+hp = 60
+price = 300
+
+[citrus_cooler]
+kind = "heal"
+hp = 80
+price = 350
+
+[prime_salve]
+kind = "heal"
+hp = 200
+price = 1200
+
+# ----------------------------------------------------------------------------------------------------------------------
+# C4a items (appended: id 38+; contract 39). Disc 05, the Metropolis Neon gym leader's gift.
+# ----------------------------------------------------------------------------------------------------------------------
+[disc_05]
+kind = "disc"
+move = "siphon"
+price = 3000
+
+# ----------------------------------------------------------------------------------------------------------------------
+# C4b (contract 41): the Hoist Key. A key item: the hideout's elevator panels refuse to work without it (`has_item`). Appended LAST (ids are saved).
+# ----------------------------------------------------------------------------------------------------------------------
+[llave_polea]
+kind = "key"
+
+# ----------------------------------------------------------------------------------------------------------------------
+# C5-B (contract 43): the three fishing rods, Gold Dentures, the Reserva Salvaje's crystal and the Ultra Crystal. Appended LAST (ids are saved).
+# The rods are key items; Bag -> Usar on one calls world_fish(0 / 1 / 2) (world.h): a success closes the bag and the pause menu (the fishing starts), a refusal answers
+# gl.bag.not_now. `dentadura` has no use of its own (a script checks it with has_item, Gold Dentures for the Warden). `cristal_reserva` is the Reserve Crystal: the
+# Great tier (the same numbers as crystal_plus) but it is only thrown in a Reserva Salvaje battle (the battle plugin's reserve mode, 43.2): the bag of a normal battle refuses it and it
+# is never sold (price 0). `ultra_cristal` is the Ultra Crystal.
+# ----------------------------------------------------------------------------------------------------------------------
+[cana_junco]
+kind = "key"
+
+[cana_fibra]
+kind = "key"
+
+[cana_aleacion]
+kind = "key"
+
+[dentadura]
+kind = "key"
+
+[cristal_reserva]
+kind = "catch"
+ball = "great"
+
+# Ultra Crystal: the Ultra Crystal numbers (random range 0..150, HP divisor 12)
+[ultra_cristal]
+kind = "catch"
+ball = "ultra"
+price = 1200
+
+# ----------------------------------------------------------------------------------------------------------------------
+# C6 (contract 46.2): the Access Chip. A key item: the legend `keydoor=chip_acceso` doors of the Torre Vertice's floors open while it is in the bag (`has_item`);
+# it is not consumed. Appended LAST (ids are saved).
+# ----------------------------------------------------------------------------------------------------------------------
+[chip_acceso]
+kind = "key"
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# C5a (contract 47): Disc 06, the poison leader's gift. Appended LAST (ids are saved; the discs' bits go by their order among the disc items).
+# ----------------------------------------------------------------------------------------------------------------------
+[disc_06]
+kind = "disc"
+move = "toxin"
+price = 3000
+
+# ----------------------------------------------------------------------------------------------------------------------
+# C6 (contract 49): Disc 07, Disc 08 and the Master Crystal (the Master Crystal, the tower
+# president's gift: it always catches). Appended LAST (ids are saved; the discs' bits go by their order among the disc items).
+# ----------------------------------------------------------------------------------------------------------------------
+[disc_07]
+kind = "disc"
+move = "mindwave"
+price = 3000
+
+[disc_08]
+kind = "disc"
+move = "mindstorm"
+price = 3000
+
+# Master Crystal: always catches (never sold, price 0)
+[cristal_maestro]
+kind = "catch"
+ball = "master"
+
+# C8 (contract 51): the Ground disc, Director Varo's gift (the engine has no one-hit-knockout move: it teaches Rumble, our Earthquake). Appended LAST (ids are saved;
+# the discs' bits go by their order among the disc items: this is the seventh).
+# ----------------------------------------------------------------------------------------------------------------------
+[disc_tierra]
+kind = "disc"
+move = "rumble"
+price = 3000
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# C7 (contract 53): the Fossil Amber (found in the Mansion Calcinada, revived at the fossil lab), the Cinder Key (opens the fire gym) and Disc 10,
+# Profesor Brasa's gift. Appended LAST (ids are saved; the discs' bits go by their order among the disc items: this is the tenth).
+# ----------------------------------------------------------------------------------------------------------------------
+[ambar_fosil]
+kind = "key"
+
+[llave_ceniza]
+kind = "key"
+
+[disc_10]
+kind = "disc"
+move = "inferno"
+price = 3000
+
+# C7 / C9 QA (contract 58): Total Salve (hp = 255 restores everything; the late-game healing of the League run). A Life Spark / Vital Draught need engine work (a fainted target / two effects): not done.
+[total_salve]
+kind = "heal"
+hp = 255
+price = 2500
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Contract 64, appended LAST (ids 56 ..; saves store item ids). The healing family of marts and the Meseta Cumbre, the Growth Seed, the Vigor Drops, the two stronger Ward Sprays and the
+# discs 11 .. 50 (the rest of 50 discs, in the disc order, mapped to our moves; discs 01 .. 10 are the ones above: 09 = Brasa's `disc_10`, 10 = Varo's `disc_tierra`).
+#   kind = "revive"  (Life Spark / Life Blaze): a FAINTED creature comes back with half (`full = false`) or all (`full = true`) of its HP, status cleared; bag and battle (it uses the turn).
+#   kind = "restore" (Vital Draught): full HP and cures the status of a living creature; bag and battle.
+#   kind = "candy"   (Growth Seed): one level up for one creature (stats, the HP gain, the moves of the new level, the evolution check); bag only, never above level 100.
+#   kind = "elixir"  (Vigor Drop / Vigor Flask): `pp` points (255 = all) back to EVERY move of one creature; bag only.
+# ----------------------------------------------------------------------------------------------------------------------
+[life_spark]
+kind = "revive"
+full = false
+price = 1500
+
+[life_blaze]
+kind = "revive"
+full = true
+price = 4000
+
+[vital_draught]
+kind = "restore"
+price = 3000
+
+[growth_seed]
+kind = "candy"
+
+[vigor_drop]
+kind = "elixir"
+pp = 10
+
+[vigor_flask]
+kind = "elixir"
+pp = 255
+
+[strong_ward]
+kind = "repel"
+steps = 200
+price = 500
+
+[grand_ward]
+kind = "repel"
+steps = 250
+price = 700
+
+[disc_11]
+kind = "disc"
+move = "cyclone"
+price = 3000
+
+[disc_12]
+kind = "disc"
+move = "sharpen"
+price = 2000
+
+[disc_13]
+kind = "disc"
+move = "gale"
+price = 2000
+
+[disc_14]
+kind = "disc"
+move = "megakick"
+price = 3000
+
+[disc_15]
+kind = "disc"
+move = "augerhorn"
+price = 3000
+
+[disc_16]
+kind = "disc"
+move = "heavyslam"
+price = 3000
+
+[disc_17]
+kind = "disc"
+move = "slamrush"
+price = 3000
+
+[disc_18]
+kind = "disc"
+move = "reckless"
+price = 3000
+
+[disc_19]
+kind = "disc"
+move = "glassbeam"
+price = 3000
+
+[disc_20]
+kind = "disc"
+move = "frostbeam"
+price = 3000
+
+[disc_21]
+kind = "disc"
+move = "whiteout"
+price = 3000
+
+[disc_22]
+kind = "disc"
+move = "megabeam"
+price = 5500
+
+[disc_23]
+kind = "disc"
+move = "pilfer"
+price = 3000
+
+[disc_24]
+kind = "disc"
+move = "clinch"
+price = 3000
+
+[disc_25]
+kind = "disc"
+move = "retort"
+price = 3000
+
+[disc_26]
+kind = "disc"
+move = "leveltoss"
+price = 3000
+
+[disc_27]
+kind = "disc"
+move = "fury"
+price = 2000
+
+[disc_28]
+kind = "disc"
+move = "bloom"
+price = 3000
+
+[disc_29]
+kind = "disc"
+move = "wyrmrage"
+price = 3000
+
+[disc_30]
+kind = "disc"
+move = "stormbolt"
+price = 3000
+
+[disc_31]
+kind = "disc"
+move = "chasm"
+price = 3000
+
+[disc_32]
+kind = "disc"
+move = "burrow"
+price = 3000
+
+[disc_33]
+kind = "disc"
+move = "blink"
+price = 2000
+
+[disc_34]
+kind = "disc"
+move = "echoing"
+price = 2000
+
+[disc_35]
+kind = "disc"
+move = "mirrorwall"
+price = 2000
+
+[disc_36]
+kind = "disc"
+move = "brood"
+price = 2000
+
+[disc_37]
+kind = "disc"
+move = "wildcard"
+price = 2000
+
+[disc_38]
+kind = "disc"
+move = "blowup"
+price = 3000
+
+[disc_39]
+kind = "disc"
+move = "shellbomb"
+price = 3000
+
+[disc_40]
+kind = "disc"
+move = "streak"
+price = 3000
+
+[disc_41]
+kind = "disc"
+move = "headlong"
+price = 3000
+
+[disc_42]
+kind = "disc"
+move = "hearty"
+price = 2000
+
+[disc_43]
+kind = "disc"
+move = "nightmeal"
+price = 3000
+
+[disc_44]
+kind = "disc"
+move = "zenithdive"
+price = 3000
+
+[disc_45]
+kind = "disc"
+move = "nap"
+price = 2000
+
+[disc_46]
+kind = "disc"
+move = "numb"
+price = 2000
+
+[disc_47]
+kind = "disc"
+move = "detonate"
+price = 3000
+
+[disc_48]
+kind = "disc"
+move = "landslide"
+price = 3000
+
+[disc_49]
+kind = "disc"
+move = "trinity"
+price = 3000
+
+[disc_50]
+kind = "disc"
+move = "decoy"
+price = 2000
+
+# Contract 67: the Eclipse Stone, a key item (id 104, appended LAST: ids are saved). Its name is `gl.it.piedra_eclipse`, right after disc_50's (63.1). With it in the bag, the player's own starter in its final form can take its Eclipse
+# Form once per battle (the Eclipse chip of the move list, scene_battle.c). The world places it later (hidden cave); until then it is given with the host token `!stone` or by the device test save (`make -C tools/host_world b3save`).
+[piedra_eclipse]
+kind = "key"
+
+# Contract 68: the Origin Fragment (Fragmento del Origen, id 105), a key item. ONE item for the legend's eight fragments: every source gives ONE (the bag shows the count, "x3"), the truth is the eight story flags
+# frag_1 .. frag_8 (mapc builtins 970 .. 977), so a full bag or a lost item never loses a fragment. Ids 105 .. 112 are reserved to D1; only 105 is used. Name `gl.it.origin_shard`, right after `gl.it.piedra_eclipse` (63.1).
+[origin_shard]
+kind = "key"
+
+# ---- Contract 74 (world & PC). Ids 106 .. 109 (positions; F1's battle items are appended AFTER them). Names `gl.it.buscatesoros|atlas|reparto_total|peluche_fuga`, right after `gl.it.origin_shard` (63.1).
+# a key item USED from the bag in the overworld. A hidden item (mapc legend `hidden=<item>`) within 5 tiles makes it respond (casino plugin, scene_f2.c).
+[buscatesoros]
+kind = "key"
+
+# a key item USED from the bag; it opens the region map (a pre-rendered picture on the card + a blinking cursor on the hero's place). Given by the rival's sister once the parcel is delivered.
+[atlas]
+kind = "key"
+
+# With it in the bag the experience of a fallen foe is halved for the creature that fought and the other half is split among the whole living party (battle_run.c award_exp).
+[reparto_total]
+kind = "key"
+
+# The doll role: a battle bag item. A wild battle (the Reserva excluded, the ghost included) ends at once and for sure; a trainer battle refuses it. kind = "rope" (the escape items; `price` = the shop's); the bag outside battle
+# says "not now" (scene_bag.c), the battle's bag uses it by id (scene_battle.c bag_pick, IT_PELUCHE_FUGA).
+[peluche_fuga]
+kind = "rope"
+price = 1000
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Contract 73. Ids are POSITIONS: 110 .. (appended after F2's 106 .. 109; the maintainer renumbers at the merge, so code and maps refer to them by their IT_* names only). Names are ORIGINAL:
+# the five boost items (+1 stage in battle), Mist Veil (Mist) and Crit Focus (Steady Gaze) are `kind = "battle"`: used in battle on the creature in play, they take the turn; prices.
+# ----------------------------------------------------------------------------------------------------------------------
+[pulso_atk]
+kind = "battle"
+stat = "atk"
+price = 500
+
+[pulso_def]
+kind = "battle"
+stat = "def"
+price = 550
+
+[pulso_spd]
+kind = "battle"
+stat = "spd"
+price = 350
+
+[pulso_spc]
+kind = "battle"
+stat = "spc"
+price = 350
+
+[pulso_acc]
+kind = "battle"
+stat = "acc"
+price = 950
+
+# the user's side is shrouded in mist for the battle (stats cannot be lowered)
+[velo_bruma]
+kind = "battle"
+effect = "mist"
+price = 700
+
+# the Steady Gaze state (critical hits up) for the battle
+[foco_critico]
+kind = "battle"
+effect = "focus"
+price = 650
+
+# the bag, outside battle: +10 PP to ONE move. Found only
+[savia]
+kind = "ether"
+pp = 10
+price = 3000
+
+# all the PP of ONE move. Found only
+[savia_max]
+kind = "ether"
+pp = 255
+price = 4500
+
+# (sold from Puerto Dinamo on: Pueblo Bruma and Metropolis Neon marts)
+[descongelar]
+kind = "cure"
+status = "frz"
+price = 250
+
+# any status (sold from Ciudad Ambar on: Ciudad Cenit, Isla Ceniza and Indigo marts)
+[panacea]
+kind = "cure"
+status = "all"
+price = 600
+
+# (contract 77): the bag, outside battle: one move of one creature gains base / 5 PP, up to three times (the count lives in the top two bits of the move's PP byte). Found only
+[pp_extra]
+kind = "ppup"
+price = 9800
+
+# (contract 80): a treasure, bag only, no use ("no effect" on any creature, kept): it SELLS for half its price. `kind = "treasure"` is compiled as an IK_STONE
+# with the stone index ST_NONE (no species evolves with it): no new item kind, so the battle plugin's validator is unchanged. Given by the Vertice recruiter of Ruta 24; four more lie hidden (Ciudad Ambar, the Reserva, the Torre Vertice, the Cueva Secreta).
+[trozo_oro]
+kind = "treasure"
+price = 10000

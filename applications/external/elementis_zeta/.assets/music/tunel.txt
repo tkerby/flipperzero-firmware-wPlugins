@@ -1,0 +1,26 @@
+title El Tunel - a dark tunnel: mostly silence, a nervous skitter on one note, a heartbeat that comes and goes, far drips, a slide that creeps up and a half step (E, F) that jabs
+tempo 90
+vol 215
+meter 4/4
+inst twitch v=255,150
+inst stab v=255,210,140
+inst slide v=200,200,200,200,200,200,200,200,200,200,200,200,200,200,200,200 d=0,4,8,12,16,20,24,28,32,36,40,44,48,52,56,60
+inst low att=12 lvl=0.6 slow
+inst thump drum=c4 v=255,200,140,90 d=0,-30,-50,-70
+inst thudb drum=c4 v=170,130,90,60 d=0,-30,-50,-70
+inst ping drum=e7 v=190,120,60 d=0,-16,-45
+inst pngb drum=e7 v=100,60,30 d=0,-16,-45
+# --- 1: a heartbeat (lub-dub) in the dark
+!thump=4 r=12 !thudb=4 r=150
+# --- 2: a nervous skitter on E
+@twitch o4 e=5 r=5 e=5 r=5 e=5 r=5 e=5 r=5 e=5 r=90
+# --- 3: a drip, far away, and its echo
+!ping=3 r=28 !pngb=3 r=200
+# --- 4: something creeps up (a slide), then a half-step jab: E, F
+@slide o3 b=64 r=100
+@stab o5 e=14 r=6 f=14 r=200
+# --- 5: the heart again, faster
+!thump=4 r=10 !thudb=4 r=60 !thump=4 r=10 !thudb=4 r=160
+# --- 6: the skitter a step lower (D), then a low breath
+@twitch o4 d=5 r=5 d=5 r=5 d=5 r=5 r=120
+@low o3 e-=80 r=120

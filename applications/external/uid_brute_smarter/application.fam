@@ -16,5 +16,5 @@ App(
     fap_author="fbettag",
     fap_weburl="https://github.com/fbettag/uid_brute_smarter",
     fap_version="1.1",
-    fap_description="Enhanced UID brute-force with key management",
+    fap_description="NFC UID brute-force with pattern detection, reader hit detection and 7-byte UID support",
 )

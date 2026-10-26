@@ -1,0 +1,7 @@
+title Level up - a bright leaping figure that ends in a sparkle
+tempo 170
+vol 200
+inst lead v=255,255,215,185,170
+inst spark arp=0,4,7 rate=1
+l16
+@lead o5 g8 o6 c8 e8 g8 @spark o6 c4

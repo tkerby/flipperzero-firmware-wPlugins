@@ -1,0 +1,41 @@
+# Sala de Premios (the casino's prize counter: a separate room next to the casino, C4b, contract 41), 10 x 8, interior. column = i, row = j. The clerk behind the counter runs the prize
+# shop 5 (`prizes sala_premios`, shops.toml): creatures and discs priced in COINS (Coin Purse). Display cases, a plant, a gambler who explains the prizes. Same carpet as the casino, plus the glass cases.
+@map sala_premios
+@size 10 8
+@interior yes
+@area sala_juegos
+@bg 3
+@fill ccarpet
+@spawn door 4 6 N
+@legend
+  .  tile=ccarpet
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  tile=ccarpet object=vitrina
+  f  tile=ccarpet npc=croupier id=clerk face=S script=prize_clerk
+  g  tile=ccarpet object=counter
+  h  tile=ccarpet npc=vecino_m id=gambler face=W text=prize.npc.a
+  i  tile=ccarpet object=planter
+  j  tile=ccarpet npc=mama id=girl face=E text=prize.npc.b
+  k  tile=mat
+@grid
+  abbcbbcbbc
+  d.........
+  de..f...e.
+  d..ggg....
+  de.....h..
+  d.......i.
+  d.j.......
+  d...kk....
+@warp k -> metropolis_neon_2 spawn=prize_door
+
+# The prize clerk: the prize screen of shop 5 (`prizes`, coins = true). VAR = 1: no Coin Purse.
+@script prize_clerk npc
+    prizes sala_premios 2
+    jv 2 1 nocase
+    end
+  nocase:
+    say gl.c4c.coins.nocase
+@end

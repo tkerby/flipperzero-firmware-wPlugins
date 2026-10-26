@@ -1,0 +1,85 @@
+# Gimnasio Planta (C4a, contract 39), 14 x 18, interior. column = i, row = j. The user's mock "Gimnasio Planta": a GREENHOUSE: white glass walls in dark frames on the back sides (glass_j / glass_i), a flower
+# meadow floor with plain light-soil paths (soil_a / soil_b), planters and flowerbeds. Four trainers (three lasses and a medium) guard the hall and FLORA NYX (flora; Dewlash 29, Mossbloom 24, Bloomoss 29) waits at the
+# far end; the camera cuts to her. A win: flag 83 = Medalla Raiz (builtin `badge_raiz`), the trainer card's 4th badge (a leaf), Disc 05 (flag 76). The entrance is a pocket closed by a cuttable bush outside (metropolis_neon_2).
+@map gimnasio_neon
+@size 14 18
+@interior yes
+@bg 0
+@fill flowers
+@spawn door 6 16 N
+@flag flora_disc 76
+@legend
+  .  tile=flowers
+  a  tile=none object=glass_j
+  b  tile=none object=glass_i
+  c  object=planter
+  d  object=flowerbed
+  e  npc=flora id=flora face=S script=flora
+  f  tile=soil
+  g  npc=chica id=t1 face=S trainer=chica_g1 range=3 text=tr.chica_g1.pre after=tr.chica_g1.after
+  h  npc=chica id=t2 face=W trainer=chica_g2 range=3 text=tr.chica_g2.pre after=tr.chica_g2.after
+  i  npc=chica id=t3 face=S trainer=chica_g3 range=3 text=tr.chica_g3.pre after=tr.chica_g3.after
+  j  npc=medium id=t4 face=W trainer=medium_g range=3 text=tr.medium_g.pre after=tr.medium_g.after
+  k  tile=mat
+@grid
+  aaaaaaaaaaaaaa
+  b.............
+  b..cd.e.dc....
+  b.....ff..c...
+  b..c..ff...c..
+  b..g..ff.d....
+  b.....ff..h...
+  b...c.ff......
+  b.ffffffffff..
+  b.....ff......
+  b.d.d.ff...c..
+  b..i..ff.d....
+  b.....ff..j...
+  b.ffffffffff..
+  b.....ff......
+  b.c..dffc..d..
+  b.....ff......
+  b.....kk......
+@warp k -> metropolis_neon_2 spawn=gym_door
+# Flora Nyx. Before the badge: the camera cuts to her, her challenge, the fight (trainer flora: Dewlash 29, Mossbloom 24, Bloomoss 29); a win = her speech, the Medalla Raiz (flag 83, the trainer card's
+# 4th badge, a leaf), what it is, then Disc 05 (a full bag keeps flora_disc clear and she hands it over the next time you talk to her). A loss is the blackout. Afterwards a last line.
+@script flora npc
+    jf badge_raiz after
+    npc_face_hero flora
+    cam_npc flora
+    say gym.flora.pre
+    battle 76 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    say gym.flora.win
+    setf badge_raiz
+    say gym.badge
+    say gym.flora.about
+    call flora_gift
+    cam_hero
+    end
+  after:
+    npc_face_hero flora
+    cam_npc flora
+    jf flora_disc said
+    call flora_gift
+    cam_hero
+    end
+  said:
+    say gym.flora.after
+    cam_hero
+@end
+@script flora_gift called
+    say gym.flora.disc
+    give_item disc_05 1
+    jv 0 0 full
+    item_var 0 disc_05
+    say gl.gift
+    setf flora_disc
+    say gym.flora.disc_about
+    end
+  full:
+    say gl.found.full
+@end

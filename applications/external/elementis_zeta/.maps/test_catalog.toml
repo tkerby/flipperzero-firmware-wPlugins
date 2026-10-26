@@ -1,0 +1,6 @@
+# Sprites that exist only for the test maps (ids >= 90): read by tools/mapc.py and tools/spritec.py next to assets/catalog.toml.
+# The animated ones exercise `frames = [...]` (contract section 22); the art is written by tools/host_world/zone_art.py.
+sprite = [
+  { name = "test_anim_tile", kind = "tile",   frames = ["maps/test_art/anim_tile_0.lv.png", "maps/test_art/anim_tile_1.lv.png", "maps/test_art/anim_tile_2.lv.png"], cflags = [], fill = 0 },
+  { name = "test_anim_flag", kind = "object", frames = ["maps/test_art/anim_flag_0.lv.png", "maps/test_art/anim_flag_1.lv.png"], fw = 1, fh = 1, cflags = ["solid"] },
+]

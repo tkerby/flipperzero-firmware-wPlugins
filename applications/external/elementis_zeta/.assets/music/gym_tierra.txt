@@ -1,0 +1,30 @@
+title Gimnasio Tierra - the last gym, the earth shakes: slow stomps that grow (C minor, 100 bpm), a power chord that rumbles underneath, a tritone that grinds, a low brass call, a chromatic climb, a roll and a final quake
+tempo 100
+vol 235
+meter 4/4
+inst p2 v=170,120,90
+inst p3 v=220,160,120
+inst p4 v=255,200,150
+inst brass v=255,255,230,205,190
+inst pow arp=-12,0,7 rate=2 lvl=0.9
+inst stomp drum=c4 v=255,230,190,150,100 d=0,-30,-55,-75,-95
+inst snr drum=a6 noise=25 seed=13 fall=12
+inst rumble drum=d3 noise=40 seed=3 v=30,70,120,170,200,170,120,70,30 slow
+l4
+# --- 1-2: the stomps, two bars alone
+[ !stomp4 r4 ]4 |
+# --- 3-4: the stomp and a low C
+@p2 o3 [ !stomp:c4 c8 c8 ]4 |
+# --- 5-6: the tritone grinds (F sharp against C)
+@p3 o3 [ !stomp:c4 c8 f+8 ]4 |
+# --- 7-8: the low brass call
+@brass o3 c4. c8 e-4 f4 |
+@brass o3 g4. f8 e-4 c4 |
+# --- 9-10: the power chords (C, E flat, F, G)
+@pow o4 c2 e-2 |
+@pow o4 f2 g2 |
+# --- 11: the climb, chromatic
+@p4 o3 c8 c+8 d8 e-8 e8 f8 f+8 g8 |
+# --- 12-13: the roll, and the earth quakes
+[ !snr8 ]8 |
+!stomp2 !rumble2 |

@@ -1,0 +1,19 @@
+title Guarderia - the day care: a siciliano lullaby (12/8) in E flat, a music box high above, long-short rocking, a hum at the end like a hand on a back
+tempo 90
+vol 215
+meter 12/8
+inst box v=255,215,175,140,115,95,80
+inst hum att=6 vib=1 vdelay=10 vper=16 slow lvl=0.75
+inst chime arp=0,4,7 rate=2 lvl=0.8
+l8
+@box
+# --- A: the lullaby (E flat, B flat, C minor, A flat and B flat), long-short
+o5 g4 f8 e-4 d8 e-4 g8 b-4 g8 |
+o6 c4 o5 b-8 a-4 g8 f4 g8 a-4. |
+o5 g4 f8 e-4 d8 e-4 g8 b-4 g8 |
+o6 e-4 d8 c4 o5 b-8 o6 c4 d8 e-4. |
+# --- B: it looks up (A flat, B flat), and comes home to a hum and a chime
+o5 a-4 g8 f4 e-8 f4 a-8 o6 c4 o5 a-8 |
+o5 b-4 a-8 g4 f8 g4 b-8 o6 d4 o5 b-8 |
+o6 e-4 d8 c4 o5 b-8 a-4 g8 f4 e-8 |
+@hum o5 e-2. @chime e-2. |

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140" viewBox="0 0 14 14" role="img" aria-labelledby="title desc">
+  <title id="title">Taiko Player</title>
+  <desc id="desc">A pixel drum ring with a play symbol on an orange background.</desc>
+  <rect width="14" height="14" rx="2" fill="#ff8200"/>
+  <path transform="translate(2 2)" fill="#111" shape-rendering="crispEdges" d="M3 0h4v1H3z M1 1h2v1H1z M7 1h2v1H7z M1 2h1v1H1z M4 2h1v1H4z M8 2h1v1H8z M0 3h1v1H0z M4 3h2v1H4z M9 3h1v1H9z M0 4h1v1H0z M4 4h3v1H4z M9 4h1v1H9z M0 5h1v1H0z M4 5h3v1H4z M9 5h1v1H9z M0 6h1v1H0z M4 6h2v1H4z M9 6h1v1H9z M1 7h1v1H1z M4 7h1v1H4z M8 7h1v1H8z M1 8h2v1H1z M7 8h2v1H7z M3 9h4v1H3z"/>
+</svg>

@@ -6,8 +6,8 @@
 #include <string.h>
 #include <storage/storage.h>
 
-#define POCKET_D20_PATH_LEN      96U
-#define POCKET_D20_LONG_PATH_LEN 128U
+#define DND_FS_PATH_LEN      96U
+#define DND_FS_LONG_PATH_LEN 128U
 
 /* Build a child path without relying on snprintf truncation. Prefix may be NULL. */
 static inline bool dnd_fs_child_path(
@@ -49,9 +49,9 @@ static inline bool dnd_fs_ensure_directory(Storage* storage, const char* path) {
 static inline bool dnd_fs_ensure_parent_dir(Storage* storage, const char* path) {
     if(!storage || !path || path[0] != '/') return false;
     size_t length = strlen(path);
-    if(length < 2U || length >= POCKET_D20_LONG_PATH_LEN) return false;
+    if(length < 2U || length >= DND_FS_LONG_PATH_LEN) return false;
 
-    char directory[POCKET_D20_LONG_PATH_LEN];
+    char directory[DND_FS_LONG_PATH_LEN];
     memcpy(directory, path, length + 1U);
     char* last = strrchr(directory, '/');
     if(!last || last == directory) return true;
@@ -64,4 +64,48 @@ static inline bool dnd_fs_ensure_parent_dir(Storage* storage, const char* path) 
         *cursor = '/';
     }
     return dnd_fs_ensure_directory(storage, directory);
+}
+
+/* All spellbook consumers must restore an interrupted sort before treating a
+   missing live file as an empty collection. No full sorter is linked into them.
+   Stat errors and directory collisions fail closed; renames never overwrite. */
+static inline bool dnd_fs_recover_sort(Storage* storage, const char* live, bool* recovered) {
+    if(recovered) *recovered = false;
+    if(!storage || !live || !live[0]) return false;
+    static const char suffix[] = ".sort.bak";
+    size_t length = strlen(live);
+    if(length + sizeof(suffix) > DND_FS_LONG_PATH_LEN) return false;
+    char backup[DND_FS_LONG_PATH_LEN];
+    memcpy(backup, live, length);
+    memcpy(backup + length, suffix, sizeof(suffix));
+    FileInfo info;
+    FS_Error error = storage_common_stat(storage, backup, &info);
+    if(error == FSE_NOT_EXIST) return true;
+    if(error != FSE_OK || file_info_is_dir(&info)) return false;
+    if(recovered) *recovered = true;
+    error = storage_common_stat(storage, live, &info);
+    if(error == FSE_NOT_EXIST) return storage_common_rename_safe(storage, backup, live) == FSE_OK;
+    if(error != FSE_OK || file_info_is_dir(&info)) return false;
+    return storage_common_remove(storage, backup) == FSE_OK;
+}
+
+/* Publish a synced temporary file, retaining the old live file on rename failure.
+   If rollback itself fails, the backup remains available for recovery. */
+static inline bool
+    dnd_fs_publish(Storage* storage, const char* temp, const char* live, const char* backup) {
+    bool had_live = storage_file_exists(storage, live);
+    if(storage_file_exists(storage, backup)) {
+        if(!had_live) {
+            if(storage_common_rename(storage, backup, live) != FSE_OK) return false;
+            had_live = true;
+        } else if(storage_common_remove(storage, backup) != FSE_OK)
+            return false;
+    }
+    if(had_live && storage_common_rename(storage, live, backup) != FSE_OK) return false;
+    if(storage_common_rename(storage, temp, live) != FSE_OK) {
+        if(had_live) (void)storage_common_rename(storage, backup, live);
+        return false;
+    }
+    if(had_live) (void)storage_common_remove(storage, backup);
+    return true;
 }

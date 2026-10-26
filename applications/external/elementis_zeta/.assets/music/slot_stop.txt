@@ -1,0 +1,5 @@
+title Slot machine, a reel lands - a low thunk and a click
+vol 220
+inst thunk drum=g4 v=255,200,140,90 d=0,-45,-75,-95
+inst clk drum=c7 v=255,120 d=0,-20
+!thunk=4 r=1 !clk=2

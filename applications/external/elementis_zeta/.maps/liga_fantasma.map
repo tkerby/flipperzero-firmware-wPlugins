@@ -1,0 +1,38 @@
+# Sala 3 de la Liga (Madame Velo, Ghost, C9, contract 56), 11 x 12, interior, ONE room of the League four run (contract 50.2): GHOST: light old flagstones (2 x 2) under a mist dither, the whole room is `@fog yes` (drifting mist), candelabra with flickering flames. column = i, row = j. The hero arrives at (5,10) facing NE; the door BEHIND him (5,11) is a solid NPC that appears when league_run is set;
+# the member stands at (5,4) facing SW (+j), the door AHEAD (5,1) is a solid NPC hidden when the member's beaten flag (league_e3) is set, the doorway (5,0) is the warp (`oneway`). No exit warp, no way back (a loss is the blackout to the lobby).
+@map liga_fantasma
+@size 11 12
+@interior yes
+@bg 0
+@fill ghf_00
+@fog yes
+@spawn in 5 10 NE
+@legend
+  K  tile=none object=wall_corner
+  w  tile=none object=wall_j
+  |  tile=none object=wall_i
+  0  tile=ghf_10 
+  1  tile=ghf_11 
+  2  tile=ghf_01 
+  3  tile=ghf_11 npc=keydoor id=door_a face=S solid=yes gate=yes text=gl.c9.door.locked hide_flag=league_e3
+  4  tile=ghf_10 
+  5  tile=ghf_00 object=cand
+  6  tile=ghf_00 
+  7  tile=ghf_10 npc=madame_velo id=member face=SW trainer=velo text=lg.velo.pre after=lg.velo.after beaten_flag=league_e3 range=4
+  8  tile=ghf_01 object=cand
+  9  tile=ghf_10 object=cand
+  a  tile=ghf_11 npc=keydoor id=door_x face=S solid=yes gate=yes text=gl.c9.door.shut show_flag=league_run
+@grid
+  Kwwww0wwwww
+  |1212321212
+  |4546464546
+  |1212121212
+  |4646764646
+  |1212121212
+  |4646464646
+  |1812121812
+  |4646464646
+  |1212121212
+  |4696469646
+  |1212a21212
+@warp 0 -> liga_dragon spawn=in oneway

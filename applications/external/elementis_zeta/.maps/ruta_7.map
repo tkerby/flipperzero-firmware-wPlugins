@@ -1,0 +1,66 @@
+# Ruta 7 (C4a, contract 39), 32 x 16. column = i, row = j. The passage hut of the second underground passage (door (24,5)) is in the east; the road runs west to Metropolis Neon (the WEST edge,
+# i = 0, rows 7..8). Look (the user's mock "Rutas 7 y 8"): the city OUTSKIRTS, closer to the city: asphalt road with dashed lanes, sidewalks, chain-link fences, road signs, street lamps, a parked car, and the animated HOLO
+# BILLBOARD of the city at the west end. Three trainers (a lass, a scout, a gambler), the Neon wild table.
+@map ruta_7
+@size 32 16
+@interior no
+@area ruta_7
+@bg 0
+@fill lawn
+@spawn hut_door 24 6 S
+@spawn east 30 7 W
+@spawn west 1 7 E
+@encounters grass rate=20
+  cindermeer 22 26 30   # C9 (contract 56): weight lowered to make room for the fill-in (the table still adds up to 100)
+  ramplet 22 26 20
+  lullabun 22 26 20
+  mossbud 22 26 15   # C9 (contract 56): weight lowered to make room for the fill-in (the table still adds up to 100)
+  lunelle 22 25 5
+  mothmist 22 26 10   # C6 (contract 49): around Ciudad Cenit
+@end
+# Open ground (contract 63, normal route): a step onto plain ground (not tall grass, water, a door, a ledge, an arrow floor) rolls this table when rand8 < 4 (4/256 per step).
+@open_rate 4
+# Roaming wild creatures (contract 55, rollout in 63): 3 creatures of this table wander the open ground (not the tall grass); touching one starts that wild battle.
+@roam 3 table=grass period=1800
+@legend
+  .  tile=lawn
+  a  object=chain_i
+  b  object=chain_j
+  c  object=dry_bush
+  d  tile=tall_grass
+  e  tile=tall_grass npc=chica id=t1 face=S trainer=chica_r7 range=3 text=tr.chica_r7.pre after=tr.chica_r7.after
+  f  object=house_f
+  g  object=holo text=ruta7.holo interact=look
+  h  object=lamp_h
+  i  door=house_f
+  j  object=road_sign text=ruta7.hut.sign interact=look
+  k  tile=sidewalk
+  l  tile=sidewalk object=road_sign text=ruta7.east.sign interact=look
+  m  tile=sidewalk object=chain_j
+  n  tile=asph
+  o  tile=asph
+  p  tile=asph object=chain_j
+  q  object=car
+  r  tile=tall_grass npc=explorador id=t2 face=N trainer=explorador_r7 range=3 text=tr.explorador_r7.pre after=tr.explorador_r7.after
+  s  tile=tall_grass npc=jugador id=t3 face=N trainer=jugador_r7 range=3 text=tr.jugador_r7.pre after=tr.jugador_r7.after
+  t  item=ward_spray
+  H  tile=lawn hidden=rich_salve   # hidden (contract 80, hidden items)
+@grid
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  b..............................b
+  b..............................b
+  b.......aaaaaaaaaaaa...........b
+  b..c......ddde.....c...ff......b
+  b...g....hdddd...h.....fi.j.h..b
+  kkkkkkkkkkkkkkkkkkkkkkkkkkkkkklm
+  noooooooooooooooooooooooooooooop
+  noooooooooooooooooooooooooooooop
+  kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkm
+  b.q.h...............h..........b
+  b.q.............ddrdd.c........b
+  b.....ddsdd...c.ddddd......c...b
+  b.....ddddd.....ddddd........t.b
+  b.............H................b
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+@warp i -> pasadizo2_s spawn=door
+@warp n -> metropolis_neon spawn=east

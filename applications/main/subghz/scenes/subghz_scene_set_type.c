@@ -12,16 +12,21 @@ void subghz_scene_set_type_submenu_callback(void* context, uint32_t index) {
 }
 
 static const char* submenu_names[SetTypeMAX] = {
+    [SetTypeTelcomaEdge433] = "Telcoma EDGE 433MHz",
     [SetTypeFaacSLH_868] = "FAAC SLH 868MHz",
     [SetTypeFaacSLH_433] = "FAAC SLH 433MHz",
+    [SetTypeGenius_433] = "Genius 433MHz",
+    [SetTypeGenius_868] = "Genius 868MHz",
     [SetTypeBFTMitto] = "BFT Mitto 433MHz",
     [SetTypeErreka433] = "Erreka 433MHz",
+    [SetTypeErreka868] = "Erreka 868MHz",
     [SetTypeSomfyTelis] = "Somfy Telis 433MHz",
     [SetTypeSomfyKeytis] = "Somfy Keytis 433MHz",
     [SetTypeANMotorsAT4] = "AN-Motors AT4 433MHz",
     [SetTypeAlutechAT4N] = "Alutech AT4N 433MHz",
     [SetTypeRoger_433] = "Roger 433MHz",
     [SetTypePhoenix_V2_433] = "V2 Phoenix 433MHz",
+    [SetTypePrastel_433_92] = "Prastel 433MHz",
     [SetTypeKingGatesStylo4k] = "KingGates Stylo4k 433M.",
     [SetTypeBenincaARC] = "Beninca ARC 433MHz",
     [SetTypeJarolift] = "Jarolift 433MHz",
@@ -39,6 +44,7 @@ static const char* submenu_names[SetTypeMAX] = {
     [SetTypeMotorline433] = "KL: Motorline 433MHz",
     [SetTypeCenturion433] = "KL: Centurion 433MHz",
     [SetTypeMonarch433] = "KL: Monarch 433MHz",
+    [SetTypeKEY433] = "KL: KEY 433MHz",
     [SetTypeJollyMotors433] = "KL: Jolly Mot. 433MHz",
     [SetTypeSommer_FM_434] = "KL: Sommer 434MHz",
     [SetTypeSommer_FM_868] = "KL: Sommer 868MHz",
@@ -51,6 +57,7 @@ static const char* submenu_names[SetTypeMAX] = {
     [SetTypeDTMNeo433] = "KL: DTM Neo 433MHz",
     [SetTypeGibidi433] = "KL: Gibidi 433MHz",
     [SetTypeGSN] = "KL: GSN 433MHz",
+    [SetTypeHomeGate_433_92] = "KL: HomeGate 433MHz",
     [SetTypeAprimatic] = "KL: Aprimatic 433MHz",
     [SetTypeElmesElectronic] = "KL: Elmes (PL) 433MHz",
     [SetTypeNormstahl_433_92] = "KL: Normstahl 433MHz",
@@ -78,6 +85,9 @@ static const char* submenu_names[SetTypeMAX] = {
     [SetTypeNiceSmilo_433_92] = "KL: Nice Smilo 433MHz",
     [SetTypeNiceFlorS_433_92] = "Nice FloR-S 433MHz",
     [SetTypeNiceOne_433_92] = "Nice One 433MHz",
+    [SetTypeNiceOCode_433_92] = "Nice O-Code 433MHz",
+    [SetTypeNiceOCodeOne_433_92] = "Nice O-Code One 433MHz",
+    [SetTypeNiceOCodeCert_433_92] = "Nice O-Code+Crt 433MHz",
     [SetTypeNiceFlo12bit] = "Nice Flo 12bit 433MHz",
     [SetTypeNiceFlo24bit] = "Nice Flo 24bit 433MHz",
     [SetTypeCAME12bit] = "CAME 12bit 433MHz",
@@ -93,6 +103,7 @@ static const char* submenu_names[SetTypeMAX] = {
     [SetTypeZKTeco430] = "ZKTeco 430MHz",
     [SetTypeGangQi_433] = "GangQi 433MHz",
     [SetTypeHollarm_433] = "Hollarm 433MHz",
+    [SetTypeNordIce_433] = "Nord ICE 433MHz",
     [SetTypeReversRB2_433] = "Revers RB2 433MHz",
     [SetTypeMarantec24_868] = "Marantec24 868MHz",
     [SetTypeMarantec_433] = "Marantec 433MHz",
@@ -115,8 +126,23 @@ void subghz_scene_set_type_on_enter(void* context) {
     SubGhz* subghz = context;
 
     for(SetType i = 0; i < SetTypeMAX; i++) {
+        if(i == SetTypeNiceOCodeOne_433_92 || i == SetTypeNiceOCodeCert_433_92) continue;
         submenu_add_item(
             subghz->submenu, submenu_names[i], i, subghz_scene_set_type_submenu_callback, subghz);
+        if(i == SetTypeNiceOCode_433_92) {
+            submenu_add_item(
+                subghz->submenu,
+                submenu_names[SetTypeNiceOCodeOne_433_92],
+                SetTypeNiceOCodeOne_433_92,
+                subghz_scene_set_type_submenu_callback,
+                subghz);
+            submenu_add_item(
+                subghz->submenu,
+                submenu_names[SetTypeNiceOCodeCert_433_92],
+                SetTypeNiceOCodeCert_433_92,
+                subghz_scene_set_type_submenu_callback,
+                subghz);
+        }
     }
 
     view_dispatcher_switch_to_view(subghz->view_dispatcher, SubGhzViewIdMenu);
@@ -257,7 +283,10 @@ bool subghz_scene_set_type_generate_protocol_from_infos(SubGhz* subghz) {
             gen_info.nice_flor_s.serial,
             gen_info.nice_flor_s.btn,
             gen_info.nice_flor_s.cnt,
-            gen_info.nice_flor_s.nice_one);
+            gen_info.nice_flor_s.nice_one,
+            gen_info.nice_flor_s.o_code,
+            gen_info.nice_flor_s.ic,
+            0);
         break;
     case GenSecPlus1:
         generated_protocol =
@@ -279,6 +308,15 @@ bool subghz_scene_set_type_generate_protocol_from_infos(SubGhz* subghz) {
             gen_info.freq,
             gen_info.phoenix_v2.serial,
             gen_info.phoenix_v2.cnt);
+        break;
+    case GenPrastel:
+        generated_protocol = subghz_txrx_gen_prastel_protocol(
+            subghz->txrx,
+            gen_info.mod,
+            gen_info.freq,
+            gen_info.prastel.serial,
+            gen_info.prastel.btn,
+            gen_info.prastel.cnt);
         break;
     default:
         furi_crash("Not implemented");
@@ -307,6 +345,11 @@ bool subghz_scene_set_type_on_event(void* context, SceneManagerEvent event) {
         subghz_gen_info_reset(subghz->gen_info);
         subghz_scene_set_type_fill_generation_infos(subghz->gen_info, event.event);
 
+        if((subghz->gen_info->type == GenNiceFlorS) && subghz->gen_info->nice_flor_s.cert_wanted) {
+            scene_manager_next_scene(subghz->scene_manager, SubGhzSceneSetSerial);
+            return true;
+        }
+
         if(scene_manager_get_scene_state(subghz->scene_manager, SubGhzSceneSetType) ==
            SubmenuIndexAddManually) {
             generated_protocol = subghz_scene_set_type_generate_protocol_from_infos(subghz);
@@ -330,9 +373,10 @@ bool subghz_scene_set_type_on_event(void* context, SceneManagerEvent event) {
             case GenBenincaARC: // Serial (u32), Button (u8), Counter (u32)
             case GenJarolift: // Serial (u32), Button (u4), Counter (u16)
             case GenDitecGOL4: // Serial (u32), Button (u4), Counter (u16)
-            case GenNiceFlorS: // Serial (u32), Button (u8), Counter (u16)
+            case GenNiceFlorS: // Serial (u32), Button (u8), Counter (u16), IC (u16, O-Code)
             case GenSecPlus2: // Serial (u32), Button (u8), Counter (u32)
             case GenPhoenixV2: // Serial (u32), Counter (u16)
+            case GenPrastel: // Serial (u32), Button (u8), Counter (u16)
                 scene_manager_next_scene(subghz->scene_manager, SubGhzSceneSetSerial);
                 break;
             }

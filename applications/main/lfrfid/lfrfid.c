@@ -1,5 +1,10 @@
 #include "lfrfid_i.h"
 #include <dolphin/dolphin.h>
+#include <loader/loader.h>
+#include <flipper_application/application_manifest.h>
+#include <lfrfid_icons.h>
+
+#define TAG "LfRfid"
 #include <applications/main/archive/helpers/archive_helpers_ext.h>
 
 //TODO: use .txt file in resources for passwords.
@@ -61,6 +66,7 @@ static void rpc_command_callback(const RpcAppSystemEvent* event, void* context) 
 static LfRfid* lfrfid_alloc(void) {
     LfRfid* lfrfid = malloc(sizeof(LfRfid));
 
+    lfrfid->variable_item_list = NULL;
     lfrfid->storage = furi_record_open(RECORD_STORAGE);
     lfrfid->dialogs = furi_record_open(RECORD_DIALOGS);
 
@@ -119,6 +125,13 @@ static LfRfid* lfrfid_alloc(void) {
     lfrfid->byte_input = byte_input_alloc();
     view_dispatcher_add_view(
         lfrfid->view_dispatcher, LfRfidViewByteInput, byte_input_get_view(lfrfid->byte_input));
+
+    // Number Input
+    lfrfid->number_input = number_input_alloc();
+    view_dispatcher_add_view(
+        lfrfid->view_dispatcher,
+        LfRfidViewNumberInput,
+        number_input_get_view(lfrfid->number_input));
 
     // Read custom view
     lfrfid->read_view = lfrfid_view_read_alloc();
@@ -182,6 +195,16 @@ static void lfrfid_free(LfRfid* lfrfid) {
     view_dispatcher_remove_view(lfrfid->view_dispatcher, LfRfidViewByteInput);
     byte_input_free(lfrfid->byte_input);
 
+    // Number Input
+    view_dispatcher_remove_view(lfrfid->view_dispatcher, LfRfidViewNumberInput);
+    number_input_free(lfrfid->number_input);
+
+    // Variable Item List - only allocated if the user opened a settings page
+    if(lfrfid->variable_item_list) {
+        view_dispatcher_remove_view(lfrfid->view_dispatcher, LfRfidViewVariableItemList);
+        variable_item_list_free(lfrfid->variable_item_list);
+    }
+
     // Read custom view
     view_dispatcher_remove_view(lfrfid->view_dispatcher, LfRfidViewRead);
     lfrfid_view_read_free(lfrfid->read_view);
@@ -206,6 +229,33 @@ static void lfrfid_free(LfRfid* lfrfid) {
     free(lfrfid);
 }
 
+// The file the saved list opens on, for a launch argument naming a dump. Not this app's own
+// string: the dump may have been renamed or deleted by the app that was handed it, and the
+// argument can come from a favourite or the CLI, so anything that is not a file in this app's
+// folder falls back to the folder rather than pointing the browser somewhere it cannot return
+// from.
+static void lfrfid_set_browse_path(LfRfid* app, const char* path) {
+    // Asked of the storage service rather than compared here: /ext is case-insensitive and has
+    // aliases, so a path that is in the folder can still fail a byte compare against it.
+    if(!*path || !storage_common_is_subdir(app->storage, LFRFID_APP_FOLDER, path)) {
+        FURI_LOG_W(TAG, "Browse path outside %s: %s", LFRFID_APP_FOLDER, path);
+        furi_string_set(app->file_path, LFRFID_APP_FOLDER);
+        return;
+    }
+
+    furi_string_set_str(app->file_path, path);
+    if(storage_file_exists(app->storage, path)) return;
+
+    // The usual way here: the dump was renamed or deleted in the app it was handed to, and the
+    // argument was built before that happened. The folder it was in is still the right place to
+    // open - the renamed file is in it - so only the name is given up.
+    FURI_LOG_W(TAG, "Browse path is gone, opening its folder: %s", path);
+    FuriString* folder = furi_string_alloc();
+    path_extract_dirname(path, folder);
+    furi_string_set(app->file_path, folder);
+    furi_string_free(folder);
+}
+
 int32_t lfrfid_app(char* args) {
     LfRfid* app = lfrfid_alloc();
 
@@ -224,7 +274,19 @@ int32_t lfrfid_app(char* args) {
             dolphin_deed(DolphinDeedRfidEmulate);
         } else {
             furi_string_set(app->file_path, args);
-            if(lfrfid_load_key_data(app, app->file_path, true)) {
+            if(furi_string_end_withi(app->file_path, T5577_FILE_EXTENSION)) {
+                // A dump is not a key this app can emulate, so a path to one means the saved
+                // list opened on it: the argument this app queues for itself behind a handoff,
+                // and what a favourite or the CLI gets instead of an app that quits on startup.
+                // The list sits on the start menu, as it does when opened from there.
+                lfrfid_set_browse_path(app, args);
+                view_dispatcher_attach_to_gui(
+                    app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
+                scene_manager_set_scene_state(
+                    app->scene_manager, LfRfidSceneStart, LfRfidMenuIndexSaved);
+                scene_manager_next_scene(app->scene_manager, LfRfidSceneStart);
+                scene_manager_next_scene(app->scene_manager, LfRfidSceneSelectKey);
+            } else if(lfrfid_load_key_data(app, app->file_path, true)) {
                 view_dispatcher_attach_to_gui(
                     app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
                 app->fav_timeout = is_favorite;
@@ -269,23 +331,96 @@ bool lfrfid_save_key(LfRfid* app) {
     return result;
 }
 
-bool lfrfid_load_key_from_file_select(LfRfid* app) {
+// Extensions are hidden in the list, so a dump and a key saved off the same tag come out as the
+// same line. The icon is what tells them apart, and it is the T5577 app's own: the same glyph
+// marks the file here, in the archive, and in the app the file opens in.
+//
+// The browser owns a fixed-size buffer, but an asset's encoded frame can be shorter.
+// Copy only the frame bytes and clear the unused tail instead of reading past the asset.
+static bool lfrfid_file_browser_item_callback(
+    FuriString* path,
+    void* context,
+    uint8_t** icon,
+    FuriString* item_name) {
+    UNUSED(context);
+    UNUSED(item_name); // left empty, so the browser names the item the way it always does
+
+    if(!furi_string_end_withi(path, T5577_FILE_EXTENSION)) return false;
+
+    const uint8_t* frame = icon_get_frame_data(&I_t5577_10px, 0);
+    size_t frame_size =
+        1u + ((icon_get_width(&I_t5577_10px) + 7u) / 8u) * icon_get_height(&I_t5577_10px);
+    if(frame[0]) {
+        // Heatshrink assets have a four-byte header with a little-endian payload size.
+        frame_size = 4u + frame[2] + ((size_t)frame[3] << 8);
+    }
+    if(frame_size > FAP_MANIFEST_MAX_ICON_SIZE) return false;
+    memset(*icon, 0, FAP_MANIFEST_MAX_ICON_SIZE);
+    memcpy(*icon, frame, frame_size);
+    return true;
+}
+
+bool lfrfid_select_key_file(LfRfid* app) {
     furi_assert(app);
 
     DialogsFileBrowserOptions browser_options;
     dialog_file_browser_set_basic_options(
-        &browser_options, LFRFID_APP_FILENAME_EXTENSION, &I_125_10px);
+        &browser_options, LFRFID_APP_FILENAME_EXTENSION "|" T5577_FILE_EXTENSION, &I_125_10px);
     browser_options.base_path = LFRFID_APP_FOLDER;
+    browser_options.item_loader_callback = lfrfid_file_browser_item_callback;
 
     // Input events and views are managed by file_browser
-    bool result =
-        dialog_file_browser_show(app->dialogs, app->file_path, app->file_path, &browser_options);
+    return dialog_file_browser_show(
+        app->dialogs, app->file_path, app->file_path, &browser_options);
+}
 
-    if(result) {
-        result = lfrfid_load_key_data(app, app->file_path, true);
+static void lfrfid_say(LfRfid* app, const char* header, const char* text) {
+    DialogMessage* message = dialog_message_alloc();
+    dialog_message_set_header(message, header, 64, 4, AlignCenter, AlignTop);
+    dialog_message_set_text(message, text, 64, 34, AlignCenter, AlignCenter);
+    dialog_message_set_buttons(message, NULL, "OK", NULL);
+    dialog_message_show(app->dialogs, message);
+    dialog_message_free(message);
+}
+
+bool lfrfid_run_t5577_app(LfRfid* app) {
+    furi_assert(app);
+
+    // Asked here rather than left to the loader. The loader does report a missing app and still
+    // runs the relaunch queued behind it, so the list does come back - but the app it names is
+    // one the user never asked for, and the answer is "App Not Found" where it could say which
+    // app is missing and how to get it. Checking first also saves closing this app to find out.
+    if(!storage_file_exists(app->storage, T5577_APP_PATH)) {
+        lfrfid_say(app, "No T5577 app", "Install the T5577 app\nfrom your RM build\nSD resources");
+        return false;
     }
 
-    return result;
+    Loader* loader = furi_record_open(RECORD_LOADER);
+
+    loader_enqueue_launch(
+        loader, T5577_APP_PATH, furi_string_get_cstr(app->file_path), LoaderDeferredLaunchFlagGui);
+
+    // This app again behind that one, told to reopen the saved list on the file it handed over:
+    // returning to a start menu would make a look at one dump cost the walk back to the list.
+    // By launch path, so it works whether this app is built into the firmware or is a .fap.
+    // Same handoff as nfc_app_run_external(), which chains mfkey32 the same way.
+    FuriString* self_path = furi_string_alloc();
+    if(loader_get_application_launch_path(loader, self_path)) {
+        loader_enqueue_launch(
+            loader,
+            furi_string_get_cstr(self_path),
+            furi_string_get_cstr(app->file_path),
+            LoaderDeferredLaunchFlagGui);
+    } else {
+        // Not worth refusing the handoff over: the dump still opens, and the user comes back to
+        // the desktop instead of to the list.
+        FURI_LOG_W(TAG, "No launch path for self, the saved list will not reopen");
+    }
+    furi_string_free(self_path);
+    furi_record_close(RECORD_LOADER);
+
+    view_dispatcher_stop(app->view_dispatcher);
+    return true;
 }
 
 bool lfrfid_load_raw_key_from_file_select(LfRfid* app) {
@@ -362,7 +497,9 @@ void lfrfid_text_store_set(LfRfid* app, const char* text, ...) {
     va_list args;
     va_start(args, text);
 
-    vsnprintf(app->text_store, LFRFID_TEXT_STORE_SIZE, text, args);
+    // sizeof, not LFRFID_TEXT_STORE_SIZE: the buffer carries the extra byte for the terminator,
+    // so passing the size without it cost every caller one character.
+    vsnprintf(app->text_store, sizeof(app->text_store), text, args);
 
     va_end(args);
 }

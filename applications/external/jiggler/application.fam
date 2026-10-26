@@ -1,0 +1,14 @@
+App(
+    appid="jiggler",
+    name="Jiggler",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="jiggler_app",
+    sources=["*.c"],
+    stack_size=2 * 1024,
+    fap_icon="icon.png",
+    fap_category="USB",
+    fap_author="rseufert",
+    fap_weburl="https://github.com/rseufert/jiggler",
+    fap_version="0.1",
+    fap_description="Mouse jiggler with invisible net-zero moves, random timing, and a desktop helper that pauses it while you work",
+)

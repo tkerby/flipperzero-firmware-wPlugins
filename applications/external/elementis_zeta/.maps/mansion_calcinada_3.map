@@ -1,0 +1,83 @@
+# Mansion Calcinada 3F (C7, contract 53), 24 x 18. Arrival from 2F at (20,4) with the statues OFF: the A door (17,13) shuts the south-east room (the stairs down to B1F (20,15)); the statue (19,3) of the arrival room turns them ON. A burglar,
+# a scientist, the fourth diary and two items.
+@map mansion_calcinada_3
+@size 24 18
+@interior yes
+@area mansion_calcinada
+@bg 0
+@fill burnt_00
+@flag mansion_sw 860      # the statues' switch: ONE flag for the whole mansion, every statue toggles it (set = "on"); the A doors are shut while it is clear, the B doors while it is set
+@encounters grass rate=12
+  cindermeer 36 40 25
+  cindibex 36 40 20
+  origamorph 36 40 15
+  slickslime 36 39 15
+  smogkeg 36 40 15
+  tarbog 38 41 10
+  foldling 36 40 10
+@end
+@spawn from2 20 4 S
+@spawn from_b 20 14 N
+@legend
+  .  tile=air_0
+  a  tile=none object=charwall
+  b  tile=burnt_01
+  c  tile=burnt_11
+  d  tile=burnt_00
+  e  tile=burnt_10
+  f  tile=ember_10
+  g  tile=ember_00
+  h  tile=ember_11
+  i  tile=ember_01
+  j  tile=burnt_01 object=rubble_c7
+  k  tile=burnt_01 item=rich_salve
+  l  tile=burnt_11 face=S id=s3 npc=statue_off script=statue
+  m  tile=burnt_01 door=stairs
+  n  tile=burnt_10 object=bookshelf interact=look script=diary4
+  o  tile=burnt_11 object=rubble_c7
+  p  tile=burnt_00 after=tr.ladron_m3a.after face=SW id=t1 npc=ladron_s range=4 text=tr.ladron_m3a.pre trainer=ladron_m3a
+  q  tile=burnt_10 after=tr.cientifico_m3b.after face=NE id=t2 npc=cientifico_s range=3 text=tr.cientifico_m3b.pre trainer=cientifico_m3b
+  r  tile=burnt_10 object=crate_plain
+  s  tile=burnt_10 object=rubble_c7
+  t  tile=burnt_11 object=crate_plain
+  u  tile=burnt_11 face=S gate=yes hide_flag=mansion_sw id=de npc=bdoor text=mansion.door
+  v  tile=burnt_00 object=rubble_c7
+  w  tile=burnt_11 item=ultra_cristal
+  x  tile=burnt_01 door=stairs
+  y  tile=burnt_01 item=disc_28
+  z  tile=burnt_01 item=pp_extra   # contract 77: PP Extra, found only
+@grid
+  ........................
+  ........................
+  ..aaaa..aaaaaaaa..aaaa..
+  .akcbc.abcbcbcbc.ablmc..
+  .adedeaadedededeaadedn..
+  .abcbcbcbobcbcjcbcbcbc..
+  .adede.adedepede.adede..
+  .abcbc.abcbcbcbc.abcbc..
+  .adedq.adfgfgede.adede..
+  .......abhihicbc........
+  ..aaaa.adfgfgede..aaaa..
+  .aycbc.abcbcbcbc.abcbc..
+  .adrdeaadedfgfgeaadsde..
+  .abcbcbcbtbhihjcbubcbc..
+  .adeve.adedfgfge.adede..
+  .abwzc.abcbcbcbc.abcxc..
+  ........................
+  ........................
+@warp m -> mansion_calcinada_2 spawn=up
+@warp x -> mansion_calcinada_4 spawn=from3
+# A statue switch: every one of them toggles the SAME flag (mansion_sw): the A doors (boarded while it is clear) open, the B doors (boarded while it is set) shut, or the other way round.
+@script statue npc
+    sfx hit
+    jf mansion_sw off
+    setf mansion_sw
+    say mansion.sw.on
+    end
+  off:
+    clrf mansion_sw
+    say mansion.sw.off
+@end
+@script diary4 interact
+    say mansion.d4
+@end

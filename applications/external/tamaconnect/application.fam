@@ -1,0 +1,15 @@
+App(
+    appid="tama_connect",
+    name="TamaConnect",
+    apptype=FlipperAppType.EXTERNAL,
+    targets=["f7"],
+    entry_point="tama_connect",
+    stack_size=4096,
+    sources=["*.c"],
+    fap_icon="appicon.png",
+    fap_category="Infrared",
+    fap_author="sp2013",
+    fap_weburl="https://github.com/s2013p/TamaConnect",
+    fap_version="1.0",
+    fap_description="Flipper Zero companion for Tamagotchi Connection 2024",
+)

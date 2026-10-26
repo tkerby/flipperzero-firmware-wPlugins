@@ -1,0 +1,12 @@
+Fetching remote heads...
+  refs/
+  refs/heads/
+  refs/tags/
+updating 'refs/heads/main'
+  from 0000000000000000000000000000000000000000
+  to   c885e35679763083137311f5657d6b089b07141b
+    sending 36 objects
+    done
+Updating remote server info
+To http://127.0.0.1:8080/git/weather-station.git
+ * [new branch]      main -> main

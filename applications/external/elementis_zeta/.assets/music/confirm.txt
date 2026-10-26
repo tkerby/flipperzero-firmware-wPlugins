@@ -1,0 +1,4 @@
+title Menu confirm - a short rising blip
+vol 200
+inst blip v=255,220,170
+@blip o6 g=3 o7 c=4

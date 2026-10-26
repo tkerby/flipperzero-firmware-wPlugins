@@ -1,0 +1,419 @@
+# The region map (the Atlas, contract 74): the layout of the schematic picture tools/regmapc.py renders into nucleo/files/regmap.bin (128 x 64, the level buffer's packing; the bottom 13 rows are the name bar).
+# `[place.<area key>]`: where the mark of that zone banner (mapc AREA_KEYS) sits (the centre, in picture pixels) and what is drawn there. Every map belongs to the area of its own @area, or, an interior with none (or with
+# an area that is not placed), to the nearest placed area through the warps (a house = its town); `[alias]` names a map the warps cannot reach.
+# kind: town (a 5 x 5 square, 7 x 7 for a city) | route (nothing drawn, the road passes) | cave (a dark mound) | wood (three trees) | plateau (the League: a flag on a mount) | ruin | power | reserva (a hatched field) | island | sea (nothing drawn, the dotted sea road passes)
+# [[road]]: pts = a polyline of the road (a straight run between points, drawn in black); style = road | sea (dotted).
+
+[place.villa_aliso]
+x = 20
+y = 33
+kind = "town"
+
+[place.ruta_1]
+x = 20
+y = 28
+kind = "route"
+
+[place.ciudad_nodo]
+x = 20
+y = 23
+kind = "city"
+
+[place.ruta_2]
+x = 20
+y = 18
+kind = "route"
+
+[place.bosque_umbrio]
+x = 20
+y = 14
+kind = "wood"
+
+[place.pueblo_cantera]
+x = 20
+y = 10
+kind = "town"
+
+[place.ruta_3]
+x = 32
+y = 10
+kind = "route"
+
+[place.monte_eco]
+x = 44
+y = 10
+kind = "cave"
+
+[place.ruta_4]
+x = 56
+y = 10
+kind = "route"
+
+[place.ciudad_marea]
+x = 69
+y = 10
+kind = "city"
+
+[place.ruta_24]
+x = 69
+y = 6
+kind = "route"
+
+[place.ruta_25]
+x = 80
+y = 4
+kind = "route"
+
+[place.ruta_5]
+x = 69
+y = 16
+kind = "route"
+
+[place.ruta_6]
+x = 69
+y = 28
+kind = "route"
+
+[place.puerto_dinamo]
+x = 69
+y = 34
+kind = "city"
+
+[place.ruta_11]
+x = 80
+y = 34
+kind = "route"
+
+[place.cueva_excavadora]
+x = 92
+y = 30
+kind = "cave"
+
+[place.ruta_9]
+x = 82
+y = 10
+kind = "route"
+
+[place.ruta_10]
+x = 96
+y = 10
+kind = "route"
+
+[place.tunel_oscuro]
+x = 104
+y = 16
+kind = "cave"
+
+[place.pueblo_bruma]
+x = 111
+y = 22
+kind = "town"
+
+[place.ruta_8]
+x = 91
+y = 22
+kind = "route"
+
+[place.ruta_7]
+x = 56
+y = 22
+kind = "route"
+
+[place.metropolis_neon]
+x = 43
+y = 22
+kind = "city"
+
+[place.ruta_12]
+x = 111
+y = 28
+kind = "route"
+
+[place.ruta_13]
+x = 111
+y = 34
+kind = "route"
+
+[place.ruta_14]
+x = 97
+y = 38
+kind = "route"
+
+[place.ruta_15]
+x = 75
+y = 38
+kind = "route"
+
+[place.ciudad_ambar]
+x = 50
+y = 38
+kind = "city"
+
+[place.ruta_16]
+x = 37
+y = 22
+kind = "route"
+
+[place.autopista]
+x = 33
+y = 28
+kind = "route"
+
+[place.ruta_18]
+x = 39
+y = 35
+kind = "route"
+
+[place.reserva]
+x = 59
+y = 30
+kind = "reserva"
+
+[place.mar_ambar]
+x = 48
+y = 47
+kind = "sea"
+
+[place.ciudad_cenit]
+x = 69
+y = 22
+kind = "city"
+
+[place.ruta_19]
+x = 41
+y = 47
+kind = "sea"
+
+[place.ruta_20]
+x = 24
+y = 47
+kind = "sea"
+
+[place.ruta_21]
+x = 14
+y = 40
+kind = "sea"
+
+[place.islas_escarcha]
+x = 32
+y = 47
+kind = "island"
+
+[place.isla_ceniza]
+x = 12
+y = 44
+kind = "island"
+
+[place.central_electrica]
+x = 109
+y = 7
+kind = "power"
+
+[place.ruta_22]
+x = 13
+y = 23
+kind = "route"
+
+[place.ruta_23]
+x = 6
+y = 18
+kind = "route"
+
+[place.senda_campeones]
+x = 6
+y = 12
+kind = "route"
+
+[place.meseta_cumbre]
+x = 6
+y = 5
+kind = "plateau"
+
+[place.cueva_secreta]
+x = 59
+y = 6
+kind = "cave"
+
+[place.ruinas_origen]
+x = 16
+y = 5
+kind = "ruin"
+
+[place.gruta_eclipse]
+x = 4
+y = 41
+kind = "cave"
+
+# the areas that exist only as interiors take the place around them (sala_juegos, escondite_vertice -> metropolis_neon; torre_recuerdos -> pueblo_bruma; torre_vertice -> ciudad_cenit; mansion_calcinada -> isla_ceniza)
+[alias]
+escondite_4 = "metropolis_neon"
+
+[[road]]
+style = "road"
+pts = [[20, 33], [20, 10]]
+
+[[road]]
+style = "road"
+pts = [[20, 23], [6, 23], [6, 5]]
+
+[[road]]
+style = "road"
+pts = [[6, 5], [16, 5]]
+
+[[road]]
+style = "road"
+pts = [[20, 10], [96, 10]]
+
+[[road]]
+style = "road"
+pts = [[69, 10], [69, 4], [80, 4]]
+
+[[road]]
+style = "road"
+pts = [[69, 10], [59, 6]]
+
+[[road]]
+style = "road"
+pts = [[96, 10], [104, 16], [111, 22]]
+
+[[road]]
+style = "road"
+pts = [[96, 10], [109, 7]]
+
+[[road]]
+style = "road"
+pts = [[69, 10], [69, 34]]
+
+[[road]]
+style = "road"
+pts = [[69, 22], [43, 22], [33, 22], [33, 33], [50, 38]]
+
+[[road]]
+style = "road"
+pts = [[69, 22], [111, 22]]
+
+[[road]]
+style = "road"
+pts = [[69, 34], [85, 34], [92, 30]]
+
+[[road]]
+style = "road"
+pts = [[111, 22], [111, 35], [106, 38], [50, 38]]
+
+[[road]]
+style = "road"
+pts = [[59, 33], [50, 38]]
+
+[[road]]
+style = "sea"
+pts = [[50, 38], [50, 47], [12, 47], [12, 44]]
+
+[[road]]
+style = "sea"
+pts = [[12, 44], [12, 38], [20, 33]]
+
+[[road]]
+style = "sea"
+pts = [[12, 41], [4, 41]]
+
+# decoration (never a place): mount = a peak (5 x 3), range = three peaks, lake = a light ellipse with a rim (rx, ry), tree = a plus (3 x 3), islet = a small white islet in the sea
+[[deco]]
+kind = "range"
+x = 5
+y = 14
+
+[[deco]]
+kind = "range"
+x = 5
+y = 30
+
+[[deco]]
+kind = "range"
+x = 38
+y = 6
+
+[[deco]]
+kind = "range"
+x = 102
+y = 12
+
+[[deco]]
+kind = "mount"
+x = 50
+y = 16
+
+[[deco]]
+kind = "mount"
+x = 86
+y = 17
+
+[[deco]]
+kind = "mount"
+x = 27
+y = 27
+
+[[deco]]
+kind = "lake"
+x = 34
+y = 17
+rx = 5
+ry = 2
+
+[[deco]]
+kind = "lake"
+x = 80
+y = 27
+rx = 4
+ry = 2
+
+[[deco]]
+kind = "lake"
+x = 76
+y = 18
+rx = 3
+ry = 1
+
+[[deco]]
+kind = "tree"
+x = 24
+y = 18
+
+[[deco]]
+kind = "tree"
+x = 14
+y = 18
+
+[[deco]]
+kind = "tree"
+x = 27
+y = 14
+
+[[deco]]
+kind = "tree"
+x = 31
+y = 26
+
+[[deco]]
+kind = "tree"
+x = 62
+y = 18
+
+[[deco]]
+kind = "tree"
+x = 96
+y = 28
+
+[[deco]]
+kind = "islet"
+x = 120
+y = 7
+
+[[deco]]
+kind = "islet"
+x = 119
+y = 33
+
+[[deco]]
+kind = "islet"
+x = 94
+y = 40

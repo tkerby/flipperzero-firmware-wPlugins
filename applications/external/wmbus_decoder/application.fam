@@ -1,0 +1,35 @@
+import os
+import subprocess
+
+selftests_enabled = os.getenv("WMBUS_SELFTESTS") == "1"
+
+try:
+    git_commit = subprocess.check_output(
+        ["git", "rev-parse", "--short=8", "HEAD"],
+        cwd=os.path.dirname(app_manifest_path),
+        stderr=subprocess.DEVNULL,
+        text=True,
+    ).strip()
+except (OSError, subprocess.SubprocessError):
+    git_commit = "unknown"
+
+App(
+    appid="wmbus_decoder",
+    name="WM-Bus Decoder",
+    apptype=FlipperAppType.EXTERNAL,
+    targets=["f7"],
+    entry_point="wmbus_decoder_app",
+    stack_size=8 * 1024,
+    cdefines=[
+        ("WMBUS_SELFTESTS", "1" if selftests_enabled else "0"),
+        ("WMBUS_GIT_COMMIT", f'\\"{git_commit}\\"'),
+    ],
+    sources=["*.c"] if selftests_enabled else ["*.c", "!test"],
+    fap_libs=["mbedtls"],
+    fap_icon="wmbus_decoder.png",
+    fap_category="Sub-GHz",
+    fap_author="Martin Mares",
+    fap_weburl="https://github.com/maresmar/wmbus-decoder",
+    fap_version="1.0",
+    fap_description="Receive and decode Wireless M-Bus meter telegrams at 868.95 MHz.",
+)

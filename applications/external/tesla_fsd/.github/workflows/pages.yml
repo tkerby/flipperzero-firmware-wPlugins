@@ -1,0 +1,81 @@
+name: pages
+
+# Publishes docs/ (Jekyll, same as the old branch build) plus the merged ESP32
+# images of the newest stable release under /firmware/ and, while one is out,
+# of a newer test build under /firmware/beta/. The browser flasher downloads
+# from there: GitHub release asset URLs send no CORS headers, so a browser can't
+# fetch them, while GitHub Pages answers with Access-Control-Allow-Origin: *.
+
+on:
+  workflow_run:
+    workflows: [build]
+    types: [completed]
+  push:
+    branches: [main]
+    paths: ['docs/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # After a build run, only redeploy for a successful tag build (that's when a
+    # release gets new images). Pushes and manual runs always deploy.
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       startsWith(github.event.workflow_run.head_branch, 'v'))
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - name: Build docs (Jekyll)
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./docs
+          destination: ./_site
+      - name: Add the release images the flasher installs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # jekyll-build-pages runs in a container and leaves _site root-owned.
+          sudo chown -R "$(id -u):$(id -g)" _site
+          # /firmware/      newest stable release, what the flasher installs by default
+          # /firmware/beta/ newest build of any kind, only while it is newer than that
+          # Stable means not flagged pre-release and no -alpha/-beta/-rc in the tag
+          # (some betas were published without the flag). Only releases that carry
+          # flashable merged images count. The API lists the "Latest" release first
+          # rather than strictly by date, so sort by creation time here.
+          gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=100" --jq \
+            '[.[] | select(.draft | not) | select(any(.assets[]; .name | endswith("-merged.bin")))] | sort_by(.created_at) | reverse' > releases.json
+          NEWEST=$(jq -r '.[0].tag_name // empty' releases.json)
+          STABLE=$(jq -r '[.[] | select(.prerelease | not) | select(.tag_name | test("-(alpha|beta|rc)") | not)][0].tag_name // empty' releases.json)
+          rm releases.json
+          test -n "$NEWEST"
+          # Before the first stable release with images, the newest build is all there is.
+          if [ -z "$STABLE" ]; then STABLE="$NEWEST"; fi
+          publish() {
+            mkdir -p "$2"
+            gh release download "$1" --repo "$GITHUB_REPOSITORY" --pattern '*-merged.bin' --dir "$2"
+            (cd "$2" && ls *-merged.bin > /dev/null &&
+              jq -n --arg tag "$1" '{tag: $tag, files: $ARGS.positional}' --args *-merged.bin > latest.json &&
+              cat latest.json)
+          }
+          publish "$STABLE" _site/firmware
+          if [ "$NEWEST" != "$STABLE" ]; then publish "$NEWEST" _site/firmware/beta; fi
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_site
+      - id: deployment
+        uses: actions/deploy-pages@v4

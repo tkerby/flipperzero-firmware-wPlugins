@@ -2,6 +2,7 @@
 
 #include <furi_hal_serial_types.h>
 #include <furi_hal_version.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <toolbox/colors.h>
 
@@ -30,8 +31,48 @@ typedef enum {
     MenuStyleCompact,
     MenuStyleMNTM,
     MenuStyleCoverFlow,
+    // Append styles to keep existing saved menu_style values compatible.
+    MenuStyleGrid,
+    MenuStyleMacintosh,
+    MenuStyle3D,
+    MenuStyleTerminal,
+    MenuStyleEurocorp,
     MenuStyleCount,
 } MenuStyle;
+
+/** Return the loader plugin filename for a stored menu style, or NULL for List. */
+static inline const char* cfw_menu_style_get_plugin_name(MenuStyle style) {
+    switch(style) {
+    case MenuStyleWii:
+        return "menu_style_wii.fal";
+    case MenuStyleDsi:
+        return "menu_style_dsi.fal";
+    case MenuStylePs4:
+        return "menu_style_ps4.fal";
+    case MenuStyleVertical:
+        return "menu_style_vertical.fal";
+    case MenuStyleC64:
+        return "menu_style_c64.fal";
+    case MenuStyleCompact:
+        return "menu_style_compact.fal";
+    case MenuStyleMNTM:
+        return "menu_style_mntm.fal";
+    case MenuStyleCoverFlow:
+        return "menu_style_coverflow.fal";
+    case MenuStyleGrid:
+        return "menu_style_grid.fal";
+    case MenuStyleMacintosh:
+        return "menu_style_macintosh.fal";
+    case MenuStyle3D:
+        return "menu_style_3d.fal";
+    case MenuStyleTerminal:
+        return "menu_style_terminal.fal";
+    case MenuStyleEurocorp:
+        return "menu_style_eurocorp.fal";
+    default:
+        return NULL;
+    }
+}
 
 typedef enum {
     SpiDefault, // CS on pa4
@@ -105,6 +146,11 @@ typedef struct {
     FuriHalVersionColor spoof_color;
     ScreenFrameColor rpc_color_fg;
     ScreenFrameColor rpc_color_bg;
+    /* Append fields to preserve offsets used by existing external apps. */
+    MenuStyle game_menu_style;
+    uint32_t game_start_point;
+    uint32_t start_point;
+    bool lock_menu_type;
 } CFWSettings;
 
 void cfw_settings_save(void);

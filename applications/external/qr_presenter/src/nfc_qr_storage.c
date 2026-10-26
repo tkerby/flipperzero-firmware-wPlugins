@@ -17,7 +17,7 @@ static bool nfc_qr_ends_with(const char* text, const char* suffix) {
     const size_t text_len = strlen(text);
     const size_t suffix_len = strlen(suffix);
     if(text_len < suffix_len) return false;
-    return strcmp(&text[text_len - suffix_len], suffix) == 0;
+    return strcasecmp(&text[text_len - suffix_len], suffix) == 0;
 }
 
 static void nfc_qr_make_path(char* out, size_t out_size, const char* name, const char* ext) {
@@ -57,7 +57,7 @@ static bool nfc_qr_read_file(
         if(!storage_file_open(file, path, FSAM_READ, FSOM_OPEN_EXISTING)) break;
 
         const uint64_t file_size = storage_file_size(file);
-        if(file_size >= out_size) break;
+        if(file_size > out_size) break;
 
         const size_t read_len = storage_file_read(file, out, (size_t)file_size);
         if(read_len != (size_t)file_size) break;
@@ -102,7 +102,7 @@ static void nfc_qr_make_slug(const char* text, char* out, size_t out_size) {
     }
 }
 
-static void nfc_qr_decode_text_escapes(const char* text, char* out, size_t out_size) {
+void nfc_qr_normalize_text(const char* text, char* out, size_t out_size) {
     size_t pos = 0;
 
     for(size_t i = 0; text[i] && (pos + 1 < out_size); i++) {
@@ -234,26 +234,38 @@ size_t nfc_qr_storage_scan(Storage* storage, NfcQrPayload* payloads, size_t payl
         FileInfo info;
         while((count < payloads_capacity) && storage_dir_read(dir, &info, name, sizeof(name))) {
             if(file_info_is_dir(&info)) continue;
-            if(!nfc_qr_ends_with(name, ".txt")) continue;
+            if(!nfc_qr_ends_with(name, ".txt") && !nfc_qr_ends_with(name, ".vcf")) continue;
+
+            const size_t base_len = strlen(name) - 4;
+            if((base_len == 0) || (base_len >= NFC_QR_NAME_LEN) || (name[0] == '.')) continue;
 
             char base[NFC_QR_NAME_LEN];
-            strlcpy(base, name, sizeof(base));
-            char* dot = strrchr(base, '.');
-            if(dot) *dot = '\0';
+            memcpy(base, name, base_len);
+            base[base_len] = '\0';
 
             NfcQrPayload candidate;
             strlcpy(candidate.name, base, sizeof(candidate.name));
-            nfc_qr_make_path(candidate.txt_path, sizeof(candidate.txt_path), base, ".txt");
+            snprintf(
+                candidate.txt_path, sizeof(candidate.txt_path), "%s/%s", NFC_QR_DATA_DIR, name);
             nfc_qr_make_path(candidate.ndef_path, sizeof(candidate.ndef_path), base, ".ndef");
 
-            if(storage_common_exists(storage, candidate.ndef_path)) {
-                payloads[count++] = candidate;
-            }
+            /* Text is the source of truth; NFC is generated when sharing. */
+            payloads[count++] = candidate;
         }
     }
 
     storage_dir_close(dir);
     storage_file_free(dir);
+    /* Keep selection predictable after an SD refresh or a new import. */
+    for(size_t i = 1; i < count; i++) {
+        NfcQrPayload item = payloads[i];
+        size_t j = i;
+        while(j > 0 && strcasecmp(payloads[j - 1].name, item.name) > 0) {
+            payloads[j] = payloads[j - 1];
+            j--;
+        }
+        payloads[j] = item;
+    }
     return count;
 }
 
@@ -264,9 +276,22 @@ bool nfc_qr_storage_read_text(
     size_t out_size) {
     size_t read_len = 0;
     if(!storage || !payload || !out || (out_size == 0)) return false;
-    if(!nfc_qr_read_file(storage, payload->txt_path, (uint8_t*)out, out_size, &read_len))
-        return false;
-    out[read_len] = '\0';
+    uint8_t raw[NFC_QR_TEXT_MAX + 5];
+    if(!nfc_qr_read_file(storage, payload->txt_path, raw, sizeof(raw), &read_len)) return false;
+    size_t start = 0;
+    if(read_len >= 3 && raw[0] == 0xEF && raw[1] == 0xBB && raw[2] == 0xBF) start = 3;
+    while(read_len > start && (raw[read_len - 1] == '\r' || raw[read_len - 1] == '\n'))
+        read_len--;
+    const size_t text_len = read_len - start;
+    if(text_len == 0 || text_len > NFC_QR_TEXT_MAX || text_len >= out_size) return false;
+    for(size_t i = start; i < read_len; i++) {
+        if(raw[i] == 0 || (raw[i] < 0x20 && raw[i] != '\n' && raw[i] != '\r' && raw[i] != '\t'))
+            return false;
+    }
+    memcpy(out, raw + start, text_len);
+    out[text_len] = '\0';
+    /* Decoding only shortens input, so in-place normalization is safe. */
+    nfc_qr_normalize_text(out, out, out_size);
     return true;
 }
 
@@ -285,11 +310,11 @@ bool nfc_qr_storage_write_payload(
     const char* fixed_name,
     const char* text,
     NfcQrPayload* out_payload) {
-    if(!storage || !text || (text[0] == '\0')) return false;
+    if(!storage || !text || (text[0] == '\0') || strlen(text) > NFC_QR_TEXT_MAX) return false;
 
     char name[NFC_QR_NAME_LEN];
     char normalized_text[NFC_QR_TEXT_MAX + 1];
-    nfc_qr_decode_text_escapes(text, normalized_text, sizeof(normalized_text));
+    nfc_qr_normalize_text(text, normalized_text, sizeof(normalized_text));
 
     if(fixed_name && fixed_name[0]) {
         strlcpy(name, fixed_name, sizeof(name));
@@ -320,4 +345,42 @@ bool nfc_qr_storage_delete_payload(Storage* storage, const NfcQrPayload* payload
 
     return storage_simply_remove(storage, payload->txt_path) &&
            storage_simply_remove(storage, payload->ndef_path);
+}
+
+bool nfc_qr_storage_add_payload(
+    Storage* storage,
+    const char* name,
+    const char* text,
+    NfcQrPayload* out_payload) {
+    if(!storage || !name || !name[0]) return false;
+    char slug[NFC_QR_NAME_LEN];
+    nfc_qr_make_slug(name, slug, sizeof(slug));
+    for(unsigned i = 0; i < 100; i++) {
+        char candidate[NFC_QR_NAME_LEN];
+        if(i == 0) {
+            strlcpy(candidate, slug, sizeof(candidate));
+        } else {
+            snprintf(candidate, sizeof(candidate), "%.24s_%u", slug, i);
+        }
+        char path[NFC_QR_PATH_LEN];
+        nfc_qr_make_path(path, sizeof(path), candidate, ".txt");
+        if(storage_common_exists(storage, path)) continue;
+        nfc_qr_make_path(path, sizeof(path), candidate, ".vcf");
+        if(storage_common_exists(storage, path)) continue;
+        nfc_qr_make_path(path, sizeof(path), candidate, ".ndef");
+        if(storage_common_exists(storage, path)) continue;
+        return nfc_qr_storage_write_payload(storage, candidate, text, out_payload);
+    }
+    return false;
+}
+
+bool nfc_qr_storage_update_payload(Storage* storage, const NfcQrPayload* payload, const char* text) {
+    if(!storage || !payload || !text || strlen(text) > NFC_QR_TEXT_MAX) return false;
+    char normalized[NFC_QR_TEXT_MAX + 1];
+    uint8_t ndef[NFC_QR_NDEF_MAX];
+    nfc_qr_normalize_text(text, normalized, sizeof(normalized));
+    const size_t length = nfc_qr_build_ndef_message(normalized, ndef, sizeof(ndef));
+    if(!length) return false;
+    return nfc_qr_write_file(storage, payload->txt_path, normalized, strlen(normalized)) &&
+           nfc_qr_write_file(storage, payload->ndef_path, ndef, length);
 }

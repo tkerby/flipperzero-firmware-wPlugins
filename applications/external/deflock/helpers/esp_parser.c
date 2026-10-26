@@ -86,6 +86,17 @@ static EspMsgType parse_flock(char** f, int n, EspMsg* out) {
         FlockConfidence by_ssid = flock_ssid_confidence(ssid);
         if(by_ssid < conf) conf = by_ssid;
     }
+    // A NAME IN A PROBE REQUEST BELONGS TO THE NETWORK SOUGHT, NOT THE SENDER.
+    //
+    // Beacons and probe responses carry the transmitter's OWN SSID, so an
+    // anchored "Flock-XXXXXX" there names the device. A probe REQUEST carries
+    // the SSID the sender is LOOKING FOR: a phone that once joined a camera's
+    // provisioning AP, or an installer's laptop, probes for "Flock-A1B2C3" from
+    // its own address, and until this cap that phone was CONFIRMED as a camera.
+    // It is the same attribution error the companion fixed for its rx side,
+    // from the other direction. Likely keeps it on the list and alertable; it
+    // still says a Flock network is known to something nearby.
+    if(conf == FlockConfidenceConfirmed && ftype == 'P') conf = FlockConfidenceLikely;
 
     // Trailing key=value fields. Older firmware omits them and newer firmware may
     // add more, so unknown keys are skipped rather than treated as an error.
@@ -272,6 +283,42 @@ EspMsgType esp_parse_companion_line(char* line, EspMsg* out) {
             snprintf(out->u.banner.build, sizeof(out->u.banner.build), "%s", f[2]);
         }
         out->type = EspMsgBanner;
+        return out->type;
+    }
+    if(strncmp(line, "SIGREV,", 7) == 0) {
+        // One bounded token. Keep the parser forwards-compatible with revision
+        // schemes other than hex, but reject an empty or comma-extended value so
+        // the UI never displays a partly parsed claim.
+        const char* revision = line + 7;
+        size_t n = strlen(revision);
+        if(n == 0 || n >= 16 || strchr(revision, ',') != NULL) return EspMsgIgnore;
+        out->u.sigrev.revision = revision;
+        out->type = EspMsgSigRevision;
+        return out->type;
+    }
+    if(strncmp(line, "SIGTEST,", 8) == 0) {
+        // SIGTEST,<signature-with-commas>,<hash>,<0|1>. Split FROM THE RIGHT:
+        // the production signature is deliberately human-readable and contains
+        // commas, so a normal field splitter would silently cut it apart.
+        char* signature = line + 8;
+        char* pass_field = strrchr(signature, ',');
+        if(!pass_field) return EspMsgIgnore;
+        *pass_field++ = '\0';
+        char* hash_field = strrchr(signature, ',');
+        if(!hash_field) return EspMsgIgnore;
+        *hash_field++ = '\0';
+        if(signature[0] == '\0' ||
+           !((pass_field[0] == '0' || pass_field[0] == '1') && pass_field[1] == '\0')) {
+            return EspMsgIgnore;
+        }
+        char* end = NULL;
+        unsigned long hash = strtoul(hash_field, &end, 16);
+        size_t hash_len = strlen(hash_field);
+        if(hash_len == 0 || hash_len > 8 || !end || *end != '\0') return EspMsgIgnore;
+        out->u.sigtest.signature = signature;
+        out->u.sigtest.hash = (uint32_t)hash;
+        out->u.sigtest.pass = pass_field[0] == '1';
+        out->type = EspMsgSigTest;
         return out->type;
     }
     // ---- WiFi security scan: WBEGIN / W,... / WEND ----
@@ -493,13 +540,16 @@ EspMsgType esp_parse_companion_line(char* line, EspMsg* out) {
         return out->type;
     }
     if(line[0] == 'D' && line[1] == ',') {
-        // D,<mac>,<rssi>,<ch>,<type>,<conf>,<ssid>[,fp=<hex32>][,cls=a|x][,hid=1]
-        // 10 slots = 7 base fields + ALL optional trailers. esp_split_fields
-        // stops splitting once it hits `max`, so a short array does not drop the
+        // D,<mac>,<rssi>,<ch>,<type>,<conf>,<ssid>[,fp=][,sg=][,pr=][,cls=][,hid=]
+        // 7 base fields + FIVE optional trailers = 12. esp_split_fields stops
+        // splitting once it hits `max`, so a short array does not drop the
         // extra token -- it silently glues it onto the previous one, where the
-        // key= prefix check then misses it. Grow this in step with the trailers.
-        char* f[10];
-        int n = esp_split_fields(line, f, 10);
+        // key= prefix check then misses it. At 10 slots a probe line carrying
+        // all five trailers lost whichever came last (cls= or hid=). Sized with
+        // headroom so the next trailer does not repeat that; the test suite
+        // pins the all-trailers line.
+        char* f[16];
+        int n = esp_split_fields(line, f, 16);
         return (out->type = parse_flock(f, n, out));
     }
     return out->type; // EspMsgIgnore

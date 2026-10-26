@@ -1,0 +1,1175 @@
+# Memory budget of Nucleo (contract section 5.x "Memory budget (enforced)"). Read by tools/mem_budget.py.
+# All numbers are bytes; "KB" in the contract and in the Flipper overlay is 1000 bytes (resident 46,887 B = 46.9 KB).
+#
+# Rules (the script prints the same ones on a failure):
+#  * a module's `ratchet` is the largest size it may have; it only ever goes DOWN by itself (`mem_budget.py --update`),
+#    going up needs `mem_budget.py --raise <module> <bytes> --reason "..."`, which is logged at the end of this file.
+#  * `target` is the approved budget: above it is a WARN while the module is within its ratchet, never a FAIL.
+#  * a heap `mode` is predicted by tools/mem_budget.py (model in the contract); below `floor` is a FAIL unless
+#    `known_red = true`, and then it only fails when the prediction drops more than `tol` below `baseline`
+#    (the recorded value; `--update` raises it when the prediction improves and clears known_red once the floor is met).
+
+# TWO BUILDS (2026-10-13, contract 5.x): everything below (ratchets, targets, baselines, known_red) is the RELEASE build, the default `ufbt build` without NUCLEO_DEBUG,
+# which is what the player runs. The DEV build (`NUCLEO_DEBUG=1 ufbt build`: debug overlay, +1.7 KB resident) is only checked against the same heap `floor`s
+# (FAIL under a floor; no ratchet, no baseline, known_red ignored): tools/mem_budget.sh builds both. The calibration offsets below were fitted on DEV builds on the
+# device (image 46,887); the model just uses the release image, so they are carried over until a release device reading re-fits them (`--calibrate explore`).
+
+[meta]
+tol = 256                  # slack in bytes: ratchet = measured + tol when set; known-red regression tolerance
+
+[system]
+free_heap = 146500         # device, no app open (lead, 2026-10-12)
+host_cache_bytes = 2679    # hero facing (1,575) + draw list and pin layer (864 + 240, ONE block since contract 70): hw_main's `J` token excludes them, the next world frame allocates them again (the streamed NPC frames are left out of the peaks and of explore_live separately: contract 5.x, task L)
+loader_stays = 1500        # ELFFile + section map + FlipperApplication: stay in the heap while a plugin is loaded (contract 5, MEM3)
+real_maps_below = 200      # map ids >= 200 are test maps (maps/maps.txt); only the real ones count for "the biggest map"
+extra_real_maps = [229, 230]   # D1 (contract 68): the Ruinas del Origen and the Gruta del Eclipse live in the reserved range 229 .. 239 (above the test fixtures' base): they count as real maps
+route1_map = 3             # the calibration map (Ruta 1)
+shop_map = 6               # the map whose clerk opens the shop (tienda)
+
+# ---- static sizes: text + data + bss of the linked ELF (arm-none-eabi-size), contract section 5 "Image" table
+[modules.resident]
+elf = "elementis_zeta_d.elf"
+target = 46000
+ratchet = 44216            # 45,108 (C5 memory recovery, contract 44: per-file size flags) + 256; was 45,638
+
+[modules.battle]
+elf = "ez_battle_d.elf"
+fal = "ez_battle.fal"
+target = 30000
+ratchet = 31318            # 26,294 (legendary intro, contract 52: +364 B on top of the IR LINK's 25,930) + 256; was 25,970
+
+[modules.menu]
+elf = "ez_menu_d.elf"
+fal = "ez_menu.fal"
+target = 12000
+ratchet = 14122            # 14,122 measured (contract 81: field moves + the Flauta Clara); 11,866 (C5 memory recovery, contract 44: one translation unit + size flags) + 256; was 12,406
+
+[modules.ui]
+elf = "ez_ui_d.elf"
+fal = "ez_ui.fal"
+target = 6000
+ratchet = 14560             # 13,888 (C5 memory recovery, contract 44: one translation unit + size flags) + 256; was 14,572
+
+[modules.pc]               # M5 memory recovery (contract 25.6): the PC box, the trainer card and the store scene, split off the menu plugin
+elf = "ez_pc_d.elf"
+fal = "ez_pc.fal"
+target = 9000
+ratchet = 12888             # 12,672 (contract 76: the Registro left for the casino plugin, -4,832 B, the trainer card came back, +1,188 B) + 256; was 16,600 (contract 74); 13,694 (C6 world systems, contract 46: the Planeador list, FLY table, gift-to-box) + 256 before that
+
+[modules.casino]           # C4-C (contract 37): the casino (slot machine, prize counter, coin purchase): the 5th plugin
+elf = "ez_casino_d.elf"
+fal = "ez_casino.fal"
+target = 6000
+ratchet = 14413             # 14,017 (contract 76: the Registro joined it, the trainer card went back to the PC plugin) + 256; was 10,257 (contract 74); 5,077 (C5 memory recovery, contract 44: one translation unit + size flags) + 256 before that
+
+[modules.link]             # IR LINK (contract 45): the Club de Enlace (trade + exhibition battle over the infrared port): the 6th plugin
+elf = "ez_link_d.elf"
+fal = "ez_link.fal"
+target = 12000
+ratchet = 10668            # 10,412 (first measured build, contract 45: unity build + PLUGIN_LINK size flags; 10,700 without the flags) + 256
+
+[modules.ending]           # C9 (contract 50): the Hall of Legacy scenes + PC browser, the credits and FIN (hof.bin): the 7th plugin
+elf = "ez_ending_d.elf"
+fal = "ez_ending.fal"
+target = 8000
+ratchet = 5576             # 5,328 (first measured build, contract 50: unity build + PLUGIN_ENDING size flags; 5,340 without them) + 256
+
+# ---- device calibration: the model is anchored to numbers MEASURED on the Flipper (debug overlay / serial log).
+# `mem_budget.py --calibrate <name> <measured_bytes> --ref "<commit, note>"` re-fits `offset` from the current tree's inputs
+# (use it after the maintainer has measured a build on the device; never to make a red number green).
+[calibration.explore]      # exploring Ruta 1: the overlay's F (free heap)
+date = "2026-10-12"
+ref = "lead device, after reboot, commit f399c95 (Ruta 1 exploring F)"
+measured = 53700
+offset = 9787
+image = 46887
+host_live = 28190
+map = 3
+
+[calibration.battle_low]   # wild battle on Ruta 1: the overlay's minimum since boot (the battle's own peak, MEM3)
+date = "2026-10-12"
+ref = "lead device, after reboot, commit f399c95 (wild battle, minimum since boot)"
+measured = 23900
+offset = 916
+image = 46887
+plugin = 31732
+before_load = 12719
+scene_total = 12955
+
+[calibration.menu_open]    # not measured on the device yet: `--calibrate menu_open <bytes>` when it is
+offset = 0
+
+[calibration.shop_open]    # not measured on the device yet
+offset = 0
+
+# ---- heap modes: expected free heap at the critical points; floor = the goal, baseline = what the model said when recorded
+[modes.explore_biggest]    # exploring on the biggest real map
+# floor 55000 -> 50000 (2026-10-13, lead + user): every plugin mode (battle load/peak, menu, shop, ui) is now
+# modelled on the biggest map and meets its own >= 30 KB floor; the exploring floor is only a backstop.
+floor = 50000
+dev_floor = 49000      # DEV build only (2026-10-14, C4-B: see the dev_floor note at the end)
+known_red = false
+baseline = 52642
+
+[modes.explore_route1]     # exploring Ruta 1 (= the calibration point)
+floor = 55000
+dev_floor = 54000      # DEV build only (2026-10-14, C4-B: see the dev_floor note at the end)
+known_red = false
+baseline = 59319
+
+[modes.battle_load]        # the plugin load transient (sections + relocation data + loader bookkeeping), any map
+floor = 30000
+known_red = false
+baseline = 40083
+
+[modes.battle_peak_wild]   # the battle scene's own peak, wild battle: the lowest point of a battle (MEM3)
+floor = 30000
+dev_floor = 29000      # DEV build only (2026-10-14, C4-B: see the dev_floor note at the end)
+known_red = false
+baseline = 32277
+
+[modes.battle_peak_trainer] # same at a trainer battle (the intro keeps the hero's facing: -1.6 KB)
+floor = 30000
+dev_floor = 29000      # DEV build only (2026-10-14, C4-B: see the dev_floor note at the end)
+known_red = false
+baseline = 32244
+
+[modes.menu_open]          # party / bag screen opened on the biggest map (max of the load transient and the screen's peak)
+floor = 30000
+known_red = false
+baseline = 35349
+
+[modes.shop_open]          # shop screen on the shop map
+floor = 30000
+known_red = false
+baseline = 42541
+
+[modes.ui_open]            # name picker / options / Guardar screen on the biggest map (UI plugin)
+floor = 30000
+dev_floor = 29000      # DEV build only (2026-10-14, C4-B: see the dev_floor note at the end)
+known_red = false
+baseline = 32606
+
+[modes.pc_open]            # PC box / trainer card / post-battle store opened on the biggest map (PC plugin; the PC visit's host peak is its scene)
+floor = 30000
+known_red = false
+baseline = 35659   # was 33,918; contract 76: the Registro moved to the casino plugin, the card came back (+1,797 release, DEV 29,617 -> 33,414)
+
+[modes.casino_open]        # slot machine / prize counter opened on the biggest map (casino plugin; its scene is the loader's margin: no host probe)
+floor = 30000
+known_red = false
+baseline = 33625
+
+[modes.link_open]          # trade / team exchange opened on the biggest map (link plugin; its scene is the loader's margin: no host probe)
+floor = 30000
+known_red = false
+baseline = 36546
+
+[modes.ending_open]        # the Hall of Legacy / credits scene opened on the biggest map (ending plugin; its scene is the loader's margin: no host probe)
+floor = 30000
+known_red = false
+baseline = 41726               # first measured (contract 50), 4 KB loader margin
+
+# ---- host probes (the scripts run by tools/mem_budget.py; the same harnesses as the contract's host tests)
+[host]
+trainer_script = "G1,5 L0=6 Ex1 w400 $a T1 g2 E=1 Q0,faint X0 r9000,150 gx $e"   # the same for a trainer battle won to the end (intro, fight, the beaten trainer): battle_peak_trainer
+battle_script = "G1,5 w400 $a W3,4 g2 gx $e"        # tools/host_battle/ui_main, UI_MAP = route1_map: $a = exploring heap, $e = battle peak
+party_script = "m2,0 K3,0 w100 X p5,2,3 w100 to w900 X ?top=CHOICE Y X ?run=0 ?top=WORLD ?party=1 ?sp0=3 w300 J bS w100 s to w300 s ?top=PARTY ?pmode=0 ?plug=2 ?stack=3 ?pheap=1 to w100 s ?pmode=1 to w300 s ?pmode=2 ?ppage=0 ?pcur=0 ?pheap=2 tr w100 s tr w100 s tr ?ppage=2 tl ?ppage=1 tl tl ?ppage=0 tr tr bS ?pmode=0 ?pheap=1 bS w300 ?top=MENU ?plug=0 ?stack=2 ?pheap=0 ?leak=0 ?peakle=999999"
+
+# ---- raise log (appended by `mem_budget.py --raise`; never edit by hand)
+
+[[raise_log]]
+date = "2026-10-12"
+kind = "ratchet"
+name = "resident"
+old = 44507
+new = 45539
+reason = "L: streamed NPC frames (map_actor_view, the LRU cache, bank_fill_view, validation): +1,032 B of code (44,251 -> 45,283); pays back 2.0 KB (Ruta 1) to 5.9 KB (lab) of bank per map"
+
+[[raise_log]]
+date = "2026-10-12"
+kind = "baseline"
+name = "battle_load"
+old = 42637
+new = 41605
+reason = "L: +1,032 B of resident code for the streamed NPC frames (the battle modes lose exactly the code growth; the trade is +2.0 .. +5.9 KB exploring per map)"
+
+[[raise_log]]
+date = "2026-10-12"
+kind = "baseline"
+name = "battle_peak_wild"
+old = 33066
+new = 32034
+reason = "L: +1,032 B of resident code for the streamed NPC frames (the battle modes lose exactly the code growth; the trade is +2.0 .. +5.9 KB exploring per map)"
+
+[[raise_log]]
+date = "2026-10-12"
+kind = "baseline"
+name = "battle_peak_trainer"
+old = 31491
+new = 30459
+reason = "L: +1,032 B of resident code for the streamed NPC frames (the battle modes lose exactly the code growth; the trade is +2.0 .. +5.9 KB exploring per map)"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "ui"
+old = 5356
+new = 9572
+reason = "K: the naming keyboard + nickname prompt (scene_kb.c 2.6 KB), the Unicode <-> font code table (names.c) and the save.bin file code moved out of the resident app (save_io.c ~1 KB: peek / write / load are only used by the title, the Guardar screen and the continue job): resident +8 B instead of +1.9 KB, so the battle modes keep their floors; ui_open stays at 36 KB free (floor 30 KB)"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "baseline"
+name = "battle_load"
+old = 41605
+new = 41284
+reason = "K: resident +8 B, battle plugin +92 B (nicknames), UI plugin +4.2 KB"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "baseline"
+name = "battle_peak_wild"
+old = 32034
+new = 31770
+reason = "K: resident +8 B (nickname cache and PartyState v3 offset by the save file code moving into the UI plugin), battle plugin +92 B (nicknames in messages and the list), UI plugin +4.2 KB"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "baseline"
+name = "battle_peak_trainer"
+old = 30459
+new = 30195
+reason = "K: resident +8 B (nickname cache and PartyState v3 offset by the save file code moving into the UI plugin), battle plugin +92 B (nicknames in messages and the list), UI plugin +4.2 KB"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "baseline"
+name = "shop_open"
+old = 43491
+new = 43230
+reason = "K: resident +8 B (nickname cache and PartyState v3 offset by the save file code moving into the UI plugin), battle plugin +92 B (nicknames in messages and the list), UI plugin +4.2 KB"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "baseline"
+name = "ui_open"
+old = 41524
+new = 36186
+reason = "K: resident +8 B (nickname cache and PartyState v3 offset by the save file code moving into the UI plugin), battle plugin +92 B (nicknames in messages and the list), UI plugin +4.2 KB"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "ui"
+old = 9572
+new = 10384
+reason = "Elementis Zero title (approved design B): logo/Cristal/ZERO from title.bin, parade, separate Continuar list (+812 B)"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "resident"
+old = 45539
+new = 46000
+reason = "M4 zone identity: zone-name banner + animated tiles / objects in the world (+460 B: world.c +320 banner_update / world_banner_off / animation clock, scene_world.c +100 the plate, render.c +56 anim_frame; 45,491 -> 45,951); ratchet set to the 46,000 target, not measured + 256"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "baseline"
+name = "battle_peak_trainer"
+old = 30195
+new = 31063
+reason = "M4: the trainer peak is now predicted from its own host scenario (a trainer battle won to the end) instead of 'wild peak - 1,575': the hero's facing is freed by SET_INTRO_DONE before the fight, so the trainer peak is the wild peak + 33 B (30,029 -> 31,571 before the +460 B of resident growth of the zone banner)"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "ui"
+old = 10384
+new = 12854
+reason = "M5-B evolution scene (scene_evo.c +2.4 KB: silhouette animation, learn/forget dialogue) + pending nickname in scene_kb.c"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "menu"
+old = 10248
+new = 18240
+reason = "M5-C PC box + trainer card (+ names.c for the box nicknames): box.c 1.5 KB, scene_box.c 3 KB, scene_card.c 1.2 KB, names.c 1.3 KB, save encoder"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "battle"
+old = 25426
+new = 26082
+reason = "M5-A forget-move UI (the forget-a-move dialog in the battle plugin: +656 B, contract 23)"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "ui"
+old = 12854
+new = 13414
+reason = "M5 memory recovery (contract 25.6): the UI plugin now carries write_file (plugin_fs.c, +280: nothing resident writes a file any more), settings_io.c (+130) and the UiPlugin.open dispatch (+28), 12,598 -> 13,158; paid for by -1,661 B of resident code (47,541 -> 45,880); ui_open stays at 30.9 KB (floor 30 KB)"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "baseline"
+name = "battle_load"
+old = 41284
+new = 39761
+reason = "post-M5 memory reserve (contract 27): the battle data tables (now 0.7 KB, were 1.9 KB) stay in the heap across the plugin load instead of being released and read again, so the load sits 0.7 KB lower than with the release (the peaks, the real low point, gained 1.7 KB)"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "baseline"
+name = "ui_open"
+old = 36186
+new = 32671
+reason = "post-M5 memory reserve (contract 27): re-based on the current plugin (36,186 was the MEM2/M3-F value; task K and the M5 recovery moved it to 30.9 KB; the reserve brings it to 32.7 KB)"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "resident"
+old = 45585
+new = 46250
+reason = "post-M5 sound engine (sound.c 762 B + hooks), approved by the user; memory reserve keeps every mode >= +1.1 KB over its floor"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "ui"
+old = 13326
+new = 13430
+reason = "post-M5 sound: title music, Options Sonido row, evolution jingles"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "resident"
+old = 46250
+new = 46506
+reason = "sound engine v2 (instrument tables, arpeggio, vibrato / slides, drums, REP, index u16 sizes): +256 B resident (contract 28)"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "resident"
+old = 46506
+new = 46726
+reason = "C2-S1 items: about +120 B of mine (Ward Spray tick / level filter in on_step_arrival + encounter_check, world_go_respawn shared with the blackout, party_ready returns the level, items.bin kind check, +1 symbol-table entry); the rest of the +220 is the Registro / pause-menu work of C2-S2"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "battle"
+old = 26082
+new = 26088
+reason = "C2-S1: the regenerated reg_gen.h (REG_IT_TXT +7 items, REG_MV_TXT +2 moves) is copied into each plugin that includes it (+6 B)"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "menu"
+old = 10054
+new = 11224
+reason = "C2-S1: technique-disc teaching (compatibility mask read, forget-a-move list, dialogue chain) in scene_party.c, Ward Spray / Exit Wisp / disc use in scene_bag.c: +1,170 B (9,798 -> 10,968); the menu plugin was 7.7 KB above its floors"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "ui"
+old = 13430
+new = 13434
+reason = "C2-S1: regenerated reg_gen.h text arrays (+4 B)"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "pc"
+old = 8581
+new = 12025
+reason = "C2-S2 Registro (contract 30): scene_reg.c in the PC plugin, 8,325 -> 11,769 B (+3,444; relocation data 2,162 -> 2,677); pc_open stays 33.8 KB against its 30 KB floor with the Registro screen's own heap peak (1,620 B) counted"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "resident"
+old = 46726
+new = 46618
+reason = "C2-S2 Registro: the pause menu's seventh entry + its opener, +112 B resident (scene_menu.o +102, menu_open.o +10; the labels went from 16 to 12 codes to pay for the seventh row's bss). Only this share is raised: the rest of the growth over the old ratchet is C2-S1's (items) and is theirs to account for"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "baseline"
+name = "pc_open"
+old = 39147
+new = 33763
+reason = "C2-S2 Registro: the PC plugin grew by 3,444 B (+515 B of relocation data) for the new screen; pc_open follows the plugin one for one (floor 30,000 still met; the other modes' erosion is the resident growth of the whole C2 wave, not this screen)"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "resident"
+old = 46618
+new = 46726
+reason = "C2-S2: restores the ratchet to the 46,726 B another change (C2-S1) had just raised it to (my --raise of the Registro's own +112 B had overwritten it with a lower number; the +112 B of the pause menu's seventh entry are part of 46,726)"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "resident"
+old = 46726
+new = 46834
+reason = "C2 content: reg_gen.h text-id tables grew with 24 species, 15 moves, 23 trainers, 3 items (2 B per entry, generated data; the only C edit is monpic.c +12 B and 0-byte asserts, contract 31)"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "battle"
+old = 26088
+new = 26228
+reason = "C2 content: reg_gen.h text-id tables grew with 24 species, 15 moves, 23 trainers, 3 items (2 B per entry, generated data; the only C edit is monpic.c +12 B and 0-byte asserts, contract 31)"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "ui"
+old = 13434
+new = 13552
+reason = "C2 content: reg_gen.h text-id tables grew with 24 species, 15 moves, 23 trainers, 3 items (2 B per entry, generated data; the only C edit is monpic.c +12 B and 0-byte asserts, contract 31)"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "resident"
+old = 46834
+new = 46842
+reason = "Species 50 (gleamlet): the generated REG_SP_TXT[] text-id table grows by one uint16 (2 B) in every module that links a copy of it (generated nucleo/gen/reg_gen.h); species records themselves stay on the SD (0 heap)."
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "battle"
+old = 26228
+new = 26230
+reason = "Species 50 (gleamlet): the generated REG_SP_TXT[] text-id table grows by one uint16 (2 B) in every module that links a copy of it (generated nucleo/gen/reg_gen.h); species records themselves stay on the SD (0 heap)."
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "ui"
+old = 13552
+new = 13558
+reason = "Species 50 (gleamlet): the generated REG_SP_TXT[] text-id table grows by one uint16 (2 B) in every module that links a copy of it (generated nucleo/gen/reg_gen.h); species records themselves stay on the SD (0 heap)."
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "resident"
+old = 46842
+new = 45391
+reason = "release build: NUCLEO_DEBUG off"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "battle"
+old = 26230
+new = 26486
+reason = "release build: NUCLEO_DEBUG off"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "menu"
+old = 11224
+new = 11290
+reason = "release build: NUCLEO_DEBUG off"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "ui"
+old = 13558
+new = 13730
+reason = "release build: NUCLEO_DEBUG off"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "pc"
+old = 12025
+new = 12121
+reason = "release build: NUCLEO_DEBUG off"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "baseline"
+name = "explore_biggest"
+old = 52194
+new = 52348
+reason = "release build: NUCLEO_DEBUG off"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "baseline"
+name = "explore_route1"
+old = 57976
+new = 58130
+reason = "release build: NUCLEO_DEBUG off"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "baseline"
+name = "battle_load"
+old = 40066
+new = 39953
+reason = "release build: NUCLEO_DEBUG off"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "baseline"
+name = "battle_peak_wild"
+old = 32206
+new = 32114
+reason = "release build: NUCLEO_DEBUG off"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "baseline"
+name = "battle_peak_trainer"
+old = 32173
+new = 32081
+reason = "release build: NUCLEO_DEBUG off"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "baseline"
+name = "menu_open"
+old = 37768
+new = 36554
+reason = "release build: NUCLEO_DEBUG off"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "baseline"
+name = "shop_open"
+old = 44670
+new = 43456
+reason = "release build: NUCLEO_DEBUG off"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "baseline"
+name = "ui_open"
+old = 32984
+new = 32728
+reason = "release build: NUCLEO_DEBUG off"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "baseline"
+name = "pc_open"
+old = 33763
+new = 35246
+reason = "release build: NUCLEO_DEBUG off"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "menu"
+old = 11290
+new = 11426
+reason = "C3-A (contract 32): the party picker + the in-game trade (scene_party.c), the bracelet-module rows of the bag (scene_bag.c): +392 B of plugin code; menu_open keeps ~5.5 KB over its floor"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "pc"
+old = 12121
+new = 12700
+reason = "C3 day care (contract 33): daycare_pc.c in the PC plugin (+552 B: deposit, withdraw with the lazy level-ups, levels gained, price; reuses box_from_party / box_party_drop / box_to_party); the UI plugin had no room for it (ui_open 0.6 KB under its floor with it), pc_open keeps ~3.9 KB over its floor"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "resident"
+old = 45391
+new = 46000
+reason = "C3 wave 1: the day care (+240 B: PartyState +68 B bss, daycare.c 128 B, menu_open_daycare 44 B; music.bin format 3 costs 0 B: the 512-slot table is on the card, sound.o 1,018 B before and after) and natives / world hooks (~+350 B); ratchet set to the 46,000 target like the M4 zone-identity raise"
+
+[[raise_log]]
+date = "2026-10-13"
+kind = "ratchet"
+name = "menu"
+old = 11426
+new = 11450
+reason = "C3-A: picker + trade + module rows + the bad-species guard of the trade (+24 B); menu_open keeps 4+ KB over its floor"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "ratchet"
+name = "menu"
+old = 11450
+new = 11492
+reason = "C3 content (contract 34): the generated text-id tables of reg_gen.h grew by the 11 species, 9 moves, 18 trainers and 1 item of chapter 3 (+42 B in the menu plugin, which links the name tables); nothing else changed there"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "ratchet"
+name = "resident"
+old = 46000
+new = 46605
+reason = "C4-B (contract 36): +164 B of the C4-B work: the 18 item names in REG_IT_TXT (+36), scene_menu.c's update that hands a stone's evolution to the UI plugin (+32), the world_bike_toggle table entry (+8) which links world_bike_toggle (+86, dead before the bag called it); the rest of the figure is C4-A / C4-C resident growth already in the tree (B-less baseline 46,441)"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "ratchet"
+name = "battle"
+old = 26486
+new = 26556
+reason = "C4-B: unidentified ghosts in scene_battle.c (+200: the ghost flag, the silhouette, the intro text, the refusals of Fight / Bag / Party, Run's 255 attempts) and 18 more item names in REG_IT_TXT (+36); battle_peak_wild / trainer keep +222 / +189 B over their floors"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "ratchet"
+name = "menu"
+old = 11492
+new = 12122
+reason = "C4-B: evolution stones and vitamins in the party list (stone_on / vit_on / the inline bc_stone_evo, inlined into p_input: +446 B; the vitamin stat-name table +10), the bike's Usar and the quit-after-dialog state of the bag (b_input +48, resume +34), 18 item names (+36 in each of the two translation units that link the name table = +72); menu_open keeps 3.7 KB over its floor (the other +6 B of the figure are C4-C's)"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "ratchet"
+name = "ui"
+old = 13730
+new = 14458
+reason = "C4-B: the evolution scene runs for a stone (Evo.to / Evo.stone, the target is found by the menu plugin and handed over in SceneCtx.stone_to: scene_evo_open +48, e_update -24 = +24 B, no lookup code in this plugin); the rest of the figure is C4-A's (the elevator list scene, ui_open_list) already in the tree (baseline without C4-B 14,434)"
+
+# dev_floor (2026-10-14, C4-B; the DEV build only, contract 36.8): the DEV build (NUCLEO_DEBUG=1, +1,704 B resident of overlay / debug code) carries every wave's growth with a
+# floor of its own. With C4-A (bike, dark caves, elevator list: resident +~0.9 KB, UI plugin +~0.5 KB), C4-C (casino, coins, save: resident +~0.2 KB) and C4-B (resident +164, battle
+# +236, menu +624, UI +24) in one tree the DEV rows fall by 1.0 - 1.4 KB: explore_biggest 49,078, explore_route1 54,860, battle_peak_wild 28,518, battle_peak_trainer 28,485,
+# ui_open 28,212 (release: 50,782 / 56,564 / 30,222 / 30,189 / 30,054, every release floor is met). the maintainer allowed the DEV floors down to 29,000 (-1,000 B): that is what
+# these five rows get (explore -1,000 / -1,000 too). The three that are still under it are the maintainer's call (see the C4-B report); the release gate is untouched.
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "baseline"
+name = "casino_open"
+old = 0
+new = 41618
+reason = "C4-C (contract 37): the new casino plugin's heap mode (the 5th plugin: 5,308 B of sections, the loader's 2 KB margin as its scene; no host probe): first recorded value, 41.6 KB against the 30 KB floor (the DEV build 39.9 KB)"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "ratchet"
+name = "pc"
+old = 12700
+new = 13243
+reason = "C4-A (contract 35.5): the elevator's floor list scene (scene_card.c, +544 B of code + 112 B of bss while the plugin is loaded) lives in the PC plugin instead of the UI plugin: ui_open was the tightest row (the DEV build 28.6 KB) and the PC plugin has the heap headroom (pc_open 32.4 KB release / 30.7 KB DEV against the 30 KB floor); the UI plugin dropped to 13,734 B (its ratchet 14,458 can come down)"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "ratchet"
+name = "menu"
+old = 12122
+new = 12406
+reason = "C4 memory recovery (contract 38): shop_load (+259) moved from the resident app into the menu plugin, the one module that needs it (resident -259); the dedup of the name tables (REG_IT_TXT x2 -> the app's one, REG_MV_TXT x2 -> one weak copy: -280) brings the plugin to 12,150, +28 over the old ratchet; 12,406 = size + 256"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "ratchet"
+name = "ui"
+old = 14458
+new = 14572
+reason = "C4 memory recovery (contract 38): bc_load / scan / head (battle_load.c, +980 B, run once at boot) moved from the resident app into the UI plugin (resident -1,100), the UI plugin's name tables / native-name bitmaps dedup (-400) and the elevator list leaving it earlier brought it to 14,316; 14,572 = size + 256 (the old 14,458 was 13,734's headroom plus C4-B)"
+
+# C4 memory recovery (2026-10-14, contract 38): `mem_budget.sh --update` LOWERED the ratchets of resident (46,605 -> 45,182), battle (26,556 -> 26,140) and casino (5,600 -> 5,364) to
+# measured + 256 (the shared name tables, the battle plugin's scene flags, battle_load.c and shop_load out of the resident app, 38.1 - 38.5) and RAISED the baselines of the rows that
+# gained (release: explore_biggest 52,348 -> 52,453, explore_route1 58,130 -> 58,235, battle_load 39,953 -> 40,329, battle_peak_wild 32,114 -> 32,565, battle_peak_trainer 32,081 -> 32,532,
+# casino_open 41,618 -> 43,215). menu_open / shop_open / ui_open / pc_open keep their old (higher) baselines: they stay "eroded" WARNs as before (the plugins that took code in are below them).
+# The two ratchets that went UP are in the raise log above (menu 12,406, ui 14,572): each is the size of its plugin + 256 after it took a function in. No floor and no dev_floor was lowered.
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "ratchet"
+name = "resident"
+old = 45182
+new = 45638
+reason = "C4b prep (contract 40): 1,024 story flags (u16 ids, three 2-bit accessors for the NpcDef / InteractDef / ScriptDef spare bits, opcode bits 6..7 in the VM: ~170 B) + the fog pass of MAPF_FOG maps (render_world ~130 B, its 48 B of tables, the redraw wake in world_update ~35 B: ~210 B); +384 B in all (44,998 -> 45,382), size + 256"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "ratchet"
+name = "casino"
+old = 5364
+new = 5768
+reason = "C5-B (contract 43): the Reserva Salvaje session ops 5..8 of the casino native (reserva_start / reserva_end / reserva_left + the step hook's time-up scene: casino_run +240, rv_end_update +80, rv_clear +40, the scene ops 28) live in the casino plugin so the resident app pays nothing for them: 5,108 -> 5,512 B (+404), ratchet = size + 256"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "ratchet"
+name = "resident"
+old = 45638
+new = 45364
+reason = "C5 memory recovery (contract 44): the four plugins are one translation unit each (-fwhole-program: -312 / -340 / -485 / -339 B of code, -380 / -719 / -814 / -420 B of relocation data), per-file and per-plugin GCC size flags (resident -832, plugins -96 .. -152 each); the C5-A/B growth (resident +480, +66 for the Reserva hook) is paid back. Ratchets = size + 256, baselines = this prediction"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "ratchet"
+name = "battle"
+old = 26140
+new = 26054
+reason = "C5 memory recovery (contract 44): the four plugins are one translation unit each (-fwhole-program: -312 / -340 / -485 / -339 B of code, -380 / -719 / -814 / -420 B of relocation data), per-file and per-plugin GCC size flags (resident -832, plugins -96 .. -152 each); the C5-A/B growth (resident +480, +66 for the Reserva hook) is paid back. Ratchets = size + 256, baselines = this prediction"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "ratchet"
+name = "menu"
+old = 12406
+new = 12122
+reason = "C5 memory recovery (contract 44): the four plugins are one translation unit each (-fwhole-program: -312 / -340 / -485 / -339 B of code, -380 / -719 / -814 / -420 B of relocation data), per-file and per-plugin GCC size flags (resident -832, plugins -96 .. -152 each); the C5-A/B growth (resident +480, +66 for the Reserva hook) is paid back. Ratchets = size + 256, baselines = this prediction"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "ratchet"
+name = "ui"
+old = 14572
+new = 14144
+reason = "C5 memory recovery (contract 44): the four plugins are one translation unit each (-fwhole-program: -312 / -340 / -485 / -339 B of code, -380 / -719 / -814 / -420 B of relocation data), per-file and per-plugin GCC size flags (resident -832, plugins -96 .. -152 each); the C5-A/B growth (resident +480, +66 for the Reserva hook) is paid back. Ratchets = size + 256, baselines = this prediction"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "ratchet"
+name = "pc"
+old = 13243
+new = 13354
+reason = "C5 memory recovery (contract 44): the four plugins are one translation unit each (-fwhole-program: -312 / -340 / -485 / -339 B of code, -380 / -719 / -814 / -420 B of relocation data), per-file and per-plugin GCC size flags (resident -832, plugins -96 .. -152 each); the C5-A/B growth (resident +480, +66 for the Reserva hook) is paid back. Ratchets = size + 256, baselines = this prediction"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "ratchet"
+name = "casino"
+old = 5768
+new = 5333
+reason = "C5 memory recovery (contract 44): the four plugins are one translation unit each (-fwhole-program: -312 / -340 / -485 / -339 B of code, -380 / -719 / -814 / -420 B of relocation data), per-file and per-plugin GCC size flags (resident -832, plugins -96 .. -152 each); the C5-A/B growth (resident +480, +66 for the Reserva hook) is paid back. Ratchets = size + 256, baselines = this prediction"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "baseline"
+name = "explore_biggest"
+old = 52453
+new = 51845
+reason = "C5 memory recovery (contract 44): the four plugins are one translation unit each (-fwhole-program: -312 / -340 / -485 / -339 B of code, -380 / -719 / -814 / -420 B of relocation data), per-file and per-plugin GCC size flags (resident -832, plugins -96 .. -152 each); the C5-A/B growth (resident +480, +66 for the Reserva hook) is paid back. Ratchets = size + 256, baselines = this prediction"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "baseline"
+name = "explore_route1"
+old = 58235
+new = 57917
+reason = "C5 memory recovery (contract 44): the four plugins are one translation unit each (-fwhole-program: -312 / -340 / -485 / -339 B of code, -380 / -719 / -814 / -420 B of relocation data), per-file and per-plugin GCC size flags (resident -832, plugins -96 .. -152 each); the C5-A/B growth (resident +480, +66 for the Reserva hook) is paid back. Ratchets = size + 256, baselines = this prediction"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "baseline"
+name = "battle_load"
+old = 40329
+new = 40128
+reason = "C5 memory recovery (contract 44): the four plugins are one translation unit each (-fwhole-program: -312 / -340 / -485 / -339 B of code, -380 / -719 / -814 / -420 B of relocation data), per-file and per-plugin GCC size flags (resident -832, plugins -96 .. -152 each); the C5-A/B growth (resident +480, +66 for the Reserva hook) is paid back. Ratchets = size + 256, baselines = this prediction"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "baseline"
+name = "battle_peak_wild"
+old = 32565
+new = 32325
+reason = "C5 memory recovery (contract 44): the four plugins are one translation unit each (-fwhole-program: -312 / -340 / -485 / -339 B of code, -380 / -719 / -814 / -420 B of relocation data), per-file and per-plugin GCC size flags (resident -832, plugins -96 .. -152 each); the C5-A/B growth (resident +480, +66 for the Reserva hook) is paid back. Ratchets = size + 256, baselines = this prediction"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "baseline"
+name = "battle_peak_trainer"
+old = 32532
+new = 32292
+reason = "C5 memory recovery (contract 44): the four plugins are one translation unit each (-fwhole-program: -312 / -340 / -485 / -339 B of code, -380 / -719 / -814 / -420 B of relocation data), per-file and per-plugin GCC size flags (resident -832, plugins -96 .. -152 each); the C5-A/B growth (resident +480, +66 for the Reserva hook) is paid back. Ratchets = size + 256, baselines = this prediction"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "baseline"
+name = "menu_open"
+old = 36554
+new = 35349
+reason = "C5 memory recovery (contract 44): the four plugins are one translation unit each (-fwhole-program: -312 / -340 / -485 / -339 B of code, -380 / -719 / -814 / -420 B of relocation data), per-file and per-plugin GCC size flags (resident -832, plugins -96 .. -152 each); the C5-A/B growth (resident +480, +66 for the Reserva hook) is paid back. Ratchets = size + 256, baselines = this prediction"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "baseline"
+name = "shop_open"
+old = 43456
+new = 42541
+reason = "C5 memory recovery (contract 44): the four plugins are one translation unit each (-fwhole-program: -312 / -340 / -485 / -339 B of code, -380 / -719 / -814 / -420 B of relocation data), per-file and per-plugin GCC size flags (resident -832, plugins -96 .. -152 each); the C5-A/B growth (resident +480, +66 for the Reserva hook) is paid back. Ratchets = size + 256, baselines = this prediction"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "baseline"
+name = "ui_open"
+old = 32728
+new = 32420
+reason = "C5 memory recovery (contract 44): the four plugins are one translation unit each (-fwhole-program: -312 / -340 / -485 / -339 B of code, -380 / -719 / -814 / -420 B of relocation data), per-file and per-plugin GCC size flags (resident -832, plugins -96 .. -152 each); the C5-A/B growth (resident +480, +66 for the Reserva hook) is paid back. Ratchets = size + 256, baselines = this prediction"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "baseline"
+name = "pc_open"
+old = 35246
+new = 33918
+reason = "C5 memory recovery (contract 44): the four plugins are one translation unit each (-fwhole-program: -312 / -340 / -485 / -339 B of code, -380 / -719 / -814 / -420 B of relocation data), per-file and per-plugin GCC size flags (resident -832, plugins -96 .. -152 each); the C5-A/B growth (resident +480, +66 for the Reserva hook) is paid back. Ratchets = size + 256, baselines = this prediction"
+
+[[raise_log]]
+date = "2026-10-14"
+kind = "baseline"
+name = "casino_open"
+old = 43215
+new = 42964
+reason = "C5 memory recovery (contract 44): the four plugins are one translation unit each (-fwhole-program: -312 / -340 / -485 / -339 B of code, -380 / -719 / -814 / -420 B of relocation data), per-file and per-plugin GCC size flags (resident -832, plugins -96 .. -152 each); the C5-A/B growth (resident +480, +66 for the Reserva hook) is paid back. Ratchets = size + 256, baselines = this prediction"
+
+[[raise_log]]
+date = "2026-10-15"
+kind = "ratchet"
+name = "battle"
+old = 25798
+new = 25970
+reason = "IR LINK port (contract 45): the exhibition battle (Battle.no_reward, our party as a healed copy inside the friend's block, the friend's name, no bag / Registro / prize in an exhibition): +172 B of the battle plugin (25,542 -> 25,714), size + 256"
+
+[[raise_log]]
+date = "2026-10-15"
+kind = "ratchet"
+name = "link"
+old = 10956
+new = 10668
+reason = "IR LINK port (contract 45): first measured build of the 6th plugin (ez_link.fal), 10,412 B after the measured PLUGIN_LINK size flags (10,700 without; tools/flag_sweep.py), size + 256"
+
+[[raise_log]]
+date = "2026-10-15"
+kind = "baseline"
+name = "link_open"
+old = 30000
+new = 35729
+reason = "IR LINK port (contract 45): the new link plugin's heap mode (10,412 B of sections, the loader's 4 KB margin as its scene; no host probe): first recorded value, 35.7 KB against the 30 KB floor (DEV 34.0 KB)"
+
+[[raise_log]]
+date = "2026-10-15"
+kind = "baseline"
+name = "battle_load"
+old = 40387
+new = 40083
+reason = "IR LINK port (contract 45): the battle plugin +172 B and the resident app +108 B (the native's link ops, the loader's PluginInfo row, g_link_foe) are paid by the battle rows (-304 B each); the floors keep 2.2 KB (release) / 1.6 KB (DEV) of margin"
+
+[[raise_log]]
+date = "2026-10-15"
+kind = "baseline"
+name = "battle_peak_wild"
+old = 32581
+new = 32277
+reason = "IR LINK port (contract 45): the battle plugin +172 B and the resident app +108 B (the native's link ops, the loader's PluginInfo row, g_link_foe) are paid by the battle rows (-304 B each); the floors keep 2.2 KB (release) / 1.6 KB (DEV) of margin"
+
+[[raise_log]]
+date = "2026-10-15"
+kind = "baseline"
+name = "battle_peak_trainer"
+old = 32548
+new = 32244
+reason = "IR LINK port (contract 45): the battle plugin +172 B and the resident app +108 B (the native's link ops, the loader's PluginInfo row, g_link_foe) are paid by the battle rows (-304 B each); the floors keep 2.2 KB (release) / 1.6 KB (DEV) of margin"
+
+[[raise_log]]
+date = "2026-10-15"
+kind = "ratchet"
+name = "pc"
+old = 13354
+new = 13950
+reason = "C6 world systems (contract 46) merged onto the IR link tree: the Planeador's list of towns (a windowed 16-row list scene replacing the 5-row elevator list: +128 B), the FLY town table + visited test (+82 B), the gift-to-box step (+~100 B of world_feat), the list's labels / ids in bss (+92 B), all in the PC plugin where the rare world features live; 13,098 -> 13,694 measured on the merged tree, ratchet = size + 256"
+
+[[raise_log]]
+date = "2026-10-15"
+kind = "ratchet"
+name = "resident"
+old = 45364
+new = 45628
+reason = "C6 content (contract 49): the generated text-id tables of reg_gen.h for 8 species, 10 moves, 3 items and 32 trainers (+20 B over the 45,352 of C5b; the ratchet was 45,364), ratchet = measured 45,372 + 256"
+
+[[raise_log]]
+date = "2026-10-15"
+kind = "ratchet"
+name = "pc"
+old = 13950
+new = 14246
+reason = "C9 systems (contract 50): the PC menu's Hall of Legacy row (+292 B: the row, a scrolling window for the 6 rows on the 64-px screen with its arrows, the request flag): scene_box.c draw_overlay +142, s_input +62, s_enter +32, close_screen +32"
+
+[[raise_log]]
+date = "2026-10-15"
+kind = "baseline"
+name = "ending_open"
+old = 41605
+new = 40581
+reason = "C9 systems (contract 50): the ending plugin's loader margin set to 4 KB (the measured scene peak is 3,594 B) instead of the provisional 3 KB"
+
+[[raise_log]]
+date = "2026-10-15"
+kind = "ratchet"
+name = "battle"
+old = 25970
+new = 26550
+reason = "Legendary encounters (contract 52): the battle plugin's legendary intro, +364 B (25,930 -> 26,294): the AN_LEGEND animation (black beat, white flash, silhouette, cry, top-down fill-in: anim_start / anim_apply / op_tick / draw_fighter / draw_world), the three-flash transition without the wipe (draw_trans / b_update), OK to skip the flashes and the silhouette (b_input), the legend flag read from bit 7 of the wild level (scene_battle_wild / open_common), the enemy plate hidden while it plays; ratchet = measured 26,294 + 256; the resident app grew +12 B (the music pick in battle_open.c)"
+
+[[raise_log]]
+date = "2026-10-15"
+kind = "ratchet"
+name = "resident"
+old = 45628
+new = 45812
+reason = "Roaming wild creatures, PILOT (contract 55): +240 B of resident code (45,472 -> 45,712): the touch (try_step bump, talk_npc OK, the wander step into the hero: 3 calls of feat() and the out-of-line feat +38), the roam wander rule (map_roam_bit) and the step counters (roam_tick, 72 -> 24 B), the NpcState.spr indirection (render_world +8, the load), the map loader's roam block length (+16), the API table's two entries (+16); the placement / touch logic itself is the PC plugin's. ratchet = measured 45,712 + 100"
+
+[[raise_log]]
+date = "2026-10-15"
+kind = "ratchet"
+name = "pc"
+old = 14246
+new = 14622
+reason = "Roaming wild creatures, PILOT (contract 55): the PC plugin's world_feat gets WACT_ROAM (the placement of a roamer out of view: species / level from the grass table, a free cell of the roam area) and WACT_ROAM_HIT (hide it, arm its respawn, queue the wild battle): +512 B (14,010 -> 14,522; the weighted slot pick is shared with the fishing cast, enc_pick 74 B, which got that much smaller). ratchet = measured 14,522 + 100"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "ratchet"
+name = "battle"
+old = 26550
+new = 28046
+reason = "contract 64: 66 moves, 17 new effect kinds (multi-hit, fixed damage, one-hit KO, recoil, drain, suicide, charge, lock, flee, stat_reset, mist, sap seed, counter, parrot, store_dmg, substitute), revive/restore items, event/message translation; paid back in heap by Q_MAX 16, BT_BUF 80, name-buffer union, caches 4/8, ItemDef 2 B"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "ratchet"
+name = "menu"
+old = 12122
+new = 12606
+reason = "contract 64: Life Spark/Life Blaze/Vital Draught/Growth Seed/Vigor Drop use paths (candy evolution and move-learn chain), disc compatibility from files/tm.bin, shop price read from items.bin"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "ratchet"
+name = "battle"
+old = 28046
+new = 28198
+reason = "contract 65 (B1, variocolor + friendship): +308 B of battle code (the tone swap, the sparkle, friendship in the battle rules, the DEV switch, the in-place platform builder) paid for by 576 B of battle-peak heap given back FIRST (the platform builder's 1,311 B working buffer, the effects window 1,536 -> 1,024 B): the release peaks end +276 B higher than before (30,837 / 30,804 -> 31,113 / 31,080)"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "ratchet"
+name = "menu"
+old = 12606
+new = 12794
+reason = "contract 65 (B1): the variocolor star in the party list / summary headers, the variocolor picture of the summary, the Growth Seed's friendship gain and its friendship-evolution rule (+320 B); the menu_open DEV row keeps 2,480 B above its floor"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "ratchet"
+name = "pc"
+old = 14622
+new = 15112
+reason = "contract 65 (B1): the Registro's variocolor star: the party / day-care scan, box_scan_shiny (reads box.bin on the card, 192 B) and the star draws (+432 B); pc_open DEV keeps ~250 B above its floor"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "ratchet"
+name = "battle"
+old = 28198
+new = 29410
+reason = "contract 67 (B3, the Eclipse Form): +996 B of plugin code (the form's rules and types in the core, the chip / animation / pictures / plate mark in the scene) paid for in HEAP: platforms without a mask, no Fighter name buffer, the menu labels in the union, Op queue 9, FX window 896, species cache 2; DEV peaks 29,063 / 29,030 stay over the 29,000 floor"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "ratchet"
+name = "casino"
+old = 5333
+new = 6880
+reason = "contract 69 (C1, the follower): +1,000 B for the follower's reaction (scene_follow.c: the emote bubble, 11 signs, the state / friendship-tier line) and +580 B for the roamers' placement and touch (scene_roam.c), MOVED here from the PC plugin (-536 B there: its DEV pc_open row had 159 B of margin, it has 380 B now); the casino plugin has 8 KB of heap margin (casino_open DEV 38,578 vs the floor 30,000); measured 6,865 + 15"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "ratchet"
+name = "casino"
+old = 6880
+new = 6936
+reason = "D1 (contract 68), merged after C1: the casino plugin hosts the Flipper's clock for the legend of the Origin Fragments (op 13, furi_hal_rtc_get_datetime and the night / dawn / midnight windows); measured 6,921 + 15 with C1's follower; casino_open DEV 38,559 vs the floor 30,000"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "ratchet"
+name = "casino"
+old = 6936
+new = 7496
+reason = "contract 71 (C2, the rustling grass): rustle_spawn (which maps / which tile, two passes over the 7 x 7 tiles near the hero) + rustle_hit (the rarest slot of the grass table, the table's highest level + 3..5) + rustle_cell live in the casino plugin (scene_roam.c) so the resident app pays nothing for them; the resident app SHRANK by 608 B (the timed shaking-grass code of 13.4 is replaced); measured 7,481 + 15; casino_open DEV 39,075 vs the floor 30,000"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "ratchet"
+name = "battle"
+old = 29410
+new = 29774
+reason = "Q72 (contract 72): the one-column move list (the two columns clip in 67 percent of the default es movesets, 51 percent en) = +364 B of battle plugin code (29,154 -> 29,518: layout decided once in fight_open, the scrolling list, the nav, the arrows); ratchet = measured + 256. DEV battle peaks stay over the maintainer's bar (29,3xx)"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "ratchet"
+name = "battle"
+old = 29774
+new = 30270
+reason = "contract 75 (F3, parity), merged after Q72: +496 B of plugin code (the battle animations Off hook, the cry as a creature appears, the style Shift question and free swap); ratchet = Q72's 29,774 + 496"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "ratchet"
+name = "menu"
+old = 12794
+new = 13102
+reason = "Q72 (contract 72): the shop's item name no longer runs under its price (draw_name_fit: a name is cut with an ellipsis to the room left of the price; 21 of 132 shop entries overlapped in es, 7 in en) = +136 B of menu plugin code (12,710 -> 12,846); ratchet = measured + 256"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "ratchet"
+name = "ui"
+old = 14144
+new = 14560
+reason = "contract 75 (F3): the Options screen grew from two rows to five (Texto, Efectos, Estilo: the row table, opt_get / opt_set, the scroll window of three rows, the labels of the visible rows in the plugin's bss: 130 -> 226 B): +408 B; ui_open DEV 30,892 -> 30,378 (floor 29,000)"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "ratchet"
+name = "battle"
+old = 30270
+new = 30502
+reason = "contract 74 (F2), merged after Q72 + F3: the Reparto Total (Team Share) = battle_run.c exp_add + award_exp share (half to the creature in play, the other half over the party size to every living member, one aggregated 'the others' line, silent move learning only into a free slot) and the Peluche Fuga branch in bag_pick (+232 B over the base 29,226; the 48 B over the 29,410 ratchet are the ones above F1's room); battle_peak DEV 29,901 / 29,868 vs the 29,000 floor, release 31,613 / 31,580"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "ratchet"
+name = "pc"
+old = 15112
+new = 15520
+reason = "contract 75 (F3): the Registro's AREA page and CRY action (area_load reading files/regarea.bin, the entry's third page, the zone rows with their how-marks, the three new labels, 12 areas in the screen's heap block): +996 B; pc_open DEV 31,696 -> 30,585 (floor 30,000: 585 B left; the thinnest row), release 33,364 -> 32,253"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "ratchet"
+name = "pc"
+old = 15520
+new = 16600
+reason = "contract 74 (F2), merged after F3: PC boxes 4 -> 12 (scrolling Cambiar caja, box.bin v2 with the v1 migration in box_begin) and the item storage (Dejar obj. / Sacar obj. / Tirar obj.: 50 slots x 99 inside box.bin, quantity box, YES / NO, key items one at a time and never tossed): +856 B over the base 14,476; the trainer card (about 1.3 KB of code) MOVED to the casino plugin to pay for it; DEV pc_open 30,824 vs the 30,000 floor (824 B of margin), release 32,492"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "ratchet"
+name = "casino"
+old = 7496
+new = 10257
+reason = "contract 74 (F2): the casino plugin hosts the trainer card (scene_tcard.c, moved out of the PC plugin: about -1.3 KB there, the PC plugin was at its DEV pc_open floor), the Buscatesoros (hidden-item detector), the Atlas (region map scene reading files/regmap.bin) and the Registro diploma (scene_f2.c), and the name changer's ownership test (bond ot); plugin code is paid only while it is loaded: casino_open DEV 35,787 vs the 30,000 floor (5,787 B of margin), release 37,482"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "ratchet"
+name = "casino"
+old = 10257
+new = 15465
+reason = "contract 76 (PC give-back): the Registro (scene_reg.c: list, entry pages, AREA page, CRY, silhouettes, the variocolor scan of box.bin) MOVED from the PC plugin to the casino plugin because the PC plugin was 383 B under its DEV pc_open floor (29,617 vs 30,000) after F2 + F3; casino 10,257 -> 15,209 (+4,952; reg_scan_shiny now lives in scene_reg.c, plus the PCW/PCL relocation-thinning wrappers copied from pc_unity.c, ~ -480 B of load transient); PC 16,316 -> 11,484 (-4,832); DEV casino_open 35,591 -> 30,605 (floor 30,000: 605 B), release 37,290 -> 32,308; DEV pc_open 29,617 -> 34,747, release 31,289 -> 36,419"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "baseline"
+name = "casino_open"
+old = 42964
+new = 32308
+reason = "contract 76 (PC give-back): the Registro (scene_reg.c) moved INTO the casino plugin (+4.9 KB of plugin code, its scene replaces the 2 KB loader margin as the casino scene when larger): casino_open release 37,290 -> 32,308, DEV 35,591 -> 30,605 (floor 30,000); pc_open gained the same room (release 31,289 -> 36,419, DEV 29,617 -> 34,747)"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "ratchet"
+name = "pc"
+old = 11740
+new = 12928
+reason = "contract 76 (PC give-back), final shape: the Registro (scene_reg.c) left the PC plugin for the casino plugin (-4,832 B) and the trainer card (scene_tcard.c, +1,188 B) came back from the casino plugin to balance the two rows; PC 16,316 -> 12,672 (net -3,644; the ratchet is 16,600 -> 12,928, this entry only undoes the interim lowering to 11,740); DEV pc_open 29,617 -> 33,414 (floor 30,000: 3,414 B), release 31,289 -> 35,086"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "baseline"
+name = "pc_open"
+old = 36419
+new = 35086
+reason = "contract 76 (PC give-back), final shape: Registro to the casino plugin, trainer card back to the PC plugin: pc_open release 31,289 -> 35,086 (DEV 29,617 -> 33,414); replaces the interim 36,419 recorded before the card moved back"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "baseline"
+name = "casino_open"
+old = 32308
+new = 33620
+reason = "contract 76 (PC give-back), final shape: Registro in the casino plugin, trainer card back in the PC plugin: casino_open release 37,290 -> 33,620 (DEV 35,591 -> 31,921, floor 30,000: 1,921 B); replaces the interim 32,308 recorded before the card moved back"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "ratchet"
+name = "menu"
+old = 13102
+new = 13134
+reason = "Contract 73 (F1): Ether / Max Ether in the party scene (the forget list reused as a move picker: ether_on / ether_pick, the T_ETHER phase, M_FORGET Back/OK) + the cure kinds (Cure-All, Defrost) in use_on: +288 B over 12,846; the battle bag items need no menu code"
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "ratchet"
+name = "menu"
+old = 13134
+new = 13166
+reason = "Merge of F1 (contract 73) onto main after Q72 + F2 + F3: the menu plugin measured 13,166 (F1 alone 13,134 on its base; the +32 B is the overlap of F1's Ether picker / cure kinds in the party scene with F2's and Q72's menu changes, both accepted). No new feature."
+
+[[raise_log]]
+date = "2026-10-16"
+kind = "ratchet"
+name = "menu"
+old = 13166
+new = 13294
+reason = "Contract 77 (F4): PP Extra (PP Plus) in the party scene: the Ether picker (ether_on / ether_pick) also serves the new item kind ppup (pp_item_ok: the move may take one more PP Plus, the byte's top two bits; base / 5 PP added), the maxima of Ether / Vigor Drop / the summary page go through bc_pp_max (an API call, the PP byte's top bits are masked on every read): +128 B over 13,166 net of the SceneCtx field reorder that already gave the menu plugin -84 B (so the PP Extra code itself is about +212 B). The row has room: DEV menu_open 33,020 vs the 30,000 floor"
+
+[[raise_log]]
+date = "2026-10-17"
+kind = "ratchet"
+name = "menu"
+old = 13294
+new = 14122
+reason = "Contract 81: the party menu's field moves (Dig / Teleport / Hearty Broth: the option box grows and scrolls, opt_open / opt_pick / field_escape / soft_begin / soft_give, the shared scene_escape also used by the bag's Exit Wisp, +3 state bytes) and the Flauta Clara used from the bag (wakes the party's sleepers): +828 B over 13,294; the menu_open row stays 1.8 KB over its floor (DEV 31,802 vs 30,000)"
+
+[[raise_log]]
+date = "2026-10-17"
+kind = "ratchet"
+name = "casino"
+old = 14273
+new = 14413
+reason = "Contract 81: scene_poison.c, the overworld poison (the damage, the code-drawn flash with its sound, one faint box per creature, the blackout when nobody is left standing) is the casino plugin's new world act WACT_POISON: +476 B over 13,937 (14,273 was the ratchet); the casino_open row stays 1.6 KB over its floor (DEV 31,653 vs 30,000)"
+
+[[raise_log]]
+date = "2026-10-17"
+kind = "ratchet"
+name = "battle"
+old = 30502
+new = 30706
+reason = "contract 82: shared experience + traded x1.5, Dig/Mind Wave, Pilfer, the Flauta Clara in battle (+364 B over the base 30,342) after 164 B of give-back (float sin/round out of battle_fx.c, half-stored platforms, shared platform block, 4 more size flags); the DEV battle peaks still rise by >= 300 B vs fd07bab"
+
+[[raise_log]]
+date = "2026-10-17"
+kind = "ratchet"
+name = "battle"
+old = 30706
+new = 31318
+reason = "contract 83: the trainer AI ON (BF_AI_ITEMS + BF_AI_MOD3, +663 B of plugin: ai_turn 226, ai_mods 196, the item scene lines) on top of the merge of (30,706) and Q80 (+68); paid in the resident app and the heap (per-function noinline / always_inline picks, the packed type chart, group size flags), the release battle peaks stay >= 30,000"

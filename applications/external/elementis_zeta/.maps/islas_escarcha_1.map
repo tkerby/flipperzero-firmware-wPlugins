@@ -1,0 +1,73 @@
+# Islas Escarcha, floor 1 (C7, contract 53), 28 x 22, a CAVE (the Exit Wisp works): BIG pale ICE slabs (`ice_<i%2><j%2>`), crystal-vein walls on the back sides and low snow drifts on the front sides, ice pillars,
+# tufts of frost-grass (the wild tiles). The EAST mouth (27,5) comes from Ruta 19's island (spawn `east`), the WEST mouth (1,16) leads to Ruta 20's islet: floor 1 is the way ACROSS the islands, three chambers joined by corridors; the rope ladder (20,11) goes down
+# to floor 2 (the optional puzzle: Aurowl). A Prime Salve, an Ultra Crystal and a sign.
+@map islas_escarcha_1
+@size 28 22
+@interior no
+@cave yes
+@area islas_escarcha
+@bg 0
+@surf yes
+@encounters grass rate=14
+  echowing 40 44 25
+  echolet 40 44 5
+  belubub 38 42 25
+  plattypuzz 38 42 20
+  lazatee 38 41 15
+  barnacub 38 42 10
+@end
+# Roaming wild creatures (contract 55, rollout in 63): 2 creatures of this table wander the whole walkable floor (grass included); touching one starts that wild battle.
+@roam 2 table=grass area=cdefg period=1800
+@spawn east 26 5 W
+@spawn west 2 16 E
+@spawn ladder 20 12 S
+@legend
+  .  tile=none
+  a  tile=none object=snow_drift
+  b  tile=none object=cwall
+  c  tile=frost_tuft
+  d  tile=ice_11
+  e  tile=ice_10
+  f  tile=ice_00
+  g  tile=ice_01
+  h  tile=ice_01 object=ice_pillar
+  i  tile=ice_01 object=snow_drift
+  j  tile=ice_11 object=snow_drift
+  k  tile=ice_11 object=ice_pillar
+  l  tile=ice_10 object=ice_pillar
+  m  tile=ice_01 item=ultra_cristal
+  n  tile=ice_10 object=snow_drift
+  o  tile=ice_11 object=ice_mouth
+  p  tile=ice_01 door=rope_ladder
+  q  tile=ice_00 object=sign interact=look text=esc1.sign
+  r  tile=ice_10 object=ice_mouth
+  s  tile=ice_00 object=snow_drift
+  t  tile=ice_00 object=ice_pillar
+  u  tile=ice_11 item=prime_salve
+  v  tile=ice_11 item=disc_19
+@grid
+  ............................
+  ............................
+  ..............abbbbbbbbbbbb.
+  ..............bvhdcccccdgkma
+  ..............befecccccnfefb
+  ..............bdgdcccccdgdgo
+  ..............befefefefefefa
+  ..............bdgdgdhdgdhdia
+  ...............aabfeaaaaaaaa
+  .................bgda.......
+  ..............abbbfebbb.....
+  ..............bdhjgdpdga....
+  .abbbbbbbb....befefeflqa....
+  .bgkgdidgda...bdgdgdgdga....
+  .bfefefeflbbbbbefccccefa....
+  abgdccccgdgdhdgdgccccdga....
+  brfeccccfefefesefccccefa....
+  .bgjccccgdaaaabjgccccdha....
+  .bfefefetea...befefefefa....
+  .biugdgdgda....aaaaaaaaa....
+  ..aaaaaaaaa.................
+  ............................
+@warp o -> ruta_19 spawn=island
+@warp r -> ruta_20 spawn=island
+@warp p -> islas_escarcha_2 spawn=up

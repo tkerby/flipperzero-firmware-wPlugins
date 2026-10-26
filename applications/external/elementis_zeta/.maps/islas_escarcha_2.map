@@ -1,0 +1,72 @@
+# Islas Escarcha, floor 2 (C7, contract 53), 22 x 20, a cave. THE BOULDER PUZZLE (simplified: the current of lowest floor dies when the holes above are plugged): two PITS (flags 855 / 856 = `esc_pit_a` / `esc_pit_b`) and
+# three boulders; the first boulder (6,6) rolls straight down column 6 into the pit (6,12) (6 pushes), the second (10,6) needs 3 pushes east to column 13 and then 6 south into the pit (13,12), the third (9,10) is a decoy. Pushing needs Empuje (module 91) and the Medalla Raiz.
+# The Tide Gem (Barnaclad's evolution) in the north-east corner, a Rich Salve, a note (sign). The ladder (4,4) goes up, the ladder (17,15) down.
+@map islas_escarcha_2
+@size 22 20
+@interior no
+@cave yes
+@area islas_escarcha
+@bg 0
+@surf yes
+@flag esc_pit_a 855     # the first pit is plugged (the first rapids of floor 3 dissolve)
+@flag esc_pit_b 856     # the second pit is plugged
+@encounters grass rate=14
+  echowing 40 44 25
+  echolet 40 44 5
+  belubub 38 42 25
+  plattypuzz 38 42 20
+  lazatee 38 41 15
+  barnacub 38 42 10
+@end
+# Roaming wild creatures (contract 55, rollout in 63): 2 creatures of this table wander the whole walkable floor (grass included); touching one starts that wild battle.
+@roam 2 table=grass area=abcde period=1800
+@spawn up 4 5 S
+@spawn down 17 14 N
+@legend
+  .  tile=none
+  a  tile=ice_10
+  b  tile=ice_01
+  c  tile=ice_11
+  d  tile=ice_00
+  e  tile=frost_tuft
+  f  tile=none object=snow_drift
+  g  tile=none object=cwall
+  h  tile=ice_00 object=ice_pillar
+  i  tile=ice_11 object=snow_drift
+  j  tile=ice_01 object=snow_drift
+  k  tile=ice_10 object=snow_drift
+  l  tile=ice_00 boulder=yes
+  m  tile=ice_11 object=ice_pillar
+  n  tile=frost_tuft item=agua
+  o  tile=ice_00 door=rope_ladder
+  p  tile=ice_01 object=sign interact=look text=esc2.sign
+  q  tile=ice_10 boulder=yes
+  r  tile=ice_00 hole=esc_pit_a
+  s  tile=ice_10 hole=esc_pit_b
+  t  tile=ice_11 door=rope_ladder
+  u  tile=ice_11 item=rich_salve
+  v  tile=ice_01 item=pp_extra   # contract 77: PP Extra, found only
+  H  tile=ice_01 hidden=vigor_flask   # hidden (contract 80, hidden items)
+@grid
+  ......................
+  .fgggggggggggggggggg..
+  .ghadadadadadadadadkf.
+  .gbcbibcbcbcbceeeencf.
+  .gdaoadahadadaeeeeeaf.
+  .gbibcbcbcbcpceeeeecf.
+  .gdadaladaladadadadaf.
+  .gbcbcbcbcbcbcbcbcjcf.
+  .gdeeedadadahadeeeeaf.
+  .gbeeebcbcjcbcbeeeecf.
+  .gdeeedadqdadadeeeeaf.
+  .gjcbcbcbcbibcbcbcbcf.
+  .gdadaradadadsdahadaf.
+  .gbcbcbcbceeecbcbcbcf.
+  .gdadadahaeeeahadadaf.
+  .gbmbcbcbceeecbcbtbcf.
+  .gdadkdadaeeeadadadaf.
+  .gbuvcHcbcbcbcbcbcbmf.
+  ..fffffffffffffffffff.
+  ......................
+@warp o -> islas_escarcha_1 spawn=ladder
+@warp t -> islas_escarcha_3 spawn=up

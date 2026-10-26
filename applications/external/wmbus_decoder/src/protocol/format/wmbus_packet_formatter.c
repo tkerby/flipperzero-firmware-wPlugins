@@ -1,0 +1,90 @@
+#include "wmbus_packet_formatter.h"
+
+#include <stdio.h>
+
+#include "wmbus_packet_summary.h"
+#include "wmbus_record_formatter.h"
+#include "../parser/wmbus_parser.h"
+
+static void wmbus_packet_formatter_format_application_detail(
+    const WmBusPacketRecord* record,
+    FuriString* out) {
+    if(!wmbus_record_formatter_format_joined(
+           record->application.records, record->application.record_count, '\n', out)) {
+        furi_string_set(out, "-");
+    }
+}
+
+static void
+    wmbus_packet_formatter_format_frame_detail(const WmBusPacketRecord* record, FuriString* out) {
+    FuriString* application_body = furi_string_alloc();
+    if(!application_body) {
+        furi_string_set(out, "");
+        return;
+    }
+
+    char security[48] = {0};
+    wmbus_packet_summary_format_security_text(
+        &record->ell, &record->tpl, security, sizeof(security));
+    if(security[0] == '\0') {
+        snprintf(security, sizeof(security), "-");
+    }
+
+    wmbus_packet_formatter_format_application_detail(record, application_body);
+    furi_string_printf(
+        out,
+        "Radio mode: %c, format: %s\nRSSI: %d dBm\nManufacturer: %s\nDevice type: %02X\nCI field: %02X\nMeter ID: %s\n---\nQuality: %s\nParser: %s\nSecurity: %s\n---\n",
+        record->mode == WmBusRxModeT ? 'T' : 'C',
+        wmbus_packet_summary_frame_type(record->format),
+        record->rssi,
+        record->identity.manufacturer,
+        record->identity.dev_type,
+        record->tpl.ci_field,
+        record->identity.meter_id,
+        wmbus_packet_quality_str(record->quality),
+        wmbus_parser_id_name(record->application.parser_id),
+        security);
+    furi_string_cat_str(out, furi_string_get_cstr(application_body));
+    furi_string_free(application_body);
+}
+
+static void
+    wmbus_packet_formatter_format_raw_detail(const WmBusPacketRecord* record, FuriString* out) {
+    furi_string_printf(
+        out,
+        "Radio mode: %c, format: %s\nRSSI: %d dBm\nManufacturer: -\nDevice type: --\nCI field: --\nMeter ID: -\n---\nQuality: %s\nParser: %s\nSecurity: -\n---\nPacket length=%u bytes",
+        record->mode == WmBusRxModeT ? 'T' : 'C',
+        wmbus_packet_summary_frame_type(record->format),
+        record->rssi,
+        wmbus_packet_quality_str(record->quality),
+        wmbus_parser_id_name(record->application.parser_id),
+        (unsigned int)record->wire_len);
+}
+
+void wmbus_packet_format_detail_text(const WmBusPacketRecord* record, FuriString* out) {
+    if(!out) return;
+    furi_string_reset(out);
+    if(!record) return;
+
+    if(wmbus_packet_quality_meets(record->quality, WmBusPacketQualityFrameComplete)) {
+        wmbus_packet_formatter_format_frame_detail(record, out);
+    } else {
+        wmbus_packet_formatter_format_raw_detail(record, out);
+    }
+}
+
+void wmbus_packet_format_application_text(const WmBusPacketRecord* record, FuriString* out) {
+    if(!out) return;
+    furi_string_reset(out);
+    if(!record) return;
+
+    if(!wmbus_packet_quality_meets(record->quality, WmBusPacketQualityFrameComplete)) {
+        furi_string_set(out, "No complete frame.");
+        return;
+    }
+
+    wmbus_packet_formatter_format_application_detail(record, out);
+    if(furi_string_equal_str(out, "-")) {
+        furi_string_set(out, "No application records.");
+    }
+}

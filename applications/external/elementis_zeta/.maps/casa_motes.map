@@ -1,0 +1,77 @@
+# Casa de los Motes (the name changer's house, name changer; F2, contract 74; map id 178), 9 x 7, interior. column = i, row = j. A quiet scholar's room lined with books of names: four shelves, candles, a table with a quill and a rug.
+# The Nombrador renames a creature of yours with the naming keyboard (`nick_prompt`: the question, then the keyboard), but only one you are the ORIGINAL TRAINER of: one that arrived over the IR link is refused (`bond ot`, Mon.xf MX_TRADED).
+@map casa_motes
+@size 9 7
+@interior yes
+@bg 3
+@fill floor_wood
+@spawn door 4 5 N
+@var mt_slot 5
+@var mt_ot 6
+@legend
+  .  tile=floor_wood
+  C  tile=none object=wall_corner
+  w  tile=none object=wall_j
+  y  tile=none object=wall_win_j
+  |  tile=none object=wall_i
+  q  tile=none object=wall_win_i
+  B  object=bookshelf interact=look text=motes.books
+  K  object=bookshelf interact=look text=casa.books
+  c  object=candle_s
+  T  object=table
+  P  object=planter
+  N  npc=psiquico_s id=namer face=SW script=namer
+  m  tile=mat
+@grid
+  Cwwywwyww
+  |BKBcKB..
+  |...N...P
+  |.....T..
+  q.c......
+  |........
+  |...mm...
+@warp m -> ciudad_nodo spawn=motes_door
+# The Nombrador: the party list picks the creature; `bond ot` says whether it is the player's own (1) or an IR-traded one (0); then `nick_prompt SLOT` (it takes the slot as an immediate, hence the six branches) asks and opens the keyboard.
+@script namer npc
+    npc_face_hero namer
+    say motes.hi
+    ask motes.ask
+    jv 0 1 go
+    say motes.no
+    end
+  go:
+    say motes.which
+    pick_party mt_slot
+    jv mt_slot 255 no
+    bond ot mt_slot
+    jv mt_ot 1 mine
+    say motes.traded
+    end
+  no:
+    say motes.no
+    end
+  mine:
+    jv mt_slot 0 s0
+    jv mt_slot 1 s1
+    jv mt_slot 2 s2
+    jv mt_slot 3 s3
+    jv mt_slot 4 s4
+    nick_prompt 5
+    jmp done
+  s0:
+    nick_prompt 0
+    jmp done
+  s1:
+    nick_prompt 1
+    jmp done
+  s2:
+    nick_prompt 2
+    jmp done
+  s3:
+    nick_prompt 3
+    jmp done
+  s4:
+    nick_prompt 4
+  done:
+    say motes.done
+@end

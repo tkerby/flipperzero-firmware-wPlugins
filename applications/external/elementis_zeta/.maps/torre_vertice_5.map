@@ -1,0 +1,69 @@
+# Torre Vertice, 5F (a corporation 9F - 10F: the healer, C6, contract 49), 16 x 12, interior. column = i, row = j. The arrival hall (rows 1..4) has the HEALER (a scientist's nurse behind the counter: it heals the party for free,
+# 9F); the wall of row 5 is shut by the third card-key door (4,5) (flag 845). Below it a wall (col 8) splits the floor in two halves joined only by a PAD ((6,9) <-> (10,9)); the stairs up (13,7) are in the right half.
+# Three trainers.
+@map torre_vertice_5
+@size 16 12
+@interior yes
+@area torre_vertice
+@flag kd3 845   # card-key door 3 (5F) opened
+@bg 0
+@fill carpet_00
+@spawn down 2 3 S
+@spawn up 13 8 S
+@legend
+  .  tile=carpet_11
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  tile=carpet_01 object=escalator
+  f  tile=carpet_01
+  g  tile=carpet_10
+  h  tile=carpet_00 door=escalator
+  i  tile=carpet_00
+  j  tile=carpet_00 npc=nurse id=healer face=SW script=healer
+  k  tile=carpet_11 object=desk
+  l  tile=carpet_01 object=desk
+  m  tile=carpet_11 object=planter
+  n  tile=carpet_10 object=planter
+  o  tile=carpet_00 object=planter
+  p  tile=carpet_01 keydoor=chip_acceso hide_flag=kd3
+  q  tile=carpet_00 object=desk
+  r  tile=carpet_10 object=desk
+  s  tile=carpet_10 object=escalator
+  t  tile=carpet_11 npc=vertice id=t5a face=S trainer=vertice_t5a range=4 text=tr.vertice_t5a.pre after=tr.vertice_t5a.after
+  u  tile=carpet_11 door=escalator
+  v  tile=carpet_10 npc=vertice id=t5c face=W trainer=vertice_t5b range=4 text=tr.vertice_t5b.pre after=tr.vertice_t5b.after
+  w  tile=pad pad=yes
+  x  tile=carpet_10 npc=cientifico id=t5b face=E trainer=cientifico_t5a range=4 text=tr.cientifico_t5a.pre after=tr.cientifico_t5a.after
+  y  tile=carpet_10 item=growth_seed
+@grid
+  abbbcbbbbcbbbcbb
+  d.e.f.f.f.f.f.f.
+  dghgigjgigigigig
+  d.f.fklkf.f.fmf.
+  dnigigigigigogig
+  dbbbpbbbbbbbbbbb
+  dgigigigdyqrisig
+  d.fkltf.d.f.fuf.
+  dgigigigdgivigig
+  d.f.f.w.d.w.f.f.
+  dgoxigigdginigig
+  d.f.f.f.d.f.f.f.
+@warp h -> torre_vertice_4 spawn=up
+@warp u -> torre_vertice_6 spawn=down
+@pad 6 9 -> 10 9 face=NE
+@pad 10 9 -> 6 9 face=NE
+# The healer: heals the party for free, once per talk (the Centro nurse's texts).
+@script healer npc
+    ask gl.center.ask
+    jv 0 1 yes
+    say gl.center.bye
+    end
+  yes:
+    fade_out
+    wait 1500
+    heal_party
+    fade_in
+    say gl.center.done
+@end
