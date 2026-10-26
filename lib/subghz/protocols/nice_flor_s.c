@@ -99,10 +99,6 @@ typedef enum {
     NiceFlorSDecoderStepCheckDuration,
 } NiceFlorSDecoderStep;
 
-/* Nice O-Code is a distinct variant of the protocol, not a counter mode: the "IC" key in
- * the .sub file is the type marker, and FFFF in it means O-Code whose installer code is
- * not known. CounterMode keeps its normal meaning for both. */
-
 static uint32_t subghz_protocol_decoder_nice_flor_s_get_hash_data(void* context);
 
 const SubGhzProtocolDecoder subghz_protocol_nice_flor_s_decoder = {
@@ -916,8 +912,6 @@ void subghz_protocol_decoder_nice_flor_s_set_skip_o_code(void* context, bool ski
     instance->fresh_run = 0;
 }
 
-/* Hash the body without the parcel number at bits 44..51, and from generic rather than
- * the decoder, since the frame handed on is the held one. */
 static uint32_t subghz_protocol_decoder_nice_flor_s_get_hash_data(void* context) {
     furi_assert(context);
     SubGhzProtocolDecoderNiceFlorS* instance = context;

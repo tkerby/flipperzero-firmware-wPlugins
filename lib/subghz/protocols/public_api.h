@@ -351,8 +351,8 @@ uint8_t subghz_protocol_marantec_crc8(uint8_t* data, size_t len);
 void subghz_protocol_nice_o_mask(uint8_t n, uint32_t* mask_32, uint16_t* mask_16);
 
 /**
- * Convert a Nice O-Code counter between the plain count and the scrambled form that goes
- * on air. An involution, so one call does either direction.
+ * Decode a Nice O-Code on-air counter into a plain count.
+ * Encoding uses a different, internal mapping; this function is not an involution.
  */
 uint16_t subghz_protocol_nice_o_cnt_swap(uint16_t cnt);
 
