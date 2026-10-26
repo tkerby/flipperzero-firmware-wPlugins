@@ -1,0 +1,68 @@
+# Tunel Oscuro, floor 2 (C4a, contract 39), 30 x 24. `@dark yes`, `@cave yes`. column = i, row = j. ONE cave: a RING of halls round a block of solid rock: the ladder A (5,5) comes down
+# from floor 1's north pocket (top left), the ladder B (24,19) goes up to floor 1's south pocket (bottom right, the way out); both ways round are open. Four trainers (one in every hall), moss patches
+# (the wild table), stalagmites and boulders, two items.
+@map tunel_2
+@size 30 24
+@interior no
+@cave yes
+@dark yes
+@area tunel_oscuro
+@bg 3
+@fill cave
+@spawn ladder_a 5 6 S
+@spawn ladder_b 24 18 N
+@encounters grass rate=14
+  echolet 20 24 35               # C9 (contract 56): weight lowered to make room for the fill-in (the table still adds up to 100)
+  pebblump 20 24 30
+  ramplet 20 24 25
+  boulderback 22 25 5
+  cragodile 23 25 5               # C9 (contract 56): the fill-in of the design notes
+@end
+# Roaming wild creatures (contract 55, rollout in 63): 2 creatures of this table wander the whole walkable floor (grass included); touching one starts that wild battle.
+@roam 2 table=grass area=.d period=1800
+@legend
+  .  tile=cave
+  a  tile=none
+  b  tile=none object=cwall_p
+  c  tile=none object=rubble
+  d  tile=moss
+  e  door=rope_ladder
+  f  npc=montanista id=t1 face=S trainer=montanista_t2a range=3 text=tr.montanista_t2a.pre after=tr.montanista_t2a.after
+  g  object=stalag_s
+  h  item=rich_salve
+  i  object=stalag
+  j  object=boulder
+  k  object=rock
+  l  npc=montanista id=t3 face=W trainer=montanista_t2b range=3 text=tr.montanista_t2b.pre after=tr.montanista_t2b.after
+  m  npc=explorador id=t2 face=E trainer=explorador_t2 range=3 text=tr.explorador_t2.pre after=tr.explorador_t2.after
+  n  npc=chica id=t4 face=N trainer=chica_t2 range=3 text=tr.chica_t2.pre after=tr.chica_t2.after
+  o  door=rope_ladder
+  p  item=prime_salve
+  q  tile=cave item=life_blaze
+@grid
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  aabbbbbbbbbbbbbbbbbbbbbbbbbcaa
+  aab...........ddddq...dddd.caa
+  aab..e......f.ddddg...ddddhcaa
+  aab......i....dddd....dddd.caa
+  aab...................j....caa
+  aab........k..k............caa
+  aab......................i.caa
+  aab......bbbbbbbbbbbb......caa
+  aab...g..baaaaaaaaaac...l..caa
+  aab.m....baaaaaaaaaac....i.caa
+  aab......baaaaaaaaaac..ddddcaa
+  aab..k...bccccccccccc..ddddcaa
+  aab....................ddddcaa
+  aabdddd........j.......k...caa
+  aabdddd...dddd...g.........caa
+  aabddddi..dddd.n...........caa
+  aab.........j........g..o..caa
+  aabp.......................caa
+  aaccccccccccccccccccccccccccaa
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+@warp e -> tunel_1 spawn=ladder_a
+@warp o -> tunel_1 spawn=ladder_b

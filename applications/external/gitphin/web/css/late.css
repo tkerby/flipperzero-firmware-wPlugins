@@ -1,0 +1,4 @@
+.fsec .note{padding:6px 12px;margin:0}
+@media (max-width:720px){.pane>.ph .crumbs{flex:1 1 100%}}
+nav.subtabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}nav.subtabs button.active{background:var(--p-bg);color:var(--p-fg)}
+.pad{padding:8px 12px}

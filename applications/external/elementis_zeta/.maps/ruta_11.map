@@ -1,0 +1,102 @@
+# Ruta 11 (C3, contract 34), 32 x 20. column = i, row = j. East of Puerto Dinamo (west edge, rows 9..10) the gravel service track runs east along +i under the HIGH-VOLTAGE
+# LINE: a row of pylons (j = 6) joined by overhead cables (non-solid cable objects between them), fenced transformers, a cooling pond, dry earth (4 variants), dry bushes, scrub (dry brush = the tall grass:
+# wild table) and rocks. Five trainers (mechanics, a fisherman, an explorer, a girl) look across the track from both sides (north ones look S, south ones look N, range 3). The CAVE of the burrowers
+# (the Cueva Excavadora) opens in the rocky nook at the north (24,2); the way east is closed by a fence (the line is being repaired: Pueblo Bruma opens in C4).
+@map ruta_11
+@size 32 20
+@interior no
+@area ruta_11
+@bg 0
+@fill earth
+@spawn west 1 9 E               # arriving from Puerto Dinamo
+@flag aide_det_done 924      # F2 (contract 74): the aide gave the Buscatesoros
+@spawn cave 24 4 S              # coming out of the Cueva Excavadora
+@encounters grass rate=15      # Route 11: the sleepy ape, the sparrow, the snake, the sand mouse, the voltage balls
+  mesmoli 14 17 28
+  jabbird 14 17 22
+  coilisp 14 17 30
+  scarabeam 15 18 10              # B2 (contract 66): the Solar emblem (a Lunar player meets Lunashell here), dry earth and scrub
+  spoolt 14 17 10
+@end
+# Open ground (contract 63, normal route): a step onto plain ground (not tall grass, water, a door, a ledge, an arrow floor) rolls this table when rand8 < 4 (4/256 per step).
+@open_rate 4
+# Roaming wild creatures (contract 55, rollout in 63): 3 creatures of this table wander the open ground (not the tall grass); touching one starts that wild battle.
+@roam 3 table=grass period=1800
+@legend
+  .  tile=earth                    # dry earth (4 variants)
+  =  tile=gravel                   # the service track (3 variants)
+  s  tile=scrub                    # dry brush: the tall grass
+  r  tile=earth object=rock
+  w  tile=gravel
+  P  tile=earth object=pylon       # high-voltage pylon
+  c  tile=earth object=cable_i     # the overhead cables between two pylons (not solid)
+  T  tile=earth object=transformer
+  u  tile=earth object=dry_bush
+  k  tile=earth object=scree
+  f  tile=earth object=rfence_i
+  e  tile=sea_o                    # the cooling pond (animated sea)
+  n  tile=dirt_a object=hole       # the cave mouth
+  N  tile=earth object=mound
+  X  tile=earth object=rfence_j
+  S  tile=earth object=sign interact=look text=ruta11.sign
+  Q  tile=earth object=sign interact=look text=ruta11.closed
+  G  tile=earth npc=guardia id=guard face=E text=ruta11.guard
+  i  tile=earth item=ward_spray
+  j  tile=earth item=antidote
+  1  tile=earth npc=mecanico id=t1 face=S trainer=mecanico_r11a range=3 text=tr.mecanico_r11a.pre after=tr.mecanico_r11a.after
+  2  tile=earth npc=pescador id=t2 face=N trainer=pescador_r11 range=4 text=tr.pescador_r11.pre after=tr.pescador_r11.after
+  3  tile=earth npc=explorador id=t3 face=N trainer=explorador_r11 range=4 text=tr.explorador_r11.pre after=tr.explorador_r11.after
+  4  tile=earth npc=mecanico id=t4 face=S trainer=mecanico_r11b range=3 text=tr.mecanico_r11b.pre after=tr.mecanico_r11b.after
+  5  tile=earth npc=chica id=t5 face=N trainer=chica_r11 range=4 text=tr.chica_r11.pre after=tr.chica_r11.after
+  A  tile=earth npc=ayudante id=aide face=S script=aide   # F2 (contract 74): Profesora Lin's aide beside the track (30 caught species -> the Buscatesoros)
+  H  tile=earth hidden=exit_wisp   # hidden (contract 80, hidden items)
+@grid
+  rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
+  r......................uuu....fr
+  r.....ssss........ssssuNnNu...fr
+  r..u..ssssk....u..ssss......u.fr
+  r.....ssss....k...ssss........fr
+  r.................ssss.......ifr
+  r...PcccccPcccccPcccccPcccccP.fr
+  r.......1...u.........4..u....fr
+  r.uA.........................Qfr
+  w==============================r
+  w==============================r
+  r.S....k...........k.........Gfr
+  r.ssssss......TTu3...u....s5ssfr
+  r.ssssss....2.TT..........ssssfr
+  r.sssjss.........sssss....ssssfr
+  r.ssssss...ee....sssss....ssssfr
+  r.ssssss...ee....sssss....ssssfr
+  r................sssss....k...fr
+  r....u...u....H..sssss........fr
+  rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
+@warp w -> puerto_dinamo spawn=east
+@warp n -> cueva_excavadora spawn=ruta11
+
+# F2 (contract 74): another of Profesora Lin's aides (aide of the Route 11 gate: 30 species caught -> the Treasure Probe). With at least 30 species CAUGHT in the Registro he gives the Buscatesoros once (flag 924 = `aide_det_done`);
+# with fewer he says how many are still missing (`caught_ge` leaves the missing number in {v2}); with a full bag he waits (nothing is lost, the flag stays clear).
+@var aide_ok 5
+@script aide npc
+    npc_face_hero aide
+    jf aide_det_done said
+    say ruta11.aide.hi
+    caught_ge aide_ok 30
+    jv aide_ok 1 give
+    say ruta11.aide.more
+    end
+  give:
+    say ruta11.aide.give
+    give_item buscatesoros 1
+    jv 0 0 full
+    setf aide_det_done
+    sfx item
+    say ruta11.aide.got
+    say ruta11.aide.about
+    end
+  full:
+    say gl.found.full
+    end
+  said:
+    say ruta11.aide.after
+@end

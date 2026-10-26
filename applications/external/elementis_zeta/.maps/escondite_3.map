@@ -1,0 +1,104 @@
+# Escondite Vertice, B3F (villain hideout B3F, C4b, contract 41), 14 x 16, interior. The deepest floor you can reach on foot: the stairs from B2F arrive at the top left (door (2,2)) and the belts lead (eight platform hops) to the
+# platform of the grunt who carries the Hoist Key (`key_grunt`: a fight, then `llave_polea`, flags 812 / 803). Two more grunts and items; there is no way further down: B4F (Varo) is reached only by the elevator.
+@map escondite_3
+@size 14 16
+@interior yes
+@area escondite_vertice
+@bg 3
+@fill metal_00
+@spawn up 2 3 S
+@flag lift_key_given 803
+@flag key_beaten 812
+@legend
+  .  tile=metal_00
+  a  tile=none object=cable_wall_j
+  b  tile=none object=cable_wall_i
+  c  tile=metal_11 object=crate_plain
+  d  tile=metal_01 object=escalator
+  e  tile=metal_11 object=crate_stack
+  f  tile=metal_01 object=crate_plain
+  g  tile=metal_11 object=crate_v
+  h  tile=metal_01 object=crate_stack
+  i  tile=metal_01 object=crate_v
+  j  tile=metal_10 object=barrel
+  k  tile=metal_00 door=escalator
+  l  tile=metal_10 object=crate_plain
+  m  tile=metal_00 object=barrel
+  n  tile=metal_10 object=crate_v
+  o  tile=metal_00 object=crate_plain
+  p  tile=metal_00 object=crate_v
+  q  tile=metal_11
+  r  tile=metal_01
+  s  tile=metal_01 object=rail_i
+  t  tile=metal_11 object=rail_i
+  u  tile=metal_11 item=vit_hp
+  v  tile=metal_10
+  w  tile=arr_nw_00
+  x  tile=arr_nw_10
+  y  tile=arr_se_10
+  z  tile=arr_se_00
+  A  tile=metal_01 object=console interact=look text=hide.term.c
+  B  tile=metal_10 object=rail_j
+  C  tile=arr_sw_00
+  D  tile=metal_00 object=crate_stack
+  E  tile=metal_00 object=rail_j
+  F  tile=arr_ne_10
+  G  tile=metal_11 object=rail_j
+  H  tile=arr_sw_01
+  I  tile=metal_01 object=rail_j
+  J  tile=arr_ne_11
+  K  tile=metal_01 object=barrel
+  L  tile=metal_10 npc=vertice id=g1 face=S trainer=vertice_b3a range=2 text=tr.vertice_b3a.pre after=tr.vertice_b3a.after
+  M  tile=metal_10 object=rail_i
+  N  tile=metal_00 object=rail_i
+  O  tile=arr_nw_11
+  P  tile=arr_nw_01
+  Q  tile=metal_01 npc=vertice id=g2 face=W trainer=vertice_b3b range=2 text=tr.vertice_b3b.pre after=tr.vertice_b3b.after
+  R  tile=metal_00 npc=vertice id=key_g face=N script=key_grunt
+  S  tile=metal_11 item=antidote
+  T  tile=metal_10 item=disc_18
+@grid
+  aaaaaaaaaaaaaa
+  bcdefghciefghc
+  bjklmnojplmnoj
+  bqrqstrqrtsqru
+  bv.vwx.v.yzv.v
+  bqrqstAqrtsqrq
+  bBCBDlEFElpBCB
+  bGHGfgIJIgKGHG
+  bL.vpj.v.MNv.v
+  bqrqKerqrOPqrq
+  bv.vDl.v.MNT.v
+  bGHGfgIJIgKGHG
+  bBCBpjEFEjDBCB
+  bqrqstrqQtsqrq
+  bv.vzy.v.xwvRv
+  bSrqstrqrtsqrq
+@warp k -> escondite_2 spawn=down
+# The grunt with the Hoist Key: talk to him: the fight; the win gives the key (a full bag: his beaten flag 812 stays, the key waits for the next talk; no second fight).
+@script key_grunt npc
+    npc_face_hero key_g
+    jf lift_key_given said
+    jf key_beaten give
+    say hide.key.pre
+    battle 88 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    setf key_beaten
+    say hide.key.win
+  give:
+    give_item llave_polea 1
+    jv 0 0 full
+    item_var 0 llave_polea
+    say gl.gift
+    setf lift_key_given
+    say hide.key.after_give
+    end
+  full:
+    say gl.found.full
+    end
+  said:
+    say hide.key.after
+@end

@@ -1,0 +1,29 @@
+title La Bici - the bicycle: a carefree, quick tune in G major that runs up and down the scale with a light bounce on every beat (bass, off-beat, bass), and a bell that rings twice at the end of the line
+tempo 168
+vol 235
+meter 4/4
+inst pep v=255,225,195,175,165
+inst ring v=255,230,255,230,170,110
+inst spoke arp=0,4,7 rate=1 lvl=0.8
+inst tock drum=g5 v=210,120 d=0,-45
+inst tap drum=d7 v=140,70 d=0,-30
+l8
+@pep
+# --- 1-4 (G, C, D, G): the tune bounces up the scale and tumbles down
+o5 !tock:g a !tap:b >d< !tock:b g !tap:b g |
+o5 !tock:c d !tap:e g !tock:e c !tap:e c |
+o5 !tock:d f+ !tap:a >d< !tock:a f+ !tap:a f+ |
+o5 !tock:g b o6 !tap:d4 o5 !tock:b4 !tap:g4 |
+# --- 5-8 (Em, C, D, G): the same, a little higher
+o5 !tock:e g !tap:b >e< !tock:b g !tap:b g |
+o5 !tock:c e !tap:g >c< !tock:g e !tap:g e |
+o5 !tock:d f+ !tap:a >d f+< !tock:a !tap:f+ d |
+o5 !tock:g4 !tap:b4 >g2< |
+# --- 9-10 (C, D): a run that never stops
+o5 !tock:c e !tap:g >c e< !tock:g !tap:e c |
+o5 !tock:d f+ !tap:a >d< !tock:a f+ !tap:d f+ |
+# --- 11-14 (G, C, D7, G): home, the bell rings twice, the wheels spin (arpeggio)
+o5 !tock:g b !tap:b >d !tock:d< b !tap:g b |
+o5 !tock:c e !tap:g >c< !tock:g e !tap:c e |
+o5 !tock:d f+ !tap:a >c< !tock:a f+ !tap:d4 |
+@ring o7 g16 g16 r16 g16 g16 r16 g8 @spoke o5 g2 |

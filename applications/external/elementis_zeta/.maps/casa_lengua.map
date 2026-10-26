@@ -1,0 +1,62 @@
+# Casa del Trueque de la Ruta 18 (Route 18's trade house: a creature for a creature, C9, contract 56), 9 x 7, interior. column = i, row = j. A tinkerer's room: the trader at the back, a table, books, crates.
+# He wants a SAGATEE and gives a TONGUARD (a creature) whose nickname is the fixed ASCII text `tr18.nick` (Marc, the same in all four languages: the trade idiom of casa_trueque). Flag 914 = the trade was done.
+@map casa_lengua
+@size 9 7
+@interior yes
+@bg 3
+@fill floor_wood
+@spawn door 4 5 N
+@flag tonguard_done 914
+@var tg_res 5
+@var tg_want 6
+@var tg_give 7
+@legend
+  .  tile=floor_wood
+  C  tile=none object=wall_corner
+  w  tile=none object=wall_j
+  y  tile=none object=wall_win_j
+  |  tile=none object=wall_i
+  B  object=bookshelf interact=look text=tr18.books
+  H  object=crate_plain
+  x  object=barrel
+  T  object=table
+  L  npc=trueque id=trader face=SW script=trader
+  m  tile=mat
+@grid
+  Cwwywwyww
+  |B.....H.
+  |...L....
+  |.x...T..
+  |.x......
+  |........
+  |...mm...
+@warp m -> ruta_18 spawn=lengua_door
+@script trader npc
+    npc_face_hero trader
+    setv tg_want sp:sagatee
+    setv tg_give sp:tonguard
+    name_var 0 tg_want
+    name_var 1 tg_give
+    jf tonguard_done after
+    say tr18.hello
+    ask tr18.ask
+    jv 0 1 go
+    say tr18.no
+    end
+  go:
+    trade sagatee tonguard tr18.nick tg_res
+    jv tg_res 1 done
+    jv tg_res 255 cancel
+    say tr18.wrong
+    end
+  cancel:
+    say tr18.no
+    end
+  done:
+    setf tonguard_done
+    say tr18.done
+    end
+  after:
+    name_var 0 tg_give
+    say tr18.after
+@end

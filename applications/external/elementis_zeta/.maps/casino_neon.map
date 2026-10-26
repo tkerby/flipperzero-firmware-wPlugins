@@ -1,0 +1,117 @@
+# Casino Neon (C4b, contract 41), 15 x 13, interior. column = i, row = j. The user's mock "Casino": a busy CARPET (ccarpet), two ROWS of slot machines (slot / slot_r, 16, each one `slots`),
+# stools, two coin clerks (croupier, `coins_buy`: 50 coins for $1000), a hostess who tells the coins, three gamblers (jugador trainers) and a Vertice grunt who guards a POSTER on the west wall (the poster
+# hides the switch of the villain hideout): beat him, read the poster, a switch clicks and the electric barrier in front of the hidden staircase (top right) goes down (flag 801). The stairs lead to the hideout (escondite_1).
+@map casino_neon
+@size 15 13
+@interior yes
+@area sala_juegos
+@bg 0
+@fill ccarpet
+@spawn door 6 11 N
+@spawn stairs 12 3 S
+@flag poster_switch 801
+@flag casino_grunt 802
+@legend
+  .  tile=ccarpet
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_i
+  d  tile=ccarpet object=escalator
+  e  tile=ccarpet object=slot interact=look script=slot_play
+  f  tile=ccarpet object=slot_r interact=look script=slot_play
+  g  tile=ccarpet npc=croupier id=clerk_a face=S script=coin_clerk
+  h  tile=ccarpet door=escalator
+  i  tile=ccarpet object=pillar
+  j  tile=ccarpet npc=barrier id=barrier face=S behavior=turn period=500 text=casino.barrier hide_flag=801 gate=yes
+  k  tile=ccarpet npc=jugador id=g2 face=S trainer=jugador_c2 range=2 text=tr.jugador_c2.pre after=tr.jugador_c2.after
+  l  tile=ccarpet object=stool
+  m  tile=ccarpet npc=jugador id=g1 face=W trainer=jugador_c1 range=3 text=tr.jugador_c1.pre after=tr.jugador_c1.after
+  n  tile=ccarpet npc=vecino_m id=loser face=SE text=casino.npc.a
+  o  tile=none object=wall_poster_i interact=look script=poster
+  p  tile=ccarpet npc=croupier id=clerk_b face=E script=coin_clerk
+  q  tile=ccarpet npc=dependienta id=hostess face=SW script=hostess
+  r  tile=ccarpet npc=mama id=lady face=W text=casino.npc.b
+  s  tile=ccarpet npc=vertice id=grunt face=E trainer=vertice_casino range=3 text=tr.vertice_casino.pre after=tr.vertice_casino.after beaten_flag=casino_grunt hide_flag=942   # C8 (contract 51): Director Varo disbands Vertice (flag 942, gimnasio_nodo.map): the grunt is gone
+  t  tile=ccarpet npc=jugador id=g3 face=W trainer=jugador_c3 range=3 text=tr.jugador_c3.pre after=tr.jugador_c3.after
+  u  tile=mat
+@grid
+  abbbbbbbbbbbbbb
+  c............d.
+  c.efef.g.fefehi
+  c............j.
+  c......k.......
+  c.fefe...efef..
+  c.llll...llllm.
+  c..............
+  c....n.........
+  o..p.......q.r.
+  cs.......t.....
+  c..............
+  c.....uu.......
+@warp h -> escondite_1 spawn=up
+@warp u -> metropolis_neon_2 spawn=casino_door
+
+# The coin clerks: 50 coins for $1000; the casino plugin does the sale.
+@script coin_clerk npc
+    ask gl.c4c.coins.ask
+    jv 0 1 yes
+    say gl.c4c.coins.bye
+    end
+  yes:
+    coins_buy 4
+    jv 4 1 done
+    jv 4 2 nomoney
+    jv 4 3 nocase
+    say gl.c4c.coins.full
+    end
+  done:
+    sfx item
+    say gl.c4c.coins.done
+    end
+  nomoney:
+    say gl.shop.no_money
+    end
+  nocase:
+    say gl.c4c.coins.nocase
+@end
+# The hostess tells how many coins the case holds (the Coin Purse is a key item from the diner).
+@script hostess npc
+    say casino.hostess.hi
+    coins_get 5
+    jv 5 0 none
+    say gl.c4c.coins.have
+    end
+  none:
+    say casino.hostess.none
+@end
+# Every machine: the slot screen (the screen says its own greetings; the script only answers the refusals).
+@script slot_play interact
+    slots 2
+    jv 2 1 nocase
+    jv 2 2 nocoins
+    end
+  nocase:
+    say gl.c4c.coins.nocase
+    end
+  nocoins:
+    say gl.c4c.coins.none
+@end
+# The poster. The grunt beside it stops the nosy; once he is beaten the switch shows and the barrier of the hidden stairs goes down.
+@script poster interact
+    jf poster_switch again
+    jf casino_grunt found
+    npc_face_hero grunt
+    say casino.poster.stop
+    end
+  found:
+    say casino.poster.look
+    say casino.poster.switch
+    sfx confirm
+    setf poster_switch
+    npc_hide barrier
+    wait 400
+    say casino.poster.clack
+    end
+  again:
+    say casino.poster.after
+@end

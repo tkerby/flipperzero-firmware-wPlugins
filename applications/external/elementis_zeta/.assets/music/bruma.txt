@@ -1,0 +1,28 @@
+title Pueblo Bruma - a town in the mist: a pale A minor arpeggio that rises out of nothing, a lonely tune that sinks (never quite resolves), high bells that answer themselves, and a far foghorn
+tempo 72
+vol 215
+meter 4/4
+inst fog arp=-12,0,3,7 rate=8 att=12 lvl=0.5 slow
+inst lead att=2 dec=10 sus=0.6 vib=1 vdelay=12 vper=12 lvl=0.9
+inst bell dec=6 sus=0.05 slow
+inst bel2 dec=6 sus=0.05 lvl=0.4 slow
+inst horn att=10 lvl=0.6 slow
+l4
+# --- A: the fog (Am), the tune sinks; F; Dm; E (the dominant, left open)
+@fog o4 a2 a2 |
+@lead o5 e2 d4 c4 |
+@fog o4 f2 f2 |
+@lead o5 c2 d4 e4 |
+@fog o4 d2 d2 |
+@lead o5 f2 e4 d4 |
+@fog o4 e2 e2 |
+@lead o5 b2. a4 |
+# --- B: bells that echo themselves over C and G, the tune again, one long breath, the horn
+@fog o4 c2 c2 |
+@bell o6 e2 @bel2 e2 |
+@fog o4 g2 g2 |
+@bell o6 d2 @bel2 d2 |
+@fog o4 a2 a2 |
+@lead o6 c2 o5 b4 a4 |
+@fog o4 e2 e2 |
+@horn o3 e2 e2 |

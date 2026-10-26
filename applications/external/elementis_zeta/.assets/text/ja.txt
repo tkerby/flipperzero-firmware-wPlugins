@@ -1,0 +1,11349 @@
+# Elementis Zeta - Japanese game text (M1), kana only. Same keys/pages as es.txt. Max 15 cells per line, 2 lines per page.
+
+[mom.a]
+あら、 げんきね！
+リンはかせが
+---
+さがしてたわよ。
+けんきゅうじょに いってね。
+
+[mom.b]
+ごはんは ちゃんと たべて
+はやく ねるのよ、 いい？
+
+[lin.b]
+エレメンティの くらしを
+けんきゅうしているの。
+
+[vecino.a]
+おい！ この むらは
+とても しずかだよ。
+---
+エレメンティが いないと
+むらから でられないぜ。
+---
+リンはかせに
+もらいなよ！
+
+[sign.aliso]
+アリソむら
+すべてが はじまる ところ。
+
+[sign.lab]
+リンはかせの けんきゅうじょ
+よやくが ひつようです。
+
+[trig.norte]
+まって！ エレメンティなしで
+そとへは いけないよ！
+
+[door.rival]
+とびらを ノックした。
+---
+へんじは ない。
+
+[obj.tv]
+ニュースで バーテックスしゃの
+ことを はなしている。
+
+[obj.pc]
+うちの パソコンだ。
+でんげんは きれている。
+
+[obj.libros.casa]
+ぼうけんの ほんや ちずが
+たくさん ある。
+
+[obj.libros.lab]
+エレメンティと エネルギーの
+ほんが ならんでいる。
+
+[obj.maquina.lab]
+エレメンティの データを
+かいせきする きかいだ。
+
+[obj.pc.lab]
+モニターに アリソむらの
+ちずが うつっている。
+
+[lab.lin.intro]
+{player}、 こんにちは！
+まっていたよ。
+
+[lab.lin.intro2]
+テーブルの うえに
+クリスタルが みっつ ある。
+---
+クリスタルの なかには
+エレメンティが いるよ。
+---
+ひとつ えらんで。
+きみの あいぼうだ！
+
+[lab.orb.ember]
+{v0}だ！
+ほのおの エレメンティ。
+---
+これに する？
+
+[lab.orb.puddle]
+{v0}だ！
+みずの エレメンティ。
+---
+これに する？
+
+[lab.orb.sprout]
+{v0}だ！
+くさの エレメンティ。
+---
+これに する？
+
+[lab.lin.chosen]
+{v0}は きみの もの！
+だいじに してね。
+
+[lab.rival.pick]
+じゃあ ぼくは
+これに する！
+
+[lab.rival.challenge]
+まて、 {player}！
+---
+どっちが つよいか
+しょうぶだ！
+
+[lab.rival.win_after]
+なんだと！？
+えらびまちがえたか…
+---
+もっと つよく なるぞ！
+
+[lab.rival.lose_after]
+はは！ ぼくの かちだ！
+いちばんの こを えらんだ。
+---
+もっと きたえなよ、
+{player}。
+
+[lab.lin.after]
+よくやった、 {player}！
+---
+もうすぐ 1ばん どうろを
+たんけん できるよ。
+
+[lab.rival.leave]
+じゃあな、 {player}！
+
+[lab.lin.already]
+エレメンティを
+だいじに してね！
+
+[lab.orb.taken]
+このクリスタルは
+からっぽだ。
+
+[lab.lin.stop]
+まって！
+まだ いっちゃ だめ！
+
+[lab.rival.idle]
+はやく えらべよ！
+まってるんだぞ！
+
+[gl.pronto]
+もうすぐ…
+
+[gl.menu.team]
+てもち
+
+[gl.menu.bag]
+どうぐ
+
+[gl.menu.save]
+セーブ
+
+[gl.menu.options]
+せってい
+
+[gl.menu.quit]
+やめる
+
+[gl.title.press_ok]
+OKを おしてね
+
+[gl.party.none]
+まだ エレメンティが
+いないよ。
+
+[gl.party.stats]
+つよさ
+
+[gl.party.cancel]
+やめる
+
+[gl.party.exp]
+けいけん
+
+[gl.party.next]
+あと
+
+[gl.options.title]
+せってい
+
+[gl.options.language]
+げんご
+
+[gl.ty.normal]
+ノーマル
+
+[gl.ty.fighting]
+かくとう
+
+[gl.ty.flying]
+ひこう
+
+[gl.ty.poison]
+どく
+
+[gl.ty.ground]
+じめん
+
+[gl.ty.rock]
+いわ
+
+[gl.ty.bug]
+むし
+
+[gl.ty.ghost]
+ゴースト
+
+[gl.ty.fire]
+ほのお
+
+[gl.ty.water]
+みず
+
+[gl.ty.grass]
+くさ
+
+[gl.ty.electric]
+でんき
+
+[gl.ty.psychic]
+エスパー
+
+[gl.ty.ice]
+こおり
+
+[gl.ty.dragon]
+ドラゴン
+
+[gl.sp.embercub]
+エンバーカブ
+
+[gl.sp.flarewolf]
+フレアウルフ
+
+[gl.sp.puddlet]
+パドレット
+
+[gl.sp.tidalux]
+タイダラクス
+
+[gl.sp.sprouton]
+スプラウトン
+
+[gl.sp.thornbuck]
+ソーンバック
+
+[gl.sp.flitter]
+フリッター
+
+[gl.sp.muncrit]
+マンクリト
+
+[gl.sp.grubbit]
+グラビット
+
+[gl.sp.grubshell]
+グラシェル
+
+[gl.sp.lanternmoth]
+ランタモス
+
+[gl.sp.stingle]
+スティングル
+
+[gl.sp.stinglet]
+スティンレ
+
+[gl.sp.velvex]
+ベルベクス
+
+[gl.sp.zaphid]
+ザフィド
+
+[gl.sp.voltgecko]
+ボルゲコ
+
+[gl.sp.pebblump]
+ペブラン
+
+[gl.sp.rockroll]
+ロクロル
+
+[gl.sp.bouldrum]
+ボルドラム
+
+[gl.sp.boulderback]
+ボルダーバク
+
+[gl.sp.flitwing]
+フリットウ
+
+[gl.sp.skyrrow]
+スカイロウ
+
+[gl.sp.munchmole]
+マンチモル
+
+[gl.sp.pyrewolf]
+パイアウルフ
+
+[gl.sp.tidalgard]
+タイダルガ
+
+[gl.sp.grovestag]
+グローベスタ
+
+[gl.sp.echolet]
+エコレット
+
+[gl.sp.lunelle]
+ルネル
+
+[gl.sp.shellfern]
+シェルファン
+
+[gl.sp.jabbird]
+ジャバード
+
+[gl.sp.lullabun]
+ララバン
+
+[gl.sp.quillix]
+クイリクス
+
+[gl.sp.dunedil]
+デュネディル
+
+[gl.sp.coilisp]
+コイリスプ
+
+[gl.sp.dozelf]
+ドゼルフ
+
+[gl.sp.mossbud]
+モスバド
+
+[gl.sp.gleamjell]
+グリムジェル
+
+[gl.sp.trilobite]
+トリロバイト
+
+[gl.sp.sealily]
+シーリリー
+
+[gl.sp.echowing]
+エコウィング
+
+[gl.sp.ferncairn]
+ファンケルン
+
+[gl.sp.jabhawk]
+ジャブホーク
+
+[gl.sp.quillord]
+クイルロード
+
+[gl.sp.dunedrake]
+デュンドラ
+
+[gl.sp.hoodcoil]
+フードコイル
+
+[gl.sp.trancelf]
+ネムエルフ
+
+[gl.sp.mossbloom]
+モスブルーム
+
+[gl.sp.trilothorn]
+トリロソーン
+
+[gl.sp.crinolith]
+クリノライト
+
+[gl.sp.gleamlet]
+グリムレット
+
+[gl.sp.glintail]
+グリンテイル
+
+[gl.sp.lustrel]
+ラストレル
+
+[gl.sp.ramplet]
+ランプレット
+
+[gl.sp.ibexer]
+アイベクサー
+
+[gl.sp.mesmoli]
+メズモリ
+
+[gl.sp.mesmaris]
+メズマリス
+
+[gl.sp.drillroot]
+ドリルート
+
+[gl.sp.augeroot]
+オーガルート
+
+[gl.sp.spoolt]
+スプールト
+
+[gl.sp.voltspool]
+ボルスプール
+
+[gl.sp.otterock]
+オッタロック
+
+[gl.sp.wispsheet]
+ウィスシート
+
+[gl.sp.shroudle]
+シュラドル
+
+[gl.sp.gloomshroud]
+グルシュラ
+
+[gl.sp.hatchkip]
+ハッチキプ
+
+[gl.sp.shellbrute]
+シェルブルト
+
+[gl.sp.mimbara]
+ミンバラ
+
+[gl.sp.tidebara]
+タイドバラ
+
+[gl.sp.embara]
+エンバラ
+
+[gl.sp.voltbara]
+ボルトバラ
+
+[gl.sp.cindermeer]
+シンダーミア
+
+[gl.sp.pyromeer]
+パイロミア
+
+[gl.sp.dewlash]
+デュラッシュ
+
+[gl.sp.smogkeg]
+スモッグケグ
+
+[gl.sp.twinkeg]
+ツインケグ
+
+[gl.sp.lunarelle]
+ルナーレル
+
+[gl.sp.lulladream]
+ララドリーム
+
+[gl.sp.quilltyrant]
+クイルタント
+
+[gl.sp.bloomoss]
+ブルーモス
+
+[gl.sp.flopfin]
+フロプフィン
+
+[gl.sp.stormgill]
+ストームギル
+
+[gl.sp.urchip]
+アーチップ
+
+[gl.sp.urchlord]
+アーチロード
+
+[gl.sp.clubrimp]
+クラブリンプ
+
+[gl.sp.smashrimp]
+スマリンプ
+
+[gl.sp.skipgoby]
+スキプゴビー
+
+[gl.sp.gobyhop]
+ゴビホップ
+
+[gl.sp.gobrawl]
+ゴブロール
+
+[gl.sp.lazatee]
+ラザティー
+
+[gl.sp.sagatee]
+サガティー
+
+[gl.sp.slumberth]
+スランバース
+
+[gl.sp.lambalm]
+ランバーム
+
+[gl.sp.wombamma]
+ウォンバンマ
+
+[gl.sp.razorfly]
+レイザフライ
+
+[gl.sp.gnucharge]
+ヌーチャージ
+
+[gl.sp.reefling]
+リーフリング
+
+[gl.sp.reefcoil]
+リーフコイル
+
+[gl.sp.reefdragon]
+リフドラゴン
+
+[gl.sp.slickslime]
+スリクライム
+
+[gl.sp.tarbog]
+ターボグ
+
+[gl.sp.kickaroo]
+キックルー
+
+[gl.sp.jabadillo]
+ジャバディロ
+
+[gl.sp.glacielle]
+グラシエル
+
+[gl.sp.mirrimime]
+ミリミム
+
+[gl.sp.somnarch]
+ソムナーク
+
+[gl.sp.mothmist]
+モスミスト
+
+[gl.sp.veilmoth]
+ベールモス
+
+[gl.sp.pixelix]
+ピクセリクス
+
+[gl.sp.clubtail]
+クラブテイル
+
+[gl.sp.anklord]
+アンクロード
+
+[gl.sp.belubub]
+ベルバブ
+
+[gl.sp.belugrand]
+ベルグランド
+
+[gl.sp.barnacub]
+バーナカブ
+
+[gl.sp.barnaclad]
+バナクラド
+
+[gl.sp.inkit]
+インキット
+
+[gl.sp.inkrake]
+インクレイク
+
+[gl.sp.glidefin]
+グライフィン
+
+[gl.sp.soarfin]
+ソアフィン
+
+[gl.sp.plattypuzz]
+プラティパズ
+
+[gl.sp.plattymind]
+プラマインド
+
+[gl.sp.frostiva]
+フロスティバ
+
+[gl.sp.voltaboon]
+ボルタブーン
+
+[gl.sp.bellowkiln]
+ベローキルン
+
+[gl.sp.origamorph]
+オリガモーフ
+
+[gl.sp.cindibex]
+シンベックス
+
+[gl.sp.blazibex]
+ブレベックス
+
+[gl.sp.archaeon]
+アーキオン
+
+[gl.sp.aurowl]
+オウロウル
+
+[gl.sp.fulgurion]
+フルグリオン
+
+[gl.sp.tuskid]
+タスキッド
+
+[gl.sp.tuskmash]
+タスマッシュ
+
+[gl.sp.tuskumo]
+タスクモー
+
+[gl.sp.cragodile]
+クラゴダイル
+
+[gl.sp.dashkip]
+ダシキップ
+
+[gl.sp.dashmark]
+ダシマーク
+
+[gl.sp.pinecub]
+パインキュブ
+
+[gl.sp.pinekeeper]
+パインキープ
+
+[gl.sp.tonguard]
+タンガード
+
+[gl.sp.pitlion]
+ピットリオン
+
+[gl.sp.flarechick]
+フレアチック
+
+[gl.sp.pyreacock]
+パイリコック
+
+[gl.sp.coilet]
+コイレット
+
+[gl.sp.teslarch]
+テスラーク
+
+[gl.sp.ignicondor]
+イグニコンド
+
+[gl.sp.genesa]
+ジェネサ
+
+[gl.sp.arkegen]
+アーケジェン
+
+[gl.sp.quillia]
+クイリア
+
+[gl.sp.quillara]
+クイララ
+
+[gl.sp.quillqueen]
+クイルクイン
+
+[gl.sp.droselet]
+ドロセレット
+
+[gl.sp.drosaura]
+ドロサウラ
+
+[gl.sp.droserath]
+ドロセラス
+
+[gl.sp.scarabeam]
+スカラビーム
+
+[gl.sp.kheprion]
+ケプリオン
+
+[gl.sp.lunashell]
+ルナシェル
+
+[gl.sp.selentor]
+セレントル
+
+[gl.sp.foldling]
+フォルドン
+
+[gl.bt.fight]
+たたかう
+
+[gl.bt.bag]
+どうぐ
+
+[gl.bt.party]
+てもち
+
+[gl.bt.run]
+にげる
+
+[gl.bt.pp]
+PP
+
+[gl.bt.lv]
+Lv
+
+[gl.bt.hp]
+HP
+
+[gl.bt.challenge]
+{v3}が
+しょうぶを しかけてきた！
+
+[gl.bt.rival_sendout]
+{v3}は
+{v0}を くりだした！
+
+[gl.bt.go]
+ゆけっ！ {v0}！
+
+[gl.bt.used]
+{v0}の
+{v1}！
+
+[gl.bt.super]
+こうかは
+ばつぐんだ！
+
+[gl.bt.notvery]
+こうかは いまひとつの
+ようだ…
+
+[gl.bt.noeffect]
+{v0}には
+こうかが ないようだ…
+
+[gl.bt.crit]
+きゅうしょに あたった！
+
+[gl.bt.miss]
+{v0}の こうげきは
+はずれた！
+
+[gl.bt.statdown]
+{v0}の
+{v1}が さがった！
+
+[gl.bt.statup]
+{v0}の
+{v1}が あがった！
+
+[gl.bt.st.attack]
+こうげき
+
+[gl.bt.st.defense]
+ぼうぎょ
+
+[gl.bt.st.speed]
+すばやさ
+
+[gl.bt.st.special]
+とくしゅ
+
+[gl.bt.st.accuracy]
+めいちゅう
+
+[gl.bt.st.evasion]
+かいひ
+
+[gl.bt.burned]
+{v0}は
+やけどを おった！
+
+[gl.bt.poisoned]
+{v0}は
+どくを あびた！
+
+[gl.bt.paralyzed]
+{v0}は
+からだが しびれた！
+
+[gl.bt.asleep]
+{v0}は
+ねむって しまった！
+
+[gl.bt.wake]
+{v0}は
+めを さました！
+
+[gl.bt.frozen]
+{v0}は
+こおりついた！
+
+[gl.bt.thaw]
+{v0}の
+こおりが とけた！
+
+[gl.bt.confused]
+{v0}は
+こんらんした！
+
+[gl.bt.hurt_itself]
+{v0}は
+じぶんを きずつけた！
+
+[gl.bt.fully_paralyzed]
+{v0}は
+しびれて うごけない！
+
+[gl.bt.flinch]
+{v0}は
+ひるんだ！
+
+[gl.bt.fainted]
+{v0}は
+たおれた！
+
+[gl.bt.exp]
+{v0}は
+{v2}の けいけんちを えた！
+
+[gl.bt.levelup]
+{v0}は
+レベル{v2}に あがった！
+
+[gl.bt.learned]
+{v0}は
+{v1}を おぼえた！
+
+[gl.bt.win]
+{v3}に
+しょうりした！
+
+[gl.bt.lose]
+もう たたかえる
+エレメンティが いない！
+---
+{player}は
+めのまえが まっくらに…
+
+[gl.bt.cant_run]
+トレーナーせんでは
+にげられない！
+
+[gl.bt.bag_empty]
+どうぐを もっていない。
+
+[gl.bt.party_only]
+{v0}しか
+いない！
+
+[gl.bt.what_do]
+{v0}は
+どうする？
+
+[gl.bt.nothing]
+しかし なにも
+おこらなかった！
+
+[gl.bt.ran]
+うまく にげきれた！
+
+[gl.bt.wild]
+やせいの {v0}が
+とびだしてきた！
+
+[gl.bt.sleeping]
+{v0}は
+ぐうぐう ねている！
+
+[gl.bt.frozen_solid]
+{v0}は
+こおって うごけない！
+
+[gl.bt.hurt_psn]
+{v0}は
+どくの ダメージを うけた！
+
+[gl.bt.hurt_brn]
+{v0}は
+やけどの ダメージを うけた！
+
+[gl.bt.focus]
+{v0}は
+きあいを ためている！
+
+[gl.bt.screen]
+{v0}の
+まわりに かべが できた！
+
+[gl.bt.recoil]
+{v0}は
+はんどうを うけた！
+
+[gl.bt.failed]
+しかし うまく
+きまらなかった！
+
+[gl.bt.conf_over]
+{v0}の
+こんらんが とけた！
+
+[gl.bt.run_fail]
+うまく にげられない！
+
+[gl.bt.struggle]
+わるあがき
+
+[gl.choice.yes]
+はい
+
+[gl.choice.no]
+いいえ
+
+[gl.name.ask_player]
+なまえを おしえてね！
+
+[gl.name.ask_rival]
+ちいさい ころからの
+ライバルだよ。
+---
+なまえは なんて いうの？
+
+[gl.name.p0]
+アレク
+
+[gl.name.p1]
+ニコ
+
+[gl.name.p2]
+リオ
+
+[gl.name.p3]
+ソル
+
+[gl.name.r0]
+ガエル
+
+[gl.name.r1]
+ブルーノ
+
+[gl.name.r2]
+イケル
+
+[gl.name.r3]
+ユーゴ
+
+# --- M3-A save ---
+[gl.title.continue]
+つづきから
+
+[gl.title.new]
+はじめから
+
+[gl.save.who]
+{player}
+
+[gl.save.reg]
+ずかん
+
+[gl.save.time]
+じかん
+
+[gl.save.ask]
+ぼうけんの きろくを
+セーブしますか？
+
+[gl.save.saving]
+セーブちゅう…
+でんげんを きらないでね
+
+[gl.save.done]
+{player}は
+ぼうけんを セーブした！
+
+[gl.save.fail]
+セーブできなかった…
+SDカードを みてね
+
+# --- M3-C capture ---
+[gl.it.crystal]
+クリスタル
+
+[gl.it.salve]
+ぬりぐすり
+
+[gl.it.antidote]
+どくけし
+
+[gl.it.limb_balm]
+しびれとりバーム
+
+[gl.it.wake_salts]
+めざましソルト
+
+[gl.it.cool_gel]
+ひやしジェル
+
+[gl.it.parcel]
+おとどけもの
+
+[gl.it.crystal_plus]
+クリスタルプラス
+
+[gl.it.rich_salve]
+こいぬりぐすり
+
+[gl.it.ward_spray]
+ガードスプレー
+
+[gl.it.exit_wisp]
+でぐちのひかり
+
+[gl.it.disc_01]
+わざディスク01
+
+[gl.it.disc_02]
+わざディスク02
+
+[gl.it.disc_03]
+わざディスク03
+
+[gl.it.ferry_pass]
+フェリーパス
+
+[gl.it.fossil_trilobite]
+トリロかせき
+
+[gl.it.fossil_sealily]
+ユリのかせき
+
+[gl.it.disc_04]
+わざディスク04
+
+[gl.it.estuche]
+コインポーチ
+
+[gl.it.luna]
+つきのジェム
+
+[gl.it.fuego]
+ほのおのジェム
+
+[gl.it.agua]
+みずのジェム
+
+[gl.it.trueno]
+かみなりのジェム
+
+[gl.it.hoja]
+はっぱのジェム
+
+[gl.it.lente]
+ゴーストレンズ
+
+[gl.it.flauta]
+めざめのふえ
+
+[gl.it.cupon_bici]
+じてんしゃクーポン
+
+[gl.it.bici]
+じてんしゃ
+
+[gl.it.vit_hp]
+HPのもと
+
+[gl.it.vit_atk]
+こうげきのもと
+
+[gl.it.vit_def]
+ぼうぎょのもと
+
+[gl.it.vit_spd]
+すばやさのもと
+
+[gl.it.vit_spc]
+とくしゅのもと
+
+[gl.it.spring_water]
+わきみず
+
+[gl.it.fizzy_pop]
+しゅわしゅわドリンク
+
+[gl.it.citrus_cooler]
+シトラスドリンク
+
+[gl.it.prime_salve]
+じょうとうぬりぐすり
+
+[gl.it.disc_05]
+わざディスク05
+
+[gl.it.llave_polea]
+ホイストキー
+
+[gl.it.cana_junco]
+あしのつりざお
+
+[gl.it.cana_fibra]
+ファイバーざお
+
+[gl.it.cana_aleacion]
+ごうきんつりざお
+
+[gl.it.dentadura]
+きんのさしば
+
+[gl.it.cristal_reserva]
+リザーブクリスタル
+
+[gl.it.ultra_cristal]
+ウルトラクリスタル
+
+[gl.it.chip_acceso]
+アクセスチップ
+
+[gl.it.disc_06]
+わざディスク06
+
+[gl.it.disc_07]
+わざディスク07
+
+[gl.it.disc_08]
+わざディスク08
+
+[gl.it.cristal_maestro]
+マスタークリスタル
+
+[gl.it.disc_tierra]
+わざディスク10
+
+[gl.it.ambar_fosil]
+かせきコハク
+
+[gl.it.llave_ceniza]
+すすのカギ
+
+[gl.it.disc_10]
+わざディスク09
+
+[gl.it.total_salve]
+ぜんかいぬりぐすり
+
+[gl.it.life_spark]
+いのちのひばな
+
+[gl.it.life_blaze]
+いのちのほのお
+
+[gl.it.vital_draught]
+バイタルドリンク
+
+[gl.it.growth_seed]
+せいちょうのたね
+
+[gl.it.vigor_drop]
+げんきのしずく
+
+[gl.it.vigor_flask]
+げんきのビン
+
+[gl.it.strong_ward]
+つよいガード
+
+[gl.it.grand_ward]
+さいきょうガード
+
+[gl.it.disc_11]
+わざディスク11
+
+[gl.it.disc_12]
+わざディスク12
+
+[gl.it.disc_13]
+わざディスク13
+
+[gl.it.disc_14]
+わざディスク14
+
+[gl.it.disc_15]
+わざディスク15
+
+[gl.it.disc_16]
+わざディスク16
+
+[gl.it.disc_17]
+わざディスク17
+
+[gl.it.disc_18]
+わざディスク18
+
+[gl.it.disc_19]
+わざディスク19
+
+[gl.it.disc_20]
+わざディスク20
+
+[gl.it.disc_21]
+わざディスク21
+
+[gl.it.disc_22]
+わざディスク22
+
+[gl.it.disc_23]
+わざディスク23
+
+[gl.it.disc_24]
+わざディスク24
+
+[gl.it.disc_25]
+わざディスク25
+
+[gl.it.disc_26]
+わざディスク26
+
+[gl.it.disc_27]
+わざディスク27
+
+[gl.it.disc_28]
+わざディスク28
+
+[gl.it.disc_29]
+わざディスク29
+
+[gl.it.disc_30]
+わざディスク30
+
+[gl.it.disc_31]
+わざディスク31
+
+[gl.it.disc_32]
+わざディスク32
+
+[gl.it.disc_33]
+わざディスク33
+
+[gl.it.disc_34]
+わざディスク34
+
+[gl.it.disc_35]
+わざディスク35
+
+[gl.it.disc_36]
+わざディスク36
+
+[gl.it.disc_37]
+わざディスク37
+
+[gl.it.disc_38]
+わざディスク38
+
+[gl.it.disc_39]
+わざディスク39
+
+[gl.it.disc_40]
+わざディスク40
+
+[gl.it.disc_41]
+わざディスク41
+
+[gl.it.disc_42]
+わざディスク42
+
+[gl.it.disc_43]
+わざディスク43
+
+[gl.it.disc_44]
+わざディスク44
+
+[gl.it.disc_45]
+わざディスク45
+
+[gl.it.disc_46]
+わざディスク46
+
+[gl.it.disc_47]
+わざディスク47
+
+[gl.it.disc_48]
+わざディスク48
+
+[gl.it.disc_49]
+わざディスク49
+
+[gl.it.disc_50]
+わざディスク50
+
+[gl.it.piedra_eclipse]
+エクリプスのいし
+
+[gl.it.origin_shard]
+オリジンのかけら
+
+[gl.it.buscatesoros]
+たからサーチャー
+
+[gl.it.atlas]
+アトラス
+
+[gl.it.reparto_total]
+チームシェア
+
+[gl.it.peluche_fuga]
+にげのぬいぐるみ
+
+[gl.it.pulso_atk]
+こうげきブースト
+
+[gl.it.pulso_def]
+ぼうぎょブースト
+
+[gl.it.pulso_spd]
+すばやさブースト
+
+[gl.it.pulso_spc]
+とくしゅブースト
+
+[gl.it.pulso_acc]
+ねらいブースト
+
+[gl.it.velo_bruma]
+きりのベール
+
+[gl.it.foco_critico]
+きゅうしょフォーカス
+
+[gl.it.savia]
+きのしる
+
+[gl.it.savia_max]
+マックスきのしる
+
+[gl.it.descongelar]
+こおりとかし
+
+[gl.it.panacea]
+なんでもなおし
+
+[gl.it.pp_extra]
+PPプラス
+
+[gl.it.trozo_oro]
+きんの かたまり
+
+[gl.bt.threw]
+{v0}を
+なげた！
+
+[gl.bt.caught]
+やったー！ {v0}を
+つかまえた！
+
+[gl.bt.broke0]
+ああっ！ でてきて
+しまった！
+
+[gl.bt.broke1]
+おしい！ つかまった
+と おもったのに！
+
+[gl.bt.broke2]
+ああ！ もうすこしで
+つかまえられたのに！
+
+[gl.bt.broke3]
+くやしい！ あと
+すこしだったのに！
+
+[gl.bt.no_steal]
+ほかの ひとの
+エレメンティは
+---
+つかまえられないよ！
+
+[gl.bt.party_full]
+てもちが いっぱいで
+もてない！
+---
+{v0}を
+にがした！
+
+[gl.bt.healed]
+{v0}の HPが
+{v2}かいふくした！
+
+[gl.bt.no_effect]
+つかっても
+こうかが ない！
+
+[gl.bt.already_out]
+{v0}は もう
+でている！
+
+[gl.bt.no_will]
+{v0}は
+たたかえない！
+
+[gl.bt.switch]
+いれかえ
+
+[gl.bt.comeback]
+もどれ！
+{v0}！
+
+# --- M3-B route ---
+[route1.sign]
+1ばん どうろ
+みなみは アリソむら
+---
+きたは ノードシティ
+
+[route1.ledge]
+がけは みなみへ
+とびおりられる。
+
+[gl.blackout]
+めの まえが
+まっしろに なった…
+
+[gl.blackout.home]
+{player}は いそいで
+いえに かえった。
+
+# --- M3-E content ---
+[mom.rest]
+{player}！ つかれてる
+みたいね。
+---
+すこし やすんでいく？
+
+[mom.rest.done]
+はい、 おしまい！
+エレメンティは
+---
+げんきいっぱいよ！
+いってらっしゃい！
+
+[mom.rest.no]
+そう。 ここで
+まってるわ。 きをつけて！
+
+[route1.clerk.a]
+こんにちは！ ぼく
+ノードシティの おみせで
+---
+はたらいてるんだ。
+サンプルを あげるよ！
+
+[route1.clerk.got]
+ぬりぐすりを
+もらった！
+
+[route1.clerk.b]
+ノードシティに きたら
+おみせに よってね！
+
+[route1.clerk.full]
+にもつが いっぱいだ。
+また こんど あげるよ！
+
+# --- M3-D menus ---
+[gl.bag.empty]
+どうぐを もっていない。
+
+[gl.bag.use]
+つかう
+
+[gl.bag.toss]
+すてる
+
+[gl.bag.not_now]
+いまは つかえないよ！
+
+[gl.bag.toss_ask]
+{v0}を {v2}こ
+すてても いい？
+
+[gl.bag.tossed]
+{v0}を {v2}こ
+すてた！
+
+# --- M4-A items ---
+[gl.bt.cured_psn]
+{v0}の どくが
+なおった！
+
+[gl.bt.cured_par]
+{v0}の しびれが
+なおった！
+
+[gl.bt.cured_brn]
+{v0}の やけどが
+なおった！
+
+[gl.bt.money]
+{player}は しょうきん
+{v1}を えた！
+
+[gl.bag.cant_toss]
+たいせつな ものだから
+すてられない！
+
+# --- M4-B shop ---
+[gl.shop.hello]
+いらっしゃいませ！
+なにを おのぞみ ですか？
+
+[gl.shop.buy]
+かう
+
+[gl.shop.sell]
+うる
+
+[gl.shop.quit]
+やめる
+
+[gl.shop.deal]
+{v0}を {v2}こ
+{v3}で いい？
+
+[gl.shop.bought]
+はい どうぞ！
+ありがとう ございました！
+---
+ほかに なにか
+おのぞみ ですか？
+
+[gl.shop.sold]
+まいど ありがとう
+ございます！
+---
+ほかに なにか
+おのぞみ ですか？
+
+[gl.shop.no_money]
+おかねが
+たりません！
+
+[gl.shop.bag_full]
+もちものが
+いっぱいです！
+
+[gl.shop.cant_sell]
+それは かいとれません！
+
+[gl.shop.bye]
+ありがとう ございました！
+またどうぞ！
+
+[gl.center.ask]
+センターへ
+ようこそ！
+---
+エレメンティを
+げんきに しますか？
+
+[gl.center.done]
+おまたせしました！
+げんきに なりましたよ！
+---
+また きてね！
+
+[gl.center.bye]
+また きてね！
+
+# --- M4-C world ---
+[gl.trainer.pre]
+おい きみ！
+しょうぶだ！
+
+[gl.trainer.after]
+いいしょうぶだった！
+きみは つよいな！
+
+[gl.found]
+{player}は {v0}を
+みつけた！
+
+[gl.found.full]
+にもつが いっぱいで
+もてない！
+
+[tr.test.pre]
+ぼくは テストの
+トレーナーだ！
+
+[tr.test.after]
+まけた… いい テスト
+バトルだった！
+
+# --- M4-E species ---
+# --- M4-D content ---
+[nodo.sign]
+ノードシティ
+すべてが つながる まち
+
+[nodo.gym]
+ノードシティの ジム
+---
+リーダーは ？？？
+タイプは じめん
+
+[nodo.house.a]
+しずかな いえだ。
+だれも でてこない。
+
+[nodo.house.b]
+とびらに かぎが
+かかっている。
+
+[nodo.npc.a]
+くさむらの なかには
+エレメンティが いるぞ。
+---
+クリスタルを なげて
+つかまえよう！
+---
+じめんに ふくろが
+おちてたら ひろおう！
+
+[nodo.npc.b]
+ここの センターは
+むりょうで なおせるよ。
+---
+つかれたら すぐ
+つかうといいわ。
+
+[nodo.npc.k]
+2ばん どうろの きた
+ウンブラの もりが ある。
+---
+むしが いっぱいの
+めいろみたいな もりさ。
+---
+まいごに なるなよ！
+
+[nodo.guard.stop]
+まて！ この みちは
+クリスタルの ない
+---
+しんまいは とおれん！
+---
+ショップで きいて
+みるといい。
+
+[nodo.guard.thanks]
+おお！ クリスタルを
+もっているな。 とおれ。
+
+[nodo.guard.tip]
+きたに ウンブラの
+もりが あるぞ。
+---
+どくけしを もって
+いくんじゃ。
+
+[nodo.guard.after]
+どくけしを もって
+いくんじゃ。
+
+[nodo.shop.ask]
+アリソむらから きたの？
+リンはかせあての
+---
+おとどけものが
+とどいてるんだ。
+---
+もっていって くれる？
+
+[nodo.shop.no]
+そうか… きがかわったら
+また きてくれ。
+
+[nodo.shop.got]
+{player}は
+おとどけものを もらった！
+
+[nodo.shop.thanks]
+リンはかせに
+わたしてくれよ！
+---
+とどけたら また
+ここに きてくれ。
+
+[nodo.shop.wait]
+さきに おとどけものを
+わたしてきてくれ。
+
+[lab.lin.parcel]
+あっ！ まっていた
+おとどけものね！
+---
+おれいに この
+クリスタルを あげる。
+---
+エレメンティを
+つかまえてね！
+
+[lab.lin.parcel.got]
+{player}は クリスタルを
+5こ もらった！
+
+[centro.books]
+エレメンティと
+クリスタルの ざっし。
+
+[ruta2.sign]
+2ばん どうろ
+みなみは ノードシティ
+---
+きたは ウンブラのもり
+
+[tr.explorador_r2.pre]
+まて！ ぼくは
+しょうねん たんけんか！
+---
+しょうぶだ！
+
+[tr.explorador_r2.after]
+つよいね！ ぼくは
+たんけんを つづけるよ。
+
+[bosque.sign]
+ウンブラの もり
+ひかりが とどかない。
+
+[tr.cazabichos_1.pre]
+むしが いちばん！
+しょうぶだ！
+
+[tr.cazabichos_1.after]
+ぼくの むしが…
+いいしょうぶだった！
+
+[tr.cazabichos_2.pre]
+いちにちじゅう むしとり！
+しょうぶだ！
+
+[tr.cazabichos_2.after]
+ぼくの あみでも
+かなわない…
+
+
+# --- K keyboard ---
+[gl.kb.new]
+あたらしい なまえ
+
+[gl.kb.end]
+おわり
+
+[gl.kb.pg0]
+あ
+
+[gl.kb.pg1]
+が
+
+[gl.kb.pg2]
+ア
+
+[gl.kb.pg3]
+ガ
+
+[gl.kb.t_player]
+なまえは？
+
+[gl.kb.t_rival]
+なまえは？
+
+[gl.kb.t_nick]
+あだなは？
+
+[gl.kb.ask_nick]
+{v0}に
+ニックネームを つけますか？
+
+
+# --- trainer names (class + name, gl.tr.*; <= 15 glyphs; assets/data/trainers.toml name = ...) ---
+[gl.tr.explorador_r2]
+たんけんか トミ
+
+[gl.tr.cazabichos_1]
+むしずき ダニ
+
+[gl.tr.cazabichos_2]
+むしずき ラウル
+
+# --- M4 zone banner (gl.area.<key> = tools/mapc.py AREA_KEYS order; the zone-name banner of the world, contract 22) ---
+[gl.area.villa_aliso]
+アリソむら
+
+[gl.area.ruta_1]
+1ばん どうろ
+
+[gl.area.ciudad_nodo]
+ノードシティ
+
+[gl.area.ruta_2]
+2ばん どうろ
+
+[gl.area.bosque_umbrio]
+ウンブラのもり
+
+[gl.area.pueblo_cantera]
+カンテラむら
+
+[gl.area.ruta_3]
+3ばん どうろ
+
+[gl.area.monte_eco]
+エコやま
+
+[gl.area.ruta_4]
+4ばん どうろ
+
+[gl.area.ciudad_marea]
+マレアシティ
+
+[gl.area.ruta_24]
+24ばん どうろ
+
+[gl.area.ruta_25]
+25ばん どうろ
+
+[gl.area.ruta_5]
+5ばん どうろ
+
+[gl.area.ruta_6]
+6ばん どうろ
+
+[gl.area.puerto_dinamo]
+ダイナモこう
+
+[gl.area.ruta_11]
+11ばん どうろ
+
+[gl.area.cueva_excavadora]
+あなほり どうくつ
+
+[gl.area.ruta_9]
+9ばん どうろ
+
+[gl.area.ruta_10]
+10ばん どうろ
+
+[gl.area.tunel_oscuro]
+くらやみトンネル
+
+[gl.area.pueblo_bruma]
+ブルマタウン
+
+[gl.area.ruta_8]
+8ばん どうろ
+
+[gl.area.ruta_7]
+7ばん どうろ
+
+[gl.area.metropolis_neon]
+ネオンシティ
+
+[gl.area.sala_juegos]
+フォーチュンホール
+
+[gl.area.escondite_vertice]
+バーテックスの アジト
+
+[gl.area.torre_recuerdos]
+おもいでのとう
+
+[gl.area.ruta_12]
+12ばん どうろ
+
+[gl.area.ruta_13]
+13ばん どうろ
+
+[gl.area.ruta_14]
+14ばん どうろ
+
+[gl.area.ruta_15]
+15ばん どうろ
+
+[gl.area.ciudad_ambar]
+アンバーシティ
+
+[gl.area.ruta_16]
+16ばん どうろ
+
+
+[gl.area.autopista]
+マグハイウェイ
+
+
+[gl.area.ruta_18]
+18ばん どうろ
+
+
+[gl.area.reserva]
+ワイルドほごく
+
+
+[gl.area.mar_ambar]
+アンバーのうみ
+
+[gl.area.ciudad_cenit]
+ゼニスシティ
+
+[gl.area.torre_vertice]
+バーテックスタワー
+
+[gl.area.ruta_19]
+19ばん どうろ
+
+[gl.area.ruta_20]
+20ばん どうろ
+
+[gl.area.ruta_21]
+21ばん どうろ
+
+[gl.area.islas_escarcha]
+フロストアイルズ
+
+[gl.area.isla_ceniza]
+アッシュじま
+
+[gl.area.mansion_calcinada]
+やけたやかた
+
+[gl.area.central_electrica]
+はつでんしょ
+# C9 (contract 56): the zone banners of Ruta 22 .. the Cueva Secreta (consecutive after gl.area.torre_vertice, in the AREA_KEYS order of tools/mapc.py)
+[gl.area.ruta_22]
+22ばん どうろ
+
+[gl.area.ruta_23]
+23ばん どうろ
+
+[gl.area.senda_campeones]
+チャンピオンのみち
+
+[gl.area.meseta_cumbre]
+サミットだいち
+
+[gl.area.cueva_secreta]
+ひみつの どうくつ
+
+[gl.area.ruinas_origen]
+オリジンの いせき
+
+[gl.area.gruta_eclipse]
+エクリプスの どうくつ
+
+
+# --- M5-A learn ---
+[gl.learn.wants]
+{v0}は あたらしい
+わざを おぼえたい！
+---
+{v1}！
+
+[gl.learn.full]
+しかし {v0}は
+わざを 4つ しっている！
+
+[gl.learn.forget_q]
+わざを ひとつ わすれて
+{v1}を おぼえる？
+
+[gl.learn.stop_q]
+{v1}を
+おぼえるのを あきらめる？
+
+[gl.learn.not]
+{v1}を
+おぼえなかった！
+
+[gl.learn.poof]
+1、2の… ポカン！
+
+[gl.learn.forgot]
+{v0}は
+{v1}を わすれた！
+
+[gl.learn.and]
+そして…
+---
+{v0}は
+{v1}を おぼえた！
+
+# --- M5-B evo ---
+[gl.evo.what]
+おや！？
+{v0}の ようすが…！
+
+[gl.evo.stopped]
+あれ？ {v0}の
+しんかが とまった！
+
+[gl.evo.done]
+おめでとう！
+---
+{v0}は
+{v1}に しんかした！
+
+# --- M5-C box/card ---
+[gl.menu.card]
+{player}
+
+[gl.box.on]
+パソコンの でんげんを
+いれた！
+---
+あずかりシステムに
+せつぞくした！
+
+[gl.box.take]
+ひきだす
+
+[gl.box.put]
+あずける
+
+[gl.box.free]
+にがす
+
+[gl.box.change]
+きりかえ
+
+[gl.box.quit]
+やめる
+
+[gl.box.name]
+ボックス
+
+[gl.box.sent]
+{v0}を
+ボックス{v2}へ おくった！
+
+[gl.box.took]
+{v0}を
+ひきだした！
+
+[gl.box.empty]
+ボックスは
+からっぽだ！
+
+[gl.box.full]
+ボックスは
+いっぱいだ！
+
+[gl.box.party_full]
+てもちが
+いっぱいだ！
+
+[gl.box.last]
+さいごの エレメンティは
+あずけられない！
+
+[gl.box.ask_free]
+{v0}を にがす？
+もどって こないよ！
+
+[gl.box.freed]
+{v0}を
+にがした！
+---
+バイバイ、{v0}！
+
+[gl.box.all_full]
+ボックスが いっぱいだ！
+---
+{v0}を
+にがした！
+
+[gl.card.money]
+おかね
+
+[gl.card.time]
+じかん
+# --- M5-D Cantera ---
+[gl.tr.aprendiz_cantera]
+みならい レオ
+
+[gl.tr.garrick]
+リーダー ガリック
+
+[cantera.sign]
+カンテラむら
+いしいろの まち
+
+[cantera.house.a]
+みんな いしきりばに
+いって だれも いない。
+
+[cantera.house.b]
+まどに いしの こなが
+ついている。
+
+[cantera.npc.gym]
+ここの ジムは
+ガリックが リーダーだよ。
+---
+いわタイプを つかうぞ。
+きを つけてな！
+
+[cantera.npc.quarry]
+むかしは あなから
+クリスタルが とれたんだ。
+---
+いまは いしばかりさ。
+どっさり あるぞ！
+
+[cantera.npc.center]
+リーダーに いどむまえに
+しっかり きたえてね！
+---
+センターで なおして
+から いくといいよ。
+
+[cantera.npc.east]
+ひがしから 3ばん どうろが
+はじまるよ。
+---
+トレーナーが
+いっぱい いるらしい。
+
+[cantera.blocker]
+おい きみ！
+トレーナーだろ？
+---
+まず ガリックを
+たおしてこい！
+
+[cantera.gym.guide.a]
+おーい！ きみなら
+チャンピオンに なれる！
+---
+ガリックは いわタイプ。
+つよいぞ！
+---
+みずと くさが
+こうかばつぐんだ！
+
+[cantera.gym.guide.b]
+すごい！ ガリックに
+かったんだね！
+---
+このちょうしで
+がんばれ！
+
+[tr.aprendiz_cantera.pre]
+ちょっと まった！
+ガリックさんに あうのは
+---
+まだ はやいぞ！
+おれが あいてだ！
+
+[tr.aprendiz_cantera.after]
+つよいな！ でも
+ガリックさんは つよいぞ！
+
+[cantera.garrick.pre]
+よくきたな！
+おれが ガリックだ！
+---
+いわの ように かたい
+まもりと こころだ！
+---
+だから おれの エレメンティは
+みんな いわタイプだ！
+---
+それでも いどむか？
+なら ぜんりょくで こい！
+
+[cantera.garrick.win]
+あなどって いたよ。
+きみは つよい！
+---
+しょうめいとして
+これを うけとれ！
+
+[cantera.badge]
+{player}は
+カンテラバッジを もらった！
+
+[cantera.garrick.about]
+リーグの こうしきな
+バッジだよ。
+---
+さいしょの リーダーに
+かった しょうこだ！
+---
+トレーナーカードに
+きろくされるぞ。
+
+[cantera.garrick.after]
+せかいには いろんな
+トレーナーが いるんだ！
+---
+きみには さいのうが ある。
+きたえつづけろよ！
+
+# --- Sound ---
+[gl.opt.sound]
+おと
+
+[gl.opt.sound.hi]
+おおきい
+
+[gl.opt.sound.lo]
+ちいさい
+
+[gl.opt.sound.off]
+なし
+
+# --- C2-S1 items ---
+[gl.bag.used]
+{player}は
+{v0}を つかった！
+
+[gl.repel.end]
+ガードスプレーの
+こうかが きれた！
+
+[gl.bag.no_here]
+ここでは
+つかえないよ！
+
+[gl.disc.boot]
+ディスクを
+きどうした！
+---
+なかみは
+{v1}！
+
+[gl.disc.cant]
+{v0}には
+あわないようだ…
+---
+{v1}は
+おぼえられない！
+
+[gl.disc.knows]
+{v0}は すでに
+{v1}を しっている！
+
+# --- C2-S2 Registro ---
+# gl.reg.*: labels of the Registro screen; gl.rg.<species id>: its description (2 pages of <= 2 lines, shown together)
+[gl.reg.seen]
+みた
+
+[gl.reg.caught]
+つかまえた
+
+[gl.reg.ht]
+たかさ
+
+[gl.reg.wt]
+おもさ
+
+[gl.rg.embercub]
+しっぽに ひが ともって
+うまれた ときから
+---
+おこると ほのおが
+おおきく もえあがる
+
+[gl.rg.flarewolf]
+むれで はしる。たてがみは
+いつも もえている。
+---
+はしると ひのこが
+うしろに ちる。
+
+[gl.rg.pyrewolf]
+むれの リーダー。
+ほのおで よるを
+---
+あかるく てらし
+なかまが ついてくる。
+
+[gl.rg.puddlet]
+みずたまりの そばに
+すんでいる。
+---
+うれしいと しっぽで
+みずを はねあげる。
+
+[gl.rg.tidalux]
+しおが みちると
+からだが ひかる。
+---
+ゆうがた むれで
+およいでいる。
+
+[gl.rg.tidalgard]
+おおきな こうらの
+たてを もっている。
+---
+なみを まともに うけて
+みんなを まもる。
+
+[gl.rg.sprouton]
+せなかの めが
+ひかりを すう。
+---
+たくさん たべると
+めも おおきくなる。
+
+[gl.rg.thornbuck]
+ちいさな つのに
+トゲが はえている。
+---
+むれを まもる。
+トゲは はるに ふえる。
+
+[gl.rg.grovestag]
+つのは きの えだのよう。
+とりが すを つくる。
+---
+もりの まもりがみ。
+ゆっくり あるく。
+
+[gl.rg.flitter]
+ちいさくて すばやい とり。
+くさむらを とびまわる。
+---
+あさ はやく たかい こえで
+さえずる。
+
+[gl.rg.flitwing]
+つばさが おおきくなり
+のはらを すべるように
+---
+とぶ。とおくの えものを
+みのがさない。
+
+[gl.rg.skyrrow]
+やのように まっすぐ
+きゅうこうかする。
+---
+たかい そらから
+えものを ねらう。
+
+[gl.rg.muncrit]
+なんでも かじる。
+みつけた ものは ぜんぶ。
+---
+まえばは ずっと
+のびつづける。
+
+[gl.rg.munchmole]
+つめで トンネルを ほる。
+ひとばんで
+---
+おかを ひとつ
+つらぬいてしまう。
+
+[gl.rg.grubbit]
+いちにち じゅう
+はっぱを たべている。
+---
+おとなしくて
+とても はやく そだつ。
+
+[gl.rg.grubshell]
+かたい からが
+からだを つつんでいる。
+---
+ほとんど うごかない。
+へんしんを まっている。
+
+[gl.rg.lanternmoth]
+はねが くらやみで
+ほのかに ひかる。
+---
+よる あかりの まわりに
+あつまってくる。
+
+[gl.rg.stingle]
+しっぽに はりを もつ
+ちいさな むし。
+---
+さわると いきなり
+さしてくる。
+
+[gl.rg.stinglet]
+いとの まゆに
+つつまれている。
+---
+じっと しながら
+からだが かわるのを まつ。
+
+[gl.rg.velvex]
+ビロードの はねから
+どくの こなが おちる。
+---
+はばたくたびに
+あたりに ひろがる。
+
+[gl.rg.zaphid]
+むれで くらす。
+なかまの あいだで
+---
+あらしの ときは とくに
+ひばなが とびかう。
+
+[gl.rg.voltgecko]
+あしの きゅうばんで
+かべを のぼる。
+---
+からだに でんきを
+ためこんでいる。
+
+[gl.rg.pebblump]
+みちの いしころに
+そっくり。
+---
+ふまれると おこって
+ころがりだす。
+
+[gl.rg.rockroll]
+さかを ころがり おちる。
+とめられない。
+---
+おもい からだで
+ぜんぶ つぶす。
+
+[gl.rg.bouldrum]
+むねを たいこのように
+たたく。
+---
+そのひびきは とおくまで
+きこえる。
+
+[gl.rg.boulderback]
+せなかに おおきな
+いわを せおっている。
+---
+かたくて おそい。
+いわの なかで ねむる。
+
+# --- C2 species ---
+# gl.sp.<id> (names), gl.mv.<id> (moves 40+), gl.rg.<id> (Registro descriptions, 2 pages of <= 2 lines); contract 31
+[gl.rg.echolet]
+おおきな みみで
+こえの はんしゃを きく。
+---
+くらい どうくつでも
+ぶつからずに とぶ。
+
+[gl.rg.lunelle]
+まるくて やわらかい
+つきの ような からだ。
+---
+まんげつの よるは
+ひたいが ひかる。
+
+[gl.rg.shellfern]
+いしの こうらに
+しだが はえている。
+---
+あめの ひは
+わかばが のびる。
+
+[gl.rg.jabbird]
+いつも しかめつらで
+とつぜん つついてくる。
+---
+まっすぐな くちばしは
+やりの ように さす。
+
+[gl.rg.lullabun]
+うたうと ながい みみが
+ふるえる。
+---
+きいた ものは
+すぐ ねむってしまう。
+
+[gl.rg.quillix]
+せなかの とげには
+どくが ある。
+---
+おどろくと
+しっぽの はりを ふる。
+
+[gl.rg.dunedil]
+スコップの ような はなで
+すなの なかを およぐ。
+---
+めだけ すなから
+だして ひそむ。
+
+[gl.rg.coilisp]
+かれはの フードを
+かぶって とぐろを まく。
+---
+しろい わが
+ちかよるなと しらせる。
+
+[gl.rg.dozelf]
+けむりの クッションで
+うとうと ねむる。
+---
+ながい ぼうしが たれて
+ぜったい おきない。
+
+[gl.rg.mossbud]
+こけに おおわれた
+ちいさな あしの かぶ。
+---
+あたまの つぼみは
+よる ひらく。
+
+[gl.rg.gleamjell]
+ガラスの かさは
+ほとんど とうめい。
+---
+なかの ひかりが
+みずの なかで ゆれる。
+
+[gl.rg.trilobite]
+からは いわの
+ふしで できている。
+---
+むかし ふるい うみで
+くらしていた。
+
+[gl.rg.sealily]
+いわの くきは
+ふしが ある。
+---
+うでを とじると
+いわの はなに なる。
+
+[gl.rg.echowing]
+まくの つばさで
+やみを きりさく。
+---
+なきごえで
+どうくつが ゆれる。
+
+[gl.rg.ferncairn]
+こうらが ひろがり
+いしの やまに なった。
+---
+せなかの しだは
+ちいさな にわの よう。
+
+[gl.rg.jabhawk]
+はばたかずに すべり
+やのように おちる。
+---
+くちばしは
+きを つらぬく。
+
+[gl.rg.quillord]
+とげは ながく
+するどく とがっている。
+---
+しっぽを ふって
+なわばりを まもる。
+
+[gl.rg.dunedrake]
+ひとばんで
+トンネルを ほる。
+---
+つるつるの うろこは
+いわも はじく。
+
+[gl.rg.hoodcoil]
+はっぱの フードを
+ひろげて おおきく みせる。
+---
+にらまれると
+からだが うごかない。
+
+[gl.rg.trancelf]
+ねむりながら
+ねんりきで うごかす。
+---
+ゆめを みると
+けむりが こくなる。
+
+[gl.rg.mossbloom]
+はなが はんぶん
+ひらいている。
+---
+かふんを ばらまいて
+みんなを せきこませる。
+
+[gl.rg.trilothorn]
+いわの とげが
+ぜんしんを おおう。
+---
+とげは かいも
+いわも わる。
+
+[gl.rg.crinolith]
+いしの かんむりは
+おおきな ゆりの よう。
+---
+ふかい うみでだけ
+うでを ひらく。
+
+[gl.rg.gleamlet]
+ちいさな ガラスの くらげ。
+ひかりの てんが ある。
+---
+ジェムに ふれると
+おおきく そだつ。
+
+# --- C2 content ---
+
+# --- trainer names (class + name, gl.tr.*; <= 15 glyphs) ---
+[gl.tr.explorador_r3a]
+たんけんか ベン
+
+[gl.tr.chica_r3]
+おんなのこ リサ
+
+[gl.tr.cazabichos_r3]
+むしずき クリス
+
+[gl.tr.montanista_r3]
+やまおとこ マルク
+
+[gl.tr.explorador_r3b]
+たんけんか カル
+
+[gl.tr.montanista_eco]
+やまおとこ ラロ
+
+[gl.tr.vertice_eco1]
+エージェント ダクス
+
+[gl.tr.vertice_eco2]
+エージェント レクス
+
+[gl.tr.vertice_eco3]
+エージェント ゼド
+
+[gl.tr.cientifico_eco]
+かがくしゃ ミゲ
+
+[gl.tr.chica_r4]
+おんなのこ ダナ
+
+[gl.tr.explorador_r4]
+たんけんか マックス
+
+[gl.tr.nadadora_1]
+すいえいせんしゅ リア
+
+[gl.tr.nadadora_2]
+すいえいせんしゅ マル
+
+[gl.tr.nerea]
+リーダー ネレア
+
+[gl.tr.explorador_r24a]
+たんけんか ティム
+
+[gl.tr.chica_r24]
+おんなのこ カルラ
+
+[gl.tr.cazabichos_r24]
+むしずき リック
+
+[gl.tr.explorador_r24b]
+たんけんか ジョー
+
+[gl.tr.vertice_r24]
+エージェント トム
+
+[gl.tr.montanista_r25]
+やまおとこ エリ
+
+[gl.tr.chica_r25]
+おんなのこ サラ
+
+
+# --- C2 key items ---
+[gl.gift]
+{player}は
+{v0}を もらった！
+
+
+# --- Ruta 3 ---
+[ruta3.sign]
+3ばん どうろ
+エコやまは きた
+
+[tr.explorador_r3a.pre]
+おい きみ！ ぼくの
+チームは はやいぞ！
+---
+ためして みよう！
+
+[tr.explorador_r3a.after]
+はやいね！
+もっと きたえるよ。
+
+[tr.chica_r3.pre]
+こんにちは！ わたしの
+フリッターは かわいい！
+---
+でも たたかうわよ！
+
+[tr.chica_r3.after]
+フリッターが
+つかれちゃった！
+
+[tr.cazabichos_r3.pre]
+むしが いちばん！
+みてよ！
+
+[tr.cazabichos_r3.after]
+むしたちは もっと
+つよくなるよ。
+
+[tr.montanista_r3.pre]
+なんねんも やまを
+のぼってきた！
+---
+いわの ように かたい！
+
+[tr.montanista_r3.after]
+やまも きみを
+みとめたよ。
+
+[tr.explorador_r3b.pre]
+ジャバードは やせてて
+おこりんぼ！
+---
+くちばしに ちゅうい！
+
+[tr.explorador_r3b.after]
+ことりが しょんぼり！
+つよいね。
+
+
+# --- Monte Eco (Vertice = the corporation: es Vértice, en Vertex, ja バーテックス, zh 顶点) ---
+[tr.montanista_eco.pre]
+ここは おれの トンネル！
+ただでは とおさん！
+---
+いわたちが まってるぞ！
+
+[tr.montanista_eco.after]
+いわだって
+まける ことも ある。
+
+[tr.vertice_eco1.pre]
+とまれ！ ここは
+バーテックスの ちたい！
+---
+さっさと きえろ！
+
+[tr.vertice_eco1.after]
+ちっ。 ボスに
+ほうこくだ。
+
+[tr.vertice_eco2.pre]
+かせきは もう
+バーテックスの ものだ。
+---
+じゃまするな！
+
+[tr.vertice_eco2.after]
+かまわん。 したには
+まだ なかまが いる。
+
+[tr.vertice_eco3.pre]
+したから きただと？
+ありえん！
+---
+ここで とめる！
+
+[tr.vertice_eco3.after]
+ガキに やられた。
+ついてないな。
+
+[eco.sci.pre]
+このかせきは
+バーテックスのだ！
+---
+ほしければ
+おれを たおせ！
+
+[eco.sci.after]
+ふん、 いいだろう。
+ひとつ えらべ。
+---
+のこりは おれが
+もらう。
+
+[eco.fossil.guard]
+かせきだ。
+かがくしゃが にらんでいる。
+
+[eco.fossil.t.ask]
+トリロかせきを
+もっていく？
+
+[eco.fossil.s.ask]
+ユリのかせきを
+もっていく？
+
+[eco.fossil.no]
+そっと おいておく。
+
+[eco.fossil.sci.take]
+よし！ のこりは
+もらうぞ！ じゃあな！
+
+[eco.fossil.sci.gone]
+かがくしゃは もう
+ひとつを もって にげた。
+
+
+# --- Ruta 4 ---
+[ruta4.sign]
+4ばん どうろ
+マレアシティは すぐ！
+
+[tr.chica_r4.pre]
+きみも トレーナー？
+わたしも よ！
+---
+しょうぶ しましょ！
+
+[tr.chica_r4.after]
+うらやましい！
+いい チームね。
+
+[tr.explorador_r4.pre]
+あつい あつい！
+さくっと しょうぶ！
+---
+ずるは なしだぞ！
+
+[tr.explorador_r4.after]
+ふう、 のどが かわいた。
+うみへ いこう。
+
+
+# --- Ciudad Marea ---
+[marea.sign]
+マレアシティ
+うみが つなぐ まち
+
+[marea.gym.sign]
+みずジム
+リーダー ネレア
+
+[marea.npc.a]
+リーダーの ネレアは
+みずタイプの つかいて。
+---
+くさと でんきが
+ゆうりだよ。
+
+[marea.npc.b]
+きたに ながい
+はしが あるよ。
+---
+ごにんの トレーナーが
+みはってる。
+
+[marea.npc.c]
+バーテックスが
+エコやまに いたとか。
+---
+こわいわ。
+
+[marea.rival.hey]
+よう、 {player}！
+もう バッジは？
+---
+どれだけ つよく
+なったかな！
+
+[marea.rival.again]
+もういちど！ いくぞ！
+
+[marea.rival.lose]
+なに！？ あれだけ
+きたえたのに！
+---
+もっと つよくなる！
+
+[marea.rival.next]
+ぼくは ぎじゅつしゃ
+テオに あいに いく。
+---
+じゃあな、 {player}！
+
+[tr.nadadora_1.pre]
+ようこそ プールへ！
+---
+ここでは およいで
+たたかうのよ！
+
+[tr.nadadora_1.after]
+ぶくぶく！ しずんだ。
+
+[tr.nadadora_2.pre]
+みずは つめたいけど
+わたしは あつい！
+---
+とびこんで！
+
+[tr.nadadora_2.after]
+おおなみに
+のまれたわ…
+
+[marea.nerea.pre]
+ようこそ、 ちょうせんしゃ！
+わたしは ネレア。
+---
+みずは ねばりづよく
+すべてを かえるのよ。
+---
+わたしの エレメンティは
+みんな みずタイプ！
+---
+とびこむ じゅんびは？
+
+[marea.nerea.win]
+すごい！ わたしの
+まけよ。
+---
+これは しょうめい。
+うけとって。
+
+[marea.badge]
+{player}は
+ウェーブバッジを もらった！
+
+[marea.nerea.about]
+リーグの バッジが
+ひとつ ふえたわ。
+---
+にばんめの リーダーに
+かった しょうこよ。
+---
+トレーナーカードで
+かがやくわ。
+
+[marea.nerea.disc]
+わざディスクも
+もっていって！
+
+[marea.nerea.disc_about]
+みずの わざが
+はいってるわ。 だいじに！
+
+[marea.nerea.after]
+せかいは うみのように
+ひろいのよ！
+---
+リーグまで
+およぎつづけてね。
+
+
+# --- Ruta 24 (the bridge of five) ---
+[ruta24.sign]
+24ばん どうろ
+ごにんの はし
+
+[tr.explorador_r24a.pre]
+はしの ごにんの
+ひとりめだ！
+---
+とおれるなら とおれ！
+
+[tr.explorador_r24a.after]
+ひとり おわり。 すすめ。
+
+[tr.chica_r24.pre]
+にばんめは わたし！
+かんたんじゃ ないわ。
+---
+じゅんびして！
+
+[tr.chica_r24.after]
+やるわね！
+ふたり おわり。
+
+[tr.cazabichos_r24.pre]
+さんばんめ！ むしたちは
+うみの うえを とぶぞ！
+---
+いくぞ！
+
+[tr.cazabichos_r24.after]
+さんにん おわり。
+
+[tr.explorador_r24b.pre]
+よんばんめ！ のこりは
+あと ひとりだ。
+---
+ゆだんするな！
+
+[tr.explorador_r24b.after]
+よんにん おわり。
+もうすこしだ。
+
+[tr.vertice_r24.pre]
+ごばんめ、 さいご。
+バーテックスの おとこだ。
+---
+しょうひんは おれのもの！
+
+[tr.vertice_r24.after]
+ちっ… しょうひんは
+くれてやる。
+
+
+# --- Ruta 25 and the house of Ingeniero Teo ---
+[ruta25.sign]
+25ばん どうろ
+テオの いえは すぐ
+
+[tr.montanista_r25.pre]
+まいにち テオの
+アンテナを みに くる！
+---
+おれの いわは かたいぞ！
+
+[tr.montanista_r25.after]
+きみの チームは つよい。
+
+[tr.chica_r25.pre]
+テオに あいに きたの？
+わたしも よ。
+---
+でも まず しょうぶ！
+
+[tr.chica_r25.after]
+つよいのね。 テオに
+よろしく。
+
+[teo.books]
+むせんと しんごうの
+ほんが ならぶ。
+
+[teo.tv]
+みどりの はけいが
+うつる がめん。
+
+[teo.deaf]
+テオは おおきな
+ヘッドホンで きこえない。
+---
+コンソールの つまみが
+ぴかぴか ひかってる。
+
+[teo.knob.turn]
+つまみを まわした。
+---
+ブーンという おとが きえた。
+
+[teo.knob.react]
+えっ？ ループが
+とまった！
+
+[teo.knob.again]
+つまみは ちょうど
+いい いち。
+
+[teo.thanks]
+ありがとう！ じぶんの
+ループに はまってた。
+---
+ぼくは テオ。 PCの
+しくみを つくった。
+---
+おれいに
+これを あげよう。
+
+[teo.pc]
+ぼくの PCは
+エレメンティを あずかる。
+---
+いつでも つかって！
+
+[teo.after]
+そのパスで
+フェリーに のれるよ。
+
+
+# --- C3-A world systems (contract 32): modules, Cortador, the fuse puzzle, the trade, the day care ---
+[gl.c3a.mod.cortador]
+カッター
+
+[gl.c3a.mod.linterna]
+ライト
+
+[gl.c3a.mod.hidro]
+ハイドロスライダー
+
+[gl.c3a.mod.empuje]
+プッシャー
+
+[gl.c3a.mod.planeador]
+グライダー
+
+[gl.c3a.mod.hint]
+ふさがれた ばしょで
+つかおう！
+
+[gl.c3a.cut.no]
+あつい くさむらだ…
+きれそうだ！
+
+[gl.c3a.cut.ask]
+カッターを つかう？
+
+[gl.c3a.cut.done]
+{player}は くさを
+きりはらった！
+
+[c3a.fuse.trash]
+ごみしか
+はいってない。
+
+[c3a.fuse.first]
+ごみの したに
+スイッチが ある！
+---
+スイッチを いれた！
+あかりが ついた。
+
+[c3a.fuse.again]
+スイッチは もう
+はいっている。
+
+[c3a.fuse.second]
+もうひとつ スイッチ！
+バリアが きえた！
+
+[c3a.fuse.reset]
+ごみしか ない。
+---
+ロックが
+もどった！
+
+[c3a.fuse.barrier]
+でんきの バリア。
+とおれない。
+
+[c3a.fuse.lamp]
+あかりが ともる。
+
+[c3a.trade.ask]
+{v0}を わたして
+{v1}を うけとる？
+
+[c3a.trade.wrong]
+えっ？ それは
+{v0}じゃない！
+---
+もっていたら
+また きてね。
+
+[c3a.trade.no]
+そうか…
+きがかわったら きてね。
+
+[c3a.trade.done]
+ありがとう！
+{v1}を だいじにね！
+
+[c3a.trade.after]
+{v0}は げんき？
+だいじにしてね！
+
+[c3a.trade.nick]
+CHIP
+
+[c3a.dc.hello]
+ここは あずかりやよ。
+
+[c3a.dc.ask_leave]
+エレメンティを
+あずける？
+
+[c3a.dc.last]
+たった いっぴきは
+あずかれないわ！
+
+[c3a.dc.taken]
+だいじに あずかるわ。
+また きてね。
+
+[c3a.dc.report]
+{v0}は つよくなった！
+レベル {v2}あがった
+---
+{v1}えんよ。
+ひきとる？
+
+[c3a.dc.poor]
+おかねが
+たりないわ。
+
+[c3a.dc.full]
+てもちが
+いっぱいよ。
+
+[c3a.dc.back]
+はい どうぞ。
+{v0}を だいじにね！
+
+[c3a.dc.no]
+そう。
+また きてね！
+
+[c3a.ambush]
+おい きみ！
+さがしたぞ！
+
+# --- C3 content (contract 34) ---
+
+[gl.rg.glintail]
+きらきらした ものを
+あつめて かくす。
+---
+しましまの しっぽは
+よるに ひかる。
+
+[gl.rg.lustrel]
+すらりと うつくしく
+おとなく しのびよる。
+---
+ながい しっぽで
+はずみを とる。
+
+[gl.rg.ramplet]
+がんこで あたまが
+かたい。 つっこむ。
+---
+ひづめに ほうたいを
+まく ボクサー。
+
+[gl.rg.ibexer]
+ながい つのの
+たちあがる ヤギ。
+---
+かまえを くずさず
+いっぽも ひかない。
+
+[gl.rg.mesmoli]
+えだに しがみついて
+うとうと している。
+---
+わっかの ひとみに
+みつめられると くらくら。
+
+[gl.rg.mesmaris]
+ながい うでを
+ひろげて ゆらす。
+---
+ひたいが だいさんの
+めの ように ひかる。
+
+[gl.rg.drillroot]
+さきが ドリルの
+ねっこ。
+---
+つちから めだけ
+のぞかせている。
+
+[gl.rg.augeroot]
+ドリルが みっつ
+まわる おおきな ねっこ。
+---
+あっというまに
+トンネルを ほる。
+
+[gl.rg.spoolt]
+いきている どうせんの
+ボビン。 ころがる。
+---
+さわると ぱちぱちと
+ひばなを だす。
+
+[gl.rg.voltspool]
+みっつの ワイヤーの
+わが ぱちぱち。
+---
+フルパワーで うごく
+はつでんきの ようだ。
+
+[gl.rg.otterock]
+あおむけに うかんで
+かいを わる。
+---
+おきにいりの いしを
+いつも もっている。
+
+[gl.tr.explorador_r6]
+たんけんか アリ
+
+[gl.tr.chica_r6]
+おんなのこ ニナ
+
+[gl.tr.cazabichos_r6]
+むしずき イアン
+
+[gl.tr.pescador_r6]
+つりびと ガス
+
+[gl.tr.mecanico_r11a]
+エンジニア ポル
+
+[gl.tr.pescador_r11]
+つりびと モー
+
+[gl.tr.explorador_r11]
+たんけんか フラン
+
+[gl.tr.mecanico_r11b]
+エンジニア ビック
+
+[gl.tr.chica_r11]
+おんなのこ ピア
+
+[gl.tr.marinero_f1]
+せんいん マテオ
+
+[gl.tr.marinero_f2]
+せんいん コスメ
+
+[gl.tr.marinero_f3]
+せんいん オットー
+
+[gl.tr.chica_f]
+きゃくの エルザ
+
+[gl.tr.pescador_f]
+つりびと ニロ
+
+[gl.tr.mecanico_g]
+エンジニア ギル
+
+[gl.tr.aprendiz_g]
+みならい キム
+
+[gl.tr.ohm]
+キャプテン オーム
+
+[ruta5.sign]
+5ばん どうろ
+きたは マレアシティ
+
+[ruta5.gate.sign]
+ゼニスシティ
+きたの もん
+
+[ruta5.dc.sign]
+あずかりや
+だいじに あずかるよ
+
+[ruta5.npc.a]
+あずかりやは
+エレメンティを あずかる。
+---
+あるくほど
+レベルが あがるよ！
+
+[ruta5.npc.b]
+まちの したに
+ちかつうろが あるよ。
+---
+6ばん どうろへ いく
+ただ ひとつの みち。
+
+[guarderia.books]
+いくじの ほん
+「いっぽ いっぽが だいじ」
+
+[guarderia.bed]
+ねぼすけ エレメンティの
+ちいさな ベッド。
+
+[guarderia.table]
+おもちゃと きのみが
+のった テーブル。
+
+[guarderia.hello]
+ここは あずかりやよ。
+
+[guarderia.ask_leave]
+エレメンティを
+あずける？
+
+[guarderia.last]
+たった いっぴきは
+あずかれないわ！
+
+[guarderia.taken]
+だいじに あずかるわ。
+また きてね。
+
+[guarderia.report]
+{v0}は つよくなった！
+レベル {v2}あがった
+---
+{v1}えんよ。
+ひきとる？
+
+[guarderia.poor]
+おかねが
+たりないわ。
+
+[guarderia.full]
+てもちが
+いっぱいよ。
+
+[guarderia.back]
+はい どうぞ。
+{v0}を だいじにね！
+
+[guarderia.no]
+そう。
+また きてね！
+
+[pasadizo.keeper.n]
+つうろの かんりにんだ。
+みずたまりに ちゅうい。
+
+[pasadizo.sign]
+ちかつうろ
+5ばん・6ばん どうろ
+
+[pasadizo.keeper]
+ずっと ここに いる。
+ネズミと こだまだけ。
+
+[pasadizo.vending]
+ドリンクの じはんき。
+からっぽだ。
+
+[pasadizo.guest]
+ちょっと きゅうけい。
+そとは あついよ！
+
+[ruta6.sign]
+6ばん どうろ
+みなみは ダイナモこう
+
+[ruta6.gate.sign]
+ゼニスシティ
+みなみの もん
+
+[ruta6.kiosk]
+こうえんの キオスク。
+きょうは おやすみ。
+
+[tr.explorador_r6.pre]
+おい！ うちの
+ランプレットは がんこだ！
+---
+しょうぶ しよう！
+
+[tr.explorador_r6.after]
+つよい チームだ。
+まけたよ。
+
+[tr.chica_r6.pre]
+わたしの エレメンティは
+かわいくて つよいの！
+---
+しょうぶよ！
+
+[tr.chica_r6.after]
+あーん！ つよい！
+
+[tr.cazabichos_r6.pre]
+この みちの むしは
+ぜんぶ ぼくの！
+---
+さなぎを みろ！
+
+[tr.cazabichos_r6.after]
+ぼくの むしは
+まだ そだつさ。
+
+[tr.pescador_r6.pre]
+あさから この いけで
+つりを している。
+---
+かかれば たたかう！
+
+[tr.pescador_r6.after]
+きょうは つれない…
+きみ いがいは。
+
+[puerto.sign]
+ダイナモこう
+でんきと うみの まち
+
+[puerto.gym.sign]
+ボルトジム
+リーダー キャプテン オーム
+
+[puerto.npc.a]
+フェリー アルバトロスは
+ここから でるよ。
+---
+のるには パスが
+ひつようだ。
+
+[puerto.npc.b]
+キャプテン オームは
+うみの おとこだ。
+---
+でんきが すべてを
+うごかすと いうよ。
+
+[puerto.npc.c]
+ジムの いりぐちを
+あつい くさが ふさぐ。
+---
+きりはらう ひつようが
+あるわね。
+
+[puerto.ferry]
+フェリー アルバトロス。
+おおきな ふね。
+
+[puerto.gangway]
+フェリーの
+タラップ。
+
+[puerto.sailor]
+ようこそ！ のるには
+パスが いるよ。
+
+[puerto.sailor.gone]
+アルバトロスは
+もう しゅっぱつした。
+
+[puerto.board.nopass]
+とまれ！ パスが なきゃ
+のれないぞ。
+---
+テオ ぎしに
+もらってこい。
+
+[puerto.board.ok]
+フェリーパスだね！
+どうぞ {player}！
+
+[puerto.board.gone]
+フェリーは でたよ。
+また こんど。
+
+[trueque.books]
+とりひきちょう
+「こうへいな こうかん」
+
+[trueque.hello]
+おい、 せんいん！
+エレメンティを こうかん！
+
+[trueque.ask]
+{v0}を わたして
+{v1}を うけとる？
+
+[trueque.wrong]
+えっ？ それは
+{v0}じゃない！
+---
+もっていたら
+また きてね。
+
+[trueque.no]
+そうか…
+きがかわったら きてね。
+
+[trueque.done]
+ありがとう！
+{v1}を だいじにね！
+
+[trueque.after]
+{v0}は げんき？
+だいじにしてね！
+
+[trueque.nick]
+Pipo
+
+[gym.barrier]
+でんきの バリア。
+とおれない。
+
+[gym.lamp]
+あかりが ともる。
+
+[gym.lit]
+ついている
+ヒューズばこ。
+
+[gym.fuse.trash]
+ヒューズばこ
+ふるい コードだけ。
+
+[gym.fuse.first]
+ばこの なかに
+スイッチが ある！
+---
+スイッチを いれた！
+あかりが ついた。
+
+[gym.fuse.again]
+スイッチは もう
+はいっている。
+
+[gym.fuse.second]
+もうひとつ スイッチ！
+バリアが きえた！
+
+[gym.fuse.reset]
+ふるい コードだけ。
+---
+ロックが
+もどった！
+
+[tr.mecanico_g.pre]
+ジムを とおるのは
+かんたんじゃ ない！
+---
+ヒューズを やくぞ！
+
+[tr.mecanico_g.after]
+チームが
+ショートした…
+
+[tr.aprendiz_g.pre]
+オーム キャプテンの
+でしだ！
+---
+ひばなは はやいぞ！
+
+[tr.aprendiz_g.after]
+まだ でんりょくが
+たりない…
+
+[dinamo.ohm.pre]
+ようこそ、 しんじん！
+わたしは オーム。
+---
+うみでは でんりゅうが
+すべてだ。
+---
+わたしの エレメンティは
+でんきタイプだ！
+---
+しびれさせて やる！
+
+[dinamo.ohm.win]
+すごい！ でんりょくを
+うばわれた！
+---
+これは しょうめい。
+うけとれ。
+
+[dinamo.badge]
+{player}は
+ボルトバッジを もらった！
+
+[dinamo.ohm.about]
+リーグの バッジが
+ひとつ ふえたな。
+---
+さんばんめの リーダーに
+かった しょうこだ。
+---
+トレーナーカードで
+かがやくぞ。
+
+[dinamo.ohm.disc]
+わざディスクも
+もっていけ！
+
+[dinamo.ohm.disc_about]
+でんきの わざが
+はいっている。 だいじに！
+
+[dinamo.ohm.after]
+でんりゅうは
+とまらない。
+---
+フルチャージで
+すすめ！
+
+[ferry.deck.hand]
+もうすぐ しゅっぱつ！
+せんちょうに あいに！
+
+[ferry.cab.sign]
+きゃくしつ
+せんちょうは おく
+
+[ferry.horn]
+ボーッ！ フェリーが
+しゅっぱつする！ おりて！
+
+[tr.marinero_f1.pre]
+おい、 おかものめ！
+ここは おれの かんぱん。
+---
+しょうぶだ！
+
+[tr.marinero_f1.after]
+しずめられた！
+ゆれるぜ…
+
+[tr.pescador_f.pre]
+ふねの へりから
+つりを している。
+---
+みろ！ つれたぞ！
+
+[tr.pescador_f.after]
+おおものを
+にがした。
+
+[tr.marinero_f2.pre]
+うみの おとこは
+こぶしで はなす。
+---
+かまえろ！
+
+[tr.marinero_f2.after]
+いい パンチだ！
+ぼうず。
+
+[tr.chica_f.pre]
+わたしは いっとうせき。
+---
+でも たたかうわよ！
+
+[tr.chica_f.after]
+エレメンティが
+ふなよい！
+
+[tr.marinero_f3.pre]
+このろうかは
+おれのものだ！
+---
+せんちょうには
+あわせない！
+
+[tr.marinero_f3.after]
+とおれ… だが
+せんちょうは ぐあいが…
+
+[ferry.rival.hey]
+{player}！ ぐうぜんだな！
+---
+ぼくは せいえいを
+つれて のったんだ。
+---
+どちらが つよいか
+ためそう！
+
+[ferry.rival.again]
+もういちど！ いくぞ！
+
+[ferry.rival.lose]
+うそだろ！
+じしんが あったのに！
+---
+もっと きたえる！
+
+[ferry.rival.next]
+せんちょうは
+ふなよいらしい…
+---
+ぼくは いくよ。
+またな {player}！
+
+[ferry.captain.sick]
+うう… ふなよいで
+ぐったりだ…
+---
+ふなよいする
+せんちょうなんて…
+
+[ferry.captain.ask]
+せんちょうの せなかを
+さすってあげる？
+
+[ferry.captain.no]
+うう… たのむ…
+
+[ferry.captain.better]
+ふう… らくになった！
+ありがとう {player}。
+
+[ferry.captain.got]
+{player}は
+カッターを てにいれた！
+
+[ferry.captain.about]
+ブレスレットの
+モジュールだ。
+---
+あつい くさの まえで
+つかうんだ。
+---
+ウェーブバッジが
+ひつようだぞ。
+
+[ferry.captain.after]
+きみの おかげで
+へいきだ。
+---
+よい たびを、
+{player}！
+
+[ruta11.sign]
+11ばん どうろ
+こうあつ ちゅうい！
+
+[ruta11.closed]
+つうこうどめ
+でんせん こうじ ちゅう
+
+[ruta11.guard]
+こうあつせんが
+こしょうした。
+---
+しばらく とおれない。
+
+[tr.mecanico_r11a.pre]
+せんを なおして
+いるんだ。 コイルも！
+---
+ひばなに ちゅうい！
+
+[tr.mecanico_r11a.after]
+ショートした！
+もえつきた…
+
+[tr.pescador_r11.pre]
+れいきゃくいけで
+つりを している。
+---
+さかなが ほかほか！
+
+[tr.pescador_r11.after]
+きょうは コードしか
+つれない。
+
+[tr.explorador_r11.pre]
+でんせんの したを
+たんけん している！
+---
+ぼくの チームは はやい！
+
+[tr.explorador_r11.after]
+はやいな…
+きみは。
+
+[tr.mecanico_r11b.pre]
+わたしの エレメンティは
+しびれさせるぞ！
+---
+どうだ？
+
+[tr.mecanico_r11b.after]
+でんりょくが
+ゼロだ。
+
+[tr.chica_r11.pre]
+このうなりで
+ねむくなる…
+---
+でも たたかうわ！
+
+[tr.chica_r11.after]
+ぐう… もう
+おわり？
+
+[muelle.sign]
+ダイナモの ふとう
+にもつ ばしょ
+
+[muelle.ferry.sign]
+フェリー アルバトロス
+パスで のれます
+
+[muelle.npc]
+きょうは つれないな。
+うみが へんだ。
+---
+フェリーの せんちょうは
+ふなよいだとか。
+
+
+# --- C4-C casino / casino (contract 37) ---
+[gl.c4c.coins.ask]
+フォーチュンホールへ
+ようこそ！
+---
+コイン 50まいを
+1000ドルで かう？
+
+[gl.c4c.coins.done]
+ありがとう！
+コイン 50まい どうぞ！
+
+[gl.c4c.coins.nocase]
+コインポーチが
+ひつようです！
+
+[gl.c4c.coins.full]
+コインポーチが
+いっぱいです！
+
+[gl.c4c.coins.bye]
+また きてね！
+
+[gl.c4c.coins.have]
+コインは {v2}まい
+もっています。
+
+[gl.c4c.coins.none]
+コインを
+もっていません。
+
+[gl.c4c.slot.out]
+コインが
+なくなった！
+
+[gl.c4c.prize.hello]
+コインを
+しょうひんに かえよう！
+
+[gl.c4c.prize.ask]
+{v0}を
+{v2}まいで かう？
+
+[gl.c4c.prize.bought]
+はい どうぞ！
+だいじに してね！
+
+[gl.c4c.prize.no_coins]
+コインが
+たりません！
+
+[gl.c4c.prize.full]
+てもちが
+いっぱいです！
+
+[gl.c4c.prize.bye]
+また きてね！
+
+# --- C4-B items and systems (contract 36) ---
+[gl.c4b.st_hp]
+HP
+
+[gl.c4b.ghost_name]
+ゆうれい？
+
+[gl.c4b.ghost_cant]
+だめだ！ しょうたいが
+わからない！
+
+[gl.c4b.ghost_scared]
+こわくて
+こうげきできない！
+
+[gl.c4b.ghost_nocatch]
+ゆうれいは
+つかまえられない！
+
+[gl.c4b.ghost_frozen]
+こわくて なにも
+できない！
+
+# --- C4-A world systems (contract 35) ---
+[gl.c4a.bike.on]
+じてんしゃに のった！
+
+[gl.c4a.bike.off]
+じてんしゃから おりた。
+
+[gl.c4a.bike.no]
+ここでは じてんしゃに
+のれない！
+
+[gl.c4a.elev.ask]
+なんかいに いく？
+
+[gl.c4a.floor.b4]
+B4F
+
+[gl.c4a.floor.b3]
+B3F
+
+[gl.c4a.floor.b2]
+B2F
+
+[gl.c4a.floor.b1]
+B1F
+
+[gl.c4a.floor.f1]
+1F
+
+[gl.c4a.floor.f2]
+2F
+
+[gl.c4a.floor.f3]
+3F
+
+[gl.c4a.floor.f4]
+4F
+
+[gl.c4a.floor.f5]
+5F
+
+[c4a.test.signal]
+テストの おわり。
+
+# --- C4a content (contract 39) ---
+[gl.rg.wispsheet]
+やぶれた シーツが よるに
+ふわふわ ういている。
+---
+ふたつの あなが
+ひとみのように ひかる。
+
+[gl.rg.shroudle]
+ぬのの うでで なにかを
+だきしめようとする。
+---
+えがおは ゆがんだ ぬいめ。
+
+[gl.rg.gloomshroud]
+おおきな マントの なかは
+うつろな かお。
+---
+ふちは かげの ほのおで
+もえている。
+
+[gl.rg.hatchkip]
+たまごの からを
+ヘルメットがわりに かぶる。
+---
+いつも ないて こいしを
+なげる。
+
+[gl.rg.shellbrute]
+からは いしの よろいに
+なった。
+---
+つばさを こんぼうのように
+ふる。
+
+[gl.rg.mimbara]
+ふわふわの けの
+おだやかな カピバラ。
+---
+あたまの けが かわる。
+
+[gl.rg.tidebara]
+つるつるの けと ひれの
+ついた あし。
+---
+なみの かたちの けの たば。
+
+[gl.rg.embara]
+けさきは おきのように
+あかく ゆげが たつ。
+---
+おんせんが だいすき。
+
+[gl.rg.voltbara]
+ジグザグに さかだつ けが
+ぱちぱち はじける。
+---
+かわいた くうきで
+じゅうでんする。
+
+[gl.rg.cindermeer]
+しっぽの さきに ひを
+ともして みはる。
+---
+きけんを みつけると ほえる。
+
+[gl.rg.pyromeer]
+かたに ほのおの
+たてがみが ゆれる。
+---
+りっぱに なわばりを まもる。
+
+[gl.rg.dewlash]
+しずくの ついた
+しょくしゅの ロゼット。
+---
+ちかづくものを つかまえる。
+
+[gl.rg.smogkeg]
+さびた たるから どくの
+ガスが もれる。
+---
+バルブが くちの かわり。
+
+[gl.rg.twinkeg]
+ふたつの たるが パイプで
+つながる。
+---
+いっしょに けむりを はく。
+
+[gl.rg.lunarelle]
+ヘイローを まとう
+おおきな つきの いし。
+---
+クレーターが よるに ひかる。
+
+[gl.rg.lulladream]
+ながみみの くもの うさぎ。
+---
+まわりに おんぷが ただよう。
+
+[gl.rg.quilltyrant]
+おおきな ヤマアラシが
+たちあがる。
+---
+しっぽの はりは こんぼう。
+
+[gl.rg.bloomoss]
+はなびらの かんむりが
+ひらききった。
+---
+ながい こけの マント。
+
+[gl.tr.explorador_r9a]
+たんけんか エドゥ
+
+[gl.tr.chica_r9a]
+おんなのこ ララ
+
+[gl.tr.cazabichos_r9]
+むしずき イワン
+
+[gl.tr.montanista_r9]
+やまおとこ ブラウ
+
+[gl.tr.explorador_r9b]
+たんけんか サウル
+
+[gl.tr.mecanico_r9]
+エンジニア ハンス
+
+[gl.tr.montanista_r10]
+やまおとこ ペレ
+
+[gl.tr.chica_r10]
+おんなのこ ジュリア
+
+[gl.tr.explorador_r10]
+たんけんか パウ
+
+[gl.tr.cazabichos_r10]
+むしずき フェル
+
+[gl.tr.montanista_t1]
+やまおとこ エロイ
+
+[gl.tr.chica_t1]
+おんなのこ マルタ
+
+[gl.tr.explorador_t1]
+たんけんか ルイス
+
+[gl.tr.montanista_t2a]
+やまおとこ ゴン
+
+[gl.tr.montanista_t2b]
+やまおとこ イバイ
+
+[gl.tr.chica_t2]
+おんなのこ エレナ
+
+[gl.tr.explorador_t2]
+たんけんか オリ
+
+[gl.tr.jugador_r8a]
+ギャンブラー ビト
+
+[gl.tr.jugador_r8b]
+ギャンブラー ロドリゴ
+
+[gl.tr.chica_r8]
+おんなのこ ソフィア
+
+[gl.tr.mecanico_r8]
+エンジニア フェリクス
+
+[gl.tr.chica_r7]
+おんなのこ イレーネ
+
+[gl.tr.explorador_r7]
+たんけんか アベル
+
+[gl.tr.jugador_r7]
+ギャンブラー ダリオ
+
+[gl.tr.chica_g1]
+おんなのこ ローザ
+
+[gl.tr.chica_g2]
+おんなのこ リリ
+
+[gl.tr.chica_g3]
+おんなのこ ビオレタ
+
+[gl.tr.medium_g]
+ミディアム アスセナ
+
+[tr.explorador_r9a.pre]
+このおかは ぼくの ものだ！
+---
+ぼくを たおしてから いけ！
+
+[tr.explorador_r9a.after]
+おかの ちりも…
+---
+つよいね。
+
+[tr.chica_r9a.pre]
+あの いしがきは
+---
+おじいちゃんと
+おばあちゃんが つくったの。
+---
+このみちは わたしが まもる！
+
+[tr.chica_r9a.after]
+あら。 みちは あなたの
+ものね。
+
+[tr.cazabichos_r9.pre]
+むしは くさに かくれてる。
+---
+ぼくの むしを みせてやる！
+
+[tr.cazabichos_r9.after]
+ぼくの むしが まけた…。
+
+[tr.montanista_r9.pre]
+いちにち おかを
+のぼってきた！
+---
+この あしは まけん！
+
+[tr.montanista_r9.after]
+あしは もったが
+---
+あたまが ついていかん。
+
+[tr.explorador_r9b.pre]
+きれる くさむらが あるんだ…
+---
+まず ぼくを きってみな！
+
+[tr.explorador_r9b.after]
+ぼくも きられたね。
+
+[tr.mecanico_r9.pre]
+みちばたで スクラップを ひ
+ろってる。
+---
+うちの たるは くさいが
+つよいぞ！
+
+[tr.mecanico_r9.after]
+たるの ガスが きれた。
+
+[tr.montanista_r10.pre]
+トンネルの まえの
+さいごの きゅうけいだ。
+---
+バトルで ウォームアップだ！
+
+[tr.montanista_r10.after]
+これで トンネルも あんしん
+だ。
+
+[tr.chica_r10.pre]
+トンネルは まっくらだって。
+---
+わたしは こわくないもん！
+
+[tr.chica_r10.after]
+くらやみより あなたが
+こわい。
+
+[tr.explorador_r10.pre]
+おい！ トンネルを いくのか？
+---
+まず ぼくの コイリスプを
+こえてみろ！
+
+[tr.explorador_r10.after]
+トンネルより はやく
+のりこえたな。
+
+[tr.cazabichos_r10.pre]
+ぼくの ガは あかりに
+つられる。
+---
+ライトは もってるかい？
+
+[tr.cazabichos_r10.after]
+ガたちも あきらめたよ！
+
+[tr.montanista_t1.pre]
+しーっ！ ここは なんでも
+ひびく。
+---
+だが おれの いしは
+もっと ひびく！
+
+[tr.montanista_t1.after]
+こだまも だまった。
+
+[tr.chica_t1.pre]
+きゃっ！ コウモリかと
+---
+おもった！
+---
+せっかくだから しょうぶよ！
+
+[tr.chica_t1.after]
+またまた びっくりしたわ。
+
+[tr.explorador_t1.pre]
+ライトを わすれた…
+---
+てさぐりで たたかうぞ！
+
+[tr.explorador_t1.after]
+めのまえが まっくらに…
+---
+ほらあなの せいじゃ ない。
+
+[tr.montanista_t2a.pre]
+はしごで ちかみちを したら
+---
+きみに であったよ！
+
+[tr.montanista_t2a.after]
+うえを いけば よかった。
+
+[tr.montanista_t2b.pre]
+なんしゅうかん ここで
+きたえた。
+---
+きゅうけいは おわりだ！
+
+[tr.montanista_t2b.after]
+あんなに きたえたのに…。
+
+[tr.chica_t2.pre]
+くらやみが こわい？
+---
+わたしは みかたに するの。
+
+[tr.chica_t2.after]
+くらくても まけたわ。
+
+[tr.explorador_t2.pre]
+トンネルは ぼくの いえさ。
+---
+はいって ぼくの チームに
+あっていけ！
+
+[tr.explorador_t2.after]
+きみの チームは
+ライトより まぶしい。
+
+[tr.jugador_r8a.pre]
+ぼくの ミーアキャットが
+---
+かつほうに なんでも かける！
+---
+いちか ばちか だ！
+
+[tr.jugador_r8a.after]
+かけに まけた。 また。
+
+[tr.jugador_r8b.pre]
+ツキすぎて カジノを
+---
+でいりきんしに なった。
+---
+ツキと きみの チーム
+どっちが うえ？
+
+[tr.jugador_r8b.after]
+ツキが つきたな。
+
+[tr.chica_r8.pre]
+うちの ルネルは よるに
+ひかるの。
+---
+おどるところ みたい？
+
+[tr.chica_r8.after]
+あなたの ほうが おどりが
+うまいわ。
+
+[tr.mecanico_r8.pre]
+ふたつの たる ダブルで
+くさい。
+---
+いきを すって たたかえ！
+
+[tr.mecanico_r8.after]
+いきが きれた。
+
+[tr.chica_r7.pre]
+まちの あかりが みえてきた
+わ。
+---
+たたかわずに とおさないわよ！
+
+[tr.chica_r7.after]
+まちで かがやいてきてね。
+
+[tr.explorador_r7.pre]
+くうきを すいに まちから
+きたんだ。
+---
+ついでに トレーニングも！
+
+[tr.explorador_r7.after]
+まちに かえろうかな。
+
+[tr.jugador_r7.pre]
+いっしょうぶ？ まけたら
+はらう。
+---
+ぼくが まけても はらうさ。
+
+[tr.jugador_r7.after]
+よろこんで はらうよ！
+
+[tr.chica_g1.pre]
+ようこそ おんしつへ！
+---
+ここでは なんでも さくわ…
+---
+ルーキーいがいは ね。
+
+[tr.chica_g1.after]
+しおれちゃった。
+
+[tr.chica_g2.pre]
+まいあさ はなに みずを
+やるの。
+---
+しんにゅうしゃにも ね！
+
+[tr.chica_g2.after]
+わたしが みずを あびたわ。
+
+[tr.chica_g3.pre]
+うちの モスブルームは
+いいにおい。
+---
+でも つよいわよ！
+
+[tr.chica_g3.after]
+いいにおいなのに まけたわ。
+
+[tr.medium_g.pre]
+くさばなが わたしに
+ささやくの。
+---
+あなたが まけるって。
+
+[tr.medium_g.after]
+くさばなも まちがうのね。
+
+[gl.tr.flora]
+リーダー フローラ
+
+[ruta2.aide.hi]
+わたしは リンはかせの じょ
+しゅよ。
+---
+ぜんこくの エレメンティを
+きろくしてるの。
+
+[ruta2.aide.more]
+10しゅるいまで あと
+{v2}しゅるい。
+---
+そろったら また きてね。
+
+[ruta2.aide.give]
+10しゅるい
+そろったのね！ すごい！
+---
+あなたに ライトを あげるわ。
+
+[ruta2.aide.got]
+{player}は モジュール
+ライトを もらった！
+
+[ruta2.aide.about]
+くらい どうくつを てらすわ。
+---
+はいると じどうで ひかるの。
+
+[ruta2.aide.after]
+ライトは やくに たってる？
+---
+エレメンティを きろくしてね！
+
+[marea.bike.sign]
+マレア じてんしゃてん
+---
+うります なおします
+
+[ruta9.sign]
+9ばん どうろ
+---
+ひがし。10ばん どうろ
+と くらやみトンネル
+
+[ruta10.centro.sign]
+エレメンティ センター
+---
+トンネルの まえに やすもう
+
+[ruta10.tunnel.sign]
+くらやみトンネル
+---
+あかりが ない。
+ライトが あると いい。
+---
+2ばん どうろの じょしゅ
+10しゅるいで もらえる。
+
+[tunel.sign]
+はしご
+---
+したの かいへ いけます。
+
+[bruma.sign]
+ブルマタウン
+---
+おもいでが ねむる まち
+
+[bruma.memorial]
+おもいでの にわ
+---
+ともだちに ひとつ はなを
+
+[bruma.npc.a]
+ここは いつも きりが
+かかってる。
+---
+おもいでだって いうよ。
+
+[bruma.npc.b]
+あの いえに ぎふが
+すんでるの。
+---
+とうに いることが おおいわ。
+
+[bruma.npc.c]
+よるに なきごえが したら…
+---
+ふりむいちゃ だめだよ。
+
+[casa.books]
+エレメンティの ふるい ほん。
+
+[casa.photos]
+わかものと ウィスシートの
+しゃしん。
+
+[casa.rel]
+おじいちゃんは いないの。
+---
+おもいでの とうへ
+おいのりに いったわ。
+---
+もう なんにちも かえらない
+の。
+
+[ruta8.gate.sign]
+ゼニスシティ
+ひがしの もん
+
+[ruta8.hut.sign]
+ちかつうろ
+---
+7ばん どうろ まで
+
+[ruta7.hut.sign]
+ちかつうろ
+---
+8ばん どうろ まで
+
+[ruta7.east.sign]
+7ばん どうろ
+---
+にし。ネオンシティ
+
+[ruta7.holo]
+ホログラムの かんばん。
+---
+ネオンシティ ねむらない
+まち！
+
+[pasadizo2.keeper.n]
+このつうろは みちの
+したを とおる。
+---
+まっすぐ いけば まよわない。
+
+[pasadizo2.sign]
+ちかつうろ 2
+---
+まちの こうこくが ここまで
+
+[pasadizo2.holo]
+ホログラムが ちかちか。
+---
+ネオン あと 2ふん
+
+[pasadizo2.holo2]
+べつの かんばん。
+---
+デパートで おかいもの！
+
+[pasadizo2.keeper]
+なんねんも ここに いるよ。
+---
+かんばんにも なれたさ。
+
+[pasadizo2.vending]
+じどうはんばいき。
+---
+こぎっての つりせんが ない。
+
+[pasadizo2.guest]
+ブルマの とうを みにいくの。
+---
+ぞくぞく するんだって。
+
+[neon.holo.a]
+ホログラムの かんばん。
+---
+デパート なんでも そろう！
+
+[neon.holo.b]
+べつの かんばん。
+---
+ファンクラブ じまんしに
+おいで！
+
+[neon.holo.c]
+ホログラムの かんばん。
+---
+フォーチュンホール
+コインと しょうひん！
+
+[neon.sign.a]
+ネオンシティ
+---
+メインどおり
+
+[neon.sign.b]
+にしどおり
+---
+ジムと やしきへ
+
+[neon.mall.sign]
+デパート
+---
+かいものが ふたかい
+
+[neon.centro.sign]
+エレメンティ センター
+---
+なかまを かいふく
+
+[neon.club.sign]
+ファンクラブ
+---
+かいいんと けんがくしゃ
+
+[neon.gym.sign]
+くさジム
+---
+リーダー。フローラ ニクス
+
+[neon.npc.a]
+すごい まち！ あかりが
+きえない！
+
+[neon.npc.b]
+くるまに ちゅうい。
+---
+ここは はやいよ！
+
+[neon.npc.c]
+クラブの かいちょうは
+はなしが ながい。
+---
+さいごまで がんばれ！
+
+[neon.npc.d]
+ジムは おんしつなんだ。
+---
+くさを きらないと いけない。
+
+[neon.npc.e]
+やしきは いちばん ふるい
+いえ。
+---
+ひみつが あるんだって。
+
+[mall.guide]
+1かい。くすりと ディスク
+---
+2かい。ジェムと ドリンク
+
+[mall.guide2]
+2かい。ジェムと ドリンク
+---
+1かい。くすりと ディスク
+
+[mall.shopper.a]
+ねだんは たかいけど
+なんでもある。
+
+[mall.shopper.b]
+ジェムは すぐ うりきれる。
+---
+はやめに かおう。
+
+[mall.vend]
+ドリンクの じはんき。
+---
+つめたい もの どう？
+
+[club.chair.hi]
+ファンクラブへ ようこそ！
+---
+かいちょうの わたしだ！
+
+[club.chair.t1]
+うちの ララバンは
+せかいいち かわいい！
+---
+あの ひとみ あの かお！
+
+[club.chair.t2]
+ぼうしで ねむってしまってね。
+---
+いきも できなかったよ！
+
+[club.chair.t3]
+ファンは じまんが すき。
+---
+わたしは じゅうごねんも だ！
+
+[club.chair.offer]
+きみは しんぼうづよく
+きいてくれた！
+---
+じてんしゃクーポンを
+あげよう！
+
+[club.chair.about]
+マレアの じてんしゃてんへ。
+---
+こうかん してくれる！
+
+[club.chair.after]
+じてんしゃは どうだい？
+---
+いつでも おいで！
+
+[club.fan.a]
+うちの ルネルは クラブいち！
+
+[club.fan.b]
+クラブは まいしゅう
+あつまるのよ。
+---
+だれでも かんげいよ！
+
+[club.poster.a]
+ポスター。ララバンは
+---
+さいこうの ともだち！
+
+[club.poster.b]
+ポスター。ファンたいかい
+---
+いま さんかしよう！
+
+[club.poster.c]
+かいちょうと ララバンの
+---
+しゃしん。
+
+[bike.hi]
+マレア じてんしゃてんへ
+ようこそ！
+---
+くにいちばんの しなぞろえだ
+よ。
+
+[bike.novoucher]
+じてんしゃは 100まんえん。
+---
+けんは もってるかい？
+
+[bike.voucher]
+じてんしゃクーポン！ いいね！
+---
+じてんしゃと こうかん
+するよ。
+
+[bike.how]
+どうぐぶくろから つかえるよ。
+---
+ばいの はやさで はしれる。
+
+[bike.how2]
+たてものと どうくつでは
+だめ。
+---
+だいじに つかってね！
+
+[bike.after]
+じてんしゃは どう？
+---
+ばいの はやさだよ。
+
+[mansion.books]
+げいじゅつと れきしの ほん。
+
+[mansion.butler]
+ようこそ やしきへ。
+---
+おくさまは うえに おります。
+
+[mansion.maid]
+このやしきの そうじは
+ごぜん いっぱい。
+
+[mansion.resident]
+このいえは まちより ふるい。
+---
+いちばん はじめの いえ。
+
+[mansion.top.books]
+ガーデニングの ほん。
+
+[mansion.top.books2]
+ミンバラの アルバム。
+
+[mansion.owner.hi]
+やしきの いちばん うえへ
+ようこそ。
+---
+わたしが ここの あるじよ。
+
+[mansion.owner.story]
+うちの ミンバラは
+あまえんぼう。
+---
+でも もう せわが できない
+の。
+
+[mansion.owner.ask]
+あなたが せわを してくれる？
+
+[mansion.owner.no]
+そう… よく かんがえてね。
+---
+ここで まってるわ。
+
+[mansion.owner.full]
+てもちが いっぱいよ。
+---
+あきを つくって また きて
+ね。
+
+[mansion.owner.given]
+{player}は ミンバラを も
+らった！
+
+[mansion.owner.hint]
+ジェムで すがたが かわるの。
+---
+みず ほのお かみなり。
+
+[mansion.owner.after]
+ミンバラは げんき？
+---
+きっと つよく なったわね。
+
+[gym.flora.pre]
+ようこそ わたしの おんしつ
+へ！
+---
+ジムリーダーの フローラ
+ニクスよ。
+---
+わたしの くさは
+やさしくて こわいの。
+
+[gym.flora.win]
+すごい！ わたしの まけよ。
+---
+これは あなたの もの。
+---
+うけとって。
+
+[gym.badge]
+{player}は
+ルートバッジを もらった！
+
+[gym.flora.about]
+リーグの こうしきな あかし。
+---
+4にんめの リーダーを
+たおした しるし。
+---
+トレーナーカードに かがやく
+わ。
+
+[gym.flora.disc]
+わざディスクも あげるわ！
+
+[gym.flora.disc_about]
+くさの わざが はいってる。
+---
+うまく つかってね！
+
+[gym.flora.after]
+わたしの おんしつは
+いつも さくわ。
+---
+バトル ありがとう。
+
+
+# --- fog and flags fixtures (contract 40: maps/test_flags.map) ---
+[flg.test.a]
+フラグ テスト A。
+
+[flg.test.b]
+フラグ テスト B。
+
+[flg.test.sign]
+かんばん。
+
+[flg.test.t.a]
+はじめて。
+
+[flg.test.t.b]
+はなした。
+
+# --- C4b content (contract 41) ---
+[gl.tr.jugador_c1]
+ギャンブラー アルド
+
+[gl.tr.jugador_c2]
+ギャンブラー マウロ
+
+[gl.tr.jugador_c3]
+ギャンブラー ナチョ
+
+[gl.tr.vertice_casino]
+エージェント フィト
+
+[gl.tr.vertice_b1a]
+エージェント コル
+
+[gl.tr.vertice_b1b]
+エージェント ノクス
+
+[gl.tr.vertice_b2a]
+エージェント イボ
+
+[gl.tr.vertice_b2b]
+エージェント ラクス
+
+[gl.tr.vertice_b2c]
+エージェント ドロ
+
+[gl.tr.vertice_b3a]
+エージェント ビク
+
+[gl.tr.vertice_b3b]
+エージェント サル
+
+[gl.tr.vertice_llave]
+エージェント オル
+
+[gl.tr.vertice_b4]
+エージェント ホクス
+
+[gl.tr.varo]
+ディレクター バロ
+
+[gl.tr.medium_t1]
+ミディアム アルマ
+
+[gl.tr.medium_t3a]
+ミディアム ノラ
+
+[gl.tr.medium_t3b]
+ミディアム イルマ
+
+[gl.tr.medium_t3c]
+ミディアム オナ
+
+[gl.tr.espiritu_madre]
+ははの たましい
+
+[gl.tr.vertice_t1]
+エージェント ルル
+
+[gl.tr.vertice_t2]
+エージェント テク
+
+[neon.casino.sign2]
+フォーチュンホール
+---
+コインと しょうひん
+
+[neon.prize.sign]
+しょうひんこうかん
+---
+コインで こうかん
+
+[neon.diner.sign]
+しょくどう
+---
+ごはんと のみもの
+
+[bruma.tower.hint]
+とうは ゆうれいで
+いっぱいだ。
+---
+ふつうでは みえない。
+
+[bruma.tower.hint2]
+ゴーストレンズが
+あれば みえるよ。
+---
+バーテックスの ボスが
+もっているらしい。
+
+[casa.rel2]
+おじいちゃんが かえった！
+ありがとう！
+
+[casa.anciano.hi]
+もう あんしんだよ、
+{player}。
+
+[casa.anciano.hi2]
+おれいを
+させておくれ。
+
+[casa.anciano.flute]
+この めざめのふえを
+うけとってくれ。
+
+[casa.anciano.about]
+メロディで ねむる
+---
+いきものを おこせる。
+
+[casa.anciano.after]
+いえで やすむよ。
+ありがとう！
+
+[casino.barrier]
+エネルギーの バリアが
+---
+かいだんを ふさぐ。
+
+[casino.npc.a]
+ひとばんじゅう
+まけてる…
+---
+つぎこそ かつ！
+
+[casino.npc.b]
+ベルの マークが
+いちばん すき！
+
+[casino.hostess.hi]
+フォーチュンホールへ
+ようこそ！
+---
+コインポーチが
+ひつようよ。
+
+[casino.hostess.none]
+コインは まだ
+もっていないわ。
+
+[casino.poster.stop]
+おい！ ポスターに
+さわるな！
+
+[casino.poster.look]
+バーテックスの
+ポスター。
+---
+うらに なにか
+ある…
+
+[casino.poster.switch]
+うらに かくし
+スイッチが！
+---
+おしてみた！
+
+[casino.poster.clack]
+カチッ！ すみの
+バリアが きえた！
+
+[casino.poster.after]
+バーテックスの ポスター。
+もう なにも ない。
+
+[tr.jugador_c1.pre]
+きょうは スロットが
+ついてない！
+---
+しょうぶ しないか？
+
+[tr.jugador_c1.after]
+ゲームも しょうぶも
+まけた…
+
+[tr.jugador_c2.pre]
+ついてない
+ばかり…
+---
+でも きみには かつ！
+
+[tr.jugador_c2.after]
+やっぱり だめか。
+スロットに もどる。
+
+[tr.jugador_c3.pre]
+いっしょに かけよう！
+---
+まけたら はらえよ。
+
+[tr.jugador_c3.after]
+まけた… コインが
+なくなった。
+
+[tr.vertice_casino.pre]
+おい！ ポスターに
+さわるな！
+---
+さっさと きえろ！
+
+[tr.vertice_casino.after]
+ちっ… そんなに
+みたいなら みろよ。
+
+[prize.npc.a]
+いい しょうひんは
+コインで はらうんだ。
+
+[prize.npc.b]
+めずらしい エレメンティが
+しょうひんに あるよ！
+
+[diner.cook]
+めしあがれ！
+きょうは シチューだよ。
+
+[diner.npc.a]
+このシトラスドリンク
+おいしい！
+
+[diner.npc.b]
+ギャンブラーは ここで
+しょくじを するのさ。
+
+[diner.man.hi]
+フォーチュンホールで
+ちょきんを なくした…
+
+[diner.man.t1]
+もう ギャンブルは
+やめた。 ひきとってくれ。
+
+[diner.man.offer]
+コインポーチを
+あげるよ。 がんばれ！
+
+[diner.man.about]
+フォーチュンホールで
+つかうんだ。
+---
+コインも そこで
+かえるよ。
+
+[diner.man.after]
+もう かけごとは
+しない。
+
+[hide.lift.locked]
+エレベーターは
+うごかない。
+
+[hide.lift.locked2]
+キーを さす
+あなが ある。
+
+[hide.lift.on]
+キーが ぴったり！
+エレベーターが うごいた！
+
+[hide.term.a]
+フォーチュンホールの
+うりあげが うつる。
+---
+ほとんど バーテックスの
+ふところに はいる。
+
+[hide.term.b]
+アジトの ちず。
+やじるしが おしてくる。
+
+[hide.term.c]
+メモ「オルが ホイスト
+キーを もつ」
+
+[hide.key.pre]
+ホイストキーを
+さがしてるのか？
+---
+うばってみろ！
+
+[hide.key.win]
+ぐっ… わかった！
+キーを やる。
+
+[hide.key.after_give]
+B1Fか B2Fの
+パネルで つかえるぞ。
+
+[hide.key.after]
+もう なにも ない…
+いってくれ。
+
+[hide.varo.pre]
+おまえが じゃまを
+している やつか。
+---
+わたしが バーテックスの
+ディレクター バロだ。
+---
+たたかわずには
+かえさん！
+
+[hide.varo.win]
+ばかな！ わたしが
+まけるとは…
+
+[hide.varo.win2]
+バーテックスは てったい。
+まだ おわらんぞ！
+
+[hide.varo.gone]
+バロは ひみつの
+とびらから にげた！
+
+[hide.varo.lente]
+にげる ときに
+なにか おとした！
+
+[hide.lente.about]
+レンズを つかえば
+ゴーストが みえる！
+
+[tr.vertice_b1a.pre]
+しんにゅうしゃだ！
+バーテックスの ちたい！
+---
+おいだしてやる！
+
+[tr.vertice_b1a.after]
+くそっ…
+ボスに ばれる…
+
+[tr.vertice_b1b.pre]
+やじるしで
+まよったか？
+---
+だしてやるよ！
+
+[tr.vertice_b1b.after]
+みちは しってたのに…
+
+[tr.vertice_b2a.pre]
+とまれ！ この さきは
+たちいりきんしだ！
+---
+さがれ！
+
+[tr.vertice_b2a.after]
+ぼくの なかまが…
+ボス、すみません！
+
+[tr.vertice_b2b.pre]
+おとが したと
+おもえば おまえか！
+
+[tr.vertice_b2b.after]
+いたた…
+
+[tr.vertice_b2c.pre]
+さんびきの ちからを
+みせてやる！
+
+[tr.vertice_b2c.after]
+さんびき とも…
+まけた…
+
+[tr.vertice_b3a.pre]
+ここから さきは
+バロの めいれいだ！
+
+[tr.vertice_b3a.after]
+バロに
+しかられる…
+
+[tr.vertice_b3b.pre]
+ここから でられると
+おもうなよ！
+
+[tr.vertice_b3b.after]
+ばかな…
+
+[tr.vertice_b4.pre]
+ディレクターは
+きゃくを とおさん！
+
+[tr.vertice_b4.after]
+すみません、ボス…
+
+[torre.stele.a]
+「ここに ねむる
+ふるい ともへ」
+
+[torre.stele.b]
+「ずっと
+わすれない」
+
+[torre.stele.c]
+「やすらかに
+ねむれ ちいさな こ」
+
+[torre.stele.d]
+「さいごまで
+そばに いてくれた」
+
+[torre.npc.a]
+なかまに はなを
+そなえに きたの。
+
+[torre.npc.b]
+ここは やすらぎの
+とうだが…
+---
+なにかが さわがせて
+いる。
+
+[torre.npc.c]
+いやな かおの
+わかものが とおった。
+
+[torre.rival.hey]
+おい、{player}！
+こんな ところで？
+---
+ゴーストでも
+みにきたのか？
+---
+きたえた ちからを
+みせてやる！
+
+[torre.rival.again]
+またか？ いくぞ！
+
+[torre.rival.lose]
+くそっ！
+また まけた！
+
+[torre.rival.next]
+もっと きたえるぞ。
+またな！
+
+[torre.ghost.chill]
+くうきが
+ひえていく…
+
+[torre.ghost.chill2]
+みえない なにかが
+かいだんを ふさぐ！
+
+[torre.ghost.back]
+おしもどされた！
+
+[torre.ghost.seen]
+レンズごしに みえた！
+ふるい ぼうれいだ！
+
+[torre.ghost.seen2]
+なくした こどもを
+さがす ははおやだ。
+
+[torre.ghost.rest]
+ぼうれいは かなしげに
+ほほえんだ…
+
+[torre.ghost.rest2]
+やっと
+やすらげる。
+
+[torre.ghost.rest3]
+かいだんが
+ひらけた！
+
+[torre.anciano.help]
+たすけて！ やつらに
+とじこめられた！
+
+[torre.anciano.thanks]
+ありがとう、{player}！
+たすかったよ。
+
+[torre.anciano.thanks2]
+ここを でよう。
+わたしの いえへ！
+
+[torre.anciano.home]
+いこう！
+
+[tr.medium_t1.pre]
+いなくなった ものを
+かんじるの…
+---
+じゃまを しないで！
+
+[tr.medium_t1.after]
+たましいが
+しずまっていく。
+
+[tr.medium_t3a.pre]
+ゆうれいが
+はなしかける…
+---
+でていけ ですって！
+
+[tr.medium_t3a.after]
+それでも しずかに
+ならないの…
+
+[tr.medium_t3b.pre]
+わたしの こころは
+きりの よう…
+---
+はいれるなら どうぞ！
+
+[tr.medium_t3b.after]
+きりが
+はれていく…
+
+[tr.medium_t3c.pre]
+とうの さむけを
+かんじなさい！
+---
+こおらせて あげる！
+
+[tr.medium_t3c.after]
+じぶんが
+こおったわ…
+
+[tr.vertice_t1.pre]
+このじいさんは
+ひとじちだ！
+---
+さわるな！
+
+[tr.vertice_t1.after]
+いてて… ボスには
+ナイショだぞ！
+
+[tr.vertice_t2.pre]
+ゆうれいは おれたちの
+ばんにんだ。
+---
+きえろ！
+
+[tr.vertice_t2.after]
+ゆうれいまで
+おれを みすてた…
+
+# --- C5-B items, Reserva Salvaje and rods (contract 43) ---
+[gl.c5b.sf_ball]
+クリスタル x{v2}
+
+[gl.c5b.sf_rock]
+いし
+
+[gl.c5b.sf_bait]
+えさ
+
+[gl.c5b.sf_threw_rock]
+いしを
+なげた！
+
+[gl.c5b.sf_threw_bait]
+えさを
+なげた！
+
+[gl.c5b.sf_angry]
+{v0}は
+おこっている！
+
+[gl.c5b.sf_eating]
+{v0}は
+たべている！
+
+[gl.c5b.sf_fled]
+やせいの {v0}は
+にげだした！
+
+[gl.c5b.sf_none]
+クリスタルが
+なくなった！
+
+[gl.c5b.rv_time]
+じかんぎれです！
+
+[gl.c5b.rv_balls]
+クリスタルが
+なくなりました！
+
+[gl.c5b.rv_left]
+のこり {v2}ほ
+クリスタル {v3}こ
+
+# --- C5-A world systems (contract 42) ---
+[gl.c5a.surf.ask]
+ハイドロスライダーを
+つかう？
+
+[gl.c5a.surf.bike]
+じてんしゃから
+おりてから つかおう
+
+[gl.c5a.push.ask]
+プッシャーを つかう？
+
+[gl.c5a.push.used]
+プッシャーが はたらいた！
+いわを うごかせる！
+
+[gl.c5a.push.on]
+いわを おして
+うごかそう！
+
+[gl.c5a.push.no]
+おおきな いわだ。
+プッシャーが ひつよう。
+
+[gl.c5a.fish.bite]
+つりいとを たらした…
+---
+なにか ひいている！
+
+[gl.c5a.fish.none]
+つりいとを たらした…
+---
+なにも ひかない。
+
+[gl.c5a.sleep.look]
+おおきな なにかが
+みちで ねている…
+
+[gl.c5a.sleep.ask]
+めざめのふえを
+ふく？
+
+[gl.c5a.sleep.woke]
+めを さました！
+
+[gl.c5a.gate.bike]
+マグハイウェイは
+じてんしゃ せんよう！
+
+# --- IR LINK (contract 45) ---
+[gl.lk.search]
+ともだちを さがしています
+
+[gl.lk.aim]
+じっけんてき IRを
+むかいあわせてね
+
+[gl.lk.pick]
+エレメンティを えらぶ
+
+[gl.lk.wait]
+ともだちを
+まっています…
+
+[gl.lk.ot]
+おや
+
+[gl.lk.swap]
+こうかんする？
+
+[gl.lk.trading]
+こうかんちゅう…
+
+[gl.lk.teams]
+チームを
+こうかんちゅう…
+
+[gl.lk.done]
+こうかん
+せいこう！
+---
+{v0}が
+なかまに くわわった！
+
+[gl.lk.cancel]
+こうかんを
+やめました。
+
+[gl.lk.declined]
+ともだちは
+ことわりました。
+
+[gl.lk.nopartner]
+ともだちが
+みつかりません。
+
+[gl.lk.error]
+つうしんが
+きれました。
+
+[gl.lk.version]
+ゲームの バージョンが
+ちがいます。
+
+[gl.lk.bad]
+ともだちの データが
+おかしいです。
+
+[gl.lk.selftest]
+IRテスト
+{v2}バイト
+
+# --- C6 systems (contract 46) ---
+[gl.c6.door.locked]
+でんしロックが
+かかっている！
+---
+ひつようなのは
+{v0}
+
+[gl.c6.door.open]
+{v0}を つかった！
+ドアが ひらいた！
+
+[gl.c6.gift.ask]
+{v0}を
+もらいますか？
+
+[gl.c6.gift.got]
+{v0}を
+てにいれた！
+
+[gl.c6.gift.fail]
+いま {v0}は
+つれていけない！
+
+[gl.c6.fly.badge]
+グライダーは まだ
+いうことを きかない。
+---
+ボルトバッジが
+ひつよう だ！
+
+[c6sys.person]
+ワープパネルが ないと
+ここには こられない。
+
+# --- C5a content (contract 47) ---
+[gl.rg.flopfin]
+いちにち はねるが
+どこへも いけない。
+---
+おおきな おびれが
+おもすぎる。
+
+[gl.rg.stormgill]
+いかりで うみに
+あらしを よぶ。
+---
+おこると なんでも
+こわしてしまう。
+
+[gl.rg.urchip]
+とげの ボールに
+おおきな め ふたつ。
+---
+あさい うみを
+ただよっている。
+
+[gl.rg.urchlord]
+どくの ながい とげが
+かんむりの ようだ。
+---
+したに ほしがたの
+くちが ひらく。
+
+[gl.rg.clubrimp]
+たたんだ こんぼうと
+くきの うえの め。
+---
+まばたきより はやく
+なぐる。
+
+[gl.rg.smashrimp]
+おおきな こうらと
+かまえた こんぼう。
+---
+いわを いっぱつで
+くだく。
+
+[gl.rg.skipgoby]
+ひれで どろの うえを
+はねる。
+---
+とびでた めで
+うえを みはる。
+
+[gl.rg.gobyhop]
+りくの うえでも
+はねるように なる。
+---
+ひれが うでのように
+のびてきた。
+
+[gl.rg.gobrawl]
+たって あるき
+つよい ひれの うで。
+---
+かいそうの ベルトは
+チャンピオンの しるし。
+
+[gl.rg.lazatee]
+ねぼすけで のんびりな
+マナティの こども。
+---
+いつも めを はんぶん
+とじている。
+
+[gl.rg.sagatee]
+フジツボの かんむりの
+かしこい マナティ。
+---
+めが ひかると
+なんでも しっている。
+
+[gl.rg.slumberth]
+まるまって ねむる
+きょだいな ナマケモノ。
+---
+けに こけが はえ
+あたまに すが ある。
+
+[gl.rg.lambalm]
+まるい けの こひつじ
+くびに すずが ある。
+---
+その けは どんな
+きずも なおす。
+
+[gl.rg.wombamma]
+がっしりした おかあさん
+ウォンバット。
+---
+こには だれも
+ちかづけさせない。
+
+[gl.rg.razorfly]
+ほそみの とんぼ。
+はねは かみそりの ふち。
+---
+ふくがんで なんでも
+みとおす。
+
+[gl.rg.gnucharge]
+たてがみと つのの
+サバンナの ヌー。
+---
+ふりかえらず
+ぜんりょくで つっこむ。
+
+[gl.rg.reefling]
+さんごの つのが ある
+あかちゃんの うみへび。
+---
+かおに しんじゅの
+ひげが ついている。
+
+[gl.rg.reefcoil]
+しんじゅを ならべた
+ながい さんごの へび。
+---
+ひれが リボンのように
+ゆれる。
+
+[gl.rg.reefdragon]
+さんごの おおきな
+はねの ドラゴン。
+---
+さんごしょうを
+まもると いわれる。
+
+[gl.rg.slickslime]
+にじいろに ひかる
+いきた あぶらの しみ。
+---
+からだの なかを
+あわが ただよう。
+
+[gl.rg.tarbog]
+がらくたが しずむ
+おおきな タールだまり。
+---
+くさい においは
+とおくまで とどく。
+
+[gl.tr.pescador_r12a]
+つりびと ベニ
+
+[gl.tr.pescador_r12b]
+つりびと タノ
+
+[gl.tr.pescador_r12c]
+つりびと レモ
+
+[gl.tr.explorador_r13a]
+たんけんか ジョエル
+
+[gl.tr.chica_r13]
+おんなのこ ベア
+
+[gl.tr.rider_r13]
+ライダー アクセル
+
+[gl.tr.explorador_r13b]
+たんけんか イバル
+
+[gl.tr.explorador_r14]
+たんけんか ノエ
+
+[gl.tr.rider_r14a]
+ライダー ティト
+
+[gl.tr.punk_r14]
+パンク ロケ
+
+[gl.tr.chica_r14]
+おんなのこ ミア
+
+[gl.tr.rider_r14b]
+ライダー ブラム
+
+[gl.tr.rider_r15]
+ライダー キラ
+
+[gl.tr.chica_r15]
+おんなのこ ナディア
+
+[gl.tr.explorador_r15]
+たんけんか ビエル
+
+[gl.tr.punk_r15]
+パンク ジギー
+
+[gl.tr.ninja_g1]
+でし レン
+
+[gl.tr.ninja_g2]
+でし アキ
+
+[gl.tr.ninja_g3]
+でし サイ
+
+[gl.tr.ninja_g4]
+でし リョウ
+
+[gl.tr.kai]
+リーダー カイ
+
+[tr.pescador_r12a.pre]
+あさから ずっと
+つっているんだ。
+
+[tr.pescador_r12a.after]
+さかなが にげたよ。
+
+[tr.pescador_r12b.pre]
+ぼくの つりばりは
+でんせつ だよ！
+
+[tr.pescador_r12b.after]
+つりばりも
+まいったよ。
+
+[tr.pescador_r12c.pre]
+この わんには
+でかい さかなが いる。
+
+[tr.pescador_r12c.after]
+きみ つりの
+うでまえ すごいね。
+
+[tr.explorador_r13a.pre]
+ぼくの とりが
+つっつくぞ！
+
+[tr.explorador_r13a.after]
+とりが びっくり
+したよ。
+
+[tr.chica_r13.pre]
+のはらの はなは
+すき？
+
+[tr.chica_r13.after]
+しおれちゃった。
+
+[tr.rider_r13.pre]
+おれの ホバーは
+もっと はやい！
+
+[tr.rider_r13.after]
+スピードまで
+まけた…
+
+[tr.explorador_r13b.pre]
+この さくの めいろは
+ぼくの いえさ。
+
+[tr.explorador_r13b.after]
+まけに まよった。
+
+[tr.explorador_r14.pre]
+ぼくの さくを
+わたる なら しょうぶ！
+
+[tr.explorador_r14.after]
+さあ とおって。
+
+[tr.rider_r14a.pre]
+ぜんそくりょくだ！
+
+[tr.rider_r14a.after]
+ブレーキだ…
+
+[tr.punk_r14.pre]
+おれの とげは
+おまえより するどい！
+
+[tr.punk_r14.after]
+かみが ぺしゃんこ。
+
+[tr.chica_r14.pre]
+わたしの はなは
+すてきな かおり！
+
+[tr.chica_r14.after]
+はなびらが しおれた。
+
+[tr.rider_r14b.pre]
+おいつけるかな？
+
+[tr.rider_r14b.after]
+おいつかれた…
+
+[tr.rider_r15.pre]
+ふうしゃは おれの
+しゃりんの ようさ！
+
+[tr.rider_r15.after]
+エンジンが とまった。
+
+[tr.chica_r15.pre]
+かぜが いい しょうぶを
+つれてくるわ。
+
+[tr.chica_r15.after]
+かぜが かわったわ。
+
+[tr.explorador_r15.pre]
+ここから のはらが
+ぜんぶ みえるよ！
+
+[tr.explorador_r15.after]
+くるのは しってた。
+
+[tr.punk_r15.pre]
+この みちは おれの
+もんだ、しんいり！
+
+[tr.punk_r15.after]
+ちっ、とおれよ。
+
+[tr.ninja_g1.pre]
+しずかに。どくは
+おまえより はやい。
+
+[tr.ninja_g1.after]
+どくでも
+とめられぬか…
+
+[tr.ninja_g2.pre]
+おとも なく
+きづかれず…
+
+[tr.ninja_g2.after]
+みやぶられたか。
+
+[tr.ninja_g3.pre]
+めいろは おれの
+どうじょう。まよえ！
+
+[tr.ninja_g3.after]
+みちを しっている。
+
+[tr.ninja_g4.pre]
+いっぽずつ きりに
+しずめてやる。
+
+[tr.ninja_g4.after]
+すすめ。カイが まつ。
+
+[ruta12.sign]
+12ばん どうろ
+---
+きたは ブルマタウン
+みなみは 13ばん どうろ
+
+[ruta12.pier]
+つりばし
+---
+つりざおを もって
+うみを むこう。
+
+[ruta12.npc.a]
+うみは ひろいね。
+こわくて すてき。
+
+[ruta12.npc.b]
+おおきな ばけものが
+さんばしで ねてるって。
+---
+おんがくだけが
+おこせるそうよ。
+
+[ruta12.guru.a]
+やあ！ きみは
+つりが すきかい？
+
+[ruta12.guru.b]
+この あしの つりざおを
+あげよう。
+
+[ruta12.guru.about]
+かばんから つかうと
+みずべで つれるよ。
+
+[ruta12.guru.after]
+いい つりざおは
+アンバーシティだ。
+
+[ruta13.sign]
+13ばん どうろ
+---
+ひがしは 12ばん どうろ
+にしは 14ばん どうろ
+
+[ruta13.sign2]
+さくに ちゅうい！
+---
+ぜんぶが でぐちに
+つながるわけじゃない。
+
+[ruta13.npc]
+さくの あいだで
+はなが さいている。
+
+[ruta14.sign]
+14ばん どうろ
+---
+ひがしは 13ばん どうろ
+にしは 15ばん どうろ
+
+[ruta14.sign2]
+さくは きたから
+みなみへ のびる。
+---
+すきまを さがせ。
+
+[ruta14.npc]
+おばあちゃんは
+さくは みちしるべだって。
+
+[ruta15.sign]
+15ばん どうろ
+---
+ひがしは 14ばん どうろ
+にしは アンバーシティ
+
+[ruta15.sign2]
+のはらの ふうしゃ
+---
+にしかぜで まわる。
+
+[ruta15.npc]
+ふうしゃが はやく
+まわると あめが くる。
+
+[ambar.sign]
+アンバーシティ
+---
+うみと サバンナが
+であう まち
+
+[ambar.sign.gym]
+どくジム
+---
+リーダーは カイ
+
+[ambar.sign.reserva]
+ワイルドほごく
+---
+にゅうじょう 500えん
+
+
+
+
+
+
+[ambar.npc.a]
+ここは しおと
+サバンナの かおり。
+
+[ambar.npc.b]
+うちの ひとは
+ほごくの かんりにん。
+---
+きんの さしばを
+なくして さわぎよ！
+
+[ambar.npc.c]
+やしの きが
+ずっと かげを つくる。
+
+[cana.a]
+ようこそ！ わたしは
+つりの ししょうの おとうと。
+
+[cana.b]
+この ファイバーざおを
+あげよう。
+
+[cana.about]
+よく つれて
+いい さかなが くるよ。
+
+[cana.after]
+ゆっくり つれ。
+いいものは まつものさ。
+
+[guardian.a]
+わたしは ワイルド
+ほごくの ばんにん。
+---
+きんの さしばを
+なくしてしまった…
+---
+ほごくの なかで
+おとしたかも。
+
+[guardian.case]
+からっぽの ガラスだな。
+はが ここに あった。
+
+[gym.kai.pre]
+ようこそ、わかもの。
+わたしは ニンジャの カイ。
+---
+わたしの どくは
+みえず においもしない。
+---
+いきを うばわれる
+かくごを しろ！
+
+[gym.kai.win]
+ばかな！ わたしの どくが
+きかぬとは。
+---
+ジムバッジを
+うけとるが いい。
+---
+さあ、とれ。
+
+[gym.kai.badge]
+{player}は
+トキシンバッジを もらった！
+
+[gym.kai.about]
+これも リーグの
+こうしきな あかし。
+---
+ごばんめの リーダーを
+たおした しょうこだ。
+---
+これが あれば
+ハイドロスライダーが きく。
+
+[gym.kai.disc]
+これを うけとれ。
+わたしの わざの ディスクだ。
+
+[gym.kai.disc_about]
+どくの わざが
+はいっている。
+---
+じわじわ きく。
+
+[gym.kai.after]
+わたしの どくは
+まだ おまえを おう。
+---
+いい たたかいだった。
+
+# --- C5b content (contract 48) ---
+
+[gl.tr.punk_r16a]
+パンク ダーク
+
+
+[gl.tr.rider_r16]
+ライダー マーラ
+
+
+[gl.tr.punk_r16b]
+パンク ロコ
+
+
+[gl.tr.rider_ap1]
+ライダー カノ
+
+
+[gl.tr.punk_ap1]
+パンク ベックス
+
+
+[gl.tr.rider_ap2]
+ライダー ローラ
+
+
+[gl.tr.punk_ap2]
+パンク スパイク
+
+
+[gl.tr.rider_ap3]
+ライダー ガボ
+
+
+[gl.tr.punk_ap3]
+パンク ジーク
+
+
+[gl.tr.rider_ap4]
+ライダー ハナ
+
+
+[gl.tr.punk_ap4]
+パンク ブルータス
+
+
+[gl.tr.rider_r18]
+ライダー イネス
+
+
+[gl.tr.explorador_r18]
+たんけんか ウリ
+
+
+[gl.tr.pescador_r18]
+つりびと ノア
+
+
+[gl.tr.nadadora_m1]
+すいえいせんしゅ ガラ
+
+
+[gl.tr.nadadora_m2]
+すいえいせんしゅ ティナ
+
+
+[tr.punk_r16a.pre]
+おい きみ！ この みちは
+おれたちの ものだ！
+
+
+[tr.punk_r16a.after]
+なかまは マグハイウェイを
+はしってるぜ。
+
+
+[tr.rider_r16.pre]
+わたしの じてんしゃは
+はやいわよ！
+
+
+[tr.rider_r16.after]
+じてんしゃが ないと
+マグハイウェイは むり。
+
+
+[tr.punk_r16b.pre]
+ねてた やつを
+おこしたのか？
+
+
+[tr.punk_r16b.after]
+いびきが うるさくて
+たまらなかったぜ。
+
+
+[tr.rider_ap1.pre]
+くだりざかだ！
+つかまれ！
+
+
+[tr.rider_ap1.after]
+あっと いうまだった。
+
+
+[tr.punk_ap1.pre]
+このレーンは
+おれの ものだ！
+
+
+[tr.punk_ap1.after]
+きょうは ついて
+ないぜ。
+
+
+[tr.rider_ap2.pre]
+ブレーキは
+かけるなよ！
+
+
+[tr.rider_ap2.after]
+あぶなく ころぶ
+ところだった。
+
+
+[tr.punk_ap2.pre]
+このさかは おわらない！
+しょうぶだ！
+
+
+[tr.punk_ap2.after]
+タイヤが まがった…
+
+
+[tr.rider_ap3.pre]
+ぜんそくりょくだ！
+
+
+[tr.rider_ap3.after]
+つぎの くだりで
+また あおう。
+
+
+[tr.punk_ap3.pre]
+おれの タイヤ、
+おれの ルール！
+
+
+[tr.punk_ap3.after]
+いつか おいついて
+やるぜ。
+
+
+[tr.rider_ap4.pre]
+さいごの くだりだ！
+いどむか？
+
+
+[tr.rider_ap4.after]
+いきが あがった…
+
+
+[tr.punk_ap4.pre]
+おれと たたかわずに
+とおさねえ！
+
+
+[tr.punk_ap4.after]
+ちっ、いっていいぜ。
+
+
+[tr.rider_r18.pre]
+レースは ここまで！
+しょうぶ！
+
+
+[tr.rider_r18.after]
+ボードウォークは
+のんびりできる。
+
+
+[tr.explorador_r18.pre]
+うみどりの とぶ
+あとを おってるんだ。
+
+
+[tr.explorador_r18.after]
+カモメに まけたよ。
+
+
+[tr.pescador_r18.pre]
+つれる ひは
+しょうぶも つれる！
+
+
+[tr.pescador_r18.after]
+いい あたりが
+にげたよ。
+
+
+[tr.nadadora_m1.pre]
+みずが さいこう！
+おいで！
+
+
+[tr.nadadora_m1.after]
+つめたくて
+きもちいい。
+
+
+[tr.nadadora_m2.pre]
+わたしに かたないと
+わたれないわよ。
+
+
+[tr.nadadora_m2.after]
+いきなさい。
+うみは ひろいわ。
+
+
+[neon.west.sign]
+にしでぐち
+---
+にしは 16ばん どうろ
+マグハイウェイ
+
+
+[ruta16.sign]
+16ばん どうろ
+---
+ひがしは ネオンシティ
+みなみは マグハイウェイ
+
+
+[ruta16.gate.sign]
+マグハイウェイ
+---
+じてんしゃ せんよう。
+ずっと くだりざか！
+
+
+[ruta16.house.sign]
+つりの いえ
+---
+つりざおを
+くれる いえ。
+
+
+[ruta16.npc.a]
+おおきな いきものが
+みちを ふさいでる。
+---
+ふえの おとで
+おきるらしいよ。
+
+
+[ruta16.npc.b]
+あの しげみを みて。
+いえが かくれてるの。
+---
+うしろに だれかが
+すんでるわ。
+
+
+[cana2.a]
+やあ！ きみは
+よく つりを するかい？
+
+
+[cana2.b]
+わたしの ごうきん
+つりざおを あげよう。
+
+
+[cana2.about]
+かばんから つかうと
+みずべで つれるよ。
+---
+めずらしい さかなも
+つれるんだ。
+
+
+[cana2.after]
+ごうきんつりざおで
+つりを してごらん。
+
+
+[plane.a]
+こんにちは！
+とりが だいすきなの。
+
+
+[plane.b]
+これ、あげるわ。
+グライダーよ。
+
+
+[plane.got]
+{player}は グライダーの
+モジュールを もらった！
+
+
+[plane.about]
+いったことのある
+まちへ とんでいける。
+---
+ボルトバッジが
+ひつようよ。
+
+
+[plane.after]
+グライダーで
+まちへ もどれるわ。
+
+
+[plane.poster]
+とりが とんでいる
+ポスターだ。
+
+
+[ap.sign]
+マグハイウェイ
+---
+くだりざかだ。
+あとは じてんしゃまかせ。
+
+
+[ap.sign2]
+ギャングの なわばり
+---
+ライダーと パンクが
+しきってる。
+
+
+[r18.sign]
+18ばん どうろ
+---
+にしは マグハイウェイ
+ひがしは アンバーシティ
+
+
+[r18.sign2]
+ボードウォーク
+---
+ざんばしから
+つりが できるよ。
+
+
+[r18.npc.a]
+ここから ひろい うみが
+みえるわ。
+---
+ハイドロスライダーが
+あれば わたれるわよ。
+
+
+[puerta.hi]
+ようこそ ワイルド
+ほごくへ！
+---
+500えんで ほごくの
+クリスタルを 30こ。
+---
+500ほの あいだ
+つかまえられるよ。
+
+
+[puerta.ask]
+はいりますか？
+
+
+[puerta.no]
+いつでも
+きてくださいね。
+
+
+[puerta.ok]
+ほごくの クリスタル
+30こ だよ！
+---
+がんばってね！
+
+
+[puerta.full]
+かばんが いっぱいよ。
+---
+クリスタルの
+ばしょを あけてね。
+
+
+[puerta.in]
+もう ほごくの
+なかに いるわよ。
+
+
+[puerta.nopay]
+さきに にゅうじょうりょうを
+はらってね！
+---
+うけつけの ひとに
+はなしかけてね。
+
+
+[puerta.leave]
+ここで おわりに
+しますか？
+
+
+[puerta.bye]
+ごらいじょう
+ありがとう！
+
+
+[puerta.board]
+ほごくの ルール
+---
+500えんで クリスタル
+30こと 500ほ。
+---
+たたかいは なし。
+いしか えさを なげよう。
+
+
+[rv.sign1]
+ワイルドほごく
+---
+エリア1
+きたは エリア2
+
+
+[rv.sign2]
+エリア2
+---
+にしに きゅうけいじょ。
+
+
+[rv.sign3]
+エリア3
+---
+いわが おおいよ。
+きをつけて。
+
+
+[rv.sign4]
+エリア4
+---
+いちばん おくの
+エリア。
+
+
+[rest.a]
+おじいさんが ここで
+はを なくしたの。
+---
+エリア3で
+みた きがするわ。
+
+
+[rest.b]
+ランバームは めったに
+でてこないよ。
+---
+えさを なげると
+のこりやすいぞ。
+
+
+[rest.books]
+いきものの せいたいを
+かいた ほんだ。
+
+
+[secret.a]
+ついに だれかが
+ひみつの いえに きた！
+---
+ごほうびを
+あげよう。
+
+
+[secret.got]
+{player}は ハイドロ
+スライダーを もらった！
+
+
+[secret.about]
+みずの うえを
+すべれるよ。
+---
+みずべで
+つかってね。
+
+
+[secret.about2]
+トキシンバッジが
+ひつようだよ。
+
+
+[secret.after]
+うみを たのしんでね。
+
+
+[guardian.b]
+わたしの きんの
+さしばだ！
+---
+ついに みつけて
+くれたんだね！
+---
+おれいに
+これを あげよう。
+
+
+[guardian.got]
+{player}は プッシャーの
+モジュールを もらった！
+
+
+[guardian.about]
+おもい いわを
+うごかせるよ。
+---
+おおきな いわの
+まえで つかおう。
+
+
+[guardian.about2]
+ルートバッジが
+ひつようだよ。
+
+
+[guardian.after]
+プッシャーで
+おもい いわを うごかそう。
+
+
+[secret.chart]
+ルートが かかれた
+かいずだ。
+
+
+[mar.sign]
+アンバーの ビーチ
+---
+みなみは ひろい うみ。
+
+
+[mar.sign2]
+ちゅうい！
+---
+うみを わたるには
+ハイドロスライダーを。
+
+
+[mar.buoy]
+ブイが うみの
+さかいを しめしている。
+---
+ながれが
+つよすぎる。
+
+# --- C6 content (contract 49) ---
+
+
+
+
+
+
+
+
+
+[gl.rg.kickaroo]
+めにも とまらぬ
+はやさで ける。
+---
+いちにちじゅう
+とびはねて きたえる。
+
+
+[gl.rg.jabadillo]
+まるまって
+こうげきを ふせぐ。
+---
+いしの グローブで
+いわを わる。
+
+
+[gl.rg.glacielle]
+おだやかに うみに
+うかんで うたう。
+---
+こおりの かんむりが
+かぜで うたう。
+
+[gl.rg.mirrimime]
+かがみの わくで
+きみの かおを まねる。
+---
+てから ひかりの
+かべを つくりだす。
+
+
+[gl.rg.somnarch]
+ねむったまま ういて
+ゆめの だいまほうつかい。
+---
+みっつの ゆめだまが
+まわりを まわる。
+
+
+[gl.rg.mothmist]
+まるくて ふわふわの
+こどもの ガ。
+---
+はねのような しょっかくで
+あめを かぎわける。
+
+
+[gl.rg.veilmoth]
+うすい ヴェールの
+はねを もつ。
+---
+はばたくたびに
+ひかる こなが おちる。
+
+
+[gl.rg.pixelix]
+ういている ブロックの
+あつまりで できている。
+---
+ふちが がめんのように
+ちかちか ひかる。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[gl.tr.karateka_d1]
+からてか タオ
+
+
+[gl.tr.karateka_d2]
+からてか ユキ
+
+
+[gl.tr.karateka_d3]
+からてか リク
+
+
+[gl.tr.karateka_d4]
+からてか ゴロー
+
+
+[gl.tr.maestro_dojo]
+マスター ガク
+
+
+[gl.tr.vertice_c1]
+エージェント ゾーイ
+
+
+[gl.tr.vertice_c2]
+エージェント ダンテ
+
+
+[gl.tr.vertice_c3]
+エージェント ヤゴ
+
+
+[gl.tr.vertice_t1a]
+エージェント ミロ
+
+
+[gl.tr.vertice_t1b]
+エージェント ベラ
+
+
+[gl.tr.vertice_t2a]
+エージェント ルカス
+
+
+[gl.tr.cientifico_t2a]
+かがくしゃ シロ
+
+
+[gl.tr.cientifico_t2b]
+かがくしゃ エミル
+
+
+[gl.tr.cientifico_t3a]
+かがくしゃ トビ
+
+
+[gl.tr.vertice_t3a]
+エージェント パブロ
+
+
+[gl.tr.cientifico_t3b]
+かがくしゃ ニルス
+
+
+[gl.tr.vertice_t4a]
+エージェント アイリス
+
+
+[gl.tr.cientifico_t4a]
+かがくしゃ ラース
+
+
+[gl.tr.vertice_t5a]
+エージェント セサル
+
+
+[gl.tr.cientifico_t5a]
+かがくしゃ ナエル
+
+
+[gl.tr.vertice_t5b]
+エージェント オルガ
+
+
+[gl.tr.vertice_t6a]
+エージェント オリオン
+
+
+[gl.tr.psiquico_g1]
+サイキッカー オマル
+
+
+[gl.tr.psiquico_g2]
+サイキッカー リビア
+
+
+[gl.tr.psiquico_g3]
+サイキッカー タデオ
+
+
+[gl.tr.psiquico_g4]
+サイキッカー ヌリア
+
+
+[gl.tr.psiquico_g5]
+サイキッカー エンツォ
+
+
+[gl.tr.psiquico_g6]
+サイキッカー アルバ
+
+
+[gl.tr.psiquico_g7]
+サイキッカー オルフェ
+
+
+[gl.tr.sena]
+ドクター セナ
+
+
+[tr.karateka_d1.pre]
+きゃくじんか！
+ちからを みせろ！
+
+
+[tr.karateka_d1.after]
+まいあさ こぶしを
+きたえている。
+
+
+[tr.karateka_d2.pre]
+ぼくの あしは
+はがねだ！ こい！
+
+
+[tr.karateka_d2.after]
+まだ バランスが
+たりない。
+
+
+[tr.karateka_d3.pre]
+この どうじょうに
+よわむしは いらん！
+
+
+[tr.karateka_d3.after]
+おもったより
+つよいな。
+
+
+[tr.karateka_d4.pre]
+マスターに あう まえに
+おれを たおせ！
+
+
+[tr.karateka_d4.after]
+マスターが
+まっている。
+
+
+[tr.vertice_c1.pre]
+いまは バーテックスが
+ゼニスを おさめる！
+
+
+[tr.vertice_c1.after]
+タワーは
+おれたちのものだ。
+
+
+[tr.vertice_c2.pre]
+かんこうきゃく？
+ここに みるものは ない。
+
+
+[tr.vertice_c2.after]
+ボスが くるまえに
+さっさと いけ。
+
+
+[tr.vertice_c3.pre]
+タワーは へいさちゅうだ！
+かえれ！
+
+
+[tr.vertice_c3.after]
+ディレクターは
+おこるぞ。
+
+
+[tr.vertice_t1a.pre]
+このフロアは
+バーテックスのものだ！
+
+
+[tr.vertice_t1a.after]
+のぼれるものなら
+のぼってみろ。
+
+
+[tr.vertice_t1b.pre]
+うちの タワーで
+もんだいを おこすつもりか？
+
+
+[tr.vertice_t1b.after]
+ついてないな。
+
+
+[tr.vertice_t2a.pre]
+ここは おれの
+なわばりだ！ かくご！
+
+
+[tr.vertice_t2a.after]
+ボスに しかられるぜ。
+
+
+[tr.cientifico_t2a.pre]
+でんきの エレメンティを
+ためしてやる！
+
+
+[tr.cientifico_t2a.after]
+データが
+だいなしだ。
+
+
+[tr.cientifico_t2b.pre]
+あたらしい ほうていしきが
+かんせいした！
+
+
+[tr.cientifico_t2b.after]
+しきが
+まちがっていた。
+
+
+[tr.cientifico_t3a.pre]
+わたしの かいろは
+かんぺきだ！
+
+
+[tr.cientifico_t3a.after]
+けいさんミスが
+あったようだ。
+
+
+[tr.vertice_t3a.pre]
+アクセスチップは
+おまえには わたさん！
+
+
+[tr.vertice_t3a.after]
+にげられた！
+
+
+[tr.cientifico_t3b.pre]
+バーテックスは
+きゅうりょうが いい！
+
+
+[tr.cientifico_t3b.after]
+ボーナスは
+なしか。
+
+
+[tr.vertice_t4a.pre]
+ここは たちいり
+きんしだ！
+
+
+[tr.vertice_t4a.after]
+いかせてやるが
+ながくは もたんぞ。
+
+
+[tr.cientifico_t4a.pre]
+どくの じっけんを
+している。 きをつけろ！
+
+
+[tr.cientifico_t4a.after]
+これは きろく
+しておこう。
+
+
+[tr.vertice_t5a.pre]
+もうすこしで
+ディレクターだな！
+
+
+[tr.vertice_t5a.after]
+あきらめた
+ほうがいい。
+
+
+[tr.cientifico_t5a.pre]
+ろんぶんの テーマは
+バトルだ！ みせてくれ！
+
+
+[tr.cientifico_t5a.after]
+もっと データが
+ひつようだ。
+
+
+[tr.vertice_t5b.pre]
+このフロアから
+さきへは いかせん！
+
+
+[tr.vertice_t5b.after]
+ディレクターは
+もっと つよいぞ。
+
+
+[tr.vertice_t6a.pre]
+まて！ ディレクターは
+めんかいしない！
+
+
+[tr.vertice_t6a.after]
+いいだろう…
+はいれ。
+
+
+[tr.psiquico_g1.pre]
+きみが なにを するか
+わかっている！
+
+
+[tr.psiquico_g1.after]
+みえなかった…。
+
+
+[tr.psiquico_g2.pre]
+こころの なかまで
+みえるわ。
+
+
+[tr.psiquico_g2.after]
+あなたの こころの
+ほうが つよいわ。
+
+
+[tr.psiquico_g3.pre]
+かがみは うそを
+つかない！ しょうぶ！
+
+
+[tr.psiquico_g3.after]
+かがみが
+われた。
+
+
+[tr.psiquico_g4.pre]
+きみの おそれが
+つたわってくる。
+
+
+[tr.psiquico_g4.after]
+おかしいわ。
+かんじなかった。
+
+
+[tr.psiquico_g5.pre]
+めを とじても
+きみが みえる！
+
+
+[tr.psiquico_g5.after]
+まけたら めを
+あけるんだな。
+
+
+[tr.psiquico_g6.pre]
+セナせんせいが
+すべて おしえてくれた！
+
+
+[tr.psiquico_g6.after]
+まだまだ
+べんきょうが たりない。
+
+
+[tr.psiquico_g7.pre]
+セナせんせいに
+かてると おもうか？
+
+
+[tr.psiquico_g7.after]
+きみなら
+かてるかもな。
+
+
+[cenit.guard.thirsty]
+のどが からからだ！
+ずっと みはりだ。
+---
+なにか のみものを
+くれたら とおすぞ。
+
+
+[cenit.guard.none]
+のみものは ネオンの
+まちで うっているぞ。
+
+
+[cenit.guard.badge]
+トキシンバッジが
+ないと とおせない。
+
+[cenit.guard.give]
+{v0}を くれるのか！
+たすかった！
+
+
+[cenit.guard.open]
+ほかの もんの ひとにも
+つたえておくよ。
+---
+ゼニスシティに
+はいって いいぞ。
+
+
+[cenit.guard.after]
+のみものを ありがとう！
+さあ はいって。
+
+
+[cenit.sign]
+ゼニスシティ
+こころの まち
+
+
+[cenit.sign.torre]
+バーテックスタワー
+バーテックスしゃ
+
+
+[cenit.sign.dojo]
+こぶしどうじょう
+ちょうせんしゃ かんげい
+
+
+[cenit.sign.gym]
+マインドジム
+リーダーは ドクター セナ
+
+
+[cenit.npc.a1]
+バーテックスが
+タワーを のっとった！
+
+
+[cenit.npc.a2]
+バーテックスは
+まちから でていった！
+
+
+[cenit.npc.b1]
+むすこが タワーの
+なかに いるの…
+
+
+[cenit.npc.b2]
+むすこが ぶじに
+かえってきたわ！
+
+
+[cenit.npc.c]
+ここでは みんな
+こころを よめるのよ。
+
+
+[cenit.npc.d]
+ゼニスでは かがみまで
+みているのよ。
+
+
+[mimo.books]
+パントマイムの ほん
+みえない かべ。
+
+
+[mimo.mirror]
+たまごがたの かがみ。
+まねを してくる。
+
+
+[mimo.hello]
+やあ！ ぼくは ミミ。
+エレメンティを こうかん！
+
+
+[mimo.hint]
+ネムエルフは こうかんで
+しんかするそうだ。
+---
+ともだちと
+つうしんこうかんだ。
+
+
+[mimo.nick]
+Marcel
+
+
+[psi.books]
+ねんりきの ほんが
+ならんでいる。
+
+
+[psi.hi]
+おお！ きみから おおきな
+さいのうを かんじる。
+---
+この ディスクを やろう。
+ねんの わざだ。
+
+
+[psi.about]
+ディスク08は
+ねんのあらし！ きょうりょく！
+
+
+[psi.after]
+まいにち こころを
+きたえるのだ。
+
+
+[dojo.master.pre]
+ようこそ！ こぶし
+どうじょうへ！
+---
+でしたちが ためした。
+つぎは わたしの ばんだ。
+
+
+[dojo.master.win]
+きみの こぶしは
+どうじょうより つよい。
+---
+ふたりの うち
+ひとりを えらべ。
+
+
+[dojo.master.after]
+こぶしどうじょうは
+きみの いえも おなじだ。
+
+
+[gym.sena.pre]
+くると おもっていたわ。
+こころで みえたの。
+---
+わたしの ちからは
+あなたより うえよ。
+---
+さあ しょうぶよ！
+
+
+[gym.sena.win]
+すごい！ あなたの こころが
+わたしを こえた。
+---
+わたしの ちからでは
+たりなかった。
+---
+ジムの バッジを
+うけとって。
+
+
+[gym.sena.badge]
+{player}は
+マインドバッジを もらった！
+
+
+[gym.sena.about]
+これも リーグの
+こうしきな しるし。
+---
+ろくばんめの リーダーを
+たおした しょうこよ。
+
+[gym.sena.disc]
+これを あげるわ。
+わたしの わざの ディスク。
+
+
+[gym.sena.disc_about]
+ねんのなみ。
+こころで なぐる わざよ。
+---
+ほんものの ねんりきよ。
+
+
+[gym.sena.after]
+あなたの ちからを
+まだ かんじるわ。
+---
+たたかって くれて
+ありがとう。
+---
+アンバーシティの みなみの
+うみを わたれるわ。
+
+[vtx.dir]
+あんない
+6F ディレクター
+
+
+[vtx.recep]
+たすけて！ バーテックスが
+タワーを のっとったの。
+---
+ディレクターは
+さいじょうかいよ。
+
+
+[vtx.recep2]
+ありがとう！ タワーは
+わたしたちの ものよ！
+
+
+[vtx.pc.a]
+ほうこくしょだ。バーテックスが
+ゼニスを せいあつする。
+
+
+[vtx.pc.b]
+うりこみの リスト。
+めずらしい エレメンティ。
+
+
+[vtx.worker.hi]
+やっと だれか きた！
+とじこめられたんだ。
+---
+パスは とられたが
+よびが あるんだ。
+
+
+[vtx.worker.key]
+このアクセスチップを やる。
+うまく つかってくれ。
+
+
+[vtx.worker.about]
+タワーの でんしロックを
+あけられる。
+---
+かいしゃを たすけてくれ。
+
+
+[vtx.worker.after]
+きをつけて いってくれ。
+ディレクターは つよい。
+
+
+[vtx.rival.hey]
+{player}！ また きみか！
+---
+その まえに
+ぼくと しょうぶだ！
+
+
+[vtx.rival.again]
+またか！ しょうぶだ！
+
+
+[vtx.rival.lose]
+ちぇっ！ また まけた。
+---
+もっと つよくなる。
+
+
+[vtx.rival.next]
+ディレクターは
+いちばん うえだ。いけ！
+
+
+[vtx.glacielle.hi]
+きてくれて ありがとう！
+バーテックスに とられた。
+---
+このエレメンティは
+うられる ところだった。
+
+
+[vtx.glacielle.give]
+つれていって。
+おだやかで うたうよ。
+
+[vtx.glacielle.about]
+グラシエルは うたって
+みずを こおらせる。
+
+
+[vtx.glacielle.after]
+だいじに してね。
+
+
+[vtx.varo.pre]
+ほう！ また きみか！
+アジトを つぶした な。
+---
+このタワーは
+わたしの たから。
+---
+きみの たびは
+ここまでだ！
+
+
+[vtx.varo.win]
+ありえん！ また
+まけたのか。
+---
+バーテックスは ゼニスから
+てったいする。いまはな。
+
+
+[vtx.varo.gone]
+バロは ぶかを つれて
+たちさった。
+
+
+[vtx.pres.help]
+たすけてくれ！
+バロに とじこめられた。
+---
+かれを たおせば
+タワーは じゆうだ。
+
+
+[vtx.pres.thanks]
+きみは えいゆうだ！
+かいしゃを すくってくれた。
+---
+とくべつな ものを
+おくりたい。
+
+
+[vtx.pres.give]
+マスタークリスタルだ。
+かならず つかまえられる。
+---
+たいせつに つかってくれ。
+
+
+[vtx.pres.after]
+あらためて
+ありがとう。
+---
+バーテックスは さった。
+いまは な。
+
+# --- C9 systems (contract 50) ---
+[gl.c9.hof.title]
+レガシーホール
+
+[gl.c9.hof.menu]
+レガシーホール
+
+[gl.c9.hof.congrats]
+おめでとう、
+{player}！
+---
+パーティは レガシー
+ホールに はいった！
+
+[gl.c9.hof.none]
+レガシーホールは
+まだ だれも いない。
+
+[gl.c9.hof.fail]
+レガシーホールを
+ほぞんできない！
+
+[gl.c9.end.fail]
+エンディングを
+ひらけなかった。
+
+[gl.c9.door.locked]
+ドアは しまっている。
+---
+この へやで かてば
+ひらく。
+
+[gl.c9.door.shut]
+ドアが うしろで
+しまった！
+
+[gl.c9.cr.title]
+ELEMENTIS
+ZETA
+
+[gl.c9.cr.sub]
+Flipper Zero
+ようの ゲーム
+
+[gl.c9.cr.design]
+デザインと
+プログラム
+---
+Daniel Jahziel
+
+[gl.c9.cr.art]
+アート
+Daniel Jahziel
+---
+PixelLabで
+つくりました
+
+[gl.c9.cr.music]
+おんがく
+オリジナルきょく
+
+[gl.c9.cr.fonts]
+フォント
+
+[gl.c9.cr.f1]
+Fusion
+Pixel Font
+---
+(c) 2022
+TakWolf
+---
+OFL 1.1
+
+[gl.c9.cr.f2]
+Ark Pixel
+Font
+---
+(c) 2021
+TakWolf
+---
+OFL 1.1
+
+[gl.c9.cr.f3]
+Galmuri
+(c)
+---
+2019-2025
+Lee Minseo
+---
+OFL 1.1
+
+[gl.c9.cr.f4]
+Boutique
+Bitmap
+---
+(C)
+2002-2019
+---
+Num Kadoma
+(c) 2026
+---
+fancy type
+foundry
+---
+OFL 1.1
+
+[gl.c9.cr.f5]
+Misaki
+Font
+---
+(C)
+2002-2021
+---
+Num Kadoma
+own free
+---
+licence
+
+[gl.c9.cr.f6]
+Miseki
+Bitmap
+---
+(c)
+2023-2024
+---
+Mark Li
+OFL 1.1
+
+[gl.c9.cr.f7]
+Cubic 11
+(c) 2005
+---
+M+ FONTS
+PROJECT
+---
+(C)
+2002-2004
+---
+COZ
+OFL 1.1
+
+[gl.c9.cr.lic]
+ライセンスは
+licenses フォルダ
+---
+に あります。
+
+[gl.c9.cr.thanks]
+あそんでくれて
+ありがとう！
+---
+コーフィーで おうえん
+---
+ko-fi.com/
+danielmartinez55371
+
+[gl.c9.cr.fin]
+おわり
+
+[c9sys.person]
+リーグは きたの
+ドアから はじまる。
+
+[c9sys.m1.pre]
+オレが サミットフォーの
+ひとりめだ！
+
+[c9sys.m1.after]
+みごとだ。 すすめ！
+
+[c9sys.champ.pre]
+よく ここまで きた！
+オレが チャンピオンだ！
+
+[c9sys.champ.win]
+まけた！
+きみが チャンピオンだ！
+
+[c9sys.champ.after]
+きみは チャンピオンだ。
+
+# --- C8 content (contract 51) ---
+
+[gl.rg.clubtail]
+しっぽは いしの
+こんぼうの よう。
+---
+まっすぐ つっこみ
+いわを くだく。
+
+[gl.rg.anklord]
+いわの よろいを まとった
+きょじん。
+---
+つのは どんな かたい
+いしも つらぬく。
+
+[gl.tr.montanista_n1]
+やまおとこ ゴル
+
+[gl.tr.mecanico_n1]
+エンジニア ルーク
+
+[gl.tr.montanista_n2]
+やまおとこ トール
+
+[gl.tr.explorador_n1]
+たんけんか ヌノ
+
+[gl.tr.mecanico_n2]
+エンジニア ボリス
+
+[gl.tr.chica_n1]
+おんなのこ ミナ
+
+[gl.tr.montanista_n3]
+やまおとこ ロロ
+
+[tr.montanista_n1.pre]
+ここの いわは うごかん！
+おまえは どうだ？
+
+[tr.montanista_n1.after]
+いわより つよい
+いきおいだ。
+
+[tr.mecanico_n1.pre]
+ドリルの じゅんびは
+できた。 おまえは？
+
+[tr.mecanico_n1.after]
+ドリルが こわれた。
+さきへ いけ。
+
+[tr.montanista_n2.pre]
+まいにち やまを
+のぼってるぞ！ こい！
+
+[tr.montanista_n2.after]
+おまえの
+エレメンティは かたいな。
+
+[tr.explorador_n1.pre]
+おまえより きょうぼうな
+やつを てなずけた！
+
+[tr.explorador_n1.after]
+おれの チームを
+てなずけたな。
+
+[tr.mecanico_n2.pre]
+このへやは おれの
+こうばだ！ でていけ！
+
+[tr.mecanico_n2.after]
+ドリルまで おまえを
+みとめたぜ。
+
+[tr.chica_n1.pre]
+リーダーは だれも
+とおさない！
+
+[tr.chica_n1.after]
+いきなさい。
+あのひとは きけんよ。
+
+[tr.montanista_n3.pre]
+さいごの とびらは
+おれが まもる！
+
+[tr.montanista_n3.after]
+リーダーは おくで
+まっている。
+
+[nodo.gymguard]
+ジムは しまっている。
+---
+リーダーは ゼニスへ
+しごとで でかけた。
+
+[gym.varo.pre]
+まっていたぞ、{player}。
+また おまえか。
+---
+アジトでも タワーでも
+あったな。
+---
+わたしの だいちは
+よわい ものを つぶす！
+
+[gym.varo.win]
+ははは！ はげしい
+たたかいだった！
+---
+おまえの かちだ。
+あかしを うけとれ。
+
+[gym.varo.badge]
+{player}は
+コアバッジを もらった！
+
+[gym.varo.about]
+はちばんめ、さいごの
+バッジだ。
+---
+さいごの リーダーを
+たおした しょうこだ。
+---
+リーグへの みちは
+ひらかれた。
+
+[gym.varo.disc]
+これを うけとれ。
+わたしの わざの ディスクだ。
+
+[gym.varo.disc_about]
+じめんの わざが
+はいっている。
+---
+ゆかぜんたいを
+ゆらす。
+
+[gym.varo.bye]
+まけた。 もう なかまに
+あわせる かおが ない。
+---
+バーテックスは
+えいえんに かいさんだ！
+---
+また きたえなおす。
+さらばだ。
+
+[gym.varo.after]
+バーテックスは
+もう ない。
+---
+じぶんの みちを いけ。
+リーグを めざせ。
+
+# --- Legendary encounters (contract 52) ---
+[gl.c52.cry]
+キシャアアア！
+
+# --- C7 content (contract 53) ---
+
+[ceniza.sign]
+アッシュじま
+---
+ねむる かざんが
+まちを みまもる。
+
+[ceniza.sign.lab]
+かせきラボ
+むかしを よみがえらす
+
+[ceniza.sign.gym]
+ほのおジム
+---
+リーダー ブラサはかせ
+タイプ ほのお
+
+[ceniza.sign.mansion]
+やけたやかた
+---
+あぶない はいきょ。
+じこせきにんで どうぞ
+
+[ceniza.npc.a]
+ここの ラボは かせきを
+よみがえらせるよ。
+---
+はいって かがくしゃに
+はなしかけてみて。
+
+[ceniza.npc.b]
+やかたは おばけが
+でるって うわさ…
+---
+むかしは かしこい
+かがくしゃの いえ。
+
+[ceniza.npc.c]
+ジムは カギが
+かかっている。
+---
+すすのカギは
+やかたの なかだ。
+---
+ブラサはかせは
+あつい じいさんだ！
+
+[lab.vitrina]
+かせきの ケース。
+しっぽの かけら。
+
+[lab.vitrina2]
+メモ かせきは
+エコやまで みつかる
+
+[lab.books]
+こせいぶつの ほん。
+どれも とても ふるい。
+
+[lab.rev.hello]
+ようこそ！ ここでは
+かせきを ふっかつ。
+---
+かせきか コハクを
+みせてくれ。
+
+[lab.rev.lily]
+ユリのかせきを
+ふっかつさせる？
+
+[lab.rev.tri]
+トリロかせきを
+ふっかつさせる？
+
+[lab.rev.amber]
+かせきコハクを
+ふっかつさせる？
+
+[lab.rev.none]
+かせきも コハクも
+もっていないね。
+---
+みつけたら
+また きてくれ。
+
+[lab.rev.bye]
+いつでも
+ふっかつさせるよ。
+
+[lab.rev.start]
+よし。 カプセルに
+いれるぞ…
+
+[lab.rev.done]
+せいこうだ！
+---
+この ふるい エレメンティを
+だいじに そだてて。
+
+[lab.rev.fail]
+しっぱいだ。
+いまは ふっかつできない。
+
+[lab.trade.hello]
+やあ！ ほかの ばしょの
+ゴビホップが ほしい。
+---
+こおりの めずらしい
+エレメンティを あげる。
+
+[lab.trade.nick]
+Lola
+
+[lab.explain]
+こうかんで しんかする
+エレメンティも いる。
+---
+ネムエルフは こうかんで
+ソムナークに なる。
+
+[central.sign]
+はつでんしょ
+---
+こうあつ きけん！
+ケーブルに ふれるな。
+
+[ruta10.lake.sign]
+はつでんしょ
+みずの むこうがわ。
+
+[esc1.sign]
+ちゅうい
+---
+こおりの したに
+なにかが いる。
+
+[esc2.sign]
+たんけんかの メモ
+---
+プッシャーで いわを
+あなに おとせ。
+---
+したの ながれが
+しずまるぞ。
+
+[esc3.rapids]
+ながれが つよすぎる。
+---
+うえの ほうから
+みずが きている。
+
+[gym.q1]
+ほのおは くさに
+つよい。
+---
+ほんとう？
+
+[gym.q2]
+みずは ほのおに
+よわい。
+---
+ほんとう？
+
+[gym.q3]
+こおりは ひこうに
+つよい。
+---
+ほんとう？
+
+[gym.q4]
+メダルは ぜんぶで
+はちまい ある。
+---
+ほんとう？
+
+[gym.q5]
+ハイドロスライダーは
+ボルトバッジが いる。
+---
+ほんとう？
+
+[gym.q6]
+わざディスクは
+ずっと つかえる。
+---
+ほんとう？
+
+[gym.right]
+せいかい！
+とびらが ひらく。
+
+[gym.wrong]
+ふせいかい！
+トレーナーが くる。
+
+[gym.won]
+かった！
+とびらが ひらく。
+
+[gym.off]
+マシンは
+とまっている。
+
+[gym.door]
+とびらが しまっている。
+マシンに こたえよう。
+
+[gym.toll.wait]
+まずは しつもんに
+こたえてみな。
+
+[gym.brasa.pre]
+わっはっは！ ブラサだ。
+あつい リーダーさ。
+---
+わしの ほのおの
+エレメンティは もえてる。
+---
+やけどを
+かくごしな！
+
+[gym.brasa.win]
+もえつきて しろい
+はいに なった！ まけた。
+---
+エンバーバッジを
+もっていきな。
+
+[gym.brasa.badge]
+{player}は
+エンバーバッジを てにいれた！
+
+[gym.brasa.about]
+ほのおの
+バッジだ。
+---
+きみの ほのおが
+わしに かった あかし。
+---
+これで たたかいの
+ねつを かんじる。
+
+[gym.brasa.disc]
+わしの わざの
+ディスクを やろう。
+
+[gym.brasa.disc_about]
+おおきな ほのおの
+わざだ。
+---
+ていねいに つかえ。
+いちど きりだぞ。
+
+[gym.brasa.after]
+また もえあがったら
+こいよ。
+---
+わしの ほのおは
+きみを まっている。
+---
+のこるは ノードシティの
+ジムだけだ。
+
+[mansion.door]
+やけた いたで
+うちつけた とびら。
+---
+どこかの スイッチで
+あくかも しれない。
+
+[mansion.sw.on]
+カチッ！ ひみつの
+スイッチを おした。
+---
+とおくで とびらが
+ひらく おと。
+
+[mansion.sw.off]
+カチッ！ ひみつの
+スイッチを おした。
+---
+とおくで とびらが
+しまる おと。
+
+[mansion.d1]
+2がつ3にち しらない
+エレメンティを はっけん
+---
+みなみの ジャングルで。
+ここへ つれてきた。
+---
+はかせは せかいで
+ひとつだけと いった。
+
+[mansion.d2]
+3がつ12にち げんぞくが
+こどもを うんだ。
+---
+いろんな エレメンティの
+とくちょうを もつ。
+---
+はかせは これを
+じっけんたいと よぶ。
+
+[mansion.d3]
+6がつ9にち 20しゅの
+いでんしを まぜた。
+---
+げんぞくの いでんしと。
+けっさく だ。
+---
+それに こわい。
+だれも しらない。
+
+[mansion.d4]
+9がつ1にち ものすごい
+はやさで せいちょう。
+---
+もう めいれいを
+きかない。 めが もえる。
+---
+ふういんを たのんだが
+だれも きかない。
+
+[mansion.d5]
+9がつ4にち ちかの
+おりを こわした。
+---
+ほのおが すべてを
+つつんだ。 にげた。
+---
+うみへ でていった。
+きたの ほうへ。
+
+[mansion.d6]
+いま どこに いるのか
+だれも しらない。
+---
+やかたは ふういん。
+カギは ちかに ある。
+---
+こんな いきものが
+ふたたび うまれぬよう。
+
+[r19.sign]
+フロストアイルズ
+---
+しまの おくに
+こおりの どうくつ。
+
+[r20.sign]
+フロストアイルズ
+---
+にしの でぐち。
+みなみは アッシュじま。
+
+[gl.rg.belubub]
+おでこの おおきな
+しろい クジラの こ。
+---
+こおりの したでも
+いつも わらってる。
+
+[gl.rg.belugrand]
+ひたいは しもに
+おおわれ ひかる。
+---
+せなかに こおりの
+とさかが ある。
+
+[gl.rg.barnacub]
+とがった からの
+ちいさな フジツボ。
+---
+ふたつの はねで
+たべものを とる。
+
+[gl.rg.barnaclad]
+フジツボの むれが
+とりでに なった。
+---
+こおりで かたまった
+からを まとう。
+
+[gl.rg.inkit]
+とがった ずきんの
+イカの あかちゃん。
+---
+おおきな めで
+なんでも みる。
+
+[gl.rg.inkrake]
+しょくしゅを まわし
+うずを つくる。
+---
+にげる ときは
+すみを はく。
+
+[gl.rg.glidefin]
+つばさの ような
+ひれの とびうお。
+---
+なみの うえを
+ながく すべる。
+
+[gl.rg.soarfin]
+よつの ひれと
+しまの おびれ。
+---
+なみを とびこえ
+たかの よう。
+
+[gl.rg.plattypuzz]
+はてなが ういた
+こまった こども。
+---
+ビーバーの しっぽで
+およぐ。
+
+[gl.rg.plattymind]
+おちついた せたかの
+ひたいに ほうせき。
+---
+しっぽは せんすの
+ように ひらく。
+
+[gl.rg.frostiva]
+ゆきの ベールの
+こおりの ダンサー。
+---
+ゆきの なかを
+だまって まう。
+
+[gl.rg.voltaboon]
+たてがみが さかだつ
+あらしの ヒヒ。
+---
+どうの てぶくろから
+でんきを だす。
+
+[gl.rg.bellowkiln]
+どろの かまどの
+ずんぐりした やつ。
+---
+よこの ふいごから
+ほのおを ふく。
+
+[gl.rg.origamorph]
+おりたたまれる
+いきた かみ。
+---
+おりめしだいで
+すがたを かえる。
+
+[gl.rg.cindibex]
+ひづめから ひばな
+ちらす アイベックス。
+---
+ほのおの つのが
+ちいさく もえる。
+
+[gl.rg.blazibex]
+ほのおの ながい つのと
+ひの ひげ。
+---
+いわに のぼって
+とおくを みはる。
+
+[gl.rg.archaeon]
+つめの ある
+ふるい きょうりゅう。
+---
+ちいさな はと
+はねの ある しっぽ。
+
+[gl.rg.aurowl]
+おおきな こおりの
+フクロウ。
+---
+オーロラの つばさと
+つきの ひとみ。
+
+[gl.rg.fulgurion]
+あらしを よぶ
+おおきな グンカンドリ。
+---
+のどぶくろが
+いなずまで ひかる。
+
+[gl.tr.nadador_r19a]
+すいえいせんしゅ アダン
+
+[gl.tr.nadadora_r19b]
+すいえいせんしゅ ブルナ
+
+[gl.tr.nadador_r19c]
+すいえいせんしゅ ブラス
+
+[gl.tr.nadadora_r19d]
+すいえいせんしゅ エバ
+
+[gl.tr.nadador_r20a]
+すいえいせんしゅ ディノ
+
+[gl.tr.nadadora_r20b]
+すいえいせんしゅ ダリア
+
+[gl.tr.nadador_r20c]
+すいえいせんしゅ エドガー
+
+[gl.tr.nadadora_r20d]
+すいえいせんしゅ クレオ
+
+[gl.tr.nadador_r21a]
+すいえいせんしゅ エリオ
+
+[gl.tr.nadadora_r21b]
+すいえいせんしゅ エマ
+
+[gl.tr.pescador_r21a]
+つりびと ファビオ
+
+[gl.tr.pescador_r21b]
+つりびと ミコ
+
+[gl.tr.ladron_m1a]
+どろぼう ロッコ
+
+[gl.tr.cientifico_m1b]
+かがくしゃ ウナイ
+
+[gl.tr.ladron_m2a]
+どろぼう ゲロ
+
+[gl.tr.cientifico_m2b]
+かがくしゃ ゼノ
+
+[gl.tr.ladron_m3a]
+どろぼう パコ
+
+[gl.tr.cientifico_m3b]
+かがくしゃ ジャノ
+
+[gl.tr.ladron_b1]
+どろぼう トト
+
+[gl.tr.cientifico_b1]
+かがくしゃ リノ
+
+[gl.tr.comefuego_g1]
+ひふき キコ
+
+[gl.tr.cientifico_g2]
+かがくしゃ ルポ
+
+[gl.tr.comefuego_g3]
+ひふき オラフ
+
+[gl.tr.cientifico_g4]
+かがくしゃ オリン
+
+[gl.tr.comefuego_g5]
+ひふき ジーナ
+
+[gl.tr.ladron_g6]
+どろぼう クコ
+
+[gl.tr.mecanico_c1]
+エンジニア キノ
+
+[gl.tr.mecanico_c2]
+エンジニア ラファ
+
+[gl.tr.punk_c3]
+パンク ルベン
+
+[gl.tr.mecanico_c4]
+エンジニア セルジオ
+
+[gl.tr.cientifico_c5]
+かがくしゃ オト
+
+[gl.tr.cientifico_c6]
+かがくしゃ マヨ
+
+[tr.nadador_r19a.pre]
+なみが ちからを
+くれる！ きみは？
+
+[tr.nadador_r19a.after]
+ながされた…
+
+[tr.nadadora_r19b.pre]
+およぎは とくい？
+しょうぶよ！
+
+[tr.nadadora_r19b.after]
+いい およぎね！
+
+[tr.nadador_r19c.pre]
+このしまで
+くんれんちゅうだ！
+
+[tr.nadador_r19c.after]
+さきへ いけ。
+
+[tr.nadadora_r19d.pre]
+アンバーから？
+ちょうせんよ！
+
+[tr.nadadora_r19d.after]
+みなみは きけん。
+
+[tr.nadador_r20a.pre]
+しまの こおりで
+うみも つめたい。
+
+[tr.nadador_r20a.after]
+さむい… まいった。
+
+[tr.nadadora_r20b.pre]
+きたの しまを
+みた？ こおりよ！
+
+[tr.nadadora_r20b.after]
+はやいわね！
+
+[tr.nadador_r20c.pre]
+このブイが
+ぼくの ゴール！
+
+[tr.nadador_r20c.after]
+ゴールを こえた。
+
+[tr.nadadora_r20d.pre]
+このすなはまで
+やすんでるの。
+
+[tr.nadadora_r20d.after]
+アッシュじまは すぐ。
+
+[tr.nadador_r21a.pre]
+もうすぐ
+アリソむらだ。
+
+[tr.nadador_r21a.after]
+きをつけて。
+
+[tr.nadadora_r21b.pre]
+このうみが
+わたしの いえ！
+
+[tr.nadadora_r21b.after]
+ちかくの ひと？
+
+[tr.pescador_r21a.pre]
+ここで なんねんも
+つってるぞ。
+
+[tr.pescador_r21a.after]
+きょうは つれない。
+
+[tr.pescador_r21b.pre]
+ぼくの つりざおは
+さいきょうだ。
+
+[tr.pescador_r21b.after]
+ざおが まけた…
+
+[tr.ladron_m1a.pre]
+ここには なにも
+ないぞ！ でていけ！
+
+[tr.ladron_m1a.after]
+ぜんぶ
+とられた。
+
+[tr.cientifico_m1b.pre]
+このあとを
+しらべている！
+
+[tr.cientifico_m1b.after]
+おもしろい…
+
+[tr.ladron_m2a.pre]
+この ほのおが
+まもってくれる！
+
+[tr.ladron_m2a.after]
+じぶんが やけた。
+
+[tr.cientifico_m2b.pre]
+にっきには おそろしい
+ことが かいてある。
+
+[tr.cientifico_m2b.after]
+ぜんぶは よむな。
+
+[tr.ladron_m3a.pre]
+カギは おれの
+ものだ！ きえろ！
+
+[tr.ladron_m3a.after]
+もっていけ。
+
+[tr.cientifico_m3b.pre]
+ここで うまれては
+ならない ものが…
+
+[tr.cientifico_m3b.after]
+きをつけろ。
+
+[tr.ladron_b1.pre]
+ちかしつは
+おれの なわばり！
+
+[tr.ladron_b1.after]
+おりて いけ…
+
+[tr.cientifico_b1.pre]
+じっけんを
+みてしまった。
+
+[tr.cientifico_b1.after]
+ねむれない…
+
+[tr.comefuego_g1.pre]
+ちがうぞ！
+これを くらえ！
+
+[tr.comefuego_g1.after]
+いいだろう。
+
+[tr.cientifico_g2.pre]
+ふせいかい。
+かがくの ばつだ。
+
+[tr.cientifico_g2.after]
+もっと べんきょう。
+
+[tr.comefuego_g3.pre]
+まちがい！
+ほのおで おしえる！
+
+[tr.comefuego_g3.after]
+きみの ほのおが うえ。
+
+[tr.cientifico_g4.pre]
+ちがう。
+きみを しらべる。
+
+[tr.cientifico_g4.after]
+データは じゅうぶん。
+
+[tr.comefuego_g5.pre]
+まちがい？
+ショーの はじまり！
+
+[tr.comefuego_g5.after]
+すてきな フィナーレ！
+
+[tr.ladron_g6.pre]
+ちがう！
+バッジを もらう！
+
+[tr.ladron_g6.after]
+ぜんぶ やられた。
+
+[tr.mecanico_c1.pre]
+はつでんきを
+てんけんちゅうだ！
+
+[tr.mecanico_c1.after]
+ヒューズが とんだ。
+
+[tr.mecanico_c2.pre]
+いちまんボルトが
+ゆうきを くれる！
+
+[tr.mecanico_c2.after]
+でんあつは きみが うえ。
+
+[tr.punk_c3.pre]
+ここは おれたちの
+アジトだ！
+
+[tr.punk_c3.after]
+ちっ。 いけよ。
+
+[tr.mecanico_c4.pre]
+ていでんで
+イライラだ！ しょうぶ！
+
+[tr.mecanico_c4.after]
+でんきが もどった。
+
+[tr.cientifico_c5.pre]
+ここの エネルギーを
+みろ！
+
+[tr.cientifico_c5.after]
+データが くるった。
+
+[tr.cientifico_c6.pre]
+ここに いなずまの
+とりが すんでいる。
+
+[tr.cientifico_c6.after]
+みに いけば？
+
+[gl.tr.brasa]
+ブラサはかせ
+
+# --- C9 content (contract 56) ---
+
+[gl.rg.tuskid]
+きばの ちいさい
+セイウチの こども。
+---
+いちにちじゅう
+こおりを たたく。
+
+[gl.rg.tuskmash]
+はがねの きんにくの
+わかい セイウチ。
+---
+まいた ヒレで
+いわを わる。
+
+[gl.rg.tuskumo]
+おおきな きばの
+すもうとり。
+---
+たたかう すがたは
+むてきだ。
+
+[gl.rg.cragodile]
+スレートで できた
+おおきな ワニ。
+---
+すいしょうの ひとみが
+どうくつで ひかる。
+
+[gl.rg.dashkip]
+あしの ながい ひよこ。
+とさかが ぼさぼさ。
+---
+とぶより さきに
+はしりだす。
+
+[gl.rg.dashmark]
+はやい かけあしの とり。
+ながい はねが 2ほん。
+---
+もようが
+はやさを あらわす。
+
+[gl.rg.pinecub]
+めの ある まつぼっくりが
+みっつ よりそう。
+---
+ひとつ ころぶと
+ほかが たすける。
+
+[gl.rg.pinekeeper]
+あるく まつの せいれい。
+えだの うでを もつ。
+---
+まつぼっくりが
+よるに ひかる。
+
+[gl.rg.tonguard]
+したが とても ながい
+おおきな アリクイ。
+---
+したを まいて
+むちのように うつ。
+
+[gl.rg.pitlion]
+おおきな あごの
+ありじごくの ようちゅう。
+---
+すなに もぐって
+えものを まつ。
+
+[gl.rg.flarechick]
+おきびの しっぽを もつ
+くじゃくの ひな。
+---
+しっぽを ふると
+はねが もえる。
+
+[gl.rg.pyreacock]
+ほのおの はねを ひろげる
+ゆうがな くじゃく。
+---
+ひとみの おきびが
+あいてを まどわす。
+
+[gl.rg.coilet]
+めが ひとつの
+いきた テスラコイル。
+---
+おどろくと
+スパークする。
+
+[gl.rg.teslarch]
+ふたつの たまを もつ
+テスラの とう。
+---
+たまの あいだを
+アークが はしる。
+
+[gl.rg.ignicondor]
+でんせつの
+ほのおの とり。
+---
+そらを とぶと
+そらが もえるという。
+
+[gl.rg.genesa]
+さいしょの エレメンティ。
+ふわふわ ひかる。
+---
+むねの ほうせきには
+ひみつが ある。
+
+[gl.rg.arkegen]
+ジェネサの かんぺきな
+コピー。
+---
+すいしょうの よろいと
+わの ひかりを まとう。
+
+[gl.tr.elite_s1a]
+サミット ダーラ
+
+[gl.tr.karateka_s1b]
+からてか ベト
+
+[gl.tr.psiquico_s2a]
+サイキッカー ヒルダ
+
+[gl.tr.elite_s2b]
+サミット ダミアン
+
+[gl.tr.karateka_s2c]
+からてか リュウ
+
+[gl.tr.elite_s3a]
+サミット ヘマ
+
+[gl.tr.karateka_s3b]
+からてか コウジ
+
+[gl.tr.elite_s3c]
+サミット マルコ
+
+[gl.tr.iver]
+アイバー
+
+[gl.tr.tanko]
+タンコ
+
+[gl.tr.velo]
+マダム ベロ
+
+[gl.tr.arkan]
+アルカン
+
+[r22.sign]
+22ばん どうろ
+リーグへの みち
+
+[r22.gate]
+リーグの もん
+バッジ8まい ひつよう
+
+[r22.rival.hey]
+やあ、{player}！
+リーグに いくのか？
+---
+おれが チャンピオン だ。
+おまえは ここまでさ。
+---
+しょうめい してやる！
+かかってこい！
+
+[r22.rival.again]
+もういっかい！
+しょうぶだ！
+
+[r22.rival.lose]
+なんだと！？ しんじられん！
+えらびかたを まちがえた！
+
+[r22.rival.next]
+ふん！ リーグを せいは
+して チャンピオンに なる！
+---
+じゃまするなよ！
+じゃあな！
+
+[pl.books]
+つうこうの きろくちょう。
+バッジ8まいだけ とおれる。
+
+[pl.poster]
+ポスター
+リーグを めざせ！
+
+[pl.trav]
+チャンピオンのみちは
+ながい みちだ。
+---
+おす いわが あるぞ。
+がんばれ！
+
+[pl.keeper]
+リーグの もんだ。
+きをつけて いけよ。
+
+[r23.sign]
+23ばん どうろ
+チャンピオンのみちへ
+
+[r23.g1]
+カンテラバッジが ないと
+とおれないぞ。
+
+[r23.g2]
+ウェーブバッジが ないと
+とおれないぞ。
+
+[r23.g3]
+ボルトバッジが ないと
+とおれないぞ。
+
+[r23.g4]
+ルートバッジが ないと
+とおれないぞ。
+
+[r23.g5]
+トキシンバッジが ないと
+とおれないぞ。
+
+[r23.g6]
+マインドバッジが ないと
+とおれないぞ。
+
+[r23.g7]
+エンバーバッジが ないと
+とおれないぞ。
+
+[r23.g8]
+コアバッジが ないと
+とおれないぞ。
+
+[sd.gate]
+いわの かべが
+みちを ふさいでいる。
+
+[tr.elite_s1a.pre]
+わたしは サミット。
+ちからを みせて！
+
+[tr.elite_s1a.after]
+チャンピオンの
+じつりょくだね。
+
+[tr.karateka_s1b.pre]
+おれの こぶしは
+はずれん！
+
+[tr.karateka_s1b.after]
+こころが つよいな。
+
+[tr.psiquico_s2a.pre]
+あなたの まけが
+みえるわ。
+
+[tr.psiquico_s2a.after]
+みえなかった…。
+
+[tr.elite_s2b.pre]
+このロードで
+よわいものは おちる。
+
+[tr.elite_s2b.after]
+とおれ。 リーグは
+もっと きびしい。
+
+[tr.karateka_s2c.pre]
+まいにち ここで
+しゅぎょうだ！
+
+[tr.karateka_s2c.after]
+あした もっと
+きたえるぞ。
+
+[tr.elite_s3a.pre]
+リーグは もうすぐ。
+まて！
+
+[tr.elite_s3a.after]
+すすめ。 だいちが
+まっている。
+
+[tr.karateka_s3b.pre]
+いわを せんこ くだいた！
+おれに かてるか？
+
+[tr.karateka_s3b.after]
+まけたよ。
+
+[tr.elite_s3c.pre]
+リーグの まえに
+わたしが あいてよ。
+
+[tr.elite_s3c.after]
+サミットフォーと
+たたかえるわね。
+
+[ms.sign]
+サミットだいち
+リーグの ほんぶ
+
+[ms.tourist]
+ここの ながめは
+さいこうだ！
+---
+チャンピオンは
+わかいらしいよ。
+
+[ms.guide]
+サミットフォーは
+ホールの なかだ。
+---
+はいる まえに
+センターで かいふくを。
+
+[lb.books]
+リーグの きろく。
+れきだいチャンピオン。
+
+[lb.coach]
+とびらの おくに
+4つの へや。
+---
+もどれないぞ。
+じゅんびを！
+
+[lb.door.no]
+バッジリーダーが
+はんのうしない。
+---
+バッジ8まいが
+ひつようだ。
+
+[lb.door.ok]
+バッジ8まい かくにん！
+とびらが ひらく。
+
+[lg.iver.pre]
+リーグへ ようこそ。
+わたしは アイバー。
+---
+こおりの わざは
+むてきよ！
+---
+かくごは いい？
+
+[lg.iver.after]
+おもったより つよい！
+すすみなさい。
+---
+リーグの ちからの
+ほんの ひとくち。
+
+[lg.tanko.pre]
+タンコだ。 からだが
+おれの ぶきだ。
+---
+どりょくで てきを
+たおす！
+---
+いくぞ！
+
+[lg.tanko.after]
+おみごと！ すすめ！
+---
+たのしみな
+チャレンジャーだ。
+
+[lg.velo.pre]
+マダム ベロよ。
+リンはかせが ほめてたわ。
+---
+ほんものの たたかいを
+みせて あげる。
+
+[lg.velo.after]
+あら、つよいのね。
+リンの いうとおり。
+---
+おゆき。 リーグが
+まっているわ。
+
+[lg.arkan.pre]
+アルカンだ。 ドラゴン
+つかいだ。
+---
+ドラゴンは むてき！
+みせてみろ！
+---
+これが さいごの
+しれんだ！
+
+[lg.arkan.after]
+みごとだ。 おれの まけだ。
+---
+さいごの あいては
+ライバルだ。 いけ！
+
+[lg.champ.pre]
+やあ、{player}！
+まっていたぞ。
+---
+サミットフォーを たおして
+おれが チャンピオンだ。
+---
+ライバルなら つよい
+はず。 みせてみろ！
+---
+たたきのめして やる！
+
+[lg.champ.win]
+なんだと！？ まさか！
+おれが まけた！？
+---
+チャンピオンに なる
+ために がんばったのに…
+---
+でも きみの かちだ。
+きみが チャンピオンだ！
+
+[lg.champ.lin]
+リンはかせ「{player}、
+やったわね！」
+---
+きみの チームは
+ホールに ふさわしい。
+---
+さあ、ついてきて！
+
+[lg.champ.after]
+きみが チャンピオンだ。
+チームを だいじにな。
+
+[marea.cave.guard]
+そのハッチは
+ひみつの どうくつへ。
+---
+リーグの チャンピオン
+だけが はいれる。
+
+[cs.console.a]
+バーテックスの メモ
+プロジェクト ジェネシス
+---
+さいしょの ジェネサは
+おとなしい。
+---
+コピーの アーケジェンは
+アッシュじまで うまれた。
+
+[cs.console.b]
+うみへ にげた。
+ここで みつけた。
+---
+もっと つよいが
+だれにも したがわない。
+---
+やしきの にっきは
+ほんとうだった。
+
+[tr18.books]
+したの スケッチが
+かいてある ノート。
+
+[tr18.hello]
+やあ、 たびの ひと！
+エレメンティを こうかん！
+
+[tr18.ask]
+{v0}を
+{v1}と こうかん？
+
+[tr18.wrong]
+ん？ それは {v0}じゃ
+ないぞ！
+---
+もって いたら
+また こい。
+
+[tr18.no]
+そうか…。 きがかわったら
+また きてくれ。
+
+[tr18.done]
+ありがとう！
+{v1}を だいじにな。
+
+[tr18.after]
+{v0}を
+だいじにな！
+
+[tr18.nick]
+Lengua
+
+# --- Extra species (contract 58) ---
+
+[gl.rg.quillia]
+まるくて やわらかい
+とげを もつ ハリネズミ。
+---
+しっぽの はりは みじかい。
+おどろくと さす。
+
+[gl.rg.quillara]
+ながい とげが
+おうぎのように ひらく。
+---
+しっぽで こどもを
+まもる。
+
+[gl.rg.quillqueen]
+おおきな ハリネズミ。
+とげの かんむりが ある。
+---
+むねの こうらは
+こうげきを はじく。
+
+[gl.rg.droselet]
+まるい はに ねばる
+つゆが ひかる。
+---
+つゆに ちいさな
+むしが くっつく。
+
+[gl.rg.drosaura]
+ながくて ねばる
+はの うでを もつ。
+---
+えものに まきついて
+はなさない。
+
+[gl.rg.droserath]
+ながい はの おうぎに
+ひかる つゆが つく。
+---
+はの あいだの くちが
+えものを のむ。
+
+[gl.rg.scarabeam]
+ちいさな たまを
+おして すすむ。
+---
+たまは ひるの
+ひかりで かがやく。
+
+[gl.rg.kheprion]
+おおきな ひの わが
+つのの あいだに ある。
+---
+あつい ひかりで
+じめんが かわく。
+
+[gl.rg.lunashell]
+こうらは みかづきの
+かたちを している。
+---
+よるに なると
+ほしが ひかりだす。
+
+[gl.rg.selentor]
+こうらに つきの
+みちかけが ほられて
+---
+いる。まんなかに
+まんげつが はまる。
+
+[gl.rg.foldling]
+くしゃくしゃの
+いきた かみ。
+---
+みた いきものの
+かたちに おりなおす。
+
+# --- C7 / C9 QA (contract 58) ---
+
+# --- Club de Enlace (contract 61) ---
+[gl.tr.amigo]
+ともだち
+
+[gl.club.hello]
+つうしんクラブ です。
+フリッパーを つなぐよ。
+---
+じっけんてきな きのう！
+しっぱい するかも。
+---
+IRを むかいあわせに
+してね。
+
+[gl.club.trade]
+こうかん
+
+[gl.club.battle]
+たいせん
+
+[gl.club.test]
+テスト
+
+[gl.club.exit]
+やめる
+
+[gl.club.fail]
+つうしんを
+ひらけなかった。
+
+[gl.club.thanks]
+たいせん
+ありがとう！
+
+# --- data (contract 64) ---
+# The names of the moves (gl.mv.<moves.toml key>) are ONE RUN in table order, like gl.sp.* and gl.it.* (contract 63.1): tools/regc.py computes their text ids
+# (reg_mv_txt()); keep the order of moves.toml when a move is appended. The battle / bag lines of the new moves and items follow.
+
+[gl.mv.bump]
+ぶつかり
+
+[gl.mv.claw]
+つめがき
+
+[gl.mv.growl]
+おどし
+
+[gl.mv.wag]
+しっぽふり
+
+[gl.mv.ember]
+ひだね
+
+[gl.mv.jet]
+みずしぶき
+
+[gl.mv.lash]
+つるうち
+
+[gl.mv.quick]
+ダッシュ
+
+[gl.mv.slash]
+ひとなぎ
+
+[gl.mv.spore]
+ねむけのこ
+
+[gl.mv.venomdust]
+どくのきり
+
+[gl.mv.harden]
+かためる
+
+[gl.mv.bite]
+ガブリ
+
+[gl.mv.bubble]
+シャボン
+
+[gl.mv.flap]
+はばたき
+
+[gl.mv.dustkick]
+つちけむり
+
+[gl.mv.silkshot]
+シルクショット
+
+[gl.mv.needle]
+はりづき
+
+[gl.mv.lance]
+やりのいちげき
+
+[gl.mv.focus]
+ねらいすまし
+
+[gl.mv.zap]
+ぴりぴりタッチ
+
+[gl.mv.numb]
+しびれごえ
+
+[gl.mv.arc]
+アークライト
+
+[gl.mv.sprint]
+ダッシュ
+
+[gl.mv.swoop]
+きゅうこうか
+
+[gl.mv.chomp]
+がぶりつき
+
+[gl.mv.curl]
+まるまり
+
+[gl.mv.pebble]
+こいしなげ
+
+[gl.mv.rumble]
+ゆさぶり
+
+[gl.mv.flatten]
+おしつぶし
+
+[gl.mv.mace]
+いしのこんぼう
+
+[gl.mv.pollen]
+しびれのこ
+
+[gl.mv.glimmer]
+はのかがやき
+
+[gl.mv.rack]
+とげのつの
+
+[gl.mv.bloom]
+はなさきづの
+
+[gl.mv.mane]
+たてがみほのお
+
+[gl.mv.wavewall]
+なみのかべ
+
+[gl.mv.haymaker]
+おおぶりパンチ
+
+[gl.mv.mirage]
+ざんぞう
+
+[gl.mv.sonar]
+まどわしごえ
+
+[gl.mv.lullaby]
+ねむりうた
+
+[gl.mv.peck]
+くちばしノック
+
+[gl.mv.reverb]
+はんきょう
+
+[gl.mv.coldeye]
+つめたいめ
+
+[gl.mv.sourspit]
+すっぱいつば
+
+[gl.mv.spikeram]
+とげとっしん
+
+[gl.mv.squeeze]
+まきしめ
+
+[gl.mv.shrill]
+するどいこえ
+
+[gl.mv.sapbite]
+じゅえきがぶ
+
+[gl.mv.spearpeck]
+やりばしつき
+
+[gl.mv.glassbeam]
+ガラスビーム
+
+[gl.mv.dreamray]
+ゆめこうせん
+
+[gl.mv.mindstorm]
+ねんのあらし
+
+[gl.mv.chop]
+チョップ
+
+[gl.mv.trip]
+あしばらい
+
+[gl.mv.clinch]
+くみつき
+
+[gl.mv.ramhead]
+ラムヘッド
+
+[gl.mv.burrow]
+ほりすすむ
+
+[gl.mv.streak]
+ながれぼし
+
+[gl.mv.veil]
+ひかりヴェール
+
+[gl.mv.sharpen]
+とぎすます
+
+[gl.mv.pilfer]
+くすねる
+
+[gl.mv.wisplick]
+ベロリ
+
+[gl.mv.hollowgaze]
+うつろなめ
+
+[gl.mv.shade]
+シェイド
+
+[gl.mv.drowse]
+ねむけ
+
+[gl.mv.cinderspin]
+ほのおのうず
+
+[gl.mv.slingstone]
+いしなげ
+
+[gl.mv.fumes]
+スモッグ
+
+[gl.mv.siphon]
+すいとる
+
+[gl.mv.flop]
+ばしゃり
+
+[gl.mv.torrent]
+だくりゅう
+
+[gl.mv.clubsmash]
+ハンマーうち
+
+[gl.mv.pincer]
+はさむ
+
+[gl.mv.ooze]
+ヘドロ
+
+[gl.mv.acidveil]
+さんのまく
+
+[gl.mv.toxin]
+どくのしずく
+
+[gl.mv.daydream]
+ぼんやり
+
+[gl.mv.heavyslam]
+のしかかり
+
+[gl.mv.megabeam]
+メガビーム
+
+[gl.mv.wyrmrage]
+ワームレイジ
+
+[gl.mv.frostbeam]
+れいとうビーム
+
+[gl.mv.rollkick]
+ころがしキック
+
+[gl.mv.jumpkick]
+とびげり
+
+[gl.mv.highkick]
+ハイキック
+
+[gl.mv.megakick]
+メガキック
+
+[gl.mv.meditate]
+めいそう
+
+[gl.mv.firefist]
+ほのおのパンチ
+
+[gl.mv.icefist]
+こおりのパンチ
+
+[gl.mv.bolfist]
+かみなりパンチ
+
+[gl.mv.mindwave]
+ねんのなみ
+
+[gl.mv.snowpuff]
+ゆきけむり
+
+[gl.mv.auroraray]
+オーロラレイ
+
+[gl.mv.whiteout]
+ホワイトアウト
+
+[gl.mv.cascade]
+カスケード
+
+[gl.mv.inferno]
+インフェルノ
+
+[gl.mv.stormbolt]
+ストームボルト
+
+[gl.mv.snip]
+ちょきり
+
+[gl.mv.trample]
+ふみつぶし
+
+[gl.mv.scowl]
+にらみつけ
+
+[gl.mv.heave]
+ぐいおし
+
+[gl.mv.swell]
+ふくらみ
+
+[gl.mv.retreat]
+ひっこみ
+
+[gl.mv.wardwall]
+ねんのかべ
+
+[gl.mv.shrink]
+ちぢみ
+
+[gl.mv.soot]
+すすけむり
+
+[gl.mv.warpgaze]
+ゆがんだめ
+
+[gl.mv.glint]
+きらめき
+
+[gl.mv.tendril]
+つるまき
+
+[gl.mv.toxcloud]
+どくのくも
+
+[gl.mv.sweetkiss]
+あまいキス
+
+[gl.mv.sporecloud]
+ほうしのくも
+
+[gl.mv.wobblefist]
+ふらふらパンチ
+
+[gl.mv.landslide]
+がけくずれ
+
+[gl.mv.trinity]
+トリニティ
+
+[gl.mv.mirrorwall]
+かがみのかべ
+
+[gl.mv.shellbomb]
+たまごばくだん
+
+[gl.mv.fury]
+いかりのこぶし
+
+[gl.mv.shockpulse]
+しょうげきは
+
+[gl.mv.leveltoss]
+なげたおし
+
+[gl.mv.fangbreak]
+かみくだき
+
+[gl.mv.shear]
+ぶったぎり
+
+[gl.mv.augerhorn]
+ドリルホーン
+
+[gl.mv.chasm]
+だいちのさけめ
+
+[gl.mv.twinslap]
+ふたつビンタ
+
+[gl.mv.meteorfist]
+パンチのあめ
+
+[gl.mv.pecking]
+つつきまくり
+
+[gl.mv.needlevolley]
+はりのあめ
+
+[gl.mv.quillshot]
+とげだいほう
+
+[gl.mv.pelt]
+たまなげ
+
+[gl.mv.rakeswipe]
+ひっかきまくり
+
+[gl.mv.twinkick]
+にれんキック
+
+[gl.mv.bonespin]
+ほねブーメラン
+
+[gl.mv.slamrush]
+ぶちかまし
+
+[gl.mv.reckless]
+むぼう
+
+[gl.mv.cyclone]
+つむじかぜ
+
+[gl.mv.skyleap]
+そらのはね
+
+[gl.mv.headlong]
+ずつきこみ
+
+[gl.mv.zenithdive]
+てんくうげき
+
+[gl.mv.rampage]
+あばれまくり
+
+[gl.mv.petalwaltz]
+はなびらワルツ
+
+[gl.mv.cinch]
+まきつけ
+
+[gl.mv.coil]
+ぐるぐるまき
+
+[gl.mv.snapshell]
+からではさむ
+
+[gl.mv.brood]
+じっとたえる
+
+[gl.mv.sip]
+すいとり
+
+[gl.mv.nightmeal]
+ゆめのごちそう
+
+[gl.mv.seedleech]
+すいとるタネ
+
+[gl.mv.mend]
+いやし
+
+[gl.mv.hearty]
+あついスープ
+
+[gl.mv.nap]
+ひとねむり
+
+[gl.mv.blowup]
+ばくさん
+
+[gl.mv.detonate]
+ばくはつ
+
+[gl.mv.blink]
+ワープ
+
+[gl.mv.bellow]
+おたけび
+
+[gl.mv.gale]
+おおかぜ
+
+[gl.mv.whiteveil]
+もや
+
+[gl.mv.frostmist]
+こおりのきり
+
+[gl.mv.retort]
+やりかえし
+
+[gl.mv.wildcard]
+ワイルドカード
+
+[gl.mv.parrot]
+おうむがえし
+
+[gl.mv.echoing]
+こだま
+
+[gl.mv.decoy]
+にせもの
+
+[gl.mv.lockout]
+ふうさ
+
+[gl.mv.refold]
+おりなおし
+
+[gl.mv.typecast]
+かたどり
+
+[gl.c64.hits]
+{v2}かい あたった！
+
+[gl.c64.ohko]
+いちげき ひっさつ！
+
+[gl.c64.chg_wind]
+{v0}は
+かぜを まきおこした！
+
+[gl.c64.chg_fly]
+{v0}は
+そらたかく とびあがった！
+
+[gl.c64.chg_bash]
+{v0}は
+あたまを ひっこめた！
+
+[gl.c64.chg_sky]
+{v0}を
+ひかりが つつんだ！
+
+[gl.c64.fled]
+たたかいから
+にげだした！
+
+[gl.c64.stat_reset]
+のうりょくへんかが
+きえさった！
+
+[gl.c64.mist]
+{v0}は
+しろいきりに つつまれた！
+
+[gl.c64.seeded]
+{v0}に
+タネを うえつけた！
+
+[gl.c64.store]
+{v0}は
+ちからを ためている！
+
+[gl.c64.unleash]
+{v0}は
+ちからを ときはなった！
+
+[gl.c64.sub]
+{v0}は
+にせものを つくった！
+
+[gl.c64.subhit]
+にせものが
+こうげきを うけた！
+
+[gl.c64.subend]
+にせものは
+こわれた！
+
+[gl.c64.trapped]
+{v0}は
+しめつけられている！
+
+[gl.c64.absorb]
+{v0}は
+たいりょくを すいとった！
+
+[gl.c64.regain]
+{v0}は
+かいふくした！
+
+[gl.c64.seedhurt]
+{v0}の たいりょくが
+タネに すわれる！
+
+[gl.c64.nap]
+{v0}は ねむって
+げんきに なった！
+
+[gl.c64.revived]
+{v0}は
+げんきを とりもどした！
+
+[gl.c64.pp]
+{v0}の
+わざポイントが かいふくした！
+
+
+# --- B1 shiny/friendship (contract 65) ---
+# The Club de Fans' second fan reads the friendship of the lead Elementi (`bond tier`, 5 tiers: < 50, < 100, < 150, < 220, 220+). {v0} = the maintainer's name.
+
+[club.fanb.hi]
+エレメンティの きもちが
+よめるのよ！
+---
+あなたの こが どれだけ
+なついてるか みせて。
+
+[club.fanb.none]
+でも エレメンティを
+つれてないじゃない！
+
+[club.fanb.t0]
+あらら！ {v0}は
+めを あわせない。
+---
+まだ しんじてない。
+じかんを あげてね。
+
+[club.fanb.t1]
+{v0}は
+けいかいしてるわ。
+---
+あなたを しんじて
+いいか まよってる。
+
+[club.fanb.t2]
+{v0}は
+そばで ほっとしてる。
+---
+えがおは みせるけど
+まだ すこし とおいわ。
+
+[club.fanb.t3]
+{v0}は
+あなたが だいすき！
+---
+みると とびはねて
+そばを はなれないわ。
+
+[club.fanb.t4]
+すごい きずな！
+{v0}は だいすき！
+---
+ふたりは ひとつね。
+ずっと だいじにしてね！
+
+# --- B3 eclipse (contract 67) ---
+[gl.b3.ecl.done]
+{v0}は
+エクリプスのすがたになった！
+
+[gl.b3.ecl.stone]
+わざリストの うえの
+エクリプスを えらぶ。
+
+# --- B2 affinity (contract 66) ---
+[gl.aff.ask]
+きみの みちは
+たいようか つき。
+---
+であう やせいの
+なかまが かわるよ。
+---
+はんたいがわの なかまは
+こうかんで てに はいる。
+---
+きみの ぞくせいは？
+
+[gl.aff.solar]
+ソーラー
+
+[gl.aff.lunar]
+ルナー
+
+
+# --- C1 follower (contract 69) ---
+[gl.fol.t0]
+{v0}は
+めを あわせない。
+---
+まだ きみを
+しんじていない。
+
+[gl.fol.t1]
+{v0}は
+きみを じっと みた。
+---
+まだ ようすを
+みているよ。
+
+[gl.fol.t2]
+{v0}は
+きみに なれてきた。
+---
+ゆっくり あとを
+ついてくる。
+
+[gl.fol.t3]
+{v0}は
+うれしくて はねた！
+---
+きみの そばを
+はなれたくない。
+
+[gl.fol.t4]
+{v0}は
+きらきらの めで
+---
+きみを みつめている。
+ふたりは ひとつ！
+
+[gl.fol.tired]
+{v0}は
+つかれて ふらふら。
+---
+センターで
+やすませよう。
+
+[gl.fol.psn]
+{v0}は
+どくで くるしそう。
+---
+はやく なおして
+あげよう。
+
+[gl.fol.slp]
+{v0}は
+ぐっすり ねている。
+
+[gl.fol.brn]
+{v0}は
+やけどで ひりひり！
+
+[gl.fol.frz]
+{v0}は
+こおって ぶるぶる！
+
+[gl.fol.par]
+{v0}は
+しびれて うごけない。
+
+# --- D1 legend / C10 (contract 68) ---
+[gl.d1.got]
+オリジンのかけらを
+みつけた！
+
+[gl.d1.candies]
+せいちょうのたねを
+5こ もらった！
+
+[gl.d1.lk_frag]
+こうかん
+せいこう！
+---
+{v0}が
+なかまに くわわった！
+---
+にもつが
+ひかっている！
+---
+オリジンの
+かけらだ！
+
+[d1.aliso.rumor]
+オリジンの
+エレメンティが いる
+---
+ジェネサと いうらしい。
+みたひとは すくない。
+---
+8つの かけらの
+むこうに いるって。
+
+[d1.cantera.rumor]
+ジェネサは かけらを
+あちこちに のこした
+---
+らしい。ここの
+トロッコを よくみて。
+
+[d1.dinamo.rumor]
+ふなのりが ひかる
+ものを みたって。
+---
+みなとの あみの
+なかに あるらしい。
+
+[d1.ambar.rumor]
+この ひろばの
+ベンチの したで
+---
+なにかが ひかるって。
+たいようじゃ ないよ。
+
+[d1.anciano.rumor]
+ジェネサの はなしを
+しっているよ。8つに
+---
+ひとつは よる
+くらい きの きりかぶ。
+---
+ひとつは どうぶつの
+ほごくで ねむる。
+---
+ひとつは ふたりの
+たびびとの きずな。
+---
+ひとつは チャンピオンに
+かった ものへ。
+
+[d1.cart.look]
+こうせきの なかで
+なにかが ひかる。
+
+[d1.cart.empty]
+トロッコには
+こうせきだけ。
+
+[d1.net.look]
+あみの なかに
+ふしぎな ひかり。
+
+[d1.net.empty]
+ふるい あみと
+しおだけ。
+
+[d1.bench.look]
+ベンチの したで
+コハクのように ひかる。
+
+[d1.bench.empty]
+ベンチの したには
+かれはだけ。
+
+[d1.stump.night]
+きりかぶの うろで
+なにかが ひかる。
+
+[d1.stump.day]
+まっくらな うろの
+ある きりかぶ。
+---
+ひるまは なにも
+みえない。
+
+[d1.stump.empty]
+うろは
+からっぽだ。
+
+[d1.bush.look]
+かれた しげみの したで
+なにかが ひかる。
+
+[d1.bush.empty]
+しげみの したは
+かれはだけ。
+
+[d1.champ.frag]
+だれかが チャンピオンに
+これを のこした。
+---
+めずらしい かけらだ。
+うけとって！
+
+[d1.hint.isla]
+ルート21の ひがしに
+こじまが あるんだ。
+---
+いわの かべの
+くさむらの おくだよ。
+
+[d1.hint.neon]
+エクリプスのいしは
+あさやけと まよなかだけ
+---
+うみの どうくつに
+あらわれるらしい。
+---
+ちからと あかりと
+エンバーが ひつよう。
+
+[d1.hint.ms]
+きたの かべに
+ふういんの いしが ある。
+---
+8つの かけらで
+ひらくらしい。
+
+[lab.lin.frag1]
+ずかんが かんせい！
+{player}！
+---
+きみは すばらしい
+けんきゅうしゃだ。
+---
+オリジンの でんせつを
+おしえよう。
+
+[lab.lin.frag2]
+オリジンの エレメンティ
+ジェネサが せかいを
+---
+ゆめみた。そして
+8つの かけらに わかれた。
+---
+あつめれば いせきが
+ひらかれるだろう。
+---
+でも チャンスは
+たった いちどだけ。
+
+[lab.lin.frag3]
+あと7つ ある。
+まちや よるや
+---
+ほごくや きずなや
+リーグに ある。
+---
+まちで きいてみて。
+がんばってね！
+
+[lab.lin.frag_old]
+ずかんが かんせい！
+{player}！
+---
+ジェネサは もう
+いるけど まだ ある。
+---
+かけらの でんせつを
+きいてほしい。
+
+[lab.lin.frag_again]
+8つの かけらを
+さがしつづけて。
+---
+まちで きいてみて。
+よるも だよ。
+
+[ms.seal]
+ふるい いしの ひら。
+8つの くぼみが ある。
+
+[ms.seal.no]
+かけらが たりない。
+いしは うごかない。
+
+[ms.seal.open]
+8つの かけらが
+いしで ひかる。
+---
+いしが ひらき
+つうろが あらわれた。
+
+[ru.mural.1]
+すべての まえ
+ジェネサだけが ゆめみた。
+
+[ru.mural.2]
+はじめに ひかり、
+つぎに うみ。
+
+[ru.mural.3]
+そして だいちと
+ほのお。
+
+[ru.mural.4]
+かぜが ふき
+いのちが うまれた。
+
+[ru.mural.5]
+よるが おとずれ
+さいごに こだま。
+
+[ru.mural.end1]
+ジェネサは こだま
+アーケジェンを みて なく。
+
+[ru.mural.end2]
+オリジンが もどれば
+ゆめは つづく。
+
+[ru.p.luz]
+ひかりの ほりもの
+かけらを おく？
+
+[ru.p.mar]
+うみの ほりもの
+かけらを おく？
+
+[ru.p.tierra]
+だいちの ほりもの
+かけらを おく？
+
+[ru.p.fuego]
+ほのおの ほりもの
+かけらを おく？
+
+[ru.p.viento]
+かぜの ほりもの
+かけらを おく？
+
+[ru.p.vida]
+いのちの ほりもの
+かけらを おく？
+
+[ru.p.noche]
+よるの ほりもの
+かけらを おく？
+
+[ru.p.eco]
+こだまの ほりもの
+かけらを おく？
+
+[ru.placed]
+かけらが はまり
+いしが ひかる。
+
+[ru.wrong]
+いしが ぜんぶ
+きえてしまった。
+
+[ru.lit]
+このいしは もう
+ひかっている。
+
+[ru.solved]
+8つの いしが
+いっせいに ひかる！
+---
+くうきが ふるえ
+ひかりが かたちに…
+
+[ru.appear]
+ジェネサ！
+しずかに みている。
+
+[ru.old1]
+いせきは しずか。
+ジェネサは もう いる。
+
+[ru.old2]
+いせきが ほほえむ。
+ありがとう たびびと！
+
+[ru.genesa.1]
+きみは オリジンを
+あつめた たびびとよ。
+---
+わたしは ジェネサ。
+すべての ゆめ。
+
+[ru.genesa.2]
+きみの ちからと
+こころを ためそう。
+---
+チャンスは
+いちどだけ。
+
+[ru.genesa.ask]
+じゅんびは いい？
+
+[ru.genesa.wait]
+ジェネサは しずかに
+まっている。
+
+[ru.genesa.gone]
+ジェネサは ひかりの
+なかへ きえた。
+
+[ru.genesa.retry]
+くうきが ふるえた…
+もういちど！
+
+[ru.genesa.got]
+ジェネサが ついてくる！
+ゆめは つづく。
+
+[gr.gate.no]
+いわから すさまじい
+ねつが あふれている。
+---
+エンバーバッジが
+ないと たえられない。
+
+[gr.shaft]
+てんじょうから
+ひかりが さしこむ。
+
+[gr.altar.empty]
+からっぽの さいだん。
+にっしょくが ほってある。
+---
+とくていの じこくに
+なにかが めざめそう。
+
+[gr.altar.faded]
+ひかりが きえ
+いしも きえた。
+
+[gr.altar.take]
+さいだんに
+エクリプスのいしが ある。
+
+[gr.altar.got]
+エクリプスのいしを
+てにいれた！
+
+# --- F3 (contract 75) ---
+[gl.opt.speed]
+もじ
+
+[gl.opt.speed.fast]
+はやい
+
+[gl.opt.speed.mid]
+ふつう
+
+[gl.opt.speed.slow]
+おそい
+
+[gl.opt.anim]
+えんしゅつ
+
+[gl.opt.anim.on]
+あり
+
+[gl.opt.anim.off]
+なし
+
+[gl.opt.style]
+ルール
+
+[gl.opt.style.shift]
+いれかえ
+
+[gl.opt.style.set]
+かちぬき
+
+[gl.bt.shift_next]
+{v3}は
+{v0}を だすよ！
+
+[gl.bt.shift_q]
+エレメンティを
+いれかえる？
+
+[gl.rga.area]
+すみか
+
+[gl.rga.none]
+すみかは ふめい
+
+[gl.rga.cry]
+なきごえ
+
+# --- F2 world & PC (contract 74) ---
+
+[gl.f2.det.none]
+はんのうが ない…
+ちかくに なにも ない。
+
+[gl.f2.det.near]
+はんのう あり！
+どうぐが ちかくに ある
+
+[gl.f2.det.here]
+すごい はんのう！
+すぐ そこに ある！
+
+[gl.f2.dip.t]
+しょうじょう
+
+[gl.f2.dip.who]
+{player}
+
+[gl.f2.dip.l1]
+ずかんを ぜんぶ
+
+[gl.f2.dip.l2]
+かんせい！ おめでとう
+
+[gl.f2.share]
+ほかの なかまも
+{v2}の けいけんち！
+
+[gl.f2.box.items]
+どうぐ
+
+[gl.f2.box.dep_it]
+どうぐ いれる
+
+[gl.f2.box.wd_it]
+どうぐ だす
+
+[gl.f2.box.toss_it]
+どうぐ すてる
+
+[gl.f2.box.dep]
+{v0}を {v2}こ
+あずけた！
+
+[gl.f2.box.wd]
+{v0}を {v2}こ
+ひきだした！
+
+[gl.f2.box.noroom]
+あずかる ばしょが
+もう ない！
+
+[gl.f2.box.none_bag]
+あずける どうぐが
+ない！
+
+[gl.f2.box.none_pc]
+あずかっている
+どうぐは ない！
+
+[ruta11.aide.hi]
+リンはかせの じょしゅよ。
+この みちを みはってるの。
+---
+ずかんが どこまで
+すすんだか みているわ。
+
+[ruta11.aide.more]
+30しゅるいまで あと
+{v2}しゅるい。
+---
+そろったら また きてね。
+
+[ruta11.aide.give]
+30しゅるい
+そろったのね！ すごい！
+---
+たからサーチャーを
+あげるわ。
+
+[ruta11.aide.got]
+{player}は
+たからサーチャーを もらった！
+
+[ruta11.aide.about]
+かくれた どうぐに
+はんのうするわ。
+---
+はんのうしたら
+OKで しらべてね。
+
+[ruta11.aide.after]
+たからさがしは
+たのしい？
+---
+エレメンティを きろくしてね！
+
+[ruta15.aide.hi]
+この みちの リンはかせの
+じょしゅよ。
+---
+ずかんが どれだけ
+すすんだか みるわ。
+
+[ruta15.aide.more]
+50しゅるいまで あと
+{v2}しゅるい。
+---
+そろったら また きてね。
+
+[ruta15.aide.give]
+50しゅるい！
+すごいわ！
+---
+これは あなたに。
+チームシェアよ。
+
+[ruta15.aide.got]
+{player}は
+チームシェアを もらった！
+
+[ruta15.aide.about]
+もちものに いれておくと
+ぜんいんが
+---
+たたかいの けいけんちを
+わけあえるの。
+
+[ruta15.aide.after]
+チームシェアは やくに
+たってる？
+---
+その ちょうしよ！
+
+[herm.hi]
+{player}！
+{rival}は いないよ。
+---
+はかせの けんきゅうじょに
+いるんじゃないかな。
+
+[herm.give]
+{player}！ リンはかせの
+ずかんは もってる？
+---
+なら これが やくに たつわ。
+アトラスよ！
+
+[herm.got]
+{player}は
+アトラスを もらった！
+
+[herm.about]
+どうぐから つかえるわ。
+---
+ちずと いまの ばしょが
+わかるの。
+
+[herm.after]
+アトラスは やくに たってる？
+きをつけてね！
+
+[motes.hi]
+ぼくは なまえのせんせい！
+エレメンティに なづけるよ。
+---
+きみが そだてた こだけ
+だよ。
+
+[motes.ask]
+なまえを かえたい こは
+いる？
+
+[motes.which]
+どの こに なづける？
+
+[motes.traded]
+その こは きみが
+そだてて ないね…
+---
+ニックネームは
+かえられないよ。
+
+[motes.done]
+いい なまえだね！
+{v0}を だいじにね。
+
+[motes.no]
+いつでも きてね。
+
+[motes.books]
+なまえの ほんが
+たくさん ある。
+
+[tr_ins.hello]
+ぼくは むしコレクター！
+もりの むしを あつめてる。
+---
+ぼくの コレクションと
+こうかんしない？
+
+[tr_ins.case]
+ランタンの はねを もつ
+ちょうが ならんでいる。
+
+[tr_ins.nick]
+Zumo
+
+[tr_pua.hello]
+とげとげの ハリネズミが
+だいすき！
+---
+つがいの おすが
+たりないの。
+
+[tr_pua.nick]
+Nena
+
+[tr_cua.hello]
+ほのおの こうまを
+そだてているんだ。
+---
+でも こおりの アザラシが
+ほしかったんだ。
+
+[tr_cua.nick]
+Iglu
+
+[tr_psi.hello]
+わたしは うらないしの
+でし。
+---
+つる だらけの
+エレメンティが ほしいの。
+
+[tr_psi.nick]
+Liana
+
+[tr_club.hello]
+でんきの ケーブルの
+ファンなんだ。
+---
+でんきトカゲと
+こうかんしない？
+
+[tr_club.nick]
+Bobi
+
+[tr_anc.hello]
+こんにちは！ おじいさんの
+いえに あそびにきたの。
+---
+わたしの ハリネズミに
+おおきな なかまが ひつよう。
+
+[tr_anc.nick]
+Nina
+
+[lab.dip.hi]
+わたしは リンはかせの
+じょしゅよ。
+---
+ずかんを かんせいした
+ひとに しょうじょう！
+
+[lab.dip.more]
+あと {v2}しゅるい。
+がんばって！
+
+[lab.dip.one]
+あと 1しゅるい！
+がんばって！
+
+[lab.dip.ok]
+ずかん かんせい！
+おめでとう、{player}！
+---
+これが あなたの
+しょうじょうよ。
+
+[lab.dip.done]
+ほんとうに がんばったわね！
+
+# --- battle (contract 73) ---
+
+[gl.f1.recharge]
+{v0}は
+はんどうで うごけない！
+
+[gl.f1.crash]
+{v0}は
+いきおいあまって ぶつかった！
+
+[gl.f1.rage]
+{v0}の いかりが
+たかまっていく！
+
+[gl.f1.undis]
+{v0}は また
+わざが つかえる！
+
+[gl.f1.disabled]
+{v0}の
+{v1}を ふうじた！
+
+[gl.f1.move_copy]
+{v0}は
+{v1}を コピーした！
+
+
+[gl.f1.transform]
+{v0}は
+{v1}に へんしん！
+
+[gl.f1.convert]
+{v0}は
+タイプを かえた！
+
+[gl.f1.loaf]
+{v0}は なまけている！
+
+[gl.f1.noobey]
+{v0}は いうことを
+きかない！
+
+[gl.f1.turned]
+{v0}は そっぽを
+むいた！
+
+[gl.f1.ignored]
+{v0}は
+しらんぷり！
+
+[gl.f1.nap]
+{v0}は ひるねを
+はじめた！
+
+[gl.f4.ppup]
+{v0}の
+わざポイントが ふえた！
+
+# --- overworld systems (contract 81) ---
+[gl.misc.overwrite]
+べつの きろくが あります。
+うわがき しますか？
+
+[gl.misc.soft_low]
+たいりょくが
+たりません！
+
+[gl.misc.flute_woke]
+ふえの ねいろが ひびく！
+みんな めを さました！
+
+[gl.misc.flute_none]
+ふえの ねいろが ひびく。
+だれも ねていない。
+
+[gl.misc.rv_steps]
+ほすう
+
+[gl.misc.rv_steps_n]
+{v2}ほ
+
+[gl.misc.rv_balls]
+タマ
+
+[gl.misc.rv_balls_n]
+{v3}
+
+# --- (contract 80): the missing story / world content (early Route 22 rival, Lin's stop, catch lesson, Registro rating, Flopfin salesman, recruiter, museum, disc gifts) ---
+[extra.r22a.hey]
+やあ、{player}！
+もう リーグへ いくのか？
+---
+まだ バッジが
+ひとつも ないのに！
+---
+どれだけ つよく
+なったか みせてみろ！
+
+[extra.r22a.again]
+もういっかい！
+しょうぶだ！
+
+[extra.r22a.lose]
+なに！？ どうして
+かてたんだ！？
+---
+ちぇっ！ もっと
+きたえなきゃ！
+
+[extra.r22a.next]
+おれは おれの みちを
+いく。 じゃあな！
+
+[extra.lin.stop1]
+まって、{player}！
+まだ でては だめ！
+
+[extra.lin.stop2]
+くさむらには やせいの
+エレメンティが いるの。
+---
+じぶんの エレメンティが
+ないと あぶないわ！
+
+[extra.lin.stop3]
+わたしと けんきゅうじょへ
+いきましょう！
+
+[extra.catch.ask]
+つかまえかたを
+おしえようか？
+
+[extra.catch.no]
+そうか。
+きを つけてな！
+
+[extra.catch.t1]
+よく みてな。 まず
+こうげきで よわらせる。
+---
+ただし たおしては
+だめだぞ！
+
+[extra.catch.t2]
+ねむりや まひに
+させると
+---
+つかまえやすく
+なるんだ！
+
+[extra.catch.t3]
+つぎに クリスタルを
+なげる。
+---
+HPが すくないほど
+つかまえやすい！
+
+[extra.catch.t4]
+しっぱいしても
+もういちど！
+
+[extra.catch.again]
+つかまえかたを
+もういちど きく？
+
+[gl.extra.rate.ask]
+ずかんを
+みてあげようか？
+
+[gl.extra.rate.no]
+また こんどね。
+
+[gl.extra.rate.count]
+つかまえた かずは
+{v2}しゅるい！
+
+[gl.extra.rate.t0]
+まだまだ これから！
+くさむらを さがそう！
+
+[gl.extra.rate.t1]
+いい ちょうしだ！
+もっと さがそう！
+
+[gl.extra.rate.t2]
+がんばってるね！
+ほかの ばしょも みよう！
+
+[gl.extra.rate.t3]
+もう 50しゅるいも！
+いいぞ！
+
+[gl.extra.rate.t4]
+はんぶん こえた！
+すばらしい！
+
+[gl.extra.rate.t5]
+すばらしい！ きみは
+マスターに なれる！
+
+[gl.extra.rate.t6]
+おどろいた！ ほとんど
+そろっているぞ！
+
+[gl.extra.rate.t7]
+ずかん かんせい！
+おめでとう！
+
+[extra.fish.hi]
+ちょっと きみ。
+いい はなしが あるよ。
+
+[extra.fish.ask]
+フロプフィンを 500ドルで
+かわない？
+
+[extra.fish.no]
+そうか。
+ざんねんだなあ。
+
+[extra.fish.broke]
+おかねが
+たりないよ。
+
+[extra.fish.bought]
+まいど！
+だいじに そだてて ね。
+
+[extra.fish.full]
+てもちも ボックスも
+いっぱいだよ。
+
+[extra.fish.after]
+もう ないよ。
+へんぴんは なしだ！
+
+[extra.recr.wait]
+はしの 5にんに
+かってから こい。
+
+[extra.recr.hello]
+おめでとう！ 5にんを
+たおしたな！
+---
+しょうひんは
+きんの かたまりだ！
+
+[extra.recr.join]
+わたしは バーテックスの
+なかまに ならない？
+
+[extra.recr.yes]
+ほう！ いい こころがけ。
+だが ただでは いれん。
+---
+しょうぶで たしかめる！
+
+[extra.recr.no]
+ことわるのか。
+ちからずくで いくぞ！
+
+[extra.recr.again]
+まだ おわって
+ないぞ！
+
+[extra.recr.lose]
+ばかな！
+やられた…
+---
+しょうひんは やる。
+おれは にげる！
+
+[gl.tr.vertice_recluta]
+エージェント ブリクス
+
+[extra.museum.sign]
+カンテラ はくぶつかん
+にゅうじょう 50ドル
+
+[extra.mus.ask]
+にゅうじょうりょうは
+50ドルです。 はらう？
+
+[extra.mus.thanks]
+ありがとう！
+ごゆっくり どうぞ。
+
+[extra.mus.broke]
+おかねが
+たりないよ。
+
+[extra.mus.no]
+また きてね。
+
+[extra.mus.clerk]
+ゆっくり どうぞ。
+さわらないでね。
+
+[extra.mus.sci]
+エコやまの かせきは
+とても めずらしい。
+---
+バーテックスが
+ねらっているとか。
+
+[extra.mus.guest]
+おおきな ほねだなあ！
+
+[extra.mus.ex1]
+こだいの かせき
+いわの こうら。
+
+[extra.mus.ex2]
+こだいの こはく
+ひみつが ねむる。
+
+[extra.mus.ex3]
+つばさの ほね
+うみを とんでいた。
+
+[extra.mus.ex4]
+おちてきた いわ
+ほしから きた。
+
+[extra.mus.sign]
+こだいせいぶつの へや
+さわらないでね。
+
+[extra.garrick.disc_about]
+「じっとたえる」だ。
+ダメージを ためて
+---
+にばいに して
+かえす。
+
+[extra.varo.fissure]
+この ディスクも
+もっていけ。
+
+[extra.varo.fissure_about]
+「だいちのさけめ」だ。
+あたれば いちげき。
+---
+はずれやすいが
+かちは ある！
+
+[extra.mimo.gift]
+まねっこが すき？
+この ディスクを あげる。
+
+[extra.mimo.about]
+「こだま」だ。
+あいての わざを まねる。
+
+[extra.lab.gift]
+ディスクが あまってる。
+もっていって！
+
+[extra.lab.gift_about]
+「ワイルドカード」だ。
+わざを ランダムに だす。
+
+[extra.dig.sign]
+そうこ へいさちゅう
+どろぼうに ちゅうい
+
+[extra.dig.shelf]
+はこが そこらじゅうに
+ちらばっている。
+
+[extra.dig.hole]
+かべの したに
+あなが ほられている。
+
+[extra.dig.agent.pre]
+このそうこは もう
+バーテックスのものだ！
+---
+さっさと でていけ！
+さもないと ゆるさん！
+
+[extra.dig.agent.after]
+くそっ！ あなから
+にげるぞ！
+
+[extra.dig.owner.wait]
+どろぼうを
+おいだして くれ！
+
+[extra.dig.owner.thanks]
+そうこを まもって
+くれて ありがとう！
+---
+バーテックスが
+トンネルを ほった。
+
+[extra.dig.owner.about]
+「ほりすすむ」だ。
+じめんに もぐって こうげき。
+
+[extra.dig.owner.after]
+バーテックスの あなは
+みなとまで つづく。
+
+[gl.tr.vertice_dig]
+エージェント ヴェクス
+# --- battle AI, experience, Dig / Pilfer / Mind Wave, the Flute in battle (contract 82, agent) ---
+
+[gl.tai.chg_dig]
+{v0}は
+あなを ほった！
+
+[gl.tai.coins]
+こばんが
+まきちらされた！
+
+[gl.tai.aiuse]
+{v3}は
+{v1}を
+---
+{v0}に
+つかった！
+
+[gl.tai.aiout]
+{v3}は
+{v0}を ひっこめた！
+
+[gl.tai.flute]
+{player}は
+めざめのふえを ふいた！
+
+[gl.tai.woke]
+ねむりが さめた！
+
+[gl.tai.flute0]
+こうかが ない！

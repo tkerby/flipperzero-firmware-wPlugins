@@ -26,6 +26,7 @@ typedef struct {
 } NfcQrNfcWorker;
 
 void nfc_qr_nfc_worker_init(NfcQrNfcWorker* worker);
+bool nfc_qr_nfc_ndef_fits(size_t ndef_len);
 bool nfc_qr_nfc_worker_start(NfcQrNfcWorker* worker, const uint8_t* ndef, size_t ndef_len);
 void nfc_qr_nfc_worker_stop(NfcQrNfcWorker* worker);
 const char* nfc_qr_nfc_worker_status_text(NfcQrNfcStatus status);

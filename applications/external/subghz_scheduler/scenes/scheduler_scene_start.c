@@ -13,14 +13,8 @@ void scheduler_scene_start_on_enter(void* context) {
     if(app->should_reset) {
         scheduler_full_reset(app->scheduler);
         furi_string_reset(app->tx_file_path);
+        scene_manager_set_scene_state(app->scene_manager, SchedulerSceneStart, MenuIndexInterval);
         app->should_reset = false;
-    }
-
-    if(!furi_string_empty(app->tx_file_path)) {
-        if(check_file_extension(furi_string_get_cstr(app->tx_file_path))) {
-            scene_manager_set_scene_state(
-                app->scene_manager, SchedulerSceneStart, MenuIndexStartSchedule);
-        }
     }
 
     scheduler_start_view_rebuild(app);
@@ -52,7 +46,17 @@ bool scheduler_scene_start_on_event(void* context, SceneManagerEvent event) {
         return true;
 
     case SchedulerStartEventSetInterval:
+        app->edit_line = -1;
         scene_manager_next_scene(app->scene_manager, SchedulerSceneInterval);
+        return true;
+
+    case SchedulerStartEventEditLines:
+        scene_manager_set_scene_state(app->scene_manager, SchedulerSceneLines, 0);
+        scene_manager_next_scene(app->scene_manager, SchedulerSceneLines);
+        return true;
+
+    case SchedulerStartEventRebuild:
+        scheduler_start_view_rebuild(app);
         return true;
 
     default:

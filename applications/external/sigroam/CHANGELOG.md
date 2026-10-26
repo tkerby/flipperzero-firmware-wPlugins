@@ -1,0 +1,270 @@
+# Changelog
+
+All notable changes to SigRoam are documented here.
+
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [0.9.1] — 2026-10-24
+
+For Scout Lite running [Scout Lite Firmware v1.1.0](https://github.com/pingequalab/ESP32Marauder/releases/tag/scout-lite-v1.1.0). Listing already-saved Wi-Fi names needs the `sigroam wifi` command, which v1.1.0 does not have. Scan nearby, join, and Upload still work on v1.1.0.
+
+### Changed
+
+- The home menu is Dashboard, Upload, Rank, Board tools, Settings, and About. Probe and Raw log are under Settings.
+- Wi-Fi opens from Upload. Saved names are listed first. Scan nearby is a separate step. The list uses the same menu as Settings: the name on the left, the signal on the right.
+- Board tools shows Ignore list and Logs on card. Split size is inside Logs.
+- The Wi-Fi status line is a menu row. The Official SDK has no variable-item header.
+
+## [0.8] — 2026-10-23
+
+For Scout Lite running [Scout Lite Firmware v1.1.0](https://github.com/pingequalab/ESP32Marauder/releases/tag/scout-lite-v1.1.0). v0.7 behavior stays on older board firmware.
+
+### Added
+
+- Scout Lite Dash uses the board's `Band: w24=` / `w5=` counts when that line is present.
+
+### Changed
+
+- The app description and About page no longer say the survey is passive or receive-only. Wardrive still transmits while it hops channels.
+- Split size: after the board has sent `Band:`, the Split page says the size is kept after reboot. Older firmware still shows that a reboot returns it to 1024 KB.
+
+## [0.7] — 2026-10-21
+
+For Scout Lite running [Scout Lite Firmware v1.0.0](https://github.com/pingequalab/ESP32Marauder/releases/tag/scout-lite-v1.0.0). Other Marauder builds keep the generic pages.
+
+### Added
+
+- Scout Lite Dash and Probe read the board with the `sigroam` command: session and time, GPS satellites and fix, AP and BLE counts, SD and BLE state, and the upload queue.
+- Board tools (Scout Lite): Ignore list (add a typed SSID or the home Wi-Fi, remove one, clear all), Logs on card (delete one, or delete all after two confirmations), and Split size. Split size lasts until the board restarts.
+- Start recovery (Scout Lite): if a scan has not started 5 seconds after Start, SigRoam checks the board, retries once, then offers a board reboot.
+- Upload (Scout Lite) shows how many logs are not uploaded yet and the last upload result. The last result is kept after you close the app.
+- Upload on Marauder boards uses Marauder's own WiGLE upload and saved Wi-Fi, and explains each result.
+- Probe shows the Marauder version on stock Marauder boards.
+
+### Changed
+
+- Join shows Saved only after the board confirms the saved network.
+
+## [0.6.1] — 2026-10-08
+
+### Fixed
+
+- On battery, opening SigRoam sometimes left the scanner unpowered. Pin 1's 5 V now comes on when the app opens. USB power is unchanged.
+
+## [0.6] — 2026-09-24
+
+For Scout Lite running SigRoam 0.6.
+
+### Added
+
+- Dash shows 2.4 GHz and 5 GHz counts separately.
+- A new network plays one short sound, at most once every 2 seconds, and does not vibrate. Settings: New net tick.
+- After you stop, Dash keeps a one-line summary of that survey.
+- If sealed surveys are still waiting, Dash asks once whether to upload. It tells you when the WiGLE key or home Wi-Fi is not set.
+- Upload shows Key and Home.
+- Rank shows your WiGLE account rank, not the count from this drive.
+- Unleashed build: `sigroam-0.6-unleashed.fap`.
+
+### Changed
+
+- Probe and About show v0.6.
+- Upload distinguishes a missing WiGLE reply, a rejected key, and WiGLE busy.
+
+### Fixed
+
+- Plugging or unplugging the Flipper's USB cable during a survey no longer leaves Dash counting while the board has stopped. Dash starts a new survey within about 15 seconds.
+
+## [0.5] — 2026-09-23
+
+BLE observation and on-board WiGLE upload for Scout Lite. Not product v1.0.
+
+The scanner app is SHA-256 `13e13033ad2f124b6edb4c599b99e10fb576872964169ea627fb8b320ea54b7c`, 1638160 bytes, written at `0x20000`. Bootloader, partition table, and otadata stay the v0.4 bytes. A sealed survey on that app wrote 66 BLE rows (`obs_ble=5784`).
+
+### Added
+
+- The scanner uploads a sealed WiGLE CSV. Success is an official `transId` stored next to that file.
+- HTTP 429 stops the round and records `reason=HTTP_429`. It does not mark the round done. That status is WiGLE's daily file limit.
+- Upload shows `WiGLE busy` / `try later` when the diag state is 5, there is no id, and the reason is `HTTP_429`. A real id still shows `Uploaded`. Any other state 5 stays `Sending`.
+- This scanner image observes BLE. Dash shows the live BLE count. There is no separate BLE switch.
+
+### Changed
+
+- Probe shows SigRoam / v0.5 / Scout Lite. It does not show the UART `Version:` line.
+
+## [0.4] — 2026-09-17
+
+Scout Lite identity on the Sess tab, a capture-quality headline, BLE-off on
+Dash, a Dash/GPS layout pass, About lockup A2, and a second Unleashed build.
+
+### Added
+
+- **The Sess tab names a Scout Lite board SigRoam.** The eight-byte wire token
+  is still `Firmware: Marauder` and is not shown on this tab. The status line
+  is Running or Sealed, the duration, and the radio permission (`W+B` / `W` /
+  `B` / `--`). A generic Marauder board still shows the wire firmware name.
+- **Dashboard capture-quality headline.** When the scanner sends `Qual:`, Dash
+  shows fix%, drop and net, refreshed on the shared 5-second tick. A stale
+  headline degrades instead of looking current.
+- **Dash shows BLE=OFF** when the scanner reports `Radio: ble=0`.
+- **A second `.fap` for Unleashed.** Official 1.4.3 and Momentum `mntm-012`
+  both report API 87.1, so one Official-SDK build covers both. Unleashed
+  `unlshd-093` (2026-09-12) is API 88.9; the loader compares the API major
+  exactly, so that firmware needs its own file. Tapping Continue on an API
+  mismatch is not support.
+
+### Changed
+
+- The app title is **SigRoam Wardriving**. Probe names SigRoam firmware when
+  it is talking to this scanner. The handshake token on the wire is unchanged.
+- **About lockup A2:** `SigRoam Wardriving v0.4` on one line (normal spacing),
+  maker line `by PINGEQUA Lab`, QR dropped to the second row. On-device
+  version matches `fap_version` 0.4 (it still said 0.3). Receive-only, No
+  attack, Marauder compatible, and the QR short link are unchanged.
+- The unique-BSSID count is the big number at the top of Dash again.
+- The status line sits on the bottom: OK, fix percent, drop, and SAT. Bytes
+  received (`rx=`) no longer show on the normal Dash while a SigRoam scan is
+  running.
+- The GPS tab dropped the `(live)` tag. Accuracy is labelled `Acc:~` because
+  it is an estimate.
+- SAT on Dash and GPS comes from the survey snapshot or a fresh Qual reading,
+  not a separate `gpsdata` poll during a scan.
+- Probe sends `info` a second time if the scanner does not answer in 1.5 s.
+- While a stock Marauder scan is running with no AP or BLE rows yet, Dash
+  shows `Waiting for first AP` instead of a zeroed count line. Stream stays
+  `No APs yet`.
+- On the GPS tab, an empty scan log is only `No GPS data yet`. A scan row
+  with no datetime shows `POI: no fix in log`.
+- Dash does not send `info` to a stock Marauder. That command is not
+  read-only there: it leaves `SHOW_INFO` and the next wardrive never starts.
+- After Probe recognises a generic Marauder, the app sends `stopscan` once
+  so Dash can start a scan. SigRoam firmware is unchanged.
+- Empty Version is not treated as a generic Marauder. Dash holds START
+  until Version arrives; 1500 ms is retry spacing, not the end of the hold.
+- Dash shows `No SD` / `Saving...` and does not cover those with the ident
+  overlay.
+- Probe retries `info` until Version arrives or the send cap.
+
+## [0.3] — 2026-09-04
+
+Scan control, where the GPS reading comes from, the notification switches, and
+one file to download instead of two.
+
+### Added
+
+- **The Sound, Vibro, Backlight and Stealth switches now do something.** They
+  have been in Settings since 0.1, stored and displayed but never read by
+  anything. The app now alerts you when the GPS fix changes state during a
+  survey: a rising two-note beep and a green blink when the fix is acquired, a
+  falling beep and a red blink when it is lost, and a short vibrate on either.
+  Each channel is gated on its own switch — Stealth suppresses the LED — and
+  alerts are throttled to at most one every 3 seconds, with the first one after
+  a restart always allowed through. Backlight, when on, holds the display lit
+  for as long as you are on the dashboard instead of letting it time out
+  mid-drive.
+
+### Changed
+
+- **A release now ships one `.fap` instead of one per firmware.** Built against
+  the Official SDK. Loading is gated on the API major. This build targets API 87
+  (Official firmware 1.4.3). CFW images that report the same API major can load
+  the same file; images on a different API major are not covered. Building this
+  source against both SDKs produced files that differ in five bytes — a
+  debug-link checksum and one byte of section size — with every code, data,
+  relocation and symbol section byte-identical. `sigroam-0.3.fap` is the whole
+  download; there is nothing to pick.
+- **The GPS reading now comes from the survey data itself.** Until now the GPS
+  tab was filled by a separate `gpsdata` query, which the scanner answers only
+  when it is not scanning — so the one moment you actually want a position was
+  the one moment the reading went stale. Each scan row already carries its own
+  latitude, longitude and timestamp, and the tab now reads those, marked
+  `(live)` to distinguish them from a sampled reading. Sampling still works on
+  the GPS tab while no scan is running.
+
+### Fixed
+
+- **Pressing OK during a scan start or stop no longer stacks up commands.** The
+  key was mapped from two states only. While the app was waiting for the scanner
+  to confirm a stop, or while it was busy, another press sent another command on
+  top of the one still in flight; and after a stop had failed, OK sent a start
+  rather than retrying the stop. All seven states are now mapped explicitly:
+  transitional states send nothing, and a failed stop retries the stop.
+- **A command that failed to reach the scanner no longer looked like it had been
+  sent.** The pending marker was cleared regardless of whether the write
+  succeeded, so a failed send left the dashboard waiting for a reply to a
+  command that never left the Flipper.
+
+## [0.2] — 2026-09-03
+
+Power handling. Both fixes come from one wrong assumption about where the 5 V on
+pin 1 comes from, showing up from two directions.
+
+### Fixed
+
+- **The serial port would not open while USB was plugged in.** 0.1 treated the
+  OTG boost converter as the only source of 5 V on pin 1 and refused to open the
+  port whenever the boost was off. The firmware deliberately keeps the boost off
+  while USB VBUS is above 4.5 V — the charger refuses it — and pin 1 is fed
+  straight from VBUS in that case, so the port was being closed on a board that
+  had power the whole time. The app now checks both sources: VBUS above the
+  threshold opens the port, and only below it does the boost state decide.
+  Running on a car charger now works the same as running on battery.
+- **Unplugging USB stopped the survey without saying so.** Power handover to the
+  battery succeeds, but the scanner board browns out and restarts into its
+  non-scanning state. 0.1 did not notice: the byte counter simply stopped rising
+  while the session timer kept going, so collection could stop with nothing on
+  screen to show it. The app now detects the stall and re-issues the scan command
+  until the board answers again. On the reference board that takes 67 to 77
+  seconds — the time the scanner needs to boot and accept commands — and the
+  retries are bounded at 24 attempts, 5 seconds apart, capped at 2 minutes.
+- **The README presented the old behaviour as a hardware limitation.** It told
+  you the scanner had no power while USB was connected and that you had to unplug
+  USB and restart the app. That was a consequence of the power gate above, not of
+  the hardware. Corrected, along with the FAQ entry built on it.
+
+### Added
+
+- **Resync status on the Dash tab** — `Resyncing...` while the app is bringing
+  the scanner back, a distinct message if the retries run out, and a diagnostic
+  row showing the state of the resync itself.
+
+### Changed
+
+- The OTG request is now left standing while USB feeds pin 1, so the power
+  service raises the boost on its own the moment USB is unplugged. Handover from
+  a car charger to the battery no longer requires restarting the app.
+- The power line in the serial log is now prefixed `pwr:` rather than `otg:` and
+  reports the measured VBUS voltage next to the OTG state.
+
+## [0.1] — 2026-09-02
+
+First public release. Wi-Fi survey front-end for the Flipper Zero driving an
+external ESP32 Marauder scanner over the GPIO serial port.
+
+### Added
+
+- **Dashboard** with four tabs (left/right to switch): live counters, parsed
+  record stream, GPS status, and session diagnostics. OK on the Dash tab starts
+  and stops the scan; the scan keeps running when you leave the page with Back.
+- **Firmware probe** — sends `info` and reports what answered, distinguishing
+  "nothing connected" from "connected but not Marauder".
+- **Raw log** — unparsed serial lines, including anything the parser did not
+  recognise, so a malformed feed is inspectable rather than invisible.
+- **Settings** — baud rate (six choices, default 115200), source codec, sound,
+  vibro, backlight, stealth, and debug rows. Persisted across restarts.
+- **Unique-BSSID estimate** from a 4 KB Bloom filter (32768 bits, 4 hashes),
+  session-scoped and RAM-only.
+- **GPIO serial handling** with the OTG power gate, physical-state verification
+  before opening the port, and detection of the Log Device conflict on pins
+  13/14 — each reported on screen instead of failing silently.
+- **QR code on the About page** linking to this repository.
+
+### Notes
+
+- Receive-only by design. No deauthentication, handshake capture, evil twin,
+  karma, beacon/BLE spam, or password cracking — permanently out of scope.
+- Survey data is not written to the Flipper's SD card. Logging is the scanner's
+  job; the Flipper provides control and live visibility.
+- Built against the official SDK (API 87) using only the common Flipper API.

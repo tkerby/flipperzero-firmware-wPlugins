@@ -111,9 +111,23 @@ applications_user/uid_brute_smarter/
 
 ## Pattern Detection Capabilities
 - **+1 Linear**: Sequential incrementing (0x1000, 0x1001, 0x1002...)
-- **+K Linear**: Fixed step patterns where K ∈ {16, 32, 64, 100, 256}
-- **16-bit Counter**: Little-endian counter in lower 16 bits
+- **+K Linear**: Any uniform step (count >= 3); mixed power-of-two strides collapse to their GCD grid; non-power-of-two envelopes fall through to the bounded bitmask branch
+- **16-bit Counter**: Upper-half counter incrementing with step 0x10000, lower 16 bits fixed
+- **Bitmask**: Bounded enumeration of the varying bits (preferred for 2-sample sets)
 - **Unknown**: Safe range expansion ±100 around single UID
+
+## Hit Detection
+- The NFC listener callback (`uid_brute_smarter_listener_callback`) counts reader engagement: CRC-valid commands addressed to the emulated UID are the strong acceptance signal, HLTA is a weak counter
+- `Stop on Hit` (config, default on) ends the run and reports the accepted UID
+- Counters are plain volatiles written from the NFC thread and read from the timer thread; keep them single-word and lock-free
+
+## UID Handling
+- 4-byte and 7-byte UIDs are supported; the pattern engine always plans over the low 4 bytes, the 3-byte manufacturer prefix and the card's ATQA/SAK are replayed verbatim
+- All cards in one audit must share the UID size (loader rejects mixed sets)
+
+## Test Suite
+- Run on the host: `make -C tests NO_COVERAGE=1 test` (all 7 suites, 84 tests)
+- The custom Unity in `tests/unity/` calls `setUp`/`tearDown` around each `RUN_TEST` and provides upstream-compat macros (`TEST_ASSERT_EQUAL_UINT32`, `UNITY_BEGIN`, `*_MESSAGE` variants)
 
 ## NFC File Parsing
 - Supports standard `.nfc` files with ISO14443-3a data

@@ -1,0 +1,25 @@
+title La Torre - the memorial tower: a low bell tolls a tritone (A, then E flat), a choir-like note hangs over it and slides down a half step, a ghost arpeggio of a diminished chord turns slowly, the wind passes; nothing resolves
+tempo 54
+vol 215
+meter 4/4
+inst toll dec=12 sus=0.08 slow
+inst choir att=14 vib=2 vdelay=16 vper=16 slow lvl=0.7
+inst ghost arp=0,3,6,9 rate=10 att=14 lvl=0.5 slow
+inst wind drum=g7 v=15,25,38,55,75,100,125,150,170,180,170,150,125,100,75,55,38,26,18,12 noise=70 seed=7 slow
+l4
+# --- the bell tolls (A), the wind, the bell again a tritone away
+@toll o3 a2 r2 |
+!wind2 r2 |
+@toll o3 e-2 r2 |
+# --- the choir: E, then F (a half step up that clashes with the bell), a ghost on A
+@choir o5 e2 e2 |
+@choir o5 f2 f2 |
+@ghost o4 a2 a2 |
+# --- the bell, the choir slides down (E, D sharp), D hangs, a ghost on E flat
+@toll o3 a2 r2 |
+@choir o5 e2 e-2 |
+@choir o5 d2 d2 |
+@ghost o4 e-2 e-2 |
+# --- both tolls, the wind, and the dark
+@toll o3 a2 e-2 |
+!wind2 r2 |

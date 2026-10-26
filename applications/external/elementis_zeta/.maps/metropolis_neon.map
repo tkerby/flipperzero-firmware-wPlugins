@@ -1,0 +1,76 @@
+# Metropolis Neon, east half (C4a, contract 39), 34 x 23. column = i, row = j. Ruta 7 arrives at the EAST edge (i = 33, rows 12..13); the avenue (asphalt, rows 12..13) runs west to the other half
+# (`metropolis_neon_2`, the west edge i = 0). Look (the user's mock "Metropolis Neon"): a CYBERPUNK city: dark neon BLOCKS with lit windows and big blinking signs, animated HOLO billboards, parked cars, street lamps, asphalt
+# avenue with dashed lanes, light sidewalks. Centro (door c), the CENTRO COMERCIAL (department store: a block with a door, `comercial_1`), the FAN CLUB (a block with a door). Three townsfolk.
+@map metropolis_neon
+@size 34 23
+@interior no
+@area metropolis_neon
+@fly 6 metropolis_neon 26 8 face=S   # the Planeador lands here, in front of the Centro door; slot 6 = visited flag 990 (contract 46.1)
+@bg 0
+@fill sidewalk
+@spawn east 32 12 W
+@spawn west 1 12 E
+@spawn centro_door 26 8 S
+@spawn dept_door 11 8 S
+@spawn club_door 27 20 S
+@legend
+  .  tile=sidewalk
+  a  object=chain_i
+  b  object=chain_j
+  c  object=nblock_1
+  d  object=nblock_0
+  e  object=center_f
+  f  door=nblock_0
+  g  door=center_f
+  h  object=sign text=neon.mall.sign interact=look
+  i  npc=mama id=npc_b face=SW text=neon.npc.b
+  j  object=sign text=neon.centro.sign interact=look
+  k  object=lamp_s
+  l  object=road_sign text=neon.sign.a interact=look
+  m  object=holo text=neon.holo.a interact=look
+  n  tile=asph
+  o  tile=asph
+  p  tile=asph
+  q  object=sign text=neon.holo.b interact=look
+  r  object=car
+  s  npc=vecino_m id=npc_a face=NE script=hint_neon
+  t  npc=vecino_m id=npc_c face=W text=neon.npc.c
+  u  door=nblock_1
+  v  object=sign text=neon.club.sign interact=look
+  w  tile=sidewalk item=disc_42
+  H  tile=sidewalk hidden=pp_extra   # hidden (contract 80, hidden items)
+@grid
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  bwccddccdd..ddccddccddcc..ccddcc.b
+  b.ccddccdd..ddccddccddcc..ccddcc.b
+  b................................b
+  b................................b
+  b................cc..............b
+  b...cc....dd.....cc......eee.....b
+  b...cc....df........dd...ege.....b
+  b...................dd...........b
+  b................................b
+  b..........h..i..........j.......b
+  b.......k......k.l....k.......km.b
+  noooooooooooooooooooooooooooooooop
+  noooooooooooooooooooooooooooooooop
+  b.q...k......k..r...k...k........b
+  b...............r.....s..........b
+  b.............................t..b
+  b...dd......cc...................b
+  b...dd......cc....dd......cc.....b
+  b.................dd......cu.....b
+  b.......................v........b
+  b........H.......................b
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+@warp f -> comercial_1 spawn=door
+@warp g -> centro_neon spawn=door
+@warp n -> metropolis_neon_2 spawn=east
+@warp p -> ruta_7 spawn=west
+@warp u -> club_fans spawn=door
+# D1 (contract 68): a clue of the hidden Gruta del Eclipse (when the stone shows).
+@script hint_neon npc
+    npc_face_hero npc_a
+    say neon.npc.a
+    say d1.hint.neon
+@end

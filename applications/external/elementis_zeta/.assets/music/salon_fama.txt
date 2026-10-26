@@ -1,0 +1,32 @@
+title Salon del Legado - the Hall of Legacy: a brass fanfare (once, in a flash), then a triumphant E flat major anthem (100 bpm) where the tune strides up and soars, shimmering major chords between the phrases, a long held top note and a roll into the loop
+tempo 100
+vol 215
+meter 4/4
+inst lead v=255,255,225,195,180
+inst hero v=255,255,240,225,210,200
+inst maj arp=0,4,7 rate=2 lvl=0.9
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+inst snr drum=a6 noise=25 seed=16 fall=12
+l4
+# --- the fanfare (once): E flat, G, B flat, E flat in a flash, a call, then the dominant shimmers
+@lead o5 e-16 g16 b-16 o6 e-16 g4. f8 e-4 |
+@maj o5 b-1 |
+@loop
+# --- 1-8: the anthem (E flat, A flat, B flat, E flat ... )
+@lead o5 e-4 g4 b-4 o6 e-4 |
+@lead o6 f2. e-4 |
+@lead o6 d4 c4 o5 b-4 a-4 |
+@lead o5 g2 b-2 |
+@lead o6 c4 d4 e-4 f4 |
+@lead o6 g2 f4 d4 |
+@lead o6 e-4 d4 c4 d4 |
+@maj o5 b-1 |
+# --- 9-16: the lift (E flat, A flat, B flat), the long held note and the roll
+@maj o4 e-1 |
+@lead o6 e-4 f4 g4 b-4 |
+@maj o4 a-1 |
+@lead o6 c4 b-4 a-4 f4 |
+@maj o4 b-1 |
+@lead o6 d4 f4 b-2 |
+@hero o6 g1 |
+[ !snr16 ]16 |

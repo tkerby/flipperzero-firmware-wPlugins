@@ -1,0 +1,69 @@
+# Ferry Albatros, cabins (C3, contract 34), 24 x 6, interior. column = i, row = j. Look (the user's mock "Ferry camarotes"): dark ship carpet (a light lattice),
+# light walls with round portholes on the back sides, bunk beds in the cabin alcoves along the north wall, the open sides black (solid void). The hero comes down the hatch at the west end and walks
+# east along the corridor (3 wide: rows 2..4) to the captain's door (the mats m, column 22). Three trainers stand in the corridor and look ACROSS it (south / north, range 3): every column
+# they own is crossed by the hero. THE RIVAL ambushes him in front of the door: the step triggers X (column 18, all three rows) run `rival_ambush` (flags 50 shows him, 51 = beaten and gone):
+# `music rival` plays while he walks up, then the battle (trainer rival_ferry).
+@map ferry_camarotes
+@size 24 6
+@interior yes
+@bg 3
+@nofollow yes                   # contract 69: the follower stays out of the ferry and the sea
+@fill carpet
+@spawn hatch 2 3 E              # coming down the hatch
+@spawn captain 21 3 W           # back from the captain's cabin
+@flag rival3_here 50            # the rival shows up in the corridor
+@flag rival3_gone 51            # ... and was beaten
+@legend
+  .  tile=carpet                   # the ship carpet
+  J  tile=carpet object=pwall      # porthole wall (north)
+  I  tile=carpet object=pwall      # porthole wall (west)
+  v  tile=void_dark                # the dark beyond the open sides (solid)
+  k  tile=carpet object=bunk       # the bunk beds of the cabins
+  p  tile=carpet object=sign interact=look text=ferry.cab.sign
+  i  tile=carpet item=rich_salve
+  1  tile=carpet npc=marinero id=c1 face=S trainer=marinero_f2 range=3 text=tr.marinero_f2.pre after=tr.marinero_f2.after
+  2  tile=carpet npc=chica id=c2 face=N trainer=chica_f range=3 text=tr.chica_f.pre after=tr.chica_f.after
+  3  tile=carpet npc=marinero id=c3 face=S trainer=marinero_f3 range=3 text=tr.marinero_f3.pre after=tr.marinero_f3.after
+  X  tile=carpet interact=step script=rival_ambush
+  R  tile=carpet npc=rival id=rival face=NW script=rival_talk show_flag=50 hide_flag=51
+  H  tile=carpet door=rope_ladder
+  m  tile=mat
+  a  tile=carpet item=disc_16
+@grid
+  JJJJJJJJJJJJJJJJJJJJJJJv
+  I..kak..p...k.k....k...v
+  I.....1.......3...X..Rmv
+  IH................X...mv
+  I.i.......2.......X...mv
+  vvvvvvvvvvvvvvvvvvvvvvvv
+@warp m -> ferry_capitan spawn=door
+@warp H -> ferry_cubierta spawn=hatch
+# The rival: when the hero crosses the line in front of the captain's door the first time his theme plays (`music rival`), he appears, walks up to him, talks and
+# fights (trainer rival_ferry: the stage-2 counter of the player's starter L20, Flitwing 19, Trancelf 18, Munchmole 16); a win = two speeches and he leaves for good (flag 51); a loss is the normal
+# blackout, he then stays and talking to him fights again.
+@script rival_ambush step if !rival3_gone
+    setf rival3_here
+    music rival
+    cam_npc rival
+    wait 300
+    npc_walk rival NW 2
+    npc_face_hero rival
+    say ferry.rival.hey
+    cam_hero
+    call rival_fight
+@end
+@script rival_talk npc
+    npc_face_hero rival
+    say ferry.rival.again
+    call rival_fight
+@end
+@script rival_fight called
+    battle 44 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    say ferry.rival.lose
+    say ferry.rival.next
+    setf rival3_gone
+@end

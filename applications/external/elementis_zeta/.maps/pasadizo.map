@@ -1,0 +1,59 @@
+# Pasadizo (the underground passage, C3, contract 34), 6 x 34, interior. column = i, row = j. A long concrete corridor under the city of Cenit: big concrete slabs (3 variants), walls
+# of small white tiles on the back sides, light posts, floor grates, a sign, a keeper who has seen it all and a Rich Salve on the way. The ladder at the north end (N) goes up to the north hut
+# (Ruta 5), the one at the south end (U) to the south hut (Ruta 6). The open sides are black (solid void), like the user's mock.
+@map pasadizo
+@size 6 34
+@interior yes
+@bg 3
+@fill concrete
+@spawn north 2 2 S              # arriving from the north hut
+@spawn south 2 30 N             # arriving from the south hut
+@legend
+  .  tile=concrete                # 3 variants
+  g  tile=grate
+  W  tile=concrete object=twall
+  J  tile=concrete object=twall
+  v  tile=void_dark               # the dark beyond the open sides (solid)
+  L  tile=concrete object=light_post
+  N  tile=concrete door=rope_ladder
+  U  tile=concrete door=rope_ladder
+  p  tile=concrete object=sign interact=look text=pasadizo.sign
+  i  tile=concrete item=rich_salve
+  k  tile=concrete npc=guardia id=keeper face=SW text=pasadizo.keeper
+@grid
+  JJJJJJ
+  W.N..v
+  W....v
+  W..p.v
+  W....v
+  W....v
+  W...Lv
+  W....v
+  W....v
+  W.gg.v
+  W....v
+  W....v
+  W...Lv
+  W....v
+  W.g..v
+  W....v
+  Wi...v
+  W....v
+  W...Lv
+  W..k.v
+  W....v
+  Wgg..v
+  W....v
+  W....v
+  W...Lv
+  W....v
+  W....v
+  W..g.v
+  W....v
+  W....v
+  W...Lv
+  W.U..v
+  W....v
+  vvvvvv
+@warp N -> pasadizo_n spawn=ladder
+@warp U -> pasadizo_s spawn=ladder

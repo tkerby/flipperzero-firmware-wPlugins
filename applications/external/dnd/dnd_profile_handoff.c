@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define DND_ACTIVE_PROFILE_PATH POCKET_D20_CHARACTER_DATA_ROOT "/custom_active_profile.txt"
+#define DND_ACTIVE_PROFILE_PATH DND_CHARACTER_DATA_ROOT "/custom_active_profile.txt"
 
 static bool dnd_profile_ref_parse_u32(const char* text, uint32_t* output) {
     if(!text || !*text || !output) return false;
@@ -51,7 +51,7 @@ bool dnd_profile_ref_path(Storage* storage, uint32_t profile, char* output, size
     output[0] = '\0';
     File* directory = storage_file_alloc(storage);
     if(!directory) return false;
-    if(!storage_dir_open(directory, POCKET_D20_CHARACTER_DATA_ROOT)) {
+    if(!storage_dir_open(directory, DND_CHARACTER_DATA_ROOT)) {
         storage_file_free(directory);
         return false;
     }
@@ -65,7 +65,7 @@ bool dnd_profile_ref_path(Storage* storage, uint32_t profile, char* output, size
             if(file_info_is_dir(&info)) continue;
             if(!dnd_profile_ref_filename_is_primary(filename, prefix, (size_t)prefix_length))
                 continue;
-            if(dnd_fs_child_path(output, size, POCKET_D20_CHARACTER_DATA_ROOT, NULL, filename)) {
+            if(dnd_fs_child_path(output, size, DND_CHARACTER_DATA_ROOT, NULL, filename)) {
                 found = true;
                 break;
             }
@@ -136,27 +136,4 @@ bool dnd_profile_ref_active_id(Storage* storage, uint32_t* profile) {
 bool dnd_profile_ref_active_exact(Storage* storage, uint32_t* profile) {
     if(!dnd_profile_ref_active_id(storage, profile)) return false;
     return dnd_profile_ref_exists(storage, *profile);
-}
-
-bool dnd_handoff_launch(const char* fap_path, const char* args) {
-    if(!fap_path || !fap_path[0]) return false;
-
-    Loader* loader = furi_record_open(RECORD_LOADER);
-    if(!loader) return false;
-
-    loader_enqueue_launch(loader, fap_path, args, LoaderDeferredLaunchFlagGui);
-    furi_record_close(RECORD_LOADER);
-    return true;
-}
-
-bool dnd_handoff_launch_if_present(const char* fap_path, const char* args) {
-    if(!fap_path || !fap_path[0]) return false;
-
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    if(!storage) return false;
-    bool present = storage_file_exists(storage, fap_path);
-    furi_record_close(RECORD_STORAGE);
-    if(!present) return false;
-
-    return dnd_handoff_launch(fap_path, args);
 }

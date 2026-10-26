@@ -1,0 +1,123 @@
+# Club de Fans (C4a, contract 39), 10 x 8, interior. column = i, row = j. The chairman talks at length about his beloved (a pet that he cannot show off) and
+# gives the BIKE COUPON (`cupon_bici`, flag 78) to whoever listens; two fans, posters on the wall, a table with cups. Contract 65: the second fan (`fan_b`) is the FRIENDSHIP EVALUATOR (happiness
+# lady): he reads the lead creature's friendship in five tiers (script `fan_bond`).
+@map club_fans
+@size 10 8
+@interior yes
+@flag clt_done 931   # F2 (contract 74): the voltgecko-for-voltspool trade was done
+@var clt_res 12
+@var clt_want 10
+@var clt_give 11
+@bg 3
+@fill floor_wood
+@spawn door 4 6 N
+@flag vale_given 78
+@var bond_t 4
+@legend
+  .  tile=floor_wood
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  object=bookshelf text=club.poster.a interact=look
+  f  object=bookshelf text=club.poster.b interact=look
+  g  object=bookshelf text=club.poster.c interact=look
+  h  npc=vecino_m id=chair face=SW script=chairman
+  i  object=table
+  j  npc=mama id=fan_a face=E text=club.fan.a
+  k  npc=vecino_m id=fan_b face=W script=fan_bond
+  l  object=flowerbed
+  m  tile=mat
+  n  tile=floor_wood npc=rider id=biker face=N script=biker
+@grid
+  abbcbbcbbb
+  def....g..
+  d....h....
+  d...i.....
+  d.j....k..
+  d.......l.
+  d.....n...
+  d...mm....
+@warp m -> metropolis_neon spawn=club_door
+# The chairman: he talks and talks; whoever listens to the end gets the Bike Coupon (once: the coupon is in the bag, flag 78). A full bag: he hands it over next time.
+@script chairman npc
+    npc_face_hero chair
+    jf vale_given said
+    say club.chair.hi
+    say club.chair.t1
+    say club.chair.t2
+    say club.chair.t3
+    say club.chair.offer
+    give_item cupon_bici 1
+    jv 0 0 full
+    item_var 0 cupon_bici
+    say gl.gift
+    setf vale_given
+    say club.chair.about
+    end
+  full:
+    say gl.found.full
+    end
+  said:
+    say club.chair.after
+@end
+# The friendship evaluator (contract 65): the club's usual line, then how much the LEAD creature (party slot 0) likes the player: `bond tier` = 0 cold (< 50), 1 wary (< 100), 2 friendly (< 150),
+# 3 fond (< 220), 4 devoted (220+, what the friendship evolutions need), 255 = no creature. {v0} = the creature's name (nickname or species).
+@script fan_bond npc
+    npc_face_hero fan_b
+    say club.fan.b
+    say club.fanb.hi
+    bond tier bond_t
+    jv bond_t 255 none
+    jv bond_t 0 t0
+    jv bond_t 1 t1
+    jv bond_t 2 t2
+    jv bond_t 3 t3
+    say club.fanb.t4
+    end
+  none:
+    say club.fanb.none
+    end
+  t0:
+    say club.fanb.t0
+    end
+  t1:
+    say club.fanb.t1
+    end
+  t2:
+    say club.fanb.t2
+    end
+  t3:
+    say club.fanb.t3
+@end
+
+# F2 (contract 74): an in-game trade (voltgecko -> voltspool, for a creature), nickname = the fixed ASCII text `tr_club.nick` (the same in all four languages, contract 32.5). Flag 931 = it was done.
+@script biker npc
+    npc_face_hero biker
+    setv clt_want sp:voltgecko
+    setv clt_give sp:voltspool
+    name_var 0 clt_want
+    name_var 1 clt_give
+    jf clt_done after
+    say tr_club.hello
+    ask trueque.ask
+    jv 0 1 go
+    say trueque.no
+    end
+  go:
+    trade voltgecko voltspool tr_club.nick clt_res
+    jv clt_res 1 done
+    jv clt_res 255 cancel
+    say trueque.wrong
+    end
+  cancel:
+    say trueque.no
+    end
+  done:
+    setf clt_done
+    say trueque.done
+    end
+  after:
+    name_var 0 clt_give
+    say trueque.after
+@end

@@ -31,5 +31,7 @@ void FillShop(
 
 int CalculateEnemyReward(const Wyrm* enemy) {
     int rewardUnits = ((enemy->length * 2) / 3) + 1;
-    return rewardUnits * 3;
+    int reward = rewardUnits * 3;
+    if(reward > 15) reward = 15;
+    return reward;
 }

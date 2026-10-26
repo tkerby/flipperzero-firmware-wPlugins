@@ -1,0 +1,47 @@
+# Casa del Planeador (C5b, contract 48), 9 x 7, interior. column = i, row = j. The house behind the cuttable bush of Ruta 16: the GIRL gives the PLANEADOR module (flag 92 =
+# `mod_planeador`, flag 834 = the gift was given; the module only flies with the Medalla Voltio). A bird-lover's room: posters of gliding birds on the walls, a bed, a table, a bookshelf.
+@map casa_planeador
+@size 9 7
+@interior yes
+@bg 3
+@fill floor_wood
+@spawn door 4 5 N
+@flag planeador_given 834
+@legend
+  .  tile=floor_wood
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  p  tile=none object=wall_poster_j text=plane.poster interact=look
+  q  tile=none object=wall_poster_i text=plane.poster interact=look
+  e  object=bed
+  f  object=bookshelf text=casa.books interact=look
+  h  object=table
+  i  npc=chica id=girl face=SW script=girl
+  j  object=candle_s
+  k  tile=mat
+@grid
+  abbpbbcbb
+  de..f.f..
+  qe.......
+  d..hi....
+  d.j......
+  d........
+  d...kk...
+@warp k -> ruta_16 spawn=plane_door
+# The girl: the PLANEADOR at the first talk (the module is a flag, `setf mod_planeador`), then a last line.
+@script girl npc
+    npc_face_hero girl
+    jf planeador_given said
+    say plane.a
+    say plane.b
+    setf mod_planeador
+    sfx item
+    say plane.got
+    say plane.about
+    setf planeador_given
+    end
+  said:
+    say plane.after
+@end

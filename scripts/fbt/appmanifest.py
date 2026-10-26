@@ -1,5 +1,6 @@
 import os
 import re
+from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Callable, ClassVar, List, Optional, Tuple, Union
@@ -65,9 +66,10 @@ class FlipperApplication:
     sdk_headers: List[str] = field(default_factory=list)
     targets: List[str] = field(default_factory=lambda: ["all"])
     resources: Optional[str] = None
+    # Built-in apps use this too - see AppManager.get_builtin_app_folders().
+    sources: List[str] = field(default_factory=lambda: ["*.c*"])
 
     # .fap-specific
-    sources: List[str] = field(default_factory=lambda: ["*.c*"])
     cflags: List[str] = field(default_factory=list)
     fap_version: Union[str, Tuple[int]] = "0.1"
     fap_icon: Optional[str] = None
@@ -118,6 +120,19 @@ class FlipperApplication:
             raise FlipperManifestException(
                 f"Invalid appid '{self.appid}'. Must match regex '{self.APP_ID_REGEX}'"
             )
+
+        # Reject float explicitly. Python float literals silently drop trailing
+        # zeros (1.10 becomes 1.1), so a float is never a safe way to write a
+        # version number. Surface the problem here with a clear message rather
+        # than letting a cryptic "'float' object is not iterable" TypeError
+        # appear deep in the build step (see flipperdevices/flipperzero-ufbt#52).
+        if isinstance(self.fap_version, float):
+            raise FlipperManifestException(
+                f"Invalid fap_version {self.fap_version!r}: floats are not accepted "
+                f"because Python drops trailing zeros (1.10 becomes 1.1). "
+                f'Write the version as a string ("1.0") or a tuple ((1, 0)).'
+            )
+
         if isinstance(self.fap_version, str):
             try:
                 self.fap_version = tuple(int(v) for v in self.fap_version.split("."))
@@ -125,8 +140,15 @@ class FlipperApplication:
                 raise FlipperManifestException(
                     f"Invalid version '{self.fap_version}'. Must be in the form 'major.minor'"
                 )
-            if len(self.fap_version) < 2:
-                raise ValueError("Not enough version components")
+        elif isinstance(self.fap_version, (tuple, list)):
+            self.fap_version = tuple(self.fap_version)
+        else:
+            raise FlipperManifestException(
+                f"Invalid fap_version {self.fap_version!r}: expected a string like "
+                f'"1.2" or a tuple like (1, 2), got {type(self.fap_version).__name__}'
+            )
+        if len(self.fap_version) < 2:
+            raise ValueError("Not enough version components")
 
 
 class AppManager:
@@ -480,10 +502,15 @@ class AppBuildset:
         )
 
     def get_builtin_app_folders(self):
+        # Sources are gathered per folder, so a folder gets one merged list: an exclusion only
+        # filters the patterns handed to GatherSources() with it, and a folder can hold more than
+        # one built-in app - in applications/main/subghz an APP sits beside a STARTUP hook whose
+        # default "*.c*" would otherwise re-add what the app excluded. Sorted because this order
+        # ends up as link order.
+        folder_sources = defaultdict(set)
+        for app in self.get_builtin_apps():
+            folder_sources[app._appdir].update(app.sources)
         return sorted(
-            set(
-                (app._appdir, source_type)
-                for app in self.get_builtin_apps()
-                for source_type in app.sources
-            )
+            (appdir, tuple(sorted(sources)))
+            for appdir, sources in folder_sources.items()
         )

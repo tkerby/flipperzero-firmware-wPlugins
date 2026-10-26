@@ -1,0 +1,5 @@
+title Slot machine, reels turning - a ratchet of four alternating clicks (played again every ~0.2 s while a reel spins)
+vol 170
+inst tka drum=e6 v=255,150 d=0,-30
+inst tkb drum=a5 v=255,150 d=0,-30
+!tka=2 r=3 !tkb=2 r=3 !tka=2 r=3 !tkb=2

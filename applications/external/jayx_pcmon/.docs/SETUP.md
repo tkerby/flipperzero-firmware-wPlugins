@@ -118,7 +118,7 @@ Do this **every time** you want live stats:
 1. Open **JAYX**
 2. Highlight **USB** (Up/Down if needed)
 3. Press **OK**
-4. You should see: `USB · waiting...` / `monitor.py --usb`
+4. You should see: `USB - waiting...` / `monitor.py --usb`
 
 ### On the PC
 
@@ -200,7 +200,7 @@ Need an **NVIDIA** GPU with drivers installed. AMD/Intel iGPU will usually show 
 
 | Problem | Fix |
 | --- | --- |
-| Flipper stuck on “USB · waiting…” | Agent not running, wrong mode, or wrong COM. Run `python monitor.py --usb` while JAYX USB screen is open. |
+| Flipper stuck on "USB - waiting..." | Agent not running, wrong mode, or wrong COM. Run `python monitor.py --usb` while JAYX USB screen is open. |
 | `Flipper Zero not found` | Cable, drivers, close qFlipper, open JAYX USB mode first. |
 | `Access is denied` on COM | Stop `monitor.py` / `runfap` / qFlipper; unplug/replug. |
 | GPU always N/A | Non-NVIDIA GPU, or drivers missing (`nvidia-ml-py` needs NVML). |
@@ -257,7 +257,7 @@ JAYX/
 ## Still stuck?
 
 1. Confirm agent prints `Connected to COMx`.  
-2. Confirm Flipper is on **USB · waiting…** (not the main menu only).  
+2. Confirm Flipper is on **USB - waiting...** (not the main menu only).  
 3. Try another cable/port.  
 4. Open an issue on [github.com/contactjayclatty/JAYX](https://github.com/contactjayclatty/JAYX) with:
    - Agent terminal output  

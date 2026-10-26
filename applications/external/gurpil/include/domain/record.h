@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -7,7 +8,7 @@
  *
  * A record is the best (highest) distance a player has achieved. It is persisted as a
  * fixed-size little-endian byte buffer with a magic/version marker for corruption detection.
- * The record is non-negative (int32_t >= 0). File I/O is handled elsewhere (Task 9);
+ * The record is non-negative (int32_t >= 0). File I/O lives in persistence/best_store;
  * this module is pure serialization/parsing + keeping the maximum.
  */
 
@@ -52,3 +53,16 @@ int32_t record_parse(const uint8_t* buf, size_t len);
  * Pure logic: no side effects, no globals.
  */
 int32_t record_update(int32_t prev_best, int32_t distance);
+
+/* Number of quarantine slots for an unreadable save file: "<file>.bad", then
+ * "<file>.bad1".."<file>.bad9". */
+#define RECORD_BACKUP_SLOTS 10
+
+/* True if `buf` decodes to a valid record: right length and correct magic/version tag.
+ * Distinguishes "stored 0" from "corrupt", which record_parse alone cannot: both parse to 0. */
+bool record_is_valid(const uint8_t* buf, size_t len);
+
+/* First free backup slot index for an unreadable save file, so a later corruption never
+ * overwrites an earlier kept copy. taken[i] is true if slot i's file already exists.
+ * Returns -1 if every slot is taken. */
+int record_backup_slot(const bool taken[RECORD_BACKUP_SLOTS]);

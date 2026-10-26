@@ -1,0 +1,25 @@
+title Rival - the ambush walk-up: soft footsteps close in (a chromatic climb that gets louder), then a cocky C minor strut with a blue third, a kick on the beat, a snare behind it and a sneer that slides off the end
+tempo 138
+vol 235
+meter 4/4
+inst w1 v=120,80
+inst w2 v=170,120
+inst w3 v=235,170
+inst lead v=255,255,225,195,175
+inst sneer v=255,255,255,255,255,255 d=0,-8,-18,-30,-42,-52
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+inst snr drum=a6 noise=25 seed=6 fall=12
+l4
+# --- the walk-up: steps behind you (C), then a chromatic climb, louder at every step
+@w1 o4 c r c r |
+@w2 c d- @w3 d e- |
+# --- the strut: call (C, E flat, E natural, G), answer (B flat, G, E flat, C), the call again, and the sneer
+@lead o5 !kick:c e-8 e8 !snr:g r8 g8 |
+o5 !kick:b- g8 e-8 !snr:c r |
+o5 !kick:c e-8 e8 !snr:g r8 g8 |
+o5 !kick:a- g8 f8 !snr:e- @sneer d |
+# --- the strut climbs (G, then C), and lands on a sneer
+@lead o5 !kick:g g8 b-8 !snr:g g8 b-8 |
+o6 !kick:c e-8 d8 !snr:c o5 b- |
+o5 !kick:g b-8 g8 !snr:e- @sneer c |
+@lead r !kick8 !kick8 !snr !snr |

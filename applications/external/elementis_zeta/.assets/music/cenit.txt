@@ -1,0 +1,32 @@
+title Ciudad Cenit - the sleek psychic metropolis: cool glassy arpeggios (Am9, Fmaj7, D, Esus) that hang in the air, a lonely lead that answers in questions, then a soft kick-and-hat pulse under a searching high motif (A dorian, 104 bpm)
+tempo 104
+vol 215
+meter 4/4
+inst am9 arp=-12,-5,0,2 rate=4 att=6 lvl=0.5 slow
+inst fm7 arp=-12,-5,-1,4 rate=4 att=6 lvl=0.5 slow
+inst dmaj arp=-12,-5,0,4 rate=4 att=6 lvl=0.5 slow
+inst esus arp=-12,-7,-5,0 rate=4 att=6 lvl=0.5 slow
+inst lead v=255,255,225,195,180
+inst pulse v=255,110,80
+inst bell dec=3 sus=0.05 slow
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+inst hat drum=c8 v=110,60
+l8
+# --- 1-8: the glass hangs (Am9, Fmaj7, D, Esus) and the maintainer asks a question over each
+@am9 o4 a2 a2 |
+@lead o5 e4 a4 b a g e |
+@fm7 o4 f2 f2 |
+@lead o5 c4 f4 g f e c |
+@dmaj o4 d2 d2 |
+@lead o5 a4 >d4 e d< b a |
+@esus o4 e2 e2 |
+@lead o5 g+4 b4 >e2< |
+# --- 9-16: the city wakes up (a soft pulse), the high motif searches and falls
+@pulse o3 !kick:a8 a8 !hat8 a8 !kick:a8 a8 !hat8 a8 |
+@lead o6 c4 e4 d c o5 b g+ |
+@pulse o3 !kick:f8 f8 !hat8 f8 !kick:f8 f8 !hat8 f8 |
+@lead o6 a4 g4 f e d c |
+@pulse o3 !kick:d8 d8 !hat8 d8 !kick:d8 d8 !hat8 d8 |
+@lead o6 f+4 a4 b a f+ d |
+@pulse o3 !kick:e8 e8 !hat8 e8 !kick:e8 e8 !hat8 e8 |
+@lead o6 e4 g+4 @bell b2 |

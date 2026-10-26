@@ -1,0 +1,71 @@
+# TEST FIXTURE (id 220): the C5 world systems (contract section 42). Not part of the game: reached only by the host harness (tools/host_world, `make c5sys`).
+#   * the lake (i 18..29, j 3..12): Hidrodeslizador (surf), the water / fishing tables, a rock standing in the water (24,7), a shore spawn `shore` (17,8) facing the water
+#   * Empuje: boulders `b` and pits `h` / `H` (flags 790 / 791): A (4,3) -> pit (7,3); B (4,5) against an invisible wall; C two boulders in a row (4,7) (5,7); D (8,5) towards a step trigger (9,5);
+#     E (11,3) -> pit (11,5) pushed SW from (11,2); F (6,9) free S push, (9,9) S push blocked by a wall flank; G (15,10) pushed east to the lake
+#   * the sleeping creature `Z` (12,17) in a corridor of invisible walls `W` (rows 16 / 18, i 10..14); the Autopista gate `g` (9,14); a bike slope (20,14) .. (24,18)
+@map test_c5sys
+@size 32 20
+@interior no
+@bg 0
+@fill dirt_a
+@spawn start 2 10 SE
+@spawn shore 17 8 SE
+@flag hole_a 790
+@flag hole_b 791
+@encounters water rate=255
+  flitter 5 5 1
+@end
+@encounters fish_old
+  muncrit 5 5 1
+@end
+@encounters fish_good rate=128
+  flitter 10 12 3
+  muncrit 10 10 1
+@end
+@encounters fish_super
+  flitter 20 25 3
+  muncrit 22 24 1
+@end
+@legend
+  .  tile=dirt_a
+  ~  tile=sea_o
+  r  tile=sea_o object=boulder
+  b  tile=dirt_a boulder=yes
+  h  tile=dirt_a hole=hole_a
+  H  tile=dirt_a hole=hole_b
+  W  tile=dirt_a solid=yes
+  X  tile=dirt_a interact=step script=noop
+  g  tile=dirt_a interact=step script=gate
+  s  tile=slope_s
+  Z  tile=dirt_a sleeper=muncrit level=30 npc=vecino face=SE
+@grid
+  ................................
+  ................................
+  ................................
+  ....b..h...b......~~~~~~~~~~~~..
+  ..................~~~~~~~~~~~~..
+  ....bW..bX.H......~~~~~~~~~~~~..
+  ..................~~~~~~~~~~~~..
+  ....bb............~~~~~~r~~~~~..
+  ..................~~~~~~~~~~~~..
+  ......b..bW.......~~~~~~~~~~~~..
+  ...............b..~~~~~~~~~~~~..
+  ..................~~~~~~~~~~~~..
+  ..................~~~~~~~~~~~~..
+  ................................
+  .........g..........s...........
+  .....................s..........
+  ..........WWWWW.......s.........
+  ............Z..........s........
+  ..........WWWWW.........s.......
+  ................................
+@script noop step
+    end
+@end
+@script gate step
+    jf on_bike pass
+    say gl.c5a.gate.bike
+    hero_walk NW 1
+  pass:
+    end
+@end

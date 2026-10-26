@@ -1,5 +1,8 @@
+import atexit
 import itertools
+import os
 import pathlib
+import time
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
@@ -10,6 +13,7 @@ from fbt.elfmanifest import assemble_manifest_data
 from fbt.fapassets import FileBundler
 from fbt.sdk.cache import SdkCache
 from fbt.util import resolve_real_dir_node
+from flipper.assets.file_filter import filter_macos_metadata_names
 from SCons.Action import Action
 from SCons.Builder import Builder
 from SCons.Errors import UserError
@@ -17,6 +21,58 @@ from SCons.Node.FS import Entry, File
 
 _FAP_META_SECTION = ".fapmeta"
 _FAP_FILEASSETS_SECTION = ".fapassets"
+
+
+def _get_fap_profile_level():
+    value = os.environ.get("FBT_PROFILE_FAPS", "0").strip().lower()
+    if value in ("", "0", "false", "no", "off"):
+        return 0
+    if value in ("2", "verbose", "detail", "detailed"):
+        return 2
+    return 1
+
+
+def _plugin_fal_name(app):
+    return f"{app.appid}.fal"
+
+
+_FAP_PROFILE_LEVEL = _get_fap_profile_level()
+_FAP_PROFILE_EPOCH = time.perf_counter()
+_FAP_PROFILE_ROWS = []
+
+
+def _print_fap_profile_summary():
+    if not _FAP_PROFILE_LEVEL or not _FAP_PROFILE_ROWS:
+        return
+
+    print("[FAP-PROFILE] Slowest FAP/FAL graph-construction times:", flush=True)
+    for row in sorted(_FAP_PROFILE_ROWS, key=lambda item: item["total"], reverse=True)[
+        :20
+    ]:
+        print(
+            "[FAP-PROFILE] "
+            f"{row['appid']}: total={row['total']:.3f}s "
+            f"init={row['init']:.3f}s "
+            f"setup={row['setup']:.3f}s "
+            f"ext={row['external']:.3f}s "
+            f"icons={row['icons']:.3f}s "
+            f"privlibs={row['private_libs']:.3f}s "
+            f"sources={row['sources']:.3f}s "
+            f"graph={row['graph']:.3f}s "
+            f"deps={row['deps']:.3f}s "
+            f"assets={row['assets']:.3f}s "
+            f"src={row['source_count']} "
+            f"asset_files={row['asset_file_count']}",
+            flush=True,
+        )
+
+
+if _FAP_PROFILE_LEVEL:
+    atexit.register(_print_fap_profile_summary)
+    print(
+        f"[FAP-PROFILE] enabled (level {_FAP_PROFILE_LEVEL}); timing FAP/FAL SCons graph construction",
+        flush=True,
+    )
 
 
 @dataclass
@@ -43,13 +99,89 @@ class AppBuilder:
         self.icons_src = None
         self.externally_built_files = []
         self.private_libs = []
+        self._profile_times = {
+            "init": 0.0,
+            "setup": 0.0,
+            "external": 0.0,
+            "icons": 0.0,
+            "private_libs": 0.0,
+            "sources": 0.0,
+            "graph": 0.0,
+            "deps": 0.0,
+            "assets": 0.0,
+        }
+        self._profile_counts = {
+            "source_count": 0,
+            "asset_file_count": 0,
+            "asset_dir_count": 0,
+            "private_lib_source_count": 0,
+        }
+        self._profile_private_libs = []
 
-    def build(self):
-        self._setup_app_env()
-        self._build_external_files()
-        self._compile_assets()
-        self._build_private_libs()
-        return self._build_app()
+    def _profile_call(self, name, callback):
+        if not _FAP_PROFILE_LEVEL:
+            return callback()
+        started = time.perf_counter()
+        try:
+            return callback()
+        finally:
+            self._profile_times[name] += time.perf_counter() - started
+
+    def build(self, total_started=None):
+        if not _FAP_PROFILE_LEVEL:
+            self._setup_app_env()
+            self._build_external_files()
+            self._compile_assets()
+            self._build_private_libs()
+            return self._build_app()
+
+        if total_started is None:
+            total_started = time.perf_counter()
+        self._profile_call("setup", self._setup_app_env)
+        self._profile_call("external", self._build_external_files)
+        self._profile_call("icons", self._compile_assets)
+        self._profile_call("private_libs", self._build_private_libs)
+        app_artifacts = self._build_app()
+        total = time.perf_counter() - total_started
+
+        row = {
+            "appid": self.app.appid,
+            "total": total,
+            **self._profile_times,
+            **self._profile_counts,
+        }
+        _FAP_PROFILE_ROWS.append(row)
+
+        print(
+            "[FAP-PROFILE] DONE "
+            f"{self.app.appid}: total={total:.3f}s "
+            f"init={self._profile_times['init']:.3f}s "
+            f"setup={self._profile_times['setup']:.3f}s "
+            f"ext={self._profile_times['external']:.3f}s "
+            f"icons={self._profile_times['icons']:.3f}s "
+            f"privlibs={self._profile_times['private_libs']:.3f}s "
+            f"sources={self._profile_times['sources']:.3f}s "
+            f"graph={self._profile_times['graph']:.3f}s "
+            f"deps={self._profile_times['deps']:.3f}s "
+            f"assets={self._profile_times['assets']:.3f}s "
+            f"src={self._profile_counts['source_count']} "
+            f"asset_files={self._profile_counts['asset_file_count']} "
+            f"asset_dirs={self._profile_counts['asset_dir_count']} "
+            f"privlib_src={self._profile_counts['private_lib_source_count']}",
+            flush=True,
+        )
+
+        if _FAP_PROFILE_LEVEL >= 2:
+            for lib_name, elapsed, source_count in sorted(
+                self._profile_private_libs, key=lambda item: item[1], reverse=True
+            ):
+                print(
+                    f"[FAP-PROFILE]   LIB {self.app.appid}/{lib_name}: "
+                    f"{elapsed:.3f}s src={source_count}",
+                    flush=True,
+                )
+
+        return app_artifacts
 
     def _setup_app_env(self):
         self.app_env = self.fw_env.Clone(
@@ -102,6 +234,7 @@ class AppBuilder:
             self.private_libs.append(self._build_private_lib(lib_def))
 
     def _build_private_lib(self, lib_def):
+        profile_started = time.perf_counter() if _FAP_PROFILE_LEVEL else None
         lib_src_root_path = self.app_work_dir.Dir("lib").Dir(lib_def.name)
         self.app_env.AppendUnique(
             CPPPATH=list(
@@ -136,10 +269,15 @@ class AppBuilder:
             ),
         )
 
-        return private_lib_env.StaticLibrary(
+        private_lib = private_lib_env.StaticLibrary(
             self.app_work_dir.File(lib_def.name),
             lib_sources,
         )
+        if _FAP_PROFILE_LEVEL:
+            elapsed = time.perf_counter() - profile_started
+            self._profile_counts["private_lib_source_count"] += len(lib_sources)
+            self._profile_private_libs.append((lib_def.name, elapsed, len(lib_sources)))
+        return private_lib
 
     def _build_app(self):
         if self.app.fap_file_assets:
@@ -159,9 +297,13 @@ class AppBuilder:
                 LIBS=[lib for lib in self.app_env["LIBS"] if lib not in excluded]
             )
 
+        sources_started = time.perf_counter() if _FAP_PROFILE_LEVEL else None
         app_sources = self.app_env.GatherSources(
             [self.app.sources, "!lib"], self.app_work_dir
         )
+        if _FAP_PROFILE_LEVEL:
+            self._profile_times["sources"] += time.perf_counter() - sources_started
+            self._profile_counts["source_count"] = len(app_sources)
 
         if not app_sources:
             raise UserError(f"No source files found for {self.app.appid}")
@@ -173,6 +315,7 @@ class AppBuilder:
         ## Uncomment for debug
         # print(f"App sources for {self.app.appid}: {list(f.path for f in app_sources)}")
 
+        graph_started = time.perf_counter() if _FAP_PROFILE_LEVEL else None
         app_artifacts = FlipperExternalAppInfo(self.app)
         app_artifacts.debug = self.app_env.Program(
             self.ext_apps_work_dir.File(f"{self.app.appid}_d.elf"),
@@ -223,7 +366,13 @@ class AppBuilder:
                 (self.app.is_default_deployable, fap_path)
             )
 
+        if _FAP_PROFILE_LEVEL:
+            self._profile_times["graph"] += time.perf_counter() - graph_started
+
+        deps_started = time.perf_counter() if _FAP_PROFILE_LEVEL else None
         self._configure_deps_and_aliases(app_artifacts)
+        if _FAP_PROFILE_LEVEL:
+            self._profile_times["deps"] += time.perf_counter() - deps_started
         return app_artifacts
 
     def _configure_deps_and_aliases(self, app_artifacts: FlipperExternalAppInfo):
@@ -254,13 +403,64 @@ class AppBuilder:
                 self.app_env.File(f"{self.app._apppath}/{self.app.fap_icon}"),
             )
 
-        # Add dependencies on file assets
-        for assets_dir in self.app._assets_dirs:
-            glob_res = self.app_env.GlobRecursive("*", assets_dir)
+        # Track generated plugin targets directly. A recursive glob through a
+        # VariantDir can expose their names under the source assets directory,
+        # where those files do not exist, especially on a second build.
+        plugin_assets_dir = self.app_work_dir.Dir("assets")
+        if self.app.embeds_plugins:
+            hw_target = self.app_env.subst("f${TARGET_HW}")
             self.app_env.Depends(
                 app_artifacts.compact,
-                (*glob_res, assets_dir),
+                [
+                    plugin_assets_dir.Dir("plugins").File(_plugin_fal_name(plugin))
+                    for plugin in self.app._plugins
+                    if plugin.fal_embedded
+                    and plugin.supports_hardware_target(hw_target)
+                ],
             )
+
+        # Enumerate static assets from disk, not the SCons variant-node graph.
+        # The value dependency also tracks added/removed files and empty dirs.
+        assets_started = time.perf_counter() if _FAP_PROFILE_LEVEL else None
+        for assets_dir in self.app._assets_dirs:
+            if self.app.embeds_plugins and assets_dir == plugin_assets_dir:
+                continue
+            asset_dir_started = time.perf_counter() if _FAP_PROFILE_LEVEL >= 2 else None
+            asset_root = pathlib.Path(assets_dir.abspath)
+            asset_files = []
+            asset_entries = []
+            asset_dirs = 0
+            for directory, dirs, files in os.walk(asset_root):
+                dirs[:] = filter_macos_metadata_names(dirs)
+                files = filter_macos_metadata_names(files)
+                asset_dirs += len(dirs)
+                for name in dirs:
+                    path = pathlib.Path(directory, name)
+                    asset_entries.append(
+                        ("dir", path.relative_to(asset_root).as_posix())
+                    )
+                for name in files:
+                    path = pathlib.Path(directory, name)
+                    asset_files.append(self.app_env.File(str(path)))
+                    asset_entries.append(
+                        ("file", path.relative_to(asset_root).as_posix())
+                    )
+            self.app_env.Depends(
+                app_artifacts.compact,
+                (*asset_files, self.app_env.Value(sorted(asset_entries))),
+            )
+            if _FAP_PROFILE_LEVEL:
+                self._profile_counts["asset_file_count"] += len(asset_files)
+                self._profile_counts["asset_dir_count"] += asset_dirs
+            if _FAP_PROFILE_LEVEL >= 2:
+                print(
+                    f"[FAP-PROFILE]   ASSETS {self.app.appid}: "
+                    f"{time.perf_counter() - asset_dir_started:.3f}s "
+                    f"files={len(asset_files)} dirs={asset_dirs} root={asset_root}",
+                    flush=True,
+                )
+        if _FAP_PROFILE_LEVEL:
+            self._profile_times["assets"] += time.perf_counter() - assets_started
 
         # Always run the validator for the app's binary when building the app
         self.app_env.AlwaysBuild(app_artifacts.validator)
@@ -268,8 +468,21 @@ class AppBuilder:
 
 
 def BuildAppElf(env, app):
+    if not _FAP_PROFILE_LEVEL:
+        app_builder = AppBuilder(env, app)
+        env["EXT_APPS"][app.appid] = app_artifacts = app_builder.build()
+        return app_artifacts
+
+    total_started = time.perf_counter()
+    print(
+        f"[FAP-PROFILE] +{total_started - _FAP_PROFILE_EPOCH:.3f}s "
+        f"START {app.appid} ({app.apptype})",
+        flush=True,
+    )
+    init_started = time.perf_counter()
     app_builder = AppBuilder(env, app)
-    env["EXT_APPS"][app.appid] = app_artifacts = app_builder.build()
+    app_builder._profile_times["init"] = time.perf_counter() - init_started
+    env["EXT_APPS"][app.appid] = app_artifacts = app_builder.build(total_started)
     return app_artifacts
 
 
@@ -466,7 +679,7 @@ def _embed_app_metadata_emitter(target, source, env):
 
     # Hack: change extension for fap libs
     if app.apptype == FlipperAppType.PLUGIN:
-        target[0].name = target[0].name.replace(".fap", ".fal")
+        target[0].name = _plugin_fal_name(app)
 
     app_work_dir = AppBuilder.get_app_work_dir(env, app)
     app._section_fapmeta = app_work_dir.File(_FAP_META_SECTION)

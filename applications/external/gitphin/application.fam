@@ -1,0 +1,93 @@
+App(
+    appid="gitphin",
+    name="Gitphin",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="gitphin_app",
+    stack_size=2 * 1024,
+    fap_icon="gitphin_10.png",
+    fap_file_assets="files",
+    targets=["f7"],
+    sources=[
+        "src/app/gitphin.c",
+        "src/http/hub_http.c",
+        "src/http/hub_chunk.c",
+        "src/http/hub_transport.c",
+        "src/http/hub_mem.c",
+        "src/http/hub_plugin.c",
+        "src/git/hub_git.c",
+        "src/git/hub_gitview.c",
+        "src/obj/hub_gitobj.c",
+        "src/obj/hub_gitio_furi.c",
+        "src/util/hub_inflate.c",
+    ],
+    fap_category="USB",
+    fap_author="Kazuki Kimura (Adhamura)",
+    fap_weburl="https://github.com/Adhamura/Gitphin",
+    fap_version="1.2",
+    fap_description="Git hosting in your pocket: a Git server and web UI for your repos, used from the PC over USB",
+)
+
+App(
+    appid="hub_pl_dav",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="hub_pl_dav_ep",
+    requires=["gitphin"],
+    fal_embedded=True,
+    sources=["src/dav/hub_dav.c"],
+)
+
+App(
+    appid="hub_pl_pack",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="hub_pl_pack_ep",
+    requires=["gitphin"],
+    fal_embedded=True,
+    sources=[
+        "src/pack/hub_plugin_pack.c",
+        "src/pack/hub_gitpack.c",
+        "src/pack/hub_gitgraph.c",
+        "src/pack/hub_deflate.c",
+        "src/util/hub_sha1.c",
+        "src/doc/hub_gitdocutil.c",
+    ],
+)
+
+App(
+    appid="hub_pl_write",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="hub_pl_write_ep",
+    requires=["gitphin"],
+    fal_embedded=True,
+    cdefines=["HUB_EXT_WRITE"],
+    sources=[
+        "src/ext/hub_gitext.c",
+        "src/write/hub_gitcommit.c",
+        "src/write/hub_gitwrite.c",
+        "src/write/hub_gitwrite_furi.c",
+        "src/write/hub_gitdiff.c",
+        "src/util/hub_sha1.c",
+    ],
+)
+
+App(
+    appid="hub_pl_query",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="hub_pl_query_ep",
+    requires=["gitphin"],
+    fal_embedded=True,
+    cdefines=["HUB_EXT_QUERY"],
+    sources=[
+        "src/ext/hub_gitext.c",
+        "src/write/hub_gitdiff.c",
+        "src/ext/hub_gitsearch.c",
+    ],
+)
+
+App(
+    appid="hub_pl_doc",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="hub_pl_doc_ep",
+    requires=["gitphin"],
+    fal_embedded=True,
+    sources=["src/doc/hub_gitdoc.c", "src/doc/hub_gitdocutil.c"],
+)

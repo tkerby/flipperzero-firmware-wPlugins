@@ -1,0 +1,91 @@
+# Torre de los Recuerdos, 3F (C4b, contract 41), 14 x 12, interior. Wild ghosts (the ghost-dust boards `oplank_d_xx` are the grass of the tower: wispsheet common, shroudle rare, hatchkip) and three mediums.
+# Without the Lente Espectral the wild ones are the unidentified GHOSTS of contract 36.4. THE MOTHER GHOST blocks the stairs up (top right): the step trigger (11,3) in the one-cell corridor in front of the door runs `ghost_stairs` until she
+# rests (flag 807): without the Lente an unidentified ghost battle (you can only run: you are pushed back); with it a TRAINER fight against her spirit (Shellbrute 30, a trainer's creature cannot be caught).
+@map torre_3
+@size 14 12
+@interior yes
+@fog yes
+@ghosts yes
+@area torre_recuerdos
+@bg 3
+@fill oplank_00
+@spawn down 2 3 S
+@spawn up 11 4 N
+@flag ghost_rested 807
+@encounters grass rate=11
+  wispsheet 21 25 55
+  hatchkip 21 24 30
+  shroudle 24 26 15
+@end
+@legend
+  .  tile=oplank_00
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  tile=oplank_11
+  f  tile=oplank_01 object=escalator
+  g  tile=oplank_01
+  h  tile=oplank_11 object=escalator
+  i  tile=oplank_10
+  j  tile=oplank_00 door=escalator
+  k  tile=oplank_00 object=pillar
+  l  tile=oplank_10 door=escalator
+  m  tile=oplank_11 item=rich_salve
+  n  tile=oplank_11 object=stele_a interact=look text=torre.stele.d
+  o  tile=oplank_01 object=candle
+  p  tile=oplank_01 object=pillar
+  q  tile=oplank_11 interact=step script=ghost_stairs
+  r  tile=none object=wall_win_i
+  s  tile=oplank_d_10
+  t  tile=oplank_d_00
+  u  tile=oplank_10 object=stele_b
+  v  tile=oplank_d_11
+  w  tile=oplank_d_01
+  x  tile=oplank_11 object=stele_a
+  y  tile=oplank_00 object=stele_a
+  z  tile=oplank_10 npc=medium id=m1 face=E trainer=medium_t3a range=3 text=tr.medium_t3a.pre after=tr.medium_t3a.after
+  A  tile=oplank_00 npc=medium id=m2 face=N trainer=medium_t3b range=3 text=tr.medium_t3b.pre after=tr.medium_t3b.after
+  B  tile=oplank_01 object=stele_b
+  C  tile=oplank_00 object=candle
+  D  tile=oplank_00 npc=medium id=m3 face=E trainer=medium_t3c range=3 text=tr.medium_t3c.pre after=tr.medium_t3c.after
+  E  tile=oplank_10 item=crystal_plus
+@grid
+  abbbcbbbcbbbcb
+  defegegegeghge
+  diji.i.i.iklki
+  dmgegnoegepqpe
+  ri.sti.sti.i.u
+  degvwegvgxgege
+  diyi.z.i.i.sti
+  degegewvoegvoe
+  ri.i.its.iAi.i
+  dxgvwxgegvweBe
+  diCs.i.iDsti.E
+  degegegegegege
+@warp j -> torre_2 spawn=up
+@warp l -> torre_4 spawn=down
+# The mother ghost.
+# Without the Lente: an unidentified ghost (wild_go on a ghost map, contract 36.4: nothing can be done, only run) and the hero is pushed back. With the Lente: her spirit fights as a trainer (it cannot be caught); a win: she rests.
+@script ghost_stairs step if !ghost_rested
+    has_item lente 4
+    jv 4 1 seen
+    say torre.ghost.chill
+    say torre.ghost.chill2
+    wild shellbrute 30 5
+    say torre.ghost.back
+    hero_walk SW 2
+    end
+  seen:
+    say torre.ghost.seen
+    say torre.ghost.seen2
+    battle 96 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    say torre.ghost.rest
+    say torre.ghost.rest2
+    setf ghost_rested
+    say torre.ghost.rest3
+@end

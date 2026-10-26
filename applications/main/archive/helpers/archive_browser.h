@@ -2,6 +2,7 @@
 
 #include "../archive_i.h"
 #include <storage/storage.h>
+#include <lfrfid/tools/t5577_file.h>
 
 #define TAB_LEFT          InputKeyLeft // Default tab switch direction
 #define TAB_DEFAULT       ArchiveTabFavorites // Start tab
@@ -48,41 +49,40 @@ static const char* const known_ext[] = {
     [ArchiveFileTypeFolder] = "?",
     [ArchiveFileTypeProtoPirate] = ".psf",
     [ArchiveFileTypeUnknown] = "*",
-    [ArchiveFileTypeAppOrJs] = ".fap|.js",
+    [ArchiveFileTypeAppOrJs] = "?", // Legacy filter value, not a file type.
+    [ArchiveFileTypeLoading] = "?",
+    [ArchiveFileTypeT5577] = T5577_FILE_EXTENSION,
     [ArchiveFileTypeSetting] = "?",
     // clang-format on
 };
 
-static const ArchiveFileTypeEnum known_type[] = {
-    [ArchiveTabFavorites] = ArchiveFileTypeUnknown,
-    [ArchiveTabIButton] = ArchiveFileTypeIButton,
-    [ArchiveTabNFC] = ArchiveFileTypeNFC,
-    [ArchiveTabSubGhz] = ArchiveFileTypeSubGhz,
-    [ArchiveTabLFRFID] = ArchiveFileTypeLFRFID,
-    [ArchiveTabInfrared] = ArchiveFileTypeInfrared,
-    [ArchiveTabBadUsb] = ArchiveFileTypeBadUsb,
-    [ArchiveTabU2f] = ArchiveFileTypeU2f,
-    [ArchiveTabApplications] = ArchiveFileTypeAppOrJs,
-    [ArchiveTabSearch] = ArchiveFileTypeSearch,
-    [ArchiveTabDiskImage] = ArchiveFileTypeUnknown,
-    [ArchiveTabInternal] = ArchiveFileTypeUnknown,
-    [ArchiveTabBrowser] = ArchiveFileTypeUnknown,
+// Tab filters may contain multiple extensions; file types always describe one file.
+static const char* const tab_ext[] = {
+    [ArchiveTabFavorites] = "*",
+    [ArchiveTabIButton] = ".ibtn",
+    [ArchiveTabNFC] = ".nfc",
+    [ArchiveTabSubGhz] = ".sub",
+    [ArchiveTabLFRFID] = ".rfid|" T5577_FILE_EXTENSION,
+    [ArchiveTabInfrared] = ".ir",
+    [ArchiveTabBadUsb] = ".txt",
+    [ArchiveTabU2f] = "?",
+    [ArchiveTabApplications] = ".fap|.js",
+    [ArchiveTabSearch] = "*",
+    [ArchiveTabDiskImage] = "*",
+    [ArchiveTabInternal] = "*",
+    [ArchiveTabBrowser] = "*",
 };
 
-static inline ArchiveFileTypeEnum archive_get_tab_filetype(ArchiveTabEnum tab) {
-    return known_type[tab];
-}
-
 static inline const char* archive_get_tab_ext(ArchiveTabEnum tab) {
-    return known_ext[archive_get_tab_filetype(tab)];
+    return tab_ext[tab];
 }
 
 static inline const char* archive_get_default_path(ArchiveTabEnum tab) {
     return tab_default_paths[tab];
 }
 
-inline bool archive_is_known_app(ArchiveFileTypeEnum type) {
-    return type < ArchiveFileTypeUnknown;
+static inline bool archive_is_known_app(ArchiveFileTypeEnum type) {
+    return type < ArchiveFileTypeUnknown || type == ArchiveFileTypeT5577;
 }
 
 void archive_file_browser_set_path(
@@ -106,6 +106,8 @@ void archive_file_array_rm_all(ArchiveBrowserView* browser);
 void archive_set_item_count(ArchiveBrowserView* browser, uint32_t count);
 
 ArchiveFile_t* archive_get_current_file(ArchiveBrowserView* browser);
+/* The caller initializes and clears the copy. No pointer to the list escapes. */
+bool archive_copy_current_file(ArchiveBrowserView* browser, ArchiveFile_t* copy);
 ArchiveFile_t* archive_get_file_at(ArchiveBrowserView* browser, size_t idx);
 ArchiveTabEnum archive_get_tab(ArchiveBrowserView* browser);
 bool archive_is_home(ArchiveBrowserView* browser);

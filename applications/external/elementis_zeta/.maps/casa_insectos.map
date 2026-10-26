@@ -1,0 +1,64 @@
+# Casa del Coleccionista (Ciudad Nodo), 9 x 7, interior (F2, contract 74; map id 179). column = i, row = j. A bug collector's front room: glass display cases along the wall, a bookshelf, a worktable and a planter of ferns.
+# In-game trade (lanternmoth -> velvex): he wants a LANTERNMOTH and gives a VELVEX whose nickname is the fixed ASCII text `tr_ins.nick` (the same in all four languages: the trade idiom of casa_mimo,
+# contract 32.5). Flag 927 = the trade was done.
+@map casa_insectos
+@size 9 7
+@interior yes
+@flag ins_done 927
+@var ins_res 5
+@var ins_want 6
+@var ins_give 7
+@bg 3
+@fill floor_wood
+@spawn door 4 5 N
+@legend
+  .  tile=floor_wood
+  C  tile=none object=wall_corner
+  w  tile=none object=wall_j
+  y  tile=none object=wall_win_j
+  |  tile=none object=wall_i
+  q  tile=none object=wall_win_i
+  B  object=bookshelf interact=look text=casa.books
+  V  object=vitrina interact=look text=tr_ins.case
+  P  object=planter
+  T  object=table
+  L  npc=explorador id=trader face=SW script=trader
+  m  tile=mat
+@grid
+  Cwwywwyww
+  |VBV.VP..
+  |...L....
+  |.....T..
+  q....P...
+  |........
+  |...mm...
+@warp m -> ciudad_nodo spawn=insectos_door
+@script trader npc
+    npc_face_hero trader
+    setv ins_want sp:lanternmoth
+    setv ins_give sp:velvex
+    name_var 0 ins_want
+    name_var 1 ins_give
+    jf ins_done after
+    say tr_ins.hello
+    ask trueque.ask
+    jv 0 1 go
+    say trueque.no
+    end
+  go:
+    trade lanternmoth velvex tr_ins.nick ins_res
+    jv ins_res 1 done
+    jv ins_res 255 cancel
+    say trueque.wrong
+    end
+  cancel:
+    say trueque.no
+    end
+  done:
+    setf ins_done
+    say trueque.done
+    end
+  after:
+    name_var 0 ins_give
+    say trueque.after
+@end

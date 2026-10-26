@@ -1,0 +1,31 @@
+title Autopista - the downhill mag highway: fast and punky in A major (A, D, E), a power-chord chug on every eighth with a kick and a snare inside the notes, a shouted hook, a free-wheeling run down two octaves of the scale and a snare roll before it starts again
+tempo 184
+vol 240
+meter 4/4
+inst pow arp=-12,0,7 rate=1 lvl=0.9
+inst lead v=255,255,225,195,180
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+inst snr drum=a6 noise=25 seed=6 fall=12
+l8
+# --- 1: the count-in
+!snr4 !snr4 !snr8 !snr8 !snr8 !snr8 |
+# --- 2-5: the chug (A, A, D, E): kick, snare, kick, snare
+@pow o4 [ !kick:a8 a8 !snr:a8 a8 ]2 |
+@pow o4 [ !kick:a8 a8 !snr:a8 a8 ]2 |
+@pow o4 [ !kick:d8 d8 !snr:d8 d8 ]2 |
+@pow o4 [ !kick:e8 e8 !snr:e8 e8 ]2 |
+# --- 6-9: the shouted hook (A, D, E, A)
+@lead o5 !kick:a8 a8 >!snr:c+8< a8 e4 !kick:a4 |
+@lead o5 !kick:f+8 f+8 !snr:a8 f+8 d4 !kick:f+4 |
+@lead o5 !kick:g+8 g+8 !snr:b8 g+8 e4 !kick:g+4 |
+@lead o5 !kick:a4 !snr:e4 a2 |
+# --- 10-13: the chug again (A, F# minor, D, E)
+@pow o4 [ !kick:a8 a8 !snr:a8 a8 ]2 |
+@pow o4 [ !kick:f+8 f+8 !snr:f+8 f+8 ]2 |
+@pow o4 [ !kick:d8 d8 !snr:d8 d8 ]2 |
+@pow o4 [ !kick:e8 e8 !snr:e8 e8 ]2 |
+# --- 14: downhill, no pedalling: the scale falls two octaves in sixteenths
+@lead l16 o6 a g+ f+ e d c+ o5 b a g+ f+ e d c+ o4 b a g+ |
+# --- 15-16: the stop at E, and a snare roll into the next round
+@pow o4 !kick:e8 e8 !snr:e8 e8 !kick:e4 !snr:e4 |
+[ !snr16 ]16 |

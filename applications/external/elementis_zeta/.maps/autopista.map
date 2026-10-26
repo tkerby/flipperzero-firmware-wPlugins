@@ -1,0 +1,103 @@
+# Autopista Mag (C5b, contract 48), 9 x 64. column = i, row = j. Ruta 16's south end arrives at the NORTH edge (i = 2..6, j = 0); the road runs SOUTH (+j) to Ruta 18 (south edge, j = 63).
+# Look (the user's mock "Autopista Mag"): a LIGHT elevated road (light pavement, a dashed centre lane, bold painted downhill chevrons) with white guardrails and graffiti rails along both edges and the dark drop below (@bg 3,
+# void cells). Four lanes (i = 2, 3, 5, 6) of BIKE SLOPES (`slope_sw`, `slide_bike`: only a rider on the bicycle is pushed; afoot they are plain pavement) in three long runs (j = 3..18, 23..38, 43..58); each run ends on a
+# band of plain pavement (j = 19..22, 39..42, 59..62) where the riders wait. The dashed centre (i = 4) is plain: a rider who steps onto it leaves his run (steering). Eight trainers (the gang: four punks, four riders), three items.
+@map autopista
+@size 9 64
+@interior no
+@area autopista
+@bg 3
+@fill roadl
+@spawn north 4 2 SW
+@spawn south 4 61 NE
+@legend
+  _  tile=none
+  =  tile=roadl
+  -  tile=road_lane
+  >  tile=road_arrow
+  v  tile=slope_sw
+  R  tile=roadl object=guardrail
+  G  tile=roadl object=graffiti_rail
+  n  tile=roadl
+  s  tile=roadl
+  D  tile=roadl object=downhill_sign text=ap.sign interact=look
+  E  tile=roadl object=downhill_sign text=ap.sign2 interact=look
+  1  npc=punk id=t1 face=E trainer=punk_ap1 range=4 text=tr.punk_ap1.pre after=tr.punk_ap1.after
+  2  npc=rider id=t2 face=N trainer=rider_ap1 range=4 text=tr.rider_ap1.pre after=tr.rider_ap1.after
+  3  npc=rider id=t3 face=E trainer=rider_ap2 range=4 text=tr.rider_ap2.pre after=tr.rider_ap2.after
+  4  npc=punk id=t4 face=N trainer=punk_ap2 range=4 text=tr.punk_ap2.pre after=tr.punk_ap2.after
+  5  npc=rider id=t5 face=E trainer=rider_ap3 range=4 text=tr.rider_ap3.pre after=tr.rider_ap3.after
+  6  npc=punk id=t6 face=N trainer=punk_ap3 range=4 text=tr.punk_ap3.pre after=tr.punk_ap3.after
+  7  npc=punk id=t7 face=W trainer=punk_ap4 range=2 text=tr.punk_ap4.pre after=tr.punk_ap4.after
+  8  npc=rider id=t8 face=E trainer=rider_ap4 range=2 text=tr.rider_ap4.pre after=tr.rider_ap4.after
+  i  item=prime_salve
+  j  item=rich_salve
+  r  item=ward_spray
+  H  tile=road_lane hidden=growth_seed   # hidden (contract 80, hidden items)
+@grid
+  _RnnnnnG_
+  _G=====R_
+  _RD=-=DG_
+  _Gvv-vvR_
+  _Rvv>vvG_
+  _Gvv-vvR_
+  _Rvv-vvG_
+  _Gvv-vvR_
+  _Rvv-vvG_
+  _Gvv-vvR_
+  _Rvv>vvG_
+  _Gvv7vvR_
+  _Rvv-vvG_
+  _Gvv-vvR_
+  _Rvv-vvG_
+  _Gvv-vvR_
+  _Rvv>vvG_
+  _Gvv-vvR_
+  _Rvv-vvG_
+  _G==-==R_
+  _R==-==G_
+  _G1=-=2R_
+  _R==-=iG_
+  _Gvv-vvR_
+  _Rvv>vvG_
+  _Gvv-vvR_
+  _Rvv-vvG_
+  _GvvHvvR_
+  _Rvv-vvG_
+  _Gvv-vvR_
+  _Rvv>vvG_
+  _Gvv8vvR_
+  _Rvv-vvG_
+  _Gvv-vvR_
+  _Rvv-vvG_
+  _Gvv-vvR_
+  _Rvv>vvG_
+  _Gvv-vvR_
+  _Rvv-vvG_
+  _G==-==R_
+  _RE=-==G_
+  _G=3-4=R_
+  _Rj=-==G_
+  _Gvv-vvR_
+  _Rvv>vvG_
+  _Gvv-vvR_
+  _Rvv-vvG_
+  _Gvv-vvR_
+  _Rvv-vvG_
+  _Gvv-vvR_
+  _Rvv>vvG_
+  _Gvv-vvR_
+  _Rvv-vvG_
+  _Gvv-vvR_
+  _Rvv-vvG_
+  _Gvv-vvR_
+  _Rvv>vvG_
+  _Gvv-vvR_
+  _Rvv-vvG_
+  _G==-==R_
+  _R5=-r6G_
+  _G==-==R_
+  _R=====G_
+  _GsssssR_
+@warp n -> ruta_16 spawn=south
+@warp s -> ruta_18 spawn=west

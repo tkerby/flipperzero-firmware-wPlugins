@@ -1,0 +1,50 @@
+# Torre de los Recuerdos, 1F (C4b, contract 41), 14 x 12, interior. column = i, row = j. The memorial tower of Pueblo Bruma: the light OLD PLANKS (oplank_<i%2><j%2>, big 2 x 2 boards), steles and candles (the user's
+# mock "Torre de los Recuerdos"), drifting mist (`@fog yes`, every floor). The entrance mat at the foot leads out to the town (spawn torre_door); the stairs up are the top right (door (11,2)). A medium (trainer), two visitors. No wild table and
+# no ghosts here (the ghosts start on 2F).
+@map torre_1
+@size 14 12
+@interior yes
+@fog yes
+@area torre_recuerdos
+@bg 3
+@fill oplank_00
+@spawn door 6 10 N
+@spawn up 11 3 S
+@legend
+  .  tile=oplank_00
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  tile=oplank_11
+  f  tile=oplank_01
+  g  tile=oplank_11 object=escalator
+  h  tile=oplank_10
+  i  tile=oplank_10 door=escalator
+  j  tile=oplank_11 object=candle
+  k  tile=oplank_01 object=candle
+  l  tile=none object=wall_win_i
+  m  tile=oplank_00 object=stele_a
+  n  tile=oplank_10 npc=vecino_m id=old face=SW text=torre.npc.b
+  o  tile=oplank_01 object=stele_b
+  p  tile=oplank_00 object=stele_a interact=look text=torre.stele.a
+  q  tile=oplank_00 npc=mama id=visitor face=E text=torre.npc.a
+  r  tile=oplank_00 npc=medium id=m1 face=W trainer=medium_t1 range=3 text=tr.medium_t1.pre after=tr.medium_t1.after
+  s  tile=oplank_01 object=stele_b interact=look text=torre.stele.b
+  t  tile=oplank_11 object=stele_a
+  u  tile=mat
+@grid
+  abbbcbbbcbbbcb
+  defefefefefgfe
+  dh.h.h.h.h.i.h
+  defjfefefekefe
+  lhmh.h.h.n.h.h
+  defefefefefeoe
+  dhphqh.hrh.h.h
+  defefefefefese
+  lhmh.h.h.h.h.h
+  defjoefeftfjoe
+  dh.h.h.h.h.h.h
+  defefeuufefefe
+@warp i -> torre_2 spawn=down
+@warp u -> pueblo_bruma spawn=torre_door

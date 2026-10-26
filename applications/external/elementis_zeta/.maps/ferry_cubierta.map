@@ -1,0 +1,58 @@
+# Ferry Albatros, deck (C3, contract 34), 21 x 13. column = i, row = j. Look (the user's mock "Ferry cubierta"): planks, a railing along the south side (row 10) and the east
+# side (column 19), the animated SEA beyond it (foam on the hull side, 2 frames), a funnel with its smoke, lifebuoys, crates and barrels, a porthole wall on the north / west sides and the hatch
+# (a floor ladder, the door L) down to the cabins. The hero arrives from the gangway at the mats E (10..11, 1); stepping on them leaves the ship (script `ferry_exit`: after the captain's gift the
+# ferry sails: flag 53). Two trainers (a sailor and a fisherman) watch the way to the hatch (they look north: the hero crosses their columns) and a deckhand talks.
+@map ferry_cubierta
+@size 21 13
+@interior no
+@bg 0
+@nofollow yes                   # contract 69: the follower stays out of the ferry and the sea
+@fill plank_o
+@spawn gangway 10 2 S           # arriving from the gangway
+@spawn hatch 3 4 S              # coming up from the cabins
+@flag captain_done 52           # the captain gave the Cortador
+@flag ferry_gone 53             # the ferry departed (set when the hero leaves after the captain)
+@legend
+  =  tile=plank_o                  # the deck planks
+  W  tile=plank_o object=pwall     # the superstructure's porthole wall
+  R  tile=plank_o object=rail_i
+  Q  tile=plank_o object=rail_j
+  O  tile=plank_o object=lifebuoy
+  E  tile=plank_o interact=step script=ferry_exit
+  F  tile=plank_o object=funnel
+  H  tile=plank_o object=crate_plain
+  T  tile=plank_o object=crate_stack
+  b  tile=plank_o object=barrel
+  L  tile=plank_o door=rope_ladder
+  r  tile=sea_tr
+  e  tile=sea_tl
+  q  tile=sea_tl_tr
+  w  tile=sea_o
+  1  tile=plank_o npc=marinero id=d1 face=N trainer=marinero_f1 range=4 text=tr.marinero_f1.pre after=tr.marinero_f1.after
+  2  tile=plank_o npc=pescador id=d2 face=E trainer=pescador_f range=5 text=tr.pescador_f.pre after=tr.pescador_f.after
+  s  tile=plank_o npc=marinero id=hand face=SW text=ferry.deck.hand
+  a  tile=plank_o item=disc_45
+@grid
+  WWWWWWWWWWWWWWWWWWWWe
+  W========OEEO====H=Qe
+  W==============F==TQe
+  W==L===============Qe
+  W==================Qe
+  W======1===========Qe
+  W===========s======Qe
+  W===2==============Qe
+  W==================Qe
+  Wab==========b=====Qe
+  RRRRRRRRRRRRRRRRRRRRe
+  rrrrrrrrrrrrrrrrrrrrq
+  wwwwwwwwwwwwwwwwwwwwe
+@warp L -> ferry_camarotes spawn=hatch
+# Leaving the ship: without the captain's gift the hero simply walks down the gangway; with it the ferry sails away behind him
+# (flag 53 hides the ferry and the gangway at the quay and they never come back).
+@script ferry_exit step
+    jnf captain_done out
+    say ferry.horn
+    setf ferry_gone
+  out:
+    warp muelle_dinamo spawn=quay
+@end

@@ -1,0 +1,117 @@
+# Pueblo Bruma (C4a, contract 39), 30 x 24. column = i, row = j. Ruta 10 arrives at the NORTH edge (i = 13..14, j = 0), Ruta 8 leaves by the WEST edge (i = 0, rows 12..13). Look (the user's mock
+# "Pueblo Bruma": BIG worn flagstones, 2 x 2 per slab: the four quarter tiles oflag_<i%2><j%2>, never small cobbles): an old misty town, low dry-stone walls with dark pines behind, animated street lamps, benches and
+# flowerbeds, a memorial garden of steles in front of the TORRE DE LOS RECUERDOS (the tower: open in C4b, its door is the cell (25,3); a medium beside the door warns about the ghosts).
+# C5a (contract 47): a SOUTH gate (i = 12..13, j = 23) leads to Ruta 12 (the fishing pier; spawn `south` (12,22)).
+# Centro (door c), tienda (door k) and the old man's house (door h: he is NOT home, he is in the tower; his granddaughter says so).
+@map pueblo_bruma
+@size 30 24
+@interior no
+@area pueblo_bruma
+@fly 5 pueblo_bruma 5 5 face=S   # the Planeador lands here, in front of the Centro door; slot 5 = visited flag 989 (contract 46.1)
+@bg 0
+@fog yes
+@fill oflag_00
+@spawn north 13 1 S
+@spawn west 1 12 E
+@spawn centro_door 5 5 S
+@spawn tienda_door 11 5 S
+@spawn casa_door 19 5 S
+@spawn torre_door 25 4 S
+@spawn south 12 22 N
+@legend
+  .  tile=oflag_00
+  a  object=stonewall_i
+  b  tile=oflag_10 object=stonewall_i
+  c  tile=oflag_10
+  d  
+  e  tile=oflag_01 object=stonewall_j
+  f  tile=oflag_11
+  g  tile=oflag_01
+  h  tile=oflag_11 object=pine_dark_a
+  i  tile=oflag_11 object=stonewall_j
+  j  object=stonewall_j
+  k  tile=oflag_10
+  l  object=pine_dark_a
+  m  object=tower_far
+  n  tile=oflag_10 object=tower_far
+  o  tile=oflag_10 object=stonewall_j
+  p  tile=oflag_01 object=center_f
+  q  tile=oflag_11 object=center_f
+  r  tile=oflag_01 object=mart_f
+  s  tile=oflag_11 object=mart_f
+  t  tile=oflag_01 object=stone_house
+  u  tile=oflag_11 object=stone_house
+  v  tile=oflag_01 object=tower_far
+  w  tile=oflag_11 door=tower_far
+  x  tile=oflag_01 object=pine_dark_a
+  y  object=center_f
+  z  tile=oflag_10 door=center_f
+  A  object=mart_f
+  B  tile=oflag_10 door=mart_f
+  C  object=stone_house
+  D  tile=oflag_10 door=stone_house
+  E  tile=oflag_10 npc=guardia id=guard face=S script=torre_block
+  F  tile=oflag_11 object=flowerbed
+  G  tile=oflag_01 object=flowerbed
+  H  object=lamp_h
+  I  object=stele_a
+  J  tile=oflag_10 object=pine_dark_a
+  K  tile=oflag_10 object=stele_a
+  L  tile=oflag_01 object=bench
+  M  tile=oflag_01 object=sign text=bruma.sign interact=look
+  N  tile=oflag_01 object=sign text=bruma.memorial interact=look
+  O  
+  P  tile=oflag_10 object=lamp_h
+  Q  npc=vecino_m id=npc_c face=NE text=bruma.npc.c
+  R  tile=oflag_01
+  S  npc=vecino_m id=npc_a face=SE text=bruma.npc.a
+  T  tile=oflag_11 npc=mama id=npc_b face=W text=bruma.npc.b
+  U  tile=oflag_11 object=lamp_h
+  V  tile=oflag_10 object=flowerbed
+  W  object=flowerbed
+  X  tile=oflag_01 object=stonewall_i
+  Y  tile=oflag_11 object=stonewall_i
+  Z  tile=oflag_01
+  1  tile=oflag_11
+  0  tile=oflag_10 hidden=panacea   # hidden (contract 80, hidden items)
+@grid
+  ababababababacdbababababababab
+  efghgfgfgfgfgfgfgfgfgfgfgfghgi
+  jklk.k.k.k.k.k.k.k.k.k.kmn.k.o
+  efgfpqpfgfrsgfgfgftugfgfvwgfxi
+  jk.kyzyk.kAB.k.k.kCD.k.k.k.E.o
+  efgfgfgFgfgfgFgfgfgfgfGfgfgfgi
+  jk.k.k.kHk.k.k.kHk.k.kIkIkIk.o
+  efgfgfgfgfgfgfgfgfgfgFgfgfgFgi
+  jJ.k.k.k.k.k.k.k.k.k.k.K.K.k.o
+  efgfLfgfgfgfLfgfMfgfNfgfGfgfgi
+  jk.k.k.k.k.k.k.k.k.k.k.k.k.k.o
+  efgfgfgfgfgfgfgfgfgfgfgfgfgfgi
+  Ok.k.k.k.P.k.kQk.k.kHk.k.k.klo
+  Rfgfgfgfgfgfgfgfgfgfgfgfgfgfgi
+  jk.k.k.kSk.k.k.k.k.k.k.k.k.k.o
+  efgFgfgfgfgfgfgfgfgfgTgfgfgfxi
+  jk.k.k.k.k.k.k.k.k.k.k.k.k.k.o
+  efgfgfgfgfgfgfgUgfgfgfgfgUgfgi
+  jk.k.kHk.k.k.k.k.k.k.k.k.k.k.o
+  efgfgfgfgfgfgfgfgfgfgfgfgfgfgi
+  jJ.k.k.k.k.k.V.k.k.k.k.kWk.0.o
+  efgfgfgfxfgfgfgfgfgfgfgfgfgfxi
+  jklk.k.k.k.k.klk.k.klk.k.k.J.o
+  XYXYXYXYXYXYZ1XYXYXYXYXYXYXYXY
+@warp c -> ruta_10 spawn=south
+@warp d -> ruta_10 spawn=south
+@warp z -> centro_bruma spawn=door
+@warp B -> tienda_bruma spawn=door
+@warp D -> casa_anciano spawn=door
+@warp w -> torre_1 spawn=door
+@warp O -> ruta_8 spawn=east
+@warp R -> ruta_8 spawn=east
+@warp Z -> ruta_12 spawn=north
+@warp 1 -> ruta_12 spawn=north
+# The medium beside the tower's door (C4b): the tower is open now; he warns about the ghosts and the Lente Espectral (the ghost scope).
+@script torre_block npc
+    npc_face_hero guard
+    say bruma.tower.hint
+    say bruma.tower.hint2
+@end

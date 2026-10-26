@@ -1,0 +1,29 @@
+title Mar - surfing the open sea: broad and flowing, a barcarolle in 6/8 in E major; slow rolling arpeggios are the swell (E, B, C# minor, A), a singing line rides over them in long notes, and a wave of surf washes in at the start of every round
+tempo 72
+vol 230
+meter 6/8
+inst flow arp=-12,-8,-5,0,-5,-8 rate=8 tone=255,200,170 lvl=0.9
+inst flowm arp=-12,-9,-5,0,-5,-9 rate=8 tone=255,200,170 lvl=0.9
+inst sing att=10 vib=2 vdelay=14 vper=16 slow lvl=0.85
+inst wash drum=g7 v=10,15,26,39,54,70,86,103,118,133,147,158,167,174,178,180,178,174,167,158,147,133,118,103,86,70,54,39,26,15,10 noise=70 seed=5 slow
+l8
+# --- the wave rolls in (and the round begins)
+!wash=62 !wash=62 !wash=62 !wash=64 |
+# --- 1-4: the swell lifts, the line floats on it (E, B, C# minor, A)
+@flow o5 e2. |
+@sing o5 g+4. b4. |
+@flow o4 b2. |
+@sing o6 d+4. c+8 o5 b8 g+8 |
+@flowm o5 c+2. |
+@sing o5 e4. g+4. |
+@flow o4 a2. |
+@sing o5 a4. o6 c+8 o5 b8 a8 |
+# --- 5-8: higher, the line leans over the crest and falls back (E, B, A, E)
+@flow o5 e2. |
+@sing o6 e4. d+8 c+8 o5 b8 |
+@flow o4 b2. |
+@sing o5 b4. a8 g+8 f+8 |
+@flow o4 a2. |
+@sing o5 e4. a4. |
+@flow o5 e2. |
+@sing o5 g+4 b4 e4 |

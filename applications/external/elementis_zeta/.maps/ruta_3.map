@@ -1,0 +1,91 @@
+# Ruta 3 (C2, contract 31), 24x40. column = i, row = j. Pueblo Cantera arrives at the south end (j = 39, from its EAST exit), the Monte Eco cave is the north end (j = 0).
+# Look (the user's variant A of tools/c2_mock.py): a MOUNTAIN TRAIL of dry packed earth (bg 0), the trail with two ruts, rock slopes instead of trees along both sides, wooden
+# post fences, dry bushes, scree and boulders, a cairn at the start / middle / top, trainers on their dotted stone spots (5, they look down the trail: the left ones face S,
+# the right ones face W, range 3, so a beaten trainer never closes the 2-wide trail), dry-grass patches (tall grass: C_GRASS, wild table below), a Ward Spray and an Antidote in the side nooks.
+# Memory: see the table in section 31 (contract 31).
+@map ruta_3
+@size 24 40
+@interior no
+@area ruta_3
+@bg 0
+@fill earth
+@spawn south 11 38 N            # arriving from Pueblo Cantera
+@spawn north 10 1 S            # arriving from the Monte Eco cave
+@encounters grass rate=20      # Route 3 flavour: the birds, the songbird, the song cloud, the needle hedgehog, the common rodent
+  jabbird 7 11 25
+  flitter 7 10 20
+  quillix 7 10 15
+  quillia 7 10 15
+  lullabun 6 10 15
+  muncrit 7 10 10
+@end
+# Open ground (contract 63, normal route): a step onto plain ground (not tall grass, water, a door, a ledge, an arrow floor) rolls this table when rand8 < 4 (4/256 per step).
+@open_rate 4
+# Roaming wild creatures (contract 55, rollout in 63): 3 creatures of this table wander the open ground (not the tall grass); touching one starts that wild battle.
+@roam 3 table=grass period=1800
+@legend
+  .  tile=earth                    # dry packed earth (4 variants)
+  =  tile=mtrail                   # the trail (2 variants)
+  g  tile=scrub                    # dry brush: the tall grass of the mountain
+  S  tile=earth object=slope       # rock slopes (3 variants): the border of the route, two cells deep
+  _  tile=none                     # nothing beyond the slopes (white)
+  b  tile=earth object=dry_bush
+  r  tile=earth object=rock
+  B  tile=earth object=boulder
+  s  tile=earth object=scree       # loose stones (decoration, walkable)
+  c  tile=earth object=cairn
+  f  tile=earth object=rfence_j
+  G  tile=earth object=sign interact=look text=ruta3.sign
+  n  tile=mtrail
+  d  tile=mtrail
+  i  tile=earth item=ward_spray
+  j  tile=earth item=antidote
+  1  tile=trainer_spot npc=explorador id=t1 face=W trainer=explorador_r3a range=3 text=tr.explorador_r3a.pre after=tr.explorador_r3a.after
+  2  tile=trainer_spot npc=chica id=t2 face=S trainer=chica_r3 range=3 text=tr.chica_r3.pre after=tr.chica_r3.after
+  3  tile=trainer_spot npc=cazabichos id=t3 face=W trainer=cazabichos_r3 range=3 text=tr.cazabichos_r3.pre after=tr.cazabichos_r3.after
+  4  tile=trainer_spot npc=montanista id=t4 face=S trainer=montanista_r3 range=3 text=tr.montanista_r3.pre after=tr.montanista_r3.after
+  5  tile=trainer_spot npc=explorador id=t5 face=W trainer=explorador_r3b range=3 text=tr.explorador_r3b.pre after=tr.explorador_r3b.after
+  H  tile=earth hidden=rich_salve   # F2 (contract 74): a hidden item
+@grid
+  ____SS....nn....SS______
+  ____SS....==....SSS_____
+  ____SSBB..==.b..SSSS____
+  ____SS.ssc.==.gggSSS____
+  ____SSSS....==ggggSSS___
+  ____SSSsB...==ggggSSSS__
+  _____SSS.....==....SSS__
+  _____SSS.....==5brb.SS__
+  ______SSbb...==..f.bSS__
+  ______SSB....==.bfBsSS__
+  ______SSSggg.==.Bf..SS__
+  ______SSSggg.==..fbSSS__
+  _____SSSSggg.==.s.srSS__
+  _____SSSgggg==j..ssSSS__
+  _____SS.b.b4==....SSSS__
+  ___SSSS.....==...SSSS___
+  ___SSSS....==.s..SSS____
+  ___SS.b.B.==ggggSSS_____
+  ___SS.b...==ggggSSS_____
+  ___SSSbb.i==ggggSS______
+  ___SS..c.==.gggSSS______
+  ___SSSbb.==3br..SS______
+  ___SSH.r.==..bB.SS______
+  _SSSSggg.==.r.bSSS______
+  _SSSSSgg.==.bf..SS______
+  _SSsgggg.==..fbrSS______
+  _SSSSggg.==.Bf.SSS______
+  _SSSS..b2==..B..SS______
+  __SSSs.b.==..b.SSS______
+  __SS..bs.==.gggSSS______
+  __SSSS....==ggggSS______
+  __SSSSbBf.==ggggSS______
+  ____SSs.f.==ggggSSS_____
+  ____SSbsf.==1.sSSSS_____
+  ___SSSS.rf.==.bs.SS_____
+  ___SSSs..f.==....SSS____
+  ___SS.bs.s.==.cB.SSS____
+  ___SSS..bG.==.bs..SS____
+  ___SSS.....==.....SS____
+  ____SS.....dd.....SS____
+@warp d -> pueblo_cantera spawn=east
+@warp n -> monte_eco_1 spawn=south

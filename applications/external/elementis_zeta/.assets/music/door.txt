@@ -1,0 +1,4 @@
+title Door / warp - two quick falling blips
+vol 200
+inst blip v=255,220,170
+@blip o6 g=4 e=4 c=5 o5 g=8

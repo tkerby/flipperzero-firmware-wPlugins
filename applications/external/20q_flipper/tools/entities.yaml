@@ -1,0 +1,890 @@
+# Curated entity vocabulary (SPEC 4.1 step 1).
+#   n = display name, lower case, <= 22 chars, 7-bit ASCII
+#   c = category: 0 animal, 1 vegetable/organic, 2 mineral/man-made, 3 other
+#   p = prior weight 1..100: how likely a player is to think of this
+#   t = tags, expanded through ontology.yaml at build time
+#
+# Names are deliberately the words a player would actually say.
+
+entities:
+
+# ===== animals: mammals ===================================================
+- {n: dog, c: 0, p: 100, t: [mammal, pet, four_legs, has_fur, has_tail, sharp_teeth, omnivore, land_animal, common, medium_size, home, garden, kid_knows, loud, clever]}
+- {n: cat, c: 0, p: 100, t: [mammal, pet, four_legs, has_fur, has_tail, claws, sharp_teeth, predator, land_animal, common, small_animal, home, nocturnal, quiet]}
+- {n: horse, c: 0, p: 90, t: [mammal, farm_animal, four_legs, has_fur, has_tail, herbivore, land_animal, big_animal, transport, farm, brown, heavy, common]}
+- {n: cow, c: 0, p: 92, t: [mammal, farm_animal, four_legs, has_fur, has_tail, has_horns, herbivore, land_animal, big_animal, farm, black, white, common, loud]}
+- {n: pig, c: 0, p: 88, t: [mammal, farm_animal, four_legs, has_tail, omnivore, land_animal, medium_size, farm, pink, common, loud, smells]}
+- {n: sheep, c: 0, p: 85, t: [mammal, farm_animal, four_legs, has_fur, herbivore, land_animal, medium_size, farm, white, common, soft]}
+- {n: goat, c: 0, p: 70, t: [mammal, farm_animal, four_legs, has_fur, has_horns, has_tail, herbivore, land_animal, medium_size, farm, mountain_place]}
+- {n: rabbit, c: 0, p: 85, t: [mammal, pet, four_legs, has_fur, has_tail, herbivore, land_animal, small_animal, garden, burrows, common, quiet, soft, kid_knows]}
+- {n: mouse, c: 0, p: 80, t: [rodent, small_animal, tiny, wild, home, nocturnal, herbivore, grey, quiet, common]}
+- {n: rat, c: 0, p: 65, t: [rodent, small_animal, wild, city, nocturnal, omnivore, grey, brown, scary, underground]}
+- {n: hamster, c: 0, p: 60, t: [rodent, pet, small_animal, tiny, home, nocturnal, herbivore, brown, kid_knows, quiet]}
+- {n: guinea pig, c: 0, p: 45, t: [rodent, pet, small_animal, home, herbivore, brown, white, kid_knows, quiet]}
+- {n: gerbil, c: 0, p: 20, t: [rodent, pet, small_animal, tiny, home, herbivore, brown, quiet]}
+- {n: squirrel, c: 0, p: 60, t: [rodent, wild, small_animal, forest, garden, herbivore, brown, grey, climbs_trees, common]}
+- {n: chipmunk, c: 0, p: 25, t: [rodent, wild, small_animal, forest, herbivore, brown, climbs_trees]}
+- {n: fox, c: 0, p: 65, t: [mammal, wild, four_legs, has_fur, has_tail, predator, sharp_teeth, land_animal, medium_size, forest, city, nocturnal, orange_col, clever]}
+- {n: wolf, c: 0, p: 62, t: [mammal, wild, four_legs, has_fur, has_tail, predator, sharp_teeth, claws, land_animal, medium_size, forest, cold_place, grey, dangerous, scary, loud]}
+- {n: bear, c: 0, p: 70, t: [mammal, wild, four_legs, has_fur, claws, sharp_teeth, omnivore, land_animal, big_animal, forest, brown, dangerous, scary, zoo, heavy]}
+- {n: polar bear, c: 0, p: 55, t: [mammal, wild, four_legs, has_fur, claws, sharp_teeth, predator, land_animal, big_animal, arctic, white, dangerous, swims, zoo, heavy]}
+- {n: panda, c: 0, p: 55, t: [mammal, wild, four_legs, has_fur, herbivore, land_animal, big_animal, black, white, zoo, rare, famous, jungle]}
+- {n: lion, c: 0, p: 85, t: [mammal, wild, four_legs, has_fur, has_tail, predator, sharp_teeth, claws, land_animal, big_animal, savanna, africa, yellow, dangerous, zoo, loud, famous]}
+- {n: tiger, c: 0, p: 82, t: [mammal, wild, four_legs, has_fur, has_tail, predator, sharp_teeth, claws, land_animal, big_animal, jungle, orange_col, colourful, dangerous, zoo, famous]}
+- {n: leopard, c: 0, p: 45, t: [mammal, wild, four_legs, has_fur, has_tail, predator, sharp_teeth, claws, land_animal, big_animal, jungle, africa, yellow, dangerous, zoo]}
+- {n: cheetah, c: 0, p: 50, t: [mammal, wild, four_legs, has_fur, has_tail, predator, sharp_teeth, land_animal, big_animal, savanna, africa, yellow, zoo, fast_thing]}
+- {n: jaguar, c: 0, p: 30, t: [mammal, wild, four_legs, has_fur, has_tail, predator, sharp_teeth, claws, land_animal, big_animal, jungle, yellow, dangerous, zoo]}
+- {n: lynx, c: 0, p: 20, t: [mammal, wild, four_legs, has_fur, predator, sharp_teeth, land_animal, medium_size, forest, cold_place, grey]}
+- {n: elephant, c: 0, p: 88, t: [mammal, wild, four_legs, has_tail, herbivore, land_animal, big_animal, huge, savanna, africa, grey, zoo, heavy, famous, loud]}
+- {n: giraffe, c: 0, p: 78, t: [mammal, wild, four_legs, has_tail, herbivore, land_animal, big_animal, huge, savanna, africa, yellow, brown, zoo, famous, long_thin]}
+- {n: zebra, c: 0, p: 70, t: [mammal, wild, four_legs, has_fur, has_tail, herbivore, land_animal, big_animal, savanna, africa, black, white, zoo]}
+- {n: hippo, c: 0, p: 55, t: [mammal, wild, four_legs, herbivore, big_animal, huge, africa, freshwater, swims, grey, zoo, heavy, dangerous]}
+- {n: rhino, c: 0, p: 55, t: [mammal, wild, four_legs, has_horns, herbivore, big_animal, huge, savanna, africa, grey, zoo, heavy, rare, dangerous]}
+- {n: monkey, c: 0, p: 78, t: [primate, wild, has_fur, has_tail, omnivore, jungle, medium_size, zoo, clever, loud, brown, climbs_trees]}
+- {n: gorilla, c: 0, p: 62, t: [primate, wild, has_fur, omnivore, jungle, africa, big_animal, black, zoo, clever, heavy, scary]}
+- {n: chimpanzee, c: 0, p: 50, t: [primate, wild, has_fur, omnivore, jungle, africa, medium_size, zoo, clever, black]}
+- {n: orangutan, c: 0, p: 32, t: [primate, wild, has_fur, omnivore, jungle, big_animal, orange_col, zoo, clever, rare]}
+- {n: baboon, c: 0, p: 25, t: [primate, wild, has_fur, has_tail, omnivore, africa, savanna, medium_size, zoo, brown]}
+- {n: lemur, c: 0, p: 22, t: [primate, wild, has_fur, has_tail, jungle, small_animal, zoo, grey, rare, nocturnal]}
+- {n: kangaroo, c: 0, p: 65, t: [marsupial, wild, has_tail, two_legs, herbivore, australia, big_animal, brown, zoo, famous]}
+- {n: koala, c: 0, p: 55, t: [marsupial, wild, has_fur, herbivore, australia, small_animal, grey, zoo, forest, soft, famous]}
+- {n: wombat, c: 0, p: 15, t: [marsupial, wild, has_fur, herbivore, australia, medium_size, brown, burrows, rare]}
+- {n: camel, c: 0, p: 60, t: [mammal, four_legs, has_fur, herbivore, desert_animal, big_animal, brown, transport, zoo, domestic]}
+- {n: llama, c: 0, p: 35, t: [mammal, farm_animal, four_legs, has_fur, herbivore, mountain_place, medium_size, brown, white, farm]}
+- {n: alpaca, c: 0, p: 25, t: [mammal, farm_animal, four_legs, has_fur, herbivore, medium_size, brown, white, farm, soft]}
+- {n: deer, c: 0, p: 62, t: [mammal, wild, four_legs, has_fur, has_tail, has_horns, herbivore, forest, medium_size, brown, quiet]}
+- {n: reindeer, c: 0, p: 40, t: [mammal, four_legs, has_fur, has_horns, herbivore, arctic, cold_place, medium_size, brown, holiday_thing, famous]}
+- {n: moose, c: 0, p: 28, t: [mammal, wild, four_legs, has_fur, has_horns, herbivore, forest, cold_place, big_animal, brown, heavy]}
+- {n: bison, c: 0, p: 22, t: [mammal, wild, four_legs, has_fur, has_horns, herbivore, big_animal, brown, heavy, rare]}
+- {n: buffalo, c: 0, p: 30, t: [mammal, four_legs, has_fur, has_horns, herbivore, africa, big_animal, brown, heavy]}
+- {n: donkey, c: 0, p: 50, t: [mammal, farm_animal, four_legs, has_fur, has_tail, herbivore, farm, medium_size, grey, brown, loud, transport]}
+- {n: bull, c: 0, p: 45, t: [mammal, farm_animal, four_legs, has_horns, has_tail, herbivore, farm, big_animal, black, brown, dangerous, heavy]}
+- {n: ox, c: 0, p: 20, t: [mammal, farm_animal, four_legs, has_horns, herbivore, farm, big_animal, brown, heavy, old_fashioned]}
+- {n: yak, c: 0, p: 12, t: [mammal, farm_animal, four_legs, has_fur, has_horns, herbivore, mountain_place, cold_place, big_animal, brown, rare]}
+- {n: otter, c: 0, p: 35, t: [mammal, wild, has_fur, has_tail, predator, freshwater, swims, small_animal, brown, river_animal, clever]}
+- {n: beaver, c: 0, p: 35, t: [rodent, wild, has_fur, has_tail, herbivore, freshwater, swims, medium_size, brown, forest, clever]}
+- {n: badger, c: 0, p: 30, t: [mammal, wild, four_legs, has_fur, omnivore, forest, nocturnal, burrows, medium_size, black, white]}
+- {n: hedgehog, c: 0, p: 40, t: [mammal, wild, four_legs, has_fur, omnivore, garden, nocturnal, small_animal, brown, sharp, pointed]}
+- {n: mole, c: 0, p: 30, t: [mammal, wild, four_legs, has_fur, burrows, underground, garden, small_animal, black, quiet]}
+- {n: bat, c: 0, p: 55, t: [mammal, wild, has_fur, has_wings, flies, nocturnal, cave_animal, small_animal, black, scary, quiet]}
+- {n: seal, c: 0, p: 45, t: [mammal, wild, marine, swims, predator, medium_size, grey, cold_place, beach, zoo]}
+- {n: walrus, c: 0, p: 25, t: [mammal, wild, marine, swims, big_animal, arctic, brown, heavy, zoo, rare]}
+- {n: whale, c: 0, p: 72, t: [mammal, wild, marine, swims, no_legs, huge, big_animal, grey, blue, heavy, famous, rare]}
+- {n: dolphin, c: 0, p: 75, t: [mammal, wild, marine, swims, no_legs, predator, medium_size, grey, clever, famous, zoo]}
+- {n: orca, c: 0, p: 30, t: [mammal, wild, marine, swims, no_legs, predator, big_animal, black, white, dangerous, zoo]}
+- {n: sloth, c: 0, p: 35, t: [mammal, wild, has_fur, jungle, small_animal, brown, quiet, rare, zoo, climbs_trees]}
+- {n: anteater, c: 0, p: 15, t: [mammal, wild, four_legs, has_fur, has_tail, jungle, medium_size, brown, rare, zoo]}
+- {n: armadillo, c: 0, p: 18, t: [mammal, wild, four_legs, has_shell, small_animal, brown, rare, burrows]}
+- {n: aardvark, c: 0, p: 12, t: [mammal, wild, four_legs, africa, nocturnal, medium_size, brown, rare, burrows]}
+- {n: meerkat, c: 0, p: 30, t: [mammal, wild, four_legs, has_fur, has_tail, africa, desert_animal, small_animal, brown, zoo, burrows]}
+- {n: mongoose, c: 0, p: 12, t: [mammal, wild, four_legs, has_fur, predator, africa, small_animal, brown, rare]}
+- {n: hyena, c: 0, p: 25, t: [mammal, wild, four_legs, has_fur, predator, sharp_teeth, africa, savanna, medium_size, brown, loud, scary]}
+- {n: raccoon, c: 0, p: 40, t: [mammal, wild, four_legs, has_fur, has_tail, omnivore, city, nocturnal, small_animal, grey, black, clever]}
+- {n: skunk, c: 0, p: 30, t: [mammal, wild, four_legs, has_fur, has_tail, nocturnal, small_animal, black, white, smells]}
+- {n: possum, c: 0, p: 18, t: [marsupial, wild, four_legs, has_fur, has_tail, nocturnal, small_animal, grey, australia]}
+- {n: platypus, c: 0, p: 22, t: [mammal, wild, lays_eggs, has_beak, swims, freshwater, australia, small_animal, brown, rare, famous]}
+- {n: porcupine, c: 0, p: 22, t: [rodent, wild, four_legs, forest, nocturnal, medium_size, brown, sharp, pointed, dangerous]}
+- {n: ferret, c: 0, p: 20, t: [mammal, pet, four_legs, has_fur, has_tail, predator, small_animal, brown, home, long_thin]}
+- {n: chinchilla, c: 0, p: 12, t: [rodent, pet, has_fur, small_animal, grey, soft, home, rare]}
+- {n: weasel, c: 0, p: 15, t: [mammal, wild, four_legs, has_fur, predator, small_animal, brown, forest, long_thin]}
+- {n: antelope, c: 0, p: 20, t: [mammal, wild, four_legs, has_horns, herbivore, savanna, africa, medium_size, brown]}
+- {n: gazelle, c: 0, p: 18, t: [mammal, wild, four_legs, has_horns, herbivore, savanna, africa, medium_size, brown, fast_thing]}
+- {n: warthog, c: 0, p: 15, t: [mammal, wild, four_legs, africa, savanna, medium_size, grey, brown]}
+- {n: wildebeest, c: 0, p: 12, t: [mammal, wild, four_legs, has_horns, herbivore, savanna, africa, big_animal, brown]}
+- {n: narwhal, c: 0, p: 15, t: [mammal, wild, marine, swims, no_legs, arctic, big_animal, grey, rare, pointed]}
+- {n: manatee, c: 0, p: 10, t: [mammal, wild, marine, swims, no_legs, big_animal, grey, rare, quiet]}
+- {n: puppy, c: 0, p: 45, t: [mammal, pet, four_legs, has_fur, has_tail, small_animal, home, kid_knows, common, loud, soft]}
+- {n: kitten, c: 0, p: 45, t: [mammal, pet, four_legs, has_fur, has_tail, small_animal, home, kid_knows, common, soft, quiet]}
+- {n: lamb, c: 0, p: 40, t: [mammal, farm_animal, four_legs, has_fur, herbivore, farm, small_animal, white, soft, kid_knows]}
+- {n: piglet, c: 0, p: 25, t: [mammal, farm_animal, four_legs, farm, small_animal, pink, kid_knows]}
+- {n: calf, c: 0, p: 20, t: [mammal, farm_animal, four_legs, herbivore, farm, medium_size, brown, kid_knows]}
+- {n: foal, c: 0, p: 15, t: [mammal, farm_animal, four_legs, herbivore, farm, medium_size, brown, kid_knows]}
+- {n: pony, c: 0, p: 45, t: [mammal, farm_animal, four_legs, has_fur, has_tail, herbivore, farm, medium_size, brown, kid_knows, transport]}
+
+# ===== animals: birds =====================================================
+- {n: chicken, c: 0, p: 85, t: [bird, farm_animal, flightless, omnivore, farm, small_animal, white, brown, common, loud, food]}
+- {n: duck, c: 0, p: 80, t: [bird, farm_animal, flies, swims, freshwater, omnivore, small_animal, white, brown, common, loud, water_place, has_wings]}
+- {n: goose, c: 0, p: 55, t: [bird, farm_animal, flies, swims, freshwater, herbivore, medium_size, white, grey, loud, farm, has_wings]}
+- {n: turkey, c: 0, p: 45, t: [bird, farm_animal, flightless, omnivore, farm, medium_size, brown, holiday_thing, food, loud]}
+- {n: pigeon, c: 0, p: 60, t: [bird, wild, flies, city, small_animal, grey, common, quiet, has_wings]}
+- {n: dove, c: 0, p: 35, t: [bird, wild, flies, small_animal, white, quiet, famous, has_wings]}
+- {n: sparrow, c: 0, p: 45, t: [bird, wild, flies, garden, small_animal, brown, common, quiet, has_wings]}
+- {n: robin, c: 0, p: 55, t: [bird, wild, flies, garden, small_animal, red, brown, common, holiday_thing, has_wings]}
+- {n: crow, c: 0, p: 50, t: [bird, wild, flies, city, forest, medium_size, black, loud, clever, has_wings]}
+- {n: raven, c: 0, p: 30, t: [bird, wild, flies, forest, medium_size, black, loud, clever, scary, has_wings]}
+- {n: magpie, c: 0, p: 30, t: [bird, wild, flies, garden, small_animal, black, white, loud, has_wings]}
+- {n: seagull, c: 0, p: 50, t: [bird, wild, flies, beach, marine, medium_size, white, grey, loud, common, has_wings]}
+- {n: eagle, c: 0, p: 70, t: [bird, wild, flies, predator, claws, has_beak, mountain_place, big_animal, brown, famous, sky, has_wings]}
+- {n: hawk, c: 0, p: 40, t: [bird, wild, flies, predator, claws, medium_size, brown, sky, has_wings]}
+- {n: falcon, c: 0, p: 32, t: [bird, wild, flies, predator, claws, medium_size, brown, fast_thing, sky, has_wings]}
+- {n: owl, c: 0, p: 72, t: [bird, wild, flies, predator, claws, nocturnal, forest, medium_size, brown, quiet, clever, famous, has_wings]}
+- {n: parrot, c: 0, p: 68, t: [bird, pet, flies, jungle, colourful, green, red, medium_size, loud, clever, home, famous, has_wings]}
+- {n: budgie, c: 0, p: 30, t: [bird, pet, flies, small_animal, green, blue, colourful, home, loud, has_wings]}
+- {n: penguin, c: 0, p: 78, t: [bird, wild, flightless, swims, marine, arctic, cold_place, medium_size, black, white, zoo, famous, kid_knows]}
+- {n: ostrich, c: 0, p: 55, t: [bird, wild, flightless, africa, savanna, big_animal, black, white, zoo, fast_thing, lays_eggs]}
+- {n: emu, c: 0, p: 20, t: [bird, wild, flightless, australia, big_animal, brown, zoo, fast_thing]}
+- {n: flamingo, c: 0, p: 50, t: [bird, wild, flies, water_place, medium_size, pink, colourful, zoo, famous, two_legs, has_wings]}
+- {n: peacock, c: 0, p: 45, t: [bird, wild, flies, colourful, blue, green, medium_size, zoo, famous, loud, has_tail, has_wings]}
+- {n: swan, c: 0, p: 50, t: [bird, wild, flies, swims, freshwater, water_place, medium_size, white, quiet, famous, has_wings]}
+- {n: heron, c: 0, p: 20, t: [bird, wild, flies, water_place, freshwater, predator, medium_size, grey, long_thin, quiet, has_wings]}
+- {n: stork, c: 0, p: 22, t: [bird, wild, flies, water_place, medium_size, white, black, long_thin, famous, has_wings]}
+- {n: pelican, c: 0, p: 25, t: [bird, wild, flies, marine, beach, medium_size, white, has_beak, zoo, has_wings]}
+- {n: woodpecker, c: 0, p: 35, t: [bird, wild, flies, forest, small_animal, black, red, loud, noisy, has_wings]}
+- {n: hummingbird, c: 0, p: 35, t: [bird, wild, flies, jungle, tiny, colourful, green, fast_thing, quiet, has_wings]}
+- {n: kingfisher, c: 0, p: 20, t: [bird, wild, flies, river_animal, water_place, small_animal, blue, colourful, predator, has_wings]}
+- {n: swallow, c: 0, p: 20, t: [bird, wild, flies, sky, small_animal, blue, black, fast_thing, has_wings]}
+- {n: blackbird, c: 0, p: 30, t: [bird, wild, flies, garden, small_animal, black, common, quiet, has_wings]}
+- {n: starling, c: 0, p: 15, t: [bird, wild, flies, city, small_animal, black, common, noisy, has_wings]}
+- {n: canary, c: 0, p: 25, t: [bird, pet, flies, small_animal, yellow, colourful, home, loud, has_wings]}
+- {n: vulture, c: 0, p: 30, t: [bird, wild, flies, africa, desert_animal, predator, big_animal, black, brown, scary, has_wings]}
+- {n: toucan, c: 0, p: 30, t: [bird, wild, flies, jungle, colourful, black, has_beak, medium_size, zoo, famous, has_wings]}
+- {n: puffin, c: 0, p: 22, t: [bird, wild, flies, marine, beach, small_animal, black, white, colourful, cold_place, has_wings]}
+- {n: albatross, c: 0, p: 15, t: [bird, wild, flies, marine, big_animal, white, rare, sky, has_wings]}
+- {n: kiwi bird, c: 0, p: 12, t: [bird, wild, flightless, forest, small_animal, brown, rare, nocturnal]}
+- {n: pheasant, c: 0, p: 18, t: [bird, wild, flies, farm, forest, medium_size, brown, colourful, food, has_wings]}
+- {n: nightingale, c: 0, p: 12, t: [bird, wild, flies, forest, small_animal, brown, nocturnal, makes_sound, famous, has_wings]}
+- {n: cuckoo, c: 0, p: 15, t: [bird, wild, flies, forest, small_animal, grey, makes_sound, famous, has_wings]}
+- {n: wren, c: 0, p: 10, t: [bird, wild, flies, garden, tiny, brown, quiet, has_wings]}
+- {n: chick, c: 0, p: 30, t: [bird, farm_animal, flightless, farm, tiny, yellow, kid_knows, soft, common]}
+
+# ===== animals: sea life ==================================================
+- {n: goldfish, c: 0, p: 65, t: [fish, pet, freshwater, small_animal, orange_col, home, common, kid_knows, quiet]}
+- {n: shark, c: 0, p: 82, t: [fish, wild, marine, predator, sharp_teeth, big_animal, grey, dangerous, scary, famous]}
+- {n: salmon, c: 0, p: 45, t: [fish, wild, freshwater, marine, medium_size, pink, food, seafood, common]}
+- {n: tuna, c: 0, p: 40, t: [fish, wild, marine, big_animal, food, seafood, common, silver_col]}
+- {n: cod, c: 0, p: 30, t: [fish, wild, marine, medium_size, food, seafood, white, common]}
+- {n: trout, c: 0, p: 25, t: [fish, wild, freshwater, river_animal, medium_size, food, seafood, brown]}
+- {n: eel, c: 0, p: 35, t: [fish, wild, freshwater, marine, long_thin, no_legs, black, wet, scary]}
+- {n: seahorse, c: 0, p: 40, t: [fish, wild, marine, tiny, yellow, rare, famous, quiet]}
+- {n: jellyfish, c: 0, p: 55, t: [animal, wild, marine, swims, no_legs, soft, transparent, dangerous, scary, wet, small_animal]}
+- {n: octopus, c: 0, p: 65, t: [mollusc, wild, marine, swims, many_legs, medium_size, red, clever, wet, famous, soft]}
+- {n: squid, c: 0, p: 35, t: [mollusc, wild, marine, swims, many_legs, medium_size, white, wet, seafood, food]}
+- {n: crab, c: 0, p: 60, t: [crustacean, wild, marine, beach, small_animal, red, claws, seafood, food, hard]}
+- {n: lobster, c: 0, p: 45, t: [crustacean, wild, marine, medium_size, red, claws, seafood, food, expensive, hard]}
+- {n: shrimp, c: 0, p: 35, t: [crustacean, wild, marine, tiny, pink, seafood, food, small_animal]}
+- {n: oyster, c: 0, p: 25, t: [mollusc, wild, marine, has_shell, small_animal, grey, seafood, food, expensive]}
+- {n: mussel, c: 0, p: 15, t: [mollusc, wild, marine, has_shell, small_animal, black, seafood, food]}
+- {n: starfish, c: 0, p: 45, t: [animal, wild, marine, beach, no_legs, small_animal, orange_col, famous, flat]}
+- {n: sea urchin, c: 0, p: 15, t: [animal, wild, marine, small_animal, black, sharp, pointed, round, dangerous]}
+- {n: coral, c: 0, p: 25, t: [animal, wild, marine, colourful, hard, rare, famous]}
+- {n: stingray, c: 0, p: 25, t: [fish, wild, marine, flat, medium_size, grey, dangerous, zoo]}
+- {n: swordfish, c: 0, p: 20, t: [fish, wild, marine, big_animal, pointed, sharp, blue, fast_thing]}
+- {n: pufferfish, c: 0, p: 20, t: [fish, wild, marine, round, small_animal, yellow, dangerous, famous]}
+- {n: clownfish, c: 0, p: 30, t: [fish, wild, marine, tiny, orange_col, colourful, famous, kid_knows]}
+- {n: piranha, c: 0, p: 25, t: [fish, wild, freshwater, river_animal, small_animal, sharp_teeth, predator, dangerous, scary, jungle]}
+- {n: catfish, c: 0, p: 15, t: [fish, wild, freshwater, river_animal, medium_size, grey, food]}
+- {n: whale shark, c: 0, p: 12, t: [fish, wild, marine, huge, big_animal, grey, rare, famous]}
+
+# ===== animals: bugs ======================================================
+- {n: ant, c: 0, p: 70, t: [insect, wild, garden, tiny, black, common, underground, land_animal]}
+- {n: bee, c: 0, p: 78, t: [insect, wild, flies, garden, tiny, yellow, black, common, dangerous, makes_sound, famous, has_wings]}
+- {n: wasp, c: 0, p: 55, t: [insect, wild, flies, garden, tiny, yellow, black, dangerous, scary, common, has_wings]}
+- {n: butterfly, c: 0, p: 75, t: [insect, wild, flies, garden, tiny, colourful, common, quiet, famous, kid_knows, has_wings]}
+- {n: moth, c: 0, p: 45, t: [insect, wild, flies, home, tiny, brown, grey, nocturnal, common, has_wings]}
+- {n: beetle, c: 0, p: 40, t: [insect, wild, garden, tiny, black, hard, common]}
+- {n: ladybird, c: 0, p: 50, t: [insect, wild, flies, garden, tiny, red, black, colourful, common, kid_knows, has_wings]}
+- {n: dragonfly, c: 0, p: 35, t: [insect, wild, flies, water_place, tiny, blue, green, colourful, fast_thing, has_wings]}
+- {n: grasshopper, c: 0, p: 40, t: [insect, wild, garden, tiny, green, makes_sound, common]}
+- {n: cricket, c: 0, p: 25, t: [insect, wild, garden, tiny, brown, makes_sound, nocturnal, noisy]}
+- {n: cockroach, c: 0, p: 35, t: [insect, wild, home, city, tiny, brown, scary, nocturnal, smells]}
+- {n: fly, c: 0, p: 60, t: [insect, wild, flies, home, tiny, black, common, noisy, smells, has_wings]}
+- {n: mosquito, c: 0, p: 50, t: [insect, wild, flies, tiny, black, dangerous, common, noisy, jungle, has_wings]}
+- {n: flea, c: 0, p: 25, t: [insect, wild, tiny, brown, common, home]}
+- {n: spider, c: 0, p: 80, t: [arachnid, wild, home, garden, tiny, black, brown, scary, common, quiet]}
+- {n: tarantula, c: 0, p: 30, t: [arachnid, wild, pet, jungle, small_animal, black, brown, has_fur, scary, dangerous]}
+- {n: scorpion, c: 0, p: 40, t: [arachnid, wild, desert_animal, small_animal, black, venomous, dangerous, scary, nocturnal]}
+- {n: centipede, c: 0, p: 20, t: [animal, wild, many_legs, tiny, brown, garden, underground, scary]}
+- {n: caterpillar, c: 0, p: 45, t: [insect, wild, garden, tiny, green, many_legs, common, kid_knows, soft]}
+- {n: snail, c: 0, p: 60, t: [mollusc, wild, garden, has_shell, tiny, brown, wet, common, quiet, slow_thing]}
+- {n: slug, c: 0, p: 40, t: [mollusc, wild, garden, tiny, brown, black, wet, common, quiet, soft, slow_thing]}
+- {n: worm, c: 0, p: 55, t: [animal, wild, garden, underground, no_legs, tiny, pink, brown, wet, common, long_thin]}
+- {n: termite, c: 0, p: 12, t: [insect, wild, tiny, white, jungle, underground]}
+- {n: firefly, c: 0, p: 20, t: [insect, wild, flies, tiny, black, nocturnal, lighting, rare, has_wings]}
+- {n: praying mantis, c: 0, p: 15, t: [insect, wild, garden, tiny, green, predator, rare]}
+- {n: stick insect, c: 0, p: 15, t: [insect, wild, pet, tiny, green, brown, long_thin, rare]}
+- {n: locust, c: 0, p: 12, t: [insect, wild, flies, tiny, brown, green, africa, rare, has_wings]}
+
+# ===== animals: reptiles and amphibians ===================================
+- {n: snake, c: 0, p: 80, t: [reptile, wild, no_legs, long_thin, predator, jungle, desert_animal, venomous, dangerous, scary, green, brown, famous]}
+- {n: python, c: 0, p: 35, t: [reptile, wild, no_legs, long_thin, predator, jungle, big_animal, green, brown, dangerous, scary, zoo]}
+- {n: cobra, c: 0, p: 35, t: [reptile, wild, no_legs, long_thin, predator, jungle, venomous, dangerous, scary, zoo, famous]}
+- {n: rattlesnake, c: 0, p: 25, t: [reptile, wild, no_legs, long_thin, predator, desert_animal, venomous, dangerous, scary, makes_sound, brown]}
+- {n: lizard, c: 0, p: 60, t: [reptile, wild, four_legs, has_tail, small_animal, green, brown, desert_animal, jungle, quiet]}
+- {n: gecko, c: 0, p: 30, t: [reptile, pet, four_legs, has_tail, small_animal, green, jungle, home, climbs_trees, quiet]}
+- {n: iguana, c: 0, p: 30, t: [reptile, pet, four_legs, has_tail, medium_size, green, jungle, zoo]}
+- {n: chameleon, c: 0, p: 35, t: [reptile, wild, four_legs, has_tail, small_animal, green, colourful, jungle, famous, zoo, slow_thing]}
+- {n: crocodile, c: 0, p: 70, t: [reptile, wild, four_legs, has_tail, predator, sharp_teeth, freshwater, swims, jungle, africa, big_animal, green, dangerous, scary, zoo]}
+- {n: alligator, c: 0, p: 50, t: [reptile, wild, four_legs, has_tail, predator, sharp_teeth, freshwater, swims, big_animal, green, dangerous, scary, zoo]}
+- {n: turtle, c: 0, p: 70, t: [reptile, wild, four_legs, has_shell, marine, swims, medium_size, green, brown, slow_thing, zoo, famous]}
+- {n: tortoise, c: 0, p: 55, t: [reptile, pet, four_legs, has_shell, land_animal, medium_size, brown, slow_thing, garden, quiet, famous]}
+- {n: frog, c: 0, p: 75, t: [amphibian, wild, four_legs, freshwater, water_place, garden, small_animal, green, makes_sound, common, wet, kid_knows]}
+- {n: toad, c: 0, p: 45, t: [amphibian, wild, four_legs, garden, small_animal, brown, wet, makes_sound, rough_thing]}
+- {n: newt, c: 0, p: 20, t: [amphibian, wild, four_legs, has_tail, freshwater, water_place, tiny, brown, wet]}
+- {n: salamander, c: 0, p: 20, t: [amphibian, wild, four_legs, has_tail, forest, wet, tiny, black, orange_col, rare]}
+- {n: komodo dragon, c: 0, p: 15, t: [reptile, wild, four_legs, has_tail, predator, big_animal, grey, dangerous, rare, zoo]}
+- {n: anaconda, c: 0, p: 18, t: [reptile, wild, no_legs, long_thin, predator, jungle, freshwater, big_animal, green, dangerous, scary]}
+
+# ===== animals: extinct and imaginary =====================================
+- {n: dinosaur, c: 0, p: 65, t: [animal, wild, extinct, huge, big_animal, four_legs, green, scary, museum, famous, kid_knows]}
+- {n: tyrannosaurus, c: 0, p: 35, t: [animal, wild, extinct, huge, big_animal, two_legs, predator, sharp_teeth, green, scary, museum, famous]}
+- {n: mammoth, c: 0, p: 25, t: [mammal, wild, extinct, huge, big_animal, four_legs, has_fur, brown, museum, arctic, cold_place]}
+- {n: dodo, c: 0, p: 20, t: [bird, wild, extinct, flightless, medium_size, grey, museum, famous, rare]}
+- {n: dragon, c: 0, p: 45, t: [animal, mythical, not_real, huge, big_animal, four_legs, has_wings, flies, has_scales, green, red, burns, scary, famous]}
+- {n: unicorn, c: 0, p: 40, t: [animal, mythical, not_real, four_legs, has_fur, has_tail, has_horns, big_animal, white, famous, kid_knows]}
+
+# ===== vegetable: fruit ===================================================
+- {n: apple, c: 1, p: 95, t: [fruit, red, green, round, handheld, healthy, common, kitchen, shop, kid_knows, grows_on_tree, cheap]}
+- {n: banana, c: 1, p: 95, t: [fruit, yellow, long_thin, handheld, healthy, common, kitchen, shop, kid_knows, grows_on_tree, cheap]}
+- {n: orange, c: 1, p: 90, t: [fruit, orange_col, round, handheld, healthy, common, kitchen, shop, grows_on_tree, cheap]}
+- {n: pear, c: 1, p: 65, t: [fruit, green, handheld, healthy, common, kitchen, grows_on_tree, cheap]}
+- {n: peach, c: 1, p: 55, t: [fruit, orange_col, pink, round, handheld, healthy, grows_on_tree, soft]}
+- {n: plum, c: 1, p: 45, t: [fruit, purple, round, handheld, healthy, grows_on_tree, small]}
+- {n: cherry, c: 1, p: 55, t: [berry, red, round, tiny, healthy, grows_on_tree, sweet]}
+- {n: grape, c: 1, p: 70, t: [berry, purple, green, round, tiny, healthy, sweet, common, shop]}
+- {n: strawberry, c: 1, p: 80, t: [berry, red, small, healthy, sweet, common, garden, kid_knows]}
+- {n: raspberry, c: 1, p: 40, t: [berry, red, tiny, healthy, sweet, garden]}
+- {n: blueberry, c: 1, p: 40, t: [berry, blue, tiny, healthy, sweet, shop]}
+- {n: blackberry, c: 1, p: 30, t: [berry, black, tiny, healthy, sweet, garden, forest]}
+- {n: watermelon, c: 1, p: 65, t: [fruit, green, red, round, big, heavy, healthy, sweet, shop]}
+- {n: melon, c: 1, p: 40, t: [fruit, green, orange_col, round, big, healthy, sweet, shop]}
+- {n: pineapple, c: 1, p: 65, t: [fruit, yellow, brown, big, healthy, sweet, rough_thing, shop, famous]}
+- {n: mango, c: 1, p: 45, t: [fruit, orange_col, yellow, healthy, sweet, grows_on_tree, shop]}
+- {n: lemon, c: 1, p: 70, t: [fruit, yellow, round, handheld, sour, grows_on_tree, kitchen, common]}
+- {n: lime, c: 1, p: 40, t: [fruit, green, round, handheld, sour, grows_on_tree, kitchen]}
+- {n: grapefruit, c: 1, p: 25, t: [fruit, yellow, pink, round, sour, grows_on_tree, breakfast]}
+- {n: coconut, c: 1, p: 50, t: [fruit, brown, round, hard, grows_on_tree, jungle, beach, heavy, famous]}
+- {n: avocado, c: 1, p: 40, t: [fruit, green, healthy, soft, savoury, shop, modern]}
+- {n: apricot, c: 1, p: 20, t: [fruit, orange_col, round, small, sweet, grows_on_tree]}
+- {n: fig, c: 1, p: 18, t: [fruit, purple, small, sweet, grows_on_tree, rare]}
+- {n: papaya, c: 1, p: 15, t: [fruit, orange_col, sweet, grows_on_tree, jungle, rare]}
+- {n: pomegranate, c: 1, p: 20, t: [fruit, red, round, sweet, grows_on_tree, rare]}
+- {n: cranberry, c: 1, p: 18, t: [berry, red, tiny, sour, holiday_thing]}
+- {n: olive, c: 1, p: 35, t: [fruit, green, black, tiny, savoury, salty, grows_on_tree, shop]}
+- {n: tomato, c: 1, p: 80, t: [fruit, red, round, handheld, healthy, savoury, garden, kitchen, common, shop]}
+- {n: raisin, c: 1, p: 25, t: [plant_food, brown, tiny, sweet, snack, dry_thing, shop]}
+- {n: date, c: 1, p: 15, t: [fruit, brown, small, sweet, grows_on_tree, desert_animal, rare]}
+
+# ===== vegetable: vegetables ==============================================
+- {n: potato, c: 1, p: 88, t: [vegetable_food, brown, round, underground, cooked_food, common, kitchen, shop, cheap, heavy]}
+- {n: carrot, c: 1, p: 88, t: [vegetable_food, orange_col, long_thin, underground, healthy, edible_raw, common, garden, kitchen, kid_knows]}
+- {n: onion, c: 1, p: 70, t: [vegetable_food, brown, white, round, underground, cooked_food, smells, kitchen, common, cheap]}
+- {n: garlic, c: 1, p: 45, t: [vegetable_food, white, small, underground, smells, cooked_food, kitchen, spicy]}
+- {n: cabbage, c: 1, p: 45, t: [vegetable_food, green, round, big, cooked_food, garden, cheap]}
+- {n: lettuce, c: 1, p: 55, t: [vegetable_food, green, edible_raw, garden, kitchen, common, healthy]}
+- {n: broccoli, c: 1, p: 65, t: [vegetable_food, green, cooked_food, healthy, kitchen, common, kid_knows]}
+- {n: cauliflower, c: 1, p: 40, t: [vegetable_food, white, round, cooked_food, healthy, kitchen]}
+- {n: spinach, c: 1, p: 35, t: [vegetable_food, green, healthy, cooked_food, kitchen, famous]}
+- {n: pea, c: 1, p: 55, t: [vegetable_food, green, round, tiny, cooked_food, healthy, kitchen, common]}
+- {n: bean, c: 1, p: 45, t: [vegetable_food, green, brown, small, cooked_food, healthy, kitchen, common]}
+- {n: sweetcorn, c: 1, p: 50, t: [vegetable_food, yellow, sweet, cooked_food, farm, kitchen, common]}
+- {n: cucumber, c: 1, p: 55, t: [vegetable_food, green, long_thin, edible_raw, healthy, garden, kitchen, wet]}
+- {n: pepper, c: 1, p: 45, t: [vegetable_food, red, green, yellow, colourful, edible_raw, kitchen, healthy]}
+- {n: chilli, c: 1, p: 40, t: [vegetable_food, red, green, small, spicy, kitchen, hot_thing]}
+- {n: mushroom, c: 1, p: 65, t: [vegetable_food, brown, white, small, cooked_food, forest, kitchen, garden, common]}
+- {n: pumpkin, c: 1, p: 60, t: [vegetable_food, orange_col, round, big, heavy, garden, holiday_thing, famous, seasonal]}
+- {n: courgette, c: 1, p: 20, t: [vegetable_food, green, long_thin, cooked_food, garden, healthy]}
+- {n: aubergine, c: 1, p: 20, t: [vegetable_food, purple, cooked_food, garden, healthy]}
+- {n: celery, c: 1, p: 35, t: [vegetable_food, green, long_thin, edible_raw, healthy, kitchen, rough_thing]}
+- {n: leek, c: 1, p: 20, t: [vegetable_food, green, white, long_thin, cooked_food, garden]}
+- {n: radish, c: 1, p: 18, t: [vegetable_food, red, round, tiny, underground, edible_raw, garden, spicy]}
+- {n: turnip, c: 1, p: 18, t: [vegetable_food, white, purple, round, underground, cooked_food, farm]}
+- {n: beetroot, c: 1, p: 22, t: [vegetable_food, purple, red, round, underground, cooked_food, garden]}
+- {n: asparagus, c: 1, p: 20, t: [vegetable_food, green, long_thin, cooked_food, expensive, healthy]}
+- {n: parsnip, c: 1, p: 15, t: [vegetable_food, white, long_thin, underground, cooked_food, farm]}
+- {n: kale, c: 1, p: 15, t: [vegetable_food, green, healthy, modern, garden]}
+- {n: sprout, c: 1, p: 25, t: [vegetable_food, green, round, tiny, cooked_food, holiday_thing, seasonal]}
+
+# ===== vegetable: plants and trees ========================================
+- {n: oak tree, c: 1, p: 55, t: [tree, green, brown, huge, heavy, forest, garden, old_fashioned, famous]}
+- {n: pine tree, c: 1, p: 50, t: [tree, green, big, forest, cold_place, holiday_thing, smells]}
+- {n: palm tree, c: 1, p: 55, t: [tree, green, big, beach, jungle, famous, holiday_thing]}
+- {n: willow tree, c: 1, p: 25, t: [tree, green, big, water_place, garden, famous]}
+- {n: apple tree, c: 1, p: 35, t: [tree, green, big, garden, farm, common]}
+- {n: christmas tree, c: 1, p: 45, t: [tree, green, big, holiday_thing, seasonal, home, colourful, famous, kid_knows]}
+- {n: cactus, c: 1, p: 60, t: [plant, green, sharp, pointed, desert_animal, home, dry_thing, dangerous, famous]}
+- {n: rose, c: 1, p: 70, t: [flower, red, pink, garden, smells, sharp, pointed, famous, common]}
+- {n: tulip, c: 1, p: 45, t: [flower, red, yellow, garden, colourful, seasonal, common]}
+- {n: daisy, c: 1, p: 50, t: [flower, white, yellow, tiny, garden, common, kid_knows]}
+- {n: sunflower, c: 1, p: 60, t: [flower, yellow, big, garden, farm, famous, colourful]}
+- {n: daffodil, c: 1, p: 40, t: [flower, yellow, garden, seasonal, common]}
+- {n: lily, c: 1, p: 25, t: [flower, white, pink, garden, smells]}
+- {n: orchid, c: 1, p: 25, t: [flower, pink, purple, home, expensive, colourful, rare]}
+- {n: lavender, c: 1, p: 25, t: [flower, purple, garden, smells, famous]}
+- {n: poppy, c: 1, p: 25, t: [flower, red, garden, seasonal, famous]}
+- {n: dandelion, c: 1, p: 35, t: [flower, yellow, garden, common, kid_knows, cheap]}
+- {n: grass, c: 1, p: 60, t: [plant, green, garden, outdoors, common, soft, cheap]}
+- {n: moss, c: 1, p: 25, t: [plant, green, forest, wet, soft, tiny]}
+- {n: fern, c: 1, p: 25, t: [plant, green, forest, home, garden]}
+- {n: ivy, c: 1, p: 25, t: [plant, green, garden, climbs_trees, common]}
+- {n: bamboo, c: 1, p: 35, t: [plant, green, long_thin, jungle, hard, famous, fast_thing]}
+- {n: seaweed, c: 1, p: 30, t: [plant, green, marine, beach, wet, water_place]}
+- {n: clover, c: 1, p: 20, t: [plant, green, tiny, garden, common, famous]}
+- {n: nettle, c: 1, p: 20, t: [plant, green, garden, sharp, dangerous, common]}
+- {n: holly, c: 1, p: 22, t: [plant, green, red, sharp, holiday_thing, seasonal, garden]}
+- {n: mistletoe, c: 1, p: 18, t: [plant, green, white, holiday_thing, seasonal, rare, famous]}
+- {n: thistle, c: 1, p: 15, t: [plant, green, purple, sharp, pointed, garden, famous]}
+- {n: bluebell, c: 1, p: 15, t: [flower, blue, forest, tiny, seasonal]}
+- {n: acorn, c: 1, p: 30, t: [plant_food, brown, tiny, hard, forest, grows_on_tree, round]}
+- {n: pine cone, c: 1, p: 25, t: [plant_food, brown, small, hard, forest, grows_on_tree, dry_thing]}
+- {n: leaf, c: 1, p: 45, t: [plant, green, brown, flat, tiny, light_weight, garden, forest, common, seasonal]}
+- {n: seed, c: 1, p: 30, t: [plant_food, brown, tiny, garden, farm, hard, common]}
+
+# ===== vegetable: prepared food ===========================================
+- {n: bread, c: 1, p: 88, t: [grain, brown, white, cooked_food, kitchen, shop, common, breakfast, cheap, soft]}
+- {n: cheese, c: 1, p: 85, t: [dairy, yellow, white, savoury, kitchen, shop, common, smells, from_animal]}
+- {n: butter, c: 1, p: 60, t: [dairy, yellow, savoury, kitchen, common, soft, from_animal, breakfast]}
+- {n: milk, c: 1, p: 85, t: [dairy, drink, white, liquid, kitchen, shop, common, healthy, breakfast, from_animal, cold_thing]}
+- {n: egg, c: 1, p: 82, t: [food, white, brown, round, small, from_animal, breakfast, kitchen, common, cooked_food, breakable, cheap]}
+- {n: yoghurt, c: 1, p: 45, t: [dairy, white, soft, healthy, breakfast, kitchen, from_animal, cold_thing]}
+- {n: cream, c: 1, p: 35, t: [dairy, white, liquid, sweet, dessert, from_animal, kitchen]}
+- {n: ice cream, c: 1, p: 85, t: [dessert, dairy, white, cold_thing, sweet, kid_knows, shop, common, famous, junk_food]}
+- {n: cake, c: 1, p: 88, t: [dessert, brown, sweet, cooked_food, holiday_thing, kitchen, shop, common, kid_knows, junk_food]}
+- {n: biscuit, c: 1, p: 70, t: [dessert, brown, sweet, small, snack, kitchen, shop, common, junk_food, cheap]}
+- {n: chocolate, c: 1, p: 90, t: [dessert, brown, sweet, snack, shop, common, kid_knows, famous, junk_food]}
+- {n: sweets, c: 1, p: 65, t: [dessert, colourful, sweet, tiny, snack, shop, kid_knows, junk_food, cheap]}
+- {n: pizza, c: 1, p: 88, t: [food, savoury, round, flat, cooked_food, restaurant, shop, common, famous, junk_food, hot_thing]}
+- {n: pasta, c: 1, p: 70, t: [grain, white, yellow, cooked_food, kitchen, restaurant, common, hot_thing]}
+- {n: spaghetti, c: 1, p: 60, t: [grain, yellow, long_thin, cooked_food, kitchen, restaurant, common, hot_thing]}
+- {n: rice, c: 1, p: 70, t: [grain, white, tiny, cooked_food, kitchen, common, cheap, hot_thing]}
+- {n: noodles, c: 1, p: 50, t: [grain, yellow, long_thin, cooked_food, kitchen, restaurant, hot_thing]}
+- {n: soup, c: 1, p: 55, t: [food, liquid, savoury, cooked_food, kitchen, restaurant, hot_thing, common]}
+- {n: sandwich, c: 1, p: 75, t: [food, savoury, cooked_food, kitchen, shop, common, handheld, cheap]}
+- {n: burger, c: 1, p: 80, t: [food, brown, round, savoury, cooked_food, restaurant, common, famous, junk_food, hot_thing]}
+- {n: chips, c: 1, p: 70, t: [food, yellow, savoury, cooked_food, restaurant, common, junk_food, hot_thing, salty]}
+- {n: crisps, c: 1, p: 55, t: [food, yellow, savoury, snack, shop, junk_food, salty, cheap, noisy]}
+- {n: popcorn, c: 1, p: 55, t: [food, white, snack, salty, cinema, shop, kid_knows, light_weight]}
+- {n: pancake, c: 1, p: 55, t: [food, brown, round, flat, sweet, cooked_food, breakfast, kitchen, hot_thing]}
+- {n: waffle, c: 1, p: 35, t: [food, brown, flat, sweet, cooked_food, breakfast, kitchen]}
+- {n: doughnut, c: 1, p: 60, t: [dessert, brown, round, sweet, shop, junk_food, famous, kid_knows]}
+- {n: pie, c: 1, p: 55, t: [food, brown, round, cooked_food, kitchen, restaurant, hot_thing, common]}
+- {n: jam, c: 1, p: 45, t: [food, red, sweet, kitchen, breakfast, shop, wet]}
+- {n: honey, c: 1, p: 55, t: [food, yellow, gold_col, sweet, liquid, kitchen, from_animal, healthy, wet]}
+- {n: sugar, c: 1, p: 60, t: [food, white, tiny, sweet, kitchen, common, cheap, junk_food]}
+- {n: salt, c: 1, p: 60, t: [food, white, tiny, salty, kitchen, common, cheap]}
+- {n: black pepper, c: 1, p: 40, t: [food, black, tiny, spicy, kitchen, common, smells]}
+- {n: flour, c: 1, p: 40, t: [grain, white, kitchen, common, cheap, dry_thing]}
+- {n: cereal, c: 1, p: 60, t: [grain, brown, breakfast, kitchen, shop, common, kid_knows, dry_thing]}
+- {n: porridge, c: 1, p: 30, t: [grain, white, breakfast, kitchen, hot_thing, healthy]}
+- {n: toast, c: 1, p: 55, t: [grain, brown, flat, cooked_food, breakfast, kitchen, hot_thing, common]}
+- {n: bacon, c: 1, p: 60, t: [meat, pink, red, breakfast, kitchen, salty, from_animal, hot_thing, smells]}
+- {n: sausage, c: 1, p: 55, t: [meat, brown, long_thin, cooked_food, kitchen, from_animal, hot_thing, common]}
+- {n: ham, c: 1, p: 45, t: [meat, pink, savoury, kitchen, from_animal, shop, salty]}
+- {n: steak, c: 1, p: 55, t: [meat, red, brown, cooked_food, restaurant, expensive, from_animal, hot_thing]}
+- {n: roast chicken, c: 1, p: 45, t: [meat, brown, cooked_food, kitchen, from_animal, hot_thing, common, smells]}
+- {n: fish fingers, c: 1, p: 30, t: [seafood, brown, cooked_food, kitchen, kid_knows, from_animal, hot_thing]}
+- {n: curry, c: 1, p: 45, t: [food, brown, spicy, cooked_food, restaurant, hot_thing, smells, famous]}
+- {n: sushi, c: 1, p: 40, t: [seafood, edible_raw, restaurant, expensive, famous, modern, cold_thing]}
+- {n: salad, c: 1, p: 50, t: [vegetable_food, green, edible_raw, healthy, restaurant, kitchen, cold_thing]}
+- {n: omelette, c: 1, p: 30, t: [food, yellow, cooked_food, breakfast, kitchen, from_animal, hot_thing]}
+- {n: custard, c: 1, p: 25, t: [dessert, yellow, liquid, sweet, kitchen, hot_thing]}
+- {n: jelly, c: 1, p: 40, t: [dessert, red, sweet, kid_knows, soft, wet, colourful]}
+- {n: marshmallow, c: 1, p: 30, t: [dessert, white, pink, sweet, soft, kid_knows, snack, junk_food]}
+- {n: bagel, c: 1, p: 25, t: [grain, brown, round, breakfast, shop, cooked_food]}
+- {n: croissant, c: 1, p: 30, t: [grain, brown, breakfast, shop, cooked_food, famous]}
+- {n: muffin, c: 1, p: 30, t: [dessert, brown, round, sweet, shop, snack, junk_food]}
+- {n: cupcake, c: 1, p: 35, t: [dessert, colourful, round, sweet, small, kid_knows, holiday_thing, junk_food]}
+- {n: pretzel, c: 1, p: 20, t: [grain, brown, salty, snack, shop, hard]}
+- {n: peanut, c: 1, p: 45, t: [nut, brown, tiny, salty, snack, shop, dangerous, cheap]}
+- {n: walnut, c: 1, p: 25, t: [nut, brown, hard, grows_on_tree, small, healthy]}
+- {n: almond, c: 1, p: 30, t: [nut, brown, tiny, grows_on_tree, healthy, snack]}
+- {n: chestnut, c: 1, p: 20, t: [nut, brown, round, grows_on_tree, seasonal, hard, holiday_thing]}
+- {n: tofu, c: 1, p: 15, t: [food, white, soft, healthy, cooked_food, modern]}
+
+# ===== vegetable: drinks ==================================================
+- {n: water, c: 1, p: 80, t: [drink, water, transparent, liquid, healthy, common, cheap, kitchen, cold_thing]}
+- {n: tea, c: 1, p: 80, t: [hot_drink, brown, liquid, kitchen, common, hot_thing, famous, cheap]}
+- {n: coffee, c: 1, p: 82, t: [hot_drink, brown, black, liquid, kitchen, shop, common, hot_thing, smells, adult_thing]}
+- {n: hot chocolate, c: 1, p: 45, t: [hot_drink, brown, liquid, sweet, kid_knows, hot_thing, kitchen]}
+- {n: orange juice, c: 1, p: 55, t: [drink, orange_col, liquid, sweet, breakfast, healthy, shop, cold_thing]}
+- {n: lemonade, c: 1, p: 45, t: [drink, yellow, liquid, sweet, sour, shop, kid_knows, cold_thing]}
+- {n: milkshake, c: 1, p: 40, t: [drink, dairy, liquid, sweet, restaurant, kid_knows, cold_thing, junk_food]}
+- {n: smoothie, c: 1, p: 30, t: [drink, colourful, liquid, sweet, healthy, shop, modern, cold_thing]}
+- {n: cola, c: 1, p: 60, t: [drink, black, brown, liquid, sweet, shop, common, famous, junk_food, cold_thing]}
+- {n: beer, c: 1, p: 55, t: [alcoholic, yellow, brown, liquid, adult_thing, shop, restaurant, common, cold_thing]}
+- {n: wine, c: 1, p: 55, t: [alcoholic, red, purple, liquid, adult_thing, restaurant, expensive, glass_made]}
+- {n: whisky, c: 1, p: 30, t: [alcoholic, brown, liquid, adult_thing, expensive, smells]}
+- {n: cider, c: 1, p: 25, t: [alcoholic, yellow, liquid, adult_thing, shop, cold_thing]}
+
+# ===== mineral: furniture and household ===================================
+- {n: chair, c: 2, p: 90, t: [seating, furniture, wooden, four_legs, home, office, common, hard, medium_size]}
+- {n: table, c: 2, p: 88, t: [furniture, wooden, four_legs, home, kitchen, flat, common, heavy, hard]}
+- {n: sofa, c: 2, p: 78, t: [seating, furniture, fabric, living_room, soft, big, heavy, common]}
+- {n: bed, c: 2, p: 88, t: [furniture, bedroom, soft, big, heavy, common, wooden]}
+- {n: desk, c: 2, p: 60, t: [furniture, wooden, office, bedroom, flat, heavy, opens, common]}
+- {n: wardrobe, c: 2, p: 50, t: [furniture, wooden, bedroom, big, heavy, opens, storage]}
+- {n: cupboard, c: 2, p: 55, t: [furniture, wooden, kitchen, storage, opens, big, common]}
+- {n: bookshelf, c: 2, p: 50, t: [furniture, wooden, living_room, storage, big, common]}
+- {n: mirror, c: 2, p: 70, t: [furnishing, glass_made, bathroom, bedroom, flat, breakable, common, shiny_thing]}
+- {n: lamp, c: 2, p: 65, t: [furnishing, lighting, electric, living_room, bedroom, common, breakable]}
+- {n: light bulb, c: 2, p: 60, t: [electric, lighting, glass_made, home, tiny, breakable, round, common, cheap, transparent]}
+- {n: curtain, c: 2, p: 55, t: [furnishing, fabric, living_room, bedroom, soft, flat, common]}
+- {n: carpet, c: 2, p: 55, t: [furnishing, fabric, living_room, soft, flat, big, common, heavy]}
+- {n: rug, c: 2, p: 40, t: [furnishing, fabric, living_room, soft, flat, common]}
+- {n: cushion, c: 2, p: 50, t: [furnishing, fabric, living_room, soft, handheld, common, square_thing]}
+- {n: pillow, c: 2, p: 65, t: [furnishing, fabric, bedroom, soft, handheld, common, white, light_weight]}
+- {n: blanket, c: 2, p: 55, t: [furnishing, fabric, bedroom, soft, common, warm_thing]}
+- {n: duvet, c: 2, p: 40, t: [furnishing, fabric, bedroom, soft, big, common, warm_thing, white]}
+- {n: mattress, c: 2, p: 35, t: [furnishing, fabric, bedroom, soft, big, heavy, flat]}
+- {n: clock, c: 2, p: 75, t: [electric, machine, home, round, measuring, has_moving_parts, common, makes_sound]}
+- {n: alarm clock, c: 2, p: 55, t: [electric, machine, bedroom, small, measuring, noisy, common, has_buttons]}
+- {n: calendar, c: 2, p: 40, t: [paper_made, home, office, flat, measuring, common, cheap]}
+- {n: picture frame, c: 2, p: 40, t: [furnishing, wooden, glass_made, living_room, flat, breakable, common]}
+- {n: vase, c: 2, p: 45, t: [ceramic, glass_made, container, living_room, breakable, hollow, common]}
+- {n: candle, c: 2, p: 60, t: [lighting, home, burns, hot_thing, smells, small, common, cheap]}
+- {n: bin, c: 2, p: 55, t: [container, plastic, kitchen, storage, smells, common, cheap, opens]}
+- {n: coat hanger, c: 2, p: 35, t: [plastic, metal, bedroom, storage, handheld, cheap, common, thin_thing]}
+- {n: doorbell, c: 2, p: 30, t: [electric, home, tiny, makes_sound, has_buttons, common]}
+- {n: doormat, c: 2, p: 25, t: [fabric, home, flat, common, cheap, rough_thing]}
+- {n: fireplace, c: 2, p: 30, t: [stone_made, living_room, burns, hot_thing, big, old_fashioned, heavy]}
+- {n: radiator, c: 2, p: 35, t: [metal, home, hot_thing, big, heavy, common]}
+- {n: staircase, c: 2, p: 35, t: [wooden, home, big, heavy, common, building_thing]}
+- {n: door, c: 2, p: 70, t: [wooden, home, opens, flat, big, heavy, common, has_handle]}
+- {n: window, c: 2, p: 70, t: [glass_made, home, opens, flat, transparent, breakable, common]}
+- {n: key, c: 2, p: 75, t: [metal, tiny, handheld, home, common, opens, shiny_thing, cheap]}
+- {n: lock, c: 2, p: 45, t: [metal, small, home, opens, hard, common]}
+- {n: keyring, c: 2, p: 25, t: [metal, tiny, handheld, common, cheap]}
+
+# ===== mineral: kitchen ===================================================
+- {n: fork, c: 2, p: 80, t: [utensil, metal, tiny, sharp, pointed, common, shiny_thing, cheap, comes_in_pair]}
+- {n: knife, c: 2, p: 82, t: [utensil, metal, cutting, sharp, dangerous, common, shiny_thing, has_handle]}
+- {n: spoon, c: 2, p: 80, t: [utensil, metal, tiny, round, common, shiny_thing, cheap]}
+- {n: plate, c: 2, p: 78, t: [crockery, ceramic, round, flat, breakable, common, white, cheap]}
+- {n: bowl, c: 2, p: 70, t: [crockery, ceramic, round, hollow, breakable, common, white]}
+- {n: cup, c: 2, p: 75, t: [crockery, ceramic, hollow, container, has_handle, common, breakable, cheap]}
+- {n: mug, c: 2, p: 70, t: [crockery, ceramic, hollow, container, has_handle, common, breakable, colourful]}
+- {n: teapot, c: 2, p: 40, t: [crockery, ceramic, container, has_handle, hollow, kitchen, old_fashioned, breakable, hot_thing]}
+- {n: kettle, c: 2, p: 65, t: [appliance, metal, kitchen, container, has_handle, hot_thing, noisy, common]}
+- {n: saucepan, c: 2, p: 55, t: [utensil, metal, cooking, has_handle, hollow, kitchen, hot_thing, heavy]}
+- {n: frying pan, c: 2, p: 60, t: [utensil, metal, cooking, has_handle, flat, kitchen, hot_thing, heavy, black]}
+- {n: oven, c: 2, p: 70, t: [appliance, metal, cooking, kitchen, big, heavy, hot_thing, opens, common]}
+- {n: microwave, c: 2, p: 65, t: [appliance, metal, cooking, kitchen, medium_size, hot_thing, opens, has_buttons, noisy, modern]}
+- {n: fridge, c: 2, p: 80, t: [appliance, metal, kitchen, big, heavy, cold_thing, opens, white, common, noisy]}
+- {n: freezer, c: 2, p: 50, t: [appliance, metal, kitchen, big, heavy, cold_thing, opens, white]}
+- {n: dishwasher, c: 2, p: 45, t: [appliance, metal, kitchen, cleaning, big, heavy, opens, noisy, modern]}
+- {n: toaster, c: 2, p: 55, t: [appliance, metal, kitchen, cooking, medium_size, hot_thing, has_buttons, shiny_thing, common]}
+- {n: blender, c: 2, p: 35, t: [appliance, plastic, kitchen, cooking, noisy, has_buttons, medium_size, modern]}
+- {n: whisk, c: 2, p: 30, t: [utensil, metal, kitchen, cooking, has_handle, handheld, cheap]}
+- {n: grater, c: 2, p: 25, t: [utensil, metal, kitchen, cooking, sharp, handheld, dangerous]}
+- {n: chopping board, c: 2, p: 35, t: [utensil, wooden, kitchen, cooking, flat, handheld, cheap]}
+- {n: tin opener, c: 2, p: 30, t: [utensil, metal, kitchen, cutting, handheld, has_handle, sharp]}
+- {n: corkscrew, c: 2, p: 25, t: [utensil, metal, kitchen, handheld, sharp, pointed, adult_thing]}
+- {n: rolling pin, c: 2, p: 25, t: [utensil, wooden, kitchen, cooking, long_thin, handheld, heavy, has_handle]}
+- {n: ladle, c: 2, p: 20, t: [utensil, metal, kitchen, cooking, has_handle, handheld]}
+- {n: bottle, c: 2, p: 70, t: [container, glass_made, plastic, hollow, handheld, common, transparent, opens, cheap]}
+- {n: jar, c: 2, p: 45, t: [container, glass_made, hollow, handheld, transparent, kitchen, opens, breakable]}
+- {n: tin can, c: 2, p: 45, t: [container, metal, hollow, handheld, kitchen, shop, cheap, shiny_thing]}
+- {n: straw, c: 2, p: 40, t: [plastic, long_thin, tiny, restaurant, kid_knows, cheap, hollow]}
+- {n: napkin, c: 2, p: 30, t: [paper_made, restaurant, kitchen, flat, cheap, white, cleaning]}
+- {n: tablecloth, c: 2, p: 25, t: [fabric, kitchen, flat, home, cleaning]}
+- {n: apron, c: 2, p: 30, t: [clothing, fabric, kitchen, cooking, worn, cheap]}
+- {n: cutting board, c: 2, p: 15, t: [utensil, plastic, kitchen, flat, handheld, cheap]}
+
+# ===== mineral: bathroom ==================================================
+- {n: toothbrush, c: 2, p: 75, t: [plastic, bathroom, cleaning, handheld, tiny, common, cheap, colourful, comes_in_pair]}
+- {n: toothpaste, c: 2, p: 55, t: [bathroom, cleaning, handheld, tiny, common, cheap, white, smells]}
+- {n: soap, c: 2, p: 65, t: [bathroom, cleaning, handheld, tiny, common, cheap, white, smells, wet]}
+- {n: shampoo, c: 2, p: 50, t: [bathroom, cleaning, liquid, handheld, common, smells, plastic]}
+- {n: towel, c: 2, p: 65, t: [fabric, bathroom, cleaning, soft, common, wet, colourful]}
+- {n: sponge, c: 2, p: 45, t: [bathroom, kitchen, cleaning, soft, handheld, tiny, wet, cheap, yellow]}
+- {n: razor, c: 2, p: 40, t: [plastic, metal, bathroom, cutting, sharp, handheld, tiny, dangerous, adult_thing]}
+- {n: comb, c: 2, p: 45, t: [plastic, bathroom, handheld, tiny, cheap, common, pointed]}
+- {n: hairbrush, c: 2, p: 45, t: [plastic, bathroom, handheld, has_handle, common, cheap]}
+- {n: toilet, c: 2, p: 60, t: [ceramic, bathroom, white, big, heavy, water, common, smells]}
+- {n: bath, c: 2, p: 50, t: [bathroom, white, big, heavy, water, hollow, common, wet]}
+- {n: shower, c: 2, p: 55, t: [bathroom, metal, water, common, wet, noisy]}
+- {n: sink, c: 2, p: 55, t: [ceramic, bathroom, kitchen, white, water, hollow, common, wet]}
+- {n: toilet paper, c: 2, p: 55, t: [paper_made, bathroom, white, soft, common, cheap, round]}
+- {n: hairdryer, c: 2, p: 45, t: [appliance, plastic, bathroom, hot_thing, noisy, handheld, has_handle, has_buttons]}
+- {n: bandage, c: 2, p: 35, t: [medical_thing, fabric, white, handheld, tiny, cheap, soft]}
+- {n: plaster, c: 2, p: 35, t: [medical_thing, bathroom, tiny, handheld, cheap, common, flat]}
+- {n: bathroom scales, c: 2, p: 25, t: [measuring, bathroom, flat, has_screen, common]}
+
+# ===== mineral: electronics ===============================================
+- {n: mobile phone, c: 2, p: 92, t: [electronic, communication, has_screen, has_buttons, handheld, black, modern, common, expensive, digital, battery_powered]}
+- {n: computer, c: 2, p: 80, t: [electronic, has_screen, has_buttons, office, home, digital, expensive, modern, medium_size]}
+- {n: laptop, c: 2, p: 78, t: [electronic, has_screen, has_buttons, office, home, digital, expensive, modern, opens, handheld]}
+- {n: tablet, c: 2, p: 55, t: [electronic, has_screen, handheld, flat, digital, modern, expensive, battery_powered]}
+- {n: television, c: 2, p: 85, t: [electronic, has_screen, living_room, big, flat, common, heavy, modern]}
+- {n: radio, c: 2, p: 60, t: [electronic, communication, makes_sound, has_buttons, home, old_fashioned, medium_size]}
+- {n: camera, c: 2, p: 65, t: [electronic, has_screen, has_buttons, handheld, black, expensive, modern, battery_powered]}
+- {n: headphones, c: 2, p: 60, t: [electronic, makes_sound, worn, handheld, black, modern, comes_in_pair, common]}
+- {n: speaker, c: 2, p: 45, t: [electronic, makes_sound, noisy, home, black, modern, medium_size]}
+- {n: printer, c: 2, p: 45, t: [electronic, machine, office, paper_made, noisy, medium_size, heavy, modern]}
+- {n: keyboard, c: 2, p: 55, t: [electronic, has_buttons, office, flat, black, common, modern]}
+- {n: computer mouse, c: 2, p: 50, t: [electronic, has_buttons, office, handheld, tiny, common, modern]}
+- {n: remote control, c: 2, p: 60, t: [electronic, has_buttons, living_room, handheld, black, common, battery_powered]}
+- {n: games console, c: 2, p: 55, t: [electronic, has_buttons, living_room, play, kid_knows, expensive, modern, digital]}
+- {n: calculator, c: 2, p: 50, t: [electronic, has_buttons, has_screen, school, office, handheld, tiny, cheap]}
+- {n: torch, c: 2, p: 50, t: [electronic, lighting, handheld, battery_powered, garage, common, has_buttons]}
+- {n: battery, c: 2, p: 50, t: [electric, metal, tiny, handheld, common, cheap, round, heavy]}
+- {n: charger, c: 2, p: 45, t: [electric, plastic, handheld, common, black, modern, long_thin]}
+- {n: usb stick, c: 2, p: 35, t: [electronic, plastic, tiny, handheld, office, digital, modern, storage]}
+- {n: router, c: 2, p: 30, t: [electronic, communication, home, black, modern, medium_size, digital]}
+- {n: drone, c: 2, p: 40, t: [electronic, machine, flies, sky, has_moving_parts, modern, expensive, noisy, battery_powered]}
+- {n: smartwatch, c: 2, p: 35, t: [electronic, has_screen, worn, jewellery, tiny, modern, expensive, digital]}
+- {n: microphone, c: 2, p: 40, t: [electronic, makes_sound, handheld, music, black, has_handle]}
+- {n: vacuum cleaner, c: 2, p: 60, t: [appliance, cleaning, machine, noisy, home, big, heavy, has_handle]}
+- {n: washing machine, c: 2, p: 65, t: [appliance, cleaning, machine, kitchen, big, heavy, white, noisy, opens, water]}
+- {n: iron, c: 2, p: 45, t: [appliance, metal, home, hot_thing, has_handle, heavy, handheld, dangerous]}
+- {n: fan, c: 2, p: 45, t: [appliance, machine, home, has_moving_parts, noisy, spins, medium_size]}
+- {n: heater, c: 2, p: 40, t: [appliance, home, hot_thing, metal, medium_size, dangerous]}
+- {n: light switch, c: 2, p: 35, t: [electric, plastic, home, tiny, has_buttons, white, common, flat]}
+- {n: plug, c: 2, p: 40, t: [electric, plastic, home, tiny, handheld, common, white, cheap]}
+- {n: robot, c: 2, p: 50, t: [machine, metal, electronic, moves_itself, modern, expensive, famous, kid_knows, digital]}
+- {n: satellite, c: 2, p: 30, t: [machine, metal, sky, communication, expensive, modern, rare, famous]}
+
+# ===== mineral: tools and garden ==========================================
+- {n: hammer, c: 2, p: 80, t: [tool, metal, wooden, has_handle, handheld, heavy, garage, workshop, building_thing, dangerous, common]}
+- {n: screwdriver, c: 2, p: 65, t: [tool, metal, has_handle, handheld, long_thin, garage, workshop, building_thing, pointed, common]}
+- {n: saw, c: 2, p: 60, t: [tool, metal, cutting, has_handle, handheld, sharp, garage, workshop, dangerous, noisy]}
+- {n: drill, c: 2, p: 55, t: [tool, machine, metal, has_handle, handheld, garage, workshop, noisy, dangerous, has_buttons, spins]}
+- {n: spanner, c: 2, p: 45, t: [tool, metal, handheld, garage, workshop, heavy, shiny_thing]}
+- {n: pliers, c: 2, p: 40, t: [tool, metal, handheld, garage, workshop, has_handle, opens]}
+- {n: axe, c: 2, p: 45, t: [tool, metal, wooden, cutting, has_handle, sharp, dangerous, forest, heavy, weapon]}
+- {n: chisel, c: 2, p: 25, t: [tool, metal, cutting, handheld, sharp, workshop, pointed]}
+- {n: nail, c: 2, p: 45, t: [metal, tiny, sharp, pointed, garage, workshop, building_thing, cheap, shiny_thing]}
+- {n: screw, c: 2, p: 40, t: [metal, tiny, sharp, pointed, garage, workshop, building_thing, cheap, spins]}
+- {n: tape measure, c: 2, p: 40, t: [tool, measuring, handheld, garage, workshop, yellow, long_thin]}
+- {n: ladder, c: 2, p: 50, t: [tool, metal, garage, building_thing, big, heavy, long_thin, dangerous]}
+- {n: toolbox, c: 2, p: 35, t: [container, metal, storage, garage, workshop, has_handle, heavy, opens]}
+- {n: glue, c: 2, p: 45, t: [liquid, school, office, tiny, handheld, cheap, wet, smells]}
+- {n: tape, c: 2, p: 45, t: [plastic, office, home, tiny, handheld, cheap, round, transparent]}
+- {n: string, c: 2, p: 40, t: [fabric, long_thin, thin_thing, handheld, cheap, home, light_weight]}
+- {n: rope, c: 2, p: 50, t: [fabric, long_thin, heavy, garage, outdoors, brown, rough_thing]}
+- {n: chain, c: 2, p: 35, t: [metal, long_thin, heavy, garage, shiny_thing, hard]}
+- {n: wheelbarrow, c: 2, p: 40, t: [tool, metal, garden, has_wheels, has_handle, big, heavy, outdoors]}
+- {n: spade, c: 2, p: 45, t: [tool, metal, wooden, garden, has_handle, big, digging, outdoors]}
+- {n: rake, c: 2, p: 35, t: [tool, metal, garden, has_handle, big, outdoors, pointed]}
+- {n: lawnmower, c: 2, p: 50, t: [machine, garden, has_wheels, has_engine, noisy, heavy, dangerous, outdoors, spins]}
+- {n: hosepipe, c: 2, p: 35, t: [plastic, garden, long_thin, water, wet, outdoors, green, hollow]}
+- {n: watering can, c: 2, p: 40, t: [container, plastic, metal, garden, has_handle, water, hollow, outdoors]}
+- {n: bucket, c: 2, p: 55, t: [container, plastic, has_handle, hollow, cleaning, garden, beach, cheap, common]}
+- {n: mop, c: 2, p: 40, t: [cleaning_thing, has_handle, long_thin, kitchen, wet, cheap]}
+- {n: broom, c: 2, p: 50, t: [cleaning_thing, wooden, has_handle, long_thin, kitchen, garage, cheap, common]}
+- {n: dustpan, c: 2, p: 25, t: [cleaning_thing, plastic, has_handle, kitchen, handheld, cheap]}
+- {n: scissors, c: 2, p: 70, t: [tool, metal, cutting, handheld, sharp, office, school, home, dangerous, common, opens]}
+- {n: stapler, c: 2, p: 40, t: [tool, metal, office, handheld, tiny, has_buttons, common]}
+- {n: paperclip, c: 2, p: 35, t: [metal, office, tiny, handheld, cheap, shiny_thing, common]}
+- {n: drawing pin, c: 2, p: 25, t: [metal, office, tiny, sharp, pointed, cheap, dangerous]}
+- {n: sandpaper, c: 2, p: 20, t: [paper_made, workshop, garage, rough_thing, flat, cheap]}
+- {n: torch lighter, c: 2, p: 15, t: [metal, tiny, handheld, burns, hot_thing, dangerous, adult_thing]}
+- {n: fire extinguisher, c: 2, p: 30, t: [metal, red, heavy, medical_thing, workplace, building_thing, hollow]}
+- {n: padlock, c: 2, p: 30, t: [metal, tiny, handheld, opens, hard, shiny_thing, garage]}
+
+# ===== mineral: stationery and paper ======================================
+- {n: pen, c: 2, p: 82, t: [stationery, writing, plastic, handheld, tiny, long_thin, common, cheap, blue, black]}
+- {n: pencil, c: 2, p: 80, t: [stationery, writing, wooden, handheld, tiny, long_thin, common, cheap, yellow, pointed, school]}
+- {n: ruler, c: 2, p: 55, t: [stationery, measuring, plastic, handheld, flat, long_thin, school, cheap, transparent]}
+- {n: rubber, c: 2, p: 45, t: [stationery, rubber, school, handheld, tiny, cheap, pink, soft]}
+- {n: notebook, c: 2, p: 55, t: [stationery, paper_made, school, office, flat, handheld, cheap, opens]}
+- {n: book, c: 2, p: 85, t: [paper_made, school, home, flat, handheld, common, opens, cheap, heavy]}
+- {n: diary, c: 2, p: 30, t: [paper_made, stationery, office, handheld, flat, opens, cheap]}
+- {n: envelope, c: 2, p: 40, t: [paper_made, office, communication, flat, handheld, white, cheap, opens]}
+- {n: stamp, c: 2, p: 40, t: [paper_made, communication, tiny, flat, cheap, colourful, office]}
+- {n: marker pen, c: 2, p: 40, t: [stationery, writing, plastic, handheld, school, cheap, colourful, smells]}
+- {n: crayon, c: 2, p: 45, t: [stationery, writing, art, handheld, tiny, kid_knows, colourful, cheap, school]}
+- {n: paintbrush, c: 2, p: 45, t: [stationery, art, wooden, handheld, long_thin, school, cheap, soft]}
+- {n: paint, c: 2, p: 50, t: [art, liquid, colourful, school, home, wet, smells]}
+- {n: chalk, c: 2, p: 35, t: [stationery, writing, school, handheld, tiny, white, cheap, dry_thing]}
+- {n: newspaper, c: 2, p: 55, t: [paper_made, communication, flat, handheld, cheap, common, black, white, old_fashioned]}
+- {n: magazine, c: 2, p: 45, t: [paper_made, communication, flat, handheld, colourful, cheap, shop]}
+- {n: map, c: 2, p: 50, t: [paper_made, flat, handheld, measuring, colourful, old_fashioned, transport]}
+- {n: poster, c: 2, p: 40, t: [paper_made, flat, colourful, bedroom, cheap, art]}
+- {n: postcard, c: 2, p: 35, t: [paper_made, communication, flat, tiny, colourful, cheap, holiday_thing]}
+- {n: dictionary, c: 2, p: 35, t: [paper_made, school, heavy, flat, opens, old_fashioned]}
+- {n: playing cards, c: 2, p: 50, t: [game_thing, paper_made, tiny, flat, handheld, play, cheap, colourful, comes_in_pair]}
+- {n: banknote, c: 2, p: 50, t: [paper_made, valuable, flat, tiny, handheld, colourful, common]}
+- {n: ticket, c: 2, p: 40, t: [paper_made, tiny, flat, handheld, cheap, transport]}
+
+# ===== mineral: clothing and worn things ==================================
+- {n: shirt, c: 2, p: 70, t: [clothing, fabric, worn, bedroom, common, soft, cheap, white]}
+- {n: t-shirt, c: 2, p: 70, t: [clothing, fabric, worn, common, soft, cheap, colourful]}
+- {n: trousers, c: 2, p: 65, t: [clothing, fabric, worn, common, soft, blue, black]}
+- {n: jeans, c: 2, p: 65, t: [clothing, fabric, worn, common, blue, rough_thing, famous]}
+- {n: dress, c: 2, p: 60, t: [clothing, fabric, worn, common, colourful, soft]}
+- {n: skirt, c: 2, p: 50, t: [clothing, fabric, worn, common, colourful, soft]}
+- {n: jumper, c: 2, p: 55, t: [clothing, fabric, worn, soft, warm_thing, common, seasonal]}
+- {n: jacket, c: 2, p: 60, t: [clothing, fabric, worn, warm_thing, common, opens, black]}
+- {n: coat, c: 2, p: 62, t: [clothing, fabric, worn, warm_thing, common, seasonal, heavy, black]}
+- {n: raincoat, c: 2, p: 35, t: [clothing, plastic, worn, wet, seasonal, colourful]}
+- {n: suit, c: 2, p: 40, t: [clothing, fabric, worn, adult_thing, workplace, expensive, black]}
+- {n: tie, c: 2, p: 45, t: [clothing, fabric, worn, adult_thing, workplace, long_thin, colourful]}
+- {n: scarf, c: 2, p: 45, t: [clothing, fabric, worn, warm_thing, seasonal, soft, long_thin, colourful]}
+- {n: hat, c: 2, p: 65, t: [headwear, fabric, worn, common, colourful, round]}
+- {n: cap, c: 2, p: 50, t: [headwear, fabric, worn, common, sport, colourful, cheap]}
+- {n: helmet, c: 2, p: 50, t: [headwear, plastic, worn, hard, sport, dangerous, transport, round, colourful]}
+- {n: gloves, c: 2, p: 50, t: [clothing, fabric, worn, comes_in_pair, warm_thing, seasonal, soft]}
+- {n: socks, c: 2, p: 60, t: [clothing, fabric, worn, comes_in_pair, soft, common, cheap, colourful]}
+- {n: shoes, c: 2, p: 70, t: [footwear, leather, worn, comes_in_pair, common, black, hard]}
+- {n: boots, c: 2, p: 55, t: [footwear, leather, worn, comes_in_pair, heavy, seasonal, brown, black]}
+- {n: trainers, c: 2, p: 55, t: [footwear, fabric, worn, comes_in_pair, sport, common, white, colourful]}
+- {n: sandals, c: 2, p: 40, t: [footwear, leather, worn, comes_in_pair, seasonal, beach, cheap]}
+- {n: slippers, c: 2, p: 40, t: [footwear, fabric, worn, comes_in_pair, home, soft, warm_thing, cheap]}
+- {n: wellies, c: 2, p: 30, t: [footwear, rubber, worn, comes_in_pair, garden, wet, green, seasonal]}
+- {n: belt, c: 2, p: 45, t: [clothing, leather, worn, long_thin, black, common]}
+- {n: wallet, c: 2, p: 55, t: [leather, container, handheld, tiny, valuable, common, black, opens, storage]}
+- {n: purse, c: 2, p: 45, t: [leather, container, handheld, tiny, valuable, common, opens, storage]}
+- {n: handbag, c: 2, p: 55, t: [leather, container, has_handle, storage, adult_thing, expensive, opens]}
+- {n: backpack, c: 2, p: 55, t: [fabric, container, worn, storage, school, opens, common, colourful]}
+- {n: suitcase, c: 2, p: 50, t: [container, plastic, storage, has_handle, has_wheels, big, heavy, opens, holiday_thing]}
+- {n: umbrella, c: 2, p: 65, t: [fabric, has_handle, handheld, opens, wet, seasonal, common, black, long_thin]}
+- {n: sunglasses, c: 2, p: 55, t: [glass_made, worn, handheld, tiny, seasonal, black, comes_in_pair, transparent]}
+- {n: glasses, c: 2, p: 65, t: [glass_made, worn, tiny, handheld, common, breakable, transparent, medical_thing]}
+- {n: watch, c: 2, p: 70, t: [jewellery, metal, worn, measuring, tiny, expensive, common, has_moving_parts, round]}
+- {n: ring, c: 2, p: 65, t: [jewellery, metal, worn, tiny, round, expensive, gold_col, valuable, common]}
+- {n: necklace, c: 2, p: 55, t: [jewellery, metal, worn, tiny, expensive, gold_col, valuable, shiny_thing]}
+- {n: bracelet, c: 2, p: 45, t: [jewellery, metal, worn, tiny, round, shiny_thing, colourful]}
+- {n: earring, c: 2, p: 40, t: [jewellery, metal, worn, tiny, comes_in_pair, shiny_thing, gold_col]}
+- {n: crown, c: 2, p: 40, t: [headwear, jewellery, metal, worn, gold_col, expensive, rare, famous, museum, round]}
+- {n: swimsuit, c: 2, p: 35, t: [clothing, fabric, worn, beach, wet, seasonal, colourful]}
+- {n: pyjamas, c: 2, p: 40, t: [clothing, fabric, worn, bedroom, soft, warm_thing, common]}
+- {n: mask, c: 2, p: 35, t: [worn, plastic, fabric, handheld, tiny, holiday_thing, scary, colourful]}
+- {n: wig, c: 2, p: 25, t: [worn, fabric, handheld, has_fur, tiny, funny_thing, colourful]}
+
+# ===== mineral: vehicles ==================================================
+- {n: car, c: 2, p: 95, t: [road_vehicle, metal, has_engine, has_wheels, big, heavy, common, colourful, expensive, noisy, fast_thing, opens]}
+- {n: bus, c: 2, p: 82, t: [road_vehicle, metal, has_engine, has_wheels, huge, heavy, city, common, red, yellow, noisy, transport]}
+- {n: lorry, c: 2, p: 60, t: [road_vehicle, metal, has_engine, has_wheels, huge, heavy, road, noisy, transport]}
+- {n: van, c: 2, p: 50, t: [road_vehicle, metal, has_engine, has_wheels, big, heavy, road, white, transport]}
+- {n: taxi, c: 2, p: 50, t: [road_vehicle, metal, has_engine, has_wheels, big, city, yellow, common, transport]}
+- {n: bicycle, c: 2, p: 85, t: [road_vehicle, metal, has_wheels, comes_in_pair, medium_size, quiet, common, cheap, sport, kid_knows]}
+- {n: motorbike, c: 2, p: 65, t: [road_vehicle, metal, has_engine, has_wheels, medium_size, noisy, dangerous, fast_thing, black]}
+- {n: scooter, c: 2, p: 50, t: [road_vehicle, metal, has_wheels, medium_size, kid_knows, cheap, quiet]}
+- {n: skateboard, c: 2, p: 55, t: [wooden, has_wheels, handheld, kid_knows, play, sport, cheap, noisy]}
+- {n: train, c: 2, p: 80, t: [rail_vehicle, metal, has_engine, has_wheels, huge, heavy, noisy, fast_thing, transport, city, famous]}
+- {n: tram, c: 2, p: 30, t: [rail_vehicle, metal, has_wheels, huge, city, noisy, transport]}
+- {n: tractor, c: 2, p: 60, t: [road_vehicle, metal, has_engine, has_wheels, farm, big, heavy, noisy, green, slow_thing]}
+- {n: bulldozer, c: 2, p: 35, t: [machine, metal, has_engine, has_wheels, huge, heavy, noisy, building_thing, yellow, slow_thing]}
+- {n: crane, c: 2, p: 40, t: [machine, metal, has_engine, huge, heavy, building_thing, city, yellow, slow_thing]}
+- {n: ambulance, c: 2, p: 55, t: [road_vehicle, metal, has_engine, has_wheels, big, medical_thing, hospital, noisy, white, fast_thing, famous]}
+- {n: fire engine, c: 2, p: 60, t: [road_vehicle, metal, has_engine, has_wheels, huge, noisy, red, famous, kid_knows, water, fast_thing]}
+- {n: police car, c: 2, p: 55, t: [road_vehicle, metal, has_engine, has_wheels, big, noisy, blue, white, famous, fast_thing]}
+- {n: boat, c: 2, p: 75, t: [water_transport, wooden, floats, water_place, big, transport, common]}
+- {n: ship, c: 2, p: 60, t: [water_transport, metal, floats, marine, huge, heavy, transport, famous]}
+- {n: ferry, c: 2, p: 35, t: [water_transport, metal, floats, marine, huge, heavy, transport]}
+- {n: canoe, c: 2, p: 35, t: [water_transport, wooden, floats, river_animal, water_place, long_thin, sport, quiet, big]}
+- {n: kayak, c: 2, p: 30, t: [water_transport, plastic, floats, water_place, long_thin, sport, colourful, big]}
+- {n: submarine, c: 2, p: 45, t: [water_transport, metal, marine, huge, heavy, expensive, famous, dangerous, grey]}
+- {n: yacht, c: 2, p: 35, t: [water_transport, floats, marine, big, expensive, white, famous]}
+- {n: raft, c: 2, p: 25, t: [water_transport, wooden, floats, water_place, flat, cheap, sport, big]}
+- {n: aeroplane, c: 2, p: 85, t: [air_transport, metal, has_engine, has_wings, flies, huge, heavy, noisy, fast_thing, sky, famous, expensive]}
+- {n: helicopter, c: 2, p: 65, t: [air_transport, metal, has_engine, flies, big, noisy, sky, fast_thing, spins, famous]}
+- {n: rocket, c: 2, p: 60, t: [air_transport, metal, has_engine, huge, sky, fast_thing, noisy, expensive, famous, kid_knows, pointed]}
+- {n: hot air balloon, c: 2, p: 40, t: [air_transport, fabric, flies, huge, sky, colourful, slow_thing, quiet, rare]}
+- {n: glider, c: 2, p: 20, t: [air_transport, has_wings, flies, sky, quiet, big, sport, white]}
+- {n: sledge, c: 2, p: 35, t: [wooden, transport, seasonal, cold_thing, kid_knows, play, cheap]}
+- {n: caravan, c: 2, p: 30, t: [road_vehicle, has_wheels, big, heavy, holiday_thing, white, home]}
+- {n: forklift, c: 2, p: 20, t: [machine, metal, has_engine, has_wheels, workplace, heavy, yellow, noisy, slow_thing]}
+- {n: jet ski, c: 2, p: 20, t: [water_transport, has_engine, marine, noisy, fast_thing, sport, expensive, big]}
+- {n: wheelchair, c: 2, p: 40, t: [medical_thing, metal, has_wheels, seating, hospital, transport, heavy]}
+- {n: pram, c: 2, p: 40, t: [has_wheels, fabric, transport, kid_knows, has_handle, big, common]}
+- {n: shopping trolley, c: 2, p: 40, t: [metal, has_wheels, container, shop, storage, big, has_handle, noisy]}
+
+# ===== mineral: music, sport, toys ========================================
+- {n: guitar, c: 2, p: 78, t: [instrument, wooden, has_handle, big, common, brown, famous, has_moving_parts]}
+- {n: piano, c: 2, p: 80, t: [instrument, wooden, has_buttons, huge, heavy, black, white, living_room, expensive, famous]}
+- {n: violin, c: 2, p: 60, t: [instrument, wooden, brown, medium_size, expensive, famous, has_handle]}
+- {n: drum, c: 2, p: 70, t: [instrument, round, noisy, loud, kid_knows, medium_size, famous]}
+- {n: flute, c: 2, p: 45, t: [instrument, metal, long_thin, handheld, school, shiny_thing, hollow]}
+- {n: trumpet, c: 2, p: 50, t: [instrument, metal, handheld, loud, gold_col, shiny_thing, hollow]}
+- {n: saxophone, c: 2, p: 40, t: [instrument, metal, gold_col, medium_size, shiny_thing, famous, hollow]}
+- {n: clarinet, c: 2, p: 25, t: [instrument, black, long_thin, handheld, school, hollow]}
+- {n: harp, c: 2, p: 30, t: [instrument, wooden, gold_col, big, heavy, expensive, rare]}
+- {n: cello, c: 2, p: 25, t: [instrument, wooden, brown, big, heavy, expensive]}
+- {n: accordion, c: 2, p: 25, t: [instrument, has_buttons, handheld, heavy, old_fashioned, noisy, opens]}
+- {n: banjo, c: 2, p: 20, t: [instrument, wooden, round, handheld, old_fashioned]}
+- {n: tambourine, c: 2, p: 25, t: [instrument, round, handheld, tiny, noisy, kid_knows, school, cheap]}
+- {n: xylophone, c: 2, p: 25, t: [instrument, wooden, colourful, kid_knows, school, tiny, noisy]}
+- {n: harmonica, c: 2, p: 25, t: [instrument, metal, tiny, handheld, cheap, shiny_thing]}
+- {n: bagpipes, c: 2, p: 20, t: [instrument, fabric, loud, rare, famous, old_fashioned, colourful]}
+- {n: ukulele, c: 2, p: 25, t: [instrument, wooden, small, handheld, cheap, brown]}
+- {n: football, c: 2, p: 85, t: [sports_equipment, round, black, white, common, child_thing, cheap, play, bouncy]}
+- {n: tennis ball, c: 2, p: 50, t: [sports_equipment, round, tiny, yellow, cheap, play, bouncy, handheld]}
+- {n: basketball, c: 2, p: 55, t: [sports_equipment, round, orange_col, play, common, bouncy, handheld]}
+- {n: cricket bat, c: 2, p: 35, t: [sports_equipment, wooden, has_handle, long_thin, play, heavy]}
+- {n: tennis racket, c: 2, p: 45, t: [sports_equipment, has_handle, handheld, play, medium_size]}
+- {n: golf club, c: 2, p: 40, t: [sports_equipment, metal, has_handle, long_thin, play, adult_thing, expensive]}
+- {n: skis, c: 2, p: 40, t: [sports_equipment, long_thin, comes_in_pair, cold_thing, seasonal, mountain_place, expensive]}
+- {n: snowboard, c: 2, p: 30, t: [sports_equipment, flat, cold_thing, seasonal, mountain_place, expensive]}
+- {n: surfboard, c: 2, p: 40, t: [sports_equipment, flat, long_thin, beach, marine, floats, colourful]}
+- {n: frisbee, c: 2, p: 40, t: [sports_equipment, plastic, round, flat, handheld, cheap, play, colourful, child_thing]}
+- {n: kite, c: 2, p: 50, t: [toy, fabric, flies, sky, colourful, beach, cheap, child_thing, light_weight]}
+- {n: swing, c: 2, p: 45, t: [playground, metal, garden, child_thing, play, has_moving_parts, outdoors]}
+- {n: slide, c: 2, p: 40, t: [playground, plastic, metal, child_thing, play, outdoors, colourful, big]}
+- {n: trampoline, c: 2, p: 45, t: [playground, garden, child_thing, play, big, round, bouncy, outdoors]}
+- {n: doll, c: 2, p: 55, t: [toy, plastic, child_thing, play, handheld, colourful, common]}
+- {n: teddy bear, c: 2, p: 70, t: [toy, fabric, child_thing, play, soft, brown, handheld, common, famous]}
+- {n: jigsaw puzzle, c: 2, p: 45, t: [game_thing, paper_made, flat, child_thing, play, colourful, cheap]}
+- {n: board game, c: 2, p: 40, t: [game_thing, paper_made, flat, play, child_thing, home, colourful]}
+- {n: chess set, c: 2, p: 40, t: [game_thing, wooden, black, white, play, adult_thing, clever, famous]}
+- {n: dice, c: 2, p: 45, t: [game_thing, plastic, tiny, white, play, cheap, handheld, square_thing]}
+- {n: marble, c: 2, p: 30, t: [toy, glass_made, round, tiny, colourful, play, cheap, child_thing, shiny_thing]}
+- {n: yo-yo, c: 2, p: 30, t: [toy, plastic, round, handheld, tiny, play, child_thing, cheap, spins]}
+- {n: lego brick, c: 2, p: 45, t: [toy, plastic, tiny, colourful, play, child_thing, famous, hard]}
+- {n: balloon, c: 2, p: 60, t: [toy, rubber, round, colourful, holiday_thing, child_thing, cheap, light_weight, flies]}
+- {n: skipping rope, c: 2, p: 35, t: [sports_equipment, long_thin, child_thing, play, cheap, playground]}
+- {n: hula hoop, c: 2, p: 25, t: [toy, plastic, round, big, colourful, child_thing, play, cheap, spins]}
+- {n: dominoes, c: 2, p: 25, t: [game_thing, plastic, tiny, black, white, play, flat, cheap]}
+- {n: darts, c: 2, p: 30, t: [sports_equipment, metal, tiny, sharp, pointed, play, adult_thing, dangerous]}
+- {n: bowling ball, c: 2, p: 30, t: [sports_equipment, round, heavy, black, play, hard, hollow]}
+- {n: roller skates, c: 2, p: 30, t: [sports_equipment, has_wheels, comes_in_pair, worn, play, child_thing, colourful]}
+- {n: fishing rod, c: 2, p: 40, t: [sports_equipment, long_thin, water_place, has_handle, sport, quiet, outdoors]}
+
+# ===== mineral: buildings and structures ==================================
+- {n: house, c: 2, p: 88, t: [building, home, common, big, heavy, brown, famous, kid_knows]}
+- {n: castle, c: 2, p: 70, t: [building, old_fashioned, museum, famous, huge, grey, rare, kid_knows]}
+- {n: church, c: 2, p: 55, t: [building, old_fashioned, city, famous, quiet, pointed, big]}
+- {n: cathedral, c: 2, p: 30, t: [building, old_fashioned, city, famous, huge, museum, rare]}
+- {n: school, c: 2, p: 70, t: [building, school, city, common, kid_knows, big, noisy]}
+- {n: hospital, c: 2, p: 65, t: [building, hospital, city, common, medical_thing, big, white]}
+- {n: library, c: 2, p: 45, t: [building, city, quiet, common, paper_made, indoors, big]}
+- {n: museum, c: 2, p: 45, t: [building, museum, city, quiet, famous, old_fashioned, big]}
+- {n: factory, c: 2, p: 40, t: [building, workplace, city, noisy, big, smells, grey]}
+- {n: bridge, c: 2, p: 65, t: [building, metal, stone_made, huge, heavy, road, water_place, famous, city]}
+- {n: tower, c: 2, p: 45, t: [building, stone_made, huge, city, famous, long_thin, museum]}
+- {n: lighthouse, c: 2, p: 45, t: [building, stone_made, beach, marine, lighting, white, famous, long_thin, rare, big]}
+- {n: windmill, c: 2, p: 40, t: [building, wooden, farm, has_moving_parts, spins, old_fashioned, famous, rare, big]}
+- {n: barn, c: 2, p: 40, t: [building, wooden, farm, red, big, storage]}
+- {n: shed, c: 2, p: 45, t: [building, wooden, garden, storage, small, common, garage]}
+- {n: garage, c: 2, p: 45, t: [building, garage, home, storage, common, opens, big]}
+- {n: tent, c: 2, p: 55, t: [fabric, outdoors, holiday_thing, medium_size, colourful, opens, cheap, light_weight]}
+- {n: igloo, c: 2, p: 30, t: [building, arctic, cold_thing, white, round, rare, famous, big]}
+- {n: skyscraper, c: 2, p: 55, t: [building, glass_made, city, huge, famous, modern, grey]}
+- {n: stadium, c: 2, p: 40, t: [building, city, huge, sport, noisy, famous, round]}
+- {n: cinema, c: 2, p: 45, t: [building, cinema, city, common, has_screen, indoors, dark_thing, big]}
+- {n: hotel, c: 2, p: 45, t: [building, city, holiday_thing, big, common]}
+- {n: restaurant, c: 2, p: 50, t: [building, restaurant, city, food, common, smells, big]}
+- {n: supermarket, c: 2, p: 50, t: [building, shop, city, food, common, big]}
+- {n: bank, c: 2, p: 40, t: [building, city, valuable, workplace, common, big]}
+- {n: prison, c: 2, p: 35, t: [building, city, scary, grey, adult_thing, rare, big]}
+- {n: airport, c: 2, p: 50, t: [building, city, huge, noisy, transport, holiday_thing, modern]}
+- {n: train station, c: 2, p: 45, t: [building, city, big, noisy, transport, common]}
+- {n: fence, c: 2, p: 45, t: [wooden, garden, farm, long_thin, outdoors, common, brown]}
+- {n: gate, c: 2, p: 40, t: [metal, wooden, garden, farm, opens, outdoors, common]}
+- {n: wall, c: 2, p: 45, t: [stone_made, home, garden, city, flat, heavy, common, grey]}
+- {n: roof, c: 2, p: 40, t: [home, building_thing, flat, heavy, outdoors, common, red]}
+- {n: chimney, c: 2, p: 40, t: [stone_made, home, building_thing, outdoors, hot_thing, red, long_thin, hollow]}
+- {n: lift, c: 2, p: 35, t: [machine, metal, indoors, city, transport, opens, has_buttons, modern]}
+- {n: escalator, c: 2, p: 30, t: [machine, metal, shop, city, transport, has_moving_parts, noisy, modern]}
+- {n: statue, c: 2, p: 45, t: [stone_made, art, city, museum, heavy, famous, grey, old_fashioned, outdoors]}
+- {n: fountain, c: 2, p: 40, t: [stone_made, city, water, outdoors, famous, wet, noisy]}
+- {n: bench, c: 2, p: 45, t: [seating, wooden, garden, city, outdoors, heavy, common]}
+- {n: postbox, c: 2, p: 35, t: [metal, communication, city, road, red, outdoors, common, hollow]}
+- {n: traffic light, c: 2, p: 50, t: [electric, metal, road, city, lighting, colourful, common, outdoors]}
+- {n: streetlight, c: 2, p: 40, t: [electric, metal, road, city, lighting, outdoors, long_thin, common]}
+- {n: road sign, c: 2, p: 40, t: [metal, road, city, flat, outdoors, common, colourful]}
+- {n: bus stop, c: 2, p: 35, t: [metal, road, city, transport, outdoors, common]}
+- {n: vending machine, c: 2, p: 35, t: [machine, metal, shop, city, food, has_buttons, big, modern]}
+- {n: cash machine, c: 2, p: 35, t: [machine, metal, city, has_screen, has_buttons, valuable, modern, common]}
+- {n: telescope, c: 2, p: 45, t: [tool, metal, measuring, sky, long_thin, expensive, glass_made, hollow]}
+- {n: microscope, c: 2, p: 40, t: [tool, metal, measuring, school, expensive, glass_made, workplace]}
+- {n: binoculars, c: 2, p: 40, t: [tool, measuring, handheld, glass_made, comes_in_pair, outdoors, black]}
+- {n: thermometer, c: 2, p: 40, t: [measuring, medical_thing, glass_made, tiny, handheld, hospital, long_thin]}
+- {n: compass, c: 2, p: 40, t: [tool, measuring, metal, tiny, handheld, round, outdoors, old_fashioned]}
+- {n: syringe, c: 2, p: 35, t: [medical_thing, plastic, hospital, tiny, sharp, pointed, scary, transparent]}
+- {n: stethoscope, c: 2, p: 35, t: [medical_thing, hospital, worn, famous, black, long_thin]}
+- {n: crutch, c: 2, p: 25, t: [medical_thing, metal, hospital, long_thin, comes_in_pair, has_handle]}
+- {n: walking stick, c: 2, p: 35, t: [wooden, has_handle, long_thin, adult_thing, old_fashioned, medical_thing]}
+- {n: coin, c: 2, p: 65, t: [metal, tiny, round, valuable, handheld, common, shiny_thing, flat, cheap]}
+- {n: credit card, c: 2, p: 50, t: [plastic, tiny, flat, valuable, handheld, common, modern, colourful]}
+- {n: medal, c: 2, p: 40, t: [metal, tiny, round, gold_col, sport, valuable, worn, shiny_thing, famous]}
+- {n: trophy, c: 2, p: 40, t: [metal, gold_col, sport, valuable, shiny_thing, has_handle, famous]}
+- {n: flag, c: 2, p: 55, t: [fabric, colourful, outdoors, famous, flat, light_weight, city]}
+- {n: bell, c: 2, p: 45, t: [metal, makes_sound, loud, round, hollow, old_fashioned, church_thing]}
+- {n: whistle, c: 2, p: 40, t: [metal, plastic, makes_sound, loud, tiny, handheld, sport, cheap]}
+- {n: candle holder, c: 2, p: 20, t: [metal, home, tiny, lighting, old_fashioned, shiny_thing]}
+- {n: mousetrap, c: 2, p: 25, t: [metal, wooden, home, tiny, dangerous, cheap]}
+- {n: birdcage, c: 2, p: 25, t: [metal, container, home, hollow, opens, old_fashioned]}
+- {n: fish tank, c: 2, p: 40, t: [glass_made, container, home, water, transparent, heavy, wet, big]}
+- {n: kennel, c: 2, p: 25, t: [wooden, garden, container, outdoors, opens, hollow]}
+- {n: saddle, c: 2, p: 30, t: [leather, farm, seating, heavy, brown, sport, worn]}
+- {n: horseshoe, c: 2, p: 30, t: [metal, farm, tiny, round, heavy, famous, shiny_thing]}
+- {n: anchor, c: 2, p: 35, t: [metal, water_transport, marine, heavy, pointed, famous, big]}
+- {n: oar, c: 2, p: 25, t: [wooden, water_transport, long_thin, has_handle, water_place, sport, big]}
+- {n: net, c: 2, p: 35, t: [fabric, sport, water_place, light_weight, has_handle]}
+- {n: gun, c: 2, p: 45, t: [weapon, metal, handheld, dangerous, scary, loud, black, adult_thing]}
+- {n: sword, c: 2, p: 55, t: [weapon, metal, cutting, sharp, pointed, long_thin, dangerous, museum, old_fashioned, famous]}
+- {n: bow and arrow, c: 2, p: 40, t: [weapon, wooden, sharp, pointed, dangerous, sport, old_fashioned, long_thin]}
+- {n: shield, c: 2, p: 35, t: [weapon, metal, museum, old_fashioned, heavy, flat, round]}
+- {n: cannon, c: 2, p: 30, t: [weapon, metal, museum, old_fashioned, huge, heavy, loud, hollow, black]}
+
+# ===== other: nature, weather, places =====================================
+- {n: sun, c: 3, p: 80, t: [natural, sky, round, hot_thing, huge, yellow, famous, lighting, outdoors, common]}
+- {n: moon, c: 3, p: 78, t: [natural, sky, round, huge, white, grey, famous, nocturnal, outdoors, lighting]}
+- {n: star, c: 3, p: 65, t: [natural, sky, huge, white, yellow, famous, nocturnal, outdoors, lighting, tiny]}
+- {n: planet, c: 3, p: 45, t: [natural, sky, round, huge, famous, rare]}
+- {n: comet, c: 3, p: 25, t: [natural, sky, fast_thing, rare, famous, lighting]}
+- {n: rainbow, c: 3, p: 70, t: [natural, sky, colourful, outdoors, famous, rare, wet, kid_knows]}
+- {n: cloud, c: 3, p: 65, t: [natural, sky, white, grey, huge, outdoors, common, wet, soft]}
+- {n: rain, c: 3, p: 65, t: [natural, sky, water, wet, liquid, outdoors, common, cold_thing, quiet]}
+- {n: snow, c: 3, p: 70, t: [natural, sky, water, white, cold_thing, outdoors, seasonal, soft, wet, kid_knows]}
+- {n: ice, c: 3, p: 55, t: [natural, water, cold_thing, transparent, hard, wet, slippery, common]}
+- {n: thunder, c: 3, p: 50, t: [natural, sky, loud, noisy, scary, outdoors, seasonal]}
+- {n: lightning, c: 3, p: 60, t: [natural, sky, lighting, dangerous, scary, fast_thing, outdoors, white, rare]}
+- {n: wind, c: 3, p: 50, t: [natural, sky, outdoors, cold_thing, common, moves, quiet]}
+- {n: fog, c: 3, p: 35, t: [natural, sky, grey, white, outdoors, wet, cold_thing, seasonal]}
+- {n: fire, c: 3, p: 70, t: [natural, hot_thing, burns, dangerous, scary, orange_col, red, lighting, famous]}
+- {n: smoke, c: 3, p: 45, t: [natural, grey, black, sky, smells, dangerous, outdoors]}
+- {n: shadow, c: 3, p: 45, t: [natural, black, flat, dark_thing, common, outdoors, quiet]}
+- {n: sea, c: 3, p: 70, t: [natural, water_place, marine, water, huge, blue, wet, salty, famous, outdoors]}
+- {n: river, c: 3, p: 60, t: [natural, water_place, freshwater, water, big, blue, wet, outdoors, moves, common]}
+- {n: lake, c: 3, p: 50, t: [natural, water_place, freshwater, water, big, blue, wet, outdoors, quiet]}
+- {n: waterfall, c: 3, p: 55, t: [natural, water_place, water, wet, noisy, famous, outdoors, huge]}
+- {n: mountain, c: 3, p: 70, t: [natural, place, mountain_place, huge, heavy, grey, cold_place, famous, outdoors, stone_made]}
+- {n: hill, c: 3, p: 40, t: [natural, place, big, green, outdoors, common]}
+- {n: valley, c: 3, p: 25, t: [natural, place, big, green, outdoors]}
+- {n: desert, c: 3, p: 55, t: [natural, place, huge, yellow, hot_thing, dry_thing, outdoors, famous, rare]}
+- {n: island, c: 3, p: 50, t: [natural, place, marine, big, green, outdoors, holiday_thing, famous]}
+- {n: beach, c: 3, p: 60, t: [natural, place, beach, marine, yellow, holiday_thing, outdoors, common, hot_thing]}
+- {n: forest, c: 3, p: 55, t: [natural, place, forest, green, huge, outdoors, quiet, common]}
+- {n: cave, c: 3, p: 50, t: [natural, place, underground, dark_thing, cold_thing, scary, stone_made, hollow, outdoors]}
+- {n: volcano, c: 3, p: 60, t: [natural, place, mountain_place, huge, hot_thing, dangerous, scary, red, famous, rare]}
+- {n: glacier, c: 3, p: 25, t: [natural, place, arctic, cold_thing, white, huge, rare, slow_thing]}
+- {n: iceberg, c: 3, p: 35, t: [natural, arctic, cold_thing, white, huge, marine, floats, dangerous, famous, rare]}
+- {n: sand, c: 3, p: 45, t: [natural, beach, yellow, tiny, dry_thing, common, outdoors, rough_thing]}
+- {n: mud, c: 3, p: 40, t: [natural, brown, wet, garden, farm, outdoors, common, smells, soft]}
+- {n: rock, c: 3, p: 55, t: [natural, stone_made, grey, heavy, hard, outdoors, common, handheld]}
+- {n: gold, c: 3, p: 55, t: [natural, metal, gold_col, valuable, expensive, heavy, shiny_thing, famous, rare]}
+- {n: diamond, c: 3, p: 55, t: [natural, valuable, expensive, tiny, hard, transparent, shiny_thing, famous, rare, jewellery]}
+- {n: coal, c: 3, p: 30, t: [natural, black, burns, hard, underground, heavy, old_fashioned, dirty_thing]}
+- {n: oil, c: 3, p: 35, t: [natural, liquid, black, underground, valuable, smells, burns]}
+- {n: crystal, c: 3, p: 30, t: [natural, transparent, shiny_thing, hard, valuable, tiny, rare]}
+- {n: puddle, c: 3, p: 30, t: [natural, water, wet, flat, outdoors, common, road, kid_knows]}
+- {n: sky, c: 3, p: 55, t: [natural, sky, blue, huge, outdoors, common, famous]}
+- {n: earthquake, c: 3, p: 25, t: [natural, dangerous, scary, loud, rare, moves]}
+- {n: tornado, c: 3, p: 35, t: [natural, sky, dangerous, scary, fast_thing, spins, rare, famous, loud]}
+- {n: space, c: 3, p: 40, t: [natural, sky, huge, dark_thing, cold_thing, famous, quiet, rare]}
+- {n: birthday, c: 3, p: 55, t: [concept, holiday_thing, seasonal, famous, kid_knows, common]}
+- {n: christmas, c: 3, p: 60, t: [concept, holiday_thing, seasonal, famous, kid_knows, common]}
+- {n: wedding, c: 3, p: 40, t: [concept, holiday_thing, famous, adult_thing, expensive]}
+- {n: holiday, c: 3, p: 45, t: [concept, holiday_thing, famous, common, expensive]}
+- {n: dream, c: 3, p: 40, t: [concept, nocturnal, quiet, common, scary]}
+- {n: music, c: 3, p: 50, t: [concept, makes_sound, famous, common, art]}
+- {n: rainforest, c: 3, p: 30, t: [natural, place, jungle, forest, green, huge, wet, hot_thing, famous, rare]}
+- {n: park, c: 3, p: 45, t: [place, garden, city, green, outdoors, common, kid_knows]}
+- {n: farm, c: 3, p: 50, t: [place, farm, outdoors, common, big, smells]}
+- {n: zoo, c: 3, p: 50, t: [place, zoo, city, outdoors, kid_knows, famous, noisy]}
+- {n: playground, c: 3, p: 45, t: [place, playground, city, outdoors, child_thing, noisy, common]}
+- {n: swimming pool, c: 3, p: 50, t: [place, water, sport, city, wet, blue, common, big]}
+- {n: market, c: 3, p: 35, t: [place, shop, city, outdoors, food, noisy, common]}
+- {n: harbour, c: 3, p: 25, t: [place, water_place, marine, city, outdoors, big]}
+
+# ===== other: people and jobs =============================================
+- {n: baby, c: 3, p: 60, t: [person, tiny, small, home, kid_knows, loud, common, soft]}
+- {n: doctor, c: 3, p: 55, t: [person, hospital, medical_thing, workplace, adult_thing, common, white, clever]}
+- {n: nurse, c: 3, p: 45, t: [person, hospital, medical_thing, workplace, adult_thing, common]}
+- {n: teacher, c: 3, p: 55, t: [person, school, workplace, adult_thing, common, clever]}
+- {n: firefighter, c: 3, p: 50, t: [person, workplace, adult_thing, dangerous, red, famous, kid_knows]}
+- {n: police officer, c: 3, p: 50, t: [person, city, workplace, adult_thing, blue, common, famous]}
+- {n: chef, c: 3, p: 40, t: [person, kitchen, restaurant, workplace, adult_thing, white, cooking]}
+- {n: farmer, c: 3, p: 40, t: [person, farm, workplace, adult_thing, outdoors]}
+- {n: pilot, c: 3, p: 40, t: [person, air_transport, workplace, adult_thing, sky, expensive, big]}
+- {n: astronaut, c: 3, p: 45, t: [person, sky, workplace, adult_thing, famous, rare, white, kid_knows]}
+- {n: clown, c: 3, p: 40, t: [person, colourful, funny_thing, scary, kid_knows, famous, play]}
+- {n: pirate, c: 3, p: 45, t: [person, marine, water_transport, scary, famous, kid_knows, old_fashioned, dangerous, big]}
+- {n: king, c: 3, p: 40, t: [person, gold_col, famous, old_fashioned, expensive, adult_thing, castle_thing]}
+- {n: queen, c: 3, p: 40, t: [person, gold_col, famous, old_fashioned, expensive, adult_thing, castle_thing]}
+- {n: footballer, c: 3, p: 40, t: [person, sport, famous, adult_thing, outdoors, expensive]}
+- {n: singer, c: 3, p: 40, t: [person, music, famous, adult_thing, makes_sound, loud]}
+- {n: builder, c: 3, p: 35, t: [person, workplace, building_thing, adult_thing, outdoors, tool]}
+- {n: driver, c: 3, p: 35, t: [person, road_vehicle, workplace, adult_thing, transport, road, big]}

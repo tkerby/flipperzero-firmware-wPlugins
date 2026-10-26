@@ -1,0 +1,11539 @@
+# Elementis Zeta - Spanish game text (M1). One entry per [key]; "---" starts a new page.
+# Max 20 glyphs per line, 2 lines per page. Keys starting with "gl." are global.
+
+[mom.a]
+¡Hola, cariño!
+La profesora Lin
+---
+te buscaba. Pasa
+por su laboratorio.
+
+[mom.b]
+Come bien y duerme
+temprano, ¿sí?
+
+[lin.b]
+Investigo cómo viven
+los Elementis.
+
+[vecino.a]
+¡Hey! Este pueblo
+es muy tranquilo.
+---
+Sin un Elementi no
+puedes salir.
+---
+¡Pídele uno a la
+profesora Lin!
+
+[sign.aliso]
+VILLA ALISO
+Donde empieza todo.
+
+[sign.lab]
+LAB. PROFESORA LIN
+Entrada con cita.
+
+[trig.norte]
+¡Espera! No salgas
+sin un Elementi.
+
+[door.rival]
+Llamas a la puerta.
+---
+Nadie contesta.
+
+[obj.tv]
+Un noticiero habla
+de Vértice S.A.
+
+[obj.pc]
+Es el PC de casa.
+Está apagado.
+
+[obj.libros.casa]
+Muchos libros de
+aventuras y mapas.
+
+[obj.libros.lab]
+Libros sobre
+Elementis y energía.
+
+[obj.maquina.lab]
+Esta máquina analiza
+datos de Elementis.
+
+[obj.pc.lab]
+El monitor muestra
+un mapa de Aliso.
+
+[lab.lin.intro]
+¡Hola, {player}!
+Te esperaba.
+
+[lab.lin.intro2]
+Sobre la mesa hay
+tres Cristales.
+---
+Dentro de cada uno
+vive un Elementi.
+---
+Elige uno: será tu
+compañero de viaje.
+
+[lab.orb.ember]
+¡Es {v0}!
+Elementi de fuego.
+---
+¿Lo eliges?
+
+[lab.orb.puddle]
+¡Es {v0}!
+Elementi de agua.
+---
+¿Lo eliges?
+
+[lab.orb.sprout]
+¡Es {v0}!
+Elementi de planta.
+---
+¿Lo eliges?
+
+[lab.lin.chosen]
+¡{v0} es tuyo!
+Cuídalo mucho.
+
+[lab.rival.pick]
+¡Entonces yo me
+quedo con este!
+
+[lab.rival.challenge]
+¡Espera, {player}!
+---
+¡Veamos quién es
+más fuerte!
+
+[lab.rival.win_after]
+¡¿Qué?! Elegí mal…
+---
+¡Me haré más fuerte!
+
+[lab.rival.lose_after]
+¡Ja! ¡Gané!
+Elegí al mejor.
+---
+Sigue entrenando,
+{player}.
+
+[lab.lin.after]
+¡Muy bien, {player}!
+---
+Pronto podrás
+explorar la Ruta 1.
+
+[lab.rival.leave]
+¡Nos vemos, {player}!
+
+[lab.lin.already]
+¡Cuida bien de tu
+Elementi!
+
+[lab.orb.taken]
+Este Cristal está
+vacío.
+
+[lab.lin.stop]
+¡Eh, espera!
+¡No te vayas aún!
+
+[lab.rival.idle]
+¡Elige de una vez!
+¡Estoy esperando!
+
+[gl.pronto]
+Pronto…
+
+[gl.menu.team]
+Equipo
+
+[gl.menu.bag]
+Mochila
+
+[gl.menu.save]
+Guardar
+
+[gl.menu.options]
+Opciones
+
+[gl.menu.quit]
+Salir
+
+[gl.title.press_ok]
+Pulsa OK
+
+[gl.party.none]
+Aún no tienes
+Elementis.
+
+[gl.party.stats]
+Datos
+
+[gl.party.cancel]
+Cancelar
+
+[gl.party.exp]
+Exp
+
+[gl.party.next]
+Falta
+
+[gl.options.title]
+Opciones
+
+[gl.options.language]
+Idioma
+
+[gl.ty.normal]
+Normal
+
+[gl.ty.fighting]
+Lucha
+
+[gl.ty.flying]
+Volador
+
+[gl.ty.poison]
+Veneno
+
+[gl.ty.ground]
+Tierra
+
+[gl.ty.rock]
+Roca
+
+[gl.ty.bug]
+Bicho
+
+[gl.ty.ghost]
+Fantasma
+
+[gl.ty.fire]
+Fuego
+
+[gl.ty.water]
+Agua
+
+[gl.ty.grass]
+Planta
+
+[gl.ty.electric]
+Eléctrico
+
+[gl.ty.psychic]
+Psíquico
+
+[gl.ty.ice]
+Hielo
+
+[gl.ty.dragon]
+Dragón
+
+[gl.sp.embercub]
+Embercub
+
+[gl.sp.flarewolf]
+Flarewolf
+
+[gl.sp.puddlet]
+Puddlet
+
+[gl.sp.tidalux]
+Tidalux
+
+[gl.sp.sprouton]
+Sprouton
+
+[gl.sp.thornbuck]
+Thornbuck
+
+[gl.sp.flitter]
+Flitter
+
+[gl.sp.muncrit]
+Muncrit
+
+[gl.sp.grubbit]
+Grubbit
+
+[gl.sp.grubshell]
+Grubshell
+
+[gl.sp.lanternmoth]
+Lampmoth
+
+[gl.sp.stingle]
+Stingle
+
+[gl.sp.stinglet]
+Stinglet
+
+[gl.sp.velvex]
+Velvex
+
+[gl.sp.zaphid]
+Zaphid
+
+[gl.sp.voltgecko]
+Voltgecko
+
+[gl.sp.pebblump]
+Pebblump
+
+[gl.sp.rockroll]
+Rockroll
+
+[gl.sp.bouldrum]
+Bouldrum
+
+[gl.sp.boulderback]
+Bouldback
+
+[gl.sp.flitwing]
+Flitwing
+
+[gl.sp.skyrrow]
+Skyrrow
+
+[gl.sp.munchmole]
+Munchmole
+
+[gl.sp.pyrewolf]
+Pyrewolf
+
+[gl.sp.tidalgard]
+Tidalgard
+
+[gl.sp.grovestag]
+Grovestag
+
+[gl.sp.echolet]
+Echolet
+
+[gl.sp.lunelle]
+Lunelle
+
+[gl.sp.shellfern]
+Shellfern
+
+[gl.sp.jabbird]
+Jabbird
+
+[gl.sp.lullabun]
+Lullabun
+
+[gl.sp.quillix]
+Quillix
+
+[gl.sp.dunedil]
+Dunedil
+
+[gl.sp.coilisp]
+Coilisp
+
+[gl.sp.dozelf]
+Dozelf
+
+[gl.sp.mossbud]
+Mossbud
+
+[gl.sp.gleamjell]
+Gleamjell
+
+[gl.sp.trilobite]
+Trilobite
+
+[gl.sp.sealily]
+Sealily
+
+[gl.sp.echowing]
+Echowing
+
+[gl.sp.ferncairn]
+Ferncairn
+
+[gl.sp.jabhawk]
+Jabhawk
+
+[gl.sp.quillord]
+Quillord
+
+[gl.sp.dunedrake]
+Dunedrake
+
+[gl.sp.hoodcoil]
+Hoodcoil
+
+[gl.sp.trancelf]
+Trancelf
+
+[gl.sp.mossbloom]
+Mossbloom
+
+[gl.sp.trilothorn]
+Trilothorn
+
+[gl.sp.crinolith]
+Crinolith
+
+[gl.sp.gleamlet]
+Gleamlet
+
+[gl.sp.glintail]
+Glintail
+
+[gl.sp.lustrel]
+Lustrel
+
+[gl.sp.ramplet]
+Ramplet
+
+[gl.sp.ibexer]
+Ibexer
+
+[gl.sp.mesmoli]
+Mesmoli
+
+[gl.sp.mesmaris]
+Mesmaris
+
+[gl.sp.drillroot]
+Drillroot
+
+[gl.sp.augeroot]
+Augeroot
+
+[gl.sp.spoolt]
+Spoolt
+
+[gl.sp.voltspool]
+Voltspool
+
+[gl.sp.otterock]
+Otterock
+
+[gl.sp.wispsheet]
+Wispsheet
+
+[gl.sp.shroudle]
+Shroudle
+
+[gl.sp.gloomshroud]
+Gloomcloak
+
+[gl.sp.hatchkip]
+Hatchkip
+
+[gl.sp.shellbrute]
+Shellbrute
+
+[gl.sp.mimbara]
+Mimbara
+
+[gl.sp.tidebara]
+Tidebara
+
+[gl.sp.embara]
+Embara
+
+[gl.sp.voltbara]
+Voltbara
+
+[gl.sp.cindermeer]
+Cindermeer
+
+[gl.sp.pyromeer]
+Pyromeer
+
+[gl.sp.dewlash]
+Dewlash
+
+[gl.sp.smogkeg]
+Smogkeg
+
+[gl.sp.twinkeg]
+Twinkeg
+
+[gl.sp.lunarelle]
+Lunarelle
+
+[gl.sp.lulladream]
+Lulladream
+
+[gl.sp.quilltyrant]
+Quillking
+
+[gl.sp.bloomoss]
+Bloomoss
+
+[gl.sp.flopfin]
+Flopfin
+
+[gl.sp.stormgill]
+Stormgill
+
+[gl.sp.urchip]
+Urchip
+
+[gl.sp.urchlord]
+Urchlord
+
+[gl.sp.clubrimp]
+Clubrimp
+
+[gl.sp.smashrimp]
+Smashrimp
+
+[gl.sp.skipgoby]
+Skipgoby
+
+[gl.sp.gobyhop]
+Gobyhop
+
+[gl.sp.gobrawl]
+Gobrawl
+
+[gl.sp.lazatee]
+Lazatee
+
+[gl.sp.sagatee]
+Sagatee
+
+[gl.sp.slumberth]
+Slumberth
+
+[gl.sp.lambalm]
+Lambalm
+
+[gl.sp.wombamma]
+Wombamma
+
+[gl.sp.razorfly]
+Razorfly
+
+[gl.sp.gnucharge]
+Gnucharge
+
+[gl.sp.reefling]
+Reefling
+
+[gl.sp.reefcoil]
+Reefcoil
+
+[gl.sp.reefdragon]
+Reefdragon
+
+[gl.sp.slickslime]
+Slickslime
+
+[gl.sp.tarbog]
+Tarbog
+
+[gl.sp.kickaroo]
+Kickaroo
+
+[gl.sp.jabadillo]
+Jabadillo
+
+[gl.sp.glacielle]
+Glacielle
+
+[gl.sp.mirrimime]
+Mirrimime
+
+[gl.sp.somnarch]
+Somnarch
+
+[gl.sp.mothmist]
+Mothmist
+
+[gl.sp.veilmoth]
+Veilmoth
+
+[gl.sp.pixelix]
+Pixelix
+
+[gl.sp.clubtail]
+Clubtail
+
+[gl.sp.anklord]
+Anklord
+
+[gl.sp.belubub]
+Belubub
+
+[gl.sp.belugrand]
+Belugrand
+
+[gl.sp.barnacub]
+Barnacub
+
+[gl.sp.barnaclad]
+Barnaclad
+
+[gl.sp.inkit]
+Inkit
+
+[gl.sp.inkrake]
+Inkrake
+
+[gl.sp.glidefin]
+Glidefin
+
+[gl.sp.soarfin]
+Soarfin
+
+[gl.sp.plattypuzz]
+Plattypuzz
+
+[gl.sp.plattymind]
+Plattymind
+
+[gl.sp.frostiva]
+Frostiva
+
+[gl.sp.voltaboon]
+Voltaboon
+
+[gl.sp.bellowkiln]
+Bellowkiln
+
+[gl.sp.origamorph]
+Origamorph
+
+[gl.sp.cindibex]
+Cindibex
+
+[gl.sp.blazibex]
+Blazibex
+
+[gl.sp.archaeon]
+Archaeon
+
+[gl.sp.aurowl]
+Aurowl
+
+[gl.sp.fulgurion]
+Fulgurion
+
+[gl.sp.tuskid]
+Tuskid
+
+[gl.sp.tuskmash]
+Tuskmash
+
+[gl.sp.tuskumo]
+Tuskumo
+
+[gl.sp.cragodile]
+Cragodile
+
+[gl.sp.dashkip]
+Dashkip
+
+[gl.sp.dashmark]
+Dashmark
+
+[gl.sp.pinecub]
+Pinecub
+
+[gl.sp.pinekeeper]
+Pinekeeper
+
+[gl.sp.tonguard]
+Tonguard
+
+[gl.sp.pitlion]
+Pitlion
+
+[gl.sp.flarechick]
+Flarechick
+
+[gl.sp.pyreacock]
+Pyreacock
+
+[gl.sp.coilet]
+Coilet
+
+[gl.sp.teslarch]
+Teslarch
+
+[gl.sp.ignicondor]
+Ignicondor
+
+[gl.sp.genesa]
+Genesa
+
+[gl.sp.arkegen]
+Arkegen
+
+[gl.sp.quillia]
+Quillia
+
+[gl.sp.quillara]
+Quillara
+
+[gl.sp.quillqueen]
+Quillqueen
+
+[gl.sp.droselet]
+Droselet
+
+[gl.sp.drosaura]
+Drosaura
+
+[gl.sp.droserath]
+Droserath
+
+[gl.sp.scarabeam]
+Scarabeam
+
+[gl.sp.kheprion]
+Kheprion
+
+[gl.sp.lunashell]
+Lunashell
+
+[gl.sp.selentor]
+Selentor
+
+[gl.sp.foldling]
+Foldling
+
+[gl.bt.fight]
+Luchar
+
+[gl.bt.bag]
+Mochila
+
+[gl.bt.party]
+Equipo
+
+[gl.bt.run]
+Huir
+
+[gl.bt.pp]
+PP
+
+[gl.bt.lv]
+Nv
+
+[gl.bt.hp]
+PS
+
+[gl.bt.challenge]
+¡{v3}
+quiere pelear!
+
+[gl.bt.rival_sendout]
+¡{v3}
+envió a {v0}!
+
+[gl.bt.go]
+¡Adelante,
+{v0}!
+
+[gl.bt.used]
+¡{v0} usó
+{v1}!
+
+[gl.bt.super]
+¡Es muy eficaz!
+
+[gl.bt.notvery]
+No es muy eficaz…
+
+[gl.bt.noeffect]
+No afecta a
+{v0}…
+
+[gl.bt.crit]
+¡Golpe crítico!
+
+[gl.bt.miss]
+¡{v0} falló!
+
+[gl.bt.statdown]
+¡{v1} de
+{v0} bajó!
+
+[gl.bt.statup]
+¡{v1} de
+{v0} subió!
+
+[gl.bt.st.attack]
+Ataque
+
+[gl.bt.st.defense]
+Defensa
+
+[gl.bt.st.speed]
+Velocidad
+
+[gl.bt.st.special]
+Especial
+
+[gl.bt.st.accuracy]
+Precisión
+
+[gl.bt.st.evasion]
+Evasión
+
+[gl.bt.burned]
+¡{v0}
+se quemó!
+
+[gl.bt.poisoned]
+¡{v0} quedó
+envenenado!
+
+[gl.bt.paralyzed]
+¡{v0} está
+paralizado!
+
+[gl.bt.asleep]
+¡{v0}
+se durmió!
+
+[gl.bt.wake]
+¡{v0}
+se despertó!
+
+[gl.bt.frozen]
+¡{v0}
+se congeló!
+
+[gl.bt.thaw]
+¡{v0} se
+descongeló!
+
+[gl.bt.confused]
+¡{v0} está
+confundido!
+
+[gl.bt.hurt_itself]
+¡{v0} se
+hizo daño!
+
+[gl.bt.fully_paralyzed]
+¡{v0} no se
+puede mover!
+
+[gl.bt.flinch]
+¡{v0}
+se amedrentó!
+
+[gl.bt.fainted]
+¡{v0}
+se debilitó!
+
+[gl.bt.exp]
+¡{v0} ganó
+{v2} puntos de Exp.!
+
+[gl.bt.levelup]
+¡{v0} subió
+al nivel {v2}!
+
+[gl.bt.learned]
+¡{v0} aprendió
+{v1}!
+
+[gl.bt.win]
+¡Venciste a
+{v3}!
+
+[gl.bt.lose]
+¡No te quedan
+Elementis aptos!
+---
+¡{player} se
+desmayó!
+
+[gl.bt.cant_run]
+¡No puedes huir de
+un entrenador!
+
+[gl.bt.bag_empty]
+La mochila está
+vacía.
+
+[gl.bt.party_only]
+Solo tienes a
+{v0}.
+
+[gl.bt.what_do]
+¿Qué hará
+{v0}?
+
+[gl.bt.nothing]
+¡Pero no pasó
+nada!
+
+[gl.bt.ran]
+¡Escapaste sin
+problemas!
+
+[gl.bt.wild]
+¡Ha aparecido
+{v0} salvaje!
+
+[gl.bt.sleeping]
+{v0} sigue
+dormido.
+
+[gl.bt.frozen_solid]
+{v0} está
+congelado.
+
+[gl.bt.hurt_psn]
+¡El veneno hace
+daño a {v0}!
+
+[gl.bt.hurt_brn]
+¡{v0} sufre
+las quemaduras!
+
+[gl.bt.focus]
+¡{v0} se está
+concentrando!
+
+[gl.bt.screen]
+¡{v0} levantó
+una pantalla!
+
+[gl.bt.recoil]
+¡{v0} sufrió
+daño de retroceso!
+
+[gl.bt.failed]
+¡Pero falló!
+
+[gl.bt.conf_over]
+¡{v0} ya no
+está confundido!
+
+[gl.bt.run_fail]
+¡No puedes escapar!
+
+[gl.bt.struggle]
+Forcejeo
+
+[gl.choice.yes]
+Sí
+
+[gl.choice.no]
+No
+
+[gl.name.ask_player]
+¿Cómo te llamas?
+
+[gl.name.ask_rival]
+Él es tu rival desde
+que eran pequeños.
+---
+¿Cómo se llama?
+
+[gl.name.p0]
+Alex
+
+[gl.name.p1]
+Nico
+
+[gl.name.p2]
+Rio
+
+[gl.name.p3]
+Sol
+
+[gl.name.r0]
+Gael
+
+[gl.name.r1]
+Bruno
+
+[gl.name.r2]
+Iker
+
+[gl.name.r3]
+Hugo
+
+# --- M3-A save ---
+[gl.title.continue]
+Continuar
+
+[gl.title.new]
+Nueva partida
+
+[gl.save.who]
+{player}
+
+[gl.save.reg]
+Registro
+
+[gl.save.time]
+Tiempo
+
+[gl.save.ask]
+¿Quieres guardar
+la partida?
+
+[gl.save.saving]
+Guardando…
+¡No apagues!
+
+[gl.save.done]
+{player} guardó
+la partida.
+
+[gl.save.fail]
+Error al guardar.
+Revisa la tarjeta SD
+
+# --- M3-C capture ---
+[gl.it.crystal]
+Cristal
+
+[gl.it.salve]
+Ungüento
+
+[gl.it.antidote]
+Antídoto
+
+[gl.it.limb_balm]
+Bálsamo Ágil
+
+[gl.it.wake_salts]
+Sales Alerta
+
+[gl.it.cool_gel]
+Gel Frescor
+
+[gl.it.parcel]
+Paquete
+
+[gl.it.crystal_plus]
+Cristal Plus
+
+[gl.it.rich_salve]
+Ungüento Rico
+
+[gl.it.ward_spray]
+Spray Escudo
+
+[gl.it.exit_wisp]
+Luz de salida
+
+[gl.it.disc_01]
+Disco 01
+
+[gl.it.disc_02]
+Disco 02
+
+[gl.it.disc_03]
+Disco 03
+
+[gl.it.ferry_pass]
+Pase del ferry
+
+[gl.it.fossil_trilobite]
+Fósil trilobite
+
+[gl.it.fossil_sealily]
+Fósil de lirio
+
+[gl.it.disc_04]
+Disco 04
+
+[gl.it.estuche]
+Monedero
+
+[gl.it.luna]
+Gema Lunar
+
+[gl.it.fuego]
+Gema Llama
+
+[gl.it.agua]
+Gema Marea
+
+[gl.it.trueno]
+Gema Chispa
+
+[gl.it.hoja]
+Gema Fronda
+
+[gl.it.lente]
+Lente Espectral
+
+[gl.it.flauta]
+Flauta Clara
+
+[gl.it.cupon_bici]
+Cupón Bici
+
+[gl.it.bici]
+Bici
+
+[gl.it.vit_hp]
+Tónico PS
+
+[gl.it.vit_atk]
+Tónico Ataque
+
+[gl.it.vit_def]
+Tónico Defensa
+
+[gl.it.vit_spd]
+Tónico Rapidez
+
+[gl.it.vit_spc]
+Tónico Especial
+
+[gl.it.spring_water]
+Agua Manantial
+
+[gl.it.fizzy_pop]
+Gaseosa
+
+[gl.it.citrus_cooler]
+Cítrico fresco
+
+[gl.it.prime_salve]
+Ungüento Fino
+
+[gl.it.disc_05]
+Disco 05
+
+[gl.it.llave_polea]
+Llave Polea
+
+[gl.it.cana_junco]
+Caña Junco
+
+[gl.it.cana_fibra]
+Caña Fibra
+
+[gl.it.cana_aleacion]
+Caña Aleación
+
+[gl.it.dentadura]
+Dentadura oro
+
+[gl.it.cristal_reserva]
+Cristal Reserva
+
+[gl.it.ultra_cristal]
+Ultra Cristal
+
+[gl.it.chip_acceso]
+Chip de acceso
+
+[gl.it.disc_06]
+Disco 06
+
+[gl.it.disc_07]
+Disco 07
+
+[gl.it.disc_08]
+Disco 08
+
+[gl.it.cristal_maestro]
+Cristal Maestro
+
+[gl.it.disc_tierra]
+Disco 10
+
+[gl.it.ambar_fosil]
+Ámbar fósil
+
+[gl.it.llave_ceniza]
+Llave Ceniza
+
+[gl.it.disc_10]
+Disco 09
+
+[gl.it.total_salve]
+Ungüento Total
+
+[gl.it.life_spark]
+Chispa vital
+
+[gl.it.life_blaze]
+Llama vital
+
+[gl.it.vital_draught]
+Brebaje Vital
+
+[gl.it.growth_seed]
+Semilla Brote
+
+[gl.it.vigor_drop]
+Gota de brío
+
+[gl.it.vigor_flask]
+Frasco de brío
+
+[gl.it.strong_ward]
+Escudo Fuerte
+
+[gl.it.grand_ward]
+Escudo Máximo
+
+[gl.it.disc_11]
+Disco 11
+
+[gl.it.disc_12]
+Disco 12
+
+[gl.it.disc_13]
+Disco 13
+
+[gl.it.disc_14]
+Disco 14
+
+[gl.it.disc_15]
+Disco 15
+
+[gl.it.disc_16]
+Disco 16
+
+[gl.it.disc_17]
+Disco 17
+
+[gl.it.disc_18]
+Disco 18
+
+[gl.it.disc_19]
+Disco 19
+
+[gl.it.disc_20]
+Disco 20
+
+[gl.it.disc_21]
+Disco 21
+
+[gl.it.disc_22]
+Disco 22
+
+[gl.it.disc_23]
+Disco 23
+
+[gl.it.disc_24]
+Disco 24
+
+[gl.it.disc_25]
+Disco 25
+
+[gl.it.disc_26]
+Disco 26
+
+[gl.it.disc_27]
+Disco 27
+
+[gl.it.disc_28]
+Disco 28
+
+[gl.it.disc_29]
+Disco 29
+
+[gl.it.disc_30]
+Disco 30
+
+[gl.it.disc_31]
+Disco 31
+
+[gl.it.disc_32]
+Disco 32
+
+[gl.it.disc_33]
+Disco 33
+
+[gl.it.disc_34]
+Disco 34
+
+[gl.it.disc_35]
+Disco 35
+
+[gl.it.disc_36]
+Disco 36
+
+[gl.it.disc_37]
+Disco 37
+
+[gl.it.disc_38]
+Disco 38
+
+[gl.it.disc_39]
+Disco 39
+
+[gl.it.disc_40]
+Disco 40
+
+[gl.it.disc_41]
+Disco 41
+
+[gl.it.disc_42]
+Disco 42
+
+[gl.it.disc_43]
+Disco 43
+
+[gl.it.disc_44]
+Disco 44
+
+[gl.it.disc_45]
+Disco 45
+
+[gl.it.disc_46]
+Disco 46
+
+[gl.it.disc_47]
+Disco 47
+
+[gl.it.disc_48]
+Disco 48
+
+[gl.it.disc_49]
+Disco 49
+
+[gl.it.disc_50]
+Disco 50
+
+[gl.it.piedra_eclipse]
+Piedra Eclipse
+
+[gl.it.origin_shard]
+Frag. Origen
+
+[gl.it.buscatesoros]
+Buscatesoros
+
+[gl.it.atlas]
+Atlas
+
+[gl.it.reparto_total]
+Reparto Total
+
+[gl.it.peluche_fuga]
+Peluche Fuga
+
+[gl.it.pulso_atk]
+Pulso Ataque
+
+[gl.it.pulso_def]
+Pulso Defensa
+
+[gl.it.pulso_spd]
+Pulso Rapidez
+
+[gl.it.pulso_spc]
+Pulso Especial
+
+[gl.it.pulso_acc]
+Pulso Mira
+
+[gl.it.velo_bruma]
+Velo de bruma
+
+[gl.it.foco_critico]
+Foco Crítico
+
+[gl.it.savia]
+Savia
+
+[gl.it.savia_max]
+Savia Máx
+
+[gl.it.descongelar]
+Descongelar
+
+[gl.it.panacea]
+Panacea
+
+[gl.it.pp_extra]
+PP Extra
+
+[gl.it.trozo_oro]
+Trozo de oro
+
+[gl.bt.threw]
+¡Lanzaste un
+{v0}!
+
+[gl.bt.caught]
+¡Bien! ¡Atrapaste
+a {v0}!
+
+[gl.bt.broke0]
+¡Oh, no! ¡Se soltó!
+
+[gl.bt.broke1]
+¡Vaya! ¡Parecía
+atrapado!
+
+[gl.bt.broke2]
+¡Aargh! ¡Casi lo
+lograste!
+
+[gl.bt.broke3]
+¡Rayos! ¡Estuvo
+tan cerca!
+
+[gl.bt.no_steal]
+¡No puedes atrapar
+el Elementi de otro
+---
+entrenador!
+
+[gl.bt.party_full]
+No hay espacio en
+tu equipo.
+---
+¡{v0} fue
+liberado!
+
+[gl.bt.healed]
+¡{v0} recuperó
+{v2} PS!
+
+[gl.bt.no_effect]
+No tendrá efecto.
+
+[gl.bt.already_out]
+¡{v0} ya está
+en combate!
+
+[gl.bt.no_will]
+¡{v0} no puede
+luchar!
+
+[gl.bt.switch]
+Cambiar
+
+[gl.bt.comeback]
+¡{v0}, basta!
+¡Regresa!
+
+# --- M3-B route ---
+[route1.sign]
+RUTA 1
+Sur: Villa Aliso
+---
+Norte: Ciudad Nodo
+
+[route1.ledge]
+Salta el desnivel
+hacia el sur.
+
+[gl.blackout]
+Todo se vuelve
+blanco…
+
+[gl.blackout.home]
+{player} corrió a
+casa a toda prisa.
+
+# --- M3-E content ---
+[mom.rest]
+¡{player}! Pareces
+cansado.
+---
+¿Quieres descansar?
+
+[mom.rest.done]
+¡Listo! ¡Tus
+Elementis están
+---
+llenos de energía!
+¡Cuídate!
+
+[mom.rest.no]
+Está bien. Aquí te
+espero. ¡Cuídate!
+
+[route1.clerk.a]
+¡Hola! Trabajo en
+la tienda de
+---
+Ciudad Nodo. ¡Toma,
+una muestra gratis!
+
+[route1.clerk.got]
+¡Recibiste un
+Ungüento!
+
+[route1.clerk.b]
+Ven a la tienda de
+Ciudad Nodo.
+
+[route1.clerk.full]
+Tu mochila está
+llena. Vuelve luego.
+
+# --- M3-D menus ---
+[gl.bag.empty]
+La mochila está
+vacía.
+
+[gl.bag.use]
+Usar
+
+[gl.bag.toss]
+Tirar
+
+[gl.bag.not_now]
+¡No es el momento
+de usar eso!
+
+[gl.bag.toss_ask]
+¿Quieres tirar
+{v2} de {v0}?
+
+[gl.bag.tossed]
+Tiraste
+{v2} {v0}.
+
+# --- M4-A items ---
+[gl.bt.cured_psn]
+¡{v0} se curó
+del veneno!
+
+[gl.bt.cured_par]
+¡{v0} se curó
+de la parálisis!
+
+[gl.bt.cured_brn]
+¡{v0} se curó
+de la quemadura!
+
+[gl.bt.money]
+¡{player} ganó
+${v1}!
+
+[gl.bag.cant_toss]
+¡Es muy importante,
+no puedes tirarlo!
+
+# --- M4-B shop ---
+[gl.shop.hello]
+¡Hola! ¿En qué
+puedo ayudarte?
+
+[gl.shop.buy]
+Comprar
+
+[gl.shop.sell]
+Vender
+
+[gl.shop.quit]
+Salir
+
+[gl.shop.deal]
+{v2} {v0} por
+{v3}. ¿Listo?
+
+[gl.shop.bought]
+¡Aquí tienes!
+¡Gracias!
+---
+¿Puedo ayudarte
+en algo más?
+
+[gl.shop.sold]
+¡Trato hecho!
+¡Gracias!
+---
+¿Puedo ayudarte
+en algo más?
+
+[gl.shop.no_money]
+No tienes dinero
+suficiente.
+
+[gl.shop.bag_full]
+Tu mochila
+está llena.
+
+[gl.shop.cant_sell]
+No puedo ponerle
+precio a eso.
+
+[gl.shop.bye]
+¡Gracias!
+¡Vuelve pronto!
+
+[gl.center.ask]
+¡Bienvenido al
+Centro!
+---
+¿Curo a tus
+Elementis?
+
+[gl.center.done]
+Tus Elementis están
+en plena forma.
+---
+¡Vuelve cuando
+quieras!
+
+[gl.center.bye]
+¡Vuelve cuando
+quieras!
+
+# --- M4-C world ---
+[gl.trainer.pre]
+¡Eh, tú! ¡Te vi!
+¡A combatir!
+
+[gl.trainer.after]
+¡Buen combate!
+Me has ganado.
+
+[gl.found]
+¡{player} encontró
+{v0}!
+
+[gl.found.full]
+No queda espacio
+en la mochila.
+
+[tr.test.pre]
+¡Soy el entrenador
+de prueba! ¡Ven!
+
+[tr.test.after]
+Perdí… ¡Buen
+combate de prueba!
+
+# --- M4-E species ---
+# --- M4-D content ---
+[nodo.sign]
+CIUDAD NODO
+Todo se conecta.
+
+[nodo.gym]
+GIMNASIO DE
+CIUDAD NODO
+---
+Líder: ???
+Tipo: Tierra
+
+[nodo.house.a]
+Una casa tranquila.
+Nadie contesta.
+
+[nodo.house.b]
+La puerta está
+cerrada con llave.
+
+[nodo.npc.a]
+En la hierba alta
+viven Elementis.
+---
+Lanza un Cristal
+para atraparlos.
+---
+Si ves una bolsa en
+el suelo, ¡tómala!
+
+[nodo.npc.b]
+El Centro cura a tus
+Elementis gratis.
+---
+Úsalo siempre que
+los veas cansados.
+
+[nodo.npc.k]
+Al norte, tras la
+Ruta 2, está el
+---
+Bosque Umbrío. Está
+lleno de bichos.
+---
+Es un laberinto.
+¡No te pierdas!
+
+[nodo.guard.stop]
+¡Alto! Este camino
+no es para novatos
+---
+sin Cristales.
+---
+Quizá en la tienda
+puedan ayudarte.
+
+[nodo.guard.thanks]
+¡Ah, ya tienes
+Cristales! Pasa.
+
+[nodo.guard.tip]
+Al norte está el
+Bosque Umbrío.
+---
+Lleva Antídotos por
+si te envenenan.
+
+[nodo.guard.after]
+Lleva Antídotos por
+si te envenenan.
+
+[nodo.shop.ask]
+¿Vienes de Villa
+Aliso? ¡Llegó un
+---
+paquete para la
+Profesora Lin!
+---
+¿Se lo llevas?
+
+[nodo.shop.no]
+¡Vaya! Vuelve si
+cambias de idea.
+
+[nodo.shop.got]
+¡{player} recibió
+el Paquete!
+
+[nodo.shop.thanks]
+¡Gracias! Llévaselo
+a la Profesora Lin.
+---
+Y vuelve a verme
+cuando lo entregues.
+
+[nodo.shop.wait]
+Primero lleva el
+paquete, por favor.
+
+[lab.lin.parcel]
+¡Oh, el paquete que
+esperaba! Gracias.
+---
+Toma, llévate estos
+Cristales para
+---
+atrapar Elementis.
+¡Te serán útiles!
+
+[lab.lin.parcel.got]
+¡{player} recibió
+5 Cristales!
+
+[centro.books]
+Revistas sobre
+Elementis.
+
+[ruta2.sign]
+RUTA 2
+Sur: Ciudad Nodo
+---
+Norte: Bosque Umbrío
+
+[tr.explorador_r2.pre]
+¡Alto ahí! Soy un
+joven explorador.
+---
+¡Veamos qué tal
+lo haces!
+
+[tr.explorador_r2.after]
+¡Vaya! Eres bueno.
+Seguiré explorando.
+
+[bosque.sign]
+BOSQUE UMBRÍO
+La luz apenas llega.
+
+[tr.cazabichos_1.pre]
+¡Los bichos son los
+mejores! ¡Pelea!
+
+[tr.cazabichos_1.after]
+¡Mis bichos han
+perdido!
+
+[tr.cazabichos_2.pre]
+¡Llevo todo el día
+cazando! ¡Pelea!
+
+[tr.cazabichos_2.after]
+¡Mi red no pudo
+con tu equipo!
+
+
+# --- K keyboard ---
+[gl.kb.new]
+NUEVO NOMBRE
+
+[gl.kb.end]
+FIN
+
+[gl.kb.pg0]
+ABC
+
+[gl.kb.pg1]
+abc
+
+[gl.kb.pg2]
+123
+
+[gl.kb.pg3]
+ABC
+
+[gl.kb.t_player]
+¿TU NOMBRE?
+
+[gl.kb.t_rival]
+¿SU NOMBRE?
+
+[gl.kb.t_nick]
+¿MOTE?
+
+[gl.kb.ask_nick]
+¿Quieres darle un
+mote a {v0}?
+
+
+# --- trainer names (class + name, gl.tr.*; <= 15 glyphs; assets/data/trainers.toml name = ...) ---
+[gl.tr.explorador_r2]
+Explorador Tomi
+
+[gl.tr.cazabichos_1]
+Cazabichos Dani
+
+[gl.tr.cazabichos_2]
+Cazabichos Raúl
+
+# --- M4 zone banner (gl.area.<key> = tools/mapc.py AREA_KEYS order; the zone-name banner of the world, contract 22) ---
+[gl.area.villa_aliso]
+Villa Aliso
+
+[gl.area.ruta_1]
+Ruta 1
+
+[gl.area.ciudad_nodo]
+Ciudad Nodo
+
+[gl.area.ruta_2]
+Ruta 2
+
+[gl.area.bosque_umbrio]
+Bosque Umbrío
+
+[gl.area.pueblo_cantera]
+Pueblo Cantera
+
+[gl.area.ruta_3]
+Ruta 3
+
+[gl.area.monte_eco]
+Monte Eco
+
+[gl.area.ruta_4]
+Ruta 4
+
+[gl.area.ciudad_marea]
+Ciudad Marea
+
+[gl.area.ruta_24]
+Ruta 24
+
+[gl.area.ruta_25]
+Ruta 25
+
+[gl.area.ruta_5]
+Ruta 5
+
+[gl.area.ruta_6]
+Ruta 6
+
+[gl.area.puerto_dinamo]
+Puerto Dínamo
+
+[gl.area.ruta_11]
+Ruta 11
+
+[gl.area.cueva_excavadora]
+Cueva Excavadora
+
+[gl.area.ruta_9]
+Ruta 9
+
+[gl.area.ruta_10]
+Ruta 10
+
+[gl.area.tunel_oscuro]
+Túnel Oscuro
+
+[gl.area.pueblo_bruma]
+Pueblo Bruma
+
+[gl.area.ruta_8]
+Ruta 8
+
+[gl.area.ruta_7]
+Ruta 7
+
+[gl.area.metropolis_neon]
+Metrópolis Neón
+
+[gl.area.sala_juegos]
+Sala Fortuna
+
+[gl.area.escondite_vertice]
+Guarida Vértice
+
+[gl.area.torre_recuerdos]
+Torre Recuerdos
+
+[gl.area.ruta_12]
+Ruta 12
+
+[gl.area.ruta_13]
+Ruta 13
+
+[gl.area.ruta_14]
+Ruta 14
+
+[gl.area.ruta_15]
+Ruta 15
+
+[gl.area.ciudad_ambar]
+Ciudad Ámbar
+
+[gl.area.ruta_16]
+Ruta 16
+
+
+[gl.area.autopista]
+Autopista Mag
+
+
+[gl.area.ruta_18]
+Ruta 18
+
+
+[gl.area.reserva]
+Reserva Salvaje
+
+
+[gl.area.mar_ambar]
+Mar de Ámbar
+
+[gl.area.ciudad_cenit]
+Ciudad Cénit
+
+[gl.area.torre_vertice]
+Torre Vértice
+
+[gl.area.ruta_19]
+Ruta 19
+
+[gl.area.ruta_20]
+Ruta 20
+
+[gl.area.ruta_21]
+Ruta 21
+
+[gl.area.islas_escarcha]
+Islas Escarcha
+
+[gl.area.isla_ceniza]
+Isla Ceniza
+
+[gl.area.mansion_calcinada]
+Mansión Quemada
+
+[gl.area.central_electrica]
+Central Energía
+# C9 (contract 56): the zone banners of Ruta 22 .. the Cueva Secreta (consecutive after gl.area.torre_vertice, in the AREA_KEYS order of tools/mapc.py)
+[gl.area.ruta_22]
+Ruta 22
+
+[gl.area.ruta_23]
+Ruta 23
+
+[gl.area.senda_campeones]
+Senda de Campeones
+
+[gl.area.meseta_cumbre]
+Meseta Cumbre
+
+[gl.area.cueva_secreta]
+Cueva Secreta
+
+[gl.area.ruinas_origen]
+Ruinas del Origen
+
+[gl.area.gruta_eclipse]
+Gruta del Eclipse
+
+
+# --- M5-A learn ---
+[gl.learn.wants]
+¡{v0} quiere
+aprender un ataque:
+---
+¡{v1}!
+
+[gl.learn.full]
+Pero {v0} ya
+conoce 4 ataques.
+
+[gl.learn.forget_q]
+¿Olvidar un ataque
+para {v1}?
+
+[gl.learn.stop_q]
+¿Dejar de aprender
+{v1}?
+
+[gl.learn.not]
+{v1} no fue
+aprendido.
+
+[gl.learn.poof]
+1, 2 y… ¡Puf!
+
+[gl.learn.forgot]
+{v0} olvidó
+{v1}.
+
+[gl.learn.and]
+Y…
+---
+¡{v0} aprendió
+{v1}!
+
+# --- M5-B evo ---
+[gl.evo.what]
+¿Qué? ¡{v0}
+está evolucionando!
+
+[gl.evo.stopped]
+¿Eh? ¡{v0}
+dejó de evolucionar!
+
+[gl.evo.done]
+¡Felicidades!
+¡{v0}
+---
+evolucionó en
+{v1}!
+
+# --- M5-C box/card ---
+[gl.menu.card]
+{player}
+
+[gl.box.on]
+¡Encendiste el PC!
+---
+Accediste al Sistema
+de Almacenamiento.
+
+[gl.box.take]
+Sacar
+
+[gl.box.put]
+Dejar
+
+[gl.box.free]
+Liberar
+
+[gl.box.change]
+Cambiar
+
+[gl.box.quit]
+Salir
+
+[gl.box.name]
+Caja
+
+[gl.box.sent]
+¡{v0} fue
+enviado a Caja {v2}!
+
+[gl.box.took]
+Sacaste a {v0}
+de la Caja.
+
+[gl.box.empty]
+Esta Caja
+está vacía.
+
+[gl.box.full]
+¡Esta Caja
+está llena!
+
+[gl.box.party_full]
+¡Tu equipo
+está lleno!
+
+[gl.box.last]
+¡No puedes dejar a
+tu último Elementi!
+
+[gl.box.ask_free]
+¿Liberar a
+{v0}?
+
+[gl.box.freed]
+{v0} fue
+liberado.
+---
+¡Adiós, {v0}!
+
+[gl.box.all_full]
+¡Las Cajas están
+llenas!
+---
+{v0} fue
+liberado.
+
+[gl.card.money]
+Dinero
+
+[gl.card.time]
+Tiempo
+# --- M5-D Cantera ---
+[gl.tr.aprendiz_cantera]
+Aprendiz Leo
+
+[gl.tr.garrick]
+Líder Garrick
+
+[cantera.sign]
+PUEBLO CANTERA
+Un pueblo de piedra.
+
+[cantera.house.a]
+Todos están en la
+cantera. Nadie abre.
+
+[cantera.house.b]
+Hay polvo de piedra
+en la ventana.
+
+[cantera.npc.gym]
+Garrick lidera el
+gimnasio de aquí.
+---
+Usa tipo Roca.
+¡Ve con cuidado!
+
+[cantera.npc.quarry]
+Antes sacábamos
+cristales aquí.
+---
+Ahora solo queda
+piedra. ¡Y mucha!
+
+[cantera.npc.center]
+Entrena mucho antes
+de retar al líder.
+---
+Y cúralos en el
+Centro.
+
+[cantera.npc.east]
+Al este empieza la
+Ruta 3.
+---
+Dicen que hay muchos
+entrenadores allí.
+
+[cantera.blocker]
+¡Eh, tú! ¿Eres un
+entrenador?
+---
+¡Primero vence a
+Garrick!
+
+[cantera.gym.guide.a]
+¡Oye! ¡Puedes llegar
+a ser campeón!
+---
+Garrick usa el tipo
+Roca.
+---
+El Agua y la Planta
+le ganan. ¡Suerte!
+
+[cantera.gym.guide.b]
+¡Genial! ¡Venciste a
+Garrick!
+---
+¡Sigue así, campeón!
+
+[tr.aprendiz_cantera.pre]
+¡Alto ahí, novato!
+¡Aún te falta mucho
+---
+para enfrentar a
+Garrick!
+
+[tr.aprendiz_cantera.after]
+¡Eres bueno! Pero
+Garrick es más duro.
+
+[cantera.garrick.pre]
+Así que llegaste.
+¡Soy Garrick!
+---
+Creo en una defensa
+firme como la roca.
+---
+¡Mis Elementis son
+todos de tipo Roca!
+---
+¿Sigues queriendo
+retarme? ¡Adelante!
+
+[cantera.garrick.win]
+Te subestimé. Eres
+muy fuerte.
+---
+Como prueba de tu
+victoria, toma esto.
+
+[cantera.badge]
+¡{player} recibió la
+MEDALLA CANTERA!
+
+[cantera.garrick.about]
+Es prueba oficial de
+la Liga.
+---
+Prueba que venciste
+al primer líder.
+---
+Queda en tu tarjeta
+de entrenador.
+
+[cantera.garrick.after]
+¡El mundo está lleno
+de entrenadores!
+---
+Tienes talento.
+¡Sigue entrenando!
+
+# --- Sound ---
+[gl.opt.sound]
+Sonido
+
+[gl.opt.sound.hi]
+Alto
+
+[gl.opt.sound.lo]
+Bajo
+
+[gl.opt.sound.off]
+No
+
+# --- C2-S1 items ---
+[gl.bag.used]
+¡{player} usó
+{v0}!
+
+[gl.repel.end]
+El efecto del Spray
+Escudo se acabó.
+
+[gl.bag.no_here]
+¡No se puede
+usar aquí!
+
+[gl.disc.boot]
+¡Activaste
+un disco!
+---
+Contiene:
+{v1}.
+
+[gl.disc.cant]
+{v0} no es
+compatible.
+---
+¡No puede aprender
+{v1}!
+
+[gl.disc.knows]
+¡{v0} conoce
+{v1}!
+
+# --- C2-S2 Registro ---
+# gl.reg.*: labels of the Registro screen; gl.rg.<species id>: its description (2 pages of <= 2 lines, shown together)
+[gl.reg.seen]
+Visto
+
+[gl.reg.caught]
+Capturado
+
+[gl.reg.ht]
+Alt
+
+[gl.reg.wt]
+Peso
+
+[gl.rg.embercub]
+Una brasa arde en su
+cola desde nacer.
+---
+Si se enfada, la
+llama crece y salta.
+
+[gl.rg.flarewolf]
+Corre en manada. Su
+melena es de fuego.
+---
+Deja un rastro de
+chispas al correr.
+
+[gl.rg.pyrewolf]
+Jefe de la manada.
+Su fuego ilumina
+---
+la noche y los suyos
+lo siguen sin dudar.
+
+[gl.rg.puddlet]
+Vive junto a charcos
+y chapotea con la
+---
+cola cuando está
+contento.
+
+[gl.rg.tidalux]
+Su cuerpo brilla al
+subir la marea.
+---
+Nada en grupo al
+caer la tarde.
+
+[gl.rg.tidalgard]
+Lleva un gran escudo
+de concha.
+---
+Aguanta las olas de
+frente y protege.
+
+[gl.rg.sprouton]
+Un brote crece en su
+lomo. Bebe la luz
+---
+del sol y el brote
+crece con él.
+
+[gl.rg.thornbuck]
+Sus pequeñas astas
+tienen espinas.
+---
+Protege a su manada.
+Crecen en primavera.
+
+[gl.rg.grovestag]
+Sus astas parecen la
+copa de un árbol.
+---
+Hay nidos en ellas.
+Guarda el bosque.
+
+[gl.rg.flitter]
+Pájaro pequeño que
+salta entre matas.
+---
+Canta al amanecer
+con un trino agudo.
+
+[gl.rg.flitwing]
+Sus alas son anchas.
+Planea sobre campos
+---
+y vigila desde
+muy lejos.
+
+[gl.rg.skyrrow]
+Se lanza en picado
+como una flecha.
+---
+Caza desde lo más
+alto del cielo.
+
+[gl.rg.muncrit]
+Roe todo lo que
+encuentra.
+---
+Sus dientes nunca
+dejan de crecer.
+
+[gl.rg.munchmole]
+Cava túneles con sus
+garras. Una noche
+---
+le basta para abrir
+una colina entera.
+
+[gl.rg.grubbit]
+Come hojas todo el
+día sin parar.
+---
+Es tranquilo y crece
+muy rápido.
+
+[gl.rg.grubshell]
+Una concha dura le
+cubre el cuerpo.
+---
+Casi no se mueve.
+Espera para cambiar.
+
+[gl.rg.lanternmoth]
+Sus alas brillan en
+la oscuridad.
+---
+Se acerca a las
+luces de noche.
+
+[gl.rg.stingle]
+Bicho pequeño con un
+aguijón en la cola.
+---
+Pica sin avisar si
+alguien lo molesta.
+
+[gl.rg.stinglet]
+Se envuelve en un
+capullo de seda.
+---
+Espera quieto a que
+su cuerpo cambie.
+
+[gl.rg.velvex]
+Alas de terciopelo.
+El polvo que suelta
+---
+al batirlas es
+venenoso.
+
+[gl.rg.zaphid]
+Viven en enjambres.
+Entre ellos saltan
+---
+chispas, sobre todo
+cuando hay tormenta.
+
+[gl.rg.voltgecko]
+Trepa muros con sus
+patas pegajosas.
+---
+Su cuerpo se carga
+de electricidad.
+
+[gl.rg.pebblump]
+Parece una piedra
+más del camino.
+---
+Si alguien lo pisa,
+rueda enfadado.
+
+[gl.rg.rockroll]
+Rueda cuesta abajo y
+nada lo detiene.
+---
+Aplasta con su peso
+todo lo que toca.
+
+[gl.rg.bouldrum]
+Golpea su pecho como
+un tambor de roca.
+---
+El estruendo llega
+a kilómetros.
+
+[gl.rg.boulderback]
+Lleva una gran roca
+en el lomo.
+---
+Es duro y lento.
+Duerme entre rocas.
+
+# --- C2 species ---
+# gl.sp.<id> (names), gl.mv.<id> (moves 40+), gl.rg.<id> (Registro descriptions, 2 pages of <= 2 lines); contract 31
+[gl.rg.echolet]
+Sus orejas grandes
+captan cada eco.
+---
+Vuela a ciegas en la
+cueva sin chocar.
+
+[gl.rg.lunelle]
+Flota como una luna
+redonda y suave.
+---
+Si hay luna llena,
+su frente brilla.
+
+[gl.rg.shellfern]
+Su concha de piedra
+lleva helechos.
+---
+Con lluvia, los
+brotes se abren.
+
+[gl.rg.jabbird]
+Frunce el ceño y
+pica sin avisar.
+---
+Pico largo y recto,
+clava como lanza.
+
+[gl.rg.lullabun]
+Sus orejas vibran
+al cantar.
+---
+Quien oye su nana
+se queda dormido.
+
+[gl.rg.quillix]
+Las púas de su lomo
+son venenosas.
+---
+Si se asusta, mueve
+la cola con aguijón.
+
+[gl.rg.dunedil]
+Nada bajo la arena
+con hocico plano.
+---
+Solo asoma los ojos
+enmascarados.
+
+[gl.rg.coilisp]
+Se enrolla bajo su
+capa de hojas.
+---
+Los anillos claros
+avisan: ¡aléjate!
+
+[gl.rg.dozelf]
+Duerme sentado sobre
+un cojín de humo.
+---
+Su gorro cuelga y
+nunca se despierta.
+
+[gl.rg.mossbud]
+Un bulbo cubierto de
+musgo, con patitas.
+---
+La flor de su cabeza
+abre de noche.
+
+[gl.rg.gleamjell]
+Campana de cristal
+casi invisible.
+---
+Su núcleo late como
+una luz en el agua.
+
+[gl.rg.trilobite]
+Su caparazón tiene
+segmentos de roca.
+---
+Hace mucho vivió en
+un mar antiguo.
+
+[gl.rg.sealily]
+Tiene un tallo de
+piedra segmentado.
+---
+Cierra sus brazos
+como flor de roca.
+
+[gl.rg.echowing]
+Sus alas de membrana
+cortan la noche.
+---
+Sus chillidos hacen
+temblar la cueva.
+
+[gl.rg.ferncairn]
+Su concha creció
+como un túmulo.
+---
+Sus helechos forman
+un jardín sobre él.
+
+[gl.rg.jabhawk]
+Planea quieto y cae
+como un dardo.
+---
+Su pico atraviesa
+la madera.
+
+[gl.rg.quillord]
+Sus púas son largas
+y muy afiladas.
+---
+Defiende su terreno
+con la cola.
+
+[gl.rg.dunedrake]
+Cava túneles enteros
+en una noche.
+---
+Sus escamas lisas
+resisten las rocas.
+
+[gl.rg.hoodcoil]
+Abre su capa seca
+para verse enorme.
+---
+Su mirada paraliza
+a quien la sostiene.
+
+[gl.rg.trancelf]
+Mueve cosas con la
+mente al dormir.
+---
+Su humo se vuelve
+denso si sueña.
+
+[gl.rg.mossbloom]
+Su flor está medio
+abierta.
+---
+Suelta un polen que
+da mucha tos.
+
+[gl.rg.trilothorn]
+Una espina de roca
+lo cubre entero.
+---
+Sus espinas rompen
+conchas y rocas.
+
+[gl.rg.crinolith]
+Su corona de piedra
+parece un lirio.
+---
+Abre sus brazos solo
+en el mar profundo.
+
+[gl.rg.gleamlet]
+Medusita de cristal
+con un destello.
+---
+Crece si una gema
+le toca el núcleo.
+
+# --- C2 content ---
+
+# --- trainer names (class + name, gl.tr.*; <= 15 glyphs) ---
+[gl.tr.explorador_r3a]
+Explorador Ben
+
+[gl.tr.chica_r3]
+Chica Lisa
+
+[gl.tr.cazabichos_r3]
+Cazabichos Cris
+
+[gl.tr.montanista_r3]
+Montañista Marc
+
+[gl.tr.explorador_r3b]
+Explorador Cal
+
+[gl.tr.montanista_eco]
+Montañista Lalo
+
+[gl.tr.vertice_eco1]
+Agente Dax
+
+[gl.tr.vertice_eco2]
+Agente Rex
+
+[gl.tr.vertice_eco3]
+Agente Zed
+
+[gl.tr.cientifico_eco]
+Científico Mige
+
+[gl.tr.chica_r4]
+Chica Dana
+
+[gl.tr.explorador_r4]
+Explorador Max
+
+[gl.tr.nadadora_1]
+Nadadora Lía
+
+[gl.tr.nadadora_2]
+Nadadora Mar
+
+[gl.tr.nerea]
+Líder Nerea
+
+[gl.tr.explorador_r24a]
+Explorador Tim
+
+[gl.tr.chica_r24]
+Chica Carla
+
+[gl.tr.cazabichos_r24]
+Cazabichos Rik
+
+[gl.tr.explorador_r24b]
+Explorador Joe
+
+[gl.tr.vertice_r24]
+Agente Tom
+
+[gl.tr.montanista_r25]
+Montañista Eli
+
+[gl.tr.chica_r25]
+Chica Sara
+
+
+# --- C2 key items ---
+[gl.gift]
+¡{player} recibió
+{v0}!
+
+
+# --- Ruta 3 ---
+[ruta3.sign]
+RUTA 3
+Monte Eco al norte
+
+[tr.explorador_r3a.pre]
+¡Oye, tú! Mi equipo
+es el más rápido.
+---
+¡Voy a probarlo!
+
+[tr.explorador_r3a.after]
+¡Qué rápido eres!
+Entrenaré más.
+
+[tr.chica_r3.pre]
+¡Hola! Mis Flitter
+son muy lindos.
+---
+¡Y también luchan!
+
+[tr.chica_r3.after]
+¡Mis Flitter se
+han cansado!
+
+[tr.cazabichos_r3.pre]
+¡Los bichos son lo
+mejor! ¡Mira!
+
+[tr.cazabichos_r3.after]
+Mis bichos aún
+crecerán.
+
+[tr.montanista_r3.pre]
+¡Llevo años subiendo
+montañas!
+---
+¡Soy duro como la
+roca!
+
+[tr.montanista_r3.after]
+Hasta la montaña
+te respeta ahora.
+
+[tr.explorador_r3b.pre]
+¡Jabbird es flaco
+pero gruñón!
+---
+¡Ojo con su pico!
+
+[tr.explorador_r3b.after]
+¡Mi pájaro lloró!
+Qué fuerte eres.
+
+
+# --- Monte Eco (Vertice = the corporation: es Vértice, en Vertex, ja バーテックス, zh 顶点) ---
+[tr.montanista_eco.pre]
+Este túnel es mío.
+¡Nadie pasa gratis!
+---
+¡Mis rocas te
+esperan!
+
+[tr.montanista_eco.after]
+Las rocas también
+pierden a veces.
+
+[tr.vertice_eco1.pre]
+¡Alto! Esto es zona
+de Vértice.
+---
+¡Largo o te
+destrozo!
+
+[tr.vertice_eco1.after]
+Tsk. El jefe se
+enterará de esto.
+
+[tr.vertice_eco2.pre]
+Los fósiles son
+de Vértice ahora.
+---
+¡No te metas!
+
+[tr.vertice_eco2.after]
+No importa. Hay
+más agentes abajo.
+
+[tr.vertice_eco3.pre]
+¿Subiendo desde
+abajo? ¡Imposible!
+---
+¡Te detendré!
+
+[tr.vertice_eco3.after]
+Se me coló un crío.
+Qué mala suerte.
+
+[eco.sci.pre]
+¡Estos fósiles son
+de Vértice!
+---
+¡Si los quieres,
+véncenos!
+
+[eco.sci.after]
+Bah, está bien.
+Toma un fósil.
+---
+Yo me llevo
+el otro.
+
+[eco.fossil.guard]
+Un fósil. Te mira el
+científico.
+
+[eco.fossil.t.ask]
+¿Quieres llevarte el
+Fósil trilobite?
+
+[eco.fossil.s.ask]
+¿Quieres llevarte el
+Fósil de lirio?
+
+[eco.fossil.no]
+Lo dejas donde está.
+
+[eco.fossil.sci.take]
+¡Perfecto! Me llevo
+el otro. ¡Adiós!
+
+[eco.fossil.sci.gone]
+El científico huyó
+con el otro fósil.
+
+
+# --- Ruta 4 ---
+[ruta4.sign]
+RUTA 4
+Hacia Ciudad Marea
+
+[tr.chica_r4.pre]
+¿Eres entrenador?
+¡Yo también!
+---
+¡Combate ya!
+
+[tr.chica_r4.after]
+¡Qué envidia!
+Tienes buen equipo.
+
+[tr.explorador_r4.pre]
+¡Hace calor aquí!
+¡Pelea rápida!
+---
+¡Sin trampas!
+
+[tr.explorador_r4.after]
+Uf, qué sed.
+Voy a la playa.
+
+
+# --- Ciudad Marea ---
+[marea.sign]
+CIUDAD MAREA
+El mar nos une
+
+[marea.gym.sign]
+GIMNASIO DE AGUA
+Líder: Nerea
+
+[marea.npc.a]
+Nerea, la líder, usa
+Elementis de Agua.
+---
+Planta y Eléctrico
+son tus aliados.
+
+[marea.npc.b]
+Al norte hay un
+puente larguísimo.
+---
+Cinco entrenadores
+lo vigilan.
+
+[marea.npc.c]
+Dicen que Vértice
+rondó Monte Eco.
+---
+Qué miedo.
+
+[marea.rival.hey]
+¡Eh, {player}! ¿Ya
+tienes medallas?
+---
+¡Veamos cuánto
+has mejorado!
+
+[marea.rival.again]
+¿Otra vez? ¡Vamos!
+
+[marea.rival.lose]
+¡¿Qué?! ¡Con lo que
+entrené!
+---
+¡Me haré aún
+más fuerte!
+
+[marea.rival.next]
+Voy a ver a Teo,
+el del PC.
+---
+¡Nos vemos, {player}!
+
+[tr.nadadora_1.pre]
+¡Bienvenido a la
+piscina!
+---
+¡Aquí se nada,
+y se lucha!
+
+[tr.nadadora_1.after]
+¡Glub! Me hundí.
+
+[tr.nadadora_2.pre]
+El agua es fría,
+yo no.
+---
+¡Zambúllete!
+
+[tr.nadadora_2.after]
+Qué ola me has
+dado…
+
+[marea.nerea.pre]
+¡Hola, retador!
+Soy Nerea.
+---
+El agua lo cambia
+todo con paciencia.
+---
+¡Mis Elementis son
+todos de tipo Agua!
+---
+¿Listo para el
+chapuzón?
+
+[marea.nerea.win]
+¡Increíble! Me has
+hundido.
+---
+Te has ganado esto.
+Tómalo.
+
+[marea.badge]
+¡{player} recibió la
+MEDALLA OLEAJE!
+
+[marea.nerea.about]
+Otra prueba oficial
+de la Liga.
+---
+Prueba que venciste
+a la segunda líder.
+---
+Brilla en tu tarjeta
+de entrenador.
+
+[marea.nerea.disc]
+¡Toma también un
+disco de técnica!
+
+[marea.nerea.disc_about]
+Trae una técnica
+de agua. ¡Úsala!
+
+[marea.nerea.after]
+El mundo es como el
+mar: ¡enorme!
+---
+Sigue nadando hacia
+la Liga.
+
+
+# --- Ruta 24 (the bridge of five) ---
+[ruta24.sign]
+RUTA 24
+Puente de los Cinco
+
+[tr.explorador_r24a.pre]
+¡Soy el primero de
+los cinco!
+---
+¡Pasa si puedes!
+
+[tr.explorador_r24a.after]
+Uno menos. Sigue.
+
+[tr.chica_r24.pre]
+¡Segunda del puente!
+No será fácil.
+---
+¡Prepárate!
+
+[tr.chica_r24.after]
+¡Vaya! Sigues vivo.
+Dos de cinco.
+
+[tr.cazabichos_r24.pre]
+¡Tercero! Mis bichos
+cruzan el mar.
+---
+¡A ver!
+
+[tr.cazabichos_r24.after]
+Tres de cinco.
+
+[tr.explorador_r24b.pre]
+¡Cuarto! Solo queda
+un rival más.
+---
+¡No te confíes!
+
+[tr.explorador_r24b.after]
+Cuatro de cinco.
+Ya casi llegas.
+
+[tr.vertice_r24.pre]
+Quinto y último. Soy
+de Vértice.
+---
+¡El premio es mío!
+
+[tr.vertice_r24.after]
+Tsk… Quédate el
+premio. Qué más da.
+
+
+# --- Ruta 25 and the house of Ingeniero Teo ---
+[ruta25.sign]
+RUTA 25
+Casa de Teo adelante
+
+[tr.montanista_r25.pre]
+¡Veo la antena de
+Teo cada día!
+---
+¡Mis rocas, duras!
+
+[tr.montanista_r25.after]
+Tu equipo es duro.
+
+[tr.chica_r25.pre]
+¿Vienes a ver a Teo?
+Yo también.
+---
+¡Pero antes, un
+combate!
+
+[tr.chica_r25.after]
+Qué bien peleas.
+Suerte con Teo.
+
+[teo.books]
+Libros de radio y
+de señales.
+
+[teo.tv]
+Una pantalla con
+ondas verdes.
+
+[teo.deaf]
+Teo lleva cascos
+enormes: no te oye.
+---
+Una perilla grande
+parpadea en la mesa.
+
+[teo.knob.turn]
+Giras la perilla.
+---
+El zumbido se apaga.
+
+[teo.knob.react]
+¡Eh! ¿Qué…? ¡Mi
+bucle! ¡Se paró!
+
+[teo.knob.again]
+La perilla está en
+su sitio.
+
+[teo.thanks]
+¡Gracias! Estaba en
+mi propio bucle.
+---
+Soy Teo. Inventé el
+sistema de PC.
+---
+Como agradecimiento,
+toma esto.
+
+[teo.pc]
+Mi PC guarda tus
+Elementis en cajas.
+---
+¡Úsalo si quieres!
+
+[teo.after]
+Con ese pase podrás
+subir al ferry.
+
+
+# --- C3-A world systems (contract 32): modules, Cortador, the fuse puzzle, the trade, the day care ---
+[gl.c3a.mod.cortador]
+Cortador
+
+[gl.c3a.mod.linterna]
+Linterna
+
+[gl.c3a.mod.hidro]
+Hidrodeslizador
+
+[gl.c3a.mod.empuje]
+Empuje
+
+[gl.c3a.mod.planeador]
+Planeador
+
+[gl.c3a.mod.hint]
+Úsalo en el mundo,
+ante su obstáculo.
+
+[gl.c3a.cut.no]
+Un arbusto espeso…
+Parece cortable.
+
+[gl.c3a.cut.ask]
+¿Usar Cortador?
+
+[gl.c3a.cut.done]
+¡{player} cortó
+el arbusto!
+
+[c3a.fuse.trash]
+Aquí solo
+hay basura.
+
+[c3a.fuse.first]
+¡Hay un interruptor
+bajo la basura!
+---
+¡Lo activas!
+Se enciende una luz.
+
+[c3a.fuse.again]
+El interruptor ya
+está activado.
+
+[c3a.fuse.second]
+¡Otro interruptor!
+¡Las barreras caen!
+
+[c3a.fuse.reset]
+Solo hay basura.
+---
+¡Las cerraduras
+se reiniciaron!
+
+[c3a.fuse.barrier]
+Barrera eléctrica.
+No se puede pasar.
+
+[c3a.fuse.lamp]
+Una luz brilla.
+
+[c3a.trade.ask]
+¿Cambias {v0}
+por {v1}?
+
+[c3a.trade.wrong]
+¿Eh? ¡Eso no es
+un {v0}!
+---
+Si tienes uno,
+vuelve.
+
+[c3a.trade.no]
+Vaya… Vuelve si
+cambias de idea.
+
+[c3a.trade.done]
+¡Gracias! Cuida
+bien a {v1}.
+
+[c3a.trade.after]
+¡Cuida mucho
+a {v0}!
+
+[c3a.trade.nick]
+CHIP
+
+[c3a.dc.hello]
+Soy la encargada de
+la guardería.
+
+[c3a.dc.ask_leave]
+¿Dejas un Elementi
+en la guardería?
+
+[c3a.dc.last]
+¡No puedo cuidar a
+tu único Elementi!
+
+[c3a.dc.taken]
+Lo cuidaré bien.
+Vuelve pronto.
+
+[c3a.dc.report]
+Tu {v0} subió.
+Nivel: +{v2}
+---
+Son ${v1}.
+¿Lo recoges?
+
+[c3a.dc.poor]
+No tienes dinero
+suficiente.
+
+[c3a.dc.full]
+Tu equipo está
+lleno.
+
+[c3a.dc.back]
+Aquí tienes. ¡Cuida
+de tu {v0}!
+
+[c3a.dc.no]
+Bien. ¡Hasta luego!
+
+[c3a.ambush]
+¡Eh, tú! ¡Te estaba
+buscando!
+
+# --- C3 content (contract 34) ---
+
+[gl.rg.glintail]
+Recoge lo que brilla
+y lo esconde.
+---
+Su cola anillada
+destella de noche.
+
+[gl.rg.lustrel]
+Esbelta y elegante,
+acecha sin ruido.
+---
+Su larga cola marca
+el ritmo del salto.
+
+[gl.rg.ramplet]
+Cabeza dura y muy
+testarudo. Embiste.
+---
+Pezuñas vendadas
+de púgil.
+
+[gl.rg.ibexer]
+Íbice de pie con
+cuernos curvados.
+---
+Guarda su posición
+y no cede un paso.
+
+[gl.rg.mesmoli]
+Se cuelga de una
+rama, dormitando.
+---
+Sus ojos de anillos
+marean al mirarte.
+
+[gl.rg.mesmaris]
+De brazos largos,
+abre las manos.
+---
+Su frente brilla
+como un tercer ojo.
+
+[gl.rg.drillroot]
+Un camote con punta
+de taladro.
+---
+Solo asoman sus ojos
+sobre la tierra.
+
+[gl.rg.augeroot]
+Raíz enorme con tres
+puntas que giran.
+---
+Excava un túnel en
+un santiamén.
+
+[gl.rg.spoolt]
+Bobina de cobre viva
+rueda y da chispas.
+---
+Se enciende si algo
+la toca.
+
+[gl.rg.voltspool]
+Tres anillos de
+alambre y chispas.
+---
+Parece un dínamo
+encendido a tope.
+
+[gl.rg.otterock]
+Flota boca arriba y
+rompe conchas.
+---
+Siempre carga su
+piedra favorita.
+
+[gl.tr.explorador_r6]
+Explorador Ari
+
+[gl.tr.chica_r6]
+Chica Nina
+
+[gl.tr.cazabichos_r6]
+Cazabichos Ian
+
+[gl.tr.pescador_r6]
+Pescador Gus
+
+[gl.tr.mecanico_r11a]
+Mecánico Pol
+
+[gl.tr.pescador_r11]
+Pescador Moe
+
+[gl.tr.explorador_r11]
+Explorador Fran
+
+[gl.tr.mecanico_r11b]
+Mecánico Vic
+
+[gl.tr.chica_r11]
+Chica Pía
+
+[gl.tr.marinero_f1]
+Marinero Mateo
+
+[gl.tr.marinero_f2]
+Marinero Cosme
+
+[gl.tr.marinero_f3]
+Marinero Otto
+
+[gl.tr.chica_f]
+Pasajera Elsa
+
+[gl.tr.pescador_f]
+Pescador Nilo
+
+[gl.tr.mecanico_g]
+Mecánico Gil
+
+[gl.tr.aprendiz_g]
+Aprendiz Kim
+
+[gl.tr.ohm]
+Capitán Ohm
+
+[ruta5.sign]
+RUTA 5
+Marea, al norte
+
+[ruta5.gate.sign]
+CIUDAD CÉNIT
+Entrada norte
+
+[ruta5.dc.sign]
+GUARDERÍA
+Tu Elementi, a salvo
+
+[ruta5.npc.a]
+La guardería cuida
+a tu Elementi.
+---
+Mientras caminas,
+¡sube de nivel!
+
+[ruta5.npc.b]
+Hay un pasadizo
+bajo la ciudad.
+---
+Es la única forma
+de ir a la Ruta 6.
+
+[guarderia.books]
+Libros de crianza:
+Cada paso cuenta.
+
+[guarderia.bed]
+Camas para Elementis
+dormilones.
+
+[guarderia.table]
+Una mesa con
+juguetes y bayas.
+
+[guarderia.hello]
+Soy la encargada de
+la guardería.
+
+[guarderia.ask_leave]
+¿Dejas un Elementi
+en la guardería?
+
+[guarderia.last]
+¡No puedo cuidar a
+tu único Elementi!
+
+[guarderia.taken]
+Lo cuidaré bien.
+Vuelve pronto.
+
+[guarderia.report]
+Tu {v0} subió.
+Nivel: +{v2}
+---
+Son ${v1}.
+¿Lo recoges?
+
+[guarderia.poor]
+No tienes dinero
+suficiente.
+
+[guarderia.full]
+Tu equipo está
+lleno.
+
+[guarderia.back]
+Aquí tienes. ¡Cuida
+de tu {v0}!
+
+[guarderia.no]
+Bien. ¡Hasta luego!
+
+[pasadizo.keeper.n]
+Cuido el pasadizo.
+Ojo con los charcos.
+
+[pasadizo.sign]
+PASADIZO SUBTERRÁNEO
+Ruta 5 - Ruta 6
+
+[pasadizo.keeper]
+Años aquí abajo.
+Solo ratas y ecos.
+
+[pasadizo.vending]
+Una máquina de
+bebidas. Está vacía.
+
+[pasadizo.guest]
+Descanso un rato.
+¡Qué calor fuera!
+
+[ruta6.sign]
+RUTA 6
+Puerto Dínamo al sur
+
+[ruta6.gate.sign]
+CIUDAD CÉNIT
+Entrada sur
+
+[ruta6.kiosk]
+Quiosco del parque.
+Hoy está cerrado.
+
+[tr.explorador_r6.pre]
+¡Eh! ¡Mi Ramplet
+es un cabezota!
+---
+¡Vamos a probarlo!
+
+[tr.explorador_r6.after]
+Tu equipo es duro.
+Me ganó.
+
+[tr.chica_r6.pre]
+¡Mis Elementis son
+lindos y fuertes!
+---
+¡Combate conmigo!
+
+[tr.chica_r6.after]
+¡Ay! ¡Qué fuerte!
+
+[tr.cazabichos_r6.pre]
+¡Los bichos de la
+ruta son míos!
+---
+¡Mira mis capullos!
+
+[tr.cazabichos_r6.after]
+Mis bichos aún
+deben crecer.
+
+[tr.pescador_r6.pre]
+Pesco en el estanque
+desde el alba.
+---
+¡Pica y lucha!
+
+[tr.pescador_r6.after]
+Hoy no pica nada…
+salvo tú.
+
+[puerto.sign]
+PUERTO DÍNAMO
+Energía y mar
+
+[puerto.gym.sign]
+GIMNASIO VOLTIO
+Líder: Capitán Ohm
+
+[puerto.npc.a]
+El ferry Albatros
+sale de aquí.
+---
+Hace falta un pase
+para subir.
+
+[puerto.npc.b]
+El Capitán Ohm es
+un lobo de mar.
+---
+Dice que la energía
+lo mueve todo.
+
+[puerto.npc.c]
+La puerta del gym
+está tapada.
+---
+Un arbusto espeso.
+Hay que cortarlo.
+
+[puerto.ferry]
+El Ferry Albatros.
+Un barco enorme.
+
+[puerto.gangway]
+La pasarela del
+ferry.
+
+[puerto.sailor]
+¡Bienvenido a bordo!
+Se necesita un pase.
+
+[puerto.sailor.gone]
+El Albatros zarpó.
+No vuelve hoy.
+
+[puerto.board.nopass]
+¡Alto! Sin pase no
+se sube al ferry.
+---
+Pídele uno al
+ingeniero Teo.
+
+[puerto.board.ok]
+¿Pase del ferry?
+¡Adelante, {player}!
+
+[puerto.board.gone]
+El ferry ya se fue.
+Vuelve otro día.
+
+[trueque.books]
+Libro de cuentas:
+Cambio justo.
+
+[trueque.hello]
+¡Eh, marinero!
+Yo cambio Elementis.
+
+[trueque.ask]
+¿Cambias {v0}
+por {v1}?
+
+[trueque.wrong]
+¿Eh? ¡Eso no es
+un {v0}!
+---
+Si tienes uno,
+vuelve.
+
+[trueque.no]
+Vaya… Vuelve si
+cambias de idea.
+
+[trueque.done]
+¡Gracias! Cuida
+bien a {v1}.
+
+[trueque.after]
+¡Cuida mucho
+a {v0}!
+
+[trueque.nick]
+Pipo
+
+[gym.barrier]
+Barrera eléctrica.
+No se puede pasar.
+
+[gym.lamp]
+Una luz brilla.
+
+[gym.lit]
+Un gabinete de
+fusibles encendido.
+
+[gym.fuse.trash]
+Fusibles: solo
+cables viejos.
+
+[gym.fuse.first]
+¡Hay un interruptor
+en el gabinete!
+---
+¡Lo activas!
+Se enciende una luz.
+
+[gym.fuse.again]
+El interruptor ya
+está activado.
+
+[gym.fuse.second]
+¡Otro interruptor!
+¡La barrera cae!
+
+[gym.fuse.reset]
+Solo cables viejos.
+---
+¡Las cerraduras
+se reiniciaron!
+
+[tr.mecanico_g.pre]
+¡Cruzar el gimnasio
+no es un paseo!
+---
+¡Voy a fundirte!
+
+[tr.mecanico_g.after]
+Mi equipo se
+fundió…
+
+[tr.aprendiz_g.pre]
+¡Aprendo del
+Capitán Ohm!
+---
+¡Mis chispas
+son rápidas!
+
+[tr.aprendiz_g.after]
+Aún me falta
+carga…
+
+[dinamo.ohm.pre]
+¡Bienvenido, novato!
+Soy el Capitán Ohm.
+---
+En el mar, la
+corriente manda.
+---
+¡Mis Elementis
+son eléctricos!
+---
+¡Te daré una
+descarga!
+
+[dinamo.ohm.win]
+¡Increíble! Me has
+dejado sin energía.
+---
+Te has ganado esto.
+Tómalo.
+
+[dinamo.badge]
+¡{player} recibió la
+MEDALLA VOLTIO!
+
+[dinamo.ohm.about]
+Otra prueba oficial
+de la Liga.
+---
+Prueba que venciste
+al tercer líder.
+---
+Brilla en tu tarjeta
+de entrenador.
+
+[dinamo.ohm.disc]
+¡Toma también un
+disco de técnica!
+
+[dinamo.ohm.disc_about]
+Trae una técnica
+eléctrica. ¡Úsala!
+
+[dinamo.ohm.after]
+La corriente nunca
+se detiene.
+---
+Sigue adelante,
+a plena carga.
+
+[ferry.deck.hand]
+Zarpamos pronto.
+¡Ve con el capitán!
+
+[ferry.cab.sign]
+CAMAROTES
+Capitán al fondo
+
+[ferry.horn]
+¡Buuuum! ¡El ferry
+zarpa! Todos fuera.
+
+[tr.marinero_f1.pre]
+¡Hey, grumete! Aquí
+mando yo.
+---
+¡Pelea conmigo!
+
+[tr.marinero_f1.after]
+¡Me hundiste!
+Qué marea…
+
+[tr.pescador_f.pre]
+Pesco desde la
+borda del barco.
+---
+¡Mira lo que saqué!
+
+[tr.pescador_f.after]
+Se me escapó el
+pez gordo.
+
+[tr.marinero_f2.pre]
+En la mar se habla
+con los puños.
+---
+¡Defiéndete!
+
+[tr.marinero_f2.after]
+Buen golpe,
+grumete.
+
+[tr.chica_f.pre]
+Viajo en primera
+clase.
+---
+¡Pero también peleo!
+
+[tr.chica_f.after]
+¡Mis Elementis se
+marearon!
+
+[tr.marinero_f3.pre]
+¡Este pasillo es
+mío!
+---
+¡Nadie llega al
+capitán sin pasar!
+
+[tr.marinero_f3.after]
+Pasa… Pero el
+capitán está mal.
+
+[ferry.rival.hey]
+¡{player}! ¡Qué
+casualidad!
+---
+Subí al ferry con
+mi mejor equipo.
+---
+¡Veamos quién
+es más fuerte!
+
+[ferry.rival.again]
+¿Otra vez? ¡Vamos!
+
+[ferry.rival.lose]
+¡No puede ser!
+¡Estaba tan seguro!
+---
+Entrenaré aún
+más duro.
+
+[ferry.rival.next]
+Dicen que el capitán
+está mareado…
+---
+Yo me largo.
+¡Nos vemos, {player}!
+
+[ferry.captain.sick]
+Uuugh… Estoy
+mareadísimo…
+---
+Un capitán que se
+marea… ¡qué pena!
+
+[ferry.captain.ask]
+¿Le frotas la
+espalda al capitán?
+
+[ferry.captain.no]
+Uuugh… Por
+favor…
+
+[ferry.captain.better]
+Ahhh… ¡Alivio!
+Gracias, {player}.
+
+[ferry.captain.got]
+¡{player} recibió el
+módulo CORTADOR!
+
+[ferry.captain.about]
+Es un módulo del
+brazalete.
+---
+Úsalo frente a un
+arbusto espeso.
+---
+Eso sí: necesitas la
+Medalla Oleaje.
+
+[ferry.captain.after]
+Gracias a ti, ya
+navego tranquilo.
+---
+¡Buen viaje,
+{player}!
+
+[ruta11.sign]
+RUTA 11
+Alta tensión: ¡ojo!
+
+[ruta11.closed]
+CERRADO
+Obras en la línea
+
+[ruta11.guard]
+La línea de alta
+tensión se averió.
+---
+Cerrado hasta nuevo
+aviso.
+
+[tr.mecanico_r11a.pre]
+Reparo la línea.
+¡Y mis bobinas!
+---
+¡Cuidado con la
+chispa!
+
+[tr.mecanico_r11a.after]
+¡Cortocircuito!
+Me he fundido.
+
+[tr.pescador_r11.pre]
+Pesco en el estanque
+de refrigeración.
+---
+¡Los peces salen
+calentitos!
+
+[tr.pescador_r11.after]
+Hoy solo pican
+cables.
+
+[tr.explorador_r11.pre]
+¡Exploro la ruta
+bajo los cables!
+---
+¡Mi equipo es
+veloz!
+
+[tr.explorador_r11.after]
+Qué velocidad…
+la tuya.
+
+[tr.mecanico_r11b.pre]
+¡Mis Elementis
+dan descargas!
+---
+¿Te atreves?
+
+[tr.mecanico_r11b.after]
+Me dejaste
+sin carga.
+
+[tr.chica_r11.pre]
+Me da sueño con
+este zumbido…
+---
+¡Pero lucho!
+
+[tr.chica_r11.after]
+Zzz… ¿ya
+acabó?
+
+[muelle.sign]
+MUELLE DE DÍNAMO
+Zona de carga
+
+[muelle.ferry.sign]
+FERRY ALBATROS
+Embarque con pase
+
+[muelle.npc]
+Hoy pica poco. El
+mar está raro.
+---
+Dicen que el capitán
+del ferry se marea.
+
+
+# --- C4-C casino / casino (contract 37) ---
+[gl.c4c.coins.ask]
+¡Bienvenido a la
+Sala Fortuna!
+---
+¿Compras 50 monedas
+por $1000?
+
+[gl.c4c.coins.done]
+¡Gracias! Aquí
+tienes 50 monedas.
+
+[gl.c4c.coins.nocase]
+Necesitas un
+Monedero.
+
+[gl.c4c.coins.full]
+Tu Monedero
+está lleno.
+
+[gl.c4c.coins.bye]
+¡Vuelve cuando
+quieras!
+
+[gl.c4c.coins.have]
+Tienes {v2}
+monedas.
+
+[gl.c4c.coins.none]
+No tienes
+monedas.
+
+[gl.c4c.slot.out]
+¡Te quedaste sin
+monedas!
+
+[gl.c4c.prize.hello]
+¡Cambia tus monedas
+por premios!
+
+[gl.c4c.prize.ask]
+¿{v0} por
+{v2} monedas?
+
+[gl.c4c.prize.bought]
+¡Aquí tienes!
+¡Cuídalo bien!
+
+[gl.c4c.prize.no_coins]
+No tienes monedas
+suficientes.
+
+[gl.c4c.prize.full]
+Tu equipo está
+lleno.
+
+[gl.c4c.prize.bye]
+¡Vuelve pronto!
+
+# --- C4-B items and systems (contract 36) ---
+[gl.c4b.st_hp]
+PS
+
+[gl.c4b.ghost_name]
+¿Fantasma?
+
+[gl.c4b.ghost_cant]
+¡Ay! ¡El fantasma
+no se deja ver!
+
+[gl.c4b.ghost_scared]
+¡Demasiado asustado
+para atacar!
+
+[gl.c4b.ghost_nocatch]
+¡No puedes capturar
+al fantasma!
+
+[gl.c4b.ghost_frozen]
+¡El miedo no te
+deja actuar!
+
+# --- C4-A world systems (contract 35) ---
+[gl.c4a.bike.on]
+Te subes a la bici.
+
+[gl.c4a.bike.off]
+Bajas de la bici.
+
+[gl.c4a.bike.no]
+¡Aquí no puedes
+usar la bici!
+
+[gl.c4a.elev.ask]
+¿A qué piso vas?
+
+[gl.c4a.floor.b4]
+B4F
+
+[gl.c4a.floor.b3]
+B3F
+
+[gl.c4a.floor.b2]
+B2F
+
+[gl.c4a.floor.b1]
+B1F
+
+[gl.c4a.floor.f1]
+1F
+
+[gl.c4a.floor.f2]
+2F
+
+[gl.c4a.floor.f3]
+3F
+
+[gl.c4a.floor.f4]
+4F
+
+[gl.c4a.floor.f5]
+5F
+
+[c4a.test.signal]
+Fin de la prueba.
+
+# --- C4a content (contract 39) ---
+[gl.rg.wispsheet]
+Una sábana rota que
+flota en la noche.
+---
+Dos agujeros brillan
+como ojos.
+
+[gl.rg.shroudle]
+Brazos de tela que
+buscan abrazar.
+---
+Su sonrisa es una
+costura torcida.
+
+[gl.rg.gloomshroud]
+Una capa enorme con
+la cara hueca.
+---
+Su borde arde en
+llamas de sombra.
+
+[gl.rg.hatchkip]
+Su casco es la mitad
+de un huevo.
+---
+Siempre llora y
+lanza piedritas.
+
+[gl.rg.shellbrute]
+Su cascarón es ahora
+una armadura.
+---
+Su ala es un
+garrote.
+
+[gl.rg.mimbara]
+Carpincho tranquilo
+de pelo suave.
+---
+Su mechón puede
+cambiar.
+
+[gl.rg.tidebara]
+Pelo liso y aletas
+en las patas.
+---
+Un mechón con forma
+de ola.
+
+[gl.rg.embara]
+Puntas del pelo como
+brasas y vapor.
+---
+Le encantan las
+aguas termales.
+
+[gl.rg.voltbara]
+Pelo erizado en
+zigzag con chispas.
+---
+Se carga con el aire
+seco.
+
+[gl.rg.cindermeer]
+Vigila de pie con la
+cola encendida.
+---
+Avisa del peligro
+con un ladrido.
+
+[gl.rg.pyromeer]
+Una melena de llamas
+cubre sus hombros.
+---
+Guarda su territorio
+con nobleza.
+
+[gl.rg.dewlash]
+Roseta de tentáculos
+con gotas.
+---
+Atrapa a quien se
+acerca.
+
+[gl.rg.smogkeg]
+Un barril oxidado
+que gotea gas.
+---
+Su válvula es su
+boca.
+
+[gl.rg.twinkeg]
+Dos barriles unidos
+por tuberías.
+---
+Echan humo a la vez.
+
+[gl.rg.lunarelle]
+Una gran piedra
+lunar con halo.
+---
+Sus cráteres brillan
+de noche.
+
+[gl.rg.lulladream]
+Un conejo-nube de
+largas orejas.
+---
+Flotan notas
+musicales.
+
+[gl.rg.quilltyrant]
+Un puercoespín
+enorme de pie.
+---
+Su cola-aguijón es
+una maza.
+
+[gl.rg.bloomoss]
+El tulipán abre una
+corona de pétalos.
+---
+Una larga capa de
+musgo.
+
+[gl.tr.explorador_r9a]
+Explorador Edu
+
+[gl.tr.chica_r9a]
+Chica Lara
+
+[gl.tr.cazabichos_r9]
+Cazabichos Iván
+
+[gl.tr.montanista_r9]
+Montañista Brau
+
+[gl.tr.explorador_r9b]
+Explorador Saúl
+
+[gl.tr.mecanico_r9]
+Mecánico Hans
+
+[gl.tr.montanista_r10]
+Montañista Pere
+
+[gl.tr.chica_r10]
+Chica Julia
+
+[gl.tr.explorador_r10]
+Explorador Pau
+
+[gl.tr.cazabichos_r10]
+Cazabichos Fer
+
+[gl.tr.montanista_t1]
+Montañista Eloy
+
+[gl.tr.chica_t1]
+Chica Marta
+
+[gl.tr.explorador_t1]
+Explorador Luis
+
+[gl.tr.montanista_t2a]
+Montañista Gon
+
+[gl.tr.montanista_t2b]
+Montañista Ibai
+
+[gl.tr.chica_t2]
+Chica Elena
+
+[gl.tr.explorador_t2]
+Explorador Oli
+
+[gl.tr.jugador_r8a]
+Jugador Vito
+
+[gl.tr.jugador_r8b]
+Jugador Rodrigo
+
+[gl.tr.chica_r8]
+Chica Sofía
+
+[gl.tr.mecanico_r8]
+Mecánico Félix
+
+[gl.tr.chica_r7]
+Chica Irene
+
+[gl.tr.explorador_r7]
+Explorador Abel
+
+[gl.tr.jugador_r7]
+Jugador Dario
+
+[gl.tr.chica_g1]
+Chica Rosa
+
+[gl.tr.chica_g2]
+Chica Lili
+
+[gl.tr.chica_g3]
+Chica Violeta
+
+[gl.tr.medium_g]
+Médium Azucena
+
+[tr.explorador_r9a.pre]
+¡Esta colina es mía!
+---
+¡Pasa por mí
+primero!
+
+[tr.explorador_r9a.after]
+Ni con la colina…
+---
+Qué fuerte.
+
+[tr.chica_r9a.pre]
+¿Ves esos muros de
+piedra?
+---
+Los hicieron mis
+abuelos.
+---
+¡Yo defiendo el
+camino!
+
+[tr.chica_r9a.after]
+Vaya. El camino es
+tuyo.
+
+[tr.cazabichos_r9.pre]
+Los bichos viven en
+la hierba.
+---
+¡Te enseño los míos!
+
+[tr.cazabichos_r9.after]
+Mis bichos no
+aguantaron.
+
+[tr.montanista_r9.pre]
+¡Llevo todo el día
+subiendo colinas!
+---
+¡Con estas piernas
+no me gana nadie!
+
+[tr.montanista_r9.after]
+Aguantan las
+piernas,
+---
+la cabeza no.
+
+[tr.explorador_r9b.pre]
+Hay un arbusto que
+se puede cortar…
+---
+¡Pero primero tienes
+que cortarme a mí!
+
+[tr.explorador_r9b.after]
+Me cortaste a mí
+también.
+
+[tr.mecanico_r9.pre]
+Recojo chatarra por
+la ruta.
+---
+¡Mi barril apesta,
+pero pega!
+
+[tr.mecanico_r9.after]
+Mi barril se quedó
+sin gas.
+
+[tr.montanista_r10.pre]
+Último respiro antes
+del túnel.
+---
+¡Calienta con un
+combate!
+
+[tr.montanista_r10.after]
+Estás listo para el
+túnel.
+
+[tr.chica_r10.pre]
+Dicen que el túnel
+está muy oscuro.
+---
+¡Yo no me asusto!
+
+[tr.chica_r10.after]
+Qué miedo me das tú.
+
+[tr.explorador_r10.pre]
+¡Eh, tú! ¿Vas a
+cruzar el túnel?
+---
+¡Primero cruza mi
+Coilisp!
+
+[tr.explorador_r10.after]
+Cruzas más rápido
+que el túnel.
+
+[tr.cazabichos_r10.pre]
+Mis polillas siguen
+la luz.
+---
+¿Tienes una
+linterna?
+
+[tr.cazabichos_r10.after]
+¡Hasta mis polillas
+se rindieron!
+
+[tr.montanista_t1.pre]
+¡Chsss! Aquí dentro
+todo suena.
+---
+Pero mis rocas
+suenan más fuerte.
+
+[tr.montanista_t1.after]
+Hasta el eco se
+calló.
+
+[tr.chica_t1.pre]
+¡Ay! ¡Qué susto!
+---
+Creí que eras un
+murciélago.
+---
+¡Pero combatamos!
+
+[tr.chica_t1.after]
+Casi me da otro
+susto.
+
+[tr.explorador_t1.pre]
+Dejé mi linterna en
+casa…
+---
+¡Peleo a ciegas!
+
+[tr.explorador_t1.after]
+Todo oscuro…
+---
+Y no fue la cueva.
+
+[tr.montanista_t2a.pre]
+Usé la escalera de
+atajo.
+---
+¡Y me topé contigo!
+
+[tr.montanista_t2a.after]
+Mejor habría ido por
+arriba.
+
+[tr.montanista_t2b.pre]
+Llevo semanas
+entrenando abajo.
+---
+¡Se acabó el
+descanso!
+
+[tr.montanista_t2b.after]
+Entrenar tanto y
+para esto…
+
+[tr.chica_t2.pre]
+¿Tienes miedo a la
+oscuridad?
+---
+Yo la uso a mi
+favor.
+
+[tr.chica_t2.after]
+Hasta a oscuras me
+ganaste.
+
+[tr.explorador_t2.pre]
+Los túneles son mi
+hogar.
+---
+¡Entra y conoce a mi
+equipo!
+
+[tr.explorador_t2.after]
+Tu equipo brilla más
+que una linterna.
+
+[tr.jugador_r8a.pre]
+Apuesto lo que sea a
+que
+---
+mis suricatas ganan.
+---
+Todo o nada,
+forastero.
+
+[tr.jugador_r8a.after]
+Perdí la apuesta.
+Otra vez.
+
+[tr.jugador_r8b.pre]
+Me echaron del
+casino
+---
+por tener mucha
+suerte.
+---
+A ver si gana tu
+equipo.
+
+[tr.jugador_r8b.after]
+La suerte se acabó.
+
+[tr.chica_r8.pre]
+Mi Lunelle brilla de
+noche.
+---
+¿Quieres verla
+bailar?
+
+[tr.chica_r8.after]
+Bailas mejor que
+ella.
+
+[tr.mecanico_r8.pre]
+Dos barriles, doble
+peste.
+---
+¡Respira hondo y
+pelea!
+
+[tr.mecanico_r8.after]
+Se me acabó el aire.
+
+[tr.chica_r7.pre]
+Las luces de la
+ciudad ya se ven.
+---
+¡No te dejo pasar
+sin pelear!
+
+[tr.chica_r7.after]
+Ve y brilla en la
+ciudad.
+
+[tr.explorador_r7.pre]
+Salí de la ciudad a
+tomar aire.
+---
+¡Y a entrenar!
+
+[tr.explorador_r7.after]
+Mejor vuelvo a la
+ciudad.
+
+[tr.jugador_r7.pre]
+¿Una partida? Si
+pierdes, pagas.
+---
+Si pierdo, también.
+
+[tr.jugador_r7.after]
+¡Pago encantado!
+
+[tr.chica_g1.pre]
+¡Bienvenido al
+invernadero!
+---
+Todo florece aquí…
+---
+menos los novatos.
+
+[tr.chica_g1.after]
+Me marchité.
+
+[tr.chica_g2.pre]
+Riego mis plantas
+cada mañana.
+---
+¡Y a los intrusos
+también!
+
+[tr.chica_g2.after]
+Me regaste a mí.
+
+[tr.chica_g3.pre]
+Mi Mossbloom huele a
+gloria.
+---
+¡Pero muerde fuerte!
+
+[tr.chica_g3.after]
+Qué mal perder con
+tanta fragancia.
+
+[tr.medium_g.pre]
+Las plantas me
+susurran cosas.
+---
+Dicen que vas a
+perder.
+
+[tr.medium_g.after]
+Las plantas se
+equivocaron.
+
+[gl.tr.flora]
+Líder Flora
+
+[ruta2.aide.hi]
+Soy ayudante de la
+Profesora Lin.
+---
+Registramos los
+Elementis del país.
+
+[ruta2.aide.more]
+Te faltan {v2}
+especies para 10.
+---
+Vuelve cuando las
+tengas.
+
+[ruta2.aide.give]
+¡Ya tienes 10
+especies! ¡Bien!
+---
+Tengo algo para ti:
+la Linterna.
+
+[ruta2.aide.got]
+¡{player} recibió el
+módulo Linterna!
+
+[ruta2.aide.about]
+Ilumina las cuevas
+oscuras.
+---
+Se activa sola
+cuando entras.
+
+[ruta2.aide.after]
+¿Te sirve la
+Linterna?
+---
+¡Sigue registrando
+Elementis!
+
+[marea.bike.sign]
+BICIS MAREA
+---
+Vendemos y reparamos
+
+[ruta9.sign]
+RUTA 9
+---
+Al este: Ruta 10 y
+el Túnel Oscuro
+
+[ruta10.centro.sign]
+CENTRO ELEMENTI
+---
+Descansa antes del
+túnel
+
+[ruta10.tunnel.sign]
+TÚNEL OSCURO
+---
+Sin luz se ve poco.
+La Linterna ayuda.
+---
+Ayudante de Lin, en
+Ruta 2: 10 especies.
+
+[tunel.sign]
+ESCALERAS DE MANO
+---
+Bajan al nivel
+inferior.
+
+[bruma.sign]
+PUEBLO BRUMA
+---
+Donde descansan los
+recuerdos
+
+[bruma.memorial]
+JARDÍN DE LOS
+RECUERDOS
+---
+Una flor por cada
+amigo
+
+[bruma.npc.a]
+Aquí siempre hay
+niebla.
+---
+Dicen que son
+recuerdos.
+
+[bruma.npc.b]
+Mi suegro vive en
+esa casa.
+---
+Pasa mucho tiempo en
+la torre.
+
+[bruma.npc.c]
+Si oyes un lamento
+por la noche…
+---
+no mires atrás.
+
+[casa.books]
+Libros viejos de
+Elementis.
+
+[casa.photos]
+Un joven con un
+Wispsheet.
+
+[casa.rel]
+El abuelo no está.
+---
+Se fue a la torre a
+rezar.
+---
+Lleva días sin
+volver.
+
+[ruta8.gate.sign]
+CIUDAD CÉNIT
+Entrada este
+
+[ruta8.hut.sign]
+PASADIZO SUBTERRÁNEO
+---
+Hasta la Ruta 7
+
+[ruta7.hut.sign]
+PASADIZO SUBTERRÁNEO
+---
+Hasta la Ruta 8
+
+[ruta7.east.sign]
+RUTA 7
+---
+Al oeste: Metrópolis
+Neón
+
+[ruta7.holo]
+Un cartel
+holográfico:
+---
+¡METRÓPOLIS NEÓN
+NUNCA DUERME!
+
+[pasadizo2.keeper.n]
+Este pasadizo cruza
+bajo la ruta.
+---
+Sigue recto y no te
+pierdas.
+
+[pasadizo2.sign]
+PASADIZO 2
+---
+Sus anuncios llegan
+hasta aquí
+
+[pasadizo2.holo]
+Un cartel parpadea:
+---
+NEÓN, 2 MIN.
+
+[pasadizo2.holo2]
+Otro cartel:
+---
+¡COMPRA EN EL CENTRO
+COMERCIAL!
+
+[pasadizo2.keeper]
+Llevo años aquí
+abajo.
+---
+Hasta me acostumbré
+a los carteles.
+
+[pasadizo2.vending]
+Una máquina
+expendedora.
+---
+Está sin monedas.
+
+[pasadizo2.guest]
+Voy a Bruma a ver la
+torre.
+---
+Dicen que da
+escalofríos.
+
+[neon.holo.a]
+Un cartel
+holográfico:
+---
+CENTRO COMERCIAL,
+¡TODO EN UNO!
+
+[neon.holo.b]
+Otro cartel:
+---
+CLUB DE FANS: ¡ENTRA
+Y PRESUME!
+
+[neon.holo.c]
+Un cartel
+holográfico:
+---
+¡SALA FORTUNA:
+MONEDAS Y PREMIOS!
+
+[neon.sign.a]
+METRÓPOLIS NEÓN
+---
+Avenida principal
+
+[neon.sign.b]
+AVENIDA OESTE
+---
+Al gimnasio y la
+mansión
+
+[neon.mall.sign]
+CENTRO COMERCIAL
+---
+Dos plantas de
+compras
+
+[neon.centro.sign]
+CENTRO ELEMENTI
+---
+Cura a tus
+compañeros
+
+[neon.club.sign]
+CLUB DE FANS
+---
+Socios y curiosos
+
+[neon.gym.sign]
+GIMNASIO PLANTA
+---
+Líder: Flora Nyx
+
+[neon.npc.a]
+¡Qué ciudad! Nunca
+se apaga.
+
+[neon.npc.b]
+Cuidado con los
+coches.
+---
+¡Aquí van muy
+rápido!
+
+[neon.npc.c]
+El presidente del
+club habla horas.
+---
+¡Aguanta hasta el
+final!
+
+[neon.npc.d]
+El gimnasio es un
+invernadero.
+---
+Hay que cortar un
+arbusto.
+
+[neon.npc.e]
+La mansión es la
+casa más antigua.
+---
+Dicen que guarda un
+secreto.
+
+[mall.guide]
+1F: ungüentos y
+discos
+---
+2F: gemas y
+tónicos
+
+[mall.guide2]
+2F: gemas y
+tónicos
+---
+1F: ungüentos y
+discos
+
+[mall.shopper.a]
+Todo es caro, pero
+hay de todo.
+
+[mall.shopper.b]
+Las gemas se
+agotan rápido.
+---
+Compra antes de que
+se acaben.
+
+[mall.vend]
+Una máquina de
+bebidas.
+---
+¿Algo fresco?
+
+[club.chair.hi]
+¡Bienvenido al Club
+de Fans!
+---
+¡Soy el presidente!
+
+[club.chair.t1]
+¡Mi Lullabun es
+tiernísimo!
+---
+¡Mira sus ojos, su
+carita!
+
+[club.chair.t2]
+Una vez se durmió en
+mi sombrero.
+---
+¡Y no me dejó ni
+respirar!
+
+[club.chair.t3]
+A los fans nos
+encanta presumir.
+---
+¡Yo llevo quince
+años haciéndolo!
+
+[club.chair.offer]
+¡Veo que escuchas
+con paciencia!
+---
+¡Toma este cupón
+de bici!
+
+[club.chair.about]
+Llévalo a Bicis
+Marea.
+---
+¡Te lo cambian por
+una bici!
+
+[club.chair.after]
+¿Qué tal la bici?
+---
+¡Pásate cuando
+quieras!
+
+[club.fan.a]
+¡Mi Lunelle es la
+mejor del club!
+
+[club.fan.b]
+El club se reúne
+cada semana.
+---
+¡Todos bienvenidos!
+
+[club.poster.a]
+Un póster: LULLABUN,
+---
+¡EL MEJOR AMIGO!
+
+[club.poster.b]
+Un póster: CONCURSO
+DE FANS
+---
+¡Inscríbete ya!
+
+[club.poster.c]
+Fotos del presidente
+---
+con su Lullabun.
+
+[bike.hi]
+¡Bienvenido a Bicis
+Marea!
+---
+Tenemos las mejores
+del país.
+
+[bike.novoucher]
+Una bici cuesta un
+millón.
+---
+¿Tienes un cupón?
+
+[bike.voucher]
+¡Un cupón de bici!
+¡Perfecto!
+---
+Te lo cambio por una
+bici.
+
+[bike.how]
+Úsala desde la
+mochila.
+---
+Es el doble de
+rápida.
+
+[bike.how2]
+En interiores y
+cuevas, no.
+---
+¡Cuídala mucho!
+
+[bike.after]
+¿Qué tal la bici?
+---
+Es el doble de
+rápida.
+
+[mansion.books]
+Libros de arte y de
+historia.
+
+[mansion.butler]
+Bienvenido a la
+mansión.
+---
+La dueña está en lo
+alto.
+
+[mansion.maid]
+Limpiar toma toda la
+mañana.
+
+[mansion.resident]
+La casa es más vieja
+que la ciudad.
+---
+Fue la primera.
+
+[mansion.top.books]
+Un libro de
+jardinería.
+
+[mansion.top.books2]
+Un álbum de fotos de
+Mimbara.
+
+[mansion.owner.hi]
+Bienvenido a lo alto
+de la mansión.
+---
+Soy la dueña de esta
+casa.
+
+[mansion.owner.story]
+Mi Mimbara es muy
+cariñosa,
+---
+pero ya no puedo
+cuidarla.
+
+[mansion.owner.ask]
+¿Quieres cuidarla
+tú?
+
+[mansion.owner.no]
+Vaya… Piénsalo bien.
+---
+Aquí estaré.
+
+[mansion.owner.full]
+Tu equipo está
+lleno.
+---
+Vuelve con un hueco
+libre.
+
+[mansion.owner.given]
+¡{player} recibió a
+Mimbara!
+
+[mansion.owner.hint]
+Cambia de forma con
+una gema:
+---
+agua, fuego o
+trueno.
+
+[mansion.owner.after]
+¿Cómo está Mimbara?
+---
+Seguro que ya es
+fuerte.
+
+[gym.flora.pre]
+¡Bienvenido a mi
+invernadero!
+---
+Soy Flora Nyx, líder
+del gimnasio.
+---
+Mis plantas son
+suaves… y letales.
+
+[gym.flora.win]
+¡Increíble! Me has
+marchitado.
+---
+Te has ganado esto.
+---
+Tómalo.
+
+[gym.badge]
+¡{player} recibió la
+MEDALLA RAÍZ!
+
+[gym.flora.about]
+Es otra prueba
+oficial de la Liga.
+---
+Prueba que venciste
+al cuarto líder.
+---
+Brilla en tu tarjeta
+de entrenador.
+
+[gym.flora.disc]
+¡Toma también un
+disco de técnica!
+
+[gym.flora.disc_about]
+Trae una técnica de
+planta.
+---
+¡Úsala bien!
+
+[gym.flora.after]
+Mi invernadero
+siempre florece.
+---
+Gracias por el
+combate.
+
+
+# --- fog and flags fixtures (contract 40: maps/test_flags.map) ---
+[flg.test.a]
+Flag test A.
+
+[flg.test.b]
+Flag test B.
+
+[flg.test.sign]
+Cartel.
+
+[flg.test.t.a]
+Primera vez.
+
+[flg.test.t.b]
+Ya hablamos.
+
+# --- C4b content (contract 41) ---
+[gl.tr.jugador_c1]
+Jugador Aldo
+
+[gl.tr.jugador_c2]
+Jugador Mauro
+
+[gl.tr.jugador_c3]
+Jugador Nacho
+
+[gl.tr.vertice_casino]
+Agente Fito
+
+[gl.tr.vertice_b1a]
+Agente Kol
+
+[gl.tr.vertice_b1b]
+Agente Nox
+
+[gl.tr.vertice_b2a]
+Agente Ivo
+
+[gl.tr.vertice_b2b]
+Agente Rax
+
+[gl.tr.vertice_b2c]
+Agente Dro
+
+[gl.tr.vertice_b3a]
+Agente Vik
+
+[gl.tr.vertice_b3b]
+Agente Sal
+
+[gl.tr.vertice_llave]
+Agente Orr
+
+[gl.tr.vertice_b4]
+Agente Hox
+
+[gl.tr.varo]
+Director Varo
+
+[gl.tr.medium_t1]
+Médium Alma
+
+[gl.tr.medium_t3a]
+Médium Nora
+
+[gl.tr.medium_t3b]
+Médium Irma
+
+[gl.tr.medium_t3c]
+Médium Ona
+
+[gl.tr.espiritu_madre]
+Espíritu madre
+
+[gl.tr.vertice_t1]
+Agente Lur
+
+[gl.tr.vertice_t2]
+Agente Tek
+
+[neon.casino.sign2]
+SALA FORTUNA
+---
+Monedas y premios
+
+[neon.prize.sign]
+SALA DE PREMIOS
+---
+Canje de monedas
+
+[neon.diner.sign]
+RESTAURANTE
+---
+Comidas y bebidas
+
+[bruma.tower.hint]
+La torre está llena
+de fantasmas.
+---
+Sin ayuda no se ven.
+
+[bruma.tower.hint2]
+Un Lente Espectral
+te los mostraría.
+---
+Dicen que el jefe de
+Vértice tiene uno.
+
+[casa.rel2]
+¡El abuelo volvió a
+casa! ¡Gracias!
+
+[casa.anciano.hi]
+Ya estamos a salvo,
+{player}.
+
+[casa.anciano.hi2]
+Mereces una
+recompensa.
+
+[casa.anciano.flute]
+Toma esta Flauta
+Clara.
+
+[casa.anciano.about]
+Su melodía despierta
+---
+lo que duerme.
+
+[casa.anciano.after]
+Descansaré en casa.
+¡Gracias otra vez!
+
+[casino.barrier]
+Una barrera de
+energía…
+---
+bloquea la escalera.
+
+[casino.npc.a]
+Llevo toda la noche
+perdiendo…
+---
+¡La próxima gano!
+
+[casino.npc.b]
+¡La campana siempre
+me da suerte!
+
+[casino.hostess.hi]
+¡Bienvenido a la
+Sala Fortuna!
+---
+Te hace falta el
+Monedero.
+
+[casino.hostess.none]
+Aún no tienes
+monedas.
+
+[casino.poster.stop]
+¡Eh! ¡Aparta las
+manos del cartel!
+
+[casino.poster.look]
+Es un cartel de
+Vértice.
+---
+Hay algo raro
+detrás…
+
+[casino.poster.switch]
+¡Hay un interruptor
+oculto detrás!
+---
+¡Lo pulsas!
+
+[casino.poster.clack]
+¡Clic! La barrera de
+la esquina se apaga.
+
+[casino.poster.after]
+Cartel de Vértice.
+Ya no oculta nada.
+
+[tr.jugador_c1.pre]
+¡Hoy las máquinas
+me odian!
+---
+¿Una partida rápida?
+
+[tr.jugador_c1.after]
+Ni en las cartas ni
+en las máquinas…
+
+[tr.jugador_c2.pre]
+Llevo una racha de
+mala suerte…
+---
+¡Pero no contigo!
+
+[tr.jugador_c2.after]
+Sigo sin suerte.
+Iré a las máquinas.
+
+[tr.jugador_c3.pre]
+¡Apuesta conmigo!
+---
+Pierdes, me pagas.
+
+[tr.jugador_c3.after]
+Perdí… y me quedé
+sin monedas.
+
+[tr.vertice_casino.pre]
+¡Eh, este cartel no
+se toca!
+---
+¡Largo de aquí!
+
+[tr.vertice_casino.after]
+Bah… Mira el cartel
+si tanto te importa.
+
+[prize.npc.a]
+Los mejores premios
+se pagan en monedas.
+
+[prize.npc.b]
+¡Hay Elementis raros
+entre los premios!
+
+[diner.cook]
+¡Buen provecho! Hoy
+hay estofado.
+
+[diner.npc.a]
+¡Este cítrico fresco
+está delicioso!
+
+[diner.npc.b]
+Aquí cenan los
+jugadores.
+
+[diner.man.hi]
+Perdí mis ahorros en
+la Sala Fortuna…
+
+[diner.man.t1]
+Ya no juego más.
+Me deshago de esto.
+
+[diner.man.offer]
+Toma mi Monedero.
+¡Suerte!
+
+[diner.man.about]
+Úsalo en la Sala de
+Juegos.
+---
+Compra monedas allí.
+
+[diner.man.after]
+No vuelvo a apostar
+nunca más.
+
+[hide.lift.locked]
+El ascensor no
+responde.
+
+[hide.lift.locked2]
+Hay una ranura
+para una llave.
+
+[hide.lift.on]
+La llave encaja y el
+ascensor se activa.
+
+[hide.term.a]
+Pantalla: cifras de
+la Sala Fortuna.
+---
+Vértice se queda
+con casi todo.
+
+[hide.term.b]
+Plano del escondite:
+las flechas mandan.
+
+[hide.term.c]
+Nota: "Orr guarda la
+Llave Polea."
+
+[hide.key.pre]
+¿Buscas la Llave
+Polea?
+---
+¡Quítamela!
+
+[hide.key.win]
+Grr… ¡Está bien!
+Toma la llave.
+
+[hide.key.after_give]
+Usa el panel de la
+B1F o la B2F.
+
+[hide.key.after]
+No tengo nada más…
+Vete ya.
+
+[hide.varo.pre]
+Así que tú eres el
+entrometido.
+---
+Soy Varo, director
+de Vértice.
+---
+¡No saldrás de aquí
+sin pelear!
+
+[hide.varo.win]
+¡Imposible! He
+perdido…
+
+[hide.varo.win2]
+Vértice se retira de
+aquí. Esto no acaba.
+
+[hide.varo.gone]
+Varo huyó por una
+puerta secreta.
+
+[hide.varo.lente]
+¡Dejó caer algo en
+su huida!
+
+[hide.lente.about]
+Con el Lente se ven
+los fantasmas.
+
+[tr.vertice_b1a.pre]
+¡Un intruso! Esto es
+de Vértice.
+---
+¡Te echaremos!
+
+[tr.vertice_b1a.after]
+Maldición…
+El jefe lo sabrá.
+
+[tr.vertice_b1b.pre]
+¿Perdido entre las
+flechas?
+---
+¡Yo te guío… fuera!
+
+[tr.vertice_b1b.after]
+Y yo que sabía el
+camino…
+
+[tr.vertice_b2a.pre]
+¡Alto! Abajo es
+zona privada.
+---
+¡Atrás!
+
+[tr.vertice_b2a.after]
+Mis Elementis…
+¡Perdón, jefe!
+
+[tr.vertice_b2b.pre]
+Escuché ruido…
+¡Eras tú!
+
+[tr.vertice_b2b.after]
+Ay, mi cabeza…
+
+[tr.vertice_b2c.pre]
+¡Mis tres Elementis
+te machacarán!
+
+[tr.vertice_b2c.after]
+Mis tres…
+derrotados.
+
+[tr.vertice_b3a.pre]
+No pasarás de aquí.
+Órdenes de Varo.
+
+[tr.vertice_b3a.after]
+Varo me
+castigará…
+
+[tr.vertice_b3b.pre]
+Aquí abajo no hay
+salida para ti.
+
+[tr.vertice_b3b.after]
+Imposible…
+
+[tr.vertice_b4.pre]
+El director no
+recibe visitas.
+
+[tr.vertice_b4.after]
+Lo siento, jefe…
+
+[torre.stele.a]
+"Aquí descansa un
+viejo amigo."
+
+[torre.stele.b]
+"Siempre te
+recordaremos."
+
+[torre.stele.c]
+"Descansa en paz,
+nuestro pequeño."
+
+[torre.stele.d]
+"Nos acompañó
+hasta el final."
+
+[torre.npc.a]
+Vengo a dejar flores
+por mi compañero.
+
+[torre.npc.b]
+La torre es un lugar
+de descanso…
+---
+Pero algo la
+perturba.
+
+[torre.npc.c]
+Un joven con mala
+cara pasó por aquí.
+
+[torre.rival.hey]
+¡Eh, {player}!
+¿Qué haces aquí?
+---
+¿Vienes a ver
+fantasmas? ¡Ja!
+---
+Antes, ¡te enseño lo
+que he aprendido!
+
+[torre.rival.again]
+¿Otra vez? ¡Vamos!
+
+[torre.rival.lose]
+¡Argh! ¡Perdí otra
+vez!
+
+[torre.rival.next]
+Seguiré entrenando.
+¡Hasta luego!
+
+[torre.ghost.chill]
+El aire se vuelve
+helado…
+
+[torre.ghost.chill2]
+Algo invisible
+bloquea la escalera.
+
+[torre.ghost.back]
+¡Te empuja hacia
+atrás!
+
+[torre.ghost.seen]
+¡Con el Lente se ve!
+Un espíritu antiguo.
+
+[torre.ghost.seen2]
+Es la madre de una
+cría perdida.
+
+[torre.ghost.rest]
+El espíritu sonríe
+con tristeza…
+
+[torre.ghost.rest2]
+Por fin puede
+descansar.
+
+[torre.ghost.rest3]
+La escalera queda
+libre.
+
+[torre.anciano.help]
+¡Ayuda! Estos tipos
+me retienen aquí.
+
+[torre.anciano.thanks]
+¡Gracias, {player}!
+Me has salvado.
+
+[torre.anciano.thanks2]
+Salgamos de aquí.
+Ven a mi casa.
+
+[torre.anciano.home]
+¡Vamos!
+
+[tr.medium_t1.pre]
+Siento a los que
+se fueron…
+---
+¡Y tú los molestas!
+
+[tr.medium_t1.after]
+Los espíritus
+se calman.
+
+[tr.medium_t3a.pre]
+Los fantasmas me
+hablan…
+---
+¡Dicen que te vayas!
+
+[tr.medium_t3a.after]
+Aun así, no se
+callan.
+
+[tr.medium_t3b.pre]
+Mi mente es como
+una niebla…
+---
+¡Pasa si te atreves!
+
+[tr.medium_t3b.after]
+La niebla
+se disipa…
+
+[tr.medium_t3c.pre]
+¡Siente el frío de
+la torre!
+---
+¡Te congelará!
+
+[tr.medium_t3c.after]
+Me congelé yo
+misma…
+
+[tr.vertice_t1.pre]
+¡Este viejo es
+nuestro rehén!
+---
+¡No lo toques!
+
+[tr.vertice_t1.after]
+Auch… ¡Que el jefe
+no se entere!
+
+[tr.vertice_t2.pre]
+Los fantasmas nos
+sirven de guardia.
+---
+¡Lárgate!
+
+[tr.vertice_t2.after]
+Hasta los fantasmas
+me abandonan…
+
+# --- C5-B items, Reserva Salvaje and rods (contract 43) ---
+[gl.c5b.sf_ball]
+Cristal x{v2}
+
+[gl.c5b.sf_rock]
+Piedra
+
+[gl.c5b.sf_bait]
+Cebo
+
+[gl.c5b.sf_threw_rock]
+¡Lanzaste una
+piedra!
+
+[gl.c5b.sf_threw_bait]
+¡Lanzaste
+cebo!
+
+[gl.c5b.sf_angry]
+¡{v0} se ha
+enfurecido!
+
+[gl.c5b.sf_eating]
+¡{v0} está
+comiendo!
+
+[gl.c5b.sf_fled]
+¡{v0} salvaje
+huyó!
+
+[gl.c5b.sf_none]
+¡No te quedan
+cristales!
+
+[gl.c5b.rv_time]
+¡Se acabó el
+tiempo!
+
+[gl.c5b.rv_balls]
+¡Se acabaron los
+cristales!
+
+[gl.c5b.rv_left]
+Pasos: {v2}
+Cristal: {v3}
+
+# --- C5-A world systems (contract 42) ---
+[gl.c5a.surf.ask]
+¿Usar
+Hidrodeslizador?
+
+[gl.c5a.surf.bike]
+Baja de la bici
+antes de usarlo.
+
+[gl.c5a.push.ask]
+¿Usar Empuje?
+
+[gl.c5a.push.used]
+¡Empuje activado!
+Ya mueves rocas.
+
+[gl.c5a.push.on]
+Empuja la roca
+para moverla.
+
+[gl.c5a.push.no]
+Una roca enorme.
+Hace falta Empuje.
+
+[gl.c5a.fish.bite]
+Lanzas el sedal…
+---
+¡Algo pica!
+
+[gl.c5a.fish.none]
+Lanzas el sedal…
+---
+No pica nada.
+
+[gl.c5a.sleep.look]
+Algo enorme duerme
+bloqueando el paso.
+
+[gl.c5a.sleep.ask]
+¿Tocar la Flauta?
+
+[gl.c5a.sleep.woke]
+¡Se despertó!
+
+[gl.c5a.gate.bike]
+¡La Autopista es
+solo para bicis!
+
+# --- IR LINK (contract 45) ---
+[gl.lk.search]
+Buscando amigo…
+
+[gl.lk.aim]
+Experimental: apunta
+los IR de ambos.
+
+[gl.lk.pick]
+Elige un Elementi
+
+[gl.lk.wait]
+Esperando al
+amigo…
+
+[gl.lk.ot]
+EO:
+
+[gl.lk.swap]
+¿Hacer el cambio?
+
+[gl.lk.trading]
+Intercambiando…
+
+[gl.lk.teams]
+Intercambiando
+equipos…
+
+[gl.lk.done]
+¡Intercambio
+completado!
+---
+¡{v0} se une
+a tu equipo!
+
+[gl.lk.cancel]
+Intercambio
+cancelado.
+
+[gl.lk.declined]
+Tu amigo no
+ha aceptado.
+
+[gl.lk.nopartner]
+No encuentro a
+ningún amigo.
+
+[gl.lk.error]
+Se perdió la
+conexión.
+
+[gl.lk.version]
+Los juegos son de
+versión distinta.
+
+[gl.lk.bad]
+Datos no válidos
+del amigo.
+
+[gl.lk.selftest]
+Prueba IR
+{v2} B/s
+
+# --- C6 systems (contract 46) ---
+[gl.c6.door.locked]
+Cerrada con llave
+electrónica.
+---
+Hace falta:
+{v0}
+
+[gl.c6.door.open]
+¡Usaste {v0}!
+La puerta se abre.
+
+[gl.c6.gift.ask]
+¿Quieres a
+{v0}?
+
+[gl.c6.gift.got]
+¡Recibiste a
+{v0}!
+
+[gl.c6.gift.fail]
+No puedes llevarte
+a {v0} ahora.
+
+[gl.c6.fly.badge]
+El Planeador no
+obedece todavía.
+---
+Hace falta la
+Medalla Voltio.
+
+[c6sys.person]
+Nadie llega aquí
+sin teletransporte.
+
+# --- C5a content (contract 47) ---
+[gl.rg.flopfin]
+Salta sin parar pero
+no llega a nada.
+---
+Su cola enorme pesa
+demasiado.
+
+[gl.rg.stormgill]
+Su furia levanta
+tormentas.
+---
+Si se enfurece,
+destruye todo.
+
+[gl.rg.urchip]
+Una bola de púas con
+dos ojos grandes.
+---
+Flota a la deriva
+en aguas someras.
+
+[gl.rg.urchlord]
+Una corona de púas
+largas y venenosas.
+---
+Su boca de estrella
+se abre abajo.
+
+[gl.rg.clubrimp]
+Dos mazos plegados
+y ojos en tallos.
+---
+Golpea más rápido
+que un parpadeo.
+
+[gl.rg.smashrimp]
+Una coraza enorme y
+mazos en guardia.
+---
+Rompe rocas de un
+solo golpe.
+
+[gl.rg.skipgoby]
+Salta por el fango
+con sus aletas.
+---
+Sus ojos saltones
+vigilan arriba.
+
+[gl.rg.gobyhop]
+Ya salta también
+en tierra firme.
+---
+Sus aletas crecen
+como bracitos.
+
+[gl.rg.gobrawl]
+De pie; sus aletas
+son brazos fuertes.
+---
+Su cinturón de algas
+es de campeón.
+
+[gl.rg.lazatee]
+Cría de manatí
+dormilona y lenta.
+---
+Sus ojos siempre
+medio cerrados.
+
+[gl.rg.sagatee]
+Manatí sabio con
+percebes de corona.
+---
+Si sus ojos brillan,
+todo lo sabe.
+
+[gl.rg.slumberth]
+Un perezoso gigante
+hecho una bola.
+---
+Con musgo en el pelo
+y un nido encima.
+
+[gl.rg.lambalm]
+Corderito de lana
+redonda y campana.
+---
+Su lana cura
+cualquier herida.
+
+[gl.rg.wombamma]
+Wombat robusta con
+su cría a cuestas.
+---
+Nadie se acerca
+a su cría.
+
+[gl.rg.razorfly]
+Libélula esbelta de
+alas como navajas.
+---
+Sus ojos compuestos
+lo ven todo.
+
+[gl.rg.gnucharge]
+Ñu de la sabana de
+melena y cuernos.
+---
+Embiste con todo
+sin mirar atrás.
+
+[gl.rg.reefling]
+Culebra marina bebé
+y cuerno de coral.
+---
+Bigotes de perla
+adornan su cara.
+
+[gl.rg.reefcoil]
+Larga serpiente de
+coral con perlas.
+---
+Sus aletas ondulan
+como cintas.
+
+[gl.rg.reefdragon]
+Gran dragón alado de
+coral y abanicos.
+---
+Dicen que protege
+los arrecifes.
+
+[gl.rg.slickslime]
+Aceite vivo con
+brillo de arcoíris.
+---
+Burbujas flotan
+en su cuerpo.
+
+[gl.rg.tarbog]
+Charco de alquitrán
+con chatarra.
+---
+Su hedor se nota
+a kilómetros.
+
+[gl.tr.pescador_r12a]
+Pescador Beni
+
+[gl.tr.pescador_r12b]
+Pescador Tano
+
+[gl.tr.pescador_r12c]
+Pescador Remo
+
+[gl.tr.explorador_r13a]
+Explorador Joel
+
+[gl.tr.chica_r13]
+Chica Bea
+
+[gl.tr.rider_r13]
+Rider Axel
+
+[gl.tr.explorador_r13b]
+Explorador Ivar
+
+[gl.tr.explorador_r14]
+Explorador Noé
+
+[gl.tr.rider_r14a]
+Rider Tito
+
+[gl.tr.punk_r14]
+Punk Roque
+
+[gl.tr.chica_r14]
+Chica Mía
+
+[gl.tr.rider_r14b]
+Rider Bram
+
+[gl.tr.rider_r15]
+Rider Kira
+
+[gl.tr.chica_r15]
+Chica Nadia
+
+[gl.tr.explorador_r15]
+Explorador Biel
+
+[gl.tr.punk_r15]
+Punk Ziggy
+
+[gl.tr.ninja_g1]
+Discípulo Ren
+
+[gl.tr.ninja_g2]
+Discípula Aki
+
+[gl.tr.ninja_g3]
+Discípulo Sai
+
+[gl.tr.ninja_g4]
+Discípulo Ryo
+
+[gl.tr.kai]
+Líder Kai
+
+[tr.pescador_r12a.pre]
+Pesco desde que
+salió el sol.
+
+[tr.pescador_r12a.after]
+Se me espantaron
+los peces.
+
+[tr.pescador_r12b.pre]
+¡Mis anzuelos
+son legendarios!
+
+[tr.pescador_r12b.after]
+Hasta el anzuelo
+se rindió.
+
+[tr.pescador_r12c.pre]
+Hay peces enormes
+en esta bahía.
+
+[tr.pescador_r12c.after]
+Tú sí que manejas
+la caña.
+
+[tr.explorador_r13a.pre]
+¡Mis pájaros te
+van a picotear!
+
+[tr.explorador_r13a.after]
+Mis pájaros se
+asustaron.
+
+[tr.chica_r13.pre]
+¿Te gustan las
+flores silvestres?
+
+[tr.chica_r13.after]
+Me has dejado
+marchita.
+
+[tr.rider_r13.pre]
+¡Mi aerodeslizador
+es más rápido!
+
+[tr.rider_r13.after]
+Perdí hasta
+la velocidad.
+
+[tr.explorador_r13b.pre]
+Este laberinto de
+vallas es mi casa.
+
+[tr.explorador_r13b.after]
+Me perdí en
+la derrota.
+
+[tr.explorador_r14.pre]
+Nadie cruza mis
+vallas sin pelear.
+
+[tr.explorador_r14.after]
+Pasa, pasa.
+
+[tr.rider_r14a.pre]
+¡A toda velocidad,
+forastero!
+
+[tr.rider_r14a.after]
+Frené en seco.
+
+[tr.punk_r14.pre]
+Mis púas son más
+filosas que tú.
+
+[tr.punk_r14.after]
+Se me aplastó
+el peinado.
+
+[tr.chica_r14.pre]
+¡Mis flores huelen
+de maravilla!
+
+[tr.chica_r14.after]
+Se marchitaron
+mis pétalos.
+
+[tr.rider_r14b.pre]
+¡Apuesto a que no
+me alcanzas!
+
+[tr.rider_r14b.after]
+Me alcanzaste.
+
+[tr.rider_r15.pre]
+Los molinos giran
+como mis ruedas.
+
+[tr.rider_r15.after]
+Se me paró
+el motor.
+
+[tr.chica_r15.pre]
+El viento trae
+buenos combates.
+
+[tr.chica_r15.after]
+El viento cambió.
+
+[tr.explorador_r15.pre]
+Desde aquí se ve
+toda la pradera.
+
+[tr.explorador_r15.after]
+Te vi venir.
+
+[tr.punk_r15.pre]
+¡Este camino es
+mío, novato!
+
+[tr.punk_r15.after]
+Está bien, pasa.
+
+[tr.ninja_g1.pre]
+Silencio. Mi veneno
+llega antes que tú.
+
+[tr.ninja_g1.after]
+Ni el veneno
+te frenó.
+
+[tr.ninja_g2.pre]
+Sin ruido y sin
+que lo notes…
+
+[tr.ninja_g2.after]
+Me viste venir.
+
+[tr.ninja_g3.pre]
+El laberinto es
+mi dojo. Pierde.
+
+[tr.ninja_g3.after]
+Conoces el
+camino.
+
+[tr.ninja_g4.pre]
+Paso a paso te
+hundo en la niebla.
+
+[tr.ninja_g4.after]
+Sigue; Kai espera.
+
+[ruta12.sign]
+RUTA 12
+---
+Norte: Pueblo Bruma
+Sur: Ruta 13
+
+[ruta12.pier]
+MUELLE DE PESCA
+---
+Caña en mano,
+mira al agua.
+
+[ruta12.npc.a]
+El mar es enorme.
+Da miedo y encanta.
+
+[ruta12.npc.b]
+Dicen que un gigante
+duerme al final.
+---
+Solo una melodía
+lo despertará.
+
+[ruta12.guru.a]
+¡Ey, joven! ¿Te
+gusta pescar?
+
+[ruta12.guru.b]
+Toma esta Caña
+Junco. Es tuya.
+
+[ruta12.guru.about]
+Úsala en la mochila,
+mirando al agua.
+
+[ruta12.guru.after]
+Las cañas mejores
+están en Ámbar.
+
+[ruta13.sign]
+RUTA 13
+---
+Este: Ruta 12
+Oeste: Ruta 14
+
+[ruta13.sign2]
+¡Cuidado con las
+vallas!
+---
+No todas llevan
+a la salida.
+
+[ruta13.npc]
+Las flores crecen
+entre las vallas.
+
+[ruta14.sign]
+RUTA 14
+---
+Este: Ruta 13
+Oeste: Ruta 15
+
+[ruta14.sign2]
+Las vallas van de
+norte a sur.
+---
+Busca el hueco.
+
+[ruta14.npc]
+Mi abuela dice que
+las vallas guían.
+
+[ruta15.sign]
+RUTA 15
+---
+Este: Ruta 14
+Oeste: Ciudad Ámbar
+
+[ruta15.sign2]
+MOLINOS DE LA
+PRADERA
+---
+Giran con el viento
+del oeste.
+
+[ruta15.npc]
+Cuando el molino
+gira rápido, llueve.
+
+[ambar.sign]
+CIUDAD ÁMBAR
+---
+Donde el mar toca
+la sabana
+
+[ambar.sign.gym]
+GIMNASIO VENENO
+---
+Líder: Kai
+
+[ambar.sign.reserva]
+RESERVA SALVAJE
+---
+Entrada: $500
+
+
+
+
+
+
+[ambar.npc.a]
+Aquí el aire huele
+a sal y a sabana.
+
+[ambar.npc.b]
+Mi marido cuida la
+Reserva.
+---
+¡Perdió su dentadura
+dorada!
+
+[ambar.npc.c]
+Las palmeras dan
+sombra todo el año.
+
+[cana.a]
+¡Bienvenido! Soy el
+hermano del gurú.
+
+[cana.b]
+Toma esta Caña
+Fibra.
+
+[cana.about]
+Pica más y atrapa
+mejores peces.
+
+[cana.after]
+Pesca con calma,
+lo bueno tarda.
+
+[guardian.a]
+Soy el Guardián de
+la Reserva Salvaje.
+---
+Perdí mi dentadura
+dorada…
+---
+Creo que se me cayó
+en la Reserva.
+
+[guardian.case]
+Una vitrina vacía
+sin sus dientes.
+
+[gym.kai.pre]
+Bienvenido, joven.
+Soy Kai, el ninja.
+---
+Mi veneno no se ve
+ni se huele.
+---
+¡Prepárate para
+perder el aliento!
+
+[gym.kai.win]
+¡Imposible! Mi
+veneno no bastó.
+---
+Ganaste la medalla
+del gimnasio.
+---
+Tómala.
+
+[gym.kai.badge]
+¡{player} recibió la
+MEDALLA TOXINA!
+
+[gym.kai.about]
+Es otra prueba
+oficial de la Liga.
+---
+Prueba que venciste
+al quinto líder.
+---
+Con ella obedecerá
+el Hidrodeslizador.
+
+[gym.kai.disc]
+Toma esto: un disco
+de mi técnica.
+
+[gym.kai.disc_about]
+Trae una técnica de
+veneno.
+---
+Duele lento y firme.
+
+[gym.kai.after]
+Mi veneno aún
+te persigue.
+---
+Gracias por el
+combate.
+
+# --- C5b content (contract 48) ---
+
+[gl.tr.punk_r16a]
+Punk Dirk
+
+
+[gl.tr.rider_r16]
+Rider Mara
+
+
+[gl.tr.punk_r16b]
+Punk Roco
+
+
+[gl.tr.rider_ap1]
+Rider Cano
+
+
+[gl.tr.punk_ap1]
+Punk Vex
+
+
+[gl.tr.rider_ap2]
+Rider Lola
+
+
+[gl.tr.punk_ap2]
+Punk Pico
+
+
+[gl.tr.rider_ap3]
+Rider Gabo
+
+
+[gl.tr.punk_ap3]
+Punk Zeke
+
+
+[gl.tr.rider_ap4]
+Rider Hana
+
+
+[gl.tr.punk_ap4]
+Punk Brutus
+
+
+[gl.tr.rider_r18]
+Rider Ines
+
+
+[gl.tr.explorador_r18]
+Explorador Uri
+
+
+[gl.tr.pescador_r18]
+Pescador Noa
+
+
+[gl.tr.nadadora_m1]
+Nadadora Gala
+
+
+[gl.tr.nadadora_m2]
+Nadadora Tina
+
+
+[tr.punk_r16a.pre]
+¡Eh, tú! Este camino
+es de mi pandilla.
+
+
+[tr.punk_r16a.after]
+Mi pandilla está
+en la Autopista.
+
+
+[tr.rider_r16.pre]
+Mi bici corre más
+que tú.
+
+
+[tr.rider_r16.after]
+Sin bici no pasas
+por la Autopista.
+
+
+[tr.punk_r16b.pre]
+¿Despertaste al
+Elementi dormido?
+
+
+[tr.punk_r16b.after]
+Roncaba tan fuerte
+que dolía.
+
+
+[tr.rider_ap1.pre]
+¡Bajada libre!
+¡Agárrate!
+
+
+[tr.rider_ap1.after]
+Qué rápido
+fue todo.
+
+
+[tr.punk_ap1.pre]
+En este carril
+mando yo.
+
+
+[tr.punk_ap1.after]
+Hoy no es mi día.
+
+
+[tr.rider_ap2.pre]
+¡No frenes! ¡Ni
+lo pienses!
+
+
+[tr.rider_ap2.after]
+Casi me caigo.
+
+
+[tr.punk_ap2.pre]
+Esta cuesta no
+tiene fin. ¡Pelea!
+
+
+[tr.punk_ap2.after]
+Mi rueda quedó
+chueca.
+
+
+[tr.rider_ap3.pre]
+¡A toda
+velocidad!
+
+
+[tr.rider_ap3.after]
+Nos vemos en el
+próximo tramo.
+
+
+[tr.punk_ap3.pre]
+Mis ruedas,
+mis reglas.
+
+
+[tr.punk_ap3.after]
+Algún día te
+alcanzo.
+
+
+[tr.rider_ap4.pre]
+¡Último tramo!
+¿Te atreves?
+
+
+[tr.rider_ap4.after]
+Me quedé sin
+aliento.
+
+
+[tr.punk_ap4.pre]
+Nadie pasa sin
+pelear conmigo.
+
+
+[tr.punk_ap4.after]
+Está bien, pasa.
+
+
+[tr.rider_r18.pre]
+Aquí termina la
+carrera. ¡Pelea!
+
+
+[tr.rider_r18.after]
+El malecón es
+más tranquilo.
+
+
+[tr.explorador_r18.pre]
+Sigo el vuelo de
+las aves marinas.
+
+
+[tr.explorador_r18.after]
+Las gaviotas me
+ganaron.
+
+
+[tr.pescador_r18.pre]
+¡Pican los peces
+y las peleas!
+
+
+[tr.pescador_r18.after]
+Se me fue el
+buen pique.
+
+
+[tr.nadadora_m1.pre]
+¡El agua está
+perfecta! ¡Ven!
+
+
+[tr.nadadora_m1.after]
+Qué fresca está
+el agua.
+
+
+[tr.nadadora_m2.pre]
+No cruzarás sin
+ganarme.
+
+
+[tr.nadadora_m2.after]
+Sigue: el mar es
+grande.
+
+
+[neon.west.sign]
+SALIDA OESTE
+---
+Oeste: Ruta 16
+Y la Autopista Mag
+
+
+[ruta16.sign]
+RUTA 16
+---
+Este: Neón
+Sur: Autopista Mag
+
+
+[ruta16.gate.sign]
+AUTOPISTA MAG
+---
+Solo para bicis.
+¡Todo cuesta abajo!
+
+
+[ruta16.house.sign]
+CASA DE LA PESCA
+---
+Aquí se regalan
+cañas de pescar.
+
+
+[ruta16.npc.a]
+Ese Elementi enorme
+bloquea el camino.
+---
+Dicen que una flauta
+lo despertaría.
+
+
+[ruta16.npc.b]
+¿Ves ese arbusto?
+Tapa una casita.
+---
+Alguien vive
+detrás.
+
+
+[cana2.a]
+¡Qué hay, joven!
+¿Pescas mucho?
+
+
+[cana2.b]
+Te regalo mi
+Caña Aleación.
+
+
+[cana2.about]
+Úsala en la mochila
+mirando al agua.
+---
+Con ella pican los
+peces más raros.
+
+
+[cana2.after]
+Pesca con la
+Caña Aleación.
+
+
+[plane.a]
+¡Hola! Me encantan
+las aves.
+
+
+[plane.b]
+Mira, te doy el
+Planeador.
+
+
+[plane.got]
+¡{player} recibió el
+módulo Planeador!
+
+
+[plane.about]
+Vuela a las ciudades
+que ya visitaste.
+---
+Necesitas la Medalla
+Voltio.
+
+
+[plane.after]
+El Planeador te
+lleva de vuelta.
+
+
+[plane.poster]
+Un cartel de aves
+planeando.
+
+
+[ap.sign]
+AUTOPISTA MAG
+---
+Bajada larga.
+Déjate llevar.
+
+
+[ap.sign2]
+ZONA DE PANDILLAS
+---
+Aquí mandan los
+riders y los punks.
+
+
+[r18.sign]
+RUTA 18
+---
+Oeste: Autopista Mag
+Este: Ciudad Ámbar
+
+
+[r18.sign2]
+MALECÓN
+---
+Se puede pescar
+desde el muelle.
+
+
+[r18.npc.a]
+Desde aquí se ve el
+mar abierto.
+---
+Con Hidrodeslizador
+podrías cruzarlo.
+
+
+[puerta.hi]
+¡Bienvenido a la
+Reserva Salvaje!
+---
+Por $500 recibes 30
+cristales.
+---
+Tienes 500 pasos
+para capturar.
+
+
+[puerta.ask]
+¿Quieres entrar?
+
+
+[puerta.no]
+Vuelve cuando
+quieras.
+
+
+[puerta.ok]
+¡Aquí tienes 30
+cristales!
+---
+¡Que tengas buena
+caza!
+
+
+[puerta.full]
+Tu mochila está
+llena.
+---
+Libera espacio para
+los cristales.
+
+
+[puerta.in]
+Ya estás dentro de
+la Reserva.
+
+
+[puerta.nopay]
+¡Primero paga la
+entrada!
+---
+Habla con el
+recepcionista.
+
+
+[puerta.leave]
+¿Terminas la visita
+ahora?
+
+
+[puerta.bye]
+Gracias por venir.
+¡Vuelve pronto!
+
+
+[puerta.board]
+REGLAS DE LA
+RESERVA
+---
+$500: 30 cristales y
+500 pasos.
+---
+No hay combates:
+piedras o cebo.
+
+
+[rv.sign1]
+RESERVA SALVAJE
+---
+Zona 1
+Norte: Zona 2
+
+
+[rv.sign2]
+ZONA 2
+---
+Casa de descanso
+al oeste.
+
+
+[rv.sign3]
+ZONA 3
+---
+Terreno rocoso.
+Cuidado al pasar.
+
+
+[rv.sign4]
+ZONA 4
+---
+La zona más
+profunda.
+
+
+[rest.a]
+Un anciano perdió
+sus dientes aquí.
+---
+Creo que los vi en
+la Zona 3.
+
+
+[rest.b]
+Lambalm casi no
+aparece.
+---
+Lanza cebo: se
+quedará más tiempo.
+
+
+[rest.books]
+Libros sobre la
+vida de Elementis.
+
+
+[secret.a]
+¡Por fin alguien
+llegó a mi casa!
+---
+Te mereces un
+regalo.
+
+
+[secret.got]
+¡{player} recibió el
+Hidrodeslizador!
+
+
+[secret.about]
+Te deja surcar el
+agua.
+---
+Úsalo mirando al
+agua.
+
+
+[secret.about2]
+Necesitas la Medalla
+Toxina.
+
+
+[secret.after]
+Disfruta del mar.
+
+
+[guardian.b]
+¡Mi dentadura
+dorada!
+---
+¡Por fin la
+encontraste!
+---
+Toma esto, en
+agradecimiento.
+
+
+[guardian.got]
+¡{player} recibió el
+módulo Empuje!
+
+
+[guardian.about]
+Mueve rocas
+pesadas.
+---
+Úsalo frente a una
+roca grande.
+
+
+[guardian.about2]
+Necesitas la Medalla
+Raíz.
+
+
+[guardian.after]
+Con Empuje moverás
+rocas pesadas.
+
+
+[secret.chart]
+Una carta marina con
+rutas dibujadas.
+
+
+[mar.sign]
+PLAYA DE ÁMBAR
+---
+Mar abierto al sur.
+Hace falta navegar.
+
+
+[mar.sign2]
+¡ATENCIÓN!
+---
+Cruza el mar con el
+Hidrodeslizador.
+
+
+[mar.buoy]
+Una boya marca el
+límite del mar.
+---
+La corriente es
+demasiado fuerte.
+
+# --- C6 content (contract 49) ---
+
+
+
+
+
+
+
+
+
+[gl.rg.kickaroo]
+Patea más rápido
+de lo que se ve.
+---
+Entrena sus piernas
+saltando sin parar.
+
+
+[gl.rg.jabadillo]
+Se enrosca para
+resistir golpes.
+---
+Sus guantes pétreos
+rompen rocas.
+
+
+[gl.rg.glacielle]
+Flota serena sobre
+el mar y canta.
+---
+Su corona de hielo
+canta con el viento.
+
+[gl.rg.mirrimime]
+Copia tu cara con
+su marco de espejo.
+---
+Sus manos levantan
+paredes de luz.
+
+
+[gl.rg.somnarch]
+Un archimago que
+levita dormido.
+---
+Tres orbes de sueño
+giran a su lado.
+
+
+[gl.rg.mothmist]
+Una polilla bebé
+peluda y redonda.
+---
+Sus antenas plumosas
+huelen la lluvia.
+
+
+[gl.rg.veilmoth]
+Sus alas son velos
+casi transparentes.
+---
+Deja caer un polvo
+que brilla de noche.
+
+
+[gl.rg.pixelix]
+Hecho de bloques de
+píxeles flotantes.
+---
+Sus bordes parpadean
+como una pantalla.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[gl.tr.karateka_d1]
+Karateka Tao
+
+
+[gl.tr.karateka_d2]
+Karateka Yuki
+
+
+[gl.tr.karateka_d3]
+Karateka Riku
+
+
+[gl.tr.karateka_d4]
+Karateka Goro
+
+
+[gl.tr.maestro_dojo]
+Maestro Gaku
+
+
+[gl.tr.vertice_c1]
+Agente Zoe
+
+
+[gl.tr.vertice_c2]
+Agente Dante
+
+
+[gl.tr.vertice_c3]
+Agente Yago
+
+
+[gl.tr.vertice_t1a]
+Agente Milo
+
+
+[gl.tr.vertice_t1b]
+Agente Vera
+
+
+[gl.tr.vertice_t2a]
+Agente Lucas
+
+
+[gl.tr.cientifico_t2a]
+Científico Ciro
+
+
+[gl.tr.cientifico_t2b]
+Científico Emil
+
+
+[gl.tr.cientifico_t3a]
+Científico Tobi
+
+
+[gl.tr.vertice_t3a]
+Agente Pablo
+
+
+[gl.tr.cientifico_t3b]
+Científico Nils
+
+
+[gl.tr.vertice_t4a]
+Agente Iris
+
+
+[gl.tr.cientifico_t4a]
+Científico Lars
+
+
+[gl.tr.vertice_t5a]
+Agente Cesar
+
+
+[gl.tr.cientifico_t5a]
+Científico Nael
+
+
+[gl.tr.vertice_t5b]
+Agente Olga
+
+
+[gl.tr.vertice_t6a]
+Agente Orión
+
+
+[gl.tr.psiquico_g1]
+Psíquico Omar
+
+
+[gl.tr.psiquico_g2]
+Psíquica Livia
+
+
+[gl.tr.psiquico_g3]
+Psíquico Tadeo
+
+
+[gl.tr.psiquico_g4]
+Psíquica Nuria
+
+
+[gl.tr.psiquico_g5]
+Psíquico Enzo
+
+
+[gl.tr.psiquico_g6]
+Psíquica Alba
+
+
+[gl.tr.psiquico_g7]
+Psíquico Orfeo
+
+
+[gl.tr.sena]
+Dra. Sena
+
+
+[tr.karateka_d1.pre]
+¡Un visitante!
+¡Muestra tu fuerza!
+
+
+[tr.karateka_d1.after]
+Entreno mis puños
+cada mañana.
+
+
+[tr.karateka_d2.pre]
+Mis piernas son
+de acero. ¡Ven!
+
+
+[tr.karateka_d2.after]
+Aún me falta
+equilibrio.
+
+
+[tr.karateka_d3.pre]
+¡El Dojo no acepta
+débiles!
+
+
+[tr.karateka_d3.after]
+Eres más fuerte
+de lo que pensé.
+
+
+[tr.karateka_d4.pre]
+Antes del maestro
+tienes que vencerme.
+
+
+[tr.karateka_d4.after]
+Ve con el maestro.
+Te espera.
+
+
+[tr.vertice_c1.pre]
+¡Vértice manda en
+Cénit ahora!
+
+
+[tr.vertice_c1.after]
+La Torre es nuestra.
+Aunque pierda.
+
+
+[tr.vertice_c2.pre]
+¿Turista? Aquí
+no hay nada que ver.
+
+
+[tr.vertice_c2.after]
+Vete antes de que
+llegue el jefe.
+
+
+[tr.vertice_c3.pre]
+La Torre está
+cerrada. ¡Largo!
+
+
+[tr.vertice_c3.after]
+El Director no
+va a estar contento.
+
+
+[tr.vertice_t1a.pre]
+Esta planta es
+de Vértice.
+
+
+[tr.vertice_t1a.after]
+Sube si te atreves.
+
+
+[tr.vertice_t1b.pre]
+¿Buscas problemas
+en nuestra torre?
+
+
+[tr.vertice_t1b.after]
+Qué mala suerte.
+
+
+[tr.vertice_t2a.pre]
+Aquí mando yo.
+¡Prepárate!
+
+
+[tr.vertice_t2a.after]
+Mi jefe me va
+a regañar.
+
+
+[tr.cientifico_t2a.pre]
+¡Pruebo mis
+Elementi eléctricos!
+
+
+[tr.cientifico_t2a.after]
+Mis datos se
+arruinaron.
+
+
+[tr.cientifico_t2b.pre]
+Mi nueva fórmula
+está lista.
+
+
+[tr.cientifico_t2b.after]
+Falló la fórmula.
+
+
+[tr.cientifico_t3a.pre]
+Mis circuitos son
+perfectos.
+
+
+[tr.cientifico_t3a.after]
+Hay un error de
+cálculo.
+
+
+[tr.vertice_t3a.pre]
+El Chip de acceso no
+es para ti.
+
+
+[tr.vertice_t3a.after]
+¡Se me escapó!
+
+
+[tr.cientifico_t3b.pre]
+Vértice paga bien.
+¡Lucharé por ello!
+
+
+[tr.cientifico_t3b.after]
+Sin sueldo extra.
+
+
+[tr.vertice_t4a.pre]
+Este piso es zona
+restringida.
+
+
+[tr.vertice_t4a.after]
+Te dejo pasar,
+pero no por mucho.
+
+
+[tr.cientifico_t4a.pre]
+Experimento con
+veneno. ¡Cuidado!
+
+
+[tr.cientifico_t4a.after]
+Hay que anotar
+esto.
+
+
+[tr.vertice_t5a.pre]
+¡Casi llegas al
+Director!
+
+
+[tr.vertice_t5a.after]
+Es mejor que
+te rindas.
+
+
+[tr.cientifico_t5a.pre]
+Mi tesis trata de
+combates. ¡A ver!
+
+
+[tr.cientifico_t5a.after]
+Necesito más datos.
+
+
+[tr.vertice_t5b.pre]
+No pasarás de
+este piso.
+
+
+[tr.vertice_t5b.after]
+El Director es
+más fuerte.
+
+
+[tr.vertice_t6a.pre]
+¡Alto! El Director
+no recibe visitas.
+
+
+[tr.vertice_t6a.after]
+Está bien… pasa.
+
+[tr.psiquico_g1.pre]
+Sé lo que vas a
+hacer. ¡Ven!
+
+
+[tr.psiquico_g1.after]
+No lo vi venir.
+
+
+[tr.psiquico_g2.pre]
+Mi mente te ve
+por dentro.
+
+
+[tr.psiquico_g2.after]
+Tu mente es
+más fuerte.
+
+
+[tr.psiquico_g3.pre]
+Los espejos no
+mienten. ¡Pelea!
+
+
+[tr.psiquico_g3.after]
+Se rompió el espejo.
+
+
+[tr.psiquico_g4.pre]
+Siento tu miedo.
+
+
+[tr.psiquico_g4.after]
+Qué raro. No lo
+sentía.
+
+
+[tr.psiquico_g5.pre]
+Cierro los ojos y
+te veo igual.
+
+
+[tr.psiquico_g5.after]
+Abre los ojos al
+perder.
+
+
+[tr.psiquico_g6.pre]
+La Dra. Sena me
+enseñó todo.
+
+
+[tr.psiquico_g6.after]
+Aún me queda
+mucho por aprender.
+
+
+[tr.psiquico_g7.pre]
+¿Crees que podrás
+con la Doctora?
+
+
+[tr.psiquico_g7.after]
+Quizá sí puedas.
+
+
+[cenit.guard.thirsty]
+¡Qué sed tengo!
+Llevo horas aquí.
+---
+Si me dieras algo
+de beber, pasarías.
+
+
+[cenit.guard.none]
+Se venden en
+Metrópolis Neón.
+
+[cenit.guard.badge]
+No pasas sin la
+Medalla Toxina.
+
+[cenit.guard.give]
+¡Me das {v0}!
+¡Qué alivio!
+
+
+[cenit.guard.open]
+Avisaré a los de
+las otras puertas.
+---
+Ya puedes pasar a
+Ciudad Cénit.
+
+
+[cenit.guard.after]
+¡Gracias por la
+bebida! Pasa.
+
+
+[cenit.sign]
+CIUDAD CÉNIT
+Ciudad de la mente
+
+
+[cenit.sign.torre]
+TORRE VÉRTICE
+Vértice S.A.
+
+
+[cenit.sign.dojo]
+DOJO DEL PUÑO
+Aceptamos retadores
+
+
+[cenit.sign.gym]
+GIMNASIO MENTE
+Líder: Dra. Sena
+
+
+[cenit.npc.a1]
+¡Vértice se apoderó
+de la Torre!
+
+
+[cenit.npc.a2]
+¡Los de Vértice se
+fueron de la ciudad!
+
+
+[cenit.npc.b1]
+Mi hijo está dentro
+de la Torre…
+
+
+[cenit.npc.b2]
+¡Mi hijo volvió a
+casa sano y salvo!
+
+
+[cenit.npc.c]
+Aquí todos leen
+la mente. ¡Cuidado!
+
+
+[cenit.npc.d]
+En Cénit, hasta
+los espejos miran.
+
+
+[mimo.books]
+Libros de mímica:
+la pared invisible.
+
+
+[mimo.mirror]
+Un espejo ovalado.
+Tu reflejo te imita.
+
+
+[mimo.hello]
+¡Hola! Soy mimo.
+Cambio Elementis.
+
+
+[mimo.hint]
+Dicen que Trancelf
+evoluciona al ser
+---
+cambiado con un
+amigo (IR).
+
+
+[mimo.nick]
+Marcel
+
+
+[psi.books]
+Libros sobre el
+poder de la mente.
+
+
+[psi.hi]
+¡Ah! Siento un gran
+talento en ti.
+---
+Toma. Es un disco
+de técnica Psíquica.
+
+
+[psi.about]
+El Disco 08 enseña
+Delirio. ¡Potente!
+
+
+[psi.after]
+Entrena tu mente
+cada día.
+
+
+[dojo.master.pre]
+¡Bienvenido al Dojo
+del Puño!
+---
+Mis alumnos ya te
+probaron. Ahora yo.
+
+
+[dojo.master.win]
+Tu puño vale más
+que mi dojo.
+---
+Elige a uno de mis
+dos Elementi.
+
+
+[dojo.master.after]
+El Dojo del Puño es
+tu segunda casa.
+
+
+[gym.sena.pre]
+Sabía que vendrías.
+Lo vi en mi mente.
+---
+Mi poder mental
+supera al tuyo.
+---
+¡Que comience el
+combate!
+
+
+[gym.sena.win]
+¡Increíble! Tu mente
+ganó a la mía.
+---
+Mi poder no bastó.
+---
+Toma la medalla
+del gimnasio.
+
+
+[gym.sena.badge]
+¡{player} recibió la
+MEDALLA MENTE!
+
+
+[gym.sena.about]
+Es otro sello
+oficial de la Liga.
+---
+Prueba que venciste
+a la sexta líder.
+
+[gym.sena.disc]
+Toma esto: un disco
+de mi técnica.
+
+
+[gym.sena.disc_about]
+Es Onda Mental:
+un golpe mental.
+---
+Fuerza psíquica.
+
+
+[gym.sena.after]
+Aún siento tu
+energía mental.
+---
+Gracias por el
+combate.
+---
+Ya puedes cruzar el
+mar al sur de Ámbar.
+
+[vtx.dir]
+DIRECTORIO
+6F: Dirección
+
+
+[vtx.recep]
+¡Ayuda! Vértice se
+adueñó de la Torre.
+---
+El Director está en
+el último piso.
+
+
+[vtx.recep2]
+¡Gracias! La Torre
+es nuestra otra vez.
+
+
+[vtx.pc.a]
+Un informe: Vértice
+controlará Cénit.
+
+
+[vtx.pc.b]
+Una lista de ventas:
+Elementi raros.
+
+
+[vtx.worker.hi]
+¡Por fin alguien!
+Me encerraron aquí.
+---
+Me quitaron mi pase,
+pero guardé otro.
+
+
+[vtx.worker.key]
+Toma este Chip de
+acceso. Úsalo bien.
+
+
+[vtx.worker.about]
+Abre las puertas
+de la Torre.
+---
+Salva la empresa.
+
+
+[vtx.worker.after]
+Sube con cuidado.
+El Director es duro.
+
+
+[vtx.rival.hey]
+¡{player}! ¿Tú por
+aquí otra vez?
+---
+Prueba mi equipo
+antes de subir.
+
+
+[vtx.rival.again]
+¿Otra vez? ¡Pelea!
+
+
+[vtx.rival.lose]
+¡Bah! Perdí de
+nuevo.
+---
+Me haré más fuerte.
+
+[vtx.rival.next]
+El Director está
+en la cima. Ve.
+
+
+[vtx.glacielle.hi]
+¡Gracias por venir!
+Vértice robó todo.
+---
+Este Elementi era
+su próxima venta.
+
+
+[vtx.glacielle.give]
+Quédatela: es dócil
+y canta en el mar.
+
+[vtx.glacielle.about]
+Glacielle canta y
+congela el agua.
+
+
+[vtx.glacielle.after]
+Cuídala mucho.
+
+
+[vtx.varo.pre]
+¡Vaya! Otra vez tú.
+Arrasaste mi base.
+---
+La Torre es mi
+mayor tesoro.
+---
+¡Aquí termina
+tu camino!
+
+
+[vtx.varo.win]
+¡Imposible! Perdí
+de nuevo.
+---
+Vértice se retira
+de Cénit. Por ahora.
+
+
+[vtx.varo.gone]
+Varo se marchó con
+sus agentes.
+
+
+[vtx.pres.help]
+¡Ayúdame, por favor!
+Varo me encerró.
+---
+Derrótalo y la Torre
+será libre otra vez.
+
+
+[vtx.pres.thanks]
+Salvaste mi empresa.
+¡Eres un héroe!
+---
+Quiero darte algo
+muy especial.
+
+[vtx.pres.give]
+Mi Cristal Maestro:
+siempre captura.
+---
+Úsalo con sabiduría.
+
+
+[vtx.pres.after]
+Gracias de nuevo.
+---
+Vértice se fue.
+Por ahora.
+
+# --- C9 systems (contract 50) ---
+[gl.c9.hof.title]
+SALÓN DEL LEGADO
+
+[gl.c9.hof.menu]
+Salón del Legado
+
+[gl.c9.hof.congrats]
+¡Felicidades,
+{player}!
+---
+Tu equipo entra al
+Salón del Legado.
+
+[gl.c9.hof.none]
+El Salón del Legado
+está vacío.
+
+[gl.c9.hof.fail]
+No se pudo guardar
+el Salón del Legado.
+
+[gl.c9.end.fail]
+No se pudo abrir
+el final del juego.
+
+[gl.c9.door.locked]
+La puerta está
+cerrada.
+---
+Se abrirá si vences
+en esta sala.
+
+[gl.c9.door.shut]
+La puerta se cerró
+tras de ti.
+
+[gl.c9.cr.title]
+ELEMENTIS
+ZETA
+
+[gl.c9.cr.sub]
+Un juego para
+Flipper Zero
+
+[gl.c9.cr.design]
+Diseño y
+programación
+---
+Daniel Jahziel
+
+[gl.c9.cr.art]
+Arte
+Daniel Jahziel
+---
+Hecho con
+PixelLab
+
+[gl.c9.cr.music]
+Música
+original
+
+[gl.c9.cr.fonts]
+Tipografías
+
+[gl.c9.cr.f1]
+Fusion
+Pixel Font
+---
+(c) 2022
+TakWolf
+---
+OFL 1.1
+
+[gl.c9.cr.f2]
+Ark Pixel
+Font
+---
+(c) 2021
+TakWolf
+---
+OFL 1.1
+
+[gl.c9.cr.f3]
+Galmuri
+(c)
+---
+2019-2025
+Lee Minseo
+---
+OFL 1.1
+
+[gl.c9.cr.f4]
+Boutique
+Bitmap
+---
+(C)
+2002-2019
+---
+Num Kadoma
+(c) 2026
+---
+fancy type
+foundry
+---
+OFL 1.1
+
+[gl.c9.cr.f5]
+Misaki
+Font
+---
+(C)
+2002-2021
+---
+Num Kadoma
+own free
+---
+licence
+
+[gl.c9.cr.f6]
+Miseki
+Bitmap
+---
+(c)
+2023-2024
+---
+Mark Li
+OFL 1.1
+
+[gl.c9.cr.f7]
+Cubic 11
+(c) 2005
+---
+M+ FONTS
+PROJECT
+---
+(C)
+2002-2004
+---
+COZ
+OFL 1.1
+
+[gl.c9.cr.lic]
+Las licencias están
+en la carpeta
+---
+licenses del juego
+
+[gl.c9.cr.thanks]
+Gracias por jugar
+---
+Apoya el juego
+en Ko-fi:
+---
+ko-fi.com/
+danielmartinez55371
+
+[gl.c9.cr.fin]
+FIN
+
+[c9sys.person]
+La Liga empieza
+por la puerta norte.
+
+[c9sys.m1.pre]
+¡Soy el primero del
+Cuarteto Cumbre!
+
+[c9sys.m1.after]
+Has ganado. Pasa.
+
+[c9sys.champ.pre]
+¡Has llegado lejos!
+¡Soy el campeón!
+
+[c9sys.champ.win]
+¡Me ganaste!
+¡Eres el campeón!
+
+[c9sys.champ.after]
+Ya eres el campeón.
+
+# --- C8 content (contract 51) ---
+
+[gl.rg.clubtail]
+Su cola es una maza
+de piedra maciza.
+---
+Embiste de frente
+y parte las rocas.
+
+[gl.rg.anklord]
+Un coloso acorazado
+con púas de roca.
+---
+Su cuerno atraviesa
+la piedra más dura.
+
+[gl.tr.montanista_n1]
+Montañista Gor
+
+[gl.tr.mecanico_n1]
+Mecánico Luc
+
+[gl.tr.montanista_n2]
+Montañista Tor
+
+[gl.tr.explorador_n1]
+Explorador Nuno
+
+[gl.tr.mecanico_n2]
+Mecánico Boris
+
+[gl.tr.chica_n1]
+Chica Mina
+
+[gl.tr.montanista_n3]
+Montañista Rolo
+
+[tr.montanista_n1.pre]
+¡Aquí la roca no
+se mueve! ¿Y tú?
+
+[tr.montanista_n1.after]
+Tienes más empuje
+que una roca.
+
+[tr.mecanico_n1.pre]
+Mi taladro está
+listo. ¿Y tú?
+
+[tr.mecanico_n1.after]
+Mi taladro se
+rompió. Pasa.
+
+[tr.montanista_n2.pre]
+Subo montañas
+cada día. ¡Ven!
+
+[tr.montanista_n2.after]
+Tus Elementis son
+muy firmes.
+
+[tr.explorador_n1.pre]
+He domado bestias
+más fieras que tú.
+
+[tr.explorador_n1.after]
+Domaste a mi
+equipo. Bien hecho.
+
+[tr.mecanico_n2.pre]
+Esta sala es mi
+taller. ¡Fuera!
+
+[tr.mecanico_n2.after]
+Hasta mi taladro
+te respeta.
+
+[tr.chica_n1.pre]
+El líder no deja
+pasar a nadie.
+
+[tr.chica_n1.after]
+Pasa. Pero él es
+muy peligroso.
+
+[tr.montanista_n3.pre]
+Guardo la última
+puerta. ¡No pasas!
+
+[tr.montanista_n3.after]
+El líder te espera
+al fondo.
+
+[nodo.gymguard]
+El gimnasio está
+cerrado.
+---
+El líder está en
+Cénit por negocios.
+
+[gym.varo.pre]
+Te esperaba,
+{player}. Otra vez.
+---
+Nos vimos en la
+Guarida y la Torre.
+---
+Mi tierra aplasta a
+los débiles. ¡Ven!
+
+[gym.varo.win]
+¡Ja! ¡Qué combate
+tan intenso!
+---
+Has ganado. Como
+prueba, toma esto.
+
+[gym.varo.badge]
+¡{player} recibió la
+MEDALLA NÚCLEO!
+
+[gym.varo.about]
+Es la octava y
+última medalla.
+---
+Prueba que venciste
+al último líder.
+---
+El camino a la Liga
+está abierto.
+
+[gym.varo.disc]
+Toma esto: un disco
+de mi técnica.
+
+[gym.varo.disc_about]
+Trae una técnica de
+tierra.
+---
+Hace temblar el
+suelo entero.
+
+[gym.varo.bye]
+Perdí. Ya no puedo
+mirar a mi gente.
+---
+¡Disuelvo Vértice
+para siempre!
+---
+Entrenaré de nuevo.
+Hasta la vista.
+
+[gym.varo.after]
+Vértice ya no
+existe.
+---
+Sigue tu camino
+y llega a la Liga.
+
+# --- Legendary encounters (contract 52) ---
+[gl.c52.cry]
+¡KYAAAAH!
+
+# --- C7 content (contract 53) ---
+
+[ceniza.sign]
+ISLA CENIZA
+---
+Un volcán dormido
+vigila el pueblo.
+
+[ceniza.sign.lab]
+LAB. DE FÓSILES
+Revivimos el pasado.
+
+[ceniza.sign.gym]
+GIMNASIO FUEGO
+---
+Líder: Prof. Brasa
+Tipo: Fuego
+
+[ceniza.sign.mansion]
+MANSIÓN
+CALCINADA
+---
+Ruinas peligrosas.
+Bajo tu riesgo.
+
+[ceniza.npc.a]
+El lab de aquí
+revive fósiles.
+---
+Entra y habla con
+el científico.
+
+[ceniza.npc.b]
+Dicen que la mansión
+está encantada…
+---
+Antes era de un
+sabio científico.
+
+[ceniza.npc.c]
+El gimnasio está
+cerrado con llave.
+---
+La Llave Ceniza
+está en la mansión.
+---
+¡Brasa es un viejo
+muy ardiente!
+
+[lab.vitrina]
+Vitrina de fósiles.
+Una cola de amonita.
+
+[lab.vitrina2]
+Nota: los fósiles
+vienen de Monte Eco.
+
+[lab.books]
+Libros de
+paleontología.
+
+[lab.rev.hello]
+¡Bienvenido! Aquí
+revivimos fósiles.
+---
+Dame un fósil o un
+ámbar fósil.
+
+[lab.rev.lily]
+¿Reviviremos el
+Fósil de lirio?
+
+[lab.rev.tri]
+¿Reviviremos el
+Fósil trilobite?
+
+[lab.rev.amber]
+¿Reviviremos el
+Ámbar fósil?
+
+[lab.rev.none]
+No llevas ningún
+fósil ni ámbar.
+---
+Vuelve cuando
+encuentres uno.
+
+[lab.rev.bye]
+Lo revivimos cuando
+quieras.
+
+[lab.rev.start]
+Bien. Colócalo en
+la cápsula…
+
+[lab.rev.done]
+¡Funcionó!
+---
+Cuida bien a este
+Elementi antiguo.
+
+[lab.rev.fail]
+Algo falló. No puedo
+revivirlo ahora.
+
+[lab.trade.hello]
+¡Hola! Busco un
+Gobyhop de fuera.
+---
+Te doy un Elementi
+raro de hielo.
+
+[lab.trade.nick]
+Lola
+
+[lab.explain]
+Algunos Elementis
+se cambian y mutan.
+---
+Trancelf pasa a
+Somnarch así.
+
+[central.sign]
+CENTRAL ENERGÍA
+---
+¡Alto voltaje!
+No toques cables.
+
+[ruta10.lake.sign]
+CENTRAL ENERGÍA
+Al otro lado.
+
+[esc1.sign]
+CUIDADO
+---
+El hielo guarda
+algo más abajo.
+
+[esc2.sign]
+NOTA DE UN
+EXPLORADOR
+---
+Tapa los pozos con
+rocas (Empuje).
+---
+Así se calma la
+corriente de abajo.
+
+[esc3.rapids]
+Los rápidos son
+demasiado fuertes.
+---
+Algo los alimenta
+desde arriba.
+
+[gym.q1]
+El Fuego es fuerte
+contra la Planta.
+---
+¿Es cierto?
+
+[gym.q2]
+El Agua es débil
+contra el Fuego.
+---
+¿Es cierto?
+
+[gym.q3]
+El Hielo vence al
+tipo Volador.
+---
+¿Es cierto?
+
+[gym.q4]
+Hay ocho medallas
+en el camino.
+---
+¿Es cierto?
+
+[gym.q5]
+El Hidrodeslizador
+usa Medalla Voltio.
+---
+¿Es cierto?
+
+[gym.q6]
+Un disco técnico
+sirve siempre.
+---
+¿Es cierto?
+
+[gym.right]
+¡Correcto! La puerta
+se abre sola.
+
+[gym.wrong]
+¡Incorrecto! Su
+entrenador te reta.
+
+[gym.won]
+¡Ganaste! La
+puerta se abre.
+
+[gym.off]
+La máquina está
+apagada.
+
+[gym.door]
+Una puerta cerrada.
+Responde la máquina.
+
+[gym.toll.wait]
+Primero responde
+la pregunta.
+
+[gym.brasa.pre]
+¡Jo, jo! Soy Brasa,
+el líder ardiente.
+---
+Mis Elementis de
+fuego están listos.
+---
+¡Prepárate para
+quemarte!
+
+[gym.brasa.win]
+¡Me consumí hasta
+la ceniza! Perdí.
+---
+Toma la Medalla
+Brasa, joven.
+
+[gym.brasa.badge]
+¡{player} recibió la
+MEDALLA BRASA!
+
+[gym.brasa.about]
+Es la medalla
+del fuego.
+---
+Prueba que tu fuego
+vence al mío.
+---
+Con ella sentirás
+el calor del duelo.
+
+[gym.brasa.disc]
+Toma este disco
+de mi técnica.
+
+[gym.brasa.disc_about]
+Trae una llama
+enorme.
+---
+Úsalo con cuidado:
+es de un solo uso.
+
+[gym.brasa.after]
+Si vuelvo a arder,
+vuelve a verme.
+---
+Mi fuego te
+espera.
+---
+Solo falta el
+gimnasio de Nodo.
+
+[mansion.door]
+Una puerta clavada
+con tablas.
+---
+Quizá un interruptor
+la abra.
+
+[mansion.sw.on]
+¡Clic! Pulsas el
+botón secreto.
+---
+Se abren puertas a
+lo lejos.
+
+[mansion.sw.off]
+¡Clic! Pulsas el
+botón secreto.
+---
+Se cierran puertas
+a lo lejos.
+
+[mansion.d1]
+3 de feb.: hallamos
+un Elementi raro
+---
+en la selva del sur.
+Lo traje aquí.
+---
+El profesor dice que
+es único.
+
+[mansion.d2]
+12 mar.: el original
+tuvo una cría.
+---
+Tiene rasgos de
+muchos Elementis.
+---
+El profesor la llama
+el experimento.
+
+[mansion.d3]
+9 de jun.: mezclamos
+genes de 20 tipos
+---
+con el original.
+Una obra maestra.
+---
+También da miedo.
+Nadie lo sabe.
+
+[mansion.d4]
+1 de sep.: crece
+muy rápido.
+---
+Ya no obedece.
+Sus ojos arden.
+---
+Pedí sellarlo,
+pero me ignoran.
+
+[mansion.d5]
+4 de sep.: rompió la
+jaula del sótano.
+---
+El fuego lo cubrió
+todo. Huimos.
+---
+Se fue hacia el mar,
+al norte.
+
+[mansion.d6]
+Nadie sabe dónde
+está ahora.
+---
+Sellamos la mansión.
+La llave, abajo.
+---
+Que nunca nazca
+algo así otra vez.
+
+[r19.sign]
+ISLAS ESCARCHA
+---
+Cueva de hielo al
+norte de la isla.
+
+[r20.sign]
+ISLAS ESCARCHA
+---
+Salida oeste.
+Al sur: Isla Ceniza.
+
+[gl.rg.belubub]
+Cría de beluga de
+frente abultada.
+---
+Sonríe siempre, aun
+bajo el hielo.
+
+[gl.rg.belugrand]
+Su frente cubierta
+de escarcha brilla.
+---
+Una cresta de hielo
+recorre su lomo.
+
+[gl.rg.barnacub]
+Percebe pequeño de
+concha cónica.
+---
+Saca dos plumas para
+atrapar comida.
+
+[gl.rg.barnaclad]
+Colonia de percebes
+en forma de fuerte.
+---
+El hielo cristalizó
+sus conchas.
+
+[gl.rg.inkit]
+Calamar bebé de
+manto en punta.
+---
+Sus ojos enormes
+lo ven todo.
+
+[gl.rg.inkrake]
+Sus tentáculos hacen
+un remolino.
+---
+Suelta una nube de
+tinta al huir.
+
+[gl.rg.glidefin]
+Pez volador con
+aletas como alas.
+---
+Planea sobre el mar
+un buen trecho.
+
+[gl.rg.soarfin]
+Cuatro aletas y una
+cola de franjas.
+---
+Salta sobre la ola
+como un halcón.
+
+[gl.rg.plattypuzz]
+Cría confundida con
+signos flotando.
+---
+Su cola de castor
+lo ayuda a nadar.
+
+[gl.rg.plattymind]
+Sereno y alto, con
+gema en la frente.
+---
+Su cola se abre como
+un abanico.
+
+[gl.rg.frostiva]
+Bailarina de hielo
+con velo de copos.
+---
+Gira entre la nieve
+y no dice palabra.
+
+[gl.rg.voltaboon]
+Babuino de tormenta
+con melena erizada.
+---
+Sus guantes de cobre
+lanzan descargas.
+
+[gl.rg.bellowkiln]
+Elementi-horno de
+barro, rechoncho.
+---
+Sus fuelles soplan
+llamas a los lados.
+
+[gl.rg.origamorph]
+Una hoja de papel
+viva que se dobla.
+---
+Cambia de figura
+según se pliega.
+
+[gl.rg.cindibex]
+Cría de íbice con
+cuernos de brasa.
+---
+Sus pezuñas dejan
+chispas al correr.
+
+[gl.rg.blazibex]
+Cuernos largos y
+barba de fuego.
+---
+Posa sobre una roca
+y otea a lo lejos.
+
+[gl.rg.archaeon]
+Ave-dinosaurio
+primitiva de garras
+---
+Dientes pequeños y
+cola emplumada.
+
+[gl.rg.aurowl]
+Gran búho de hielo.
+Sus alas brillan.
+---
+Como una aurora,
+con ojos de luna.
+
+[gl.rg.fulgurion]
+Fragata enorme
+de tormenta.
+---
+Su buche destella
+con rayos.
+
+[gl.tr.nadador_r19a]
+Nadador Adan
+
+[gl.tr.nadadora_r19b]
+Nadadora Bruna
+
+[gl.tr.nadador_r19c]
+Nadador Blas
+
+[gl.tr.nadadora_r19d]
+Nadadora Eva
+
+[gl.tr.nadador_r20a]
+Nadador Dino
+
+[gl.tr.nadadora_r20b]
+Nadadora Dalia
+
+[gl.tr.nadador_r20c]
+Nadador Edgar
+
+[gl.tr.nadadora_r20d]
+Nadadora Cleo
+
+[gl.tr.nadador_r21a]
+Nadador Elio
+
+[gl.tr.nadadora_r21b]
+Nadadora Emma
+
+[gl.tr.pescador_r21a]
+Pescador Fabio
+
+[gl.tr.pescador_r21b]
+Pescador Mico
+
+[gl.tr.ladron_m1a]
+Ladrón Rocco
+
+[gl.tr.cientifico_m1b]
+Científico Unai
+
+[gl.tr.ladron_m2a]
+Ladrón Gero
+
+[gl.tr.cientifico_m2b]
+Científico Zeno
+
+[gl.tr.ladron_m3a]
+Ladrón Pako
+
+[gl.tr.cientifico_m3b]
+Científico Jano
+
+[gl.tr.ladron_b1]
+Ladrón Tuto
+
+[gl.tr.cientifico_b1]
+Científico Lino
+
+[gl.tr.comefuego_g1]
+Comefuego Kiko
+
+[gl.tr.cientifico_g2]
+Científico Lupo
+
+[gl.tr.comefuego_g3]
+Comefuego Olaf
+
+[gl.tr.cientifico_g4]
+Científico Orin
+
+[gl.tr.comefuego_g5]
+Comefuego Gina
+
+[gl.tr.ladron_g6]
+Ladrón Cuco
+
+[gl.tr.mecanico_c1]
+Mecánico Quino
+
+[gl.tr.mecanico_c2]
+Mecánico Rafa
+
+[gl.tr.punk_c3]
+Punk Ruben
+
+[gl.tr.mecanico_c4]
+Mecánico Sergio
+
+[gl.tr.cientifico_c5]
+Científico Oto
+
+[gl.tr.cientifico_c6]
+Científico Mayo
+
+[tr.nadador_r19a.pre]
+¡Las olas me dan
+fuerza! ¿Y a ti?
+
+[tr.nadador_r19a.after]
+Me arrastró la
+corriente…
+
+[tr.nadadora_r19b.pre]
+¿Nadas bien?
+¡Veamos!
+
+[tr.nadadora_r19b.after]
+¡Qué buen nado!
+
+[tr.nadador_r19c.pre]
+Entreno en este
+islote. ¡Pelea!
+
+[tr.nadador_r19c.after]
+Sigue tu ruta.
+
+[tr.nadadora_r19d.pre]
+¿Vienes de Ámbar?
+¡Te desafío!
+
+[tr.nadadora_r19d.after]
+Cuidado más al sur.
+
+[tr.nadador_r20a.pre]
+El hielo de las
+islas enfría el mar.
+
+[tr.nadador_r20a.after]
+Brrr… me rindo.
+
+[tr.nadadora_r20b.pre]
+¿Viste las islas
+al norte? ¡Hielo!
+
+[tr.nadadora_r20b.after]
+¡Eres rápido!
+
+[tr.nadador_r20c.pre]
+Esta boya es mi
+meta. ¡Peleemos!
+
+[tr.nadador_r20c.after]
+Cumpliste mi meta.
+
+[tr.nadadora_r20d.pre]
+Descanso en esta
+barra de arena.
+
+[tr.nadadora_r20d.after]
+Sigue hacia Ceniza.
+
+[tr.nadador_r21a.pre]
+Casi llegas a
+Villa Aliso.
+
+[tr.nadador_r21a.after]
+Buen viaje a casa.
+
+[tr.nadadora_r21b.pre]
+Esta ruta es mi
+hogar. ¡Lucha!
+
+[tr.nadadora_r21b.after]
+Eres de casa, ¿no?
+
+[tr.pescador_r21a.pre]
+Pesco aquí desde
+hace años.
+
+[tr.pescador_r21a.after]
+Hoy no pica nada.
+
+[tr.pescador_r21b.pre]
+Mi caña es mejor
+que tu equipo.
+
+[tr.pescador_r21b.after]
+Mi caña perdió…
+
+[tr.ladron_m1a.pre]
+¡Aquí no hay nada
+que ver! ¡Fuera!
+
+[tr.ladron_m1a.after]
+Ya me quitaste
+el botín.
+
+[tr.cientifico_m1b.pre]
+Investigo estas
+ruinas. ¡Déjame!
+
+[tr.cientifico_m1b.after]
+Interesante…
+
+[tr.ladron_m2a.pre]
+Estas llamas me
+protegen. ¿Y tú?
+
+[tr.ladron_m2a.after]
+Me quemé yo solo.
+
+[tr.cientifico_m2b.pre]
+Los diarios cuentan
+algo terrible.
+
+[tr.cientifico_m2b.after]
+No lo leas todo.
+
+[tr.ladron_m3a.pre]
+¡La llave es mía!
+¡Largo!
+
+[tr.ladron_m3a.after]
+Llévatela, ladrón.
+
+[tr.cientifico_m3b.pre]
+Aquí nació algo
+que no debía.
+
+[tr.cientifico_m3b.after]
+Cuidado con él.
+
+[tr.ladron_b1.pre]
+El sótano es mío.
+¡Nadie baja!
+
+[tr.ladron_b1.after]
+Baja, baja…
+
+[tr.cientifico_b1.pre]
+Yo vi el experi-
+mento. Aún lo veo.
+
+[tr.cientifico_b1.after]
+Ya no duermo.
+
+[tr.comefuego_g1.pre]
+¡Respuesta mala!
+¡Quema esto!
+
+[tr.comefuego_g1.after]
+Bien, pasa.
+
+[tr.cientifico_g2.pre]
+Fallaste. La
+ciencia te castiga.
+
+[tr.cientifico_g2.after]
+Aprende un poco.
+
+[tr.comefuego_g3.pre]
+¡Error! ¡Mi llama
+te dará la lección!
+
+[tr.comefuego_g3.after]
+Tu llama es mayor.
+
+[tr.cientifico_g4.pre]
+Incorrecto. Deberé
+examinarte.
+
+[tr.cientifico_g4.after]
+Datos suficientes.
+
+[tr.comefuego_g5.pre]
+¿Error? ¡Mi
+espectáculo empieza!
+
+[tr.comefuego_g5.after]
+¡Qué gran final!
+
+[tr.ladron_g6.pre]
+¡Mal! Te quitaré
+las medallas.
+
+[tr.ladron_g6.after]
+Me quitaste todo.
+
+[tr.mecanico_c1.pre]
+Reviso los
+generadores. ¡Fuera!
+
+[tr.mecanico_c1.after]
+Saltó el fusible.
+
+[tr.mecanico_c2.pre]
+El 10 000 voltios
+me da valor.
+
+[tr.mecanico_c2.after]
+Tu voltaje es mayor.
+
+[tr.punk_c3.pre]
+¡Esta central es
+de mi banda!
+
+[tr.punk_c3.after]
+Bah. Pasa nomás.
+
+[tr.mecanico_c4.pre]
+Un apagón nos tiene
+loco. ¡Pelea!
+
+[tr.mecanico_c4.after]
+Vuelve la luz.
+
+[tr.cientifico_c5.pre]
+Tanta energía en
+un sitio… ¡Mira!
+
+[tr.cientifico_c5.after]
+Mis datos fallaron.
+
+[tr.cientifico_c6.pre]
+Un pájaro de rayos
+vive aquí arriba.
+
+[tr.cientifico_c6.after]
+Ve a verlo, pues.
+
+[gl.tr.brasa]
+Profesor Brasa
+
+# --- C9 content (contract 56) ---
+
+[gl.rg.tuskid]
+Cría de morsa con
+colmillos y banda.
+---
+Golpea el hielo
+todo el día.
+
+[gl.rg.tuskmash]
+Morsa joven de
+músculos de acero.
+---
+Sus aletas vendadas
+rompen la roca.
+
+[gl.rg.tuskumo]
+Gran luchador de
+sumo con colmillos.
+---
+Su postura de lucha
+es imbatible.
+
+[gl.rg.cragodile]
+Un cocodrilo enorme
+hecho de pizarra.
+---
+Sus ojos de cuarzo
+brillan en la cueva.
+
+[gl.rg.dashkip]
+Pollito patilargo
+de cresta loca.
+---
+Corre antes de
+saber volar.
+
+[gl.rg.dashmark]
+Corredor veloz con
+dos plumas largas.
+---
+Sus marcas indican
+su gran velocidad.
+
+[gl.rg.pinecub]
+Tres piñas con ojos
+que se apoyan.
+---
+Si una cae, las
+otras la levantan.
+
+[gl.rg.pinekeeper]
+Espíritu del pino
+que camina.
+---
+Sus piñas brillan
+como ojos de noche.
+
+[gl.rg.tonguard]
+Oso hormiguero de
+lengua larguísima.
+---
+La enrolla y la
+lanza como látigo.
+
+[gl.rg.pitlion]
+Larva de hormiga
+león con pinzas.
+---
+Se entierra en la
+arena y espera.
+
+[gl.rg.flarechick]
+Pavo real bebé con
+cola de brasa.
+---
+Sus plumas arden
+al sacudir la cola.
+
+[gl.rg.pyreacock]
+Pavo real elegante
+con plumas ígneas.
+---
+Sus ojos de brasa
+hipnotizan al rival.
+
+[gl.rg.coilet]
+Una bobina de Tesla
+viva con un ojo.
+---
+Chispea cuando se
+asusta.
+
+[gl.rg.teslarch]
+Torre de Tesla con
+dos esferas.
+---
+Entre ellas saltan
+arcos eléctricos.
+
+[gl.rg.ignicondor]
+Ave legendaria de
+fuego.
+---
+Dicen que su vuelo
+enciende el cielo.
+
+[gl.rg.genesa]
+El primer Elementi:
+flota y brilla.
+---
+La gema de su pecho
+guarda un secreto.
+
+[gl.rg.arkegen]
+La copia perfecta
+de Genesa.
+---
+Armadura de cristal
+y halo de anillos.
+
+[gl.tr.elite_s1a]
+Cumbre Dara
+
+[gl.tr.karateka_s1b]
+Karateka Beto
+
+[gl.tr.psiquico_s2a]
+Psíquica Hilda
+
+[gl.tr.elite_s2b]
+Cumbre Damian
+
+[gl.tr.karateka_s2c]
+Karateka Ryu
+
+[gl.tr.elite_s3a]
+Cumbre Gema
+
+[gl.tr.karateka_s3b]
+Karateka Koji
+
+[gl.tr.elite_s3c]
+Cumbre Marco
+
+[gl.tr.iver]
+Iver
+
+[gl.tr.tanko]
+Tanko
+
+[gl.tr.velo]
+Madame Velo
+
+[gl.tr.arkan]
+Arkan
+
+[r22.sign]
+RUTA 22
+Camino a la Liga
+
+[r22.gate]
+PUERTA DE LA LIGA
+Solo con 8 medallas.
+
+[r22.rival.hey]
+¡Eh, {player}!
+¿Vas a la Liga?
+---
+Yo seré el campeón.
+No pasas la Senda.
+---
+¡Te lo demuestro!
+¡A pelear!
+
+[r22.rival.again]
+¡Otra vez!
+¡Peleemos!
+
+[r22.rival.lose]
+¡¿Qué?! ¡Increíble!
+¡Elegí mal!
+
+[r22.rival.next]
+¡Bah! Iré a la Liga
+y seré campeón.
+---
+¡No te metas en mi
+camino! ¡Adiós!
+
+[pl.books]
+Registro de paso:
+solo ocho medallas.
+
+[pl.poster]
+CARTEL
+¡Llega a la Liga!
+
+[pl.trav]
+La Senda de los
+Campeones es larga.
+---
+Hay rocas que
+empujar. ¡Ánimo!
+
+[pl.keeper]
+Puerta de la Liga.
+Adelante, aspirante.
+
+[r23.sign]
+RUTA 23
+Hacia la Senda
+
+[r23.g1]
+Sin la Medalla
+Cantera no pasas.
+
+[r23.g2]
+Sin la Medalla
+Oleaje no pasas.
+
+[r23.g3]
+Sin la Medalla
+Voltio no pasas.
+
+[r23.g4]
+Sin la Medalla
+Raíz no pasas.
+
+[r23.g5]
+Sin la Medalla
+Toxina no pasas.
+
+[r23.g6]
+Sin la Medalla
+Mente no pasas.
+
+[r23.g7]
+Sin la Medalla
+Brasa no pasas.
+
+[r23.g8]
+Sin la Medalla
+Núcleo no pasas.
+
+[sd.gate]
+Una pared de rocas
+cierra el paso.
+
+[tr.elite_s1a.pre]
+Soy de la Cumbre.
+¡Prueba mi nivel!
+
+[tr.elite_s1a.after]
+Tienes nivel de
+campeón.
+
+[tr.karateka_s1b.pre]
+¡Mi puño no falla!
+¿Y el tuyo?
+
+[tr.karateka_s1b.after]
+Tu espíritu es
+más fuerte.
+
+[tr.psiquico_s2a.pre]
+Veo tu derrota
+antes de empezar.
+
+[tr.psiquico_s2a.after]
+No lo vi venir…
+
+[tr.elite_s2b.pre]
+Esta Senda separa
+a los aspirantes.
+
+[tr.elite_s2b.after]
+Pasas. Pero la Liga
+es más dura.
+
+[tr.karateka_s2c.pre]
+¡Entreno cada día
+en la Senda!
+
+[tr.karateka_s2c.after]
+Mañana entreno
+más duro.
+
+[tr.elite_s3a.pre]
+Casi llegas a la
+Meseta. ¡Alto!
+
+[tr.elite_s3a.after]
+Sigue. La Meseta
+te espera.
+
+[tr.karateka_s3b.pre]
+He roto mil rocas.
+¿Rompes mi guardia?
+
+[tr.karateka_s3b.after]
+Mi guardia cayó.
+
+[tr.elite_s3c.pre]
+Antes de la Liga,
+pasa por mí.
+
+[tr.elite_s3c.after]
+Estás listo para
+el Cuarteto Cumbre.
+
+[ms.sign]
+MESETA CUMBRE
+Sede de la Liga
+
+[ms.tourist]
+¡Qué vista desde
+aquí arriba!
+---
+Dicen que el campeón
+es muy joven.
+
+[ms.guide]
+El Cuarteto Cumbre
+está en el salón.
+---
+Cúrate en el Centro
+antes de entrar.
+
+[lb.books]
+Archivo de la Liga:
+campeones y fechas.
+
+[lb.coach]
+Tras la puerta hay
+cuatro salas.
+---
+No hay vuelta atrás.
+¡Cúrate bien!
+
+[lb.door.no]
+Lector de medallas:
+acceso denegado.
+---
+Debes tener las
+ocho medallas.
+
+[lb.door.ok]
+¡Ocho medallas!
+La puerta se abre.
+
+[lg.iver.pre]
+Bienvenido a la
+Liga. Soy Iver.
+---
+Nadie vence mi frío.
+¡Te dejaré helado!
+---
+¿Estás listo?
+
+[lg.iver.after]
+Eres mejor de lo
+que pensaba. ¡Pasa!
+---
+Solo has probado
+un poco de la Liga.
+
+[lg.tanko.pre]
+Soy Tanko. Mi
+cuerpo es mi arma.
+---
+¡Con esfuerzo, mis
+rivales caen!
+---
+¡Prepárate!
+
+[lg.tanko.after]
+¡Increíble! Me has
+vencido. ¡Pasa!
+---
+Sigue adelante,
+campeón en ciernes.
+
+[lg.velo.pre]
+Soy Madame Velo.
+Lin habla de ti.
+---
+Te mostraré cómo
+pelea una maestra.
+
+[lg.velo.after]
+¡Oh! Eres fuerte,
+como dijo Lin.
+---
+Sigue, niño. La
+Liga te espera.
+
+[lg.arkan.pre]
+Soy Arkan, el
+domadragones.
+---
+Los dragones no se
+vencen. ¡Veamos!
+---
+¡Esta es tu última
+prueba!
+
+[lg.arkan.after]
+¡Increíble! Me has
+ganado.
+---
+El último reto es
+tu rival. ¡Ve!
+
+[lg.champ.pre]
+¡Eh, {player}! Te
+esperaba aquí.
+---
+Vencí al Cuarteto
+Cumbre. Soy campeón
+---
+Mi rival debe ser
+fuerte. ¡Muéstralo!
+---
+¡Te aplastaré!
+
+[lg.champ.win]
+¡¿Qué?! ¡No puede
+ser! ¡Me ganaste!
+---
+Tanto esfuerzo para
+ser campeón…
+---
+Pero lo mereces.
+El campeón eres tú.
+
+[lg.champ.lin]
+Prof. Lin: ¡{player},
+lo lograste!
+---
+Tu equipo merece el
+Salón del Legado.
+---
+¡Ven conmigo!
+
+[lg.champ.after]
+Ahora eres campeón.
+Cuida a tu equipo.
+
+[marea.cave.guard]
+Esa trampilla va a
+la Cueva Secreta.
+---
+Solo entran los
+campeones.
+
+[cs.console.a]
+NOTAS DE VÉRTICE
+Proyecto GÉNESIS
+---
+Genesa, la primera,
+es dócil.
+---
+Su copia, Arkegen,
+nació en Ceniza.
+
+[cs.console.b]
+Huyó al mar. Aquí
+lo hallamos.
+---
+Más fuerte, pero
+indomable.
+---
+Los diarios de la
+mansión no mentían.
+
+[tr18.books]
+Un cuaderno con
+dibujos de lenguas.
+
+[tr18.hello]
+¡Hola, viajero!
+Yo cambio Elementis.
+
+[tr18.ask]
+¿Cambias {v0}
+por {v1}?
+
+[tr18.wrong]
+¿Eh? ¡Eso no es
+un {v0}!
+---
+Si tienes uno,
+vuelve.
+
+[tr18.no]
+Vaya… Vuelve si
+cambias de idea.
+
+[tr18.done]
+¡Gracias! Cuida
+bien a {v1}.
+
+[tr18.after]
+¡Cuida mucho
+a {v0}!
+
+[tr18.nick]
+Lengua
+
+# --- Extra species (contract 58) ---
+
+[gl.rg.quillia]
+Una eriza de púas
+redondas y suaves.
+---
+Su aguijón es corto.
+Pica si la asustan.
+
+[gl.rg.quillara]
+Sus púas largas se
+abren en abanico.
+---
+Protege a sus crías
+con la cola.
+
+[gl.rg.quillqueen]
+Gran eriza erguida
+con corona de púas.
+---
+Su coraza resiste
+golpes y venenos.
+
+[gl.rg.droselet]
+Un brote de hojas
+cubiertas de gotas.
+---
+Las gotas atrapan
+insectos diminutos.
+
+[gl.rg.drosaura]
+Brazos-hoja largos
+y pegajosos.
+---
+Se enroscan en la
+presa sin soltarla.
+
+[gl.rg.droserath]
+Abanico de hojas
+cuajadas de gotas.
+---
+Su boca entre las
+hojas traga presas.
+
+[gl.rg.scarabeam]
+Empuja una bolita
+que brilla de día.
+---
+La hace rodar por
+el suelo seco.
+
+[gl.rg.kheprion]
+Un gran sol brilla
+entre sus cuernos.
+---
+Su calor seca la
+tierra que pisa.
+
+[gl.rg.lunashell]
+Su caparazón es una
+luna creciente.
+---
+De noche se le
+encienden estrellas.
+
+[gl.rg.selentor]
+Lleva talladas las
+fases de la luna.
+---
+Una luna llena está
+en medio del lomo.
+
+[gl.rg.foldling]
+Papel arrugado vivo
+sin forma propia.
+---
+Se repliega a imagen
+de lo que ha visto.
+
+# --- C7 / C9 QA (contract 58) ---
+
+# --- Club de Enlace (contract 61) ---
+[gl.tr.amigo]
+Amigo
+
+[gl.club.hello]
+Club de Enlace:
+unimos dos Flipper.
+---
+¡Es experimental!
+Puede fallar.
+---
+Apunten los IR
+cara a cara.
+
+[gl.club.trade]
+Intercambiar
+
+[gl.club.battle]
+Combatir
+
+[gl.club.test]
+Prueba
+
+[gl.club.exit]
+Salir
+
+[gl.club.fail]
+No se pudo abrir
+el enlace.
+
+[gl.club.thanks]
+¡Gracias por el
+combate!
+
+# --- data (contract 64) ---
+# The names of the moves (gl.mv.<moves.toml key>) are ONE RUN in table order, like gl.sp.* and gl.it.* (contract 63.1): tools/regc.py computes their text ids
+# (reg_mv_txt()); keep the order of moves.toml when a move is appended. The battle / bag lines of the new moves and items follow.
+
+[gl.mv.bump]
+Topetazo
+
+[gl.mv.claw]
+Zarpazo
+
+[gl.mv.growl]
+Amenaza
+
+[gl.mv.wag]
+Meneo
+
+[gl.mv.ember]
+Brasita
+
+[gl.mv.jet]
+Chorro
+
+[gl.mv.lash]
+Latigazo
+
+[gl.mv.quick]
+Arremetida
+
+[gl.mv.slash]
+Filo fino
+
+[gl.mv.spore]
+Bruma sopor
+
+[gl.mv.venomdust]
+Bruma tóxica
+
+[gl.mv.harden]
+Coraza
+
+[gl.mv.bite]
+Tarascada
+
+[gl.mv.bubble]
+Espuma
+
+[gl.mv.flap]
+Aleteo
+
+[gl.mv.dustkick]
+Polvareda
+
+[gl.mv.silkshot]
+Hilo de seda
+
+[gl.mv.needle]
+Aguijonazo
+
+[gl.mv.lance]
+Estocada
+
+[gl.mv.focus]
+Mirada fija
+
+[gl.mv.zap]
+Roce voltio
+
+[gl.mv.numb]
+Entumecer
+
+[gl.mv.arc]
+Voltarco
+
+[gl.mv.sprint]
+Esprint
+
+[gl.mv.swoop]
+Picada
+
+[gl.mv.chomp]
+Dentellada
+
+[gl.mv.curl]
+Ovillarse
+
+[gl.mv.pebble]
+Guijarrazo
+
+[gl.mv.rumble]
+Retumbo
+
+[gl.mv.flatten]
+Aplastón
+
+[gl.mv.mace]
+Maza pétrea
+
+[gl.mv.pollen]
+Polen torpe
+
+[gl.mv.glimmer]
+Fulgor
+
+[gl.mv.rack]
+Astas espino
+
+[gl.mv.bloom]
+Astaflor
+
+[gl.mv.mane]
+Melena ígnea
+
+[gl.mv.wavewall]
+Muro de olas
+
+[gl.mv.haymaker]
+Mazazo
+
+[gl.mv.mirage]
+Espejismo
+
+[gl.mv.sonar]
+Eco confuso
+
+[gl.mv.lullaby]
+Nana
+
+[gl.mv.peck]
+Pico ligero
+
+[gl.mv.reverb]
+Reverbero
+
+[gl.mv.coldeye]
+Ojo glacial
+
+[gl.mv.sourspit]
+Baba ácida
+
+[gl.mv.spikeram]
+Embiste púa
+
+[gl.mv.squeeze]
+Estrujón
+
+[gl.mv.shrill]
+Estridencia
+
+[gl.mv.sapbite]
+Chupasavia
+
+[gl.mv.spearpeck]
+Pico lanza
+
+[gl.mv.glassbeam]
+Rayo cristal
+
+[gl.mv.dreamray]
+Rayo onírico
+
+[gl.mv.mindstorm]
+Delirio
+
+[gl.mv.chop]
+Tajo
+
+[gl.mv.trip]
+Zancadilla
+
+[gl.mv.clinch]
+Llave
+
+[gl.mv.ramhead]
+Topetazo
+
+[gl.mv.burrow]
+Cavar
+
+[gl.mv.streak]
+Estela
+
+[gl.mv.veil]
+Velo de luz
+
+[gl.mv.sharpen]
+Afilar
+
+[gl.mv.pilfer]
+Hurto
+
+[gl.mv.wisplick]
+Lamida
+
+[gl.mv.hollowgaze]
+Ojos Huecos
+
+[gl.mv.shade]
+Sombra
+
+[gl.mv.drowse]
+Sopor
+
+[gl.mv.cinderspin]
+Giro Ascua
+
+[gl.mv.slingstone]
+Honda
+
+[gl.mv.fumes]
+Humareda
+
+[gl.mv.siphon]
+Sifón
+
+[gl.mv.flop]
+Chapoteo
+
+[gl.mv.torrent]
+Torrente
+
+[gl.mv.clubsmash]
+Mazazo
+
+[gl.mv.pincer]
+Tenaza
+
+[gl.mv.ooze]
+Cieno
+
+[gl.mv.acidveil]
+Velo ácido
+
+[gl.mv.toxin]
+Toxina
+
+[gl.mv.daydream]
+Ensueño
+
+[gl.mv.heavyslam]
+Aplastón
+
+[gl.mv.megabeam]
+Megarrayo
+
+[gl.mv.wyrmrage]
+Furia dragón
+
+[gl.mv.frostbeam]
+Rayo hielo
+
+[gl.mv.rollkick]
+Patada giro
+
+[gl.mv.jumpkick]
+Patada salto
+
+[gl.mv.highkick]
+Patada alta
+
+[gl.mv.megakick]
+Megapatada
+
+[gl.mv.meditate]
+Meditar
+
+[gl.mv.firefist]
+Puño fuego
+
+[gl.mv.icefist]
+Puño hielo
+
+[gl.mv.bolfist]
+Puño rayo
+
+[gl.mv.mindwave]
+Onda mental
+
+[gl.mv.snowpuff]
+Polvonieve
+
+[gl.mv.auroraray]
+Rayo aurora
+
+[gl.mv.whiteout]
+Ventisca
+
+[gl.mv.cascade]
+Cascada
+
+[gl.mv.inferno]
+Infierno
+
+[gl.mv.stormbolt]
+Tronada
+
+[gl.mv.snip]
+Tijeretazo
+
+[gl.mv.trample]
+Pisotón
+
+[gl.mv.scowl]
+Mirada dura
+
+[gl.mv.heave]
+Empujón
+
+[gl.mv.swell]
+Hinchazón
+
+[gl.mv.retreat]
+Repliegue
+
+[gl.mv.wardwall]
+Muro mental
+
+[gl.mv.shrink]
+Encoger
+
+[gl.mv.soot]
+Hollín
+
+[gl.mv.warpgaze]
+Ojo torcido
+
+[gl.mv.glint]
+Destello
+
+[gl.mv.tendril]
+Zarcillo
+
+[gl.mv.toxcloud]
+Nube tóxica
+
+[gl.mv.sweetkiss]
+Beso dulce
+
+[gl.mv.sporecloud]
+Esporazo
+
+[gl.mv.wobblefist]
+Puño flojo
+
+[gl.mv.landslide]
+Derrumbe
+
+[gl.mv.trinity]
+Tríada
+
+[gl.mv.mirrorwall]
+Muro espejo
+
+[gl.mv.shellbomb]
+Huevo bomba
+
+[gl.mv.fury]
+Rabia
+
+[gl.mv.shockpulse]
+Pulso sónico
+
+[gl.mv.leveltoss]
+Derribo
+
+[gl.mv.fangbreak]
+Colmillazo
+
+[gl.mv.shear]
+Cizalla
+
+[gl.mv.augerhorn]
+Cuerno broca
+
+[gl.mv.chasm]
+Abismo
+
+[gl.mv.twinslap]
+Doble palma
+
+[gl.mv.meteorfist]
+Puñetazos
+
+[gl.mv.pecking]
+Picoteo
+
+[gl.mv.needlevolley]
+Agujazos
+
+[gl.mv.quillshot]
+Tiro de púas
+
+[gl.mv.pelt]
+Bolazos
+
+[gl.mv.rakeswipe]
+Zarpazos
+
+[gl.mv.twinkick]
+Doble patada
+
+[gl.mv.bonespin]
+Hueso vuelta
+
+[gl.mv.slamrush]
+Embestida
+
+[gl.mv.reckless]
+Temeridad
+
+[gl.mv.cyclone]
+Ciclón
+
+[gl.mv.skyleap]
+Vuelo alto
+
+[gl.mv.headlong]
+Testarazo
+
+[gl.mv.zenithdive]
+Picada total
+
+[gl.mv.rampage]
+Descontrol
+
+[gl.mv.petalwaltz]
+Vals pétalos
+
+[gl.mv.cinch]
+Atadura
+
+[gl.mv.coil]
+Enroscar
+
+[gl.mv.snapshell]
+Concha cepo
+
+[gl.mv.brood]
+Contención
+
+[gl.mv.sip]
+Sorbo
+
+[gl.mv.nightmeal]
+Devorasueños
+
+[gl.mv.seedleech]
+Chupasemilla
+
+[gl.mv.mend]
+Remendar
+
+[gl.mv.hearty]
+Caldo tibio
+
+[gl.mv.nap]
+Siesta
+
+[gl.mv.blowup]
+Reventón
+
+[gl.mv.detonate]
+Detonación
+
+[gl.mv.blink]
+Parpadeo
+
+[gl.mv.bellow]
+Bramido
+
+[gl.mv.gale]
+Vendaval
+
+[gl.mv.whiteveil]
+Bruma
+
+[gl.mv.frostmist]
+Niebla fría
+
+[gl.mv.retort]
+Réplica
+
+[gl.mv.wildcard]
+Comodín
+
+[gl.mv.parrot]
+Loro
+
+[gl.mv.echoing]
+Eco
+
+[gl.mv.decoy]
+Señuelo
+
+[gl.mv.lockout]
+Bloqueo
+
+[gl.mv.refold]
+Replegar
+
+[gl.mv.typecast]
+Moldeo
+
+[gl.c64.hits]
+¡Golpeó {v2} veces!
+
+[gl.c64.ohko]
+¡Es un KO
+de un golpe!
+
+[gl.c64.chg_wind]
+¡{v0} levantó
+un torbellino!
+
+[gl.c64.chg_fly]
+¡{v0} voló
+muy alto!
+
+[gl.c64.chg_bash]
+¡{v0} baja
+la cabeza!
+
+[gl.c64.chg_sky]
+¡{v0} brilla
+con luz intensa!
+
+[gl.c64.fled]
+¡Se escapó
+del combate!
+
+[gl.c64.stat_reset]
+¡Los cambios de
+stats se eliminaron!
+
+[gl.c64.mist]
+¡{v0} se cubre
+de niebla!
+
+[gl.c64.seeded]
+¡{v0} fue
+sembrado!
+
+[gl.c64.store]
+¡{v0} acumula
+energía!
+
+[gl.c64.unleash]
+¡{v0} libera
+la energía!
+
+[gl.c64.sub]
+¡{v0} creó
+un señuelo!
+
+[gl.c64.subhit]
+¡El señuelo recibe
+el golpe!
+
+[gl.c64.subend]
+¡El señuelo
+se deshizo!
+
+[gl.c64.trapped]
+¡{v0} está
+atrapado!
+
+[gl.c64.absorb]
+¡{v0} absorbió
+salud!
+
+[gl.c64.regain]
+¡{v0} recuperó
+salud!
+
+[gl.c64.seedhurt]
+¡La semilla drena
+salud de {v0}!
+
+[gl.c64.nap]
+¡{v0} durmió y
+se curó!
+
+[gl.c64.revived]
+¡{v0} se
+revitalizó!
+
+[gl.c64.pp]
+¡PP de {v0}
+restaurados!
+
+
+# --- B1 shiny/friendship (contract 65) ---
+# The Club de Fans' second fan reads the friendship of the lead Elementi (`bond tier`, 5 tiers: < 50, < 100, < 150, < 220, 220+). {v0} = the maintainer's name.
+
+[club.fanb.hi]
+¡Sé leer el ánimo
+de los Elementis!
+---
+Déjame ver cómo
+te quiere el tuyo.
+
+[club.fanb.none]
+¡Pero si no traes
+ningún Elementi!
+
+[club.fanb.t0]
+¡Uy! {v0}
+te evita la mirada.
+---
+No confía en ti.
+Dale tiempo y mimos.
+
+[club.fanb.t1]
+{v0} te mira
+con recelo.
+---
+Aún no sabe si
+puede fiarse de ti.
+
+[club.fanb.t2]
+{v0} está
+a gusto contigo.
+---
+Te sonríe, aunque
+guarda distancia.
+
+[club.fanb.t3]
+¡{v0}
+te quiere mucho!
+---
+Salta al verte y
+casi no se separa.
+
+[club.fanb.t4]
+¡Qué gran vínculo!
+{v0} te ama.
+---
+Sois uno solo.
+¡Cuídalo siempre!
+
+# --- B3 eclipse (contract 67) ---
+[gl.b3.ecl.done]
+¡{v0} tomó su
+Forma Eclipse!
+
+[gl.b3.ecl.stone]
+Elige Eclipse en la
+lista de ataques.
+
+# --- B2 affinity (contract 66) ---
+[gl.aff.ask]
+Tu camino sigue al
+Sol o a la Luna.
+---
+Cambia los Elementis
+salvajes que verás.
+---
+Los del otro bando
+solo se canjean.
+---
+¿Tu afinidad?
+
+[gl.aff.solar]
+Solar
+
+[gl.aff.lunar]
+Lunar
+
+
+# --- C1 follower (contract 69) ---
+[gl.fol.t0]
+{v0} te evita
+la mirada.
+---
+Aún no confía
+en ti.
+
+[gl.fol.t1]
+{v0} te mira
+de reojo.
+---
+Todavía no sabe
+si fiarse.
+
+[gl.fol.t2]
+{v0} está
+a gusto contigo.
+---
+Te sigue con
+paso tranquilo.
+
+[gl.fol.t3]
+¡{v0} salta
+de alegría!
+---
+No quiere
+separarse de ti.
+
+[gl.fol.t4]
+{v0} te mira
+con cariño.
+---
+Sois uno solo.
+¡Qué gran vínculo!
+
+[gl.fol.tired]
+{v0} apenas
+puede con el paso.
+---
+Necesita descansar
+en un Centro.
+
+[gl.fol.psn]
+{v0} tiene
+mala cara...
+---
+El veneno le
+sienta fatal.
+
+[gl.fol.slp]
+{v0} duerme
+a pierna suelta.
+
+[gl.fol.brn]
+¡Ay! {v0}
+se ha quemado.
+
+[gl.fol.frz]
+{v0} tirita,
+rodeado de hielo.
+
+[gl.fol.par]
+{v0} tiembla,
+no puede moverse.
+
+# --- D1 legend / C10 (contract 68) ---
+[gl.d1.got]
+Encontraste un
+Fragmento del Origen
+
+[gl.d1.candies]
+¡Recibiste 5
+Semillas Brote!
+
+[gl.d1.lk_frag]
+¡Intercambio
+completado!
+---
+¡{v0} se une
+a tu equipo!
+---
+¡Algo brilla en tu
+mochila!
+---
+¡Es un Fragmento
+del Origen!
+
+[d1.aliso.rumor]
+Cuentan que existe
+un Elementi del
+---
+Origen: Genesa.
+Pocos la han visto.
+---
+Dicen que se oculta
+tras 8 fragmentos.
+
+[d1.cantera.rumor]
+Dicen que Genesa
+dejó fragmentos por
+---
+el mundo. Mira bien
+el carro de la mina.
+
+[d1.dinamo.rumor]
+Un marinero juró ver
+brillar algo raro
+---
+en las redes del
+puerto. ¿Un tesoro?
+
+[d1.ambar.rumor]
+Dicen que en esta
+plaza algo brilla
+---
+bajo un banco: ni el
+sol lo explica.
+
+[d1.anciano.rumor]
+Sé de Genesa. Se
+partió en 8 trozos.
+---
+Uno brilla de noche
+en un tocón umbrío.
+---
+Otro duerme en la
+Reserva Salvaje.
+---
+Otro nace del lazo
+de dos viajeros.
+---
+Y uno premia a quien
+vence al campeón.
+
+[d1.cart.look]
+Entre el mineral
+brilla algo raro.
+
+[d1.cart.empty]
+Solo queda mineral
+en el carro.
+
+[d1.net.look]
+Entre las redes hay
+un destello extraño.
+
+[d1.net.empty]
+Solo redes viejas
+y sal.
+
+[d1.bench.look]
+Bajo el banco, algo
+brilla como ámbar.
+
+[d1.bench.empty]
+Solo hojas secas
+bajo el banco.
+
+[d1.stump.night]
+En el hueco del
+tocón brilla algo.
+
+[d1.stump.day]
+Un tocón con un
+hueco muy oscuro.
+---
+De día no se ve
+nada dentro.
+
+[d1.stump.empty]
+El hueco está
+vacío.
+
+[d1.bush.look]
+Bajo el arbusto seco
+brilla algo raro.
+
+[d1.bush.empty]
+Solo hojas secas
+bajo el arbusto.
+
+[d1.champ.frag]
+Alguien dejó esto
+para el campeón:
+---
+un fragmento raro.
+¡Tómalo!
+
+[d1.hint.isla]
+En la Ruta 21, al
+este, hay un islote
+---
+en el muro de rocas.
+Tras una maleza…
+
+[d1.hint.neon]
+La Piedra Eclipse
+solo sale al alba
+---
+y a medianoche, en
+una gruta marina.
+---
+Hace falta fuerza,
+luz y la Brasa.
+
+[d1.hint.ms]
+En el muro norte hay
+una losa sellada.
+---
+Solo con los 8
+fragmentos se abre.
+
+[lab.lin.frag1]
+¡Registro completo,
+{player}!
+---
+Eres un gran
+investigador.
+---
+Te contaré una
+leyenda del Origen.
+
+[lab.lin.frag2]
+Genesa, el Elementi
+del Origen, soñó el
+---
+mundo. Y se partió
+en 8 fragmentos.
+---
+Reúnelos y las
+Ruinas se abrirán.
+---
+Pero solo tendrás
+una oportunidad.
+
+[lab.lin.frag3]
+Hay 7 más: en los
+pueblos, la noche,
+---
+la Reserva, un lazo
+y la Liga.
+---
+Pregunta por los
+pueblos. ¡Suerte!
+
+[lab.lin.frag_old]
+¡Registro completo,
+{player}!
+---
+Ya tienes a Genesa,
+pero hay mucho más.
+---
+Ahora oye la leyenda
+de los fragmentos.
+
+[lab.lin.frag_again]
+Sigue buscando los
+8 fragmentos.
+---
+Pregunta en los
+pueblos y de noche.
+
+[ms.seal]
+Una losa antigua.
+Tiene 8 huecos.
+
+[ms.seal.no]
+Faltan fragmentos.
+La losa no cede.
+
+[ms.seal.open]
+Los 8 fragmentos
+brillan en la losa.
+---
+La losa se abre
+y deja un pasaje.
+
+[ru.mural.1]
+Antes de todo,
+solo soñaba Genesa.
+
+[ru.mural.2]
+Primero fue la LUZ,
+luego el MAR.
+
+[ru.mural.3]
+Después la TIERRA y
+el FUEGO.
+
+[ru.mural.4]
+Siguió el VIENTO y
+llegó la VIDA.
+
+[ru.mural.5]
+Cayó la NOCHE. Su
+ECO fue el último.
+
+[ru.mural.end1]
+Genesa miró su ECO,
+Arkegen, y lloró.
+
+[ru.mural.end2]
+Si el Origen vuelve,
+el sueño continúa.
+
+[ru.p.luz]
+Grabado: LUZ
+¿Colocar fragmento?
+
+[ru.p.mar]
+Grabado: MAR
+¿Colocar fragmento?
+
+[ru.p.tierra]
+Grabado: TIERRA
+¿Colocar fragmento?
+
+[ru.p.fuego]
+Grabado: FUEGO
+¿Colocar fragmento?
+
+[ru.p.viento]
+Grabado: VIENTO
+¿Colocar fragmento?
+
+[ru.p.vida]
+Grabado: VIDA
+¿Colocar fragmento?
+
+[ru.p.noche]
+Grabado: NOCHE
+¿Colocar fragmento?
+
+[ru.p.eco]
+Grabado: ECO
+¿Colocar fragmento?
+
+[ru.placed]
+El fragmento encaja.
+La piedra brilla.
+
+[ru.wrong]
+Todas las piedras
+se apagan.
+
+[ru.lit]
+Esta piedra ya
+brilla.
+
+[ru.solved]
+¡Las 8 piedras
+brillan a la vez!
+---
+El aire vibra y una
+luz toma forma…
+
+[ru.appear]
+¡Genesa!
+Te mira, serena.
+
+[ru.old1]
+Las ruinas callan:
+Genesa ya te sigue.
+
+[ru.old2]
+Las ruinas sonríen.
+¡Gracias, viajero!
+
+[ru.genesa.1]
+Has reunido el
+Origen, viajero.
+---
+Soy Genesa, el
+sueño que lo inició.
+
+[ru.genesa.2]
+Probaré tu fuerza
+y tu corazón.
+---
+Solo tendrás una
+oportunidad.
+
+[ru.genesa.ask]
+¿Estás listo?
+
+[ru.genesa.wait]
+Genesa espera,
+serena.
+
+[ru.genesa.gone]
+Genesa se desvanece
+en un haz de luz.
+
+[ru.genesa.retry]
+El aire tiembla…
+Inténtalo otra vez.
+
+[ru.genesa.got]
+¡Genesa te sigue!
+El sueño continúa.
+
+[gr.gate.no]
+Un calor abrasador
+sale de la roca.
+---
+Solo la Medalla
+Brasa lo resiste.
+
+[gr.shaft]
+Un haz de luz cae
+del techo al altar.
+
+[gr.altar.empty]
+Un altar vacío con
+un eclipse grabado.
+---
+Quizá algo despierta
+con ciertas horas.
+
+[gr.altar.faded]
+La luz se apagó.
+La piedra se fue.
+
+[gr.altar.take]
+En el altar reposa
+la Piedra Eclipse.
+
+[gr.altar.got]
+¡Obtuviste la
+Piedra Eclipse!
+
+# --- F3 (contract 75) ---
+[gl.opt.speed]
+Texto
+
+[gl.opt.speed.fast]
+Rápido
+
+[gl.opt.speed.mid]
+Medio
+
+[gl.opt.speed.slow]
+Lento
+
+[gl.opt.anim]
+Efectos
+
+[gl.opt.anim.on]
+Sí
+
+[gl.opt.anim.off]
+No
+
+[gl.opt.style]
+Estilo
+
+[gl.opt.style.shift]
+Cambio
+
+[gl.opt.style.set]
+Fijo
+
+[gl.bt.shift_next]
+¡{v3}
+sacará a {v0}!
+
+[gl.bt.shift_q]
+¿Quieres cambiar
+de Elementi?
+
+[gl.rga.area]
+Área
+
+[gl.rga.none]
+Área desconocida
+
+[gl.rga.cry]
+Grito
+
+# --- F2 world & PC (contract 74) ---
+
+[gl.f2.det.none]
+Sin respuesta...
+No hay nada cerca.
+
+[gl.f2.det.near]
+¡Responde! Hay un
+objeto oculto cerca.
+
+[gl.f2.det.here]
+¡Suena muy fuerte!
+¡Está muy cerca!
+
+[gl.f2.dip.t]
+DIPLOMA
+
+[gl.f2.dip.who]
+{player}
+
+[gl.f2.dip.l1]
+completó todo el
+
+[gl.f2.dip.l2]
+Registro. ¡Bravo!
+
+[gl.f2.share]
+¡Los demás ganaron
+{v2} puntos de Exp.!
+
+[gl.f2.box.items]
+Objetos
+
+[gl.f2.box.dep_it]
+Dejar obj.
+
+[gl.f2.box.wd_it]
+Sacar obj.
+
+[gl.f2.box.toss_it]
+Tirar obj.
+
+[gl.f2.box.dep]
+{v0} x{v2}
+¡Dejado en el PC!
+
+[gl.f2.box.wd]
+{v0} x{v2}
+¡Sacado del PC!
+
+[gl.f2.box.noroom]
+No queda espacio
+en el PC.
+
+[gl.f2.box.none_bag]
+No tienes nada
+que dejar.
+
+[gl.f2.box.none_pc]
+El PC no guarda
+ningún objeto.
+
+[ruta11.aide.hi]
+¡Hola! Soy otro
+ayudante de Lin.
+---
+Vigilo el Registro
+desde esta ruta.
+
+[ruta11.aide.more]
+Te faltan {v2}
+especies para 30.
+---
+Vuelve cuando las
+tengas.
+
+[ruta11.aide.give]
+¡Ya tienes 30
+especies! ¡Genial!
+---
+Toma esto: es un
+Buscatesoros.
+
+[ruta11.aide.got]
+¡{player} recibió el
+Buscatesoros!
+
+[ruta11.aide.about]
+Detecta objetos
+ocultos cerca.
+---
+Si responde, busca y
+pulsa OK de frente.
+
+[ruta11.aide.after]
+¿Encuentras tesoros
+con él?
+---
+¡Sigue registrando
+Elementis!
+
+[ruta15.aide.hi]
+Soy el ayudante de
+Lin en esta ruta.
+---
+Mido tu progreso
+en el Registro.
+
+[ruta15.aide.more]
+Te faltan {v2}
+especies para 50.
+---
+Vuelve cuando las
+tengas.
+
+[ruta15.aide.give]
+¡50 especies! ¡Eres
+increíble!
+---
+Esto es para ti: el
+Reparto Total.
+
+[ruta15.aide.got]
+¡{player} recibió el
+Reparto Total!
+
+[ruta15.aide.about]
+Con él en la mochila
+el equipo entero
+---
+gana parte de la
+Exp. de cada pelea.
+
+[ruta15.aide.after]
+¿Te ayuda el Reparto
+Total?
+---
+¡Sigue así!
+
+[herm.hi]
+¡Hola, {player}!
+{rival} no está.
+---
+Anda por el
+laboratorio de Lin.
+
+[herm.give]
+¡{player}! ¿Ya tienes
+el Registro de Lin?
+---
+Entonces esto te
+servirá: ¡un Atlas!
+
+[herm.got]
+¡{player} recibió
+el Atlas!
+
+[herm.about]
+Úsalo desde la
+Mochila.
+---
+Te muestra el mapa
+y dónde estás.
+
+[herm.after]
+¿Te sirve el Atlas?
+¡Buen viaje!
+
+[motes.hi]
+¡Soy el Nombrador!
+Pongo motes.
+---
+Solo a los que has
+criado tú, claro.
+
+[motes.ask]
+¿Quieres cambiar el
+mote de uno?
+
+[motes.which]
+¿De cuál quieres
+cambiar el mote?
+
+[motes.traded]
+Ese no lo criaste
+tú...
+---
+No puedo cambiar su
+mote.
+
+[motes.done]
+¡Buen mote! Cuida
+mucho a {v0}.
+
+[motes.no]
+Vuelve cuando
+quieras.
+
+[motes.books]
+Libros de nombres:
+miles de motes.
+
+[tr_ins.hello]
+¡Colecciono bichos
+de todo el bosque!
+---
+Cambio uno de los
+míos por el tuyo.
+
+[tr_ins.case]
+Mariposas con alas
+de farol: preciosas.
+
+[tr_ins.nick]
+Zumo
+
+[tr_pua.hello]
+¡Adoro los erizos
+de púas!
+---
+Me falta el macho
+de la pareja.
+
+[tr_pua.nick]
+Nena
+
+[tr_cua.hello]
+Cuido caballos de
+fuego en mi cuadra.
+---
+Pero siempre quise
+una foca de hielo.
+
+[tr_cua.nick]
+Iglu
+
+[tr_psi.hello]
+Soy la aprendiz del
+vidente.
+---
+Sueño con un
+Elementi de lianas.
+
+[tr_psi.nick]
+Liana
+
+[tr_club.hello]
+Soy fan de los
+cables eléctricos.
+---
+¿Cambias tu geco
+eléctrico?
+
+[tr_club.nick]
+Bobi
+
+[tr_anc.hello]
+¡Hola! Soy de visita
+en casa del abuelo.
+---
+Mi erizo necesita
+un compañero grande.
+
+[tr_anc.nick]
+Nina
+
+[lab.dip.hi]
+Soy el asistente
+de Lin.
+---
+Doy un diploma a
+quien lo completa.
+
+[lab.dip.more]
+Aún te faltan {v2}
+especies. ¡Ánimo!
+
+[lab.dip.one]
+Solo te falta una
+especie. ¡Ánimo!
+
+[lab.dip.ok]
+¡Registro completo!
+¡Bravo, {player}!
+---
+Aquí tienes tu
+diploma.
+
+[lab.dip.done]
+¡Te lo has ganado!
+¡Sigue explorando!
+
+# --- battle (contract 73) ---
+
+[gl.f1.recharge]
+¡{v0} debe
+recargarse!
+
+[gl.f1.crash]
+¡{v0} siguió
+y se estrelló!
+
+[gl.f1.rage]
+¡La furia de
+{v0} aumenta!
+
+[gl.f1.undis]
+¡{v0} puede
+usar su ataque!
+
+[gl.f1.disabled]
+¡{v0} no podrá
+usar {v1}!
+
+[gl.f1.move_copy]
+¡{v0} copió
+{v1}!
+
+
+[gl.f1.transform]
+¡{v0} es ahora
+{v1}!
+
+[gl.f1.convert]
+¡{v0} cambió
+de tipo!
+
+[gl.f1.loaf]
+¡{v0} está
+holgazaneando!
+
+[gl.f1.noobey]
+¡{v0} no
+obedece!
+
+[gl.f1.turned]
+¡{v0} se dio
+la vuelta!
+
+[gl.f1.ignored]
+¡{v0} ignoró
+la orden!
+
+[gl.f1.nap]
+¡{v0} se echó
+a dormir!
+
+[gl.f4.ppup]
+¡PP de {v0}
+aumentaron!
+
+# --- overworld systems (contract 81) ---
+[gl.misc.overwrite]
+Ya hay otra partida
+guardada. ¿Borrarla?
+
+[gl.misc.soft_low]
+¡No tiene salud
+suficiente!
+
+[gl.misc.flute_woke]
+¡Suena la flauta!
+¡Todos despertaron!
+
+[gl.misc.flute_none]
+Suena la flauta.
+Nadie dormía.
+
+[gl.misc.rv_steps]
+Pasos
+
+[gl.misc.rv_steps_n]
+{v2}/500
+
+[gl.misc.rv_balls]
+Cristal
+
+[gl.misc.rv_balls_n]
+{v3}
+
+# --- (contract 80): the missing story / world content (early Route 22 rival, Lin's stop, catch lesson, Registro rating, Flopfin salesman, recruiter, museum, disc gifts) ---
+[extra.r22a.hey]
+¡Eh, {player}!
+¿Ya vas a la Liga?
+---
+¡Si no tienes ni
+una medalla!
+---
+A ver cuánto has
+mejorado… ¡Vamos!
+
+[extra.r22a.again]
+¡Otra vez!
+¡Peleemos!
+
+[extra.r22a.lose]
+¡¿Qué?! ¿Cómo has
+ganado?
+---
+¡Bah! Aún me falta
+entrenar.
+
+[extra.r22a.next]
+Seguiré mi camino.
+¡Hasta pronto!
+
+[extra.lin.stop1]
+¡Espera, {player}!
+¡No salgas todavía!
+
+[extra.lin.stop2]
+Es peligroso: en la
+hierba alta viven
+---
+Elementis salvajes.
+Necesitas uno tuyo.
+
+[extra.lin.stop3]
+¡Ven conmigo al
+laboratorio!
+
+[extra.catch.ask]
+¿Quieres que te
+enseñe a capturar?
+
+[extra.catch.no]
+Bueno, tú sabrás.
+¡Buen viaje!
+
+[extra.catch.t1]
+Mira bien. Primero
+debilítalo atacando
+---
+pero ¡sin dejarlo
+fuera de combate!
+
+[extra.catch.t2]
+Si puedes, causa un
+estado: sueño o
+---
+parálisis. ¡Así se
+capturan mejor!
+
+[extra.catch.t3]
+Luego lanza un
+Cristal. ¡Cuanta
+---
+menos vida le
+quede, mejor!
+
+[extra.catch.t4]
+Si falla, ¡inténtalo
+de nuevo! Ánimo.
+
+[extra.catch.again]
+¿Repasamos cómo
+capturar?
+
+[gl.extra.rate.ask]
+¿Quieres que valore
+tu Registro?
+
+[gl.extra.rate.no]
+Otro día, entonces.
+
+[gl.extra.rate.count]
+Has capturado {v2}
+especies.
+
+[gl.extra.rate.t0]
+Aún te queda mucho.
+¡Busca en la hierba!
+
+[gl.extra.rate.t1]
+Vas por buen camino.
+¡Sigue buscando!
+
+[gl.extra.rate.t2]
+Se nota tu esfuerzo.
+Visita otras zonas.
+
+[gl.extra.rate.t3]
+¡Ya pasas de 50!
+Casi la mitad.
+
+[gl.extra.rate.t4]
+¡Más de la mitad!
+Vas muy bien.
+
+[gl.extra.rate.t5]
+¡Magnífico! Podrías
+ser Maestro.
+
+[gl.extra.rate.t6]
+¡Increíble! Casi
+está completo.
+
+[gl.extra.rate.t7]
+¡Registro completo!
+¡Felicidades!
+
+[extra.fish.hi]
+¡Psst! Eh, tú.
+Tengo una ganga.
+
+[extra.fish.ask]
+¿Compras un Flopfin
+por $500?
+
+[extra.fish.no]
+¿No? Allá tú.
+Qué lástima.
+
+[extra.fish.broke]
+No te alcanza el
+dinero.
+
+[extra.fish.bought]
+¡Trato hecho!
+Cuídalo bien.
+
+[extra.fish.full]
+Tu equipo y el PC
+están llenos.
+
+[extra.fish.after]
+Ya no me queda más.
+¡No hay devolución!
+
+[extra.recr.wait]
+Vence a los cinco
+del puente primero.
+
+[extra.recr.hello]
+¡Bien hecho! Has
+ganado a los cinco.
+---
+Tu premio: un Trozo
+de oro puro.
+
+[extra.recr.join]
+Soy de Vértice.
+¿Te unes a nosotros?
+
+[extra.recr.yes]
+¡Ja! Qué bien. Pero
+hay que ganárselo.
+---
+¡Demuéstralo en
+combate!
+
+[extra.recr.no]
+¿No? Qué pena. Te
+convenceré a golpes.
+
+[extra.recr.again]
+¡Aún no hemos
+terminado!
+
+[extra.recr.lose]
+¡Increíble! Me has
+ganado…
+---
+Quédate el premio.
+Yo me largo.
+
+[gl.tr.vertice_recluta]
+Agente Brix
+
+[extra.museum.sign]
+MUSEO DE CANTERA
+Entrada: $50
+
+[extra.mus.ask]
+La entrada cuesta
+$50. ¿Pagas?
+
+[extra.mus.thanks]
+¡Gracias! Pasa y
+disfruta.
+
+[extra.mus.broke]
+No te alcanza para
+la entrada.
+
+[extra.mus.no]
+Vuelve cuando
+quieras.
+
+[extra.mus.clerk]
+Disfruta del museo.
+No toques nada.
+
+[extra.mus.sci]
+Los fósiles de Monte
+Eco son rarísimos.
+---
+Dicen que Vértice
+anda tras ellos.
+
+[extra.mus.guest]
+¡Qué enormes son
+los huesos!
+
+[extra.mus.ex1]
+FÓSIL ANTIGUO
+De concha de roca.
+
+[extra.mus.ex2]
+ÁMBAR ANTIGUO
+Guarda un secreto.
+
+[extra.mus.ex3]
+ESQUELETO ALADO
+Voló sobre el mar.
+
+[extra.mus.ex4]
+ROCA CAÍDA
+Vino del espacio.
+
+[extra.mus.sign]
+SALA DE LA VIDA
+ANTIGUA. No tocar.
+
+[extra.garrick.disc_about]
+Contención: guarda
+el daño recibido
+---
+y lo devuelve
+doblado.
+
+[extra.varo.fissure]
+Toma también este
+otro disco.
+
+[extra.varo.fissure_about]
+Es Abismo. Un solo
+golpe, si acierta.
+---
+Falla muy a menudo,
+¡pero vale la pena!
+
+[extra.mimo.gift]
+¿Te gusta imitar?
+Toma este disco.
+
+[extra.mimo.about]
+Es Eco: copia el
+último ataque rival.
+
+[extra.lab.gift]
+Me sobra un disco.
+¡Llévatelo!
+
+[extra.lab.gift_about]
+Es Comodín: usa un
+ataque al azar.
+
+[extra.dig.sign]
+ALMACÉN CERRADO
+Por robo. Cuidado.
+
+[extra.dig.shelf]
+Hay cajas tiradas
+por todas partes.
+
+[extra.dig.hole]
+Un túnel cavado
+bajo la pared.
+
+[extra.dig.agent.pre]
+Este almacén ya es
+de Vértice.
+---
+¡Lárgate o te las
+verás conmigo!
+
+[extra.dig.agent.after]
+¡Maldición! Me largo
+por mi túnel.
+
+[extra.dig.owner.wait]
+¡Por favor, echa al
+ladrón del almacén!
+
+[extra.dig.owner.thanks]
+¡Gracias por salvar
+mi almacén!
+---
+Vértice cavó un
+túnel para robarme.
+
+[extra.dig.owner.about]
+Es Cavar: se esconde
+bajo tierra y ataca.
+
+[extra.dig.owner.after]
+El túnel de Vértice
+llega a la bahía.
+
+[gl.tr.vertice_dig]
+Agente Vex
+# --- battle AI, experience, Dig / Pilfer / Mind Wave, the Flute in battle (contract 82, agent) ---
+
+[gl.tai.chg_dig]
+¡{v0} cavó
+un agujero!
+
+[gl.tai.coins]
+¡Monedas
+esparcidas!
+
+[gl.tai.aiuse]
+¡{v3}
+usó {v1}
+---
+en {v0}!
+
+[gl.tai.aiout]
+¡{v3}
+retiró a {v0}!
+
+[gl.tai.flute]
+{player} tocó la
+Flauta Clara.
+
+[gl.tai.woke]
+¡Los dormidos
+despertaron!
+
+[gl.tai.flute0]
+No tuvo
+efecto.

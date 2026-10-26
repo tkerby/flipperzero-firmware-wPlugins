@@ -1,0 +1,386 @@
+# TEST FIXTURE (id 98): the C3-A world systems (contract section 32). Not part of the game: reached only by the host harness (`make -C tools/host_world c3a`).
+#   * two cuttable bushes (legend cut=yes)                         -> east side, (16,3) and (16,7)
+#   * Ohm's fuse puzzle: 15 cabinets in a 5 x 3 grid (index = row * 5 + column, at i = 3 + 2 * column, j = 3 + 2 * row), the electric barrier at (7,9), a lamp
+#   * an in-game trade (flitter for muncrit) with trader T at (17,10), the day-care lady D at (20,10)
+# Flags 204 .. 207 and vars 1 .. 9 belong to this map; the barrier / lamp placeholders are existing actors.
+@map test_c3a
+@size 22 13
+@interior yes
+@bg 3
+@fill floor_lab
+@spawn start 18 2 SW
+@flag fuse_open 204
+@flag fuse_lamp 205
+@flag trade_done 206
+@var fuse_first 1
+@var fuse_second 2
+@var fuse_stage 3
+@var fuse_dir 4
+@var tr_res 5
+@var dc_occ 6
+@var dc_sp 7
+@var dc_lv 8
+@var dc_res 9
+@var tr_want 10
+@var tr_give 11
+@legend
+  .  tile=floor_lab
+  X  object=pillar
+  a  object=pillar interact=look script=can_0
+  b  object=pillar interact=look script=can_1
+  c  object=pillar interact=look script=can_2
+  d  object=pillar interact=look script=can_3
+  e  object=pillar interact=look script=can_4
+  f  object=pillar interact=look script=can_5
+  g  object=pillar interact=look script=can_6
+  h  object=pillar interact=look script=can_7
+  i  object=pillar interact=look script=can_8
+  j  object=pillar interact=look script=can_9
+  k  object=pillar interact=look script=can_10
+  l  object=pillar interact=look script=can_11
+  m  object=pillar interact=look script=can_12
+  n  object=pillar interact=look script=can_13
+  o  object=pillar interact=look script=can_14
+  B  npc=item_bag id=barrier face=S text=c3a.fuse.barrier hide_flag=204
+  L  npc=crystal_water id=lamp face=S text=c3a.fuse.lamp show_flag=205 solid=no
+  u  cut=yes
+  V  object=pillar interact=look script=ambush   # the rival's ambush: his theme (music rival), then the map's own track again (music_map)
+  Q  object=pillar interact=look script=calc_test   # a pillar whose only job is to reference the calc test script
+  T  npc=vecino id=trader face=S script=trader
+  D  npc=mama id=lady face=S script=lady
+@grid
+  ......................
+  .L....................
+  ......................
+  ...a.b.c.d.e....u.....
+  ......................
+  ...f.g.h.i.j..........
+  ......................
+  ...k.l.m.n.o....u.....
+  ......................
+  XXXXXXXBXXXXXX........
+  .................T..D.
+  ......................
+  .................V..Q.
+@script fuse_enter on_enter if !fuse_open
+    setv fuse_stage 0
+    clrf fuse_lamp
+    call roll
+@end
+# the first switch is a random cabinet (var fuse_first), the second one a random ORTHOGONAL neighbour of it (fuse_second): right +1, left -1, down +5, up -5 (a retry
+# when that leaves the 5 x 3 grid). Both are chosen once per visit (on_enter) and kept in vars, so they survive a save.
+@script roll called
+  top:
+    rand fuse_first 15
+    rand fuse_dir 4
+    copyv fuse_second fuse_first
+    jv fuse_dir 0 right
+    jv fuse_dir 1 left
+    jv fuse_dir 2 down
+    jv fuse_first 0 top
+    jv fuse_first 1 top
+    jv fuse_first 2 top
+    jv fuse_first 3 top
+    jv fuse_first 4 top
+    addv fuse_second 251
+    end
+  right:
+    jv fuse_first 4 top
+    jv fuse_first 9 top
+    jv fuse_first 14 top
+    addv fuse_second 1
+    end
+  left:
+    jv fuse_first 0 top
+    jv fuse_first 5 top
+    jv fuse_first 10 top
+    addv fuse_second 255
+    end
+  down:
+    jv fuse_first 10 top
+    jv fuse_first 11 top
+    jv fuse_first 12 top
+    jv fuse_first 13 top
+    jv fuse_first 14 top
+    addv fuse_second 5
+@end
+@script found1 called
+    jv fuse_stage 1 again
+    setv fuse_stage 1
+    setf fuse_lamp
+    sfx confirm
+    say c3a.fuse.first
+    end
+  again:
+    say c3a.fuse.again
+@end
+@script found2 called
+    jv fuse_stage 0 trash
+    setf fuse_open
+    sfx item
+    say c3a.fuse.second
+    end
+  trash:
+    say c3a.fuse.trash
+@end
+@script miss called
+    jv fuse_stage 1 reset
+    say c3a.fuse.trash
+    end
+  reset:
+    setv fuse_stage 0
+    clrf fuse_lamp
+    call roll
+    sfx cancel
+    say c3a.fuse.reset
+@end
+@script can_0 interact if !fuse_open
+    jv fuse_first 0 hit1
+    jv fuse_second 0 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_1 interact if !fuse_open
+    jv fuse_first 1 hit1
+    jv fuse_second 1 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_2 interact if !fuse_open
+    jv fuse_first 2 hit1
+    jv fuse_second 2 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_3 interact if !fuse_open
+    jv fuse_first 3 hit1
+    jv fuse_second 3 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_4 interact if !fuse_open
+    jv fuse_first 4 hit1
+    jv fuse_second 4 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_5 interact if !fuse_open
+    jv fuse_first 5 hit1
+    jv fuse_second 5 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_6 interact if !fuse_open
+    jv fuse_first 6 hit1
+    jv fuse_second 6 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_7 interact if !fuse_open
+    jv fuse_first 7 hit1
+    jv fuse_second 7 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_8 interact if !fuse_open
+    jv fuse_first 8 hit1
+    jv fuse_second 8 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_9 interact if !fuse_open
+    jv fuse_first 9 hit1
+    jv fuse_second 9 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_10 interact if !fuse_open
+    jv fuse_first 10 hit1
+    jv fuse_second 10 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_11 interact if !fuse_open
+    jv fuse_first 11 hit1
+    jv fuse_second 11 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_12 interact if !fuse_open
+    jv fuse_first 12 hit1
+    jv fuse_second 12 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_13 interact if !fuse_open
+    jv fuse_first 13 hit1
+    jv fuse_second 13 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_14 interact if !fuse_open
+    jv fuse_first 14 hit1
+    jv fuse_second 14 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script trader npc
+    setv tr_want 7
+    setv tr_give 8
+    name_var 0 tr_want
+    name_var 1 tr_give
+    jf trade_done after
+    ask c3a.trade.ask
+    jv 0 1 go
+    say c3a.trade.no
+    end
+  go:
+    trade flitter muncrit c3a.trade.nick tr_res
+    jv tr_res 1 done
+    jv tr_res 255 cancel
+    say c3a.trade.wrong
+    end
+  cancel:
+    say c3a.trade.no
+    end
+  done:
+    setf trade_done
+    say c3a.trade.done
+    end
+  after:
+    name_var 0 tr_give
+    say c3a.trade.after
+@end
+@script lady npc
+    daycare_query dc_occ      # dc_occ, dc_sp, dc_lv + {v1} the fee, {v2} the levels gained
+    name_var 0 dc_sp          # {v0} = the species in care
+    say c3a.dc.hello
+    jv dc_occ 1 occupied
+    ask c3a.dc.ask_leave
+    jv 0 1 leave
+    say c3a.dc.no
+    end
+  leave:
+    daycare_deposit dc_res
+    jv dc_res 255 bye
+    jv dc_res 0 last
+    say c3a.dc.taken
+    end
+  last:
+    say c3a.dc.last
+    end
+  bye:
+    say c3a.dc.no
+    end
+  occupied:
+    ask c3a.dc.report
+    jv 0 1 take
+    say c3a.dc.no
+    end
+  take:
+    daycare_withdraw dc_res
+    jv dc_res 1 gave
+    jv dc_res 2 poor
+    say c3a.dc.full
+    end
+  gave:
+    say c3a.dc.back
+    end
+  poor:
+    say c3a.dc.poor
+@end
+# native `calc` (rand / copyv / addvv): the host test starts it with script_start; it only writes vars (fuse_dir = 84, fuse_first = 0, fuse_second = 0, tr_want = 144)
+@script calc_test interact
+    setv dc_res 40
+    setv tr_res 2
+    copyv fuse_dir dc_res
+    addvv fuse_dir tr_res
+    addvv fuse_dir fuse_dir
+    rand fuse_first 1
+    rand fuse_second 0
+    setv tr_want 200
+    addvv tr_want tr_want
+@end
+# `music NAME` plays a track of assets/music/index.txt (the rival's theme while he walks up), `music_map` goes back to the map's own track. A real ambush follows the theme with
+# `battle TRAINER VAR`: the battle starts its own music and the map's track returns after it by itself, so music_map is only needed when no battle follows.
+@script ambush interact
+    music rival
+    wait 400
+    say c3a.ambush
+    music_map
+@end

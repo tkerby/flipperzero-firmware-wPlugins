@@ -1,0 +1,15 @@
+App(
+    appid="thermometer",
+    name="Thermometer",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="thermometer_app",
+    cdefines=["APP_THERMOMETER"],
+    stack_size=4 * 1024,
+    fap_icon="thermometer_10px.png",
+    fap_icon_assets="images",
+    fap_category="GPIO",
+    fap_author="niki-timofe",
+    fap_weburl="https://github.com/niki-timofe/flipperzero-app-onewire",
+    fap_version="0.2.1",
+    fap_description="Thermometer reader over onewire.",
+)

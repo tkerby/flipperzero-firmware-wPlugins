@@ -1,0 +1,52 @@
+# TEST FIXTURE (id 228): the encounters on OPEN ground (contract section 63). Not part of the game: reached only by the host harness (tools/host_world, `make roam`, section `open`).
+# column = i, row = j. A meadow with every kind of tile the open-ground roll must tell apart: plain grass `.` and the path `=` (OPEN ground: no collision flag at all; rate 64/256 here), the tall grass `g` (its own
+# rate 25), the pond `w` (its own water table, 60: surfing only), a ledge row `v`, a step trigger `X`, arrow floors `>` and a bike slope `s` (all flagged: never an open-ground roll), a door `D` (a warp).
+# No @roam: the statistics of the host test must not meet a roamer.
+@map test_open
+@size 24 16
+@interior no
+@bg 0
+@fill grass
+@spawn start 12 13 N
+@surf yes
+@encounters grass rate=25
+  flitter 3 6 60
+  muncrit 3 6 40
+@end
+@encounters water rate=60
+  jabbird 10 12 70
+  lunelle 11 13 30
+@end
+@open_rate 64
+@legend
+  .  tile=grass
+  =  tile=path
+  g  tile=tall_grass
+  w  tile=sea_o
+  B  object=bush
+  v  ledge=SW
+  X  tile=grass interact=step script=noop
+  >  tile=arrow_se
+  s  tile=slope_s
+  D  tile=path
+@grid
+  BBBBBBBBBBBBBBBBBBBBBBBB
+  B......................B
+  B.====================.B
+  B......................B
+  B..ggggg.....wwwwww....B
+  B..ggggg.....wwwwww....B
+  B..ggggg.....wwwwww....B
+  B......................B
+  B..vvvvvv..............B
+  B......................B
+  B..XX..>>>>.....ssss...B
+  B......................B
+  B....D.................B
+  B......................B
+  B......................B
+  BBBBBBBBBBBBBBBBBBBBBBBB
+@warp D -> ruta_1 spawn=south oneway
+@script noop step
+    end
+@end

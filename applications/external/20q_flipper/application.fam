@@ -1,0 +1,21 @@
+App(
+    appid="twentyq",
+    name="20 Questions",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="twentyq_app",
+    sources=[
+        "twentyq_app.c",
+        "scenes/*.c",
+        "views/*.c",
+        "helpers/*.c",
+    ],
+    stack_size=2 * 1024,
+    fap_icon="twentyq.png",
+    fap_icon_assets="images",
+    fap_file_assets="files",
+    fap_category="Games",
+    fap_author="Cheesedog223",
+    fap_weburl="https://github.com/Cheesedog223/20Q_Flipper0",
+    fap_version=(1, 0),
+    fap_description="Think of anything. Your Flipper guesses it in 20 questions. Fully offline.",
+)

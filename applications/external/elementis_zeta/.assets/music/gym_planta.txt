@@ -1,0 +1,22 @@
+title Gimnasio Planta - the plant gym (a variant of the gym theme): the same growing pulse, but soft and floral, in G major (the pulse opens like petals, G and B), a gentle kick, a rising bloom, a scale that climbs to the raised fourth and comes back, a light roll
+tempo 104
+vol 225
+meter 4/4
+inst p1 v=100,70,50
+inst p2 v=150,105,80
+inst p3 v=200,150,110
+inst p4 v=240,190,140
+inst kick drum=g5 v=200,160,110 d=0,-45,-75
+inst tap drum=d7 v=150,80 d=0,-30
+l8
+# --- the petals open alone, two bars
+@p1 o5 [ g b ]8 |
+# --- the beat comes in (kick on the downbeat), two bars
+@p2 [ !kick:g b d b ]4 |
+# --- the sixth leans in (E), a tap on the off-beat: two bars
+@p3 [ !kick:g b e b !tap:g b e b ]2 |
+# --- the bloom: up the scale to the raised fourth (C sharp) and down again
+@p4 g a b >c d e f+ g< |
+@p4 o6 g f+ e d c o5 b a g |
+# --- a light roll, and it starts again
+[ !tap=5 ]4 !tap=6 !tap=6 !tap=7 !tap=7 !tap=8 !tap=8

@@ -1,0 +1,7 @@
+/* ---- repo pictures ---- */
+.av{display:inline-flex;flex:none;align-items:center;justify-content:center}
+.av img{display:block;object-fit:cover;border:2px solid var(--bd);background:var(--card2);image-rendering:pixelated}
+.av.s32 img{width:32px;height:32px}.av.s48 img{width:48px;height:48px}
+.av-prev{display:flex;gap:var(--s3);align-items:center;margin:var(--s3) 0 0}
+.av-prev .av img{width:64px;height:64px}
+.sys{color:var(--muted);font-size:var(--fs-s)}

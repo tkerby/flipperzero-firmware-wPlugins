@@ -1,0 +1,140 @@
+# Gimnasio Tierra (C8, contract 51), 17 x 21, interior. column = i, row = j. The user's approved mock "Gimnasio Tierra" (tools/c6_mock.py TIERRA): BIG light SANDSTONE slabs (2 x 2 tiles:
+# `sslab_<i%2><j%2>`, never small tiles), rocks, boulders and pillars on them, the two back sides walled. The hall is a ROCK MAZE of five barrier rows (j = 16, 13, 10, 7, 4) across the whole width with ONE 2-cell gap each, alternately
+# on the left (i = 2..3) and on the right (i = 13..14), posts (pillars) on both sides of every gap: the way is a serpentine, 2-wide lanes between the barriers (no spinner arrows: they read badly on the light slabs). The seven
+# disciples stand IN the barrier rows (a niche between two rocks) facing SW (+j, a world axis: their art is the static 8-direction one) down the lane below them: a hero walking the lane crosses their column at distance 1..2 (range 3;
+# the hall's guard 4) and is seen; the beaten one has walked at most one step out of his niche and a lane is two cells wide, so a beaten fighter never closes the way. DIRECTOR VARO (a script NPC, the camera cuts to him) waits at
+# the top (8,1) between two pillars. A win: flag 87 (Medalla Nucleo, builtin `badge_nucleo`, the trainer card's 8th badge), the Ground disc (flag 941), his farewell (he disbands Vertice: flag 942 hides its remaining grunts).
+# Entry: Ciudad Nodo's gym door, locked by a guard until the 7th badge (flag 86; the guard hides then).
+@map gimnasio_nodo
+@size 17 21
+@interior yes
+@bg 0
+@fill sslab_11
+@spawn door 8 19 N
+@flag varo_disc 941            # the Ground disc was handed over (a full bag keeps it clear)
+@flag fissure_given 692        # (contract 80): the second disc (Chasm role, Disc 31) was handed over. 692 = the pick-up flag of the pouch that lay in the Cueva Secreta 2 until contract 80
+@flag vertice_gone 942         # Director Varo disbanded Team Vertice (hides its grunts in the towns)
+@flag beaten_montanista_n1 943
+@flag beaten_mecanico_n1 944
+@flag beaten_montanista_n2 945
+@flag beaten_explorador_n1 946
+@flag beaten_mecanico_n2 947
+@flag beaten_chica_n1 948
+@flag beaten_montanista_n3 949
+@legend
+  0  tile=sslab_00
+  1  tile=sslab_10
+  2  tile=sslab_01
+  3  tile=sslab_11
+  e  tile=sslab_00 object=rock_code
+  f  tile=sslab_10 object=rock_code
+  g  tile=sslab_01 object=rock_code
+  h  tile=sslab_11 object=rock_code
+  i  tile=sslab_00 object=boulder
+  j  tile=sslab_10 object=boulder
+  k  tile=sslab_01 object=boulder
+  l  tile=sslab_11 object=boulder
+  P  tile=sslab_00 object=pillar
+  Q  tile=sslab_10 object=pillar
+  R  tile=sslab_01 object=pillar
+  S  tile=sslab_11 object=pillar
+  K  tile=none object=wall_corner
+  w  tile=none object=wall_j
+  |  tile=none object=wall_i
+  m  tile=mat
+  A  tile=sslab_00 npc=montanista_s id=t_montanista_n1 face=SW trainer=montanista_n1 range=4 text=tr.montanista_n1.pre after=tr.montanista_n1.after beaten_flag=beaten_montanista_n1
+  B  tile=sslab_11 npc=mecanico_s id=t_mecanico_n1 face=SW trainer=mecanico_n1 range=3 text=tr.mecanico_n1.pre after=tr.mecanico_n1.after beaten_flag=beaten_mecanico_n1
+  C  tile=sslab_01 npc=montanista_s id=t_montanista_n2 face=SW trainer=montanista_n2 range=3 text=tr.montanista_n2.pre after=tr.montanista_n2.after beaten_flag=beaten_montanista_n2
+  D  tile=sslab_00 npc=explorador_s id=t_explorador_n1 face=SW trainer=explorador_n1 range=3 text=tr.explorador_n1.pre after=tr.explorador_n1.after beaten_flag=beaten_explorador_n1
+  E  tile=sslab_11 npc=mecanico_s id=t_mecanico_n2 face=SW trainer=mecanico_n2 range=3 text=tr.mecanico_n2.pre after=tr.mecanico_n2.after beaten_flag=beaten_mecanico_n2
+  F  tile=sslab_01 npc=chica_s id=t_chica_n1 face=SW trainer=chica_n1 range=3 text=tr.chica_n1.pre after=tr.chica_n1.after beaten_flag=beaten_chica_n1
+  G  tile=sslab_00 npc=montanista_s id=t_montanista_n3 face=SW trainer=montanista_n3 range=3 text=tr.montanista_n3.pre after=tr.montanista_n3.after beaten_flag=beaten_montanista_n3
+  V  tile=sslab_01 npc=varo id=varo face=SW script=varo
+@grid
+  Kwwwwwwwwwwwwwwww
+  |lg323R3V3R3232hk
+  |f01010101010101e
+  |3232323232323232
+  |Q01PfifGfifififi
+  |3232323232323232
+  |1010101010101010
+  |hkhkEkhkhFhR32Sk
+  |1010101010101010
+  |3232323232323232
+  |Q01PfifDfifififi
+  |3232323232323232
+  |1010101010101010
+  |hkhkBkhkhChR32Sk
+  |1010101010101010
+  |3232323232323232
+  |Q01PfAfififififi
+  |3232323232323232
+  |101010101010101P
+  |3232323232323kh2
+  |1010101mm010f010
+@warp m -> ciudad_nodo spawn=gym_door
+# Director Varo. Before the badge: the camera cuts to him, his challenge, the fight (trainer varo_g: Clubtail 45, Augeroot 42, Shellbrute 44, Quilltyrant 45, Anklord 50); a win = his speech, the Medalla Nucleo
+# (flag 87, the trainer card's 8th badge), what it is, then the Ground disc and his farewell (he disbands Team Vertice: flag 942); a full bag keeps varo_disc clear and he hands the disc over (and says goodbye) the next time
+# you talk to him. A loss is the blackout. Afterwards a last line.
+@script varo npc
+    jf badge_nucleo after
+    npc_face_hero varo
+    cam_npc varo
+    say gym.varo.pre
+    battle varo_g 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    say gym.varo.win
+    setf badge_nucleo
+    say gym.varo.badge
+    say gym.varo.about
+    call varo_gift
+    cam_hero
+    end
+  after:
+    npc_face_hero varo
+    cam_npc varo
+    jnf varo_disc first
+    jf fissure_given said
+    call varo_fissure              # (contract 80): gives a disc: here the second disc (Disc 31), given at the same time as the Ground disc, or at the next talk when the bag was full
+    cam_hero
+    end
+  first:
+    call varo_gift
+    cam_hero
+    end
+  said:
+    say gym.varo.after
+    cam_hero
+@end
+@script varo_gift called
+    say gym.varo.disc
+    give_item disc_tierra 1
+    jv 0 0 full
+    item_var 0 disc_tierra
+    say gl.gift
+    setf varo_disc
+    say gym.varo.disc_about
+    call varo_fissure
+    say gym.varo.bye
+    setf vertice_gone
+    end
+  full:
+    say gl.found.full
+@end
+@script varo_fissure called
+    jf fissure_given fdone
+    say extra.varo.fissure
+    give_item disc_31 1
+    jv 0 0 ffull
+    item_var 0 disc_31
+    say gl.gift
+    setf fissure_given
+    say extra.varo.fissure_about
+    end
+  ffull:
+    say gl.found.full
+  fdone:
+@end

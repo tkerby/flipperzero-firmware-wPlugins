@@ -1,0 +1,29 @@
+title Neon - the big city at night: a four-on-the-floor kick with a driving 16th bass (D minor: Dm, Bb, F, C), a synth hook, buzzing seventh-chord arpeggios, a chromatic run into the loop
+tempo 136
+vol 225
+meter 4/4
+inst bass v=255,170,140
+inst lead v=255,255,225,195,180
+inst arpmin arp=0,3,7,10 rate=1 lvl=0.8
+inst arpmaj arp=0,4,7,11 rate=1 lvl=0.8
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+inst snr drum=a6 noise=25 seed=2 fall=12
+l16
+# --- 1-4 the engine: Dm, Bb, F, C (the 16th bass octaves under kick, snare, kick, snare)
+@bass o3 [ !kick:d >d< d >d< !snr:d >d< d >d< ]2 |
+@bass o3 [ !kick:b- >b-< b- >b-< !snr:b- >b-< b- >b-< ]2 |
+@bass o3 [ !kick:f >f< f >f< !snr:f >f< f >f< ]2 |
+@bass o3 [ !kick:c >c< c >c< !snr:c >c< c >c< ]2 |
+# --- 5-8 the hook (eighths, kicks and snares inside the notes)
+@lead o5 !kick:d8 f8 !snr:a8 f8 >!kick:d8< a8 !snr:f8 a8 |
+@lead o5 !kick:b-8 d8 !snr:f8 d8 >!kick:b-8< f8 !snr:d8 f8 |
+@lead o5 !kick:f8 a8 >!snr:c8< a8 >!kick:f8< >c8< !snr:a8 >c8< |
+@lead o5 !kick:c8 e8 !snr:g8 e8 >!kick:c8< g8 !snr:e8 g8 |
+# --- 9-12 the seventh chords buzz (Dm7, Bbmaj7, Fmaj7, Cmaj7), 
+@arpmin o4 !kick:d4 d4 !snr:d4 d4 |
+@arpmaj o4 !kick:b-4 b-4 !snr:b-4 b-4 |
+@arpmaj o4 !kick:f4 f4 !snr:f4 f4 |
+@arpmaj o4 !kick:c4 c4 !snr:c4 c4 |
+# --- 13-14 the climax: the chromatic run up and a snare roll into the loop
+@lead o5 d8 e8 f8 f+8 g8 a8 b8 >c8< |
+[ !snr16 ]16 |

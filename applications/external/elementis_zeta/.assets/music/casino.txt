@@ -1,0 +1,30 @@
+title Sala Fortuna - the Fortune Hall: a swung, bouncy jazz turnaround (Dm7, G7, Cmaj7, A7) where a brassy tune and a walking bass trade bars, a hot run of 16ths, and a glittering finish (150 bpm, every beat is 40 ticks: a swung eighth pair is 27 + 13)
+tempo 150
+vol 225
+meter 4/4
+inst brass v=255,255,230,200,180
+inst walk v=255,215,175,140,115,100
+inst spark arp=0,4,7 rate=1 lvl=0.85
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+inst snr drum=a6 noise=25 seed=6 fall=12
+# --- 1-4: Dm7 tune, G7 walk, Cmaj7 tune, A7 walk
+@brass o5 !kick:a=27 g=13 f=27 e=13 d=27 f=13 a=27 g=13
+@walk o3 !kick:g=40 a=40 b=40 >d=40<
+@brass o5 !kick:e=27 g=13 >c=27< e=13 g=40 e=40
+@walk o3 !kick:a=40 c+=40 e=40 g=40
+# --- 5-8: the tune again, bent (Dm7, G7 walking down, Cmaj7 high, a chromatic climb)
+@brass o5 !kick:d=27 f=13 a=27 >c=13< a=27 f=13 d=40
+@walk o3 !kick:g=40 f=40 e=40 d=40
+@brass o5 >!kick:c=27< b=13 g=27 e=13 g=27 b=13 >c=40<
+@walk o3 !kick:c=27 c+=13 d=27 d+=13 e=27 f=13 f+=27 g=13
+# --- 9-12: Fmaj7 tune, Bb7 walk, Em7 - A7 tune, A7 walk down
+@brass o5 !kick:a=27 g=13 f=27 e=13 f=27 a=13 >c=40<
+@walk o3 !kick:b-=40 >d=40 f=40 a-=40<
+@brass o5 !kick:g=27 f+=13 e=27 d=13 c+=27 e=13 a=40
+@walk o3 !kick:a=40 g=40 e=40 c+=40
+# --- 13-16: the hot run, the sparkle, a stab and the glittering finish
+@brass o5 !kick:d=10 f=10 a=10 >d=10 f=10 d=10< a=10 f=10 d=10 f=10 a=10 >d=10 f=10 d=10< a=10 f=10
+@spark o6 !kick:c=40 e=40 g=40 >c=40<
+@brass o5 !kick:g=20 r=20 g=20 r=20 b=20 r=20 >d=40<
+@brass o5 !kick:c=10 e=10 g=10 >c=10 e=10 g=10 c=10 e=10<
+@spark o6 c=80

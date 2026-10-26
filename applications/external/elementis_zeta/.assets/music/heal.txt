@@ -1,0 +1,7 @@
+title Healing machine - a gentle rising twinkle into a soft shimmering chord (C major seventh)
+tempo 140
+vol 190
+inst harp v=170,255,210,170,140,120
+inst maj7 arp=0,4,7,11 rate=5 tone=190,255,190
+l16
+@harp o5 c e g o6 c e g c8 r8 @maj7 o5 c2

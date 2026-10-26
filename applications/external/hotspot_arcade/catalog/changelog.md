@@ -1,3 +1,8 @@
+## 1.10.1
+
+- Battleship now displays both firing boards after players place their ships.
+- The board firmware remains v22; no reflash is required.
+
 ## 1.10.0
 
 - Pick a smaller download. Releases now offer a .fap per board alongside the combined one.

@@ -1,0 +1,11482 @@
+# Elementis Zeta - English game text (M1). Same keys/pages as es.txt. Max 20 glyphs per line, 2 lines per page.
+
+[mom.a]
+Hi, sweetie!
+Professor Lin
+---
+was looking for you.
+Stop by her lab.
+
+[mom.b]
+Eat well and sleep
+early, okay?
+
+[lin.b]
+I research how
+Elementis live.
+
+[vecino.a]
+Hey! This village
+is very quiet.
+---
+Can't leave without
+an Elementi.
+---
+Ask Professor Lin
+for one!
+
+[sign.aliso]
+ALISO VILLAGE
+Where it all begins.
+
+[sign.lab]
+PROF. LIN'S LAB
+By appointment only.
+
+[trig.norte]
+Wait! Don't leave
+without an Elementi.
+
+[door.rival]
+You knock on the
+door.
+---
+No one answers.
+
+[obj.tv]
+A news show talks
+about Vertex Inc.
+
+[obj.pc]
+It's the home PC.
+It's turned off.
+
+[obj.libros.casa]
+Lots of books about
+adventures and maps.
+
+[obj.libros.lab]
+Books on Elementis
+and energy.
+
+[obj.maquina.lab]
+This machine scans
+Elementi data.
+
+[obj.pc.lab]
+The monitor shows
+a map of Aliso.
+
+[lab.lin.intro]
+Hello, {player}!
+I was expecting you.
+
+[lab.lin.intro2]
+Three Crystals are
+on the table.
+---
+Each one holds an
+Elementi.
+---
+Pick one. It will be
+your travel partner.
+
+[lab.orb.ember]
+It's {v0}!
+A Fire Elementi.
+---
+Choose it?
+
+[lab.orb.puddle]
+It's {v0}!
+A Water Elementi.
+---
+Choose it?
+
+[lab.orb.sprout]
+It's {v0}!
+A Grass Elementi.
+---
+Choose it?
+
+[lab.lin.chosen]
+{v0} is yours!
+Take good care.
+
+[lab.rival.pick]
+Then I'll take
+this one!
+
+[lab.rival.challenge]
+Wait, {player}!
+---
+Let's see who is
+stronger!
+
+[lab.rival.win_after]
+What?! I picked
+the wrong one…
+---
+I'll get stronger!
+
+[lab.rival.lose_after]
+Ha! I won!
+I picked the best.
+---
+Keep training,
+{player}.
+
+[lab.lin.after]
+Well done, {player}!
+---
+Soon you'll be able
+to explore Route 1.
+
+[lab.rival.leave]
+See you, {player}!
+
+[lab.lin.already]
+Take good care of
+your Elementi!
+
+[lab.orb.taken]
+This Crystal is
+empty.
+
+[lab.lin.stop]
+Hey, wait!
+Don't leave yet!
+
+[lab.rival.idle]
+Pick one already!
+I'm waiting!
+
+[gl.pronto]
+Coming soon…
+
+[gl.menu.team]
+Party
+
+[gl.menu.bag]
+Bag
+
+[gl.menu.save]
+Save
+
+[gl.menu.options]
+Options
+
+[gl.menu.quit]
+Quit
+
+[gl.title.press_ok]
+Press OK
+
+[gl.party.none]
+You don't have any
+Elementis yet.
+
+[gl.party.stats]
+Stats
+
+[gl.party.cancel]
+Cancel
+
+[gl.party.exp]
+Exp
+
+[gl.party.next]
+To go
+
+[gl.options.title]
+Options
+
+[gl.options.language]
+Language
+
+[gl.ty.normal]
+Normal
+
+[gl.ty.fighting]
+Fighting
+
+[gl.ty.flying]
+Flying
+
+[gl.ty.poison]
+Poison
+
+[gl.ty.ground]
+Ground
+
+[gl.ty.rock]
+Rock
+
+[gl.ty.bug]
+Bug
+
+[gl.ty.ghost]
+Ghost
+
+[gl.ty.fire]
+Fire
+
+[gl.ty.water]
+Water
+
+[gl.ty.grass]
+Grass
+
+[gl.ty.electric]
+Electric
+
+[gl.ty.psychic]
+Psychic
+
+[gl.ty.ice]
+Ice
+
+[gl.ty.dragon]
+Dragon
+
+[gl.sp.embercub]
+Embercub
+
+[gl.sp.flarewolf]
+Flarewolf
+
+[gl.sp.puddlet]
+Puddlet
+
+[gl.sp.tidalux]
+Tidalux
+
+[gl.sp.sprouton]
+Sprouton
+
+[gl.sp.thornbuck]
+Thornbuck
+
+[gl.sp.flitter]
+Flitter
+
+[gl.sp.muncrit]
+Muncrit
+
+[gl.sp.grubbit]
+Grubbit
+
+[gl.sp.grubshell]
+Grubshell
+
+[gl.sp.lanternmoth]
+Lampmoth
+
+[gl.sp.stingle]
+Stingle
+
+[gl.sp.stinglet]
+Stinglet
+
+[gl.sp.velvex]
+Velvex
+
+[gl.sp.zaphid]
+Zaphid
+
+[gl.sp.voltgecko]
+Voltgecko
+
+[gl.sp.pebblump]
+Pebblump
+
+[gl.sp.rockroll]
+Rockroll
+
+[gl.sp.bouldrum]
+Bouldrum
+
+[gl.sp.boulderback]
+Bouldback
+
+[gl.sp.flitwing]
+Flitwing
+
+[gl.sp.skyrrow]
+Skyrrow
+
+[gl.sp.munchmole]
+Munchmole
+
+[gl.sp.pyrewolf]
+Pyrewolf
+
+[gl.sp.tidalgard]
+Tidalgard
+
+[gl.sp.grovestag]
+Grovestag
+
+[gl.sp.echolet]
+Echolet
+
+[gl.sp.lunelle]
+Lunelle
+
+[gl.sp.shellfern]
+Shellfern
+
+[gl.sp.jabbird]
+Jabbird
+
+[gl.sp.lullabun]
+Lullabun
+
+[gl.sp.quillix]
+Quillix
+
+[gl.sp.dunedil]
+Dunedil
+
+[gl.sp.coilisp]
+Coilisp
+
+[gl.sp.dozelf]
+Dozelf
+
+[gl.sp.mossbud]
+Mossbud
+
+[gl.sp.gleamjell]
+Gleamjell
+
+[gl.sp.trilobite]
+Trilobite
+
+[gl.sp.sealily]
+Sealily
+
+[gl.sp.echowing]
+Echowing
+
+[gl.sp.ferncairn]
+Ferncairn
+
+[gl.sp.jabhawk]
+Jabhawk
+
+[gl.sp.quillord]
+Quillord
+
+[gl.sp.dunedrake]
+Dunedrake
+
+[gl.sp.hoodcoil]
+Hoodcoil
+
+[gl.sp.trancelf]
+Trancelf
+
+[gl.sp.mossbloom]
+Mossbloom
+
+[gl.sp.trilothorn]
+Trilothorn
+
+[gl.sp.crinolith]
+Crinolith
+
+[gl.sp.gleamlet]
+Gleamlet
+
+[gl.sp.glintail]
+Glintail
+
+[gl.sp.lustrel]
+Lustrel
+
+[gl.sp.ramplet]
+Ramplet
+
+[gl.sp.ibexer]
+Ibexer
+
+[gl.sp.mesmoli]
+Mesmoli
+
+[gl.sp.mesmaris]
+Mesmaris
+
+[gl.sp.drillroot]
+Drillroot
+
+[gl.sp.augeroot]
+Augeroot
+
+[gl.sp.spoolt]
+Spoolt
+
+[gl.sp.voltspool]
+Voltspool
+
+[gl.sp.otterock]
+Otterock
+
+[gl.sp.wispsheet]
+Wispsheet
+
+[gl.sp.shroudle]
+Shroudle
+
+[gl.sp.gloomshroud]
+Gloomcloak
+
+[gl.sp.hatchkip]
+Hatchkip
+
+[gl.sp.shellbrute]
+Shellbrute
+
+[gl.sp.mimbara]
+Mimbara
+
+[gl.sp.tidebara]
+Tidebara
+
+[gl.sp.embara]
+Embara
+
+[gl.sp.voltbara]
+Voltbara
+
+[gl.sp.cindermeer]
+Cindermeer
+
+[gl.sp.pyromeer]
+Pyromeer
+
+[gl.sp.dewlash]
+Dewlash
+
+[gl.sp.smogkeg]
+Smogkeg
+
+[gl.sp.twinkeg]
+Twinkeg
+
+[gl.sp.lunarelle]
+Lunarelle
+
+[gl.sp.lulladream]
+Lulladream
+
+[gl.sp.quilltyrant]
+Quillking
+
+[gl.sp.bloomoss]
+Bloomoss
+
+[gl.sp.flopfin]
+Flopfin
+
+[gl.sp.stormgill]
+Stormgill
+
+[gl.sp.urchip]
+Urchip
+
+[gl.sp.urchlord]
+Urchlord
+
+[gl.sp.clubrimp]
+Clubrimp
+
+[gl.sp.smashrimp]
+Smashrimp
+
+[gl.sp.skipgoby]
+Skipgoby
+
+[gl.sp.gobyhop]
+Gobyhop
+
+[gl.sp.gobrawl]
+Gobrawl
+
+[gl.sp.lazatee]
+Lazatee
+
+[gl.sp.sagatee]
+Sagatee
+
+[gl.sp.slumberth]
+Slumberth
+
+[gl.sp.lambalm]
+Lambalm
+
+[gl.sp.wombamma]
+Wombamma
+
+[gl.sp.razorfly]
+Razorfly
+
+[gl.sp.gnucharge]
+Gnucharge
+
+[gl.sp.reefling]
+Reefling
+
+[gl.sp.reefcoil]
+Reefcoil
+
+[gl.sp.reefdragon]
+Reefdragon
+
+[gl.sp.slickslime]
+Slickslime
+
+[gl.sp.tarbog]
+Tarbog
+
+[gl.sp.kickaroo]
+Kickaroo
+
+[gl.sp.jabadillo]
+Jabadillo
+
+[gl.sp.glacielle]
+Glacielle
+
+[gl.sp.mirrimime]
+Mirrimime
+
+[gl.sp.somnarch]
+Somnarch
+
+[gl.sp.mothmist]
+Mothmist
+
+[gl.sp.veilmoth]
+Veilmoth
+
+[gl.sp.pixelix]
+Pixelix
+
+[gl.sp.clubtail]
+Clubtail
+
+[gl.sp.anklord]
+Anklord
+
+[gl.sp.belubub]
+Belubub
+
+[gl.sp.belugrand]
+Belugrand
+
+[gl.sp.barnacub]
+Barnacub
+
+[gl.sp.barnaclad]
+Barnaclad
+
+[gl.sp.inkit]
+Inkit
+
+[gl.sp.inkrake]
+Inkrake
+
+[gl.sp.glidefin]
+Glidefin
+
+[gl.sp.soarfin]
+Soarfin
+
+[gl.sp.plattypuzz]
+Plattypuzz
+
+[gl.sp.plattymind]
+Plattymind
+
+[gl.sp.frostiva]
+Frostiva
+
+[gl.sp.voltaboon]
+Voltaboon
+
+[gl.sp.bellowkiln]
+Bellowkiln
+
+[gl.sp.origamorph]
+Origamorph
+
+[gl.sp.cindibex]
+Cindibex
+
+[gl.sp.blazibex]
+Blazibex
+
+[gl.sp.archaeon]
+Archaeon
+
+[gl.sp.aurowl]
+Aurowl
+
+[gl.sp.fulgurion]
+Fulgurion
+
+[gl.sp.tuskid]
+Tuskid
+
+[gl.sp.tuskmash]
+Tuskmash
+
+[gl.sp.tuskumo]
+Tuskumo
+
+[gl.sp.cragodile]
+Cragodile
+
+[gl.sp.dashkip]
+Dashkip
+
+[gl.sp.dashmark]
+Dashmark
+
+[gl.sp.pinecub]
+Pinecub
+
+[gl.sp.pinekeeper]
+Pinekeeper
+
+[gl.sp.tonguard]
+Tonguard
+
+[gl.sp.pitlion]
+Pitlion
+
+[gl.sp.flarechick]
+Flarechick
+
+[gl.sp.pyreacock]
+Pyreacock
+
+[gl.sp.coilet]
+Coilet
+
+[gl.sp.teslarch]
+Teslarch
+
+[gl.sp.ignicondor]
+Ignicondor
+
+[gl.sp.genesa]
+Genesa
+
+[gl.sp.arkegen]
+Arkegen
+
+[gl.sp.quillia]
+Quillia
+
+[gl.sp.quillara]
+Quillara
+
+[gl.sp.quillqueen]
+Quillqueen
+
+[gl.sp.droselet]
+Droselet
+
+[gl.sp.drosaura]
+Drosaura
+
+[gl.sp.droserath]
+Droserath
+
+[gl.sp.scarabeam]
+Scarabeam
+
+[gl.sp.kheprion]
+Kheprion
+
+[gl.sp.lunashell]
+Lunashell
+
+[gl.sp.selentor]
+Selentor
+
+[gl.sp.foldling]
+Foldling
+
+[gl.bt.fight]
+Fight
+
+[gl.bt.bag]
+Bag
+
+[gl.bt.party]
+Party
+
+[gl.bt.run]
+Run
+
+[gl.bt.pp]
+PP
+
+[gl.bt.lv]
+Lv
+
+[gl.bt.hp]
+HP
+
+[gl.bt.challenge]
+{v3}
+wants to battle!
+
+[gl.bt.rival_sendout]
+{v3}
+sent out {v0}!
+
+[gl.bt.go]
+Go! {v0}!
+
+[gl.bt.used]
+{v0} used
+{v1}!
+
+[gl.bt.super]
+It's super
+effective!
+
+[gl.bt.notvery]
+It's not very
+effective…
+
+[gl.bt.noeffect]
+It doesn't affect
+{v0}…
+
+[gl.bt.crit]
+A critical hit!
+
+[gl.bt.miss]
+{v0}'s attack
+missed!
+
+[gl.bt.statdown]
+{v0}'s
+{v1} fell!
+
+[gl.bt.statup]
+{v0}'s
+{v1} rose!
+
+[gl.bt.st.attack]
+Attack
+
+[gl.bt.st.defense]
+Defense
+
+[gl.bt.st.speed]
+Speed
+
+[gl.bt.st.special]
+Special
+
+[gl.bt.st.accuracy]
+Accuracy
+
+[gl.bt.st.evasion]
+Evasion
+
+[gl.bt.burned]
+{v0} was
+burned!
+
+[gl.bt.poisoned]
+{v0} was
+poisoned!
+
+[gl.bt.paralyzed]
+{v0} is
+paralyzed!
+
+[gl.bt.asleep]
+{v0} fell
+asleep!
+
+[gl.bt.wake]
+{v0} woke up!
+
+[gl.bt.frozen]
+{v0} was
+frozen solid!
+
+[gl.bt.thaw]
+{v0} thawed
+out!
+
+[gl.bt.confused]
+{v0} is
+confused!
+
+[gl.bt.hurt_itself]
+{v0} hurt
+itself!
+
+[gl.bt.fully_paralyzed]
+{v0}'s fully
+paralyzed!
+
+[gl.bt.flinch]
+{v0}
+flinched!
+
+[gl.bt.fainted]
+{v0}
+fainted!
+
+[gl.bt.exp]
+{v0} gained
+{v2} EXP. Points!
+
+[gl.bt.levelup]
+{v0} grew to
+level {v2}!
+
+[gl.bt.learned]
+{v0} learned
+{v1}!
+
+[gl.bt.win]
+You defeated
+{v3}!
+
+[gl.bt.lose]
+You're out of
+usable Elementis!
+---
+{player} blacked
+out!
+
+[gl.bt.cant_run]
+You can't run from
+a trainer battle!
+
+[gl.bt.bag_empty]
+Your bag is empty.
+
+[gl.bt.party_only]
+You only have
+{v0}.
+
+[gl.bt.what_do]
+What will
+{v0} do?
+
+[gl.bt.nothing]
+But nothing
+happened!
+
+[gl.bt.ran]
+Got away safely!
+
+[gl.bt.wild]
+A wild {v0}
+appeared!
+
+[gl.bt.sleeping]
+{v0} is fast
+asleep.
+
+[gl.bt.frozen_solid]
+{v0} is
+frozen solid!
+
+[gl.bt.hurt_psn]
+{v0} is hurt
+by poison!
+
+[gl.bt.hurt_brn]
+{v0} is hurt
+by its burn!
+
+[gl.bt.focus]
+{v0} is
+getting pumped!
+
+[gl.bt.screen]
+{v0} put up
+a screen!
+
+[gl.bt.recoil]
+{v0} is hit
+with recoil!
+
+[gl.bt.failed]
+But it failed!
+
+[gl.bt.conf_over]
+{v0} snapped
+out of confusion!
+
+[gl.bt.run_fail]
+You can't escape!
+
+[gl.bt.struggle]
+Struggle
+
+[gl.choice.yes]
+YES
+
+[gl.choice.no]
+NO
+
+[gl.name.ask_player]
+What's your name?
+
+[gl.name.ask_rival]
+He's been your rival
+since childhood.
+---
+What's his name?
+
+[gl.name.p0]
+Alex
+
+[gl.name.p1]
+Nico
+
+[gl.name.p2]
+Rio
+
+[gl.name.p3]
+Sol
+
+[gl.name.r0]
+Gael
+
+[gl.name.r1]
+Bruno
+
+[gl.name.r2]
+Iker
+
+[gl.name.r3]
+Hugo
+
+# --- M3-A save ---
+[gl.title.continue]
+Continue
+
+[gl.title.new]
+New Game
+
+[gl.save.who]
+{player}
+
+[gl.save.reg]
+Registry
+
+[gl.save.time]
+Time
+
+[gl.save.ask]
+Would you like to
+save the game?
+
+[gl.save.saving]
+Saving…
+Don't turn it off!
+
+[gl.save.done]
+{player} saved
+the game.
+
+[gl.save.fail]
+Couldn't save.
+Check the SD card.
+
+# --- M3-C capture ---
+[gl.it.crystal]
+Crystal
+
+[gl.it.salve]
+Salve
+
+[gl.it.antidote]
+Antidote
+
+[gl.it.limb_balm]
+Limb Balm
+
+[gl.it.wake_salts]
+Wake Salts
+
+[gl.it.cool_gel]
+Cool Gel
+
+[gl.it.parcel]
+Parcel
+
+[gl.it.crystal_plus]
+Crystal Plus
+
+[gl.it.rich_salve]
+Rich Salve
+
+[gl.it.ward_spray]
+Ward Spray
+
+[gl.it.exit_wisp]
+Exit Wisp
+
+[gl.it.disc_01]
+Disc 01
+
+[gl.it.disc_02]
+Disc 02
+
+[gl.it.disc_03]
+Disc 03
+
+[gl.it.ferry_pass]
+Ferry Pass
+
+[gl.it.fossil_trilobite]
+Trilo Fossil
+
+[gl.it.fossil_sealily]
+Lily Fossil
+
+[gl.it.disc_04]
+Disc 04
+
+[gl.it.estuche]
+Coin Purse
+
+[gl.it.luna]
+Lunar Gem
+
+[gl.it.fuego]
+Flame Gem
+
+[gl.it.agua]
+Tide Gem
+
+[gl.it.trueno]
+Spark Gem
+
+[gl.it.hoja]
+Frond Gem
+
+[gl.it.lente]
+Spectral Lens
+
+[gl.it.flauta]
+Clear Flute
+
+[gl.it.cupon_bici]
+Bike Coupon
+
+[gl.it.bici]
+Bicycle
+
+[gl.it.vit_hp]
+HP Tonic
+
+[gl.it.vit_atk]
+Attack Tonic
+
+[gl.it.vit_def]
+Defense Tonic
+
+[gl.it.vit_spd]
+Speed Tonic
+
+[gl.it.vit_spc]
+Special Tonic
+
+[gl.it.spring_water]
+Spring Water
+
+[gl.it.fizzy_pop]
+Fizzy Pop
+
+[gl.it.citrus_cooler]
+Citrus Cooler
+
+[gl.it.prime_salve]
+Prime Salve
+
+[gl.it.disc_05]
+Disc 05
+
+[gl.it.llave_polea]
+Hoist Key
+
+[gl.it.cana_junco]
+Reed Rod
+
+[gl.it.cana_fibra]
+Fiber Rod
+
+[gl.it.cana_aleacion]
+Alloy Rod
+
+[gl.it.dentadura]
+Gold Dentures
+
+[gl.it.cristal_reserva]
+Reserve Crystal
+
+[gl.it.ultra_cristal]
+Ultra Crystal
+
+[gl.it.chip_acceso]
+Access Chip
+
+[gl.it.disc_06]
+Disc 06
+
+[gl.it.disc_07]
+Disc 07
+
+[gl.it.disc_08]
+Disc 08
+
+[gl.it.cristal_maestro]
+Master Crystal
+
+[gl.it.disc_tierra]
+Disc 10
+
+[gl.it.ambar_fosil]
+Fossil Amber
+
+[gl.it.llave_ceniza]
+Cinder Key
+
+[gl.it.disc_10]
+Disc 09
+
+[gl.it.total_salve]
+Total Salve
+
+[gl.it.life_spark]
+Life Spark
+
+[gl.it.life_blaze]
+Life Blaze
+
+[gl.it.vital_draught]
+Vital Draught
+
+[gl.it.growth_seed]
+Growth Seed
+
+[gl.it.vigor_drop]
+Vigor Drop
+
+[gl.it.vigor_flask]
+Vigor Flask
+
+[gl.it.strong_ward]
+Strong Ward
+
+[gl.it.grand_ward]
+Grand Ward
+
+[gl.it.disc_11]
+Disc 11
+
+[gl.it.disc_12]
+Disc 12
+
+[gl.it.disc_13]
+Disc 13
+
+[gl.it.disc_14]
+Disc 14
+
+[gl.it.disc_15]
+Disc 15
+
+[gl.it.disc_16]
+Disc 16
+
+[gl.it.disc_17]
+Disc 17
+
+[gl.it.disc_18]
+Disc 18
+
+[gl.it.disc_19]
+Disc 19
+
+[gl.it.disc_20]
+Disc 20
+
+[gl.it.disc_21]
+Disc 21
+
+[gl.it.disc_22]
+Disc 22
+
+[gl.it.disc_23]
+Disc 23
+
+[gl.it.disc_24]
+Disc 24
+
+[gl.it.disc_25]
+Disc 25
+
+[gl.it.disc_26]
+Disc 26
+
+[gl.it.disc_27]
+Disc 27
+
+[gl.it.disc_28]
+Disc 28
+
+[gl.it.disc_29]
+Disc 29
+
+[gl.it.disc_30]
+Disc 30
+
+[gl.it.disc_31]
+Disc 31
+
+[gl.it.disc_32]
+Disc 32
+
+[gl.it.disc_33]
+Disc 33
+
+[gl.it.disc_34]
+Disc 34
+
+[gl.it.disc_35]
+Disc 35
+
+[gl.it.disc_36]
+Disc 36
+
+[gl.it.disc_37]
+Disc 37
+
+[gl.it.disc_38]
+Disc 38
+
+[gl.it.disc_39]
+Disc 39
+
+[gl.it.disc_40]
+Disc 40
+
+[gl.it.disc_41]
+Disc 41
+
+[gl.it.disc_42]
+Disc 42
+
+[gl.it.disc_43]
+Disc 43
+
+[gl.it.disc_44]
+Disc 44
+
+[gl.it.disc_45]
+Disc 45
+
+[gl.it.disc_46]
+Disc 46
+
+[gl.it.disc_47]
+Disc 47
+
+[gl.it.disc_48]
+Disc 48
+
+[gl.it.disc_49]
+Disc 49
+
+[gl.it.disc_50]
+Disc 50
+
+[gl.it.piedra_eclipse]
+Eclipse Stone
+
+[gl.it.origin_shard]
+Origin Fragment
+
+[gl.it.buscatesoros]
+Treasure Probe
+
+[gl.it.atlas]
+Atlas
+
+[gl.it.reparto_total]
+Team Share
+
+[gl.it.peluche_fuga]
+Escape Plush
+
+[gl.it.pulso_atk]
+Attack Boost
+
+[gl.it.pulso_def]
+Defense Boost
+
+[gl.it.pulso_spd]
+Speed Boost
+
+[gl.it.pulso_spc]
+Special Boost
+
+[gl.it.pulso_acc]
+Aim Boost
+
+[gl.it.velo_bruma]
+Mist Veil
+
+[gl.it.foco_critico]
+Crit Focus
+
+[gl.it.savia]
+Sap
+
+[gl.it.savia_max]
+Max Sap
+
+[gl.it.descongelar]
+Defrost
+
+[gl.it.panacea]
+Cure-All
+
+[gl.it.pp_extra]
+PP Plus
+
+[gl.it.trozo_oro]
+Gold Chunk
+
+[gl.bt.threw]
+You threw a
+{v0}!
+
+[gl.bt.caught]
+All right!
+{v0} caught!
+
+[gl.bt.broke0]
+Oh, no! It broke
+free!
+
+[gl.bt.broke1]
+Aww! It appeared
+to be caught!
+
+[gl.bt.broke2]
+Aargh! Almost
+had it!
+
+[gl.bt.broke3]
+Shoot! It was so
+close too!
+
+[gl.bt.no_steal]
+You can't catch
+another trainer's
+---
+Elementi!
+
+[gl.bt.party_full]
+There's no room
+in your party.
+---
+{v0} was
+released!
+
+[gl.bt.healed]
+{v0} regained
+{v2} HP!
+
+[gl.bt.no_effect]
+It won't have
+any effect.
+
+[gl.bt.already_out]
+{v0} is
+already out!
+
+[gl.bt.no_will]
+{v0} can't
+fight!
+
+[gl.bt.switch]
+Switch
+
+[gl.bt.comeback]
+{v0}, enough!
+Come back!
+
+# --- M3-B route ---
+[route1.sign]
+ROUTE 1
+Aliso Village (S)
+---
+Nodo City (N)
+
+[route1.ledge]
+Hop down ledges
+to the south.
+
+[gl.blackout]
+Everything goes
+white…
+
+[gl.blackout.home]
+{player} dashed home
+in a hurry.
+
+# --- M3-E content ---
+[mom.rest]
+{player}! You look
+tired.
+---
+Want to rest a bit?
+
+[mom.rest.done]
+All done! Your
+Elementis are full
+---
+of energy!
+Take care, dear!
+
+[mom.rest.no]
+Okay, dear. I'll be
+here. Take care!
+
+[route1.clerk.a]
+Hi! I work at the
+Nodo City shop.
+---
+Here, a free sample
+just for you!
+
+[route1.clerk.got]
+You received a
+Salve!
+
+[route1.clerk.b]
+Drop by the Nodo
+City shop sometime!
+
+[route1.clerk.full]
+Your bag is full.
+Come back later!
+
+# --- M3-D menus ---
+[gl.bag.empty]
+Your bag is empty.
+
+[gl.bag.use]
+Use
+
+[gl.bag.toss]
+Toss
+
+[gl.bag.not_now]
+This isn't the time
+to use that!
+
+[gl.bag.toss_ask]
+Is it OK to toss
+{v2} {v0}?
+
+[gl.bag.tossed]
+Threw away
+{v2} {v0}.
+
+# --- M4-A items ---
+[gl.bt.cured_psn]
+{v0} was cured
+of poison!
+
+[gl.bt.cured_par]
+{v0} was cured
+of paralysis!
+
+[gl.bt.cured_brn]
+{v0} was cured
+of its burn!
+
+[gl.bt.money]
+{player} got
+${v1}!
+
+[gl.bag.cant_toss]
+It's too important
+to toss!
+
+# --- M4-B shop ---
+[gl.shop.hello]
+Hi there! May I
+help you?
+
+[gl.shop.buy]
+Buy
+
+[gl.shop.sell]
+Sell
+
+[gl.shop.quit]
+Quit
+
+[gl.shop.deal]
+{v2} {v0} for
+{v3}. OK?
+
+[gl.shop.bought]
+Here you are!
+Thank you!
+---
+Is there anything
+else I can do?
+
+[gl.shop.sold]
+Deal! Thank you!
+---
+Is there anything
+else I can do?
+
+[gl.shop.no_money]
+You don't have
+enough money.
+
+[gl.shop.bag_full]
+Your bag is
+full.
+
+[gl.shop.cant_sell]
+I can't put a
+price on that.
+
+[gl.shop.bye]
+Thank you!
+Come again!
+
+[gl.center.ask]
+Welcome to the
+Center!
+---
+Shall I heal your
+Elementis?
+
+[gl.center.done]
+Your Elementis are
+fighting fit!
+---
+Come again
+soon!
+
+[gl.center.bye]
+Come again
+soon!
+
+# --- M4-C world ---
+[gl.trainer.pre]
+Hey you! I saw you!
+Let's battle!
+
+[gl.trainer.after]
+Good fight!
+You beat me.
+
+[gl.found]
+{player} found
+{v0}!
+
+[gl.found.full]
+No more room in
+your bag.
+
+[tr.test.pre]
+I'm the test
+trainer! Come on!
+
+[tr.test.after]
+I lost… Good
+test battle!
+
+# --- M4-E species ---
+# --- M4-D content ---
+[nodo.sign]
+NODO CITY
+Everything connects.
+
+[nodo.gym]
+NODO CITY GYM
+---
+Leader: ???
+Type: Ground
+
+[nodo.house.a]
+A quiet house.
+No one answers.
+
+[nodo.house.b]
+The door is locked.
+
+[nodo.npc.a]
+Wild Elementis live
+in the tall grass.
+---
+Throw a Crystal to
+catch them!
+---
+If you spot a bag on
+the ground, grab it!
+
+[nodo.npc.b]
+The Center heals
+Elementis for free.
+---
+Use it whenever they
+look tired.
+
+[nodo.npc.k]
+Past Route 2 lies
+Umbra Forest.
+---
+It's a maze of trees
+full of bugs!
+---
+Don't get lost!
+
+[nodo.guard.stop]
+Halt! This road is
+not for rookies
+---
+without Crystals.
+---
+Maybe the shop can
+help you.
+
+[nodo.guard.thanks]
+Oh, you have
+Crystals now! Pass.
+
+[nodo.guard.tip]
+Umbra Forest lies
+to the north.
+---
+Bring Antidotes in
+case of poison.
+
+[nodo.guard.after]
+Bring Antidotes in
+case of poison.
+
+[nodo.shop.ask]
+Are you from Aliso
+Village? A parcel
+---
+came for Professor
+Lin!
+---
+Will you take it?
+
+[nodo.shop.no]
+Oh! Come back when
+you've decided.
+
+[nodo.shop.got]
+{player} received
+the Parcel!
+
+[nodo.shop.thanks]
+Thanks! Take it to
+Professor Lin.
+---
+Come see me again
+once it's delivered.
+
+[nodo.shop.wait]
+Please deliver the
+parcel first.
+
+[lab.lin.parcel]
+Oh, the parcel I was
+expecting! Thanks.
+---
+Take these Crystals
+to catch Elementis.
+---
+They'll come in
+very handy!
+
+[lab.lin.parcel.got]
+{player} received
+5 Crystals!
+
+[centro.books]
+Magazines about
+Elementis.
+
+[ruta2.sign]
+ROUTE 2
+Nodo City (S)
+---
+Umbra Forest (N)
+
+[tr.explorador_r2.pre]
+Halt! I'm a junior
+explorer.
+---
+Let's see how you
+do!
+
+[tr.explorador_r2.after]
+Wow, you're good!
+I'll keep exploring.
+
+[bosque.sign]
+UMBRA FOREST
+It's dark in here.
+
+[tr.cazabichos_1.pre]
+Bugs are the best!
+Let's battle!
+
+[tr.cazabichos_1.after]
+My bugs lost!
+Nice battle!
+
+[tr.cazabichos_2.pre]
+I've been hunting
+all day! Battle me!
+
+[tr.cazabichos_2.after]
+My net couldn't
+handle your team!
+
+
+# --- K keyboard ---
+[gl.kb.new]
+NEW NAME
+
+[gl.kb.end]
+END
+
+[gl.kb.pg0]
+ABC
+
+[gl.kb.pg1]
+abc
+
+[gl.kb.pg2]
+123
+
+[gl.kb.pg3]
+ABC
+
+[gl.kb.t_player]
+YOUR NAME?
+
+[gl.kb.t_rival]
+HIS NAME?
+
+[gl.kb.t_nick]
+NICKNAME?
+
+[gl.kb.ask_nick]
+Give a nickname
+to {v0}?
+
+
+# --- trainer names (class + name, gl.tr.*; <= 15 glyphs; assets/data/trainers.toml name = ...) ---
+[gl.tr.explorador_r2]
+Scout Tomi
+
+[gl.tr.cazabichos_1]
+Bug Fan Dani
+
+[gl.tr.cazabichos_2]
+Bug Fan Raul
+
+# --- M4 zone banner (gl.area.<key> = tools/mapc.py AREA_KEYS order; the zone-name banner of the world, contract 22) ---
+[gl.area.villa_aliso]
+Aliso Village
+
+[gl.area.ruta_1]
+Route 1
+
+[gl.area.ciudad_nodo]
+Nodo City
+
+[gl.area.ruta_2]
+Route 2
+
+[gl.area.bosque_umbrio]
+Umbra Forest
+
+[gl.area.pueblo_cantera]
+Cantera Town
+
+[gl.area.ruta_3]
+Route 3
+
+[gl.area.monte_eco]
+Mt. Eco
+
+[gl.area.ruta_4]
+Route 4
+
+[gl.area.ciudad_marea]
+Marea City
+
+[gl.area.ruta_24]
+Route 24
+
+[gl.area.ruta_25]
+Route 25
+
+[gl.area.ruta_5]
+Route 5
+
+[gl.area.ruta_6]
+Route 6
+
+[gl.area.puerto_dinamo]
+Dynamo Port
+
+[gl.area.ruta_11]
+Route 11
+
+[gl.area.cueva_excavadora]
+Digger Cave
+
+[gl.area.ruta_9]
+Route 9
+
+[gl.area.ruta_10]
+Route 10
+
+[gl.area.tunel_oscuro]
+Dark Tunnel
+
+[gl.area.pueblo_bruma]
+Bruma Town
+
+[gl.area.ruta_8]
+Route 8
+
+[gl.area.ruta_7]
+Route 7
+
+[gl.area.metropolis_neon]
+Neon Metropolis
+
+[gl.area.sala_juegos]
+Fortune Hall
+
+[gl.area.escondite_vertice]
+Vertex Hideout
+
+[gl.area.torre_recuerdos]
+Memory Tower
+
+[gl.area.ruta_12]
+Route 12
+
+[gl.area.ruta_13]
+Route 13
+
+[gl.area.ruta_14]
+Route 14
+
+[gl.area.ruta_15]
+Route 15
+
+[gl.area.ciudad_ambar]
+Amber City
+
+[gl.area.ruta_16]
+Route 16
+
+
+[gl.area.autopista]
+Mag Highway
+
+
+[gl.area.ruta_18]
+Route 18
+
+
+[gl.area.reserva]
+Wild Reserve
+
+
+[gl.area.mar_ambar]
+Amber Sea
+
+[gl.area.ciudad_cenit]
+Zenith City
+
+[gl.area.torre_vertice]
+Vertex Tower
+
+[gl.area.ruta_19]
+Route 19
+
+[gl.area.ruta_20]
+Route 20
+
+[gl.area.ruta_21]
+Route 21
+
+[gl.area.islas_escarcha]
+Frost Isles
+
+[gl.area.isla_ceniza]
+Ash Island
+
+[gl.area.mansion_calcinada]
+Charred Mansion
+
+[gl.area.central_electrica]
+Power Plant
+# C9 (contract 56): the zone banners of Ruta 22 .. the Cueva Secreta (consecutive after gl.area.torre_vertice, in the AREA_KEYS order of tools/mapc.py)
+[gl.area.ruta_22]
+Route 22
+
+[gl.area.ruta_23]
+Route 23
+
+[gl.area.senda_campeones]
+Champions' Path
+
+[gl.area.meseta_cumbre]
+Summit Plateau
+
+[gl.area.cueva_secreta]
+Secret Cave
+
+[gl.area.ruinas_origen]
+Ruins of Origin
+
+[gl.area.gruta_eclipse]
+Eclipse Grotto
+
+
+# --- M5-A learn ---
+[gl.learn.wants]
+{v0} wants to
+learn a move:
+---
+{v1}!
+
+[gl.learn.full]
+But {v0} knows
+4 moves already.
+
+[gl.learn.forget_q]
+Forget a move to
+learn {v1}?
+
+[gl.learn.stop_q]
+Give up learning
+{v1}?
+
+[gl.learn.not]
+{v1} was
+not learned.
+
+[gl.learn.poof]
+1, 2 and… Poof!
+
+[gl.learn.forgot]
+{v0} forgot
+{v1}!
+
+[gl.learn.and]
+And…
+---
+{v0} learned
+{v1}!
+
+# --- M5-B evo ---
+[gl.evo.what]
+What? {v0}
+is evolving!
+
+[gl.evo.stopped]
+Huh? {v0}
+stopped evolving!
+
+[gl.evo.done]
+Congratulations!
+---
+{v0} evolved
+into {v1}!
+
+# --- M5-C box/card ---
+[gl.menu.card]
+{player}
+
+[gl.box.on]
+You turned
+on the PC!
+---
+Accessed the
+Storage System.
+
+[gl.box.take]
+Withdraw
+
+[gl.box.put]
+Deposit
+
+[gl.box.free]
+Release
+
+[gl.box.change]
+Change Box
+
+[gl.box.quit]
+Log off
+
+[gl.box.name]
+Box
+
+[gl.box.sent]
+{v0} was sent
+to Box {v2}!
+
+[gl.box.took]
+Took out {v0}
+from the Box.
+
+[gl.box.empty]
+This Box
+is empty.
+
+[gl.box.full]
+This Box
+is full!
+
+[gl.box.party_full]
+Your party
+is full!
+
+[gl.box.last]
+You can't deposit
+your last Elementi!
+
+[gl.box.ask_free]
+Release {v0}?
+It won't come back!
+
+[gl.box.freed]
+{v0} was
+released.
+---
+Bye-bye, {v0}!
+
+[gl.box.all_full]
+The Boxes
+are full!
+---
+{v0} was
+released.
+
+[gl.card.money]
+Money
+
+[gl.card.time]
+Time
+# --- M5-D Cantera ---
+[gl.tr.aprendiz_cantera]
+Trainee Leo
+
+[gl.tr.garrick]
+Leader Garrick
+
+[cantera.sign]
+CANTERA TOWN
+A stone-gray town.
+
+[cantera.house.a]
+Everyone is at the
+quarry. No answer.
+
+[cantera.house.b]
+There is stone dust
+on the window.
+
+[cantera.npc.gym]
+Garrick leads the
+town's gym.
+---
+He uses Rock types.
+Be careful!
+
+[cantera.npc.quarry]
+We used to dig up
+crystals here.
+---
+Now there's only
+stone. Lots of it!
+
+[cantera.npc.center]
+Train hard before
+facing the leader.
+---
+And heal up at the
+Center first!
+
+[cantera.npc.east]
+Route 3 begins
+to the east.
+---
+They say it's full
+of trainers.
+
+[cantera.blocker]
+Hey, you! Are you a
+trainer?
+---
+Beat Garrick first!
+
+[cantera.gym.guide.a]
+Hey! You can become
+a champion!
+---
+Garrick uses Rock
+types.
+---
+Water and Grass beat
+it. Good luck!
+
+[cantera.gym.guide.b]
+Great! You beat
+Garrick!
+---
+Keep it up, champ!
+
+[tr.aprendiz_cantera.pre]
+Hold it right there!
+You're still light
+---
+years from facing
+Garrick!
+
+[tr.aprendiz_cantera.after]
+You're good! But
+Garrick is tougher.
+
+[cantera.garrick.pre]
+So, you've made it.
+I'm Garrick!
+---
+I trust in rock-hard
+defense and will.
+---
+That's why all my
+Elementis are Rock!
+---
+Still want to fight?
+Then show me!
+
+[cantera.garrick.win]
+I took you lightly.
+You're strong!
+---
+As proof of victory,
+take this!
+
+[cantera.badge]
+{player} received the
+CANTERA BADGE!
+
+[cantera.garrick.about]
+This is an official
+League badge.
+---
+It proves you beat
+the first leader.
+---
+It's kept on your
+trainer card.
+
+[cantera.garrick.after]
+The world is full of
+different trainers!
+---
+You've got talent.
+Keep it up, champ!
+
+# --- Sound ---
+[gl.opt.sound]
+Sound
+
+[gl.opt.sound.hi]
+High
+
+[gl.opt.sound.lo]
+Low
+
+[gl.opt.sound.off]
+Off
+
+# --- C2-S1 items ---
+[gl.bag.used]
+{player} used
+{v0}!
+
+[gl.repel.end]
+Ward Spray's effect
+wore off.
+
+[gl.bag.no_here]
+Can't use that
+here!
+
+[gl.disc.boot]
+Booted up
+a disc!
+---
+It contained:
+{v1}.
+
+[gl.disc.cant]
+{v0} is not
+compatible.
+---
+It can't learn
+{v1}!
+
+[gl.disc.knows]
+{v0} knows
+{v1}!
+
+# --- C2-S2 Registro ---
+# gl.reg.*: labels of the Registro screen; gl.rg.<species id>: its description (2 pages of <= 2 lines, shown together)
+[gl.reg.seen]
+Seen
+
+[gl.reg.caught]
+Caught
+
+[gl.reg.ht]
+Ht
+
+[gl.reg.wt]
+Wt
+
+[gl.rg.embercub]
+An ember burns on
+its tail at birth.
+---
+When it gets angry,
+the flame leaps up.
+
+[gl.rg.flarewolf]
+It runs in a pack,
+its mane ablaze.
+---
+Sparks trail behind
+it as it dashes.
+
+[gl.rg.pyrewolf]
+Leader of the pack.
+Its fire lights up
+---
+the night, and the
+others follow it.
+
+[gl.rg.puddlet]
+It lives by puddles
+and splashes around
+---
+with its tail when
+it is happy.
+
+[gl.rg.tidalux]
+Its body glows when
+the tide comes in.
+---
+It swims in schools
+at dusk.
+
+[gl.rg.tidalgard]
+It carries a big
+shell shield.
+---
+It takes on waves
+and protects others.
+
+[gl.rg.sprouton]
+A sprout on its back
+drinks in sunlight.
+---
+The more it eats,
+the more it grows.
+
+[gl.rg.thornbuck]
+Small antlers with
+sharp thorns.
+---
+It guards its herd.
+More grow in spring.
+
+[gl.rg.grovestag]
+Its antlers form a
+tree crown.
+---
+Birds nest in them.
+It guards the wood.
+
+[gl.rg.flitter]
+A small, quick bird
+hopping in bushes.
+---
+It sings a high note
+at dawn.
+
+[gl.rg.flitwing]
+Its wings are broad.
+It glides over
+---
+fields, spotting
+prey from afar.
+
+[gl.rg.skyrrow]
+It dives like an
+arrow.
+---
+It hunts from high
+above the clouds.
+
+[gl.rg.muncrit]
+It gnaws on anything
+it finds.
+---
+Its teeth never stop
+growing.
+
+[gl.rg.munchmole]
+It digs tunnels with
+claws. One night
+---
+is enough to bore
+through a big hill.
+
+[gl.rg.grubbit]
+It munches leaves
+all day long.
+---
+Calm by nature, it
+grows very fast.
+
+[gl.rg.grubshell]
+A hard shell covers
+its soft body.
+---
+It barely moves,
+waiting to change.
+
+[gl.rg.lanternmoth]
+Its wings glow in
+the dark.
+---
+It gathers around
+lights at night.
+
+[gl.rg.stingle]
+A tiny bug with a
+tail stinger.
+---
+It stings without
+warning if bothered.
+
+[gl.rg.stinglet]
+It wraps itself in a
+silk cocoon.
+---
+It waits still while
+its body changes.
+
+[gl.rg.velvex]
+Its velvety wings
+shed poisonous dust
+---
+whenever it flaps
+them.
+
+[gl.rg.zaphid]
+It lives in swarms.
+Sparks jump between
+---
+them, mostly when
+a storm is near.
+
+[gl.rg.voltgecko]
+It climbs walls with
+sticky feet.
+---
+Its body stores
+electricity.
+
+[gl.rg.pebblump]
+It looks like an
+ordinary pebble.
+---
+Step on it and it
+rolls away angrily.
+
+[gl.rg.rockroll]
+It rolls down hills.
+Nothing stops it.
+---
+It crushes whatever
+it rolls over.
+
+[gl.rg.bouldrum]
+It beats its chest
+like a stone drum.
+---
+The rumble is heard
+for miles around.
+
+[gl.rg.boulderback]
+It carries a huge
+rock on its back.
+---
+Hard and slow, it
+sleeps among rocks.
+
+# --- C2 species ---
+# gl.sp.<id> (names), gl.mv.<id> (moves 40+), gl.rg.<id> (Registro descriptions, 2 pages of <= 2 lines); contract 31
+[gl.rg.echolet]
+Its big ears catch
+every echo.
+---
+It flies in the dark
+and never crashes.
+
+[gl.rg.lunelle]
+It floats like a
+soft round moon.
+---
+Its forehead glows
+under a full moon.
+
+[gl.rg.shellfern]
+Its stone shell is
+covered in ferns.
+---
+In the rain the
+sprouts unfurl.
+
+[gl.rg.jabbird]
+It scowls and pecks
+without warning.
+---
+Its straight beak
+stabs like a spear.
+
+[gl.rg.lullabun]
+Its long ears quiver
+when it sings.
+---
+Whoever hears it
+sing falls asleep.
+
+[gl.rg.quillix]
+Its back quills are
+poisonous.
+---
+When scared, it
+swings its stinger.
+
+[gl.rg.dunedil]
+It swims under sand
+with a spade snout.
+---
+Only its masked eyes
+peek out.
+
+[gl.rg.coilisp]
+It coils up under a
+hood of dry leaves.
+---
+Its pale rings warn:
+keep your distance.
+
+[gl.rg.dozelf]
+It dozes on a smoke
+cushion.
+---
+Its long cap droops
+and it never wakes.
+
+[gl.rg.mossbud]
+A mossy bulb that
+walks on tiny feet.
+---
+The bud on its head
+opens at night.
+
+[gl.rg.gleamjell]
+Its glass bell is
+almost invisible.
+---
+Its core pulses like
+a light in water.
+
+[gl.rg.trilobite]
+Its shell is made of
+rocky segments.
+---
+It once lived in an
+ancient sea.
+
+[gl.rg.sealily]
+Its stone stalk is
+segmented.
+---
+Its arms close like
+a rock flower.
+
+[gl.rg.echowing]
+Its membrane wings
+slice the dark.
+---
+Its shrieks make the
+cave tremble.
+
+[gl.rg.ferncairn]
+Its shell has grown
+into a stone cairn.
+---
+Ferns make a garden
+on its back.
+
+[gl.rg.jabhawk]
+It glides on still
+wings, then darts.
+---
+Its beak goes right
+through wood.
+
+[gl.rg.quillord]
+Its quills are long
+and razor sharp.
+---
+It defends its turf
+with its tail.
+
+[gl.rg.dunedrake]
+It digs tunnels in a
+single night.
+---
+Its smooth scales
+turn aside rocks.
+
+[gl.rg.hoodcoil]
+It flares its leaf
+hood to look huge.
+---
+Its stare freezes
+anyone who meets it.
+
+[gl.rg.trancelf]
+It moves things with
+its mind asleep.
+---
+Its smoke thickens
+when it dreams.
+
+[gl.rg.mossbloom]
+Its flower is half
+open.
+---
+Its pollen makes
+everyone cough.
+
+[gl.rg.trilothorn]
+Rock thorns cover
+its whole body.
+---
+Its spines crack
+shells and rocks.
+
+[gl.rg.crinolith]
+Its stone crown is
+like a huge lily.
+---
+It opens its arms
+only in deep water.
+
+[gl.rg.gleamlet]
+A tiny glass jelly
+with a bright dot.
+---
+A gem touching its
+core makes it grow.
+
+# --- C2 content ---
+
+# --- trainer names (class + name, gl.tr.*; <= 15 glyphs) ---
+[gl.tr.explorador_r3a]
+Scout Ben
+
+[gl.tr.chica_r3]
+Lass Lisa
+
+[gl.tr.cazabichos_r3]
+Bug Fan Cris
+
+[gl.tr.montanista_r3]
+Hiker Marc
+
+[gl.tr.explorador_r3b]
+Scout Cal
+
+[gl.tr.montanista_eco]
+Hiker Lalo
+
+[gl.tr.vertice_eco1]
+Agent Dax
+
+[gl.tr.vertice_eco2]
+Agent Rex
+
+[gl.tr.vertice_eco3]
+Agent Zed
+
+[gl.tr.cientifico_eco]
+Scientist Mige
+
+[gl.tr.chica_r4]
+Lass Dana
+
+[gl.tr.explorador_r4]
+Scout Max
+
+[gl.tr.nadadora_1]
+Swimmer Lia
+
+[gl.tr.nadadora_2]
+Swimmer Mar
+
+[gl.tr.nerea]
+Leader Nerea
+
+[gl.tr.explorador_r24a]
+Scout Tim
+
+[gl.tr.chica_r24]
+Lass Carla
+
+[gl.tr.cazabichos_r24]
+Bug Fan Rik
+
+[gl.tr.explorador_r24b]
+Scout Joe
+
+[gl.tr.vertice_r24]
+Agent Tom
+
+[gl.tr.montanista_r25]
+Hiker Eli
+
+[gl.tr.chica_r25]
+Lass Sara
+
+
+# --- C2 key items ---
+[gl.gift]
+{player} received
+{v0}!
+
+
+# --- Ruta 3 ---
+[ruta3.sign]
+ROUTE 3
+Mt. Eco to the north
+
+[tr.explorador_r3a.pre]
+Hey you! My team is
+the fastest around.
+---
+Time to prove it!
+
+[tr.explorador_r3a.after]
+You're quick!
+I'll train harder.
+
+[tr.chica_r3.pre]
+Hi! My Flitters are
+so cute.
+---
+But they can fight!
+
+[tr.chica_r3.after]
+My Flitters are
+worn out!
+
+[tr.cazabichos_r3.pre]
+Bugs are the best!
+Look at these!
+
+[tr.cazabichos_r3.after]
+My bugs will grow
+stronger.
+
+[tr.montanista_r3.pre]
+I've climbed rocks
+for many years!
+---
+Tough as rock!
+
+[tr.montanista_r3.after]
+Even the mountain
+respects you now.
+
+[tr.explorador_r3b.pre]
+Jabbird is skinny
+but mean!
+---
+Watch its beak!
+
+[tr.explorador_r3b.after]
+My bird is crushed!
+You are strong.
+
+
+# --- Monte Eco (Vertice = the corporation: es Vértice, en Vertex, ja バーテックス, zh 顶点) ---
+[tr.montanista_eco.pre]
+This tunnel is mine.
+Nobody passes free!
+---
+My rocks await!
+
+[tr.montanista_eco.after]
+Even rocks lose
+sometimes.
+
+[tr.vertice_eco1.pre]
+Halt! This is a
+Vertex zone.
+---
+Scram or else!
+
+[tr.vertice_eco1.after]
+Tsk. The boss will
+hear about this.
+
+[tr.vertice_eco2.pre]
+The fossils belong
+to Vertex now.
+---
+Stay out of it!
+
+[tr.vertice_eco2.after]
+No matter. There are
+more agents below.
+
+[tr.vertice_eco3.pre]
+Coming up from
+below? Impossible!
+---
+I will stop you!
+
+[tr.vertice_eco3.after]
+A brat got past me.
+Bad luck.
+
+[eco.sci.pre]
+These fossils are
+Vertex property!
+---
+If you want them,
+beat me first!
+
+[eco.sci.after]
+Bah, fine. Take
+one of the fossils.
+---
+I will take the
+other one.
+
+[eco.fossil.guard]
+A fossil. The Vertex
+scientist glares.
+
+[eco.fossil.t.ask]
+Take the Trilo
+Fossil?
+
+[eco.fossil.s.ask]
+Take the Lily
+Fossil?
+
+[eco.fossil.no]
+You leave it there.
+
+[eco.fossil.sci.take]
+Perfect! I'll take
+the other. Bye!
+
+[eco.fossil.sci.gone]
+He ran off with
+the other fossil.
+
+
+# --- Ruta 4 ---
+[ruta4.sign]
+ROUTE 4
+Marea City ahead
+
+[tr.chica_r4.pre]
+You're a trainer?
+Me too!
+---
+Fight me now!
+
+[tr.chica_r4.after]
+I'm jealous!
+Great team.
+
+[tr.explorador_r4.pre]
+Hot out here!
+Quick fight!
+---
+No cheating!
+
+[tr.explorador_r4.after]
+Phew, so thirsty.
+Off to the beach.
+
+
+# --- Ciudad Marea ---
+[marea.sign]
+MAREA CITY
+The sea unites us
+
+[marea.gym.sign]
+WATER GYM
+Leader: Nerea
+
+[marea.npc.a]
+Leader Nerea uses
+Water Elementis.
+---
+Grass and Electric
+are your allies.
+
+[marea.npc.b]
+There's a very long
+bridge up north.
+---
+Five trainers watch
+over it.
+
+[marea.npc.c]
+They say Vertex was
+lurking in Mt. Eco.
+---
+Scary.
+
+[marea.rival.hey]
+Hey, {player}! Got
+any badges yet?
+---
+Let's see how much
+you've improved!
+
+[marea.rival.again]
+Again? Let's go!
+
+[marea.rival.lose]
+What?! All that
+training for this?
+---
+I will get even
+stronger!
+
+[marea.rival.next]
+I'm off to see Teo,
+the PC engineer.
+---
+See you, {player}!
+
+[tr.nadadora_1.pre]
+Welcome to the pool!
+---
+We swim here,
+and we fight!
+
+[tr.nadadora_1.after]
+Glub! I sank.
+
+[tr.nadadora_2.pre]
+The water is cold,
+I am not.
+---
+Dive in!
+
+[tr.nadadora_2.after]
+What a wave you
+hit me with…
+
+[marea.nerea.pre]
+Welcome, challenger!
+I'm Nerea.
+---
+Water shapes all,
+given patience.
+---
+All my Elementis are
+Water types!
+---
+Ready to dive in?
+
+[marea.nerea.win]
+Incredible! You've
+sunk me.
+---
+You earned this.
+Take it.
+
+[marea.badge]
+{player} received the
+WAVE BADGE!
+
+[marea.nerea.about]
+Another official
+League badge.
+---
+It proves you beat
+the second leader.
+---
+It shines on your
+trainer card.
+
+[marea.nerea.disc]
+Take a technique
+disc too!
+
+[marea.nerea.disc_about]
+It holds a Water
+move. Use it well!
+
+[marea.nerea.after]
+The world is a sea:
+enormous!
+---
+Keep swimming toward
+the League.
+
+
+# --- Ruta 24 (the bridge of five) ---
+[ruta24.sign]
+ROUTE 24
+Bridge of Five
+
+[tr.explorador_r24a.pre]
+I'm the first of the
+bridge's five!
+---
+Pass if you can!
+
+[tr.explorador_r24a.after]
+One down. Go on.
+
+[tr.chica_r24.pre]
+Second one here!
+It won't be easy.
+---
+Get ready!
+
+[tr.chica_r24.after]
+Wow! Still standing.
+Two of five.
+
+[tr.cazabichos_r24.pre]
+Third! My bugs
+hop over the sea!
+---
+Let us see!
+
+[tr.cazabichos_r24.after]
+Three of five.
+
+[tr.explorador_r24b.pre]
+Fourth! Only one
+more after me.
+---
+Don't get cocky!
+
+[tr.explorador_r24b.after]
+Four of five.
+Almost there.
+
+[tr.vertice_r24.pre]
+Fifth and last. I'm
+with Vertex.
+---
+The prize is mine!
+
+[tr.vertice_r24.after]
+Tsk… Keep the
+prize. Whatever.
+
+
+# --- Ruta 25 and the house of Ingeniero Teo ---
+[ruta25.sign]
+ROUTE 25
+Teo's house ahead
+
+[tr.montanista_r25.pre]
+I come to see Teo's
+antenna every day!
+---
+My rocks are tough!
+
+[tr.montanista_r25.after]
+Your team is tough.
+
+[tr.chica_r25.pre]
+Here to see Teo?
+Me too.
+---
+But first, a
+battle!
+
+[tr.chica_r25.after]
+You fight well.
+Good luck with Teo.
+
+[teo.books]
+Books on radio and
+signals.
+
+[teo.tv]
+A screen full of
+green waves.
+
+[teo.deaf]
+Huge headphones
+block Teo's ears.
+---
+A big knob on the
+console is blinking.
+
+[teo.knob.turn]
+You turn the knob.
+---
+The loud hum stops.
+
+[teo.knob.react]
+Huh? My loop!
+It stopped!
+
+[teo.knob.again]
+The knob is set.
+
+[teo.thanks]
+Thanks! I was stuck
+in my own loop.
+---
+I'm Teo. I built the
+PC box system.
+---
+As thanks,
+take this.
+
+[teo.pc]
+My PC stores your
+Elementis in boxes.
+---
+Use it any time!
+
+[teo.after]
+With that pass you
+can board the ferry.
+
+
+# --- C3-A world systems (contract 32): modules, Cortador, the fuse puzzle, the trade, the day care ---
+[gl.c3a.mod.cortador]
+Cutter
+
+[gl.c3a.mod.linterna]
+Lantern
+
+[gl.c3a.mod.hidro]
+Hydroglider
+
+[gl.c3a.mod.empuje]
+Pusher
+
+[gl.c3a.mod.planeador]
+Glider
+
+[gl.c3a.mod.hint]
+Use it in the world,
+facing its obstacle.
+
+[gl.c3a.cut.no]
+A thick bush…
+It looks cuttable.
+
+[gl.c3a.cut.ask]
+Use Cutter?
+
+[gl.c3a.cut.done]
+{player} cut
+the bush!
+
+[c3a.fuse.trash]
+Only trash
+in here.
+
+[c3a.fuse.first]
+There's a switch
+under the trash!
+---
+You flip it!
+A light turns on.
+
+[c3a.fuse.again]
+The switch is
+already on.
+
+[c3a.fuse.second]
+Another switch!
+The barriers drop!
+
+[c3a.fuse.reset]
+Only trash.
+---
+The locks were
+reset!
+
+[c3a.fuse.barrier]
+An electric barrier.
+You can't pass.
+
+[c3a.fuse.lamp]
+A light shines.
+
+[c3a.trade.ask]
+Trade {v0}
+for {v1}?
+
+[c3a.trade.wrong]
+Huh? That's not
+a {v0}!
+---
+Come back when
+you have one.
+
+[c3a.trade.no]
+Oh well… Come back
+if you rethink.
+
+[c3a.trade.done]
+Thanks! Take care
+of {v1}!
+
+[c3a.trade.after]
+Take care of
+{v0}!
+
+[c3a.trade.nick]
+CHIP
+
+[c3a.dc.hello]
+I run the day
+care.
+
+[c3a.dc.ask_leave]
+Leave an Elementi
+at the day care?
+
+[c3a.dc.last]
+I can't take your
+only Elementi!
+
+[c3a.dc.taken]
+I'll care for it.
+Come back soon.
+
+[c3a.dc.report]
+{v0} grew.
+Levels: +{v2}
+---
+Fee: ${v1}.
+Take it back?
+
+[c3a.dc.poor]
+You don't have
+enough money.
+
+[c3a.dc.full]
+Your party is
+full.
+
+[c3a.dc.back]
+Here you go. Take
+care of {v0}!
+
+[c3a.dc.no]
+Fine. See you!
+
+[c3a.ambush]
+Hey you! I've been
+looking for you!
+
+# --- C3 content (contract 34) ---
+
+[gl.rg.glintail]
+It hoards shiny
+things in secret.
+---
+Its ringed tail
+glints at night.
+
+[gl.rg.lustrel]
+Slim and graceful,
+it stalks silently.
+---
+Its long tail sets
+the leap's rhythm.
+
+[gl.rg.ramplet]
+Hard-headed and
+stubborn. It rams.
+---
+Its hooves wear
+boxer bandages.
+
+[gl.rg.ibexer]
+A standing ibex with
+swept-back horns.
+---
+It holds its guard
+and never yields.
+
+[gl.rg.mesmoli]
+It clings to a twig,
+half asleep.
+---
+Its ringed eyes make
+you dizzy.
+
+[gl.rg.mesmaris]
+Long-armed, it opens
+its hands wide.
+---
+Its brow glows like
+a third eye.
+
+[gl.rg.drillroot]
+A root with a drill
+for a tip.
+---
+Only its eyes peek
+out of the soil.
+
+[gl.rg.augeroot]
+Huge root, three
+spinning drills.
+---
+It digs a tunnel in
+no time.
+
+[gl.rg.spoolt]
+A living copper
+coil. It sparks.
+---
+It lights up if
+anything touches it.
+
+[gl.rg.voltspool]
+Three wire rings
+full of sparks.
+---
+Like a dynamo at
+full speed.
+
+[gl.rg.otterock]
+It floats belly-up
+and cracks shells.
+---
+It always holds its
+favorite stone.
+
+[gl.tr.explorador_r6]
+Scout Ari
+
+[gl.tr.chica_r6]
+Lass Nina
+
+[gl.tr.cazabichos_r6]
+Bug Fan Ian
+
+[gl.tr.pescador_r6]
+Fisher Gus
+
+[gl.tr.mecanico_r11a]
+Mechanic Pol
+
+[gl.tr.pescador_r11]
+Fisher Moe
+
+[gl.tr.explorador_r11]
+Scout Fran
+
+[gl.tr.mecanico_r11b]
+Mechanic Vic
+
+[gl.tr.chica_r11]
+Lass Pia
+
+[gl.tr.marinero_f1]
+Sailor Mateo
+
+[gl.tr.marinero_f2]
+Sailor Cosme
+
+[gl.tr.marinero_f3]
+Sailor Otto
+
+[gl.tr.chica_f]
+Passenger Elsa
+
+[gl.tr.pescador_f]
+Fisher Nilo
+
+[gl.tr.mecanico_g]
+Mechanic Gil
+
+[gl.tr.aprendiz_g]
+Trainee Kim
+
+[gl.tr.ohm]
+Captain Ohm
+
+[ruta5.sign]
+ROUTE 5
+Marea to the north
+
+[ruta5.gate.sign]
+ZENITH CITY
+North gate
+
+[ruta5.dc.sign]
+DAY CARE
+Your Elementi, safe
+
+[ruta5.npc.a]
+The day care cares
+for your Elementi.
+---
+While you walk, it
+gains levels!
+
+[ruta5.npc.b]
+There's a passage
+under the city.
+---
+It's the only way to
+Route 6.
+
+[guarderia.books]
+Care books:
+Every step counts.
+
+[guarderia.bed]
+Little beds for
+sleepy Elementis.
+
+[guarderia.table]
+A table with toys
+and berries.
+
+[guarderia.hello]
+I run the day
+care.
+
+[guarderia.ask_leave]
+Leave an Elementi
+at the day care?
+
+[guarderia.last]
+I can't take your
+only Elementi!
+
+[guarderia.taken]
+I'll care for it.
+Come back soon.
+
+[guarderia.report]
+{v0} grew.
+Levels: {v2}
+---
+Fee: ${v1}.
+Take it back?
+
+[guarderia.poor]
+You don't have
+enough money.
+
+[guarderia.full]
+Your party is
+full.
+
+[guarderia.back]
+Here you go. Take
+care of {v0}!
+
+[guarderia.no]
+Fine. See you!
+
+[pasadizo.keeper.n]
+I keep the passage.
+Mind the puddles.
+
+[pasadizo.sign]
+UNDERGROUND PASSAGE
+Route 5 - Route 6
+
+[pasadizo.keeper]
+Years down here.
+Rats and echoes.
+
+[pasadizo.vending]
+A drink machine.
+It's empty.
+
+[pasadizo.guest]
+Resting a while.
+It's hot outside!
+
+[ruta6.sign]
+ROUTE 6
+Dynamo Port south
+
+[ruta6.gate.sign]
+ZENITH CITY
+South gate
+
+[ruta6.kiosk]
+A park kiosk.
+It's closed today.
+
+[tr.explorador_r6.pre]
+Hey! My Ramplet is
+a real hardhead!
+---
+Let's test it!
+
+[tr.explorador_r6.after]
+Your team's tough.
+I lost.
+
+[tr.chica_r6.pre]
+My Elementis are
+cute and tough!
+---
+Battle me!
+
+[tr.chica_r6.after]
+Aww! So strong!
+
+[tr.cazabichos_r6.pre]
+The bugs of this
+route are mine!
+---
+Look at my cocoons!
+
+[tr.cazabichos_r6.after]
+My bugs still need
+to grow.
+
+[tr.pescador_r6.pre]
+I fish this pond
+since dawn.
+---
+They bite and fight!
+
+[tr.pescador_r6.after]
+Nothing's biting…
+but you.
+
+[puerto.sign]
+DYNAMO PORT
+Power and sea
+
+[puerto.gym.sign]
+VOLT GYM
+Leader: Capt. Ohm
+
+[puerto.npc.a]
+The Albatross ferry
+leaves from here.
+---
+You need a pass
+to board.
+
+[puerto.npc.b]
+Captain Ohm is a sea
+dog.
+---
+He says current
+drives everything.
+
+[puerto.npc.c]
+A thick bush blocks
+the gym door.
+---
+Somebody has to
+cut it.
+
+[puerto.ferry]
+The Albatross Ferry.
+A huge ship.
+
+[puerto.gangway]
+The ferry's
+gangway.
+
+[puerto.sailor]
+Welcome aboard!
+A pass is required.
+
+[puerto.sailor.gone]
+The Albatross has
+sailed away.
+
+[puerto.board.nopass]
+Stop! No pass, no
+boarding.
+---
+Ask Engineer Teo
+for one.
+
+[puerto.board.ok]
+Ferry pass?
+Go aboard, {player}!
+
+[puerto.board.gone]
+The ferry has left.
+Come another day.
+
+[trueque.books]
+A ledger:
+Fair trades.
+
+[trueque.hello]
+Hey, sailor! I
+swap Elementis.
+
+[trueque.ask]
+Trade {v0}
+for {v1}?
+
+[trueque.wrong]
+Huh? That's not
+a {v0}!
+---
+Come back when
+you have one.
+
+[trueque.no]
+Oh well… Come back
+if you rethink.
+
+[trueque.done]
+Thanks! Take care
+of {v1}!
+
+[trueque.after]
+Take care of
+{v0}!
+
+[trueque.nick]
+Pipo
+
+[gym.barrier]
+An electric barrier.
+You can't pass.
+
+[gym.lamp]
+A light shines.
+
+[gym.lit]
+A lit fuse
+cabinet.
+
+[gym.fuse.trash]
+Fuse cabinet: just
+old cables.
+
+[gym.fuse.first]
+There's a switch
+in the cabinet!
+---
+You flip it!
+A light turns on.
+
+[gym.fuse.again]
+The switch is
+already on.
+
+[gym.fuse.second]
+Another switch!
+The barrier drops!
+
+[gym.fuse.reset]
+Just old cables.
+---
+The locks
+were reset!
+
+[tr.mecanico_g.pre]
+Crossing this gym is
+no picnic!
+---
+I'll fry your fuses!
+
+[tr.mecanico_g.after]
+My team blew a
+fuse…
+
+[tr.aprendiz_g.pre]
+I learn from Captain
+Ohm!
+---
+My sparks are
+fast!
+
+[tr.aprendiz_g.after]
+I still need
+more charge…
+
+[dinamo.ohm.pre]
+Welcome, rookie!
+I'm Captain Ohm.
+---
+At sea, current
+is everything.
+---
+My Elementis are
+Electric types!
+---
+I'll shock you!
+
+[dinamo.ohm.win]
+Incredible! You've
+drained me.
+---
+You earned this.
+Take it.
+
+[dinamo.badge]
+{player} received the
+VOLT BADGE!
+
+[dinamo.ohm.about]
+Another official
+League badge.
+---
+It proves you beat
+the third leader.
+---
+It shines on your
+trainer card.
+
+[dinamo.ohm.disc]
+Take a technique
+disc too!
+
+[dinamo.ohm.disc_about]
+It holds an Electric
+move. Use it well!
+
+[dinamo.ohm.after]
+Current never stops.
+---
+Keep going at
+full charge.
+
+[ferry.deck.hand]
+We sail soon. Go
+see the captain!
+
+[ferry.cab.sign]
+CABINS
+Captain at the end
+
+[ferry.horn]
+Toot! The ferry
+sets sail! All off.
+
+[tr.marinero_f1.pre]
+Hey, landlubber! I
+rule this deck.
+---
+Battle me!
+
+[tr.marinero_f1.after]
+You sank me!
+What a swell…
+
+[tr.pescador_f.pre]
+I fish off the side
+of this ship.
+---
+Look what I caught!
+
+[tr.pescador_f.after]
+The big one got
+away.
+
+[tr.marinero_f2.pre]
+At sea, we talk
+with our fists.
+---
+Defend yourself!
+
+[tr.marinero_f2.after]
+Nice punch,
+landlubber.
+
+[tr.chica_f.pre]
+I travel first
+class.
+---
+But I battle too!
+
+[tr.chica_f.after]
+My Elementis got
+seasick!
+
+[tr.marinero_f3.pre]
+This corridor's
+mine!
+---
+Nobody reaches the
+captain freely!
+
+[tr.marinero_f3.after]
+Pass… but the
+captain's unwell.
+
+[ferry.rival.hey]
+{player}! What luck!
+---
+I boarded with my
+best Elementis.
+---
+Let's see who's
+stronger!
+
+[ferry.rival.again]
+Again? Let's go!
+
+[ferry.rival.lose]
+No way! I was so
+sure!
+---
+I'll train even
+harder.
+
+[ferry.rival.next]
+They say the captain
+is seasick…
+---
+I'm out. See you,
+{player}!
+
+[ferry.captain.sick]
+Ooough… I'm so
+seasick…
+---
+A captain who gets
+seasick… shameful!
+
+[ferry.captain.ask]
+Rub the captain's
+back?
+
+[ferry.captain.no]
+Ooough… Please…
+
+[ferry.captain.better]
+Ahhh… Much better!
+Thanks, {player}.
+
+[ferry.captain.got]
+{player} got the
+CUTTER module!
+
+[ferry.captain.about]
+It's a bracelet
+module.
+---
+Use it facing a
+thick bush.
+---
+You need the Wave
+Badge first.
+
+[ferry.captain.after]
+Thanks to you, I'm
+sailing smooth.
+---
+Safe travels,
+{player}!
+
+[ruta11.sign]
+ROUTE 11
+High voltage ahead
+
+[ruta11.closed]
+CLOSED
+Line repairs
+
+[ruta11.guard]
+The power line
+broke down.
+---
+Closed until further
+notice.
+
+[tr.mecanico_r11a.pre]
+I fix the line. And
+my coils!
+---
+Watch the spark!
+
+[tr.mecanico_r11a.after]
+Short circuit! I'm
+burnt out.
+
+[tr.pescador_r11.pre]
+I fish the cooling
+pond.
+---
+The fish come out
+toasty!
+
+[tr.pescador_r11.after]
+Today only cables
+bite.
+
+[tr.explorador_r11.pre]
+I explore the route
+under the cables!
+---
+My team is fast!
+
+[tr.explorador_r11.after]
+Such speed…
+yours.
+
+[tr.mecanico_r11b.pre]
+My Elementis give
+shocks!
+---
+Do you dare?
+
+[tr.mecanico_r11b.after]
+You drained my
+charge.
+
+[tr.chica_r11.pre]
+This hum makes me
+sleepy…
+---
+But I fight!
+
+[tr.chica_r11.after]
+Zzz… is it
+over?
+
+[muelle.sign]
+DYNAMO DOCKS
+Loading area
+
+[muelle.ferry.sign]
+ALBATROSS FERRY
+Boarding with pass
+
+[muelle.npc]
+Not much biting. The
+sea is odd today.
+---
+They say the ferry's
+captain is seasick.
+
+
+# --- C4-C casino / casino (contract 37) ---
+[gl.c4c.coins.ask]
+Welcome to the
+Fortune Hall!
+---
+Buy 50 coins
+for $1000?
+
+[gl.c4c.coins.done]
+Thank you! Here
+are your 50 coins.
+
+[gl.c4c.coins.nocase]
+You need a
+Coin Purse.
+
+[gl.c4c.coins.full]
+Your Coin Purse
+is full.
+
+[gl.c4c.coins.bye]
+Come back any
+time!
+
+[gl.c4c.coins.have]
+You have {v2}
+coins.
+
+[gl.c4c.coins.none]
+You have no
+coins.
+
+[gl.c4c.slot.out]
+You are out of
+coins!
+
+[gl.c4c.prize.hello]
+Trade your coins
+for prizes!
+
+[gl.c4c.prize.ask]
+{v0} for
+{v2} coins?
+
+[gl.c4c.prize.bought]
+Here you are!
+Take good care!
+
+[gl.c4c.prize.no_coins]
+You don't have
+enough coins.
+
+[gl.c4c.prize.full]
+Your team is
+full.
+
+[gl.c4c.prize.bye]
+Come back soon!
+
+# --- C4-B items and systems (contract 36) ---
+[gl.c4b.st_hp]
+HP
+
+[gl.c4b.ghost_name]
+GHOST?
+
+[gl.c4b.ghost_cant]
+Darn! The GHOST
+can't be identified!
+
+[gl.c4b.ghost_scared]
+Too scared
+to attack!
+
+[gl.c4b.ghost_nocatch]
+You can't catch
+a ghost!
+
+[gl.c4b.ghost_frozen]
+Fear keeps you
+from acting!
+
+# --- C4-A world systems (contract 35) ---
+[gl.c4a.bike.on]
+You get on
+the bike.
+
+[gl.c4a.bike.off]
+You get off
+the bike.
+
+[gl.c4a.bike.no]
+You can't ride the
+bike in here!
+
+[gl.c4a.elev.ask]
+Which floor?
+
+[gl.c4a.floor.b4]
+B4F
+
+[gl.c4a.floor.b3]
+B3F
+
+[gl.c4a.floor.b2]
+B2F
+
+[gl.c4a.floor.b1]
+B1F
+
+[gl.c4a.floor.f1]
+1F
+
+[gl.c4a.floor.f2]
+2F
+
+[gl.c4a.floor.f3]
+3F
+
+[gl.c4a.floor.f4]
+4F
+
+[gl.c4a.floor.f5]
+5F
+
+[c4a.test.signal]
+End of the test.
+
+# --- C4a content (contract 39) ---
+[gl.rg.wispsheet]
+A torn sheet that
+floats at night.
+---
+Two holes glow like
+eyes.
+
+[gl.rg.shroudle]
+Cloth arms that look
+for a hug.
+---
+Its smile is a
+crooked seam.
+
+[gl.rg.gloomshroud]
+A huge cloak with a
+hollow face.
+---
+Its edge burns with
+shadow flames.
+
+[gl.rg.hatchkip]
+Its helmet is half
+an eggshell.
+---
+It is sad and slings
+pebbles.
+
+[gl.rg.shellbrute]
+The shell is now its
+stone armor.
+---
+Its wing is a club.
+
+[gl.rg.mimbara]
+A calm capybara with
+soft fur.
+---
+Its tuft of fur can
+change.
+
+[gl.rg.tidebara]
+Sleek fur and leg
+flippers.
+---
+Its tuft is shaped
+like a wave.
+
+[gl.rg.embara]
+Ember-tipped fur in
+steam.
+---
+It loves hot
+springs.
+
+[gl.rg.voltbara]
+Spiky zigzag fur
+full of sparks.
+---
+It charges in dry
+air.
+
+[gl.rg.cindermeer]
+It stands guard, its
+tail tip aflame.
+---
+It barks at any
+danger.
+
+[gl.rg.pyromeer]
+Flames form a mane
+on its shoulders.
+---
+It guards its land
+nobly.
+
+[gl.rg.dewlash]
+Tentacles with
+dewdrops.
+---
+It traps whatever
+comes near.
+
+[gl.rg.smogkeg]
+A rusty keg leaking
+toxic gas.
+---
+Its valve is its
+mouth.
+
+[gl.rg.twinkeg]
+Two kegs welded with
+pipes.
+---
+They puff smoke
+together.
+
+[gl.rg.lunarelle]
+A big moonstone with
+a halo.
+---
+Its craters glow at
+night.
+
+[gl.rg.lulladream]
+A cloud bunny with
+long ears.
+---
+Musical notes drift
+around it.
+
+[gl.rg.quilltyrant]
+A huge porcupine
+standing tall.
+---
+Its stinger tail is
+a mace.
+
+[gl.rg.bloomoss]
+The tulip opens a
+crown of petals.
+---
+A long cloak of
+moss.
+
+[gl.tr.explorador_r9a]
+Scout Edu
+
+[gl.tr.chica_r9a]
+Lass Lara
+
+[gl.tr.cazabichos_r9]
+Bug Fan Ivan
+
+[gl.tr.montanista_r9]
+Hiker Brau
+
+[gl.tr.explorador_r9b]
+Scout Saul
+
+[gl.tr.mecanico_r9]
+Mechanic Hans
+
+[gl.tr.montanista_r10]
+Hiker Pere
+
+[gl.tr.chica_r10]
+Lass Julia
+
+[gl.tr.explorador_r10]
+Scout Pau
+
+[gl.tr.cazabichos_r10]
+Bug Fan Fer
+
+[gl.tr.montanista_t1]
+Hiker Eloy
+
+[gl.tr.chica_t1]
+Lass Marta
+
+[gl.tr.explorador_t1]
+Scout Luis
+
+[gl.tr.montanista_t2a]
+Hiker Gon
+
+[gl.tr.montanista_t2b]
+Hiker Ibai
+
+[gl.tr.chica_t2]
+Lass Elena
+
+[gl.tr.explorador_t2]
+Scout Oli
+
+[gl.tr.jugador_r8a]
+Gambler Vito
+
+[gl.tr.jugador_r8b]
+Gambler Rodrigo
+
+[gl.tr.chica_r8]
+Lass Sofia
+
+[gl.tr.mecanico_r8]
+Mechanic Felix
+
+[gl.tr.chica_r7]
+Lass Irene
+
+[gl.tr.explorador_r7]
+Scout Abel
+
+[gl.tr.jugador_r7]
+Gambler Dario
+
+[gl.tr.chica_g1]
+Lass Rosa
+
+[gl.tr.chica_g2]
+Lass Lili
+
+[gl.tr.chica_g3]
+Lass Violet
+
+[gl.tr.medium_g]
+Medium Lily
+
+[tr.explorador_r9a.pre]
+This hill is mine!
+---
+Get past me first!
+
+[tr.explorador_r9a.after]
+Not even with the
+hill…
+---
+Strong.
+
+[tr.chica_r9a.pre]
+See those stone
+walls?
+---
+My grandparents
+built them.
+---
+I guard the road!
+
+[tr.chica_r9a.after]
+Wow. The road is
+yours.
+
+[tr.cazabichos_r9.pre]
+Bugs hide in the
+grass.
+---
+Let me show you
+mine!
+
+[tr.cazabichos_r9.after]
+My bugs couldn't
+take it.
+
+[tr.montanista_r9.pre]
+I've been climbing
+hills all day!
+---
+Nobody beats these
+legs!
+
+[tr.montanista_r9.after]
+My legs held up,
+---
+my head didn't.
+
+[tr.explorador_r9b.pre]
+There's a bush you
+can cut…
+---
+But first you have
+to cut me down!
+
+[tr.explorador_r9b.after]
+You cut me down too.
+
+[tr.mecanico_r9.pre]
+I collect scrap
+along the route.
+---
+My keg stinks, but
+it hits!
+
+[tr.mecanico_r9.after]
+My keg ran out of
+gas.
+
+[tr.montanista_r10.pre]
+Last breather before
+the tunnel.
+---
+Warm up with a
+battle!
+
+[tr.montanista_r10.after]
+You're ready for the
+tunnel.
+
+[tr.chica_r10.pre]
+They say the tunnel
+is pitch dark.
+---
+I'm not scared!
+
+[tr.chica_r10.after]
+You scare me more
+than the dark.
+
+[tr.explorador_r10.pre]
+Hey, you! Going
+through the tunnel?
+---
+First get through my
+Coilisp!
+
+[tr.explorador_r10.after]
+You cross faster
+than the tunnel.
+
+[tr.cazabichos_r10.pre]
+My moths follow the
+light.
+---
+Do you have a
+lantern?
+
+[tr.cazabichos_r10.after]
+Even my moths gave
+up!
+
+[tr.montanista_t1.pre]
+Shh! Everything
+echoes in here.
+---
+But my rocks echo
+louder.
+
+[tr.montanista_t1.after]
+Even the echo went
+quiet.
+
+[tr.chica_t1.pre]
+Eek! You scared me!
+---
+I thought you were a
+bat.
+---
+But let's battle!
+
+[tr.chica_t1.after]
+You nearly scared me
+again.
+
+[tr.explorador_t1.pre]
+I left my lantern at
+home…
+---
+I fight blind!
+
+[tr.explorador_t1.after]
+Everything went
+dark…
+---
+Not the cave's
+fault.
+
+[tr.montanista_t2a.pre]
+I took the ladder to
+save time.
+---
+And ran into you!
+
+[tr.montanista_t2a.after]
+I should've gone the
+long way.
+
+[tr.montanista_t2b.pre]
+I've trained down
+here for weeks.
+---
+Break time is over!
+
+[tr.montanista_t2b.after]
+All that training
+for this…
+
+[tr.chica_t2.pre]
+Afraid of the dark?
+---
+I use it to my
+advantage.
+
+[tr.chica_t2.after]
+You beat me even in
+the dark.
+
+[tr.explorador_t2.pre]
+Tunnels are my home.
+---
+Step in and meet my
+team!
+
+[tr.explorador_t2.after]
+Your team outshines
+a lantern.
+
+[tr.jugador_r8a.pre]
+I'll bet anything my
+---
+meerkats win.
+---
+All or nothing,
+stranger.
+
+[tr.jugador_r8a.after]
+I lost the bet.
+Again.
+
+[tr.jugador_r8b.pre]
+They threw me out of
+---
+the casino for luck.
+---
+Let's see if your
+team wins.
+
+[tr.jugador_r8b.after]
+My luck ran out.
+
+[tr.chica_r8.pre]
+My Lunelle glows at
+night.
+---
+Want to see it
+dance?
+
+[tr.chica_r8.after]
+You dance better
+than it does.
+
+[tr.mecanico_r8.pre]
+Two kegs, double
+stink.
+---
+Take a deep breath
+and fight!
+
+[tr.mecanico_r8.after]
+I ran out of air.
+
+[tr.chica_r7.pre]
+You can see the city
+lights from here.
+---
+I won't let you pass
+without a fight!
+
+[tr.chica_r7.after]
+Go shine in the
+city.
+
+[tr.explorador_r7.pre]
+I left the city for
+fresh air.
+---
+And to train!
+
+[tr.explorador_r7.after]
+I'd better go back
+to the city.
+
+[tr.jugador_r7.pre]
+A game? If you lose,
+you pay.
+---
+If I lose, I pay
+too.
+
+[tr.jugador_r7.after]
+Happy to pay!
+
+[tr.chica_g1.pre]
+Welcome to the
+greenhouse!
+---
+Everything blooms
+here…
+---
+except rookies.
+
+[tr.chica_g1.after]
+I wilted.
+
+[tr.chica_g2.pre]
+I water my plants
+every morning.
+---
+And intruders too!
+
+[tr.chica_g2.after]
+You watered me
+instead.
+
+[tr.chica_g3.pre]
+My Mossbloom smells
+heavenly.
+---
+But it bites hard!
+
+[tr.chica_g3.after]
+What a shame to lose
+with such fragrance.
+
+[tr.medium_g.pre]
+The plants whisper
+to me.
+---
+They say you'll
+lose.
+
+[tr.medium_g.after]
+The plants were
+wrong.
+
+[gl.tr.flora]
+Leader Flora
+
+[ruta2.aide.hi]
+I'm Professor Lin's
+aide.
+---
+We log Elementis all
+over the land.
+
+[ruta2.aide.more]
+You need {v2} more
+to reach 10.
+---
+Come back when you
+have them.
+
+[ruta2.aide.give]
+10 species caught!
+Well done!
+---
+I have something for
+you: the Lantern.
+
+[ruta2.aide.got]
+{player} received the
+Lantern module!
+
+[ruta2.aide.about]
+It lights up dark
+caves.
+---
+It switches on by
+itself.
+
+[ruta2.aide.after]
+Is the Lantern
+useful?
+---
+Keep logging
+Elementis!
+
+[marea.bike.sign]
+MAREA BIKES
+---
+Sales and repairs
+
+[ruta9.sign]
+ROUTE 9
+---
+East: Route 10 and
+the Dark Tunnel
+
+[ruta10.centro.sign]
+ELEMENTI CENTER
+---
+Rest before the
+tunnel
+
+[ruta10.tunnel.sign]
+DARK TUNNEL
+---
+Hard to see inside.
+The Lantern helps.
+---
+Lin's aide, Route 2:
+catch 10 species.
+
+[tunel.sign]
+LADDERS
+---
+They lead down
+below.
+
+[bruma.sign]
+BRUMA TOWN
+---
+Where memories rest
+
+[bruma.memorial]
+MEMORY GARDEN
+---
+One flower for each
+friend
+
+[bruma.npc.a]
+There's always fog
+here.
+---
+They say it's
+memories.
+
+[bruma.npc.b]
+My father-in-law
+lives there.
+---
+He's often in the
+tower.
+
+[bruma.npc.c]
+If you hear a wail
+at night…
+---
+don't look back.
+
+[casa.books]
+Old books on
+Elementis.
+
+[casa.photos]
+A young man with a
+Wispsheet.
+
+[casa.rel]
+Grandpa isn't here.
+---
+He went to the tower
+to pray.
+---
+He hasn't come back
+in days.
+
+[ruta8.gate.sign]
+ZENITH CITY
+East gate
+
+[ruta8.hut.sign]
+UNDERGROUND PASSAGE
+---
+To Route 7
+
+[ruta7.hut.sign]
+UNDERGROUND PASSAGE
+---
+To Route 8
+
+[ruta7.east.sign]
+ROUTE 7
+---
+West: Neon
+Metropolis
+
+[ruta7.holo]
+A holographic
+billboard:
+---
+NEON METROPOLIS
+NEVER SLEEPS!
+
+[pasadizo2.keeper.n]
+This passage runs
+under the road.
+---
+Go straight, and
+don't get lost.
+
+[pasadizo2.sign]
+PASSAGE 2
+---
+Its ads reach even
+here
+
+[pasadizo2.holo]
+A sign flickers:
+---
+NEON, 2 MIN.
+
+[pasadizo2.holo2]
+Another sign:
+---
+SHOP AT THE
+DEPARTMENT STORE!
+
+[pasadizo2.keeper]
+I've been down here
+for years.
+---
+I even got used to
+the signs.
+
+[pasadizo2.vending]
+A vending machine.
+---
+It's out of coins.
+
+[pasadizo2.guest]
+I'm going to Bruma
+to see the tower.
+---
+They say it gives
+you chills.
+
+[neon.holo.a]
+A holographic
+billboard:
+---
+DEPARTMENT STORE,
+ALL IN ONE!
+
+[neon.holo.b]
+Another billboard:
+---
+FAN CLUB: COME IN
+AND SHOW OFF!
+
+[neon.holo.c]
+A holographic
+billboard:
+---
+FORTUNE HALL: COINS
+AND PRIZES!
+
+[neon.sign.a]
+NEON METROPOLIS
+---
+Main avenue
+
+[neon.sign.b]
+WEST AVENUE
+---
+To the gym and the
+mansion
+
+[neon.mall.sign]
+DEPARTMENT STORE
+---
+Two floors of
+shopping
+
+[neon.centro.sign]
+ELEMENTI CENTER
+---
+Heal your partners
+
+[neon.club.sign]
+FAN CLUB
+---
+Members and the
+curious
+
+[neon.gym.sign]
+PLANT GYM
+---
+Leader: Flora Nyx
+
+[neon.npc.a]
+What a city! The
+lights never go out!
+
+[neon.npc.b]
+Watch out for cars.
+---
+They go fast here!
+
+[neon.npc.c]
+The club chairman
+talks for hours.
+---
+Hang in there till
+the end!
+
+[neon.npc.d]
+The gym is a
+greenhouse.
+---
+You have to cut a
+bush.
+
+[neon.npc.e]
+The mansion is the
+oldest house.
+---
+They say it keeps a
+secret.
+
+[mall.guide]
+1F: salves and
+discs
+---
+2F: gems and
+tonics
+
+[mall.guide2]
+2F: gems and
+tonics
+---
+1F: salves and
+discs
+
+[mall.shopper.a]
+Prices are high, but
+they have it all.
+
+[mall.shopper.b]
+Gems sell out
+fast.
+---
+Buy before they're
+gone.
+
+[mall.vend]
+A drink machine.
+---
+Something cool?
+
+[club.chair.hi]
+Welcome to the Fan
+Club!
+---
+I'm the chairman!
+
+[club.chair.t1]
+My Lullabun is so
+cute!
+---
+Look at those eyes,
+that face!
+
+[club.chair.t2]
+Once it fell asleep
+on my hat.
+---
+It wouldn't let me
+breathe!
+
+[club.chair.t3]
+Fans love to show
+off.
+---
+I've been doing it
+for fifteen years!
+
+[club.chair.offer]
+You listen with
+patience!
+---
+Take this bike
+coupon!
+
+[club.chair.about]
+Take it to Marea
+Bikes.
+---
+They'll swap it for
+a bike!
+
+[club.chair.after]
+How's the bike?
+---
+Drop by anytime!
+
+[club.fan.a]
+My Lunelle is the
+best in the club!
+
+[club.fan.b]
+The club meets
+every week.
+---
+Everyone is welcome!
+
+[club.poster.a]
+A poster: LULLABUN,
+---
+THE BEST FRIEND!
+
+[club.poster.b]
+A poster: FAN
+CONTEST
+---
+Sign up now!
+
+[club.poster.c]
+Photos of the
+chairman
+---
+with his Lullabun.
+
+[bike.hi]
+Welcome to Marea
+Bikes!
+---
+We have the best in
+the land.
+
+[bike.novoucher]
+A bike costs a
+million.
+---
+Do you have a
+coupon?
+
+[bike.voucher]
+A bike coupon!
+Perfect!
+---
+I'll swap it for a
+bike.
+
+[bike.how]
+Use it from the bag.
+---
+It's twice as fast.
+
+[bike.how2]
+Not indoors or in
+caves.
+---
+Take good care of
+it!
+
+[bike.after]
+How's the bike?
+---
+It's twice as fast.
+
+[mansion.books]
+Art and history
+books.
+
+[mansion.butler]
+Welcome to the
+mansion.
+---
+The owner is
+upstairs.
+
+[mansion.maid]
+Cleaning this house
+takes all morning.
+
+[mansion.resident]
+This house is older
+than the city.
+---
+It was the first.
+
+[mansion.top.books]
+A gardening book.
+
+[mansion.top.books2]
+A photo album of
+Mimbara.
+
+[mansion.owner.hi]
+Welcome to the top
+of the mansion.
+---
+I own this house.
+
+[mansion.owner.story]
+My Mimbara is very
+sweet,
+---
+but I can no longer
+care for it.
+
+[mansion.owner.ask]
+Will you take care
+of it?
+
+[mansion.owner.no]
+Oh… Think it over.
+---
+I'll be here.
+
+[mansion.owner.full]
+Your party is full.
+---
+Come back with a
+free slot.
+
+[mansion.owner.given]
+{player} received
+Mimbara!
+
+[mansion.owner.hint]
+It changes with a
+gem:
+---
+water, fire or
+thunder.
+
+[mansion.owner.after]
+How is Mimbara?
+---
+I bet it's strong
+now.
+
+[gym.flora.pre]
+Welcome to my
+greenhouse!
+---
+I'm Flora Nyx, the
+gym leader.
+---
+My plants are
+gentle… and deadly.
+
+[gym.flora.win]
+Incredible! You
+wilted me.
+---
+You earned this.
+---
+Take it.
+
+[gym.badge]
+{player} received the
+ROOT BADGE!
+
+[gym.flora.about]
+Another official
+League proof.
+---
+It shows you beat
+the fourth leader.
+---
+It shines on your
+trainer card.
+
+[gym.flora.disc]
+Take a technique
+disc too!
+
+[gym.flora.disc_about]
+It holds a grass
+technique.
+---
+Use it well!
+
+[gym.flora.after]
+My greenhouse always
+blooms.
+---
+Thanks for the
+battle.
+
+
+# --- fog and flags fixtures (contract 40: maps/test_flags.map) ---
+[flg.test.a]
+Flag test A.
+
+[flg.test.b]
+Flag test B.
+
+[flg.test.sign]
+Sign.
+
+[flg.test.t.a]
+First time.
+
+[flg.test.t.b]
+Talked already.
+
+# --- C4b content (contract 41) ---
+[gl.tr.jugador_c1]
+Gambler Aldo
+
+[gl.tr.jugador_c2]
+Gambler Mauro
+
+[gl.tr.jugador_c3]
+Gambler Nacho
+
+[gl.tr.vertice_casino]
+Agent Fito
+
+[gl.tr.vertice_b1a]
+Agent Kol
+
+[gl.tr.vertice_b1b]
+Agent Nox
+
+[gl.tr.vertice_b2a]
+Agent Ivo
+
+[gl.tr.vertice_b2b]
+Agent Rax
+
+[gl.tr.vertice_b2c]
+Agent Dro
+
+[gl.tr.vertice_b3a]
+Agent Vik
+
+[gl.tr.vertice_b3b]
+Agent Sal
+
+[gl.tr.vertice_llave]
+Agent Orr
+
+[gl.tr.vertice_b4]
+Agent Hox
+
+[gl.tr.varo]
+Director Varo
+
+[gl.tr.medium_t1]
+Medium Alma
+
+[gl.tr.medium_t3a]
+Medium Nora
+
+[gl.tr.medium_t3b]
+Medium Irma
+
+[gl.tr.medium_t3c]
+Medium Ona
+
+[gl.tr.espiritu_madre]
+Mother Spirit
+
+[gl.tr.vertice_t1]
+Agent Lur
+
+[gl.tr.vertice_t2]
+Agent Tek
+
+[neon.casino.sign2]
+FORTUNE HALL
+---
+Coins and prizes
+
+[neon.prize.sign]
+PRIZE ROOM
+---
+Coin exchange
+
+[neon.diner.sign]
+DINER
+---
+Food and drinks
+
+[bruma.tower.hint]
+The tower is full
+of ghosts.
+---
+You can't see them.
+
+[bruma.tower.hint2]
+A Spectral Lens
+would show them.
+---
+They say Vertex's
+boss owns one.
+
+[casa.rel2]
+Grandpa is home
+safe! Thank you!
+
+[casa.anciano.hi]
+We are safe now,
+{player}.
+
+[casa.anciano.hi2]
+You deserve a
+reward.
+
+[casa.anciano.flute]
+Take this Clear
+Flute.
+
+[casa.anciano.about]
+Its melody wakes
+---
+sleeping Elementis.
+
+[casa.anciano.after]
+I'll rest at home.
+Thanks again!
+
+[casino.barrier]
+An energy barrier
+---
+blocks the stairs.
+
+[casino.npc.a]
+Lost all night…
+---
+The next one wins!
+
+[casino.npc.b]
+The bell symbol
+always brings luck!
+
+[casino.hostess.hi]
+Welcome to the
+Fortune Hall!
+---
+A Coin Purse is
+required.
+
+[casino.hostess.none]
+You have no coins
+yet.
+
+[casino.poster.stop]
+Hey! Hands off the
+poster!
+
+[casino.poster.look]
+It is a Vertex
+poster.
+---
+Something is odd
+behind it…
+
+[casino.poster.switch]
+A hidden switch is
+behind it!
+---
+You press it!
+
+[casino.poster.clack]
+Click! The corner
+barrier shuts off.
+
+[casino.poster.after]
+Vertex poster.
+Nothing hidden now.
+
+[tr.jugador_c1.pre]
+The slots hate me
+today!
+---
+Care for a match?
+
+[tr.jugador_c1.after]
+No luck at cards
+or slots…
+
+[tr.jugador_c2.pre]
+I'm on a losing
+streak…
+---
+But not against you!
+
+[tr.jugador_c2.after]
+Still no luck.
+Back to the slots.
+
+[tr.jugador_c3.pre]
+Place a bet with me!
+---
+Lose and you pay.
+
+[tr.jugador_c3.after]
+I lost… I'm out
+of coins.
+
+[tr.vertice_casino.pre]
+Hey! Hands off
+that poster!
+---
+Get lost!
+
+[tr.vertice_casino.after]
+Tsk… Look at the
+poster if you must.
+
+[prize.npc.a]
+The best prizes are
+paid in coins.
+
+[prize.npc.b]
+There are rare
+Elementis as prizes!
+
+[diner.cook]
+Enjoy your meal!
+Today: stew.
+
+[diner.npc.a]
+This citrus cooler
+is delicious!
+
+[diner.npc.b]
+Gamblers eat here
+before they play.
+
+[diner.man.hi]
+I lost my savings at
+the Fortune Hall…
+
+[diner.man.t1]
+I'm done gambling.
+Take this off me.
+
+[diner.man.offer]
+Take my Coin Purse.
+Good luck!
+
+[diner.man.about]
+Use it at the Game
+Corner.
+---
+Buy coins there.
+
+[diner.man.after]
+I'll never bet
+again.
+
+[hide.lift.locked]
+The elevator does
+not respond.
+
+[hide.lift.locked2]
+There is a slot
+for a key.
+
+[hide.lift.on]
+The key fits. The
+elevator starts up.
+
+[hide.term.a]
+Figures from the
+Fortune Hall.
+---
+Vertex keeps almost
+all of it.
+
+[hide.term.b]
+Hideout plan: the
+arrows push you.
+
+[hide.term.c]
+Note: "Orr keeps the
+hoist key."
+
+[hide.key.pre]
+Looking for the
+Hoist Key?
+---
+Take it from me!
+
+[hide.key.win]
+Grr… Fine!
+Take the key.
+
+[hide.key.after_give]
+Use the panels on
+B1F or B2F.
+
+[hide.key.after]
+I have nothing
+else… Go away.
+
+[hide.varo.pre]
+So you are the
+meddler.
+---
+I am Varo, director
+of Vertex.
+---
+You won't leave
+without a fight!
+
+[hide.varo.win]
+Impossible! I
+lost…
+
+[hide.varo.win2]
+Vertex is pulling
+out. It's not over.
+
+[hide.varo.gone]
+Varo fled through a
+secret door.
+
+[hide.varo.lente]
+He dropped something
+as he ran!
+
+[hide.lente.about]
+The Lens lets you
+see ghosts.
+
+[tr.vertice_b1a.pre]
+An intruder! This is
+Vertex's!
+---
+We'll throw you out!
+
+[tr.vertice_b1a.after]
+Damn…
+The boss will know.
+
+[tr.vertice_b1b.pre]
+Lost among the
+arrows?
+---
+I'll guide you out!
+
+[tr.vertice_b1b.after]
+And I knew the
+way…
+
+[tr.vertice_b2a.pre]
+Halt! Below is
+private.
+---
+Back off!
+
+[tr.vertice_b2a.after]
+My Elementis…
+Sorry, boss!
+
+[tr.vertice_b2b.pre]
+I heard a noise…
+It was you!
+
+[tr.vertice_b2b.after]
+Ow, my head…
+
+[tr.vertice_b2c.pre]
+My three Elementis
+will crush you!
+
+[tr.vertice_b2c.after]
+My three…
+defeated.
+
+[tr.vertice_b3a.pre]
+You shall not pass.
+Orders from Varo.
+
+[tr.vertice_b3a.after]
+Varo will
+punish me…
+
+[tr.vertice_b3b.pre]
+There is no way out
+for you down here.
+
+[tr.vertice_b3b.after]
+Impossible…
+
+[tr.vertice_b4.pre]
+The director takes
+no visitors.
+
+[tr.vertice_b4.after]
+Sorry, boss…
+
+[torre.stele.a]
+"Here rests an
+old friend."
+
+[torre.stele.b]
+"We will always
+remember you."
+
+[torre.stele.c]
+"Rest in peace,
+little one."
+
+[torre.stele.d]
+"He stayed with us
+to the end."
+
+[torre.npc.a]
+I came to leave
+flowers for my pal.
+
+[torre.npc.b]
+The tower is for
+resting…
+---
+But something stirs
+there.
+
+[torre.npc.c]
+A rude young man
+went past here.
+
+[torre.rival.hey]
+Hey, {player}!
+Why are you here?
+---
+Here to see ghosts?
+Ha!
+---
+First, let me show
+you what I learned!
+
+[torre.rival.again]
+Again? Let's go!
+
+[torre.rival.lose]
+Argh! I lost again!
+
+[torre.rival.next]
+I'll keep training.
+See you around!
+
+[torre.ghost.chill]
+The air turns
+icy…
+
+[torre.ghost.chill2]
+Something unseen
+blocks the stairs.
+
+[torre.ghost.back]
+It pushes you back!
+
+[torre.ghost.seen]
+Through the Lens you
+see an old spirit!
+
+[torre.ghost.seen2]
+She is the mother of
+a lost little one.
+
+[torre.ghost.rest]
+The spirit smiles
+sadly…
+
+[torre.ghost.rest2]
+At last it can
+rest.
+
+[torre.ghost.rest3]
+The stairs are
+clear.
+
+[torre.anciano.help]
+Help! These thugs
+are holding me.
+
+[torre.anciano.thanks]
+Thank you, {player}!
+You saved me.
+
+[torre.anciano.thanks2]
+Let's leave here.
+Come to my house.
+
+[torre.anciano.home]
+Let's go!
+
+[tr.medium_t1.pre]
+I feel the ones who
+have gone…
+---
+You disturb them!
+
+[tr.medium_t1.after]
+The spirits calm
+down.
+
+[tr.medium_t3a.pre]
+The ghosts talk to
+me…
+---
+They say go away!
+
+[tr.medium_t3a.after]
+Still, they won't
+be quiet.
+
+[tr.medium_t3b.pre]
+My mind is a fog…
+---
+Enter if you dare!
+
+[tr.medium_t3b.after]
+The fog
+clears…
+
+[tr.medium_t3c.pre]
+Feel the tower's
+chill!
+---
+It will freeze you!
+
+[tr.medium_t3c.after]
+I froze
+myself…
+
+[tr.vertice_t1.pre]
+This old man is our
+hostage!
+---
+Hands off him!
+
+[tr.vertice_t1.after]
+Ouch… Don't tell
+the boss!
+
+[tr.vertice_t2.pre]
+The ghosts are our
+guards.
+---
+Get lost!
+
+[tr.vertice_t2.after]
+Even the ghosts
+abandoned me…
+
+# --- C5-B items, Reserva Salvaje and rods (contract 43) ---
+[gl.c5b.sf_ball]
+Crystal x{v2}
+
+[gl.c5b.sf_rock]
+Rock
+
+[gl.c5b.sf_bait]
+Bait
+
+[gl.c5b.sf_threw_rock]
+You threw a
+rock!
+
+[gl.c5b.sf_threw_bait]
+You threw
+some bait!
+
+[gl.c5b.sf_angry]
+{v0} is
+angry!
+
+[gl.c5b.sf_eating]
+{v0} is
+eating!
+
+[gl.c5b.sf_fled]
+Wild {v0}
+ran away!
+
+[gl.c5b.sf_none]
+You have no
+crystals left!
+
+[gl.c5b.rv_time]
+Time's up!
+
+[gl.c5b.rv_balls]
+You're out of
+Reserve Crystals!
+
+[gl.c5b.rv_left]
+Steps: {v2}
+Crystals: {v3}
+
+# --- C5-A world systems (contract 42) ---
+[gl.c5a.surf.ask]
+Use
+Hydroglider?
+
+[gl.c5a.surf.bike]
+Get off the bike
+before using it.
+
+[gl.c5a.push.ask]
+Use Pusher?
+
+[gl.c5a.push.used]
+Pusher is on!
+Rocks can move.
+
+[gl.c5a.push.on]
+Push the rock
+to move it.
+
+[gl.c5a.push.no]
+A huge rock.
+It needs Pusher.
+
+[gl.c5a.fish.bite]
+You cast the line…
+---
+Something bites!
+
+[gl.c5a.fish.none]
+You cast the line…
+---
+Nothing bites.
+
+[gl.c5a.sleep.look]
+Something huge is
+asleep in the way.
+
+[gl.c5a.sleep.ask]
+Play the
+Clear Flute?
+
+[gl.c5a.sleep.woke]
+It woke up!
+
+[gl.c5a.gate.bike]
+The Mag Highway is
+for bicycles only!
+
+# --- IR LINK (contract 45) ---
+[gl.lk.search]
+Finding a friend…
+
+[gl.lk.aim]
+Experimental: point
+both IR ports.
+
+[gl.lk.pick]
+Pick an Elementi
+
+[gl.lk.wait]
+Waiting for
+your friend…
+
+[gl.lk.ot]
+OT:
+
+[gl.lk.swap]
+Make the trade?
+
+[gl.lk.trading]
+Trading…
+
+[gl.lk.teams]
+Swapping teams…
+
+[gl.lk.done]
+Trade complete!
+---
+{v0} joined
+your team!
+
+[gl.lk.cancel]
+Trade canceled.
+
+[gl.lk.declined]
+Your friend
+declined.
+
+[gl.lk.nopartner]
+Nobody found
+nearby.
+
+[gl.lk.error]
+The link was
+lost.
+
+[gl.lk.version]
+Different game
+versions.
+
+[gl.lk.bad]
+Invalid data
+from your friend.
+
+[gl.lk.selftest]
+IR test
+{v2} B/s
+
+# --- C6 systems (contract 46) ---
+[gl.c6.door.locked]
+It is locked with an
+electronic key.
+---
+You need:
+{v0}
+
+[gl.c6.door.open]
+Used {v0}!
+The door opens.
+
+[gl.c6.gift.ask]
+Do you want
+{v0}?
+
+[gl.c6.gift.got]
+You received
+{v0}!
+
+[gl.c6.gift.fail]
+You can't take
+{v0} now.
+
+[gl.c6.fly.badge]
+The Glider won't
+obey you yet.
+---
+It needs the
+Volt Badge.
+
+[c6sys.person]
+Nobody comes here
+without a pad.
+
+# --- C5a content (contract 47) ---
+[gl.rg.flopfin]
+It flops about all
+day, going nowhere.
+---
+Its huge tail is
+too heavy.
+
+[gl.rg.stormgill]
+Its rage whips up
+storms at sea.
+---
+When angry, it
+wrecks everything.
+
+[gl.rg.urchip]
+A ball of spikes
+with two big eyes.
+---
+It drifts in
+shallow water.
+
+[gl.rg.urchlord]
+A crown of long
+poisonous spikes.
+---
+Its star mouth opens
+underneath.
+
+[gl.rg.clubrimp]
+Two folded clubs
+and eyes on stalks.
+---
+It hits faster than
+a blink.
+
+[gl.rg.smashrimp]
+Huge armor and
+clubs on guard.
+---
+It shatters rock
+in one blow.
+
+[gl.rg.skipgoby]
+It hops over mud
+on its fins.
+---
+Its bulging eyes
+watch from above.
+
+[gl.rg.gobyhop]
+It now hops on
+dry land too.
+---
+Its fins grow like
+little arms.
+
+[gl.rg.gobrawl]
+Upright, with fins
+strong as arms.
+---
+Its seaweed belt
+marks a champion.
+
+[gl.rg.lazatee]
+A sleepy, slow
+manatee calf.
+---
+Its eyes are always
+half shut.
+
+[gl.rg.sagatee]
+A wise manatee in a
+barnacle crown.
+---
+When its eyes glow,
+it knows all.
+
+[gl.rg.slumberth]
+A giant sloth
+curled up asleep.
+---
+Moss on its fur and
+a nest on its head.
+
+[gl.rg.lambalm]
+A lamb with round
+wool and a bell.
+---
+Its wool heals any
+wound.
+
+[gl.rg.wombamma]
+A sturdy wombat
+carrying her cub.
+---
+She lets no one near
+her little one.
+
+[gl.rg.razorfly]
+A slim dragonfly,
+razor-edged wings.
+---
+Its compound eyes
+see everything.
+
+[gl.rg.gnucharge]
+A savanna gnu with a
+mane and horns.
+---
+It charges headlong,
+never looking back.
+
+[gl.rg.reefling]
+A baby sea serpent
+with a coral horn.
+---
+Pearl whiskers
+adorn its face.
+
+[gl.rg.reefcoil]
+A long coral serpent
+strung with pearls.
+---
+Its fins ripple
+like ribbons.
+
+[gl.rg.reefdragon]
+A great winged coral
+dragon of fans.
+---
+They say it guards
+the reefs.
+
+[gl.rg.slickslime]
+A living oil slick
+with rainbow glow.
+---
+Bubbles drift
+in its body.
+
+[gl.rg.tarbog]
+A tar pit with junk
+sunk inside.
+---
+You can smell it
+from miles away.
+
+[gl.tr.pescador_r12a]
+Fisher Beni
+
+[gl.tr.pescador_r12b]
+Fisher Tano
+
+[gl.tr.pescador_r12c]
+Fisher Remo
+
+[gl.tr.explorador_r13a]
+Scout Joel
+
+[gl.tr.chica_r13]
+Lass Bea
+
+[gl.tr.rider_r13]
+Rider Axel
+
+[gl.tr.explorador_r13b]
+Scout Ivar
+
+[gl.tr.explorador_r14]
+Scout Noe
+
+[gl.tr.rider_r14a]
+Rider Tito
+
+[gl.tr.punk_r14]
+Punk Roque
+
+[gl.tr.chica_r14]
+Lass Mia
+
+[gl.tr.rider_r14b]
+Rider Bram
+
+[gl.tr.rider_r15]
+Rider Kira
+
+[gl.tr.chica_r15]
+Lass Nadia
+
+[gl.tr.explorador_r15]
+Scout Biel
+
+[gl.tr.punk_r15]
+Punk Ziggy
+
+[gl.tr.ninja_g1]
+Disciple Ren
+
+[gl.tr.ninja_g2]
+Disciple Aki
+
+[gl.tr.ninja_g3]
+Disciple Sai
+
+[gl.tr.ninja_g4]
+Disciple Ryo
+
+[gl.tr.kai]
+Leader Kai
+
+[tr.pescador_r12a.pre]
+I've fished since
+sunrise.
+
+[tr.pescador_r12a.after]
+You scared off
+my fish.
+
+[tr.pescador_r12b.pre]
+My hooks are
+legendary!
+
+[tr.pescador_r12b.after]
+Even my hook
+gave up.
+
+[tr.pescador_r12c.pre]
+Huge fish live in
+this bay.
+
+[tr.pescador_r12c.after]
+You sure can
+handle a rod.
+
+[tr.explorador_r13a.pre]
+My birds will
+peck you!
+
+[tr.explorador_r13a.after]
+My birds got
+scared.
+
+[tr.chica_r13.pre]
+Do you like
+wildflowers?
+
+[tr.chica_r13.after]
+You left me
+wilted.
+
+[tr.rider_r13.pre]
+My hoverbike is
+faster!
+
+[tr.rider_r13.after]
+I lost my
+speed too.
+
+[tr.explorador_r13b.pre]
+This fence maze
+is my home.
+
+[tr.explorador_r13b.after]
+I got lost in
+the defeat.
+
+[tr.explorador_r14.pre]
+None cross my fences
+without a fight.
+
+[tr.explorador_r14.after]
+Go ahead.
+
+[tr.rider_r14a.pre]
+Full speed ahead,
+stranger!
+
+[tr.rider_r14a.after]
+I hit the brakes.
+
+[tr.punk_r14.pre]
+My spikes are
+sharper than you.
+
+[tr.punk_r14.after]
+You flattened
+my hair.
+
+[tr.chica_r14.pre]
+My flowers smell
+divine!
+
+[tr.chica_r14.after]
+My petals wilted.
+
+[tr.rider_r14b.pre]
+Bet you can't catch
+me!
+
+[tr.rider_r14b.after]
+You caught me.
+
+[tr.rider_r15.pre]
+The windmills turn
+like my wheels.
+
+[tr.rider_r15.after]
+My engine stalled.
+
+[tr.chica_r15.pre]
+The wind brings
+good battles.
+
+[tr.chica_r15.after]
+The wind has turned.
+
+[tr.explorador_r15.pre]
+From here you see
+the whole meadow.
+
+[tr.explorador_r15.after]
+I saw you coming.
+
+[tr.punk_r15.pre]
+This road is mine,
+rookie!
+
+[tr.punk_r15.after]
+Fine, go on.
+
+[tr.ninja_g1.pre]
+Silence. My poison
+reaches you first.
+
+[tr.ninja_g1.after]
+Even poison could
+not stop you.
+
+[tr.ninja_g2.pre]
+Without a sound,
+unnoticed…
+
+[tr.ninja_g2.after]
+You saw me coming.
+
+[tr.ninja_g3.pre]
+The maze is my
+dojo. Get lost.
+
+[tr.ninja_g3.after]
+You know the way.
+
+[tr.ninja_g4.pre]
+Step by step I sink
+you in the fog.
+
+[tr.ninja_g4.after]
+Move on; Kai waits.
+
+[ruta12.sign]
+ROUTE 12
+---
+North: Bruma Town
+South: Route 13
+
+[ruta12.pier]
+FISHING PIER
+---
+Rod in hand,
+face the water.
+
+[ruta12.npc.a]
+The sea is huge.
+Scary and lovely.
+
+[ruta12.npc.b]
+They say a giant
+sleeps at the end.
+---
+Only a melody
+will wake it.
+
+[ruta12.guru.a]
+Hey, kid! Do you
+like fishing?
+
+[ruta12.guru.b]
+Take this Reed Rod.
+It's yours.
+
+[ruta12.guru.about]
+Use it from the bag
+while facing water.
+
+[ruta12.guru.after]
+Better rods wait
+in Amber City.
+
+[ruta13.sign]
+ROUTE 13
+---
+East: Route 12
+West: Route 14
+
+[ruta13.sign2]
+Mind the fences!
+---
+Not all of them lead
+to the exit.
+
+[ruta13.npc]
+Flowers grow wild
+between the fences.
+
+[ruta14.sign]
+ROUTE 14
+---
+East: Route 13
+West: Route 15
+
+[ruta14.sign2]
+The fences run
+north to south.
+---
+Find the gap.
+
+[ruta14.npc]
+My gran says the
+fences are a guide.
+
+[ruta15.sign]
+ROUTE 15
+---
+East: Route 14
+West: Amber City
+
+[ruta15.sign2]
+MEADOW WINDMILLS
+---
+They turn with the
+west wind.
+
+[ruta15.npc]
+When the mill spins
+fast, rain comes.
+
+[ambar.sign]
+AMBER CITY
+---
+Where the sea meets
+the savanna
+
+[ambar.sign.gym]
+POISON GYM
+---
+Leader: Kai
+
+[ambar.sign.reserva]
+WILD RESERVE
+---
+Entry: $500
+
+
+
+
+
+
+[ambar.npc.a]
+The air smells of
+salt and savanna.
+
+[ambar.npc.b]
+My husband runs
+the Reserve.
+---
+He lost his golden
+teeth!
+
+[ambar.npc.c]
+The palms shade the
+town all year.
+
+[cana.a]
+Welcome! I'm the
+guru's brother.
+
+[cana.b]
+Take this Fiber
+Rod.
+
+[cana.about]
+More bites and
+better catches.
+
+[cana.after]
+Fish calmly; good
+things take time.
+
+[guardian.a]
+I'm the Warden of
+the Wild Reserve.
+---
+I lost my golden
+teeth…
+---
+I think they fell
+in the Reserve.
+
+[guardian.case]
+An empty glass case.
+It held his teeth.
+
+[gym.kai.pre]
+Welcome, young one.
+I'm Kai, the ninja.
+---
+My poison is neither
+seen nor smelled.
+---
+Prepare to lose
+your breath!
+
+[gym.kai.win]
+Impossible! Not
+even my poison.
+---
+You earned the
+gym badge.
+---
+Take it.
+
+[gym.kai.badge]
+{player} received the
+TOXIN BADGE!
+
+[gym.kai.about]
+It is another proof
+of the League.
+---
+It shows you beat
+the fifth leader.
+---
+With it the
+Hydroglider obeys.
+
+[gym.kai.disc]
+Take this: a disc
+of my technique.
+
+[gym.kai.disc_about]
+It carries a poison
+technique.
+---
+Slow and sure pain.
+
+[gym.kai.after]
+My poison still
+follows you.
+---
+Thanks for the
+battle.
+
+# --- C5b content (contract 48) ---
+
+[gl.tr.punk_r16a]
+Punk Dirk
+
+
+[gl.tr.rider_r16]
+Rider Mara
+
+
+[gl.tr.punk_r16b]
+Punk Roco
+
+
+[gl.tr.rider_ap1]
+Rider Cano
+
+
+[gl.tr.punk_ap1]
+Punk Vex
+
+
+[gl.tr.rider_ap2]
+Rider Lola
+
+
+[gl.tr.punk_ap2]
+Punk Pico
+
+
+[gl.tr.rider_ap3]
+Rider Gabo
+
+
+[gl.tr.punk_ap3]
+Punk Zeke
+
+
+[gl.tr.rider_ap4]
+Rider Hana
+
+
+[gl.tr.punk_ap4]
+Punk Brutus
+
+
+[gl.tr.rider_r18]
+Rider Ines
+
+
+[gl.tr.explorador_r18]
+Scout Uri
+
+
+[gl.tr.pescador_r18]
+Fisher Noa
+
+
+[gl.tr.nadadora_m1]
+Swimmer Gala
+
+
+[gl.tr.nadadora_m2]
+Swimmer Tina
+
+
+[tr.punk_r16a.pre]
+Hey, you! This road
+is my crew's.
+
+
+[tr.punk_r16a.after]
+My crew rides the
+Mag Highway.
+
+
+[tr.rider_r16.pre]
+My bike is faster
+than you.
+
+
+[tr.rider_r16.after]
+No bike, no way
+into the highway.
+
+
+[tr.punk_r16b.pre]
+Did you wake the
+sleeping giant?
+
+
+[tr.punk_r16b.after]
+It snored so loud
+it hurt.
+
+
+[tr.rider_ap1.pre]
+Downhill all the
+way! Hold on!
+
+
+[tr.rider_ap1.after]
+That was fast.
+
+
+[tr.punk_ap1.pre]
+I rule this lane.
+
+
+[tr.punk_ap1.after]
+Not my day.
+
+
+[tr.rider_ap2.pre]
+Don't brake! Don't
+even think about it!
+
+
+[tr.rider_ap2.after]
+I almost fell.
+
+
+[tr.punk_ap2.pre]
+This slope never
+ends. Fight me!
+
+
+[tr.punk_ap2.after]
+My wheel is bent.
+
+
+[tr.rider_ap3.pre]
+Full speed ahead!
+
+
+[tr.rider_ap3.after]
+See you at the
+next stretch.
+
+
+[tr.punk_ap3.pre]
+My wheels,
+my rules.
+
+
+[tr.punk_ap3.after]
+I'll catch you
+someday.
+
+
+[tr.rider_ap4.pre]
+Last stretch! Think
+you can take me?
+
+
+[tr.rider_ap4.after]
+I'm out of breath.
+
+
+[tr.punk_ap4.pre]
+Nobody passes
+without a fight.
+
+
+[tr.punk_ap4.after]
+Fine. Go ahead.
+
+
+[tr.rider_r18.pre]
+The race ends
+here. Fight!
+
+
+[tr.rider_r18.after]
+The boardwalk is
+more relaxing.
+
+
+[tr.explorador_r18.pre]
+I'm tracking the
+seabirds.
+
+
+[tr.explorador_r18.after]
+The gulls beat me.
+
+
+[tr.pescador_r18.pre]
+The fish are biting
+and so are fights!
+
+
+[tr.pescador_r18.after]
+I lost my lucky
+bite.
+
+
+[tr.nadadora_m1.pre]
+The water's perfect!
+Come on in!
+
+
+[tr.nadadora_m1.after]
+So refreshing!
+
+
+[tr.nadadora_m2.pre]
+You won't cross
+without beating me.
+
+
+[tr.nadadora_m2.after]
+Go on: the sea is
+big.
+
+
+[neon.west.sign]
+WEST EXIT
+---
+West: Route 16
+and the Mag Highway
+
+
+[ruta16.sign]
+ROUTE 16
+---
+E: Neon Metropolis
+S: Mag Highway
+
+
+[ruta16.gate.sign]
+MAG HIGHWAY
+---
+Bicycles only.
+It's all downhill!
+
+
+[ruta16.house.sign]
+FISHING HOUSE
+---
+Fishing rods given
+away here.
+
+
+[ruta16.npc.a]
+That huge Elementi
+blocks the road.
+---
+They say a flute
+would wake it.
+
+
+[ruta16.npc.b]
+See that bush?
+It hides a house.
+---
+Somebody lives
+behind it.
+
+
+[cana2.a]
+Hey there, kid!
+Do you fish a lot?
+
+
+[cana2.b]
+I'll give you my
+Alloy Rod.
+
+
+[cana2.about]
+Use it from the bag
+while facing water.
+---
+It lures the rarest
+fish.
+
+
+[cana2.after]
+Go fishing with
+the Alloy Rod.
+
+
+[plane.a]
+Hello! I just love
+birds.
+
+
+[plane.b]
+Here, I'll give you
+the Glider.
+
+
+[plane.got]
+{player} received the
+Glider module!
+
+
+[plane.about]
+Flies you to towns
+you have visited.
+---
+You need the Volt
+Badge.
+
+
+[plane.after]
+The Glider takes
+you back.
+
+
+[plane.poster]
+A poster of birds
+gliding.
+
+
+[ap.sign]
+MAG HIGHWAY
+---
+Downhill stretch.
+Let the bike roll.
+
+
+[ap.sign2]
+GANG TERRITORY
+---
+Riders and punks
+rule this road.
+
+
+[r18.sign]
+ROUTE 18
+---
+West: Mag Highway
+East: Amber City
+
+
+[r18.sign2]
+BOARDWALK
+---
+You can fish from
+the pier.
+
+
+[r18.npc.a]
+You can see the
+open sea from here.
+---
+With the Hydroglider
+you could cross it.
+
+
+[puerta.hi]
+Welcome to the
+Wild Reserve!
+---
+For $500 you get 30
+Reserve Crystals.
+---
+You have 500 steps
+to catch Elementis.
+
+
+[puerta.ask]
+Want to go in?
+
+
+[puerta.no]
+Come back any
+time.
+
+
+[puerta.ok]
+Here are your 30
+Reserve Crystals!
+---
+Happy hunting!
+
+
+[puerta.full]
+Your bag is full.
+---
+Make room for the
+crystals first.
+
+
+[puerta.in]
+You're already
+inside the Reserve.
+
+
+[puerta.nopay]
+Pay the entrance
+fee first!
+---
+Talk to the
+attendant.
+
+
+[puerta.leave]
+End your visit
+now?
+
+
+[puerta.bye]
+Thanks for visiting.
+Come back soon!
+
+
+[puerta.board]
+RESERVE RULES
+---
+$500: 30 crystals,
+500 steps.
+---
+No battles: throw
+rocks or bait.
+
+
+[rv.sign1]
+WILD RESERVE
+---
+Area 1
+North: Area 2
+
+
+[rv.sign2]
+AREA 2
+---
+Rest house to the
+west.
+
+
+[rv.sign3]
+AREA 3
+---
+Rocky ground.
+Watch your step.
+
+
+[rv.sign4]
+AREA 4
+---
+The deepest
+area.
+
+
+[rest.a]
+An old man lost his
+teeth around here.
+---
+I think I saw them
+in Area 3.
+
+
+[rest.b]
+Lambalm hardly
+ever shows up.
+---
+Throw bait: it stays
+longer.
+
+
+[rest.books]
+Books on the habits
+of wild Elementis.
+
+
+[secret.a]
+At last, someone
+found my house!
+---
+You deserve a
+prize.
+
+
+[secret.got]
+{player} received the
+Hydroglider!
+
+
+[secret.about]
+It lets you glide
+over water.
+---
+Use it while facing
+water.
+
+
+[secret.about2]
+You need the Toxin
+Badge.
+
+
+[secret.after]
+Enjoy the sea.
+
+
+[guardian.b]
+My golden teeth!
+---
+You finally found
+them!
+---
+Take this as my
+thanks.
+
+
+[guardian.got]
+{player} received the
+Pusher module!
+
+
+[guardian.about]
+It moves heavy
+boulders.
+---
+Use it facing a
+big boulder.
+
+
+[guardian.about2]
+You need the Root
+Badge.
+
+
+[guardian.after]
+With Pusher you can
+move heavy boulders.
+
+
+[secret.chart]
+A sea chart with
+routes drawn on it.
+
+
+[mar.sign]
+AMBER BEACH
+---
+Open sea to the
+south.
+
+
+[mar.sign2]
+ATTENTION!
+---
+Use the Hydroglider
+to cross the sea.
+
+
+[mar.buoy]
+A buoy marks the
+limit of the sea.
+---
+The current is far
+too strong.
+
+# --- C6 content (contract 49) ---
+
+
+
+
+
+
+
+
+
+[gl.rg.kickaroo]
+Kicks faster than
+the eye can follow.
+---
+It trains its legs
+by hopping all day.
+
+
+[gl.rg.jabadillo]
+It curls up to
+shrug off blows.
+---
+Its stone gloves
+crack boulders.
+
+
+[gl.rg.glacielle]
+It floats calmly on
+the sea and sings.
+---
+Its ice crown sings
+in the wind.
+
+[gl.rg.mirrimime]
+Its mirror frame
+copies your face.
+---
+Its hands raise
+walls of light.
+
+
+[gl.rg.somnarch]
+It levitates asleep,
+a dream archmage.
+---
+Three sleep orbs
+circle around it.
+
+
+[gl.rg.mothmist]
+A fuzzy round baby
+moth with big eyes.
+---
+Feathery antennae
+smell the rain.
+
+
+[gl.rg.veilmoth]
+Its wings are sheer
+shimmering veils.
+---
+Glowing dust falls
+as it flutters.
+
+
+[gl.rg.pixelix]
+Made of floating
+pixel blocks.
+---
+Its edges flicker
+like a screen.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[gl.tr.karateka_d1]
+Black Belt Tao
+
+
+[gl.tr.karateka_d2]
+Black Belt Yuki
+
+
+[gl.tr.karateka_d3]
+Black Belt Riku
+
+
+[gl.tr.karateka_d4]
+Black Belt Goro
+
+
+[gl.tr.maestro_dojo]
+Master Gaku
+
+
+[gl.tr.vertice_c1]
+Agent Zoe
+
+
+[gl.tr.vertice_c2]
+Agent Dante
+
+
+[gl.tr.vertice_c3]
+Agent Yago
+
+
+[gl.tr.vertice_t1a]
+Agent Milo
+
+
+[gl.tr.vertice_t1b]
+Agent Vera
+
+
+[gl.tr.vertice_t2a]
+Agent Lucas
+
+
+[gl.tr.cientifico_t2a]
+Scientist Ciro
+
+
+[gl.tr.cientifico_t2b]
+Scientist Emil
+
+
+[gl.tr.cientifico_t3a]
+Scientist Tobi
+
+
+[gl.tr.vertice_t3a]
+Agent Pablo
+
+
+[gl.tr.cientifico_t3b]
+Scientist Nils
+
+
+[gl.tr.vertice_t4a]
+Agent Iris
+
+
+[gl.tr.cientifico_t4a]
+Scientist Lars
+
+
+[gl.tr.vertice_t5a]
+Agent Cesar
+
+
+[gl.tr.cientifico_t5a]
+Scientist Nael
+
+
+[gl.tr.vertice_t5b]
+Agent Olga
+
+
+[gl.tr.vertice_t6a]
+Agent Orion
+
+
+[gl.tr.psiquico_g1]
+Psychic Omar
+
+
+[gl.tr.psiquico_g2]
+Psychic Livia
+
+
+[gl.tr.psiquico_g3]
+Psychic Tadeo
+
+[gl.tr.psiquico_g4]
+Psychic Nuria
+
+
+[gl.tr.psiquico_g5]
+Psychic Enzo
+
+
+[gl.tr.psiquico_g6]
+Psychic Alba
+
+
+[gl.tr.psiquico_g7]
+Psychic Orfeo
+
+
+[gl.tr.sena]
+Dr. Sena
+
+
+[tr.karateka_d1.pre]
+A visitor! Show
+me your strength!
+
+
+[tr.karateka_d1.after]
+I train my fists
+every morning.
+
+
+[tr.karateka_d2.pre]
+My legs are steel.
+Come on!
+
+
+[tr.karateka_d2.after]
+I still lack
+balance.
+
+
+[tr.karateka_d3.pre]
+The Dojo takes
+no weaklings!
+
+
+[tr.karateka_d3.after]
+You are stronger
+than I thought.
+
+
+[tr.karateka_d4.pre]
+Before the master
+you must beat me.
+
+
+[tr.karateka_d4.after]
+Go see the master.
+He waits.
+
+
+[tr.vertice_c1.pre]
+Vertex rules
+Zenith now!
+
+
+[tr.vertice_c1.after]
+The Tower is ours
+even if I lose.
+
+
+[tr.vertice_c2.pre]
+A tourist? Nothing
+to see here.
+
+
+[tr.vertice_c2.after]
+Leave before
+the boss comes.
+
+
+[tr.vertice_c3.pre]
+The Tower is closed.
+Scram!
+
+
+[tr.vertice_c3.after]
+The Director won't
+be happy.
+
+
+[tr.vertice_t1a.pre]
+This floor belongs
+to Vertex.
+
+
+[tr.vertice_t1a.after]
+Go up if you dare.
+
+
+[tr.vertice_t1b.pre]
+Looking for trouble
+in our tower?
+
+
+[tr.vertice_t1b.after]
+Just my luck.
+
+
+[tr.vertice_t2a.pre]
+I'm in charge here.
+Get ready!
+
+
+[tr.vertice_t2a.after]
+The boss will
+scold me.
+
+
+[tr.cientifico_t2a.pre]
+Testing my
+electric Elementi!
+
+
+[tr.cientifico_t2a.after]
+My data is
+ruined.
+
+
+[tr.cientifico_t2b.pre]
+My new formula
+is ready.
+
+
+[tr.cientifico_t2b.after]
+The formula failed.
+
+
+[tr.cientifico_t3a.pre]
+My circuits are
+perfect.
+
+
+[tr.cientifico_t3a.after]
+There is a
+miscalculation.
+
+
+[tr.vertice_t3a.pre]
+The Access Chip is
+not for you.
+
+
+[tr.vertice_t3a.after]
+You got past me!
+
+
+[tr.cientifico_t3b.pre]
+Vertex pays well.
+I'll fight for it!
+
+
+[tr.cientifico_t3b.after]
+No bonus for me.
+
+
+[tr.vertice_t4a.pre]
+This floor is
+restricted.
+
+
+[tr.vertice_t4a.after]
+Go on, but not
+for long.
+
+
+[tr.cientifico_t4a.pre]
+I experiment with
+poison. Careful!
+
+
+[tr.cientifico_t4a.after]
+This must be
+noted.
+
+
+[tr.vertice_t5a.pre]
+You almost reached
+the Director!
+
+
+[tr.vertice_t5a.after]
+You had better
+give up.
+
+
+[tr.cientifico_t5a.pre]
+My thesis is about
+battles. Show me!
+
+
+[tr.cientifico_t5a.after]
+I need more data.
+
+
+[tr.vertice_t5b.pre]
+You won't get past
+this floor.
+
+
+[tr.vertice_t5b.after]
+The Director is
+stronger.
+
+
+[tr.vertice_t6a.pre]
+Halt! The Director
+sees no visitors.
+
+
+[tr.vertice_t6a.after]
+Fine… go in.
+
+
+[tr.psiquico_g1.pre]
+I know what you'll
+do. Come!
+
+
+[tr.psiquico_g1.after]
+I didn't see it
+coming.
+
+
+[tr.psiquico_g2.pre]
+My mind sees
+inside you.
+
+
+[tr.psiquico_g2.after]
+Your mind is
+stronger.
+
+
+[tr.psiquico_g3.pre]
+Mirrors never lie.
+Fight!
+
+
+[tr.psiquico_g3.after]
+The mirror broke.
+
+
+[tr.psiquico_g4.pre]
+I feel your fear.
+
+
+[tr.psiquico_g4.after]
+Strange. I did not
+feel it.
+
+
+[tr.psiquico_g5.pre]
+I close my eyes
+and still see you.
+
+
+[tr.psiquico_g5.after]
+Open your eyes when
+you lose.
+
+
+[tr.psiquico_g6.pre]
+Dr. Sena taught
+me everything.
+
+
+[tr.psiquico_g6.after]
+I still have much
+to learn.
+
+
+[tr.psiquico_g7.pre]
+Think you can beat
+the Doctor?
+
+
+[tr.psiquico_g7.after]
+Maybe you can.
+
+
+[cenit.guard.thirsty]
+I'm so thirsty!
+Hours on duty.
+---
+Bring me a drink
+and I'll let you in.
+
+
+[cenit.guard.none]
+Drinks are sold
+in Neon Metropolis.
+
+
+[cenit.guard.badge]
+You need the Toxin
+Badge to pass.
+
+[cenit.guard.give]
+{v0}! Thanks,
+what a relief!
+
+
+[cenit.guard.open]
+I'll tell the others
+at the other gates.
+---
+You may enter
+Zenith City now.
+
+
+[cenit.guard.after]
+Thanks! Great drink.
+Go right in.
+
+
+[cenit.sign]
+ZENITH CITY
+City of the mind
+
+
+[cenit.sign.torre]
+VERTEX TOWER
+Vertex Inc.
+
+
+[cenit.sign.dojo]
+FIST DOJO
+Challengers welcome
+
+
+[cenit.sign.gym]
+MIND GYM
+Leader: Dr. Sena
+
+
+[cenit.npc.a1]
+Vertex took over
+the Tower!
+
+
+[cenit.npc.a2]
+Vertex left the
+city for good!
+
+
+[cenit.npc.b1]
+My son is inside
+the Tower…
+
+
+[cenit.npc.b2]
+My son is home
+safe and sound!
+
+
+[cenit.npc.c]
+Everyone here reads
+minds. Careful!
+
+
+[cenit.npc.d]
+In Zenith even
+mirrors watch you.
+
+
+[mimo.books]
+Mime books:
+the invisible wall.
+
+
+[mimo.mirror]
+An oval mirror. It
+mimics your moves.
+
+
+[mimo.hello]
+Hi! I'm a mime.
+I trade Elementi.
+
+
+[mimo.hint]
+They say Trancelf
+evolves when traded
+---
+with a friend over
+infrared.
+
+
+[mimo.nick]
+Marcel
+
+
+[psi.books]
+Books on the
+power of the mind.
+
+
+[psi.hi]
+Ah! I sense great
+talent in you.
+---
+Take this disc of
+Psychic technique.
+
+
+[psi.about]
+Disc 08 teaches
+Mindstorm. Powerful!
+
+
+[psi.after]
+Train your mind
+every day.
+
+
+[dojo.master.pre]
+Welcome to the Fist
+Dojo!
+---
+My pupils tried you.
+Now I'll try you.
+
+
+[dojo.master.win]
+Your fist is worth
+more than my dojo.
+---
+Choose one of my
+two Elementi.
+
+
+[dojo.master.after]
+The Fist Dojo is
+your second home.
+
+
+[gym.sena.pre]
+I knew you'd come.
+I saw it coming.
+---
+My mind power is
+greater than yours.
+---
+Let the fight begin!
+
+
+[gym.sena.win]
+Wow! Your mind
+beat mine.
+---
+My power wasn't
+enough.
+---
+Take the gym's
+badge.
+
+
+[gym.sena.badge]
+{player} received the
+MIND BADGE!
+
+
+[gym.sena.about]
+It is another seal
+of the League.
+---
+It shows you beat
+the sixth leader.
+
+[gym.sena.disc]
+Take this: a disc of
+my technique.
+
+
+[gym.sena.disc_about]
+It is Mind Wave:
+a pure mental blow.
+---
+Raw psychic force.
+
+
+[gym.sena.after]
+I still feel your
+mental energy.
+---
+Thanks for the
+battle.
+---
+Cross the sea
+south of Amber City.
+
+[vtx.dir]
+DIRECTORY
+6F: Management
+
+
+[vtx.recep]
+Help! Vertex took
+over the Tower.
+---
+The Director is on
+the top floor.
+
+
+[vtx.recep2]
+Thank you! The Tower
+is ours again.
+
+
+[vtx.pc.a]
+A report: Vertex
+will control Zenith.
+
+
+[vtx.pc.b]
+A sales list:
+rare Elementi.
+
+
+[vtx.worker.hi]
+Finally, someone!
+They locked me in.
+---
+They took my pass,
+but I kept a spare.
+
+
+[vtx.worker.key]
+Take this Access
+Chip. Use it well.
+
+
+[vtx.worker.about]
+It opens the Tower's
+electronic doors.
+---
+Save our company.
+
+
+[vtx.worker.after]
+Go up carefully.
+Beware the Director.
+
+
+[vtx.rival.hey]
+{player}! You again?
+---
+Face my team first.
+
+
+[vtx.rival.again]
+Again? Fight me!
+
+
+[vtx.rival.lose]
+Bah! I lost again.
+---
+I will get stronger.
+
+
+[vtx.rival.next]
+The Director is at
+the top. Go on.
+
+
+[vtx.glacielle.hi]
+Thanks for coming!
+Vertex took it all.
+---
+This Elementi was
+their next sale.
+
+
+[vtx.glacielle.give]
+Keep her: she's calm
+and sings at sea.
+
+[vtx.glacielle.about]
+Glacielle sings and
+freezes the water.
+
+
+[vtx.glacielle.after]
+Take good care.
+
+
+[vtx.varo.pre]
+Well, you again!
+You razed my base.
+---
+The Tower is my
+greatest treasure.
+---
+Your road ends here!
+
+
+[vtx.varo.win]
+Impossible! I lost
+again.
+---
+Vertex pulls out of
+Zenith. For now.
+
+
+[vtx.varo.gone]
+Varo left with his
+agents.
+
+
+[vtx.pres.help]
+Help me, please!
+Varo locked me in.
+---
+Beat him, free the
+Tower again.
+
+
+[vtx.pres.thanks]
+You're a hero!
+You saved my firm.
+---
+I want to give you
+something special.
+
+[vtx.pres.give]
+The Master Crystal:
+it always catches.
+---
+Use it wisely.
+
+
+[vtx.pres.after]
+Thanks again.
+---
+Vertex is gone.
+For now.
+
+# --- C9 systems (contract 50) ---
+[gl.c9.hof.title]
+HALL OF LEGACY
+
+[gl.c9.hof.menu]
+Hall of Legacy
+
+[gl.c9.hof.congrats]
+Congratulations,
+{player}!
+---
+Your team enters the
+Hall of Legacy.
+
+[gl.c9.hof.none]
+The Hall of Legacy
+is empty.
+
+[gl.c9.hof.fail]
+The Hall of Legacy
+could not be saved.
+
+[gl.c9.end.fail]
+The ending could
+not be played.
+
+[gl.c9.door.locked]
+The door is shut.
+---
+It opens when you
+win in this room.
+
+[gl.c9.door.shut]
+The door shut
+behind you.
+
+[gl.c9.cr.title]
+ELEMENTIS
+ZETA
+
+[gl.c9.cr.sub]
+A game for
+Flipper Zero
+
+[gl.c9.cr.design]
+Design and
+programming
+---
+Daniel Jahziel
+
+[gl.c9.cr.art]
+Art
+Daniel Jahziel
+---
+Made with
+PixelLab
+
+[gl.c9.cr.music]
+Music
+original
+
+[gl.c9.cr.fonts]
+Fonts
+
+[gl.c9.cr.f1]
+Fusion
+Pixel Font
+---
+(c) 2022
+TakWolf
+---
+OFL 1.1
+
+[gl.c9.cr.f2]
+Ark Pixel
+Font
+---
+(c) 2021
+TakWolf
+---
+OFL 1.1
+
+[gl.c9.cr.f3]
+Galmuri
+(c)
+---
+2019-2025
+Lee Minseo
+---
+OFL 1.1
+
+[gl.c9.cr.f4]
+Boutique
+Bitmap
+---
+(C)
+2002-2019
+---
+Num Kadoma
+(c) 2026
+---
+fancy type
+foundry
+---
+OFL 1.1
+
+[gl.c9.cr.f5]
+Misaki
+Font
+---
+(C)
+2002-2021
+---
+Num Kadoma
+own free
+---
+licence
+
+[gl.c9.cr.f6]
+Miseki
+Bitmap
+---
+(c)
+2023-2024
+---
+Mark Li
+OFL 1.1
+
+[gl.c9.cr.f7]
+Cubic 11
+(c) 2005
+---
+M+ FONTS
+PROJECT
+---
+(C)
+2002-2004
+---
+COZ
+OFL 1.1
+
+[gl.c9.cr.lic]
+The licences are in
+the game's
+---
+licenses folder
+
+[gl.c9.cr.thanks]
+Thanks for playing
+---
+Support the game
+on Ko-fi:
+---
+ko-fi.com/
+danielmartinez55371
+
+[gl.c9.cr.fin]
+THE END
+
+[c9sys.person]
+The League starts
+at the north door.
+
+[c9sys.m1.pre]
+I am the first of
+the Summit Four!
+
+[c9sys.m1.after]
+You won. Go on.
+
+[c9sys.champ.pre]
+You came far!
+I am the champion!
+
+[c9sys.champ.win]
+You beat me!
+You are champion!
+
+[c9sys.champ.after]
+You are champion.
+
+# --- C8 content (contract 51) ---
+
+[gl.rg.clubtail]
+Its tail is a club
+of solid stone.
+---
+It charges head-on
+and shatters rock.
+
+[gl.rg.anklord]
+An armored colossus
+spiked with rock.
+---
+Its horn pierces
+the hardest stone.
+
+[gl.tr.montanista_n1]
+Hiker Gor
+
+[gl.tr.mecanico_n1]
+Mechanic Luc
+
+[gl.tr.montanista_n2]
+Hiker Tor
+
+[gl.tr.explorador_n1]
+Scout Nuno
+
+[gl.tr.mecanico_n2]
+Mechanic Boris
+
+[gl.tr.chica_n1]
+Lass Mina
+
+[gl.tr.montanista_n3]
+Hiker Rolo
+
+[tr.montanista_n1.pre]
+Rock never budges
+here! Will you?
+
+[tr.montanista_n1.after]
+You have more drive
+than a rock.
+
+[tr.mecanico_n1.pre]
+My drill is ready.
+Are you?
+
+[tr.mecanico_n1.after]
+My drill broke.
+Go on through.
+
+[tr.montanista_n2.pre]
+I climb mountains
+every day. Come on!
+
+[tr.montanista_n2.after]
+Your Elementi are
+solid as rock.
+
+[tr.explorador_n1.pre]
+I've tamed beasts
+fiercer than you!
+
+[tr.explorador_n1.after]
+You tamed my team.
+Well done.
+
+[tr.mecanico_n2.pre]
+This hall is my
+workshop. Out!
+
+[tr.mecanico_n2.after]
+Even my drill
+respects you.
+
+[tr.chica_n1.pre]
+The leader lets
+no one through.
+
+[tr.chica_n1.after]
+Go on. He is
+very dangerous.
+
+[tr.montanista_n3.pre]
+I guard the last
+door. No way past!
+
+[tr.montanista_n3.after]
+The leader waits
+at the far end.
+
+[nodo.gymguard]
+The gym is
+closed.
+---
+The leader is in
+Zenith on business.
+
+[gym.varo.pre]
+I expected you,
+{player}. Again!
+---
+We met in the
+Hideout and Tower.
+---
+My earth crushes
+the weak. Come!
+
+[gym.varo.win]
+Ha! What an
+intense fight!
+---
+You have won. As
+proof, take this.
+
+[gym.varo.badge]
+{player} received the
+CORE BADGE!
+
+[gym.varo.about]
+It is the eighth
+and last badge.
+---
+It shows you beat
+the final leader.
+---
+The road to the
+League is open.
+
+[gym.varo.disc]
+Take this: a disc
+of my technique.
+
+[gym.varo.disc_about]
+It carries a ground
+technique.
+---
+It shakes the whole
+floor.
+
+[gym.varo.bye]
+I lost. I cannot
+face my people.
+---
+I disband Vertex
+forever!
+---
+I will train again.
+Until we meet.
+
+[gym.varo.after]
+Vertex is no
+more.
+---
+Go your way and
+reach the League.
+
+# --- Legendary encounters (contract 52) ---
+[gl.c52.cry]
+KYAAAAH!
+
+# --- C7 content (contract 53) ---
+
+[ceniza.sign]
+ASH ISLAND
+---
+A sleeping volcano
+watches the town.
+
+[ceniza.sign.lab]
+FOSSIL LAB
+We revive the past.
+
+[ceniza.sign.gym]
+FIRE GYM
+---
+Leader: Prof. Brasa
+Type: Fire
+
+[ceniza.sign.mansion]
+CHARRED
+MANSION
+---
+Dangerous ruins.
+Enter at your risk.
+
+[ceniza.npc.a]
+The lab here brings
+fossils to life.
+---
+Go in and talk to
+the scientist.
+
+[ceniza.npc.b]
+They say the mansion
+is haunted…
+---
+It once belonged to
+a wise scientist.
+
+[ceniza.npc.c]
+The gym is locked
+with a key.
+---
+The Cinder Key is
+in the mansion.
+---
+Professor Brasa is
+a fiery old man!
+
+[lab.vitrina]
+A fossil case.
+A spiral tail bit.
+
+[lab.vitrina2]
+Note: fossils come
+from Mt. Eco.
+
+[lab.books]
+Paleontology books.
+All very old.
+
+[lab.rev.hello]
+Welcome! We revive
+fossils here.
+---
+Hand me a fossil
+or Fossil Amber.
+
+[lab.rev.lily]
+Shall we revive
+the Lily Fossil?
+
+[lab.rev.tri]
+Shall we revive
+the Trilo Fossil?
+
+[lab.rev.amber]
+Shall we revive
+the Fossil Amber?
+
+[lab.rev.none]
+You carry no
+fossil or amber.
+---
+Come back when
+you find one.
+
+[lab.rev.bye]
+We will revive it
+whenever you like.
+
+[lab.rev.start]
+Good. Place it in
+the capsule…
+
+[lab.rev.done]
+It worked!
+---
+Take good care of
+this old Elementi.
+
+[lab.rev.fail]
+Something failed.
+Cannot revive now.
+
+[lab.trade.hello]
+Hello! I want a
+Gobyhop from afar.
+---
+I will give you a
+rare ice Elementi.
+
+[lab.trade.nick]
+Lola
+
+[lab.explain]
+Some Elementi only
+evolve when traded.
+---
+Trancelf, for one,
+becomes Somnarch.
+
+[central.sign]
+POWER PLANT
+---
+High voltage!
+Do not touch cables.
+
+[ruta10.lake.sign]
+POWER PLANT
+Across the water.
+
+[esc1.sign]
+WARNING
+---
+The ice hides
+something below.
+
+[esc2.sign]
+AN EXPLORER'S NOTE
+---
+Plug the pits with
+rocks (Pusher).
+---
+That calms the
+current below.
+
+[esc3.rapids]
+The rapids are
+too strong.
+---
+Something feeds them
+from above.
+
+[gym.q1]
+Fire is strong
+against Grass.
+---
+Is that true?
+
+[gym.q2]
+Water is weak
+against Fire.
+---
+Is that true?
+
+[gym.q3]
+Ice beats the
+Flying type.
+---
+Is that true?
+
+[gym.q4]
+There are eight
+badges on the road.
+---
+Is that true?
+
+[gym.q5]
+Hydroglider needs
+the Volt Badge.
+---
+Is that true?
+
+[gym.q6]
+A technique disc
+lasts forever.
+---
+Is that true?
+
+[gym.right]
+Correct! The door
+opens by itself.
+
+[gym.wrong]
+Wrong! Its trainer
+challenges you.
+
+[gym.won]
+You won! The
+door opens.
+
+[gym.off]
+The machine is
+switched off.
+
+[gym.door]
+A shut door.
+Answer the machine.
+
+[gym.toll.wait]
+Answer the
+question first.
+
+[gym.brasa.pre]
+Ho ho! I am Brasa,
+the red-hot leader.
+---
+My fire Elementi
+are all fired up.
+---
+Get ready to
+burn!
+
+[gym.brasa.win]
+I burned out to
+white ash! I lost.
+---
+Take the Ember
+Badge, kid.
+
+[gym.brasa.badge]
+{player} received the
+EMBER BADGE!
+
+[gym.brasa.about]
+It is the badge
+of fire.
+---
+It proves your fire
+beats mine.
+---
+With it you feel
+the heat of battle.
+
+[gym.brasa.disc]
+Take this disc of
+my technique.
+
+[gym.brasa.disc_about]
+It holds a huge
+flame.
+---
+Use it with care:
+it works only once.
+
+[gym.brasa.after]
+When I am lit
+again, come back.
+---
+My fire awaits
+you.
+---
+Only the Nodo gym
+is left now.
+
+[mansion.door]
+A door nailed shut
+with burnt boards.
+---
+Maybe a switch
+opens it.
+
+[mansion.sw.on]
+Click! You press
+the secret switch.
+---
+Doors open in
+the distance.
+
+[mansion.sw.off]
+Click! You press
+the secret switch.
+---
+Doors shut in
+the distance.
+
+[mansion.d1]
+Feb 3: we found a
+strange Elementi
+---
+deep in the south.
+We brought it here.
+---
+The professor says
+it is one of a kind.
+
+[mansion.d2]
+Mar 12: the original
+had a pup.
+---
+It shows traits of
+many Elementi.
+---
+The professor calls
+it the experiment.
+
+[mansion.d3]
+Jun 9: we mixed
+genes of 20 kinds
+---
+with the original.
+A masterpiece.
+---
+It is also scary.
+No one knows.
+
+[mansion.d4]
+Sep 1: it grows
+so fast.
+---
+It no longer obeys.
+Its eyes burn.
+---
+I asked to seal it,
+but they ignore me.
+
+[mansion.d5]
+Sep 4: it broke the
+cellar cage.
+---
+Fire covered it
+all. We fled.
+---
+It went out to sea,
+north.
+
+[mansion.d6]
+No one knows where
+it is now.
+---
+We sealed the manor.
+The key lies below.
+---
+May nothing like it
+be born again.
+
+[r19.sign]
+FROST ISLES
+---
+An ice cave lies
+in this island.
+
+[r20.sign]
+FROST ISLES
+---
+West exit.
+South: Ash Island.
+
+[gl.rg.belubub]
+A beluga calf with
+a bulging brow.
+---
+It smiles always,
+even under ice.
+
+[gl.rg.belugrand]
+Frost covers its
+brow and shines.
+---
+An ice crest runs
+down its back.
+
+[gl.rg.barnacub]
+A small barnacle
+in a cone shell.
+---
+It puts out two
+feathers to feed.
+
+[gl.rg.barnaclad]
+A barnacle colony
+formed as a fort.
+---
+Ice has turned its
+shells to crystal.
+
+[gl.rg.inkit]
+A baby squid with a
+pointed mantle.
+---
+Its huge eyes
+miss nothing.
+
+[gl.rg.inkrake]
+Its tentacles spin
+into a whirlpool.
+---
+It leaves a cloud
+of ink as it flees.
+
+[gl.rg.glidefin]
+A flying fish with
+wing-like fins.
+---
+It glides a good
+way over the waves.
+
+[gl.rg.soarfin]
+Four fins and a
+striped tail.
+---
+It leaps over waves
+like a hawk.
+
+[gl.rg.plattypuzz]
+A puzzled pup with
+question marks.
+---
+Its beaver tail
+helps it swim.
+
+[gl.rg.plattymind]
+Calm and tall, with
+a gem on its brow.
+---
+Its tail opens like
+a fan.
+
+[gl.rg.frostiva]
+A frost dancer in
+a veil of snow.
+---
+She spins among
+flakes in silence.
+
+[gl.rg.voltaboon]
+A storm baboon with
+a bristling mane.
+---
+Its copper gloves
+throw sparks.
+
+[gl.rg.bellowkiln]
+A stout oven of
+clay and fire.
+---
+Bellows on its sides
+blow out flames.
+
+[gl.rg.origamorph]
+A living sheet of
+paper that folds.
+---
+It changes shape
+as it creases.
+
+[gl.rg.cindibex]
+A young ibex with
+embers for horns.
+---
+Sparks fly from
+its hooves.
+
+[gl.rg.blazibex]
+Long flaming horns
+and a fiery beard.
+---
+It stands on a rock
+and scans afar.
+
+[gl.rg.archaeon]
+A primitive clawed
+bird-dinosaur.
+---
+It has tiny teeth
+and feathered tail.
+
+[gl.rg.aurowl]
+A great ice owl.
+Its wings glow.
+---
+Like an aurora,
+with moon eyes.
+
+[gl.rg.fulgurion]
+A huge storm
+frigatebird.
+---
+Its crop flashes
+with lightning.
+
+[gl.tr.nadador_r19a]
+Swimmer Adan
+
+[gl.tr.nadadora_r19b]
+Swimmer Bruna
+
+[gl.tr.nadador_r19c]
+Swimmer Blas
+
+[gl.tr.nadadora_r19d]
+Swimmer Eva
+
+[gl.tr.nadador_r20a]
+Swimmer Dino
+
+[gl.tr.nadadora_r20b]
+Swimmer Dalia
+
+[gl.tr.nadador_r20c]
+Swimmer Edgar
+
+[gl.tr.nadadora_r20d]
+Swimmer Cleo
+
+[gl.tr.nadador_r21a]
+Swimmer Elio
+
+[gl.tr.nadadora_r21b]
+Swimmer Emma
+
+[gl.tr.pescador_r21a]
+Fisher Fabio
+
+[gl.tr.pescador_r21b]
+Fisher Mico
+
+[gl.tr.ladron_m1a]
+Burglar Rocco
+
+[gl.tr.cientifico_m1b]
+Scientist Unai
+
+[gl.tr.ladron_m2a]
+Burglar Gero
+
+[gl.tr.cientifico_m2b]
+Scientist Zeno
+
+[gl.tr.ladron_m3a]
+Burglar Pako
+
+[gl.tr.cientifico_m3b]
+Scientist Jano
+
+[gl.tr.ladron_b1]
+Burglar Tuto
+
+[gl.tr.cientifico_b1]
+Scientist Lino
+
+[gl.tr.comefuego_g1]
+Fire-eater Kiko
+
+[gl.tr.cientifico_g2]
+Scientist Lupo
+
+[gl.tr.comefuego_g3]
+Fire-eater Olaf
+
+[gl.tr.cientifico_g4]
+Scientist Orin
+
+[gl.tr.comefuego_g5]
+Fire-eater Gina
+
+[gl.tr.ladron_g6]
+Burglar Cuco
+
+[gl.tr.mecanico_c1]
+Mechanic Quino
+
+[gl.tr.mecanico_c2]
+Mechanic Rafa
+
+[gl.tr.punk_c3]
+Punk Ruben
+
+[gl.tr.mecanico_c4]
+Mechanic Sergio
+
+[gl.tr.cientifico_c5]
+Scientist Oto
+
+[gl.tr.cientifico_c6]
+Scientist Mayo
+
+[tr.nadador_r19a.pre]
+Waves give me
+strength. You?
+
+[tr.nadador_r19a.after]
+The current beat
+me…
+
+[tr.nadadora_r19b.pre]
+Can you swim well?
+Let's see!
+
+[tr.nadadora_r19b.after]
+What a swimmer!
+
+[tr.nadador_r19c.pre]
+I train on this
+islet. Battle me!
+
+[tr.nadador_r19c.after]
+Go on your way.
+
+[tr.nadadora_r19d.pre]
+From Amber City?
+I challenge you!
+
+[tr.nadadora_r19d.after]
+Careful down south.
+
+[tr.nadador_r20a.pre]
+The isles' ice cools
+the whole sea.
+
+[tr.nadador_r20a.after]
+Brrr… I give up.
+
+[tr.nadadora_r20b.pre]
+See the isles to
+the north? Ice!
+
+[tr.nadadora_r20b.after]
+You are fast!
+
+[tr.nadador_r20c.pre]
+This buoy is my
+goal. Fight me!
+
+[tr.nadador_r20c.after]
+You beat my goal.
+
+[tr.nadadora_r20d.pre]
+I rest on this
+sandbar. Battle!
+
+[tr.nadadora_r20d.after]
+On to Ash Island.
+
+[tr.nadador_r21a.pre]
+You are almost
+at Aliso Village.
+
+[tr.nadador_r21a.after]
+Safe trip home.
+
+[tr.nadadora_r21b.pre]
+This route is my
+home. Fight!
+
+[tr.nadadora_r21b.after]
+A local, right?
+
+[tr.pescador_r21a.pre]
+I have fished
+here for years.
+
+[tr.pescador_r21a.after]
+Nothing bites today.
+
+[tr.pescador_r21b.pre]
+My rod beats your
+whole team.
+
+[tr.pescador_r21b.after]
+My rod lost…
+
+[tr.ladron_m1a.pre]
+Nothing to see
+here! Get out!
+
+[tr.ladron_m1a.after]
+You took my
+loot.
+
+[tr.cientifico_m1b.pre]
+I study these
+ruins. Go away!
+
+[tr.cientifico_m1b.after]
+Interesting…
+
+[tr.ladron_m2a.pre]
+These flames guard
+me. And you?
+
+[tr.ladron_m2a.after]
+I burned myself.
+
+[tr.cientifico_m2b.pre]
+The diaries tell
+of something awful.
+
+[tr.cientifico_m2b.after]
+Do not read it all.
+
+[tr.ladron_m3a.pre]
+The key is mine!
+Beat it!
+
+[tr.ladron_m3a.after]
+Take it, thief.
+
+[tr.cientifico_m3b.pre]
+Something was born
+that should not be.
+
+[tr.cientifico_m3b.after]
+Beware of it.
+
+[tr.ladron_b1.pre]
+The cellar is mine.
+No one goes down!
+
+[tr.ladron_b1.after]
+Go down then…
+
+[tr.cientifico_b1.pre]
+I saw the experi-
+ment. I still do.
+
+[tr.cientifico_b1.after]
+I cannot sleep.
+
+[tr.comefuego_g1.pre]
+Wrong answer!
+Burn this!
+
+[tr.comefuego_g1.after]
+Fine, go on.
+
+[tr.cientifico_g2.pre]
+You failed. Science
+punishes you.
+
+[tr.cientifico_g2.after]
+Study a bit more.
+
+[tr.comefuego_g3.pre]
+Wrong! My flame
+will teach you!
+
+[tr.comefuego_g3.after]
+Your fire is bigger.
+
+[tr.cientifico_g4.pre]
+Incorrect. I must
+examine you.
+
+[tr.cientifico_g4.after]
+Enough data.
+
+[tr.comefuego_g5.pre]
+Wrong? My show
+begins now!
+
+[tr.comefuego_g5.after]
+What a finale!
+
+[tr.ladron_g6.pre]
+Wrong! I will take
+your badges.
+
+[tr.ladron_g6.after]
+You took it all.
+
+[tr.mecanico_c1.pre]
+I check the gens.
+Get out of here!
+
+[tr.mecanico_c1.after]
+The fuse blew.
+
+[tr.mecanico_c2.pre]
+Ten thousand volts
+give me courage.
+
+[tr.mecanico_c2.after]
+Higher voltage.
+
+[tr.punk_c3.pre]
+This plant is my
+gang's turf!
+
+[tr.punk_c3.after]
+Bah. Just go.
+
+[tr.mecanico_c4.pre]
+A blackout has us
+mad. Battle me!
+
+[tr.mecanico_c4.after]
+Light is back.
+
+[tr.cientifico_c5.pre]
+So much energy in
+one spot… Look!
+
+[tr.cientifico_c5.after]
+My data failed.
+
+[tr.cientifico_c6.pre]
+A bird of lightning
+lives up here.
+
+[tr.cientifico_c6.after]
+Go see it, then.
+
+[gl.tr.brasa]
+Professor Brasa
+
+# --- C9 content (contract 56) ---
+
+[gl.rg.tuskid]
+A walrus pup with
+tusks and a band.
+---
+It punches ice all
+day long.
+
+[gl.rg.tuskmash]
+A young walrus with
+steel-hard muscles.
+---
+Bandaged flippers
+break rock.
+
+[gl.rg.tuskumo]
+A great sumo fighter
+with huge tusks.
+---
+Its stance is
+unbeatable.
+
+[gl.rg.cragodile]
+A huge crocodile
+made of slate.
+---
+Its quartz eyes glow
+in the cave.
+
+[gl.rg.dashkip]
+A long-legged chick
+with a messy crest.
+---
+It runs before it
+can fly.
+
+[gl.rg.dashmark]
+A fast runner with
+two long feathers.
+---
+The marks on it
+show its speed.
+
+[gl.rg.pinecub]
+Pine cones with eyes
+lean on each other.
+---
+If one falls, the
+others lift it.
+
+[gl.rg.pinekeeper]
+A pine spirit that
+walks on branches.
+---
+Its cones glow like
+eyes at night.
+
+[gl.rg.tonguard]
+A big anteater with
+a very long tongue.
+---
+It coils it and
+lashes like a whip.
+
+[gl.rg.pitlion]
+An antlion larva
+with huge jaws.
+---
+It buries itself in
+sand and waits.
+
+[gl.rg.flarechick]
+A peacock chick with
+an ember tail.
+---
+Its feathers glow
+when it shakes it.
+
+[gl.rg.pyreacock]
+An elegant peacock
+with fiery plumes.
+---
+Its ember eyes
+mesmerize foes.
+
+[gl.rg.coilet]
+A living Tesla coil
+with a single eye.
+---
+It sparks when
+frightened.
+
+[gl.rg.teslarch]
+A Tesla tower with
+two spheres.
+---
+Electric arcs leap
+between them.
+
+[gl.rg.ignicondor]
+A legendary bird of
+fire.
+---
+They say its flight
+lights the sky.
+
+[gl.rg.genesa]
+The very first
+Elementi. It glows.
+---
+A gem on its chest
+hides a secret.
+
+[gl.rg.arkegen]
+A perfected copy of
+Genesa.
+---
+Crystal armor and a
+halo of rings.
+
+[gl.tr.elite_s1a]
+Summit Dara
+
+[gl.tr.karateka_s1b]
+Black Belt Beto
+
+[gl.tr.psiquico_s2a]
+Psychic Hilda
+
+[gl.tr.elite_s2b]
+Summit Damian
+
+[gl.tr.karateka_s2c]
+Black Belt Ryu
+
+[gl.tr.elite_s3a]
+Summit Gema
+
+[gl.tr.karateka_s3b]
+Black Belt Koji
+
+[gl.tr.elite_s3c]
+Summit Marco
+
+[gl.tr.iver]
+Iver
+
+[gl.tr.tanko]
+Tanko
+
+[gl.tr.velo]
+Madame Velo
+
+[gl.tr.arkan]
+Arkan
+
+[r22.sign]
+ROUTE 22
+Road to the League
+
+[r22.gate]
+LEAGUE GATE
+Only with 8 badges.
+
+[r22.rival.hey]
+Hey, {player}!
+Off to the League?
+---
+I'll be the Champ.
+You won't make it.
+---
+Let me prove it!
+Let's fight!
+
+[r22.rival.again]
+Again!
+Let's fight!
+
+[r22.rival.lose]
+WHAT? Unbelievable!
+I chose wrong!
+
+[r22.rival.next]
+Fine! I'll beat the
+League. I'm Champ!
+---
+Don't get in my way!
+Smell ya later!
+
+[pl.books]
+Gate log: only
+eight badges pass.
+
+[pl.poster]
+POSTER
+Reach the League!
+
+[pl.trav]
+The Champions' Path
+is long.
+---
+There are rocks to
+push. Good luck!
+
+[pl.keeper]
+League Gate.
+Go on, challenger.
+
+[r23.sign]
+ROUTE 23
+To Champions' Path
+
+[r23.g1]
+No Cantera Badge,
+no entry!
+
+[r23.g2]
+No Wave Badge,
+no entry!
+
+[r23.g3]
+No Volt Badge,
+no entry!
+
+[r23.g4]
+No Root Badge,
+no entry!
+
+[r23.g5]
+No Toxin Badge,
+no entry!
+
+[r23.g6]
+No Mind Badge,
+no entry!
+
+[r23.g7]
+No Ember Badge,
+no entry!
+
+[r23.g8]
+No Core Badge,
+no entry!
+
+[sd.gate]
+A wall of rocks
+blocks the way.
+
+[tr.elite_s1a.pre]
+I'm Summit class.
+Test my level!
+
+[tr.elite_s1a.after]
+You've got champion
+level.
+
+[tr.karateka_s1b.pre]
+My fists never miss!
+Are yours ready?
+
+[tr.karateka_s1b.after]
+Your spirit is
+stronger.
+
+[tr.psiquico_s2a.pre]
+I foresee your
+defeat already.
+
+[tr.psiquico_s2a.after]
+I didn't see that
+coming…
+
+[tr.elite_s2b.pre]
+This Path weeds out
+the weak.
+
+[tr.elite_s2b.after]
+You pass. The League
+is tougher.
+
+[tr.karateka_s2c.pre]
+I train on this path
+every day!
+
+[tr.karateka_s2c.after]
+Tomorrow I train
+harder.
+
+[tr.elite_s3a.pre]
+The Plateau is near.
+Not so fast!
+
+[tr.elite_s3a.after]
+Go on. The Plateau
+awaits you.
+
+[tr.karateka_s3b.pre]
+I've broken a
+thousand rocks!
+
+[tr.karateka_s3b.after]
+My guard fell.
+
+[tr.elite_s3c.pre]
+Before the League,
+get past me.
+
+[tr.elite_s3c.after]
+You're ready for the
+Summit Four.
+
+[ms.sign]
+SUMMIT PLATEAU
+League HQ
+
+[ms.tourist]
+What a view from
+up here!
+---
+The Champion, they
+say, is quite young.
+
+[ms.guide]
+The Summit Four are
+inside the hall.
+---
+Heal at the Center
+before you enter.
+
+[lb.books]
+League archive:
+champions by year.
+
+[lb.coach]
+Four rooms lie past
+that door.
+---
+No turning back.
+Heal up first!
+
+[lb.door.no]
+Badge reader:
+badges missing.
+---
+You need all eight
+badges to enter.
+
+[lb.door.ok]
+Eight badges!
+The door opens.
+
+[lg.iver.pre]
+Welcome to the
+League. I'm Iver.
+---
+None beat my ice!
+I'll freeze you!
+---
+Ready?
+
+[lg.iver.after]
+You're better than
+I thought. Go on!
+---
+That was a taste
+of League power.
+
+[lg.tanko.pre]
+I'm Tanko. My body
+is my weapon.
+---
+Effort topples all
+my foes!
+---
+Get ready!
+
+[lg.tanko.after]
+Incredible! You beat
+me. Go on!
+---
+Keep going, future
+champion.
+
+[lg.velo.pre]
+I'm Madame Velo.
+Lin speaks of you.
+---
+I'll show you how
+a master fights.
+
+[lg.velo.after]
+Oh! You're strong,
+just as Lin said.
+---
+Go on, child. The
+League awaits.
+
+[lg.arkan.pre]
+I'm Arkan, the
+dragon tamer.
+---
+Dragons can't be
+beaten. Let's see!
+---
+This is your last
+trial!
+
+[lg.arkan.after]
+Incredible! You've
+beaten me.
+---
+Your last test is
+your rival. Go!
+
+[lg.champ.pre]
+Hey, {player}! I was
+waiting for you.
+---
+I beat the Four and
+I'm the Champion.
+---
+My rival must be
+strong. Prove it!
+---
+I'll crush you!
+
+[lg.champ.win]
+WHAT? No way!
+You beat me!
+---
+All that work to be
+Champion…
+---
+But you earned it.
+You're the Champion!
+
+[lg.champ.lin]
+Prof. Lin: {player},
+you did it!
+---
+Your team has earned
+the Hall of Legacy.
+---
+Come with me!
+
+[lg.champ.after]
+You're the Champion
+now. Cherish them.
+
+[marea.cave.guard]
+That hatch leads to
+the Secret Cave.
+---
+Only champions
+may enter.
+
+[cs.console.a]
+VERTEX NOTES
+Project GENESIS
+---
+Genesa, the first,
+is gentle.
+---
+Its copy, Arkegen,
+was made at Ash.
+
+[cs.console.b]
+It fled out to sea.
+We found it here.
+---
+Stronger, yet it
+obeys no one.
+---
+The mansion diaries
+did not lie.
+
+[tr18.books]
+A notebook of
+tongue sketches.
+
+[tr18.hello]
+Hello, traveler!
+I trade Elementi.
+
+[tr18.ask]
+Trade {v0}
+for {v1}?
+
+[tr18.wrong]
+Huh? That's not a
+{v0}!
+---
+If you have one,
+come back.
+
+[tr18.no]
+Oh… Come back if
+you reconsider.
+
+[tr18.done]
+Thanks! Care for
+{v1}!
+
+[tr18.after]
+Take good care
+of {v0}!
+
+[tr18.nick]
+Lengua
+
+# --- Extra species (contract 58) ---
+
+[gl.rg.quillia]
+A hedgehog with
+soft round quills.
+---
+Short stinger tail.
+It jabs when scared.
+
+[gl.rg.quillara]
+Its long quills fan
+out like a crest.
+---
+It guards its young
+with its tail.
+
+[gl.rg.quillqueen]
+A big hedgehog with
+a crown of quills.
+---
+Its chest armor
+shrugs off blows.
+
+[gl.rg.droselet]
+A sprout with sticky
+dew on its leaves.
+---
+The droplets trap
+tiny insects.
+
+[gl.rg.drosaura]
+Long, sticky leaf
+arms that curl.
+---
+They coil around
+prey and hold on.
+
+[gl.rg.droserath]
+A fan of long leaves
+beaded with drops.
+---
+A mouth hides among
+them and eats prey.
+
+[gl.rg.scarabeam]
+Pushes a small orb
+that glows by day.
+---
+It rolls the orb
+over dry ground.
+
+[gl.rg.kheprion]
+A great sun disc
+glows in its horns.
+---
+Its heat dries the
+earth it walks on.
+
+[gl.rg.lunashell]
+Its shell is a
+crescent moon.
+---
+Little stars light
+up on it at night.
+
+[gl.rg.selentor]
+The moon's phases
+are carved on it.
+---
+A full moon is set
+in the middle.
+
+[gl.rg.foldling]
+A crumpled sheet of
+living paper.
+---
+It refolds into the
+shape of any it saw.
+
+# --- C7 / C9 QA (contract 58) ---
+
+# --- Club de Enlace (contract 61) ---
+[gl.tr.amigo]
+Friend
+
+[gl.club.hello]
+Link Club: we join
+two Flippers.
+---
+It's experimental!
+It may fail.
+---
+Point both IR ports
+at each other.
+
+[gl.club.trade]
+Trade
+
+[gl.club.battle]
+Battle
+
+[gl.club.test]
+Test
+
+[gl.club.exit]
+Exit
+
+[gl.club.fail]
+Could not open
+the link.
+
+[gl.club.thanks]
+Thanks for the
+battle!
+
+# --- data (contract 64) ---
+# The names of the moves (gl.mv.<moves.toml key>) are ONE RUN in table order, like gl.sp.* and gl.it.* (contract 63.1): tools/regc.py computes their text ids
+# (reg_mv_txt()); keep the order of moves.toml when a move is appended. The battle / bag lines of the new moves and items follow.
+
+[gl.mv.bump]
+Bump
+
+[gl.mv.claw]
+Claw
+
+[gl.mv.growl]
+Menace
+
+[gl.mv.wag]
+Tail Wag
+
+[gl.mv.ember]
+Cinder
+
+[gl.mv.jet]
+Jet Spray
+
+[gl.mv.lash]
+Vine Lash
+
+[gl.mv.quick]
+Dash Strike
+
+[gl.mv.slash]
+Keen Cut
+
+[gl.mv.spore]
+Drowsy Dust
+
+[gl.mv.venomdust]
+Venom Mist
+
+[gl.mv.harden]
+Stiffen
+
+[gl.mv.bite]
+Chomp
+
+[gl.mv.bubble]
+Suds
+
+[gl.mv.flap]
+Flap
+
+[gl.mv.dustkick]
+Dust Kick
+
+[gl.mv.silkshot]
+Silk Shot
+
+[gl.mv.needle]
+Needle Jab
+
+[gl.mv.lance]
+Spear Thrust
+
+[gl.mv.focus]
+Steady Gaze
+
+[gl.mv.zap]
+Static Touch
+
+[gl.mv.numb]
+Numbing Hum
+
+[gl.mv.arc]
+Arc Flash
+
+[gl.mv.sprint]
+Sprint
+
+[gl.mv.swoop]
+Swoop
+
+[gl.mv.chomp]
+Chomp
+
+[gl.mv.curl]
+Curl Up
+
+[gl.mv.pebble]
+Pebble Toss
+
+[gl.mv.rumble]
+Rumble
+
+[gl.mv.flatten]
+Flatten
+
+[gl.mv.mace]
+Stone Mace
+
+[gl.mv.pollen]
+Numb Pollen
+
+[gl.mv.glimmer]
+Leaf Glimmer
+
+[gl.mv.rack]
+Thorn Rack
+
+[gl.mv.bloom]
+Antler Bloom
+
+[gl.mv.mane]
+Mane Blaze
+
+[gl.mv.wavewall]
+Wave Wall
+
+[gl.mv.haymaker]
+Haymaker
+
+[gl.mv.mirage]
+Mirage
+
+[gl.mv.sonar]
+Echo Daze
+
+[gl.mv.lullaby]
+Lullaby
+
+[gl.mv.peck]
+Beak Tap
+
+[gl.mv.reverb]
+Reverb
+
+[gl.mv.coldeye]
+Cold Stare
+
+[gl.mv.sourspit]
+Sour Spit
+
+[gl.mv.spikeram]
+Spike Ram
+
+[gl.mv.squeeze]
+Squeeze
+
+[gl.mv.shrill]
+Shrill
+
+[gl.mv.sapbite]
+Sap Bite
+
+[gl.mv.spearpeck]
+Spear Peck
+
+[gl.mv.glassbeam]
+Glass Beam
+
+[gl.mv.dreamray]
+Dream Ray
+
+[gl.mv.mindstorm]
+Mindstorm
+
+[gl.mv.chop]
+Chop
+
+[gl.mv.trip]
+Leg Sweep
+
+[gl.mv.clinch]
+Grapple
+
+[gl.mv.ramhead]
+Head Ram
+
+[gl.mv.burrow]
+Burrow
+
+[gl.mv.streak]
+Streak
+
+[gl.mv.veil]
+Light Veil
+
+[gl.mv.sharpen]
+Sharpen
+
+[gl.mv.pilfer]
+Pilfer
+
+[gl.mv.wisplick]
+Wisp Lick
+
+[gl.mv.hollowgaze]
+Hollow Gaze
+
+[gl.mv.shade]
+Shade
+
+[gl.mv.drowse]
+Drowse
+
+[gl.mv.cinderspin]
+Cinder Spin
+
+[gl.mv.slingstone]
+Stone Sling
+
+[gl.mv.fumes]
+Fumes
+
+[gl.mv.siphon]
+Siphon
+
+[gl.mv.flop]
+Flop
+
+[gl.mv.torrent]
+Torrent
+
+[gl.mv.clubsmash]
+Club Smash
+
+[gl.mv.pincer]
+Pincer
+
+[gl.mv.ooze]
+Ooze
+
+[gl.mv.acidveil]
+Acid Veil
+
+[gl.mv.toxin]
+Toxin
+
+[gl.mv.daydream]
+Daydream
+
+[gl.mv.heavyslam]
+Heavy Slam
+
+[gl.mv.megabeam]
+Mega Beam
+
+[gl.mv.wyrmrage]
+Wyrm Rage
+
+[gl.mv.frostbeam]
+Frost Beam
+
+[gl.mv.rollkick]
+Roll Kick
+
+[gl.mv.jumpkick]
+Jump Kick
+
+[gl.mv.highkick]
+High Kick
+
+[gl.mv.megakick]
+Mega Kick
+
+[gl.mv.meditate]
+Meditate
+
+[gl.mv.firefist]
+Fire Fist
+
+[gl.mv.icefist]
+Ice Fist
+
+[gl.mv.bolfist]
+Bolt Fist
+
+[gl.mv.mindwave]
+Mind Wave
+
+[gl.mv.snowpuff]
+Snow Puff
+
+[gl.mv.auroraray]
+Aurora Ray
+
+[gl.mv.whiteout]
+Whiteout
+
+[gl.mv.cascade]
+Cascade
+
+[gl.mv.inferno]
+Inferno
+
+[gl.mv.stormbolt]
+Stormbolt
+
+[gl.mv.snip]
+Snip
+
+[gl.mv.trample]
+Trample
+
+[gl.mv.scowl]
+Scowl
+
+[gl.mv.heave]
+Heave
+
+[gl.mv.swell]
+Swell
+
+[gl.mv.retreat]
+Tuck In
+
+[gl.mv.wardwall]
+Mind Wall
+
+[gl.mv.shrink]
+Shrink
+
+[gl.mv.soot]
+Soot Puff
+
+[gl.mv.warpgaze]
+Warp Gaze
+
+[gl.mv.glint]
+Glint
+
+[gl.mv.tendril]
+Tendril
+
+[gl.mv.toxcloud]
+Toxic Cloud
+
+[gl.mv.sweetkiss]
+Sweet Kiss
+
+[gl.mv.sporecloud]
+Spore Cloud
+
+[gl.mv.wobblefist]
+Wobble Fist
+
+[gl.mv.landslide]
+Landslide
+
+[gl.mv.trinity]
+Trinity
+
+[gl.mv.mirrorwall]
+Mirror Wall
+
+[gl.mv.shellbomb]
+Shell Bomb
+
+[gl.mv.fury]
+Fury
+
+[gl.mv.shockpulse]
+Shock Pulse
+
+[gl.mv.leveltoss]
+Hurl Down
+
+[gl.mv.fangbreak]
+Fang Crush
+
+[gl.mv.shear]
+Shear
+
+[gl.mv.augerhorn]
+Auger Horn
+
+[gl.mv.chasm]
+Chasm
+
+[gl.mv.twinslap]
+Twin Slap
+
+[gl.mv.meteorfist]
+Fist Shower
+
+[gl.mv.pecking]
+Peck Frenzy
+
+[gl.mv.needlevolley]
+Needle Rain
+
+[gl.mv.quillshot]
+Quill Shot
+
+[gl.mv.pelt]
+Pelt
+
+[gl.mv.rakeswipe]
+Rake Swipes
+
+[gl.mv.twinkick]
+Twin Kick
+
+[gl.mv.bonespin]
+Bone Spin
+
+[gl.mv.slamrush]
+Rush
+
+[gl.mv.reckless]
+Reckless
+
+[gl.mv.cyclone]
+Cyclone
+
+[gl.mv.skyleap]
+Sky Leap
+
+[gl.mv.headlong]
+Headlong
+
+[gl.mv.zenithdive]
+Zenith Dive
+
+[gl.mv.rampage]
+Rampage
+
+[gl.mv.petalwaltz]
+Petal Waltz
+
+[gl.mv.cinch]
+Cinch
+
+[gl.mv.coil]
+Coil Up
+
+[gl.mv.snapshell]
+Shell Snap
+
+[gl.mv.brood]
+Hold Fast
+
+[gl.mv.sip]
+Sip
+
+[gl.mv.nightmeal]
+Dream Feast
+
+[gl.mv.seedleech]
+Sap Seed
+
+[gl.mv.mend]
+Mend
+
+[gl.mv.hearty]
+Hearty Broth
+
+[gl.mv.nap]
+Nap
+
+[gl.mv.blowup]
+Blow Up
+
+[gl.mv.detonate]
+Detonate
+
+[gl.mv.blink]
+Blink Away
+
+[gl.mv.bellow]
+Bellow
+
+[gl.mv.gale]
+Gale
+
+[gl.mv.whiteveil]
+Murk
+
+[gl.mv.frostmist]
+Frost Mist
+
+[gl.mv.retort]
+Retort
+
+[gl.mv.wildcard]
+Wildcard
+
+[gl.mv.parrot]
+Parrot
+
+[gl.mv.echoing]
+Echoing
+
+[gl.mv.decoy]
+Decoy
+
+[gl.mv.lockout]
+Lockout
+
+[gl.mv.refold]
+Refold
+
+[gl.mv.typecast]
+Typecast
+
+[gl.c64.hits]
+Hit {v2} times!
+
+[gl.c64.ohko]
+It's a one-hit
+KO!
+
+[gl.c64.chg_wind]
+{v0} whipped
+up a whirlwind!
+
+[gl.c64.chg_fly]
+{v0} flew
+up high!
+
+[gl.c64.chg_bash]
+{v0} lowered
+its head!
+
+[gl.c64.chg_sky]
+{v0} is
+glowing!
+
+[gl.c64.fled]
+It fled
+the battle!
+
+[gl.c64.stat_reset]
+All stat changes
+were eliminated!
+
+[gl.c64.mist]
+{v0} hid in
+the mist!
+
+[gl.c64.seeded]
+{v0} was
+seeded!
+
+[gl.c64.store]
+{v0} is
+storing energy!
+
+[gl.c64.unleash]
+{v0} unleashed
+energy!
+
+[gl.c64.sub]
+{v0} made
+a decoy!
+
+[gl.c64.subhit]
+The decoy took
+the hit!
+
+[gl.c64.subend]
+The decoy
+broke!
+
+[gl.c64.trapped]
+{v0} can't
+move!
+
+[gl.c64.absorb]
+{v0} sucked up
+health!
+
+[gl.c64.regain]
+{v0} regained
+health!
+
+[gl.c64.seedhurt]
+Sap seed drains
+{v0}'s health!
+
+[gl.c64.nap]
+{v0} slept and
+became healthy!
+
+[gl.c64.revived]
+{v0} was
+revived!
+
+[gl.c64.pp]
+{v0}'s PP
+were restored!
+
+
+# --- B1 shiny/friendship (contract 65) ---
+# The Club de Fans' second fan reads the friendship of the lead Elementi (`bond tier`, 5 tiers: < 50, < 100, < 150, < 220, 220+). {v0} = the maintainer's name.
+
+[club.fanb.hi]
+I can read how
+Elementis feel!
+---
+Let me see how much
+yours likes you.
+
+[club.fanb.none]
+But you have no
+Elementi with you!
+
+[club.fanb.t0]
+Uh-oh! {v0}
+avoids your eyes.
+---
+It does not trust
+you. Give it time.
+
+[club.fanb.t1]
+{v0} watches
+you warily.
+---
+It is not sure it
+can rely on you.
+
+[club.fanb.t2]
+{v0} is
+at ease with you.
+---
+It smiles, but still
+keeps its distance.
+
+[club.fanb.t3]
+{v0} is
+very fond of you!
+---
+It leaps up when it
+sees you.
+
+[club.fanb.t4]
+{v0} adores
+you! What a bond!
+---
+You two are as one.
+Cherish it always!
+
+# --- B3 eclipse (contract 67) ---
+[gl.b3.ecl.done]
+{v0} took its
+Eclipse Form!
+
+[gl.b3.ecl.stone]
+Pick Eclipse in the
+move list.
+
+# --- B2 affinity (contract 66) ---
+[gl.aff.ask]
+Your path follows
+the Sun or Moon.
+---
+It changes the wild
+Elementi you meet.
+---
+The other side's
+come only by trade.
+---
+Your affinity?
+
+[gl.aff.solar]
+Solar
+
+[gl.aff.lunar]
+Lunar
+
+
+# --- C1 follower (contract 69) ---
+[gl.fol.t0]
+{v0} avoids
+your eyes.
+---
+It does not trust
+you yet.
+
+[gl.fol.t1]
+{v0} watches
+you warily.
+---
+It is not sure it
+can trust you.
+
+[gl.fol.t2]
+{v0} seems
+happy with you.
+---
+It follows you at
+an easy pace.
+
+[gl.fol.t3]
+{v0} hops
+for joy!
+---
+It does not want
+to leave your side.
+
+[gl.fol.t4]
+{v0} gazes
+at you happily.
+---
+You two are one.
+What a bond!
+
+[gl.fol.tired]
+{v0} is worn
+out and slow.
+---
+It needs a rest
+at a Center.
+
+[gl.fol.psn]
+{v0} looks
+unwell…
+---
+The poison is
+hurting it.
+
+[gl.fol.slp]
+{v0} sleeps
+soundly. Zzz…
+
+[gl.fol.brn]
+Ouch! {v0}
+is burned.
+
+[gl.fol.frz]
+{v0} shivers,
+wrapped in ice.
+
+[gl.fol.par]
+{v0} twitches:
+it cannot move well.
+
+# --- D1 legend / C10 (contract 68) ---
+[gl.d1.got]
+You found an
+Origin Fragment!
+
+[gl.d1.candies]
+You got 5
+Growth Seeds!
+
+[gl.d1.lk_frag]
+Trade complete!
+---
+{v0} joined
+your team!
+---
+Something glows in
+your bag!
+---
+It is an Origin
+Fragment!
+
+[d1.aliso.rumor]
+They say there is
+an Elementi of
+---
+Origin: Genesa.
+Few have seen it.
+---
+It hides behind
+8 fragments.
+
+[d1.cantera.rumor]
+They say Genesa
+left fragments all
+---
+over. Look closely
+at the mine cart.
+
+[d1.dinamo.rumor]
+A sailor swore he
+saw something shine
+---
+in the port nets.
+A treasure?
+
+[d1.ambar.rumor]
+They say something
+shines in this
+---
+square, under a
+bench. Not the sun.
+
+[d1.anciano.rumor]
+I know of Genesa.
+It split in 8 bits.
+---
+One glows at night
+in a shady stump.
+---
+One sleeps in the
+Wild Reserve.
+---
+One is born of the
+bond of two people.
+---
+One rewards whoever
+beats the champion.
+
+[d1.cart.look]
+Something odd shines
+among the ore.
+
+[d1.cart.empty]
+Only ore is left
+in the cart.
+
+[d1.net.look]
+Among the nets there
+is a strange glint.
+
+[d1.net.empty]
+Only old nets
+and salt.
+
+[d1.bench.look]
+Under the bench a
+dim amber glint.
+
+[d1.bench.empty]
+Only dry leaves
+under the bench.
+
+[d1.stump.night]
+Something shines in
+the stump's hollow.
+
+[d1.stump.day]
+A stump with a
+very dark hollow.
+---
+By day, nothing
+shows inside.
+
+[d1.stump.empty]
+The hollow is
+empty.
+
+[d1.bush.look]
+Something odd shines
+under the dry bush.
+
+[d1.bush.empty]
+Only dry leaves
+under the bush.
+
+[d1.champ.frag]
+Someone left this
+for the champion:
+---
+a strange fragment.
+Take it!
+
+[d1.hint.isla]
+On Route 21, to
+the east, an islet
+---
+sits in the rock
+wall. Behind brush…
+
+[d1.hint.neon]
+The Eclipse Stone
+only shows at dawn
+---
+and at midnight, in
+a sea grotto.
+---
+You need strength,
+light and the Ember.
+
+[d1.hint.ms]
+The north wall has
+a sealed slab.
+---
+Only 8 fragments
+open it.
+
+[lab.lin.frag1]
+Registry complete,
+{player}!
+---
+You are a great
+researcher.
+---
+Let me tell you the
+Origin legend.
+
+[lab.lin.frag2]
+Genesa, the Elementi
+of Origin, dreamed
+---
+the world. It split
+into 8 fragments.
+---
+Gather them and the
+Ruins will open.
+---
+But you will get
+only one chance.
+
+[lab.lin.frag3]
+There are 7 more:
+in towns, at night,
+---
+in the Reserve, a
+bond and League.
+---
+Ask around the
+towns. Good luck!
+
+[lab.lin.frag_old]
+Registry complete,
+{player}!
+---
+You have Genesa,
+but there is more.
+---
+Now hear the legend
+of the fragments.
+
+[lab.lin.frag_again]
+Keep looking for
+the 8 fragments.
+---
+Ask in the towns
+and at night.
+
+[ms.seal]
+An ancient slab.
+It has 8 sockets.
+
+[ms.seal.no]
+Fragments missing.
+The slab won't move.
+
+[ms.seal.open]
+The 8 fragments
+glow on the slab.
+---
+The slab opens and
+reveals a passage.
+
+[ru.mural.1]
+Before all things,
+only Genesa dreamed.
+
+[ru.mural.2]
+First came LIGHT,
+then the SEA.
+
+[ru.mural.3]
+Then EARTH and
+FIRE.
+
+[ru.mural.4]
+WIND followed and
+LIFE arrived.
+
+[ru.mural.5]
+NIGHT fell. Its
+ECHO came last.
+
+[ru.mural.end1]
+Genesa saw her ECHO,
+Arkegen, and wept.
+
+[ru.mural.end2]
+If Origin returns,
+the dream goes on.
+
+[ru.p.luz]
+Carved: LIGHT
+Place a fragment?
+
+[ru.p.mar]
+Carved: SEA
+Place a fragment?
+
+[ru.p.tierra]
+Carved: EARTH
+Place a fragment?
+
+[ru.p.fuego]
+Carved: FIRE
+Place a fragment?
+
+[ru.p.viento]
+Carved: WIND
+Place a fragment?
+
+[ru.p.vida]
+Carved: LIFE
+Place a fragment?
+
+[ru.p.noche]
+Carved: NIGHT
+Place a fragment?
+
+[ru.p.eco]
+Carved: ECHO
+Place a fragment?
+
+[ru.placed]
+The fragment fits.
+The stone glows.
+
+[ru.wrong]
+All the stones
+go dark.
+
+[ru.lit]
+This stone is
+already lit.
+
+[ru.solved]
+All 8 stones
+glow at once!
+---
+The air hums and a
+light takes shape…
+
+[ru.appear]
+Genesa!
+She gazes, serene.
+
+[ru.old1]
+The ruins are quiet:
+Genesa is with you.
+
+[ru.old2]
+The ruins smile.
+Thank you, traveler!
+
+[ru.genesa.1]
+You gathered the
+Origin, traveler.
+---
+I am Genesa, the
+dream that began it.
+
+[ru.genesa.2]
+I will test your
+strength and heart.
+---
+You will have only
+one chance.
+
+[ru.genesa.ask]
+Are you ready?
+
+[ru.genesa.wait]
+Genesa waits,
+serene.
+
+[ru.genesa.gone]
+Genesa fades into
+a beam of light.
+
+[ru.genesa.retry]
+The air trembles…
+Try again.
+
+[ru.genesa.got]
+Genesa follows you!
+The dream goes on.
+
+[gr.gate.no]
+A scorching heat
+comes off the rock.
+---
+Only the Ember
+Badge can bear it.
+
+[gr.shaft]
+A light beam falls
+from the roof.
+
+[gr.altar.empty]
+An empty altar with
+an eclipse carved.
+---
+Maybe something
+wakes at set hours.
+
+[gr.altar.faded]
+The light faded.
+The stone is gone.
+
+[gr.altar.take]
+The Eclipse Stone
+rests on the altar.
+
+[gr.altar.got]
+You got the
+Eclipse Stone!
+
+# --- F3 (contract 75) ---
+[gl.opt.speed]
+Text
+
+[gl.opt.speed.fast]
+Fast
+
+[gl.opt.speed.mid]
+Medium
+
+[gl.opt.speed.slow]
+Slow
+
+[gl.opt.anim]
+Effects
+
+[gl.opt.anim.on]
+On
+
+[gl.opt.anim.off]
+Off
+
+[gl.opt.style]
+Style
+
+[gl.opt.style.shift]
+Shift
+
+[gl.opt.style.set]
+Set
+
+[gl.bt.shift_next]
+{v3}
+will use {v0}!
+
+[gl.bt.shift_q]
+Will you change
+Elementi?
+
+[gl.rga.area]
+Area
+
+[gl.rga.none]
+Unknown area
+
+[gl.rga.cry]
+Cry
+
+# --- F2 world & PC (contract 74) ---
+
+[gl.f2.det.none]
+No response…
+Nothing nearby.
+
+[gl.f2.det.near]
+It responds! There's
+a hidden item near.
+
+[gl.f2.det.here]
+It rings loudly!
+It's very close!
+
+[gl.f2.dip.t]
+DIPLOMA
+
+[gl.f2.dip.who]
+{player}
+
+[gl.f2.dip.l1]
+completed the whole
+
+[gl.f2.dip.l2]
+Registry. Bravo!
+
+[gl.f2.share]
+The others gained
+{v2} EXP. Points!
+
+[gl.f2.box.items]
+Items
+
+[gl.f2.box.dep_it]
+Put item
+
+[gl.f2.box.wd_it]
+Take item
+
+[gl.f2.box.toss_it]
+Toss item
+
+[gl.f2.box.dep]
+{v0} x{v2}
+Stored in the PC!
+
+[gl.f2.box.wd]
+{v0} x{v2}
+Taken from the PC!
+
+[gl.f2.box.noroom]
+No more room in
+the PC.
+
+[gl.f2.box.none_bag]
+You have nothing
+to deposit.
+
+[gl.f2.box.none_pc]
+The PC holds
+no items.
+
+[ruta11.aide.hi]
+Hi! I'm another of
+Lin's aides.
+---
+I watch the Registry
+from this route.
+
+[ruta11.aide.more]
+You need {v2} more
+to reach 30.
+---
+Come back when you
+have them.
+
+[ruta11.aide.give]
+30 species caught!
+Great!
+---
+Take this: a
+Treasure Probe.
+
+[ruta11.aide.got]
+{player} received the
+Treasure Probe!
+
+[ruta11.aide.about]
+It detects hidden
+items nearby.
+---
+If it responds, face
+the spot, press OK.
+
+[ruta11.aide.after]
+Finding treasure
+with it?
+---
+Keep logging
+Elementis!
+
+[ruta15.aide.hi]
+I'm Lin's aide for
+this route.
+---
+I check how far your
+Registry has come.
+
+[ruta15.aide.more]
+You need {v2} more
+to reach 50.
+---
+Come back when you
+have them.
+
+[ruta15.aide.give]
+50 species! You're
+amazing!
+---
+This is for you:
+the Team Share.
+
+[ruta15.aide.got]
+{player} received the
+Team Share!
+
+[ruta15.aide.about]
+Keep it in the bag
+and the whole team
+---
+gets a share of the
+EXP. of each battle.
+
+[ruta15.aide.after]
+Does the Team Share
+help?
+---
+Keep it up!
+
+[herm.hi]
+Hi, {player}!
+{rival} isn't here.
+---
+Probably at Lin's
+lab.
+
+[herm.give]
+{player}! Have you
+got Lin's Registry?
+---
+Then this will help:
+an Atlas!
+
+[herm.got]
+{player} received
+the Atlas!
+
+[herm.about]
+Use it from
+the Bag.
+---
+It shows the map and
+where you are.
+
+[herm.after]
+Is the Atlas useful?
+Safe travels!
+
+[motes.hi]
+I'm the Namer!
+I name Elementi.
+---
+Only ones you raised
+yourself, of course.
+
+[motes.ask]
+Do you want to
+rename one?
+
+[motes.which]
+Which one do you
+want renamed?
+
+[motes.traded]
+You didn't raise
+that one…
+---
+I can't change its
+nickname.
+
+[motes.done]
+Great name! Treat
+{v0} well.
+
+[motes.no]
+Come back any
+time.
+
+[motes.books]
+Books of names:
+thousands of them.
+
+[tr_ins.hello]
+I collect bugs from
+the whole forest!
+---
+I'll swap one of
+mine for yours.
+
+[tr_ins.case]
+Lantern-winged moths
+in glass cases.
+
+[tr_ins.nick]
+Zumo
+
+[tr_pua.hello]
+I adore spiny
+hedgehogs!
+---
+I'm missing the
+male of a pair.
+
+[tr_pua.nick]
+Nena
+
+[tr_cua.hello]
+I tend fire ponies
+in my stable.
+---
+But I always wanted
+an ice seal.
+
+[tr_cua.nick]
+Iglu
+
+[tr_psi.hello]
+I'm the seer's
+apprentice.
+---
+I dream of a vine-
+covered Elementi.
+
+[tr_psi.nick]
+Liana
+
+[tr_club.hello]
+I'm a fan of cables
+and power.
+---
+Want to swap your
+spark gecko?
+
+[tr_club.nick]
+Bobi
+
+[tr_anc.hello]
+Hi! I'm visiting
+grandpa's house.
+---
+My hedgehog needs a
+big partner.
+
+[tr_anc.nick]
+Nina
+
+[lab.dip.hi]
+I'm Lin's assistant.
+I give a diploma
+---
+to whoever completes
+the Registry.
+
+[lab.dip.more]
+You still need {v2}
+species. Keep going!
+
+[lab.dip.one]
+Only one species
+left. Keep going!
+
+[lab.dip.ok]
+Registry complete!
+Well done, {player}!
+---
+Here is your
+diploma.
+
+[lab.dip.done]
+You earned it!
+Keep exploring!
+
+# --- battle (contract 73) ---
+
+[gl.f1.recharge]
+{v0} must
+recharge!
+
+[gl.f1.crash]
+{v0} kept
+going and crashed!
+
+[gl.f1.rage]
+{v0}'s fury
+is building!
+
+[gl.f1.undis]
+{v0} can use
+its move again!
+
+[gl.f1.disabled]
+{v0} can't use
+{v1} now!
+
+[gl.f1.move_copy]
+{v0} copied
+{v1}!
+
+
+[gl.f1.transform]
+{v0} turned
+into {v1}!
+
+[gl.f1.convert]
+{v0} changed
+its type!
+
+[gl.f1.loaf]
+{v0} is
+loafing around!
+
+[gl.f1.noobey]
+{v0} won't
+obey!
+
+[gl.f1.turned]
+{v0} turned
+away!
+
+[gl.f1.ignored]
+{v0} ignored
+orders!
+
+[gl.f1.nap]
+{v0} began
+to nap!
+
+[gl.f4.ppup]
+{v0}'s PP
+rose!
+
+# --- overworld systems (contract 81) ---
+[gl.misc.overwrite]
+A saved game is
+there. Overwrite it?
+
+[gl.misc.soft_low]
+Not healthy
+enough!
+
+[gl.misc.flute_woke]
+The flute plays!
+Everyone woke up!
+
+[gl.misc.flute_none]
+The flute plays.
+No one was asleep.
+
+[gl.misc.rv_steps]
+Steps
+
+[gl.misc.rv_steps_n]
+{v2}/500
+
+[gl.misc.rv_balls]
+Crystal
+
+[gl.misc.rv_balls_n]
+{v3}
+
+# --- (contract 80): the missing story / world content (early Route 22 rival, Lin's stop, catch lesson, Registro rating, Flopfin salesman, recruiter, museum, disc gifts) ---
+[extra.r22a.hey]
+Hey, {player}!
+Off to the League?
+---
+You don't even have
+a badge yet!
+---
+Let's see how much
+you've improved!
+
+[extra.r22a.again]
+Again!
+Let's fight!
+
+[extra.r22a.lose]
+WHAT? How did you
+win that?
+---
+Bah! I need more
+training.
+
+[extra.r22a.next]
+I'll go my own way.
+See ya!
+
+[extra.lin.stop1]
+Wait, {player}!
+Don't go out yet!
+
+[extra.lin.stop2]
+It's dangerous! Wild
+Elementis live in
+---
+the tall grass. You
+need one for safety.
+
+[extra.lin.stop3]
+Come with me to
+the lab!
+
+[extra.catch.ask]
+Want me to show you
+how to catch them?
+
+[extra.catch.no]
+Suit yourself.
+Safe travels!
+
+[extra.catch.t1]
+Watch closely.
+First, weaken it
+---
+with your attacks,
+but don't KO it!
+
+[extra.catch.t2]
+If you can, inflict
+a status: sleep or
+---
+paralysis. They are
+easier to catch!
+
+[extra.catch.t3]
+Then toss a Crystal.
+The lower its HP,
+---
+the better the odds!
+
+[extra.catch.t4]
+If it fails, try
+again. Good luck!
+
+[extra.catch.again]
+Shall we go over
+catching again?
+
+[gl.extra.rate.ask]
+Shall I rate your
+Registry?
+
+[gl.extra.rate.no]
+Another time, then.
+
+[gl.extra.rate.count]
+You have caught {v2}
+species.
+
+[gl.extra.rate.t0]
+You have far to go.
+Search the grass!
+
+[gl.extra.rate.t1]
+On the right track!
+Keep searching!
+
+[gl.extra.rate.t2]
+Nice effort! Try
+other areas too.
+
+[gl.extra.rate.t3]
+Over 50 already!
+Good going.
+
+[gl.extra.rate.t4]
+Over half already!
+Very good!
+
+[gl.extra.rate.t5]
+Magnificent! You may
+become a Master.
+
+[gl.extra.rate.t6]
+Incredible! It is
+nearly complete.
+
+[gl.extra.rate.t7]
+Registry complete!
+Congratulations!
+
+[extra.fish.hi]
+Psst! Hey, you.
+Got a bargain.
+
+[extra.fish.ask]
+Buy a Flopfin for
+$500?
+
+[extra.fish.no]
+No? Your loss.
+Such a shame.
+
+[extra.fish.broke]
+You can't afford
+it.
+
+[extra.fish.bought]
+Deal! Take good
+care of it.
+
+[extra.fish.full]
+Your team and PC
+are full.
+
+[extra.fish.after]
+No more left.
+No refunds!
+
+[extra.recr.wait]
+Beat all five bridge
+trainers first.
+
+[extra.recr.hello]
+Well done! You beat
+all five trainers.
+---
+Your prize: a Gold
+Chunk of real gold!
+
+[extra.recr.join]
+I'm with Vertex.
+Want to join us?
+
+[extra.recr.yes]
+Ha! Great. But you
+have to earn it.
+---
+Prove yourself in
+battle!
+
+[extra.recr.no]
+No? Too bad. I'll
+change your mind!
+
+[extra.recr.again]
+We're not done yet!
+
+[extra.recr.lose]
+Unbelievable! You
+beat me…
+---
+Keep the prize.
+I'm out of here.
+
+[gl.tr.vertice_recluta]
+Agent Brix
+
+[extra.museum.sign]
+CANTERA MUSEUM
+Entry: $50
+
+[extra.mus.ask]
+Museum entry is $50.
+Will you pay?
+
+[extra.mus.thanks]
+Thanks! Go on in
+and enjoy.
+
+[extra.mus.broke]
+You can't afford
+the ticket.
+
+[extra.mus.no]
+Come back any time.
+
+[extra.mus.clerk]
+Enjoy the museum.
+Please don't touch.
+
+[extra.mus.sci]
+Mt. Eco fossils are
+very rare.
+---
+They say Vertex is
+after them.
+
+[extra.mus.guest]
+Those bones are
+huge!
+
+[extra.mus.ex1]
+ANCIENT FOSSIL
+Rock-shelled kind.
+
+[extra.mus.ex2]
+ANCIENT AMBER
+It keeps a secret.
+
+[extra.mus.ex3]
+WINGED SKELETON
+It flew over seas.
+
+[extra.mus.ex4]
+FALLEN ROCK
+It came from stars.
+
+[extra.mus.sign]
+HALL OF ANCIENT
+LIFE. Do not touch.
+
+[extra.garrick.disc_about]
+It is Hold Fast. It
+stores up damage
+---
+and strikes back
+twice as hard.
+
+[extra.varo.fissure]
+Take this other
+disc as well.
+
+[extra.varo.fissure_about]
+It is Chasm. If it
+hits, it's a KO.
+---
+It misses often,
+but it's worth it!
+
+[extra.mimo.gift]
+Like to mimic?
+Take this disc.
+
+[extra.mimo.about]
+Echoing copies the
+foe's last move.
+
+[extra.lab.gift]
+I have a spare disc.
+Take it!
+
+[extra.lab.gift_about]
+It's Wildcard: it
+uses a random move.
+
+[extra.dig.sign]
+WAREHOUSE CLOSED
+Burglary. Careful.
+
+[extra.dig.shelf]
+Crates are tossed
+everywhere.
+
+[extra.dig.hole]
+A tunnel dug under
+the wall.
+
+[extra.dig.agent.pre]
+This warehouse is
+Vertex's now!
+---
+Scram, or you'll
+answer to me!
+
+[extra.dig.agent.after]
+Darn! I'm leaving
+through my tunnel.
+
+[extra.dig.owner.wait]
+Please, throw that
+thief out!
+
+[extra.dig.owner.thanks]
+Thanks for saving
+my warehouse!
+---
+Vertex dug a tunnel
+to rob me.
+
+[extra.dig.owner.about]
+Burrow: dig in, then
+strike from below.
+
+[extra.dig.owner.after]
+Vertex's tunnel goes
+to the bay.
+
+[gl.tr.vertice_dig]
+Agent Vex
+# --- battle AI, experience, Dig / Pilfer / Mind Wave, the Flute in battle (contract 82, agent) ---
+
+[gl.tai.chg_dig]
+{v0} dug
+a hole!
+
+[gl.tai.coins]
+Coins scattered
+everywhere!
+
+[gl.tai.aiuse]
+{v3}
+used {v1}
+---
+on {v0}!
+
+[gl.tai.aiout]
+{v3}
+withdrew {v0}!
+
+[gl.tai.flute]
+{player} played
+the Clear Flute.
+
+[gl.tai.woke]
+Everyone asleep
+woke up!
+
+[gl.tai.flute0]
+It had
+no effect.

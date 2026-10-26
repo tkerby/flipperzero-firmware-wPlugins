@@ -1,0 +1,7 @@
+title Item received - a short sparkling arpeggio
+tempo 220
+vol 200
+inst lead v=255,255,215,185,170
+inst spark arp=0,4,7 rate=1
+l16
+@lead o5 e g o6 c8 @spark e4

@@ -1,0 +1,28 @@
+title Pasadizo - the underground passage: hollow footsteps on stone (left, right, each with a fainter echo that comes back off the walls), a bare open fifth humming in the dark, a worried little motif in D minor, a far clank
+tempo 80
+vol 220
+meter 4/4
+inst stepl drum=g4 v=255,170,100 d=0,-25,-50
+inst stepr drum=e4 v=255,170,100 d=0,-25,-50
+inst echl drum=g4 v=80,50,25 d=0,-25,-50
+inst echr drum=e4 v=80,50,25 d=0,-25,-50
+inst hum arp=0,7 rate=10 att=12 lvl=0.6 slow
+inst worry v=255,215,175,150,135
+inst clank drum=a6 v=255,225,195,165,135,105,75,50 d=0,0,0,0,0,0,0,0 slow
+inst clke drum=a6 v=90,75,60,45,30,15 d=0,0,0,0,0,0 slow
+# a beat is 75 ticks: the step (3), 22 ticks of silence, the echo (3), the rest
+# --- 1-2: footsteps alone, eight beats
+[ !stepl=3 r=22 !echl=3 r=47 !stepr=3 r=22 !echr=3 r=47 ]4
+# --- 3: the open fifth hums (D, A), then a clank far away and its echo
+@hum o4 d2
+!clank=16 r=40 !clke=12 r=82
+# --- 4: the worried motif (D E F E, D)
+@worry o5 d4 e4 f4 e4
+@worry o5 d2 r2
+# --- 5-6: footsteps again
+[ !stepl=3 r=22 !echl=3 r=47 !stepr=3 r=22 !echr=3 r=47 ]4
+# --- 7: the hum a step down (C), nothing else
+@hum o4 c2 r2
+# --- 8: the motif answered (F, E, D, and a half step to C sharp that never resolves)
+@worry o5 f4 e4 d4 c+4
+@worry o5 d2 r2

@@ -1,0 +1,14 @@
+App(
+    appid="ir_jammer",
+    name="IR Jammer",
+    apptype=FlipperAppType.EXTERNAL,
+    targets=["f7"],
+    entry_point="ir_jammer_app",
+    stack_size=2 * 1024,
+    fap_icon="icons/ir_jammer_10px.png",
+    fap_category="Infrared",
+    fap_author="Clawzman",
+    fap_weburl="https://github.com/Clawzman/flipper-ir-jammer",
+    fap_version="1.0",
+    fap_description="IR Jammer for Flipper Zero works with the internal IR LED or an external IR module.",
+)

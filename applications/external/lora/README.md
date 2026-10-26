@@ -1,5 +1,5 @@
-![GitHub release (with filter)](https://img.shields.io/github/v/release/ElectronicCats/flipper-rs485modbus?color=%23008000)
-![GitHub actions](https://img.shields.io/github/actions/workflow/status/ElectronicCats/flipper-rs485modbus/build.yml)
+![GitHub release (with filter)](https://img.shields.io/github/v/release/ElectronicCats/flipper-SX1262-LoRa?color=%23008000)
+![GitHub actions](https://img.shields.io/github/actions/workflow/status/ElectronicCats/flipper-SX1262-LoRa/build.yml)
 
 # Flipper LoRa Relay App :dolphin:
 
@@ -16,7 +16,7 @@ Work with LoRa radio communication signals. Now you can interact with LoRa trans
  </a>
 </p>
 
-Requires the [**Electronic Cats Flipper Add-On: Sub-GHz**](https://electroniccats.com/store/flipper-add-on-subghz/).
+Requires the [**Electronic Cats Flipper Add-On: Sub-GHz**](https://electroniccats.com/store/flipper-lra-subghz/).
 
 ## Features
 

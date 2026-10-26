@@ -1,0 +1,108 @@
+# Escondite Vertice, B1F (villain hideout B1F, C4b, contract 41), 14 x 16, interior. column = i, row = j. Steel plates (metal_<i%2><j%2>), cable walls, crates and consoles; the floor is a field of nine 3 x 3 PLATFORMS
+# joined by ARROW BELTS (the approved arr_* pieces: the hero is pushed along a belt until a plain tile, contract 35.3; a belt is one way): ONE route leads from the stairs up (from the casino, door (2,2)) to the stairs down
+# (door (12,2)); the other belts carry you round the field (the digraph is strongly connected: nobody is stuck). The elevator panel (Hoist Key, `llave_polea`) is in the middle platform; two grunts; items in the corners.
+@map escondite_1
+@size 14 16
+@interior yes
+@area escondite_vertice
+@bg 3
+@fill metal_00
+@spawn up 2 3 S
+@spawn down 12 3 S
+@spawn lift 7 10 NE
+@legend
+  .  tile=metal_00
+  a  tile=none object=cable_wall_j
+  b  tile=none object=cable_wall_i
+  c  tile=metal_11 object=crate_plain
+  d  tile=metal_01 object=escalator
+  e  tile=metal_11 object=crate_stack
+  f  tile=metal_01 object=crate_plain
+  g  tile=metal_11 object=crate_v
+  h  tile=metal_01 object=crate_stack
+  i  tile=metal_01 object=crate_v
+  j  tile=metal_10 object=barrel
+  k  tile=metal_00 door=escalator
+  l  tile=metal_10 object=crate_plain
+  m  tile=metal_00 object=barrel
+  n  tile=metal_10 object=crate_v
+  o  tile=metal_00 object=crate_plain
+  p  tile=metal_00 object=crate_v
+  q  tile=metal_00 door=escalator
+  r  tile=metal_11
+  s  tile=metal_01
+  t  tile=metal_01 object=rail_i
+  u  tile=metal_11 object=rail_i
+  v  tile=metal_10
+  w  tile=arr_nw_00
+  x  tile=arr_nw_10
+  y  tile=metal_11 object=console interact=look text=hide.term.a
+  z  tile=metal_10 object=rail_j
+  A  tile=arr_sw_00
+  B  tile=metal_00 object=crate_stack
+  C  tile=metal_00 object=rail_j
+  D  tile=arr_ne_10
+  E  tile=arr_ne_00
+  F  tile=metal_11 object=rail_j
+  G  tile=arr_sw_01
+  H  tile=metal_01 object=rail_j
+  I  tile=arr_ne_11
+  J  tile=metal_01 object=barrel
+  K  tile=arr_ne_01
+  L  tile=metal_10 npc=vertice id=g1 face=S trainer=vertice_b1a range=2 text=tr.vertice_b1a.pre after=tr.vertice_b1a.after
+  M  tile=metal_00 object=rail_i
+  N  tile=metal_10 object=rail_i
+  O  tile=arr_se_01
+  P  tile=arr_se_11
+  Q  tile=metal_11 object=console interact=look script=lift
+  R  tile=metal_10 npc=vertice id=g2 face=N trainer=vertice_b1b range=2 text=tr.vertice_b1b.pre after=tr.vertice_b1b.after
+  S  tile=metal_11 item=exit_wisp
+  T  tile=metal_01 item=prime_salve
+  U  tile=arr_se_00
+  V  tile=arr_se_10
+@grid
+  aaaaaaaaaaaaaa
+  bcdefghciefgdc
+  bjklmnojplmnqj
+  brsrtusrsutrsr
+  bv.vwx.v.xwv.v
+  brsytusrsutrsr
+  bzAzBlCDClpzEz
+  bFGFfgHIHgJFKF
+  bL.vMN.v.jBv.v
+  brsrOPsQsefrsr
+  bv.vMN.v.lpv.R
+  bFGFfgHIHgJFKF
+  bzAzpjCDCjBzEz
+  bSsrtusrTutrsr
+  bv.vUV.v.VUv.v
+  brsrtusrsutrsr
+@warp k -> casino_neon spawn=stairs
+@warp q -> escondite_2 spawn=up
+# The elevator panel: a three-row floor list (B1F, B2F, B4F); the row of this floor does nothing.
+@var floor 7
+@script lift interact
+    has_item llave_polea 3
+    jv 3 1 ride
+    say hide.lift.locked
+    say hide.lift.locked2
+    end
+  ride:
+    say hide.lift.on
+    say gl.c4a.elev.ask
+    elevator floor gl.c4a.floor.b1 gl.c4a.floor.b2 gl.c4a.floor.b4
+    jv floor 255 stay
+    jv floor 0 stay
+    jv floor 1 to1
+    jv floor 2 to2
+  to1:
+    sfx door
+    warp escondite_2 spawn=lift
+    end
+  to2:
+    sfx door
+    warp escondite_4 spawn=lift
+    end
+  stay:
+    end
+@end

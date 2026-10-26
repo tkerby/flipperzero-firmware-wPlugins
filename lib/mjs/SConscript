@@ -26,8 +26,14 @@ libenv.AppendUnique(
     ],
 )
 
-sources = libenv.GlobRecursive("*.c*")
+sources = libenv.GlobRecursive("*.c*", exclude=["fal"])
 
 lib = libenv.StaticLibrary("${FW_LIB_NAME}", sources)
 libenv.Install("${LIB_DIST_DIR}", lib)
+
+if env["IS_BASE_FIRMWARE"]:
+    # Only the native compatibility bridge is linked into resident firmware.
+    bridgeenv = libenv.Clone(FW_LIB_NAME="mjs_fal")
+    bridge = bridgeenv.StaticLibrary("${FW_LIB_NAME}", Glob("fal/*.c"))
+    bridgeenv.Install("${LIB_DIST_DIR}", bridge)
 Return("lib")

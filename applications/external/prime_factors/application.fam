@@ -1,0 +1,14 @@
+App(
+    appid="prime_factors",
+    name="Prime Factorization",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="flipper_prime_factors_app",
+    stack_size=4 * 1024,
+    fap_icon="flipper_prime_factors.png",
+    fap_icon_assets="images",
+    fap_category="Tools",
+    fap_author="gbritoda",
+    fap_weburl="https://github.com/gbritoda/flipper0-prime_factors",
+    fap_version="1.0",
+    fap_description="Prime factorization of an integer by trial division",
+)

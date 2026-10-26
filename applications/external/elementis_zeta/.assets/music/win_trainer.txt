@@ -1,0 +1,13 @@
+title Victory over a trainer (once) - a drum fill, a proud climb and a long major chord (C major)
+once
+tempo 150
+vol 200
+meter 4/4
+inst lead v=255,255,215,185,170
+inst maj arp=0,4,7 rate=2
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+inst snr drum=a6 noise=25 seed=6 fall=12
+!kick=3 r=17 !snr=3 r=7 !snr=3 r=7 !snr=3 r=7 !snr=3 r=7 !snr=3 r=7 |
+@lead o5 c8 e8 g8 o6 c8 e4 g4 |
+o6 a8 g8 f8 e8 d4 g4 |
+@maj o5 c1 |

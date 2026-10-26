@@ -1,0 +1,7 @@
+title Evolution begins - three rising glides over a growing vibrato
+tempo 130
+vol 190
+inst glide v=200,225,255,255,255,255,255,255,255,255,255,255 d=0,12,23,35,46,58,69,81,92,104,115,127 slow
+inst hero att=6 vib=2 vdelay=3 vper=8 slow
+@glide o5 c=60 d=60 e=60
+@hero o6 c=25

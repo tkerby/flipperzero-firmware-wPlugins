@@ -4,6 +4,9 @@
 #include "application_assets.h"
 #include <loader/firmware_api/firmware_api.h>
 #include <storage/storage_processing.h>
+#ifndef FURI_RAM_EXEC
+#include <mjs/fal/mjs_fal_imports.h>
+#endif
 
 #include <m-list.h>
 
@@ -13,10 +16,15 @@ struct FlipperApplication {
     ELFDebugInfo state;
     FlipperApplicationManifest manifest;
     ELFFile* elf;
+#ifndef FURI_RAM_EXEC
+    MjsFalImports mjs_imports;
+#endif
     FuriThread* thread;
     void* ep_thread_args;
 
     bool preloaded_manifest;
+    FlipperApplicationAssetsProgress assets_progress;
+    void* assets_progress_context;
 };
 
 /********************** Debugger access to loader state **********************/
@@ -59,9 +67,15 @@ FlipperApplication*
     furi_check(api_interface);
 
     FlipperApplication* app = malloc(sizeof(FlipperApplication));
+#ifndef FURI_RAM_EXEC
+    mjs_fal_imports_init(&app->mjs_imports, api_interface);
+    api_interface = &app->mjs_imports.api;
+#endif
     app->elf = elf_file_alloc(storage, api_interface);
     app->thread = NULL;
     app->ep_thread_args = NULL;
+    app->assets_progress = NULL;
+    app->assets_progress_context = NULL;
 
     return app;
 }
@@ -90,6 +104,10 @@ void flipper_application_free(FlipperApplication* app) {
     }
 
     elf_file_free(app->elf);
+#ifndef FURI_RAM_EXEC
+    /* Keep the engine available through ELF destructors and module cleanup. */
+    mjs_fal_imports_release(&app->mjs_imports);
+#endif
 
     if(app->ep_thread_args) {
         free(app->ep_thread_args);
@@ -153,6 +171,8 @@ static bool flipper_application_process_manifest_section(
 // we can't use const char* as context because we will lose the const qualifier
 typedef struct {
     const char* path;
+    FlipperApplicationAssetsProgress progress;
+    void* progress_context;
 } FlipperApplicationPreloadAssetsContext;
 
 static bool flipper_application_process_assets_section(
@@ -161,7 +181,13 @@ static bool flipper_application_process_assets_section(
     size_t size,
     void* context) {
     FlipperApplicationPreloadAssetsContext* preload_context = context;
-    return flipper_application_assets_load(file, preload_context->path, offset, size);
+    return flipper_application_assets_load(
+        file,
+        preload_context->path,
+        offset,
+        size,
+        preload_context->progress,
+        preload_context->progress_context);
 }
 
 static FlipperApplicationPreloadStatus
@@ -181,7 +207,11 @@ static FlipperApplicationPreloadStatus
         }
 
         // load assets section
-        FlipperApplicationPreloadAssetsContext preload_context = {.path = path};
+        FlipperApplicationPreloadAssetsContext preload_context = {
+            .path = path,
+            .progress = app->assets_progress,
+            .progress_context = app->assets_progress_context,
+        };
         if(elf_process_section(
                app->elf,
                ".fapassets",
@@ -205,6 +235,15 @@ static FlipperApplicationPreloadStatus
     }
 
     return flipper_application_validate_manifest(app);
+}
+
+void flipper_application_set_assets_progress_callback(
+    FlipperApplication* app,
+    FlipperApplicationAssetsProgress callback,
+    void* context) {
+    furi_check(app);
+    app->assets_progress = callback;
+    app->assets_progress_context = context;
 }
 
 /* Parse headers, load manifest */
@@ -234,6 +273,9 @@ FlipperApplicationLoadStatus flipper_application_map_to_memory(FlipperApplicatio
     furi_check(app);
 
     ELFFileLoadStatus status = elf_file_load_sections(app->elf);
+#ifndef FURI_RAM_EXEC
+    if(app->mjs_imports.failed) return FlipperApplicationLoadStatusMissingRuntime;
+#endif
 
     switch(status) {
     case ELFFileLoadStatusSuccess:
@@ -317,6 +359,8 @@ const char* flipper_application_load_status_to_string(FlipperApplicationLoadStat
         return "Unknown error";
     case FlipperApplicationLoadStatusMissingImports:
         return "Update Application or Firmware to compatible versions (MissingImports)";
+    case FlipperApplicationLoadStatusMissingRuntime:
+        return "mJS engine unavailable. Check matching SD resources (mjs_engine.fal) and free memory";
     }
 
     return "Unknown error";
