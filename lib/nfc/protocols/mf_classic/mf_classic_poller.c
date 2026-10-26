@@ -14,6 +14,12 @@
 
 #define MF_CLASSIC_MAX_BUFF_SIZE (64)
 
+// MIFARE Classic EV1 hidden sector 17 (signature), key B is the same on every card
+#define MF_CLASSIC_EV1_SIGNATURE_BLOCK (69)
+static const MfClassicKey mf_classic_ev1_signature_key_b = {
+    .data = {0x4B, 0x79, 0x1B, 0xEA, 0x7B, 0xCC},
+};
+
 // Ordered by frequency, labeled chronologically
 const MfClassicBackdoorKeyPair mf_classic_backdoor_keys[] = {
     {{{0xa3, 0x96, 0xef, 0xa4, 0xe2, 0x4f}}, MfClassicBackdoorAuth3}, // Fudan (static encrypted)
@@ -219,7 +225,18 @@ NfcCommand mf_classic_poller_handler_detect_type(MfClassicPoller* instance) {
         iso14443_3a_poller_get_data(instance->iso14443_3a_poller));
     const uint8_t sak = instance->data->iso14443_3a_data->sak;
 
-    if(sak == 0x09) { // Mini shares the 1K bit (0x08), so it must be matched first
+    if(instance->current_type_check == MfClassicType1kEv1) {
+        // Full auth rather than a nonce probe, so only cards holding the hidden sector match
+        MfClassicKey key = mf_classic_ev1_signature_key_b;
+        MfClassicError error = mf_classic_poller_auth(
+            instance, MF_CLASSIC_EV1_SIGNATURE_BLOCK, &key, MfClassicKeyTypeB, NULL, false);
+        if(error == MfClassicErrorNone) {
+            instance->data->type = MfClassicType1kEv1;
+            FURI_LOG_D(TAG, "1K EV1 detected");
+        }
+        instance->current_type_check = MfClassicType4k;
+        instance->state = MfClassicPollerStateStart;
+    } else if(sak == 0x09) { // Mini shares the 1K bit (0x08), so it must be matched first
         instance->data->type = MfClassicTypeMini;
         instance->current_type_check = MfClassicType4k;
         instance->state = MfClassicPollerStateStart;
@@ -234,12 +251,13 @@ NfcCommand mf_classic_poller_handler_detect_type(MfClassicPoller* instance) {
         if(mf_classic_poller_is_plus_2k_sl1(instance)) {
             instance->data->type = MfClassicType2k;
             FURI_LOG_D(TAG, "Plus 2K SL1 detected (SAK 08 + ATS)");
+            instance->current_type_check = MfClassicType4k;
+            instance->state = MfClassicPollerStateStart;
         } else {
             instance->data->type = MfClassicType1k;
             FURI_LOG_D(TAG, "1K detected (SAK)");
+            instance->current_type_check = MfClassicType1kEv1;
         }
-        instance->current_type_check = MfClassicType4k;
-        instance->state = MfClassicPollerStateStart;
     } else if(instance->current_type_check == MfClassicType4k) {
         MfClassicError error =
             mf_classic_poller_get_nt(instance, 254, MfClassicKeyTypeA, NULL, false);
@@ -257,12 +275,13 @@ NfcCommand mf_classic_poller_handler_detect_type(MfClassicPoller* instance) {
         if(error == MfClassicErrorNone) {
             instance->data->type = MfClassicType1k;
             FURI_LOG_D(TAG, "1K detected");
+            instance->current_type_check = MfClassicType1kEv1;
         } else {
             instance->data->type = MfClassicTypeMini;
             FURI_LOG_D(TAG, "Mini detected");
+            instance->current_type_check = MfClassicType4k;
+            instance->state = MfClassicPollerStateStart;
         }
-        instance->current_type_check = MfClassicType4k;
-        instance->state = MfClassicPollerStateStart;
     }
 
     return command;

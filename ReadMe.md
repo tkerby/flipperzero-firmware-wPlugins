@@ -73,6 +73,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Grimoire v0.1 (By rseufert)](https://github.com/rseufert/grimoire)
 - Added: [USB CD-ROM v0.1.2 (By piersroberts)](https://github.com/piersroberts/flippercd)
 - Added: [USB Floppy v0.1.3 (By piersroberts)](https://github.com/piersroberts/flipperfloppy)
+- OFW: [NFC: Add MIFARE Classic 1K EV1 support #4480 (By MickaelBergem)](https://github.com/flipperdevices/flipperzero-firmware/pull/4480)
+- Added: [FM Radio RDS v0.1 (By victormico)](https://github.com/victormico/flipperzero-radio) - Si4703 volume control and RDS station names/radio text ([PR #3](https://github.com/victormico/flipperzero-radio/pull/3)).
 
 <a name="release"></a>
 
@@ -607,6 +609,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [FlipWorld v1.0.4 (By jblanked)](https://github.com/jblanked/FlipWorld) `Req: ESP32` with [FliperHTTP Firmware](https://github.com/jblanked/FlipperHTTP)
 - [Flizzer Tracker v0.11 (By LTVA1)](https://github.com/LTVA1/flizzer_tracker)
 - [Flo Tracker v1.0 (By harimwoo)](https://github.com/harimwoo/flipper-flo-tracker)
+- [FM Radio RDS v0.1 (By victormico)](https://github.com/victormico/flipperzero-radio)
 - [FM Radio v2.2 (By coolshrimp)](https://github.com/coolshrimp/flipperzero-fm-radio) `Req: TEA5767/Si4703`
 - [FM Radio w Vol v0.10 (By coolshrimp & pchmielewski1)](https://github.com/pchmielewski1/tea5767-pt2257-fm-radio-with-volume-control) `Req: TEA5767+PT2257`
 - [FM Transmitter KT0803 v1.0 (By goosedev72-projects)](https://github.com/goosedev72-projects/flipperzero-kt0803-transmitter) `Req: KT0803`

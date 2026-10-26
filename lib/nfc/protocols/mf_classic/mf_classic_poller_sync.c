@@ -489,8 +489,14 @@ MfClassicError
     if((sectors_read == 0) && (keys_found == 0)) {
         error = MfClassicErrorNotPresent;
     } else {
+        MfClassicType requested_type = data->type;
         mf_classic_copy(data, mfc_data);
-        error = mf_classic_is_card_read(mfc_data) ? MfClassicErrorNone : MfClassicErrorPartialRead;
+        // Callers pass keys for the type from sync detection, which reports EV1 as 1K. Keep
+        // that type so that a read without the hidden sectors counts as complete.
+        if(requested_type == MfClassicType1k && data->type == MfClassicType1kEv1) {
+            data->type = MfClassicType1k;
+        }
+        error = mf_classic_is_card_read(data) ? MfClassicErrorNone : MfClassicErrorPartialRead;
     }
 
     nfc_poller_free(poller);
@@ -504,6 +510,8 @@ MfClassicError mf_classic_poller_sync_detect_type(Nfc* nfc, MfClassicType* type)
 
     MfClassicError error = MfClassicErrorNone;
 
+    // EV1 is reported as 1K: telling them apart needs a full authentication with the hidden
+    // sector key, and callers only use the 16 regular sectors.
     // Probe a block unique to each size, largest first (block 0 is the always-present Mini fallback).
     // 2K is intentionally absent: block presence can't separate a Plus 2K SL1 from a magic 1K that
     // answers every block, so this path reports only Mini/1K/4K -- a genuine 2K is ATS-sized in the
