@@ -71,6 +71,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Key Wizard v1.3 (By Vazgen Grigoryan)](https://github.com/vazgen3201/flipper-key-wizard)
 - Added: [Bleepsentry v1.0 (By hdyrawan)](https://github.com/hdyrawan/bleepsentry)
 - Added: [Grimoire v0.1 (By rseufert)](https://github.com/rseufert/grimoire)
+- Added: [USB CD-ROM v0.1.2 (By piersroberts)](https://github.com/piersroberts/flippercd)
+- Added: [USB Floppy v0.1.3 (By piersroberts)](https://github.com/piersroberts/flipperfloppy)
 
 <a name="release"></a>
 
@@ -1019,8 +1021,10 @@ This software is for experimental purposes only and is not meant for any illegal
 - [ULCFKey v1.0 (By noproto)](https://github.com/zc-public/breakme-resources/tree/main/flipper_apps)
 - [Unbank BTCLN QR Generator v1.0 (By shanzy39)](https://github.com/shanzy39/Unbank-BTCLN-QR-Generator)
 - [uPython v1.8 (By ofabel)](https://github.com/ofabel/mp-flipper)
+- [USB CD-ROM v0.1.2 (By piersroberts)](https://github.com/piersroberts/flippercd)
 - [USB Consumer Control (By WithSecureLabs)](https://github.com/WithSecureLabs/usb-consumer-control)
 - [USB HID Autofire v1.1 (By pbek)](https://github.com/pbek/usb_hid_autofire)
+- [USB Floppy v0.1.3 (By piersroberts)](https://github.com/piersroberts/flipperfloppy)
 - [USB Mass Storage v1.5 (By nminaylov)](https://github.com/flipperdevices/flipperzero-good-faps/tree/nm/usb_mass_storage_app/mass_storage)
 - [USB Midi Capturing v0.1 (By fgreil)](https://github.com/fgreil/mitzi-midi)
 - [USB Midi v1.0 (By DrZlo13 & kribesk)](https://github.com/kribesk/flipper-zero-usb-midi) [Instructions by ESurge](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/applications/plugins/usb_midi/ReadMe.md)
