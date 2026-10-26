@@ -134,7 +134,8 @@ static void scanner_handle_ibutton_detected(KeyScanner* scanner) {
         sizeof(scanner->detected_key.protocol_name) - 1);
 
     iButtonEditableData editable;
-    ibutton_protocols_get_editable_data(scanner->ibutton_protocols, scanner->ibutton_key, &editable);
+    ibutton_protocols_get_editable_data(
+        scanner->ibutton_protocols, scanner->ibutton_key, &editable);
     if(editable.ptr && editable.size > 0) {
         size_t sz = editable.size;
         if(sz > sizeof(scanner->detected_key.data)) sz = sizeof(scanner->detected_key.data);
