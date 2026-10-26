@@ -130,8 +130,17 @@ static void scanner_handle_ibutton_detected(KeyScanner* scanner) {
     const char* name = ibutton_protocols_get_name(scanner->ibutton_protocols, proto_id);
     strncpy(
         scanner->detected_key.protocol_name,
-        name ? name : "Dallas",
+        name ? name : "DS1990",
         sizeof(scanner->detected_key.protocol_name) - 1);
+
+    iButtonEditableData editable;
+    ibutton_protocols_get_editable_data(scanner->ibutton_protocols, scanner->ibutton_key, &editable);
+    if(editable.ptr && editable.size > 0) {
+        size_t sz = editable.size;
+        if(sz > sizeof(scanner->detected_key.data)) sz = sizeof(scanner->detected_key.data);
+        memcpy(scanner->detected_key.data, editable.ptr, sz);
+        scanner->detected_key.data_len = sz;
+    }
 
     FuriString* uid_str = furi_string_alloc();
     ibutton_protocols_render_uid(scanner->ibutton_protocols, scanner->ibutton_key, uid_str);
@@ -392,41 +401,4 @@ bool key_scanner_poll_step(KeyScanner* scanner, DetectedKey* out_key) {
     furi_mutex_release(scanner->mutex);
 
     return found;
-}
-
-void key_scanner_simulate_detection(
-    KeyScanner* scanner,
-    KeyCategory category,
-    DetectedKey* out_key) {
-    UNUSED(scanner);
-    if(!out_key) return;
-
-    memset(out_key, 0, sizeof(DetectedKey));
-    out_key->category = category;
-    out_key->valid = true;
-
-    if(category == KeyCategoryLFRFID) {
-        strncpy(out_key->protocol_name, "EM4100", sizeof(out_key->protocol_name) - 1);
-        uint8_t uid[5] = {0x01, 0x23, 0x45, 0x67, 0x89};
-        memcpy(out_key->data, uid, 5);
-        out_key->data_len = 5;
-        snprintf(out_key->data_hex, sizeof(out_key->data_hex), "01 23 45 67 89");
-    } else if(category == KeyCategoryNFC) {
-        strncpy(out_key->protocol_name, "Mifare Classic", sizeof(out_key->protocol_name) - 1);
-        uint8_t uid[4] = {0xDE, 0xAD, 0xBE, 0xEF};
-        memcpy(out_key->data, uid, 4);
-        out_key->data_len = 4;
-        snprintf(out_key->data_hex, sizeof(out_key->data_hex), "DE AD BE EF");
-        strncpy(out_key->atqa, "00 04", sizeof(out_key->atqa));
-        strncpy(out_key->sak, "08", sizeof(out_key->sak));
-        out_key->atqa_raw[0] = 0x04;
-        out_key->atqa_raw[1] = 0x00;
-        out_key->sak_raw = 0x08;
-    } else if(category == KeyCategoryIButton) {
-        strncpy(out_key->protocol_name, "Dallas", sizeof(out_key->protocol_name) - 1);
-        uint8_t rom[8] = {0x01, 0x00, 0xBE, 0x11, 0xAA, 0x00, 0x00, 0xFB};
-        memcpy(out_key->data, rom, 8);
-        out_key->data_len = 8;
-        snprintf(out_key->data_hex, sizeof(out_key->data_hex), "01 00 BE 11 AA 00 00 FB");
-    }
 }

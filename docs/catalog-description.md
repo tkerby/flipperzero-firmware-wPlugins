@@ -15,7 +15,8 @@ Touch any key, fob, or card to your Flipper Zero, and Key Wizard instantly ident
 
 ## Navigation and Controls
 
-- Press OK in Scanning mode to test simulated detections.
-- Press Right in Scanning mode to open the Universal Quick Keys menu.
+- Press Left / Right in Scanning mode to switch scanning filter (Auto, RFID 125kHz, NFC 13.56MHz, iButton 1-Wire).
+- Press Up in Scanning mode to open the Universal Quick Keys menu.
+- Press Down in Scanning mode to open the About & Support screen.
 - Press Back to exit.
-- When a key is detected, press OK to save directly to native folder, or Left/Back to cancel.
+- When a key is detected, press OK to save directly to native folder, or Left/Back to return to scanning.

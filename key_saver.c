@@ -1,5 +1,8 @@
 #include "key_saver.h"
-#include <flipper_format/flipper_format.h>
+#include <lib/ibutton/ibutton_protocols.h>
+#include <lib/lfrfid/protocols/lfrfid_protocols.h>
+#include <lib/lfrfid/lfrfid_dict_file.h>
+#include <toolbox/protocols/protocol_dict.h>
 #include <lib/nfc/nfc_device.h>
 #include <lib/nfc/protocols/iso14443_3a/iso14443_3a.h>
 #include <stdio.h>
@@ -114,30 +117,50 @@ bool key_saver_save_to_native_asset(DetectedKey* key, char* out_path, size_t out
             success = nfc_device_save(nfc_dev, full_path);
             nfc_device_free(nfc_dev);
         }
-    } else {
-        FlipperFormat* file = flipper_format_file_alloc(storage);
-        do {
-            if(!flipper_format_file_open_always(file, full_path)) break;
-
-            if(key->category == KeyCategoryLFRFID) {
-                // Native Flipper RFID format
-                if(!flipper_format_write_header_cstr(file, "Flipper RFID key", 1)) break;
-                if(!flipper_format_write_string_cstr(file, "Key type", key->protocol_name)) break;
-                if(!flipper_format_write_hex(file, "Data", key->data, (uint16_t)key->data_len))
-                    break;
-                success = true;
-            } else if(key->category == KeyCategoryIButton) {
-                // Native Flipper iButton format
-                if(!flipper_format_write_header_cstr(file, "Flipper iButton key", 1)) break;
-                if(!flipper_format_write_string_cstr(file, "Key type", key->protocol_name)) break;
-                if(!flipper_format_write_hex(file, "Data", key->data, (uint16_t)key->data_len))
-                    break;
-                success = true;
+    } else if(key->category == KeyCategoryIButton) {
+        iButtonProtocols* proto = ibutton_protocols_alloc();
+        if(proto) {
+            iButtonKey* key_obj = ibutton_key_alloc(ibutton_protocols_get_max_data_size(proto));
+            if(key_obj) {
+                iButtonProtocolId proto_id =
+                    ibutton_protocols_get_id_by_name(proto, key->protocol_name);
+                if(proto_id == iButtonProtocolIdInvalid) {
+                    if(strstr(key->protocol_name, "Dallas") != NULL) {
+                        proto_id = ibutton_protocols_get_id_by_name(proto, "DS1990");
+                    } else if(strstr(key->protocol_name, "Cyfral") != NULL) {
+                        proto_id = ibutton_protocols_get_id_by_name(proto, "Cyfral");
+                    } else if(strstr(key->protocol_name, "Metakom") != NULL) {
+                        proto_id = ibutton_protocols_get_id_by_name(proto, "Metakom");
+                    }
+                }
+                if(proto_id == iButtonProtocolIdInvalid) {
+                    proto_id = ibutton_protocols_get_id_by_name(proto, "DS1990");
+                }
+                ibutton_key_set_protocol_id(key_obj, proto_id);
+                iButtonEditableData editable;
+                ibutton_protocols_get_editable_data(proto, key_obj, &editable);
+                if(editable.ptr && editable.size > 0) {
+                    size_t sz = key->data_len;
+                    if(sz > editable.size) sz = editable.size;
+                    memcpy(editable.ptr, key->data, sz);
+                    ibutton_protocols_apply_edits(proto, key_obj);
+                }
+                success = ibutton_protocols_save(proto, key_obj, full_path);
+                ibutton_key_free(key_obj);
             }
-        } while(0);
-
-        flipper_format_file_close(file);
-        flipper_format_free(file);
+            ibutton_protocols_free(proto);
+        }
+    } else if(key->category == KeyCategoryLFRFID) {
+        ProtocolDict* dict = protocol_dict_alloc(lfrfid_protocols, LFRFIDProtocolMax);
+        if(dict) {
+            ProtocolId proto_id = protocol_dict_get_protocol_by_name(dict, key->protocol_name);
+            if(proto_id == PROTOCOL_NO) {
+                proto_id = LFRFIDProtocolEM4100;
+            }
+            protocol_dict_set_data(dict, proto_id, key->data, key->data_len);
+            success = lfrfid_dict_file_save(dict, proto_id, full_path);
+            protocol_dict_free(dict);
+        }
     }
 
     furi_record_close(RECORD_STORAGE);
