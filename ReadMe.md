@@ -37,6 +37,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Seed Capturer v1.2 (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/64d285c8e2a7eeef5f34cd5988d8506e2d730743) [Can decode a saved RAW `.sub` file instead of capturing over the air, and uses an external CC1101 module when one is plugged in (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/aa47284e599dec2a4a9b5c71595c0db1dc7a7c7e) [Now supports **BFT Mitto** remotes on 433.92 MHz, the same way as Erreka - capture the hops and recover the Seed in qUnleashed (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/0d295f581c1e34cd56e2e590ea85625a64c2b724)
 - Updated: [Flipper Lotto v1.0 (By molykima)](https://github.com/molykima/Flipper-Lottery-Number-Generator)
 - Updated: [BLE Beacon v1.1 (By steanlab)](https://github.com/steanlab/BLE-Beacon)
+- [`Nice O-Code` - `New remote` now mints a serial the gate is certain to enrol, picking from the 1024 that keep the captured remote's certificate consistent instead of any of 2^28 (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/c66f01dce74d3aaf45b212b2ec67f4c47cf979fa)
 
 <a name="release"></a>
 
