@@ -24,22 +24,22 @@
 
 #define PRESETS_MAX 16
 
-#define SETTINGS_PATH APP_DATA_PATH("radio.settings")
-#define SETTINGS_MAGIC 0x52
+#define SETTINGS_PATH    APP_DATA_PATH("radio.settings")
+#define SETTINGS_MAGIC   0x52
 #define SETTINGS_VERSION 2
 
 /// Timer period. The seek status and the Si4703 RDS data are polled on every tick.
-#define TICK_MS 40
+#define TICK_MS            40
 /// Signal level and device presence are polled every 500 ms.
-#define POLL_TICKS (500 / TICK_MS)
+#define POLL_TICKS         (500 / TICK_MS)
 /// Give the TEA5767 100 ms to start searching before reading its ready flag.
-#define SEEK_START_TICKS (100 / TICK_MS + 1)
+#define SEEK_START_TICKS   (100 / TICK_MS + 1)
 /// Give up a station search after 15 seconds.
 #define SEEK_TIMEOUT_TICKS (15000 / TICK_MS)
 /// Status messages are shown for 1.5 seconds.
-#define MESSAGE_TICKS (1500 / TICK_MS)
+#define MESSAGE_TICKS      (1500 / TICK_MS)
 /// The wiring of each chip is shown for 3 seconds while searching for the board.
-#define WIRING_PAGE_TICKS (3000 / TICK_MS)
+#define WIRING_PAGE_TICKS  (3000 / TICK_MS)
 
 typedef enum {
     RadioStateNotFound,
@@ -173,11 +173,8 @@ static void render_signal(Canvas* canvas, uint8_t bars) {
 }
 
 // The compact scale leaves room for the RDS radio text at the bottom.
-static void render_scale(
-    Canvas* canvas,
-    RadioSettings* settings,
-    uint16_t frequency,
-    bool compact) {
+static void
+    render_scale(Canvas* canvas, RadioSettings* settings, uint16_t frequency, bool compact) {
     int32_t y = compact ? 51 : 55;
     canvas_draw_line(canvas, 4, y, 123, y);
     for(uint16_t mhz = 88; mhz <= 108; mhz++) {
