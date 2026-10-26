@@ -12,4 +12,4 @@
 // so it is deliberately not used to merge devices or cross-match captures (that would
 // under-count identical models). RSSI is left 0 (not present without radiotap). Bounds-
 // checked against untrusted input. Returns true on a probe request.
-bool wc_parse_probe_frame(const uint8_t *frame, size_t len, WcObservation *out);
+bool wc_parse_probe_frame(const uint8_t* frame, size_t len, WcObservation* out);

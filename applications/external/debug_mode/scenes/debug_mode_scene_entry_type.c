@@ -25,7 +25,8 @@ bool debug_mode_scene_entry_type_on_event(void* context, SceneManagerEvent event
     DebugMode* app = context;
     bool consumed = false;
 
-    if(event.type == SceneManagerEventTypeCustom && event.event < DEBUG_MODE_SELECTABLE_ENTRY_TYPES) {
+    if(event.type == SceneManagerEventTypeCustom &&
+       event.event < DEBUG_MODE_SELECTABLE_ENTRY_TYPES) {
         strncpy(
             app->pending_entry_type,
             debug_mode_entry_types[event.event],

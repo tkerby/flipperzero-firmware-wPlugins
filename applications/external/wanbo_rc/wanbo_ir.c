@@ -5,16 +5,16 @@
 
 #define WANBO_NEC_ADDRESS 0x3B
 
-#define NEC_FREQUENCY 38000
+#define NEC_FREQUENCY  38000
 #define NEC_DUTY_CYCLE 0.33f
 
-#define NEC_HEADER_MARK 9000
+#define NEC_HEADER_MARK  9000
 #define NEC_HEADER_SPACE 4500
-#define NEC_BIT_MARK 560
-#define NEC_ZERO_SPACE 560
-#define NEC_ONE_SPACE 1690
-#define NEC_STOP_MARK 560
-#define NEC_END_SPACE 40000
+#define NEC_BIT_MARK     560
+#define NEC_ZERO_SPACE   560
+#define NEC_ONE_SPACE    1690
+#define NEC_STOP_MARK    560
+#define NEC_END_SPACE    40000
 
 static const uint8_t wanbo_command_table[] = {
     [WanboCommandPower] = 0x00,

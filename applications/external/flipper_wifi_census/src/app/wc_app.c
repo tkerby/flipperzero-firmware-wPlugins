@@ -6,19 +6,19 @@
 
 #include <furi.h>
 
-static bool wc_custom_event_callback(void *context, uint32_t event) {
-    WcApp *app = context;
+static bool wc_custom_event_callback(void* context, uint32_t event) {
+    WcApp* app = context;
     return scene_manager_handle_custom_event(app->scene_manager, event);
 }
 
-static bool wc_back_event_callback(void *context) {
-    WcApp *app = context;
+static bool wc_back_event_callback(void* context) {
+    WcApp* app = context;
     return scene_manager_handle_back_event(app->scene_manager);
 }
 
-static WcApp *wc_app_alloc(void) {
-    WcApp *app = malloc(sizeof(WcApp));
-    if (!app) {
+static WcApp* wc_app_alloc(void) {
+    WcApp* app = malloc(sizeof(WcApp));
+    if(!app) {
         return NULL; // the entry point exits; memset on NULL would take the device down
     }
     memset(app, 0, sizeof(WcApp));
@@ -44,21 +44,22 @@ static WcApp *wc_app_alloc(void) {
     app->widget = widget_alloc();
     app->var_item_list = variable_item_list_alloc();
 
-    view_dispatcher_add_view(app->view_dispatcher, WcViewList,
-                             wc_scroll_list_get_view(app->list_view));
-    view_dispatcher_add_view(app->view_dispatcher, WcViewTextInput,
-                             text_input_get_view(app->text_input));
-    view_dispatcher_add_view(app->view_dispatcher, WcViewTextBox, text_box_get_view(app->text_box));
+    view_dispatcher_add_view(
+        app->view_dispatcher, WcViewList, wc_scroll_list_get_view(app->list_view));
+    view_dispatcher_add_view(
+        app->view_dispatcher, WcViewTextInput, text_input_get_view(app->text_input));
+    view_dispatcher_add_view(
+        app->view_dispatcher, WcViewTextBox, text_box_get_view(app->text_box));
     view_dispatcher_add_view(app->view_dispatcher, WcViewWidget, widget_get_view(app->widget));
-    view_dispatcher_add_view(app->view_dispatcher, WcViewVarList,
-                             variable_item_list_get_view(app->var_item_list));
+    view_dispatcher_add_view(
+        app->view_dispatcher, WcViewVarList, variable_item_list_get_view(app->var_item_list));
 
     app->scene_manager = scene_manager_alloc(&wc_scene_handlers, app);
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
     return app;
 }
 
-static void wc_app_free(WcApp *app) {
+static void wc_app_free(WcApp* app) {
     view_dispatcher_remove_view(app->view_dispatcher, WcViewList);
     view_dispatcher_remove_view(app->view_dispatcher, WcViewTextInput);
     view_dispatcher_remove_view(app->view_dispatcher, WcViewTextBox);
@@ -75,11 +76,11 @@ static void wc_app_free(WcApp *app) {
     view_dispatcher_free(app->view_dispatcher);
     furi_record_close(RECORD_GUI);
 
-    if (app->serial) {
+    if(app->serial) {
         wc_serial_furi_free(app->serial);
     }
     wc_census_free(&app->scan.census);
-    if (app->browse_census) {
+    if(app->browse_census) {
         wc_census_free(app->browse_census);
         free(app->browse_census);
     }
@@ -87,8 +88,8 @@ static void wc_app_free(WcApp *app) {
 }
 
 int32_t wc_app_run(void) {
-    WcApp *app = wc_app_alloc();
-    if (!app) {
+    WcApp* app = wc_app_alloc();
+    if(!app) {
         return -1;
     }
     scene_manager_next_scene(app->scene_manager, WcSceneStart);

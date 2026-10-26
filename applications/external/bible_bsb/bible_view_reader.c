@@ -23,8 +23,7 @@ static void bible_passage_display_ref(const BibleAppState* state, char* out, siz
         return;
     }
 
-    const char* book_name =
-        state->selected_book_name[0] ? state->selected_book_name : "Book";
+    const char* book_name = state->selected_book_name[0] ? state->selected_book_name : "Book";
     if(passage->start_verse > 0) {
         if(passage->end_verse > passage->start_verse) {
             snprintf(

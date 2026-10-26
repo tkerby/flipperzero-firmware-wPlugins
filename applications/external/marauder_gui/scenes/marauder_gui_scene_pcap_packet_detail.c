@@ -18,7 +18,15 @@ enum {
 
 static void marauder_gui_format_mac(const uint8_t* mac, char* out, size_t out_size) {
     snprintf(
-        out, out_size, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+        out,
+        out_size,
+        "%02X:%02X:%02X:%02X:%02X:%02X",
+        mac[0],
+        mac[1],
+        mac[2],
+        mac[3],
+        mac[4],
+        mac[5]);
 }
 
 /* Widget has no hook for a raw Right keypress (only registered button elements fire a callback -
@@ -65,7 +73,8 @@ void marauder_gui_scene_pcap_packet_detail_on_enter(void* context) {
         sizeof(header),
         "#%u %s",
         (unsigned)app->pcap_view_selected,
-        marauder_pcap_frame_type_label((MarauderPcapFrameType)e->frame_type, app->language == MarauderLanguageEnglish));
+        marauder_pcap_frame_type_label(
+            (MarauderPcapFrameType)e->frame_type, app->language == MarauderLanguageEnglish));
     widget_add_string_element(app->widget, 2, 0, AlignLeft, AlignTop, FontPrimary, header);
 
     if(got < 22) {

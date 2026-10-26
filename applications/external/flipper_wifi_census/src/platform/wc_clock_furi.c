@@ -4,7 +4,7 @@
 
 #include <stddef.h>
 
-static uint32_t clock_now(void *self) {
+static uint32_t clock_now(void* self) {
     (void)self;
     return furi_hal_rtc_get_timestamp();
 }

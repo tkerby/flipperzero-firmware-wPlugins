@@ -86,13 +86,7 @@ View* debug_mode_splash_view_alloc(void* context) {
     view_set_draw_callback(view, debug_mode_splash_view_draw);
     view_set_input_callback(view, debug_mode_splash_view_input);
 
-    with_view_model(
-        view,
-        DebugModeSplashModel * model,
-        {
-            model->phase = 1;
-        },
-        true);
+    with_view_model(view, DebugModeSplashModel * model, { model->phase = 1; }, true);
 
     return view;
 }
@@ -103,11 +97,5 @@ void debug_mode_splash_view_free(View* view) {
 }
 
 void debug_mode_splash_view_tick(View* view) {
-    with_view_model(
-        view,
-        DebugModeSplashModel * model,
-        {
-            model->phase++;
-        },
-        true);
+    with_view_model(view, DebugModeSplashModel * model, { model->phase++; }, true);
 }

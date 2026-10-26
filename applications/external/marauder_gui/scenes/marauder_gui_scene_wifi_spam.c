@@ -43,16 +43,18 @@ size_t marauder_gui_wifi_spam_type_count(void) {
 }
 
 const char* marauder_gui_wifi_spam_type_label(size_t index) {
-    return (index < MARAUDER_WIFI_SPAM_TYPE_COUNT) ? marauder_wifi_spam_types[index].label_tr : "?";
+    return (index < MARAUDER_WIFI_SPAM_TYPE_COUNT) ? marauder_wifi_spam_types[index].label_tr :
+                                                     "?";
 }
 
 const char* marauder_gui_wifi_spam_type_label_en(size_t index) {
-    return (index < MARAUDER_WIFI_SPAM_TYPE_COUNT) ? marauder_wifi_spam_types[index].label_en : "?";
+    return (index < MARAUDER_WIFI_SPAM_TYPE_COUNT) ? marauder_wifi_spam_types[index].label_en :
+                                                     "?";
 }
 
 const char* marauder_gui_wifi_spam_type_command(size_t index) {
     return (index < MARAUDER_WIFI_SPAM_TYPE_COUNT) ? marauder_wifi_spam_types[index].command :
-                                                       "attack -t beacon -r";
+                                                     "attack -t beacon -r";
 }
 
 const char* marauder_gui_wifi_spam_type_description(size_t index) {
@@ -133,7 +135,8 @@ void marauder_gui_scene_wifi_spam_on_enter(void* context) {
         marauder_uart_send_line(app->uart, cmd);
         marauder_uart_send_line(app->uart, "attack -t beacon -l");
     } else {
-        marauder_uart_send_line(app->uart, marauder_gui_wifi_spam_type_command(app->wifi_spam_type_index));
+        marauder_uart_send_line(
+            app->uart, marauder_gui_wifi_spam_type_command(app->wifi_spam_type_index));
     }
 }
 

@@ -270,8 +270,7 @@ static bool bible_bsb_scene_nfc_share_on_event(void* context, SceneManagerEvent 
             scene_manager_search_and_switch_to_another_scene(
                 app->scene_manager, BibleSceneCollection);
         } else {
-            scene_manager_search_and_switch_to_another_scene(
-                app->scene_manager, BibleSceneReader);
+            scene_manager_search_and_switch_to_another_scene(app->scene_manager, BibleSceneReader);
         }
         return true;
     }
@@ -512,10 +511,7 @@ BibleApp* bible_app_alloc(void) {
 
     /* Custom views — all 8 views registered with ViewDispatcher */
     if(!bible_app_register_view(
-           app,
-           BibleViewBookList,
-           bible_bsb_view_book_list_draw,
-           bible_bsb_view_book_list_input) ||
+           app, BibleViewBookList, bible_bsb_view_book_list_draw, bible_bsb_view_book_list_input) ||
        !bible_app_register_view(
            app,
            BibleViewBookFilter,
@@ -532,10 +528,7 @@ BibleApp* bible_app_alloc(void) {
            bible_bsb_view_verse_select_draw,
            bible_bsb_view_verse_select_input) ||
        !bible_app_register_view(
-           app,
-           BibleViewReader,
-           bible_bsb_view_reader_draw,
-           bible_bsb_view_reader_input) ||
+           app, BibleViewReader, bible_bsb_view_reader_draw, bible_bsb_view_reader_input) ||
        !bible_app_register_view(
            app,
            BibleViewActionMenu,

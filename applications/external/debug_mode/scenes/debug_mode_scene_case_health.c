@@ -11,9 +11,8 @@ void debug_mode_scene_case_health_on_enter(void* context) {
     if(case_store_read_header(app->storage, app->current_case_id, &header) &&
        case_store_get_stats(app->storage, app->current_case_id, &stats)) {
         uint32_t signal = stats.pass + stats.fail + stats.resolutions + stats.lessons;
-        uint32_t open_threads = stats.next_steps > stats.resolutions ?
-                                    stats.next_steps - stats.resolutions :
-                                    0;
+        uint32_t open_threads =
+            stats.next_steps > stats.resolutions ? stats.next_steps - stats.resolutions : 0;
 
         furi_string_printf(
             text,

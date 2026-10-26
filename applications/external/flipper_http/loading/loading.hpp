@@ -1,24 +1,27 @@
 #pragma once
 #include <gui/gui.h>
 
-class Loading
-{
+class Loading {
 public:
-    Loading(Canvas *canvas);
+    Loading(Canvas* canvas);
     //
     void animate();
     void stop();
     //
-    void setText(const char *text) { currentText = text; }
+    void setText(const char* text) {
+        currentText = text;
+    }
     //
-    uint32_t getTimeElapsed() { return timeElapsed; }
+    uint32_t getTimeElapsed() {
+        return timeElapsed;
+    }
 
 private:
-    Canvas *canvas = nullptr;
+    Canvas* canvas = nullptr;
     void drawSpinner();
     uint32_t spinnerPosition;
     uint32_t timeElapsed;
     uint32_t timeStart;
     bool animating = false;
-    const char *currentText = "Loading...";
+    const char* currentText = "Loading...";
 };

@@ -53,7 +53,8 @@ uint32_t usb_cdrom_app_image_blocks(UsbCdromApp* app, const char* path) {
     if(storage_common_stat(app->fs_api, path, &info) != FSE_OK || file_info_is_dir(&info)) {
         return 0;
     }
-    if(!info.size || info.size % CD_BLOCK_SIZE || info.size / CD_BLOCK_SIZE > USB_CDROM_MAX_BLOCKS) {
+    if(!info.size || info.size % CD_BLOCK_SIZE ||
+       info.size / CD_BLOCK_SIZE > USB_CDROM_MAX_BLOCKS) {
         return 0;
     }
     return info.size / CD_BLOCK_SIZE;

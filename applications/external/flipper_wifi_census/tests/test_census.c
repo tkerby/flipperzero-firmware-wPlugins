@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-static WcObservation obs_of(const uint8_t mac[6], int8_t rssi, const char *ssid, bool beacon) {
+static WcObservation obs_of(const uint8_t mac[6], int8_t rssi, const char* ssid, bool beacon) {
     WcObservation o;
     memset(&o, 0, sizeof(o));
     memcpy(o.mac, mac, 6);
@@ -13,7 +13,7 @@ static WcObservation obs_of(const uint8_t mac[6], int8_t rssi, const char *ssid,
     o.rssi = rssi;
     o.channel = 6;
     o.is_beacon = beacon;
-    if (ssid) {
+    if(ssid) {
         strncpy(o.probed_ssid, ssid, WC_SSID_MAX_LEN);
     }
     return o;
@@ -74,9 +74,9 @@ static void test_ap_not_linked_to_client_by_ssid(void) {
 static void test_stats(void) {
     WcCensus c;
     wc_census_init(&c);
-    uint8_t ap[6] = {0x00, 0x1A, 0x11, 1, 1, 1};     // Apple OUI -> but beacon -> AP
+    uint8_t ap[6] = {0x00, 0x1A, 0x11, 1, 1, 1}; // Apple OUI -> but beacon -> AP
     uint8_t laptop[6] = {0x00, 0x1B, 0x21, 2, 2, 2}; // Intel -> laptop
-    uint8_t phone[6] = {0xDA, 0, 0, 0, 0, 1};        // random -> phone
+    uint8_t phone[6] = {0xDA, 0, 0, 0, 0, 1}; // random -> phone
     WcObservation ob_ap = obs_of(ap, -40, NULL, true);
     WcObservation ob_lap = obs_of(laptop, -55, NULL, false);
     WcObservation ob_ph = obs_of(phone, -60, NULL, false);
@@ -97,7 +97,7 @@ static void test_stats(void) {
 static void test_table_full_drops(void) {
     WcCensus c;
     wc_census_init(&c);
-    for (int i = 0; i < WC_CENSUS_MAX_DEVICES + 5; i++) {
+    for(int i = 0; i < WC_CENSUS_MAX_DEVICES + 5; i++) {
         uint8_t mac[6] = {0x02, 0, 0, (uint8_t)(i >> 8), (uint8_t)i, 0};
         // 0x02 sets LAA; make each unique and wildcard so none merge.
         WcObservation o = obs_of(mac, -70, NULL, false);
@@ -163,9 +163,9 @@ static void test_merge_accumulates(void) {
     assert(a.count == 3);
 
     // laptop: obs summed, first=100 kept, last=200, rssi strongest -40.
-    const WcSignature *lap = NULL;
-    for (uint16_t i = 0; i < a.count; i++) {
-        if (memcmp(a.devices[i].mac, laptop, 6) == 0) {
+    const WcSignature* lap = NULL;
+    for(uint16_t i = 0; i < a.count; i++) {
+        if(memcmp(a.devices[i].mac, laptop, 6) == 0) {
             lap = &a.devices[i];
         }
     }
@@ -248,7 +248,7 @@ static void test_stats_carry_the_dropped_count(void) {
     WcCensus c;
     wc_census_init(&c);
     wc_census_set_max(&c, 3);
-    for (uint16_t i = 0; i < 10; i++) {
+    for(uint16_t i = 0; i < 10; i++) {
         WcSignature sig;
         memset(&sig, 0, sizeof(sig));
         sig.mac[0] = 0x00;
@@ -334,8 +334,8 @@ static void test_late_link_never_touches_a_non_seeker(void) {
 
     assert(c.count == 3); // nobody was folded away
     bool home_still_its_own = false;
-    for (uint16_t i = 0; i < c.count; i++) {
-        if (c.devices[i].mac_random && wc_signature_has_ssid(&c.devices[i], "HomeA")) {
+    for(uint16_t i = 0; i < c.count; i++) {
+        if(c.devices[i].mac_random && wc_signature_has_ssid(&c.devices[i], "HomeA")) {
             home_still_its_own = true;
         }
     }

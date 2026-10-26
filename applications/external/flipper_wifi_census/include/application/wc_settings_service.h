@@ -16,6 +16,6 @@ typedef struct {
 
 // Load the stored options. A missing file is not an error: `s` comes back with the defaults.
 // Returns false only if a file exists but is corrupt (`s` still holds the defaults).
-bool wc_settings_service_load(const WcStorePort *store, WcSettings *s);
+bool wc_settings_service_load(const WcStorePort* store, WcSettings* s);
 
-bool wc_settings_service_save(const WcStorePort *store, const WcSettings *s);
+bool wc_settings_service_save(const WcStorePort* store, const WcSettings* s);

@@ -8,7 +8,7 @@
 #include <gui/icon.h>
 #include <input/input.h>
 
-#define GRID_COLS 3
+#define GRID_COLS    3
 #define BUTTON_COUNT 12
 
 typedef struct {
@@ -79,7 +79,7 @@ static void wanbo_rc_select_right(WanboRcApp* app) {
 }
 
 static void wanbo_rc_draw_main(Canvas* canvas, WanboRcApp* app) {
-/*
+    /*
     Os assets enviados ficaram visualmente invertidos no Flipper:
     - arquivo normal: botão escuro
     - arquivo hover: botão claro
@@ -97,9 +97,8 @@ static void wanbo_rc_draw_main(Canvas* canvas, WanboRcApp* app) {
         uint8_t col = i % GRID_COLS;
         uint8_t row = i / GRID_COLS;
 
-        const Icon* icon = (i == app->selected) ?
-                               wanbo_buttons[i].icon :
-                               wanbo_buttons[i].icon_selected;
+        const Icon* icon = (i == app->selected) ? wanbo_buttons[i].icon :
+                                                  wanbo_buttons[i].icon_selected;
 
         canvas_draw_icon(canvas, wanbo_icon_x[col], wanbo_icon_y[row], icon);
     }

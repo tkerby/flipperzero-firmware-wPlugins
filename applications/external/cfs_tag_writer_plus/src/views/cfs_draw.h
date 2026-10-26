@@ -89,5 +89,12 @@ void cfs_draw_spool_anim(
     uint8_t b,
     uint8_t angle,
     uint8_t fill);
-void cfs_draw_spool(Canvas* canvas, int32_t cx, int32_t cy, int32_t radius, uint8_t r, uint8_t g, uint8_t b);
+void cfs_draw_spool(
+    Canvas* canvas,
+    int32_t cx,
+    int32_t cy,
+    int32_t radius,
+    uint8_t r,
+    uint8_t g,
+    uint8_t b);
 void cfs_draw_str_fit(Canvas* canvas, int32_t x, int32_t y, int32_t max_width, const char* str);

@@ -12,4 +12,4 @@
 // value); RSSI, channel and a directed SSID are filled when present and left at their zero
 // defaults otherwise. `len` is the number of bytes at `line` to consider (need not be
 // NUL-terminated). Returns true when a MAC was found and `out` is populated.
-bool wc_parse_summary_line(const char *line, size_t len, WcObservation *out);
+bool wc_parse_summary_line(const char* line, size_t len, WcObservation* out);

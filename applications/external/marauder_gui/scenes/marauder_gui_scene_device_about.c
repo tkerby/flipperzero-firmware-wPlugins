@@ -5,8 +5,7 @@ void marauder_gui_scene_device_about_on_enter(void* context) {
     app->tick_handler = NULL;
 
     widget_reset(app->widget);
-    widget_add_string_element(
-        app->widget, 2, 4, AlignLeft, AlignTop, FontPrimary, "Marauder GUI");
+    widget_add_string_element(app->widget, 2, 4, AlignLeft, AlignTop, FontPrimary, "Marauder GUI");
     widget_add_string_element(
         app->widget, 2, 20, AlignLeft, AlignTop, FontSecondary, "ESP32 Marauder");
     widget_add_string_element(

@@ -3,8 +3,20 @@
 #include <stddef.h>
 #include <stdint.h>
 
-typedef enum { HamType, HamRead, HamMove, HamEdit } HamEpisode;
-typedef enum { HamNone, HamKeyDown, HamKeyUp, HamMouseMove, HamClickDown, HamClickUp } HamEventKind;
+typedef enum {
+    HamType,
+    HamRead,
+    HamMove,
+    HamEdit
+} HamEpisode;
+typedef enum {
+    HamNone,
+    HamKeyDown,
+    HamKeyUp,
+    HamMouseMove,
+    HamClickDown,
+    HamClickUp
+} HamEventKind;
 typedef struct {
     HamEventKind kind;
     char character; /* '\b' means backspace; all other characters are printable ASCII. */

@@ -74,7 +74,8 @@ void morse_config_validate(MorseConfig* config) {
     if(config->farnsworth && (config->farnsworth < 5 || config->farnsworth > 20)) {
         config->farnsworth = 0;
     }
-    config->squelch_dbm = -110 + (int8_t)(clamp_u32((uint32_t)(config->squelch_dbm + 110), 0, 60) / 5 * 5);
+    config->squelch_dbm =
+        -110 + (int8_t)(clamp_u32((uint32_t)(config->squelch_dbm + 110), 0, 60) / 5 * 5);
     config->courtesy_delay_ms = clamp_u32(config->courtesy_delay_ms, 0, 5000) / 500 * 500;
     config->preamble_ms = clamp_u32(config->preamble_ms, 0, 1000) / 100 * 100;
     config->tail_ms = clamp_u32(config->tail_ms, 0, 1000) / 100 * 100;
@@ -100,8 +101,7 @@ void morse_config_validate(MorseConfig* config) {
         config->interval_anchor = IntervalAnchorStart;
     }
     bool period_ok = false;
-    static const uint16_t period_allowed[] =
-        {15, 30, 45, 60, 90, 120, 180, 300, 600, 900, 1800};
+    static const uint16_t period_allowed[] = {15, 30, 45, 60, 90, 120, 180, 300, 600, 900, 1800};
     for(size_t i = 0; i < COUNT_OF(period_allowed); i++) {
         if(config->period_s == period_allowed[i]) period_ok = true;
     }

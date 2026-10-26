@@ -41,8 +41,8 @@ void jalali_to_gregorian(int jy, int jm, int jd, int* gy, int* gm, int* gd) {
         days = (days - 1) % 365;
     }
     int d = (int)(days + 1);
-    const int sal_a[12] =
-        {31, gregorian_is_leap(y) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    const int sal_a[12] = {
+        31, gregorian_is_leap(y) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
     int m = 1;
     while(m <= 12 && d > sal_a[m - 1]) {
         d -= sal_a[m - 1];

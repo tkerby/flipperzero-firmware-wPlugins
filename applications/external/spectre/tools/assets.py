@@ -23,7 +23,9 @@ GHOST = """
 .###...##...##...##.
 .##.....#.....#...#.
 ....................
-""".strip("\n").splitlines()
+""".strip(
+    "\n"
+).splitlines()
 
 ICON = """
 ...####...
@@ -36,7 +38,10 @@ ICON = """
 .########.
 .##.##.##.
 .#..#..#..
-""".strip("\n").splitlines()
+""".strip(
+    "\n"
+).splitlines()
+
 
 def xbm(rows):
     out = []
@@ -50,10 +55,11 @@ def xbm(rows):
                 byte = 0
     return out
 
+
 bits = xbm(GHOST)
 lines = []
 for i in range(0, len(bits), 15):
-    lines.append("    " + ", ".join(f"0x{b:02x}" for b in bits[i:i + 15]) + ",")
+    lines.append("    " + ", ".join(f"0x{b:02x}" for b in bits[i : i + 15]) + ",")
 block = "\n".join(lines)
 src = open("spectre.c").read()
 src, n = re.subn(

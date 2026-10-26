@@ -6,7 +6,7 @@
 #include <stdint.h>
 
 // Called with one complete line (newline stripped), valid only for the call.
-typedef void (*WcLineFn)(void *ctx, const char *line, size_t len);
+typedef void (*WcLineFn)(void* ctx, const char* line, size_t len);
 
 // Reassembles a byte stream (as it arrives in arbitrary chunks from the UART) into complete
 // lines. Pure and host-testable: the furi serial adapter just feeds it received bytes. A
@@ -18,8 +18,8 @@ typedef struct {
     bool overflow;
 } WcLineAsm;
 
-void wc_lineasm_init(WcLineAsm *a);
+void wc_lineasm_init(WcLineAsm* a);
 
 // Feed `n` bytes; for each newline-terminated line, invoke `cb`. Carriage returns are
 // stripped; empty lines are skipped.
-void wc_lineasm_feed(WcLineAsm *a, const uint8_t *data, size_t n, WcLineFn cb, void *ctx);
+void wc_lineasm_feed(WcLineAsm* a, const uint8_t* data, size_t n, WcLineFn cb, void* ctx);

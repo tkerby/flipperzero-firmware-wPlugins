@@ -39,8 +39,7 @@ void cfs_scene_start_on_enter(void* context) {
     // Scene state holds the last chosen item id; reopen on it.
     uint32_t state = scene_manager_get_scene_state(app->scene_manager, CfsSceneStart);
     size_t selected = state >= StartItemRead ? state - StartItemRead : 0;
-    cfs_screen_show_menu(
-        app->screen, start_items, start_events, COUNT_OF(start_items), selected);
+    cfs_screen_show_menu(app->screen, start_items, start_events, COUNT_OF(start_items), selected);
     view_dispatcher_switch_to_view(app->view_dispatcher, CfsViewScreen);
 }
 

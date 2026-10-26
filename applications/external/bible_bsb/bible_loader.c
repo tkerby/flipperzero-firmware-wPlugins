@@ -17,7 +17,7 @@
  * no larger than BIBLE_MAX_FILE_SIZE.
  * ============================================================================ */
 
-#define BSB_PACK_PATH          APP_ASSETS_PATH("bsb.pack")
+#define BSB_PACK_PATH           APP_ASSETS_PATH("bsb.pack")
 #define BIBLE_PACK_MAX_CHAPTERS 2048
 
 static void bible_sanitize_text(char* text, size_t max_len) {
@@ -331,8 +331,7 @@ static bool bible_scan_verses_from_json(
                     }
                     text_buf[text_len] = '\0';
                     /* Apply verse range filter */
-                    if(start_verse == 0 ||
-                       (verse_num >= start_verse && verse_num <= end_verse)) {
+                    if(start_verse == 0 || (verse_num >= start_verse && verse_num <= end_verse)) {
                         bible_sanitize_text(text_buf, sizeof(text_buf) - 1);
                         count++;
                         if(!callback(verse_num, text_buf, ctx)) {

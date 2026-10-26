@@ -173,8 +173,7 @@ static int32_t floppy_thread_worker(void* context) {
                     if(!cmd_ok) {
                         FURI_LOG_W(TAG, "cmd %02X rejected", cdb[0]);
                         if(xfer_len) {
-                            usbd_ep_stall(
-                                dev, dir == UfiDataIn ? USB_MSC_TX_EP : USB_MSC_RX_EP);
+                            usbd_ep_stall(dev, dir == UfiDataIn ? USB_MSC_TX_EP : USB_MSC_RX_EP);
                         }
                         state = StateBuildStatus;
                         continue;
@@ -280,11 +279,7 @@ static int32_t floppy_thread_worker(void* context) {
                     }
                     if(!ok) {
                         FURI_LOG_W(
-                            TAG,
-                            "cmd %02X failed sk=%02X asc=%02X",
-                            ufi.cmd[0],
-                            ufi.sk,
-                            ufi.asc);
+                            TAG, "cmd %02X failed sk=%02X asc=%02X", ufi.cmd[0], ufi.sk, ufi.asc);
                     }
                     state = StateWriteStatus;
                     continue;

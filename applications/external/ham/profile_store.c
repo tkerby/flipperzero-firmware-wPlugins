@@ -69,8 +69,8 @@ static bool copy_verified(Storage* storage, const char* source, const char* targ
 }
 
 const char* ham_profile_source(Storage* storage) {
-    return storage_common_stat(storage, HAM_PROFILE_PENDING, NULL) == FSE_OK ?
-               HAM_PROFILE_BACKUP : HAM_PROFILE;
+    return storage_common_stat(storage, HAM_PROFILE_PENDING, NULL) == FSE_OK ? HAM_PROFILE_BACKUP :
+                                                                               HAM_PROFILE;
 }
 
 bool ham_profile_recover(Storage* storage) {
@@ -99,7 +99,8 @@ bool ham_profile_store(Storage* storage, const char* contents) {
     /* Flipper rename is copy/delete, not an atomic filesystem replacement. Leave
        the marker and backup intact on failure so startup can recover old settings. */
     if(storage_common_rename(storage, HAM_PROFILE_TEMP, HAM_PROFILE) != FSE_OK ||
-       !matches(storage, HAM_PROFILE, contents)) return false;
+       !matches(storage, HAM_PROFILE, contents))
+        return false;
     if(backup) {
         if(!remove_if_present(storage, HAM_PROFILE_PENDING)) return false;
         remove_if_present(storage, HAM_PROFILE_BACKUP);

@@ -51,12 +51,7 @@ bool debug_mode_scene_new_case_title_on_event(void* context, SceneManagerEvent e
             app->current_case_status[sizeof(app->current_case_status) - 1] = '\0';
             if(app->pending_template_id != 0) {
                 case_store_append_entry(
-                    app->storage,
-                    id,
-                    "Note",
-                    "Guided case created from template.",
-                    "",
-                    "");
+                    app->storage, id, "Note", "Guided case created from template.", "", "");
                 case_store_append_entry(
                     app->storage,
                     id,

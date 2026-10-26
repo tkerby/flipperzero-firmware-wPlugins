@@ -4,10 +4,12 @@
 #include <string.h>
 
 #define WIFI_STATION_SCAN_REFRESH_TICKS 15 /* ~1.5s at the app's 100ms tick period */
-#define WIFI_STATION_MARQUEE_TICKS 3
-#define WIFI_STATION_MARQUEE_DELAY_TICKS 30 /* ~3s pause before a highlighted row starts scrolling */
+#define WIFI_STATION_MARQUEE_TICKS      3
+#define WIFI_STATION_MARQUEE_DELAY_TICKS \
+    30 /* ~3s pause before a highlighted row starts scrolling */
 
-static bool marauder_gui_scene_wifi_station_scan_have_index(MarauderGuiApp* app, long global_index) {
+static bool
+    marauder_gui_scene_wifi_station_scan_have_index(MarauderGuiApp* app, long global_index) {
     for(size_t i = 0; i < app->ap_count; i++) {
         if(app->station_global_index[i] == global_index) return true;
     }
@@ -30,7 +32,8 @@ static void marauder_gui_scene_wifi_station_scan_uart_line(MarauderGuiApp* app, 
     if(!app->wifi_station_capturing) return;
 
     const char* p = line;
-    while(*p == ' ') p++;
+    while(*p == ' ')
+        p++;
     if(*p != '[') return;
 
     long sidx = strtol(p + 1, NULL, 10);

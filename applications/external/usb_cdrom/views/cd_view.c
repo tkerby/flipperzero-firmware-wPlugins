@@ -76,7 +76,8 @@ static void cd_view_draw_callback(Canvas* canvas, void* _model) {
     }
 
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str_aligned(canvas, canvas_width(canvas) / 2, 0, AlignCenter, AlignTop, "USB CD-ROM");
+    canvas_draw_str_aligned(
+        canvas, canvas_width(canvas) / 2, 0, AlignCenter, AlignTop, "USB CD-ROM");
 
     canvas_draw_rframe(canvas, 0, 13, canvas_width(canvas), 37, 3);
     if(model->loaded) {
@@ -176,8 +177,7 @@ void cd_view_set_disc(CdView* cd_view, bool loaded, FuriString* name, FuriString
 }
 
 void cd_view_set_connection_error(CdView* cd_view) {
-    with_view_model(
-        cd_view->view, CdViewModel * model, { model->connection_error = true; }, true);
+    with_view_model(cd_view->view, CdViewModel * model, { model->connection_error = true; }, true);
 }
 
 void cd_view_clear_connection_error(CdView* cd_view) {

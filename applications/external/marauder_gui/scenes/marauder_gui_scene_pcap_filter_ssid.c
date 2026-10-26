@@ -19,7 +19,10 @@ static void marauder_gui_scene_pcap_filter_ssid_toggle(MarauderGuiApp* app, cons
         if(strcmp(app->pcap_filter_ssids[i], ssid) == 0) {
             /* Remove by shifting the tail down - the list is tiny (<= MARAUDER_AP_LIST_MAX). */
             for(size_t j = i + 1; j < app->pcap_filter_ssid_count; j++) {
-                strncpy(app->pcap_filter_ssids[j - 1], app->pcap_filter_ssids[j], sizeof(app->pcap_filter_ssids[0]));
+                strncpy(
+                    app->pcap_filter_ssids[j - 1],
+                    app->pcap_filter_ssids[j],
+                    sizeof(app->pcap_filter_ssids[0]));
             }
             app->pcap_filter_ssid_count--;
             return;
@@ -27,8 +30,11 @@ static void marauder_gui_scene_pcap_filter_ssid_toggle(MarauderGuiApp* app, cons
     }
     if(app->pcap_filter_ssid_count < MARAUDER_PCAP_SSID_FILTER_MAX) {
         strncpy(
-            app->pcap_filter_ssids[app->pcap_filter_ssid_count], ssid, sizeof(app->pcap_filter_ssids[0]) - 1);
-        app->pcap_filter_ssids[app->pcap_filter_ssid_count][sizeof(app->pcap_filter_ssids[0]) - 1] = '\0';
+            app->pcap_filter_ssids[app->pcap_filter_ssid_count],
+            ssid,
+            sizeof(app->pcap_filter_ssids[0]) - 1);
+        app->pcap_filter_ssids[app->pcap_filter_ssid_count][sizeof(app->pcap_filter_ssids[0]) - 1] =
+            '\0';
         app->pcap_filter_ssid_count++;
     }
 }
@@ -68,7 +74,8 @@ void marauder_gui_scene_pcap_filter_ssid_on_enter(void* context) {
     app->wifi_scan_frozen = true;
     app->wifi_list_show_selected_count = false;
     app->wifi_list_frozen_label = marauder_gui_text(app, "Gorulen SSID'ler", "Seen SSIDs");
-    app->wifi_list_empty_label = marauder_gui_text(app, "Bu dosyada SSID yok", "No SSIDs in this file");
+    app->wifi_list_empty_label =
+        marauder_gui_text(app, "Bu dosyada SSID yok", "No SSIDs in this file");
 
     view_dispatcher_switch_to_view(app->view_dispatcher, MarauderGuiViewWifiList);
     marauder_gui_wifi_list_redraw(app);

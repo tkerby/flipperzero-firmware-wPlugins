@@ -7,15 +7,15 @@
    figures for a running attack, so this is purely "something is happening" feedback in place of
    what used to be Marauder's own (unlocalizable, English-only) raw confirmation line. */
 
-#define ATTACK_VIEW_BAND_Y 20
-#define ATTACK_VIEW_BAND_H 24
+#define ATTACK_VIEW_BAND_Y   20
+#define ATTACK_VIEW_BAND_H   24
 #define ATTACK_VIEW_CENTER_X 64
 #define ATTACK_VIEW_CENTER_Y (ATTACK_VIEW_BAND_Y + ATTACK_VIEW_BAND_H / 2)
 
-#define SPECTRUM_BAR_COUNT 20
-#define SPECTRUM_BAR_WIDTH 3
-#define SPECTRUM_BAR_GAP 2
-#define SPECTRUM_PERIOD 24
+#define SPECTRUM_BAR_COUNT  20
+#define SPECTRUM_BAR_WIDTH  3
+#define SPECTRUM_BAR_GAP    2
+#define SPECTRUM_PERIOD     24
 #define SPECTRUM_PHASE_STEP 3
 
 static void marauder_gui_attack_view_draw_spectrum(Canvas* canvas, MarauderGuiApp* app) {
@@ -25,10 +25,10 @@ static void marauder_gui_attack_view_draw_spectrum(Canvas* canvas, MarauderGuiAp
     const int32_t half_period = SPECTRUM_PERIOD / 2;
 
     for(int32_t i = 0; i < SPECTRUM_BAR_COUNT; i++) {
-        uint32_t phase = (app->attack_spectrum_phase + (uint32_t)i * SPECTRUM_PHASE_STEP) %
-                          SPECTRUM_PERIOD;
+        uint32_t phase =
+            (app->attack_spectrum_phase + (uint32_t)i * SPECTRUM_PHASE_STEP) % SPECTRUM_PERIOD;
         int32_t triangle = (phase < (uint32_t)half_period) ? (int32_t)phase :
-                                                              (SPECTRUM_PERIOD - (int32_t)phase);
+                                                             (SPECTRUM_PERIOD - (int32_t)phase);
         int32_t height = 2 + (triangle * (ATTACK_VIEW_BAND_H - 2)) / half_period;
 
         canvas_draw_box(
@@ -48,13 +48,13 @@ static void marauder_gui_attack_view_draw_spectrum(Canvas* canvas, MarauderGuiAp
    angles are precomputed here as a small integer table (cos/sin * 100, i.e. percent) instead of
    computed on-device. */
 #define RADAR_ANGLE_STEPS 16
-static const int8_t marauder_radar_cos16[RADAR_ANGLE_STEPS] = {
-    100, 92, 71, 38, 0, -38, -71, -92, -100, -92, -71, -38, 0, 38, 71, 92};
-static const int8_t marauder_radar_sin16[RADAR_ANGLE_STEPS] = {
-    0, 38, 71, 92, 100, 92, 71, 38, 0, -38, -71, -92, -100, -92, -71, -38};
+static const int8_t marauder_radar_cos16[RADAR_ANGLE_STEPS] =
+    {100, 92, 71, 38, 0, -38, -71, -92, -100, -92, -71, -38, 0, 38, 71, 92};
+static const int8_t marauder_radar_sin16[RADAR_ANGLE_STEPS] =
+    {0, 38, 71, 92, 100, 92, 71, 38, 0, -38, -71, -92, -100, -92, -71, -38};
 
-#define RADAR_RADIUS 22
-#define RADAR_INNER_RADIUS 11
+#define RADAR_RADIUS               22
+#define RADAR_INNER_RADIUS         11
 #define RADAR_SWEEP_TICKS_PER_STEP 2 /* one angle step every ~200ms - a full turn in ~3.2s */
 
 /* Fixed "nearby device" positions the sweep passes over each rotation - angle index into the
@@ -86,16 +86,17 @@ static void marauder_gui_attack_view_draw_radar(Canvas* canvas, MarauderGuiApp* 
 
     for(size_t b = 0; b < RADAR_BLIP_COUNT; b++) {
         uint8_t idx = marauder_radar_blips[b].angle_idx;
-        int32_t bx = ATTACK_VIEW_CENTER_X +
-                     (marauder_radar_cos16[idx] * RADAR_RADIUS * marauder_radar_blips[b].radius_pct) /
-                         10000;
-        int32_t by = ATTACK_VIEW_CENTER_Y +
-                     (marauder_radar_sin16[idx] * RADAR_RADIUS * marauder_radar_blips[b].radius_pct) /
-                         10000;
+        int32_t bx = ATTACK_VIEW_CENTER_X + (marauder_radar_cos16[idx] * RADAR_RADIUS *
+                                             marauder_radar_blips[b].radius_pct) /
+                                                10000;
+        int32_t by = ATTACK_VIEW_CENTER_Y + (marauder_radar_sin16[idx] * RADAR_RADIUS *
+                                             marauder_radar_blips[b].radius_pct) /
+                                                10000;
 
         /* "Just passed" (not "about to be passed") so the flash trails the sweep line, like a
            real radar blip lighting up after the beam sweeps over it. */
-        uint32_t behind = (sweep_idx >= idx) ? (sweep_idx - idx) : (RADAR_ANGLE_STEPS + sweep_idx - idx);
+        uint32_t behind = (sweep_idx >= idx) ? (sweep_idx - idx) :
+                                               (RADAR_ANGLE_STEPS + sweep_idx - idx);
         if(behind <= 1) {
             canvas_draw_circle(canvas, bx, by, 3);
         } else {

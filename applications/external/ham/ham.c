@@ -12,8 +12,8 @@
 #include "profile_store.h"
 #include <ham_icons.h>
 
-#define HAM_DIR "/ext/apps_data/ham"
-#define HAM_TEXT HAM_DIR "/text.txt"
+#define HAM_DIR       "/ext/apps_data/ham"
+#define HAM_TEXT      HAM_DIR "/text.txt"
 #define TEXT_CAPACITY 8192
 
 static const char sample_text[] =
@@ -23,10 +23,9 @@ static const char sample_text[] =
     "Let me read through these notes before I continue. "
     "That gives me something to work with. I will come back to the earlier question. "
     "Here is a shorter version of the thought I was working on. ";
-static const char default_profile[] =
-    "# HAM profile. Changes take effect when the app opens.\n"
-    "activity=50\nradius=600\nduration_seconds=600\n"
-    "wpm_min=100\nwpm_max=130\nclick_percent=25\nseed=0\n";
+static const char default_profile[] = "# HAM profile. Changes take effect when the app opens.\n"
+                                      "activity=50\nradius=600\nduration_seconds=600\n"
+                                      "wpm_min=100\nwpm_max=130\nclick_percent=25\nseed=0\n";
 
 typedef struct {
     HamEngine engine;
@@ -85,14 +84,20 @@ static HamProfile load_profile(HamApp* app) {
         unsigned value;
         if(sscanf(line, "%31[^=]=%u", key, &value) != 2) {
             /* Comments and blank lines are ignored. */
-        } else if(!strcmp(key, "activity")) profile.activity = limit(value, 0, 100);
-        else if(!strcmp(key, "radius")) profile.radius = limit(value, 5, 1200);
+        } else if(!strcmp(key, "activity"))
+            profile.activity = limit(value, 0, 100);
+        else if(!strcmp(key, "radius"))
+            profile.radius = limit(value, 5, 1200);
         else if(!strcmp(key, "duration_seconds"))
             profile.duration_seconds = value ? limit(value, 10, 7200) : 0;
-        else if(!strcmp(key, "wpm_min")) profile.wpm_min = limit(value, 15, 180);
-        else if(!strcmp(key, "wpm_max")) profile.wpm_max = limit(value, 15, 180);
-        else if(!strcmp(key, "click_percent")) profile.click_percent = limit(value, 0, 100);
-        else if(!strcmp(key, "seed")) profile.seed = value;
+        else if(!strcmp(key, "wpm_min"))
+            profile.wpm_min = limit(value, 15, 180);
+        else if(!strcmp(key, "wpm_max"))
+            profile.wpm_max = limit(value, 15, 180);
+        else if(!strcmp(key, "click_percent"))
+            profile.click_percent = limit(value, 0, 100);
+        else if(!strcmp(key, "seed"))
+            profile.seed = value;
         if(!end) break;
         line = end + 1;
     }
@@ -119,12 +124,19 @@ static HamProfile load_profile(HamApp* app) {
 }
 static bool save_profile(const HamProfile* p) {
     char config[512];
-    snprintf(config, sizeof(config),
-             "# HAM profile. Radius is in relative HID counts.\n"
-             "activity=%u\nradius=%u\nduration_seconds=%u\n"
-             "wpm_min=%u\nwpm_max=%u\nclick_percent=%u\nseed=%lu\n",
-             p->activity, p->radius, p->duration_seconds, p->wpm_min, p->wpm_max,
-             p->click_percent, (unsigned long)p->seed);
+    snprintf(
+        config,
+        sizeof(config),
+        "# HAM profile. Radius is in relative HID counts.\n"
+        "activity=%u\nradius=%u\nduration_seconds=%u\n"
+        "wpm_min=%u\nwpm_max=%u\nclick_percent=%u\nseed=%lu\n",
+        p->activity,
+        p->radius,
+        p->duration_seconds,
+        p->wpm_min,
+        p->wpm_max,
+        p->click_percent,
+        (unsigned long)p->seed);
     Storage* storage = furi_record_open(RECORD_STORAGE);
     bool saved = ham_profile_store(storage, config);
     furi_record_close(RECORD_STORAGE);
@@ -135,14 +147,21 @@ static void release_inputs(void) {
     furi_hal_hid_mouse_release(HID_MOUSE_BTN_LEFT | HID_MOUSE_BTN_RIGHT | HID_MOUSE_BTN_WHEEL);
 }
 static bool dispatch(HamEvent event) {
-    uint16_t key = event.character == '\b' ? HID_KEYBOARD_DELETE : HID_ASCII_TO_KEY(event.character);
+    uint16_t key = event.character == '\b' ? HID_KEYBOARD_DELETE :
+                                             HID_ASCII_TO_KEY(event.character);
     switch(event.kind) {
-    case HamKeyDown: return furi_hal_hid_kb_press(key);
-    case HamKeyUp: return furi_hal_hid_kb_release(key);
-    case HamMouseMove: return furi_hal_hid_mouse_move(event.dx, event.dy);
-    case HamClickDown: return furi_hal_hid_mouse_press(HID_MOUSE_BTN_LEFT);
-    case HamClickUp: return furi_hal_hid_mouse_release(HID_MOUSE_BTN_LEFT);
-    default: return true;
+    case HamKeyDown:
+        return furi_hal_hid_kb_press(key);
+    case HamKeyUp:
+        return furi_hal_hid_kb_release(key);
+    case HamMouseMove:
+        return furi_hal_hid_mouse_move(event.dx, event.dy);
+    case HamClickDown:
+        return furi_hal_hid_mouse_press(HID_MOUSE_BTN_LEFT);
+    case HamClickUp:
+        return furi_hal_hid_mouse_release(HID_MOUSE_BTN_LEFT);
+    default:
+        return true;
     }
 }
 static void input_callback(InputEvent* event, void* context) {
@@ -169,7 +188,9 @@ static void draw_callback(Canvas* canvas, void* context) {
     canvas_draw_icon(canvas, 3 + pose, 1 + (pose ? 0 : 1), &I_ham);
     canvas_draw_str(canvas, 18, 11, "HAM");
     canvas_set_font(canvas, FontSecondary);
-    const char* status = app->usb_failed ? "USB busy" : !app->connected ? "No USB" : ham_episode_name(e);
+    const char* status = app->usb_failed ? "USB busy" :
+                         !app->connected ? "No USB" :
+                                           ham_episode_name(e);
     canvas_draw_str_aligned(canvas, 125, 11, AlignRight, AlignBottom, status);
     char number[12];
     snprintf(number, sizeof(number), "%u", e->profile.activity);
@@ -185,28 +206,64 @@ static void draw_callback(Canvas* canvas, void* context) {
     char duration[12];
     unsigned seconds = e->profile.duration_seconds;
     if(seconds) {
-        if(seconds % 3600 == 0) snprintf(duration, sizeof(duration), "%uh", seconds / 3600);
-        else if(seconds % 60 == 0) snprintf(duration, sizeof(duration), "%um", seconds / 60);
-        else snprintf(duration, sizeof(duration), "%us", seconds);
+        if(seconds % 3600 == 0)
+            snprintf(duration, sizeof(duration), "%uh", seconds / 3600);
+        else if(seconds % 60 == 0)
+            snprintf(duration, sizeof(duration), "%um", seconds / 60);
+        else
+            snprintf(duration, sizeof(duration), "%us", seconds);
         canvas_draw_str(canvas, 40, 53, duration);
     } else {
         /* Draw infinity explicitly; the device font does not contain Unicode infinity. */
         static const int8_t points[][2] = {
-            {0,3},{1,1},{3,1},{5,3},{7,5},{9,5},{10,3},{9,1},{7,1},{5,3},{3,5},{1,5},{0,3}};
+            {0, 3},
+            {1, 1},
+            {3, 1},
+            {5, 3},
+            {7, 5},
+            {9, 5},
+            {10, 3},
+            {9, 1},
+            {7, 1},
+            {5, 3},
+            {3, 5},
+            {1, 5},
+            {0, 3}};
         for(unsigned i = 1; i < COUNT_OF(points); ++i)
-            canvas_draw_line(canvas, 41 + points[i-1][0], 45 + points[i-1][1],
-                             41 + points[i][0], 45 + points[i][1]);
+            canvas_draw_line(
+                canvas,
+                41 + points[i - 1][0],
+                45 + points[i - 1][1],
+                41 + points[i][0],
+                45 + points[i][1]);
     }
     uint64_t elapsed = e->elapsed / 1000;
     uint64_t clock_seconds = seconds ? (elapsed < seconds ? seconds - elapsed : 0) : elapsed;
     char clock[28];
     if(clock_seconds >= 3600)
-        snprintf(clock, sizeof(clock), "%lu:%02u:%02u", (unsigned long)(clock_seconds / 3600),
-                 (unsigned)(clock_seconds / 60 % 60), (unsigned)(clock_seconds % 60));
-    else snprintf(clock, sizeof(clock), "%u:%02u %s", (unsigned)(clock_seconds / 60),
-                  (unsigned)(clock_seconds % 60), seconds ? "left" : "run");
+        snprintf(
+            clock,
+            sizeof(clock),
+            "%lu:%02u:%02u",
+            (unsigned long)(clock_seconds / 3600),
+            (unsigned)(clock_seconds / 60 % 60),
+            (unsigned)(clock_seconds % 60));
+    else
+        snprintf(
+            clock,
+            sizeof(clock),
+            "%u:%02u %s",
+            (unsigned)(clock_seconds / 60),
+            (unsigned)(clock_seconds % 60),
+            seconds ? "left" : "run");
     canvas_draw_str_aligned(canvas, 124, 53, AlignRight, AlignBottom, clock);
-    canvas_draw_str(canvas, 4, 64, e->complete ? "OK  New session" : e->running ? "OK  Pause" : "OK  Start");
+    canvas_draw_str(
+        canvas,
+        4,
+        64,
+        e->complete ? "OK  New session" :
+        e->running  ? "OK  Pause" :
+                      "OK  Start");
     canvas_draw_str_aligned(canvas, 124, 64, AlignRight, AlignBottom, "Back  Exit");
 #if HAM_ENABLE_PREVIEW
     if(app->capture && canvas_get_buffer_size(canvas) == sizeof(app->frame)) {
@@ -231,10 +288,12 @@ int32_t ham_app(void* context) {
     app->input = furi_message_queue_alloc(16, sizeof(InputEvent));
     app->control = furi_event_flag_alloc();
     HamProfile profile = load_profile(app);
-    ham_init(&app->engine, profile, app->text, profile.seed ? profile.seed : furi_hal_random_get());
+    ham_init(
+        &app->engine, profile, app->text, profile.seed ? profile.seed : furi_hal_random_get());
 #if HAM_ENABLE_PREVIEW
     if(app->capture && strstr((const char*)context, "running")) {
-        app->engine.running = true; /* Render-only diagnostics: engine is never ticked or dispatched. */
+        app->engine.running =
+            true; /* Render-only diagnostics: engine is never ticked or dispatched. */
         app->capture_pose = strstr((const char*)context, "-b") ? 1 : 0;
     }
     if(app->capture && strstr((const char*)context, "infinite")) {
@@ -271,16 +330,20 @@ int32_t ham_app(void* context) {
             exit = exit || now - opened > 800;
         } else
 #endif
-        if(!exit && received == FuriStatusOk) {
-            if(input.key == InputKeyBack) exit = true;
-            else if(input.key == InputKeyUp) app->duration_selected = false;
-            else if(input.key == InputKeyDown) app->duration_selected = true;
+            if(!exit && received == FuriStatusOk) {
+            if(input.key == InputKeyBack)
+                exit = true;
+            else if(input.key == InputKeyUp)
+                app->duration_selected = false;
+            else if(input.key == InputKeyDown)
+                app->duration_selected = true;
             else if(input.key == InputKeyLeft || input.key == InputKeyRight) {
                 if(app->duration_selected) {
                     app->engine.profile.duration_seconds = ham_duration_step(
                         app->engine.profile.duration_seconds, input.key == InputKeyRight ? 1 : -1);
                 } else {
-                    int a = (int)app->engine.profile.activity + (input.key == InputKeyRight ? 5 : -5);
+                    int a =
+                        (int)app->engine.profile.activity + (input.key == InputKeyRight ? 5 : -5);
                     ham_activity(&app->engine, a < 0 ? 0 : a > 100 ? 100 : a, now);
                     if(!app->engine.running && !app->usb_failed) release_inputs();
                 }
@@ -291,8 +354,11 @@ int32_t ham_app(void* context) {
                 } else if(connected) {
                     if(app->engine.complete) {
                         HamProfile current = app->engine.profile;
-                        ham_init(&app->engine, current, app->text,
-                                 current.seed ? current.seed : furi_hal_random_get());
+                        ham_init(
+                            &app->engine,
+                            current,
+                            app->text,
+                            current.seed ? current.seed : furi_hal_random_get());
                     }
                     ham_start(&app->engine, now);
                 }

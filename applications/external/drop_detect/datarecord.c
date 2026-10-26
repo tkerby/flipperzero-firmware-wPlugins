@@ -100,19 +100,28 @@ int32_t capture_thread(void* context) {
                 TAG,
                 "sample[%ld]: ax=%f ay=%f az=%f gx=%f gy=%f gz=%f",
                 captured,
-                (double)accel_scaled.x, (double)accel_scaled.y, (double)accel_scaled.z,
-                (double)gyro_scaled.x, (double)gyro_scaled.y, (double)gyro_scaled.z);
-            if (captured == 2) {
+                (double)accel_scaled.x,
+                (double)accel_scaled.y,
+                (double)accel_scaled.z,
+                (double)gyro_scaled.x,
+                (double)gyro_scaled.y,
+                (double)gyro_scaled.z);
+            if(captured == 2) {
                 FURI_LOG_I(TAG, "sample going silent...");
             }
         }
 
         int len = snprintf(
-            line, sizeof(line), "%ld,%f,%f,%f,%f,%f,%f\n",
+            line,
+            sizeof(line),
+            "%ld,%f,%f,%f,%f,%f,%f\n",
             captured,
-            (double)accel_scaled.x, (double)accel_scaled.y, (double)accel_scaled.z,
-            (double)gyro_scaled.x, (double)gyro_scaled.y, (double)gyro_scaled.z
-            );
+            (double)accel_scaled.x,
+            (double)accel_scaled.y,
+            (double)accel_scaled.z,
+            (double)gyro_scaled.x,
+            (double)gyro_scaled.y,
+            (double)gyro_scaled.z);
         storage_file_write(entry, line, len);
         captured++;
         furi_delay_ms(10);
@@ -129,7 +138,6 @@ int32_t capture_thread(void* context) {
 }
 
 void capture(ICM42688P* imu, uint32_t samples, const char* label) {
-
     // Wait for any previous capture to complete
     if(cap_ctx.thread) {
         furi_thread_join(cap_ctx.thread);
@@ -142,14 +150,14 @@ void capture(ICM42688P* imu, uint32_t samples, const char* label) {
         return;
     }
     FURI_LOG_I(TAG, "IMU valid: %p", (void*)imu);
-    
+
     cap_ctx.icm = imu;
     cap_ctx.samples = samples;
     cap_ctx.label = label;
     cap_ctx.done = false;
     cap_ctx.cancel = false;
     FURI_LOG_I(TAG, "context set");
-    
+
     FURI_LOG_I(TAG, "allocating thread...");
     FuriThread* thread = furi_thread_alloc();
     if(!thread) {
@@ -159,7 +167,7 @@ void capture(ICM42688P* imu, uint32_t samples, const char* label) {
     FURI_LOG_I(TAG, "thread allocated: %p", (void*)thread);
 
     furi_thread_set_context(thread, &cap_ctx);
-    
+
     // Increased stack size from 1024 to 2048 for safety
     furi_thread_set_stack_size(thread, 4096);
     furi_thread_set_priority(thread, FuriThreadPriorityNormal);

@@ -43,7 +43,8 @@ void cfs_draw_str_fit(Canvas* canvas, int32_t x, int32_t y, int32_t max_width, c
         memcpy(buf, str, len);
         // drop a trailing space before the dots
         size_t cut = len;
-        while(cut > 0 && buf[cut - 1] == ' ') cut--;
+        while(cut > 0 && buf[cut - 1] == ' ')
+            cut--;
         memcpy(buf + cut, "..", 3);
         if((int32_t)canvas_string_width(canvas, buf) <= max_width) break;
         len--;
@@ -52,7 +53,8 @@ void cfs_draw_str_fit(Canvas* canvas, int32_t x, int32_t y, int32_t max_width, c
 }
 
 // cos() of the 12 spoke angles (30 degree steps), scaled by 64.
-static const int8_t cfs_cos12[CFS_SPOOL_STEPS] = {64, 55, 32, 0, -32, -55, -64, -55, -32, 0, 32, 55};
+static const int8_t cfs_cos12[CFS_SPOOL_STEPS] =
+    {64, 55, 32, 0, -32, -55, -64, -55, -32, 0, 32, 55};
 #define CFS_SIN12(i) (cfs_cos12[((i) + 9) % CFS_SPOOL_STEPS])
 
 // A filament spool seen from the side: flange, filament wound in the spool's
@@ -93,20 +95,24 @@ void cfs_draw_spool_anim(
     for(uint8_t k = 0; k < 3; k++) {
         const uint8_t i = (angle + k * 4) % CFS_SPOOL_STEPS;
         canvas_draw_line(
-            canvas,
-            cx,
-            cy,
-            cx + (cfs_cos12[i] * spoke) / 64,
-            cy + (CFS_SIN12(i) * spoke) / 64);
+            canvas, cx, cy, cx + (cfs_cos12[i] * spoke) / 64, cy + (CFS_SIN12(i) * spoke) / 64);
     }
     canvas_draw_disc(canvas, cx, cy, 1);
 }
 
-void cfs_draw_spool(Canvas* canvas, int32_t cx, int32_t cy, int32_t radius, uint8_t r, uint8_t g, uint8_t b) {
+void cfs_draw_spool(
+    Canvas* canvas,
+    int32_t cx,
+    int32_t cy,
+    int32_t radius,
+    uint8_t r,
+    uint8_t g,
+    uint8_t b) {
     cfs_draw_spool_anim(canvas, cx, cy, radius, r, g, b, 0, 255);
 }
 
-static void cfs_draw_buttons(Canvas* canvas, const char* left, const char* center, const char* right) {
+static void
+    cfs_draw_buttons(Canvas* canvas, const char* left, const char* center, const char* right) {
     canvas_set_font(canvas, FontSecondary);
     canvas_set_color(canvas, ColorBlack);
     if(left) elements_button_left(canvas, left);
@@ -213,7 +219,8 @@ void cfs_draw_spool_card(Canvas* canvas, const CfsCardModel* m) {
 
 // ---- status: writing / done / failed ----
 
-static void cfs_draw_text_lines(Canvas* canvas, int32_t x, int32_t y, int32_t w, const char* text) {
+static void
+    cfs_draw_text_lines(Canvas* canvas, int32_t x, int32_t y, int32_t w, const char* text) {
     char line[32];
     while(text && *text) {
         const char* nl = strchr(text, '\n');

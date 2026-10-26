@@ -10,17 +10,17 @@ typedef struct {
     int count;
 } Collector;
 
-static void collect(void *ctx, const char *line, size_t len) {
-    Collector *c = ctx;
-    if (c->count < MAX_LINES) {
+static void collect(void* ctx, const char* line, size_t len) {
+    Collector* c = ctx;
+    if(c->count < MAX_LINES) {
         memcpy(c->lines[c->count], line, len);
         c->lines[c->count][len] = '\0';
         c->count++;
     }
 }
 
-static void feed_str(WcLineAsm *a, const char *s, Collector *c) {
-    wc_lineasm_feed(a, (const uint8_t *)s, strlen(s), collect, c);
+static void feed_str(WcLineAsm* a, const char* s, Collector* c) {
+    wc_lineasm_feed(a, (const uint8_t*)s, strlen(s), collect, c);
 }
 
 static void test_splits_on_newline_and_strips_cr(void) {

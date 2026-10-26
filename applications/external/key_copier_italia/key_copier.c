@@ -233,22 +233,22 @@ static void key_copier_view_load_callback(void* context) {
 
             const char* cursor = furi_string_get_cstr(depth_buffer);
 
-    for(int i = 0; i < model->format.pin_num; i++) {
-    char* end_ptr;
-    unsigned long value = strtoul(cursor, &end_ptr, 10);
+            for(int i = 0; i < model->format.pin_num; i++) {
+                char* end_ptr;
+                unsigned long value = strtoul(cursor, &end_ptr, 10);
 
-    if(end_ptr == cursor || value > 255) {
-        break;
-    }
+                if(end_ptr == cursor || value > 255) {
+                    break;
+                }
 
-    model->depth[i] = (uint8_t)value;
+                model->depth[i] = (uint8_t)value;
 
-    cursor = end_ptr;
+                cursor = end_ptr;
 
-    if(*cursor == '-') {
-        cursor++;
-    }
-}
+                if(*cursor == '-') {
+                    cursor++;
+                }
+            }
             model->data_loaded = true;
             // signal that the file was read successfully
         } while(0);
@@ -263,12 +263,10 @@ static void key_copier_draw_cisa(Canvas* canvas, KeyCopierModel* model, FuriStri
     KeyFormat* fmt = &model->format;
     const float scale = (float)INCHES_PER_PX;
     const int baseline = (int)roundf(62.0f - (float)fmt->uncut_depth_inch / scale);
-    const float radians =
-        (180.0f - (float)fmt->drill_angle) * 3.14159265f / 360.0f;
+    const float radians = (180.0f - (float)fmt->drill_angle) * 3.14159265f / 360.0f;
     const float slope = tanf(radians);
 
-    int end_x = (int)roundf(
-        ((float)fmt->last_pin_inch + (float)fmt->elbow_inch) / scale);
+    int end_x = (int)roundf(((float)fmt->last_pin_inch + (float)fmt->elbow_inch) / scale);
     if(end_x > 127) end_x = 127;
     if(end_x < 0) end_x = 0;
 
@@ -280,11 +278,9 @@ static void key_copier_draw_cisa(Canvas* canvas, KeyCopierModel* model, FuriStri
         float cut_depth = 0.0f;
         for(int p = 0; p < fmt->pin_num; p++) {
             const float center =
-                ((float)fmt->first_pin_inch +
-                 (float)p * (float)fmt->pin_increment_inch) / scale;
-            const float depth =
-                ((float)model->depth[p] - (float)fmt->min_depth_ind) *
-                ((float)fmt->depth_step_inch / scale);
+                ((float)fmt->first_pin_inch + (float)p * (float)fmt->pin_increment_inch) / scale;
+            const float depth = ((float)model->depth[p] - (float)fmt->min_depth_ind) *
+                                ((float)fmt->depth_step_inch / scale);
             const float candidate = depth - fabsf((float)x - center) * slope;
             if(candidate > cut_depth) cut_depth = candidate;
         }
@@ -297,8 +293,7 @@ static void key_copier_draw_cisa(Canvas* canvas, KeyCopierModel* model, FuriStri
 
     for(int p = 0; p < fmt->pin_num; p++) {
         const int x = (int)roundf(
-            ((float)fmt->first_pin_inch +
-             (float)p * (float)fmt->pin_increment_inch) / scale);
+            ((float)fmt->first_pin_inch + (float)p * (float)fmt->pin_increment_inch) / scale);
         furi_string_printf(buffer, "%d", model->depth[p]);
         canvas_draw_str_aligned(
             canvas, x, baseline - 12, AlignCenter, AlignCenter, furi_string_get_cstr(buffer));
@@ -307,24 +302,23 @@ static void key_copier_draw_cisa(Canvas* canvas, KeyCopierModel* model, FuriStri
 
     const int selected_x = (int)roundf(
         ((float)fmt->first_pin_inch +
-         (float)(model->pin_slc - 1) * (float)fmt->pin_increment_inch) / scale);
+         (float)(model->pin_slc - 1) * (float)fmt->pin_increment_inch) /
+        scale);
     canvas_draw_icon(canvas, selected_x - 2, baseline - 25, &I_arrow_down);
     // Battuta iniziale
-    canvas_draw_line(
-    canvas, 0, baseline - 6, 0, baseline);
+    canvas_draw_line(canvas, 0, baseline - 6, 0, baseline);
 
-// Bordo inferiore e raccordo finale
-int elbow_px = (int)roundf(
-    (float)fmt->elbow_inch / scale);
+    // Bordo inferiore e raccordo finale
+    int elbow_px = (int)roundf((float)fmt->elbow_inch / scale);
 
-int tip_x = end_x + elbow_px;
-if(tip_x > 127) tip_x = 127;
+    int tip_x = end_x + elbow_px;
+    if(tip_x > 127) tip_x = 127;
 
-int tip_y = 62 - elbow_px;
-if(tip_y < 0) tip_y = 0;
+    int tip_y = 62 - elbow_px;
+    if(tip_y < 0) tip_y = 0;
 
-canvas_draw_line(canvas, 0, 62, end_x, 62);
-canvas_draw_line(canvas, end_x, 62, tip_x, tip_y);
+    canvas_draw_line(canvas, 0, 62, end_x, 62);
+    canvas_draw_line(canvas, end_x, 62, tip_x, tip_y);
     canvas_draw_str(canvas, 100, 10, fmt->format_name);
 }
 
@@ -387,12 +381,11 @@ static void key_copier_view_measure_draw_callback(Canvas* canvas, void* model) {
             top_contour_px + current_depth_px); // draw top pin width horizontal line
 
         if(my_format.sides == 2) { // new
-            int last_depth = (current_pin > 1)
-                                 ? my_model->depth[current_pin - 2] - my_format.min_depth_ind
-                                 : 0;
-            int next_depth = (current_pin < my_format.pin_num)
-                                 ? my_model->depth[current_pin] - my_format.min_depth_ind
-                                 : 0;
+            int last_depth =
+                (current_pin > 1) ? my_model->depth[current_pin - 2] - my_format.min_depth_ind : 0;
+            int next_depth = (current_pin < my_format.pin_num) ?
+                                 my_model->depth[current_pin] - my_format.min_depth_ind :
+                                 0;
             int current_depth = my_model->depth[current_pin - 1] - my_format.min_depth_ind;
             int current_depth_px =
                 (int)round(current_depth * my_format.depth_step_inch / inches_per_px);
@@ -480,12 +473,11 @@ static void key_copier_view_measure_draw_callback(Canvas* canvas, void* model) {
         }
         // new end
 
-        int last_depth = (current_pin > 1)
-                             ? my_model->depth[current_pin - 2] - my_format.min_depth_ind
-                             : 0;
-        int next_depth = (current_pin < my_format.pin_num)
-                             ? my_model->depth[current_pin] - my_format.min_depth_ind
-                             : 0;
+        int last_depth =
+            (current_pin > 1) ? my_model->depth[current_pin - 2] - my_format.min_depth_ind : 0;
+        int next_depth = (current_pin < my_format.pin_num) ?
+                             my_model->depth[current_pin] - my_format.min_depth_ind :
+                             0;
         if(current_pin == 1) {
             canvas_draw_line(
                 canvas,

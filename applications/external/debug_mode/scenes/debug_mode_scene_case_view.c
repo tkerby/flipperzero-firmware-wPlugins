@@ -25,7 +25,8 @@ void debug_mode_scene_case_view_on_enter(void* context) {
         app->current_case_title[sizeof(app->current_case_title) - 1] = '\0';
         strncpy(app->current_case_status, header.status, sizeof(app->current_case_status) - 1);
         app->current_case_status[sizeof(app->current_case_status) - 1] = '\0';
-        strncpy(app->current_case_priority, header.priority, sizeof(app->current_case_priority) - 1);
+        strncpy(
+            app->current_case_priority, header.priority, sizeof(app->current_case_priority) - 1);
         app->current_case_priority[sizeof(app->current_case_priority) - 1] = '\0';
     }
     uint32_t entry_count = case_store_count_entries(app->storage, app->current_case_id);
@@ -49,11 +50,7 @@ void debug_mode_scene_case_view_on_enter(void* context) {
         debug_mode_scene_case_view_callback,
         app);
     submenu_add_item(
-        app->submenu,
-        "Timeline",
-        CaseViewActionTimeline,
-        debug_mode_scene_case_view_callback,
-        app);
+        app->submenu, "Timeline", CaseViewActionTimeline, debug_mode_scene_case_view_callback, app);
     submenu_add_item(
         app->submenu,
         "Case Health",
@@ -69,11 +66,7 @@ void debug_mode_scene_case_view_on_enter(void* context) {
             app);
     }
     submenu_add_item(
-        app->submenu,
-        "More...",
-        CaseViewActionMore,
-        debug_mode_scene_case_view_callback,
-        app);
+        app->submenu, "More...", CaseViewActionMore, debug_mode_scene_case_view_callback, app);
 
     view_dispatcher_switch_to_view(app->view_dispatcher, DebugModeViewIdSubmenu);
 }

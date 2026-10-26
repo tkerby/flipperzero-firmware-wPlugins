@@ -6,7 +6,7 @@
 
 /* Bounded, passive WPA2 M1/M2 candidate detection. This is not a MIC/password
    verification, nor a PMKID parser. All state is reset at the start of a file. */
-#define MARAUDER_PCAP_PAIR_SLOTS 8
+#define MARAUDER_PCAP_PAIR_SLOTS     8
 #define MARAUDER_PCAP_PAIR_WINDOW_US 10000000ULL
 
 typedef struct {

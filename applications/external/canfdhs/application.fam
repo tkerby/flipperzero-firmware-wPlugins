@@ -7,7 +7,7 @@ App(
     fap_icon_assets="assets",
     fap_libs=["assets"],
     fap_icon="icon.png",
-    sources=["*.c","*.cpp"],
+    sources=["*.c", "*.cpp"],
     fap_category="GPIO",
     fap_author="SERMA Safety and Security",
     fap_weburl="https://github.com/serma-safety-security/Flipper-Zero-CAN-FD-HS-SW",

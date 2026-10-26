@@ -47,7 +47,7 @@ static const MarauderMenuItem marauder_wifi_select_aps_attack_menu_items[] = {
    sitting at index 3). */
 static const int marauder_wifi_select_aps_attack_type_map[] = {0, 1, 2, 4, 5, 6, 7, 8};
 
-#define WIFI_SELECT_APS_ATTACK_MENU_COUNT \
+#define WIFI_SELECT_APS_ATTACK_MENU_COUNT                 \
     (sizeof(marauder_wifi_select_aps_attack_menu_items) / \
      sizeof(marauder_wifi_select_aps_attack_menu_items[0]))
 
@@ -60,11 +60,14 @@ void marauder_gui_scene_wifi_select_aps_attack_menu_on_enter(void* context) {
         marauder_gui_text(app, "Tum Secililere", "To All Selected"));
 }
 
-bool marauder_gui_scene_wifi_select_aps_attack_menu_on_event(void* context, SceneManagerEvent event) {
+bool marauder_gui_scene_wifi_select_aps_attack_menu_on_event(
+    void* context,
+    SceneManagerEvent event) {
     MarauderGuiApp* app = context;
     bool consumed = false;
 
-    if(event.type == SceneManagerEventTypeCustom && event.event < WIFI_SELECT_APS_ATTACK_MENU_COUNT) {
+    if(event.type == SceneManagerEventTypeCustom &&
+       event.event < WIFI_SELECT_APS_ATTACK_MENU_COUNT) {
         app->wifi_ap_attack_type = marauder_wifi_select_aps_attack_type_map[event.event];
         app->wifi_attack_multi_ap = true;
         scene_manager_next_scene(app->scene_manager, MarauderGuiSceneWifiAttack);

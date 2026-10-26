@@ -2,11 +2,11 @@
 #include <nfc/helpers/iso13239_crc.h>
 #include <string.h>
 
-#define DEBUG_MODE_NFC_FWT_FC (100000U)
-#define DEBUG_MODE_PICOPASS_UID_LEN (8U)
-#define DEBUG_MODE_PICOPASS_CMD_ACTALL (0x0AU)
+#define DEBUG_MODE_NFC_FWT_FC                    (100000U)
+#define DEBUG_MODE_PICOPASS_UID_LEN              (8U)
+#define DEBUG_MODE_PICOPASS_CMD_ACTALL           (0x0AU)
 #define DEBUG_MODE_PICOPASS_CMD_READ_OR_IDENTIFY (0x0CU)
-#define DEBUG_MODE_PICOPASS_CMD_SELECT (0x81U)
+#define DEBUG_MODE_PICOPASS_CMD_SELECT           (0x81U)
 
 typedef struct {
     DebugMode* app;
@@ -72,7 +72,8 @@ static bool debug_mode_nfc_try_picopass_csn(DebugModeNfcWorkerContext* worker) {
     if(bit_buffer_get_size_bytes(worker->rx_buffer) != DEBUG_MODE_PICOPASS_UID_LEN) return false;
     bit_buffer_write_bytes(worker->rx_buffer, serial, sizeof(serial));
 
-    debug_mode_nfc_uid_to_string("PICO", serial, sizeof(serial), worker->app->nfc_uid, sizeof(worker->app->nfc_uid));
+    debug_mode_nfc_uid_to_string(
+        "PICO", serial, sizeof(serial), worker->app->nfc_uid, sizeof(worker->app->nfc_uid));
     return true;
 }
 
@@ -200,8 +201,7 @@ bool debug_mode_scene_nfc_scan_on_event(void* context, SceneManagerEvent event) 
     DebugMode* app = context;
     bool consumed = false;
 
-    if(event.type == SceneManagerEventTypeCustom &&
-       event.event == DebugModeCustomEventNfcFound) {
+    if(event.type == SceneManagerEventTypeCustom && event.event == DebugModeCustomEventNfcFound) {
         debug_mode_scene_nfc_scan_stop_worker(app);
         notification_message(app->notifications, &sequence_success);
 
@@ -248,8 +248,9 @@ bool debug_mode_scene_nfc_scan_on_event(void* context, SceneManagerEvent event) 
             app->message_body,
             sizeof(app->message_body),
             "No card was detected.\n\nHold it flat against the back and try again.");
-        app->message_return_scene =
-            app->nfc_mode == DebugModeNfcModeLink ? DebugModeSceneCaseView : DebugModeSceneMainMenu;
+        app->message_return_scene = app->nfc_mode == DebugModeNfcModeLink ?
+                                        DebugModeSceneCaseView :
+                                        DebugModeSceneMainMenu;
         scene_manager_next_scene(app->scene_manager, DebugModeSceneMessage);
         consumed = true;
     } else if(

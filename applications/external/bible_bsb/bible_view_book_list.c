@@ -74,8 +74,7 @@ void bible_bsb_view_book_list_draw(Canvas* canvas, void* ctx) {
 
         uint8_t book_idx = filtered[list_idx];
         if(book_idx >= BIBLE_BOOK_COUNT) continue;
-        int16_t y =
-            BOOK_LIST_HEADER_HEIGHT + 2 + (i * BOOK_LIST_LINE_HEIGHT) + BIBLE_CHAR_HEIGHT;
+        int16_t y = BOOK_LIST_HEADER_HEIGHT + 2 + (i * BOOK_LIST_LINE_HEIGHT) + BIBLE_CHAR_HEIGHT;
         const char* name = OSIS_BOOK_NAMES[book_idx];
         if(!name) continue;
         if(book_idx == state->selected_book) {

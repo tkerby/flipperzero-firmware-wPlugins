@@ -30,15 +30,15 @@
 #define UFI_SK_ILLEGAL_REQUEST (0x05)
 #define UFI_SK_DATA_PROTECT    (0x07)
 
-#define UFI_ASC_WRITE_FAULT              (0x03)
-#define UFI_ASC_UNRECOVERED_READ_ERROR   (0x11)
-#define UFI_ASC_PARAM_LIST_LENGTH_ERROR  (0x1A)
-#define UFI_ASC_INVALID_COMMAND          (0x20)
-#define UFI_ASC_LBA_OUT_OF_RANGE         (0x21)
-#define UFI_ASC_INVALID_FIELD_IN_CDB     (0x24)
-#define UFI_ASC_INVALID_FIELD_IN_PARAMS  (0x26)
-#define UFI_ASC_WRITE_PROTECTED          (0x27)
-#define UFI_ASC_FORMAT_FAILED            (0x31)
+#define UFI_ASC_WRITE_FAULT               (0x03)
+#define UFI_ASC_UNRECOVERED_READ_ERROR    (0x11)
+#define UFI_ASC_PARAM_LIST_LENGTH_ERROR   (0x1A)
+#define UFI_ASC_INVALID_COMMAND           (0x20)
+#define UFI_ASC_LBA_OUT_OF_RANGE          (0x21)
+#define UFI_ASC_INVALID_FIELD_IN_CDB      (0x24)
+#define UFI_ASC_INVALID_FIELD_IN_PARAMS   (0x26)
+#define UFI_ASC_WRITE_PROTECTED           (0x27)
+#define UFI_ASC_FORMAT_FAILED             (0x31)
 #define UFI_ASC_SAVING_PARAMS_UNSUPPORTED (0x39)
 
 #define UFI_MODE_PAGE_FLEXIBLE_DISK (0x05)
@@ -240,10 +240,7 @@ static bool ufi_format(UfiSession* ufi, const uint8_t* params, uint32_t len) {
     // the image has a fixed size, so only its own format is accepted
     if(get_be32(params + 4) != blocks || get_be24(params + 9) != UFI_BLOCK_SIZE) {
         FURI_LOG_W(
-            TAG,
-            "format to %lu x %lu not supported",
-            get_be32(params + 4),
-            get_be24(params + 9));
+            TAG, "format to %lu x %lu not supported", get_be32(params + 4), get_be24(params + 9));
         return ufi_fail(ufi, UFI_SK_ILLEGAL_REQUEST, UFI_ASC_INVALID_FIELD_IN_PARAMS);
     }
 

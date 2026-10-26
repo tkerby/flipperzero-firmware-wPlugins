@@ -5,7 +5,7 @@ void serial_chat_uart_rx_callback(
     FuriHalSerialRxEvent event,
     void* context) {
     SerialChatApp* app = (SerialChatApp*)context;
-    
+
     if(event == FuriHalSerialRxEventData) {
         uint8_t data = furi_hal_serial_async_rx(handle);
         // Just buffer the data, don't send events from ISR
@@ -18,27 +18,20 @@ void serial_chat_uart_init(SerialChatApp* app) {
     if(app->serial_handle) {
         serial_chat_uart_deinit(app);
     }
-    
+
     // Acquire serial handle
     app->serial_handle = furi_hal_serial_control_acquire(UART_CH);
     furi_check(app->serial_handle);
-    
+
     // Initialize UART with current config
     furi_hal_serial_init(app->serial_handle, app->config.baudrate);
-    
+
     // Configure framing (data bits, parity, stop bits)
     furi_hal_serial_configure_framing(
-        app->serial_handle,
-        app->config.data_bits,
-        app->config.parity,
-        app->config.stop_bits);
-    
+        app->serial_handle, app->config.data_bits, app->config.parity, app->config.stop_bits);
+
     // Enable RX and TX
-    furi_hal_serial_async_rx_start(
-        app->serial_handle,
-        serial_chat_uart_rx_callback,
-        app,
-        false);
+    furi_hal_serial_async_rx_start(app->serial_handle, serial_chat_uart_rx_callback, app, false);
 }
 
 void serial_chat_uart_deinit(SerialChatApp* app) {

@@ -68,7 +68,8 @@ bool cfs_scene_write_progress_on_event(void* context, SceneManagerEvent event) {
             notification_message(app->notifications, &sequence_success);
             CfsStatusModel status = {.kind = CfsStatusOk, .button_center = "Next"};
             snprintf(status.title, sizeof(status.title), "Tag 1 done");
-            snprintf(status.text, sizeof(status.text), "Take it off, put\ntag 2 on, then\npress OK");
+            snprintf(
+                status.text, sizeof(status.text), "Take it off, put\ntag 2 on, then\npress OK");
             cfs_screen_show_status(app->screen, &status, CfsCustomEventButtonWriteTag2, 0, 0);
         } else {
             cfs_progress_bump_serial(app);

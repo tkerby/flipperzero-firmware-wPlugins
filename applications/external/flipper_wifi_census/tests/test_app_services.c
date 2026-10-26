@@ -26,24 +26,24 @@ typedef struct {
     FakeFile files[FAKE_MAX_FILES];
 } FakeStore;
 
-static FakeFile *fake_find(FakeStore *s, const char *name) {
-    for (int i = 0; i < FAKE_MAX_FILES; i++) {
-        if (s->files[i].used && strcmp(s->files[i].name, name) == 0) {
+static FakeFile* fake_find(FakeStore* s, const char* name) {
+    for(int i = 0; i < FAKE_MAX_FILES; i++) {
+        if(s->files[i].used && strcmp(s->files[i].name, name) == 0) {
             return &s->files[i];
         }
     }
     return NULL;
 }
 
-static bool fake_write(void *self, const char *name, const uint8_t *data, size_t len) {
-    FakeStore *s = self;
-    if (len > FAKE_MAX_BYTES) {
+static bool fake_write(void* self, const char* name, const uint8_t* data, size_t len) {
+    FakeStore* s = self;
+    if(len > FAKE_MAX_BYTES) {
         return false;
     }
-    FakeFile *f = fake_find(s, name);
-    if (!f) {
-        for (int i = 0; i < FAKE_MAX_FILES; i++) {
-            if (!s->files[i].used) {
+    FakeFile* f = fake_find(s, name);
+    if(!f) {
+        for(int i = 0; i < FAKE_MAX_FILES; i++) {
+            if(!s->files[i].used) {
                 f = &s->files[i];
                 f->used = true;
                 snprintf(f->name, sizeof(f->name), "%s", name);
@@ -51,7 +51,7 @@ static bool fake_write(void *self, const char *name, const uint8_t *data, size_t
             }
         }
     }
-    if (!f) {
+    if(!f) {
         return false;
     }
     memcpy(f->data, data, len);
@@ -59,66 +59,66 @@ static bool fake_write(void *self, const char *name, const uint8_t *data, size_t
     return true;
 }
 
-static size_t fake_read(void *self, const char *name, uint8_t *buf, size_t cap) {
-    const FakeFile *f = fake_find(self, name);
-    if (!f || f->len > cap) {
+static size_t fake_read(void* self, const char* name, uint8_t* buf, size_t cap) {
+    const FakeFile* f = fake_find(self, name);
+    if(!f || f->len > cap) {
         return 0;
     }
     memcpy(buf, f->data, f->len);
     return f->len;
 }
 
-static size_t fake_read_range(void *self, const char *name, size_t offset, uint8_t *buf,
-                              size_t cap) {
-    const FakeFile *f = fake_find(self, name);
-    if (!f || offset >= f->len) {
+static size_t
+    fake_read_range(void* self, const char* name, size_t offset, uint8_t* buf, size_t cap) {
+    const FakeFile* f = fake_find(self, name);
+    if(!f || offset >= f->len) {
         return 0;
     }
     size_t n = f->len - offset;
-    if (n > cap) {
+    if(n > cap) {
         n = cap;
     }
     memcpy(buf, f->data + offset, n);
     return n;
 }
 
-static size_t fake_file_size(void *self, const char *name) {
-    const FakeFile *f = fake_find(self, name);
+static size_t fake_file_size(void* self, const char* name) {
+    const FakeFile* f = fake_find(self, name);
     return f ? f->len : 0;
 }
 
-static size_t fake_read_range_path(void *self, const char *path, size_t offset, uint8_t *buf,
-                                   size_t cap) {
+static size_t
+    fake_read_range_path(void* self, const char* path, size_t offset, uint8_t* buf, size_t cap) {
     return fake_read_range(self, path, offset, buf, cap);
 }
 
-static size_t fake_file_size_path(void *self, const char *path) {
+static size_t fake_file_size_path(void* self, const char* path) {
     return fake_file_size(self, path);
 }
 
-static bool fake_rename(void *self, const char *from, const char *to) {
-    FakeFile *f = fake_find(self, from);
-    if (!f) {
+static bool fake_rename(void* self, const char* from, const char* to) {
+    FakeFile* f = fake_find(self, from);
+    if(!f) {
         return false;
     }
     snprintf(f->name, sizeof(f->name), "%s", to);
     return true;
 }
 
-static bool fake_delete(void *self, const char *name) {
-    FakeFile *f = fake_find(self, name);
-    if (!f) {
+static bool fake_delete(void* self, const char* name) {
+    FakeFile* f = fake_find(self, name);
+    if(!f) {
         return false;
     }
     f->used = false;
     return true;
 }
 
-static uint16_t fake_list(void *self, WcStoreNameFn cb, void *ctx) {
-    FakeStore *s = self;
+static uint16_t fake_list(void* self, WcStoreNameFn cb, void* ctx) {
+    FakeStore* s = self;
     uint16_t n = 0;
-    for (int i = 0; i < FAKE_MAX_FILES; i++) {
-        if (s->files[i].used) {
+    for(int i = 0; i < FAKE_MAX_FILES; i++) {
+        if(s->files[i].used) {
             cb(ctx, s->files[i].name);
             n++;
         }
@@ -127,15 +127,15 @@ static uint16_t fake_list(void *self, WcStoreNameFn cb, void *ctx) {
 }
 
 struct WcFileWriter {
-    FakeFile *f;
+    FakeFile* f;
 };
 
-static WcFileWriter *fake_open_write(void *self, const char *name) {
-    FakeStore *s = self;
-    FakeFile *f = fake_find(s, name);
-    if (!f) {
-        for (int i = 0; i < FAKE_MAX_FILES; i++) {
-            if (!s->files[i].used) {
+static WcFileWriter* fake_open_write(void* self, const char* name) {
+    FakeStore* s = self;
+    FakeFile* f = fake_find(s, name);
+    if(!f) {
+        for(int i = 0; i < FAKE_MAX_FILES; i++) {
+            if(!s->files[i].used) {
                 f = &s->files[i];
                 f->used = true;
                 snprintf(f->name, sizeof(f->name), "%s", name);
@@ -143,17 +143,17 @@ static WcFileWriter *fake_open_write(void *self, const char *name) {
             }
         }
     }
-    if (!f) {
+    if(!f) {
         return NULL;
     }
     f->len = 0;
-    WcFileWriter *w = malloc(sizeof(WcFileWriter));
+    WcFileWriter* w = malloc(sizeof(WcFileWriter));
     w->f = f;
     return w;
 }
 
-static bool fake_write_chunk(WcFileWriter *w, const uint8_t *data, size_t len) {
-    if (w->f->len + len > FAKE_MAX_BYTES) {
+static bool fake_write_chunk(WcFileWriter* w, const uint8_t* data, size_t len) {
+    if(w->f->len + len > FAKE_MAX_BYTES) {
         return false;
     }
     memcpy(w->f->data + w->f->len, data, len);
@@ -163,30 +163,31 @@ static bool fake_write_chunk(WcFileWriter *w, const uint8_t *data, size_t len) {
 
 static bool g_fake_close_fails = false;
 
-static bool fake_close_write(WcFileWriter *w) {
+static bool fake_close_write(WcFileWriter* w) {
     free(w);
     return !g_fake_close_fails;
 }
 
-static WcStorePort fake_store_port(FakeStore *s) {
-    WcStorePort p = {.self = s,
-                     .write_file = fake_write,
-                     .read_file = fake_read,
-                     .file_size = fake_file_size,
-                     .file_size_path = fake_file_size_path,
-                     .read_range = fake_read_range,
-                     .read_range_path = fake_read_range_path,
-                     .rename_file = fake_rename,
-                     .delete_file = fake_delete,
-                     .list = fake_list,
-                     .open_write = fake_open_write,
-                     .write = fake_write_chunk,
-                     .close = fake_close_write};
+static WcStorePort fake_store_port(FakeStore* s) {
+    WcStorePort p = {
+        .self = s,
+        .write_file = fake_write,
+        .read_file = fake_read,
+        .file_size = fake_file_size,
+        .file_size_path = fake_file_size_path,
+        .read_range = fake_read_range,
+        .read_range_path = fake_read_range_path,
+        .rename_file = fake_rename,
+        .delete_file = fake_delete,
+        .list = fake_list,
+        .open_write = fake_open_write,
+        .write = fake_write_chunk,
+        .close = fake_close_write};
     return p;
 }
 
 static uint32_t g_now = 1000;
-static uint32_t fake_now(void *self) {
+static uint32_t fake_now(void* self) {
     (void)self;
     return g_now;
 }
@@ -197,7 +198,7 @@ static WcClockPort fake_clock(void) {
 
 // --- tests ---
 
-static void feed(WcScanService *svc, const char *line) {
+static void feed(WcScanService* svc, const char* line) {
     wc_scan_on_line(svc, line, strlen(line));
 }
 
@@ -206,8 +207,8 @@ static void test_scan_service_builds_census(void) {
     wc_scan_init(&svc, fake_clock());
     feed(&svc, "RSSI: -40 CH: 6 MAC: 00:1B:21:00:00:01 SSID: Net"); // stable laptop
     feed(&svc, "RSSI: -42 CH: 6 MAC: 00:1B:21:00:00:01 SSID: Net"); // same -> dedup
-    feed(&svc, "RSSI: -70 CH: 1 MAC: DA:00:00:00:00:09 SSID: ");    // random phone
-    feed(&svc, "garbage line no mac");                              // ignored
+    feed(&svc, "RSSI: -70 CH: 1 MAC: DA:00:00:00:00:09 SSID: "); // random phone
+    feed(&svc, "garbage line no mac"); // ignored
     WcCensusStats s = wc_scan_stats(&svc);
     assert(s.total == 2);
     assert(s.unique_stable == 1);
@@ -215,7 +216,7 @@ static void test_scan_service_builds_census(void) {
 }
 
 static void test_capture_save_load_and_csv(void) {
-    FakeStore *store_data = calloc(1, sizeof(FakeStore));
+    FakeStore* store_data = calloc(1, sizeof(FakeStore));
     assert(store_data);
     WcStorePort store = fake_store_port(store_data);
 
@@ -235,7 +236,7 @@ static void test_capture_save_load_and_csv(void) {
     assert(fake_find(store_data, "casa" WC_CSV_EXT));
 
     WcCaptureMeta m2;
-    WcCensus *c2 = calloc(1, sizeof(WcCensus));
+    WcCensus* c2 = calloc(1, sizeof(WcCensus));
     assert(c2);
     wc_census_init(c2); // the reader keeps the caller's ceiling, so it must be set
     assert(wc_capture_service_load(&store, "casa" WC_CAP_EXT, &m2, c2));
@@ -246,7 +247,7 @@ static void test_capture_save_load_and_csv(void) {
 }
 
 static void test_compare_service_end_to_end(void) {
-    FakeStore *store_data = calloc(1, sizeof(FakeStore));
+    FakeStore* store_data = calloc(1, sizeof(FakeStore));
     assert(store_data);
     WcStorePort store = fake_store_port(store_data);
 
@@ -254,7 +255,7 @@ static void test_compare_service_end_to_end(void) {
     WcScanService a;
     wc_scan_init(&a, fake_clock());
     feed(&a, "MAC: 00:1B:21:00:00:01 SSID: Net"); // shared laptop
-    feed(&a, "MAC: B8:27:EB:00:00:AA SSID: ");    // only in A
+    feed(&a, "MAC: B8:27:EB:00:00:AA SSID: "); // only in A
     // Location B: the same laptop.
     WcScanService b;
     wc_scan_init(&b, fake_clock());
@@ -267,7 +268,7 @@ static void test_compare_service_end_to_end(void) {
     snprintf(meta.label, sizeof(meta.label), "B");
     assert(wc_capture_service_save(&store, "B", &meta, &b.census));
 
-    WcCompareResult *r = calloc(1, sizeof(WcCompareResult));
+    WcCompareResult* r = calloc(1, sizeof(WcCompareResult));
     assert(r);
     assert(wc_compare_service_run(&store, "A" WC_CAP_EXT, "B" WC_CAP_EXT, r));
     assert(r->na == 2 && r->nb == 1);
@@ -278,7 +279,7 @@ static void test_compare_service_end_to_end(void) {
 }
 
 static void test_known_service_mark_and_match(void) {
-    FakeStore *store_data = calloc(1, sizeof(FakeStore));
+    FakeStore* store_data = calloc(1, sizeof(FakeStore));
     assert(store_data);
     WcStorePort store = fake_store_port(store_data);
 
@@ -297,7 +298,7 @@ static void test_known_service_mark_and_match(void) {
     WcKnownDb db2;
     assert(wc_known_service_load(&store, &db2));
     assert(db2.count == 1);
-    const WcKnown *m = wc_known_match(&db2, &sig);
+    const WcKnown* m = wc_known_match(&db2, &sig);
     assert(m && strcmp(m->label, "Pi lab") == 0);
 
     // A randomized MAC with no SSID cannot be marked.
@@ -309,7 +310,7 @@ static void test_known_service_mark_and_match(void) {
 }
 
 static void test_known_service_multiple_and_manage(void) {
-    FakeStore *store_data = calloc(1, sizeof(FakeStore));
+    FakeStore* store_data = calloc(1, sizeof(FakeStore));
     assert(store_data);
     WcStorePort store = fake_store_port(store_data);
 
@@ -345,7 +346,7 @@ static void test_known_service_multiple_and_manage(void) {
 }
 
 static void test_known_service_save_load_direct(void) {
-    FakeStore *store_data = calloc(1, sizeof(FakeStore));
+    FakeStore* store_data = calloc(1, sizeof(FakeStore));
     assert(store_data);
     WcStorePort store = fake_store_port(store_data);
 
@@ -367,7 +368,7 @@ static void test_known_service_save_load_direct(void) {
 }
 
 static void test_merge_service_end_to_end(void) {
-    FakeStore *store_data = calloc(1, sizeof(FakeStore));
+    FakeStore* store_data = calloc(1, sizeof(FakeStore));
     assert(store_data);
     WcStorePort store = fake_store_port(store_data);
 
@@ -375,12 +376,12 @@ static void test_merge_service_end_to_end(void) {
     WcScanService d1;
     wc_scan_init(&d1, fake_clock());
     feed(&d1, "MAC: 00:1B:21:00:00:01 SSID: Net"); // laptop
-    feed(&d1, "MAC: B8:27:EB:00:00:AA SSID: ");    // pi, only day 1
+    feed(&d1, "MAC: B8:27:EB:00:00:AA SSID: "); // pi, only day 1
     // Day 2: same laptop + a new device.
     WcScanService d2;
     wc_scan_init(&d2, fake_clock());
     feed(&d2, "MAC: 00:1B:21:00:00:01 SSID: Net"); // same laptop
-    feed(&d2, "MAC: 3C:A9:F4:00:00:BB SSID: ");    // new, only day 2
+    feed(&d2, "MAC: 3C:A9:F4:00:00:BB SSID: "); // new, only day 2
 
     WcCaptureMeta meta;
     memset(&meta, 0, sizeof(meta));
@@ -392,7 +393,7 @@ static void test_merge_service_end_to_end(void) {
     assert(wc_merge_service_run(&store, "d1" WC_CAP_EXT, "d2" WC_CAP_EXT, "acc", NULL, NULL));
 
     WcCaptureMeta mm;
-    WcCensus *merged = calloc(1, sizeof(WcCensus));
+    WcCensus* merged = calloc(1, sizeof(WcCensus));
     assert(merged);
     wc_census_init(merged); // the reader keeps the caller's ceiling, so it must be set
     assert(wc_capture_service_load(&store, "acc" WC_CAP_EXT, &mm, merged));
@@ -403,20 +404,21 @@ static void test_merge_service_end_to_end(void) {
 }
 
 static void test_import_service_from_pcap(void) {
-    FakeStore *store_data = calloc(1, sizeof(FakeStore));
+    FakeStore* store_data = calloc(1, sizeof(FakeStore));
     assert(store_data);
     WcStorePort store = fake_store_port(store_data);
 
     // Build a minimal classic pcap (LE, linktype 105) with two probe requests.
     uint8_t pcap[256];
     size_t o = 0;
-    const uint8_t gh[24] = {0xD4, 0xC3, 0xB2, 0xA1, 0x02, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00,
-                            0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 105,  0x00, 0x00, 0x00};
+    const uint8_t gh[24] = {0xD4, 0xC3, 0xB2, 0xA1, 0x02, 0x00, 0x04, 0x00,
+                            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                            0x00, 0x10, 0x00, 0x00, 105,  0x00, 0x00, 0x00};
     memcpy(pcap, gh, 24);
     o = 24;
     // A probe request: FC=0x40, dur, A1 bcast, A2 (stable mac), A3 bcast, seqctrl, SSID IE.
     const uint8_t mac[6] = {0x00, 0x1B, 0x21, 0x01, 0x02, 0x03};
-    for (int r = 0; r < 2; r++) {
+    for(int r = 0; r < 2; r++) {
         uint8_t frame[64];
         size_t fl = 0;
         frame[fl++] = 0x40;
@@ -456,7 +458,7 @@ static void test_import_service_from_pcap(void) {
 
     assert(wc_import_service_run(&store, fake_clock(), "cap.pcap", "imp", NULL));
     WcCaptureMeta m;
-    WcCensus *c = calloc(1, sizeof(WcCensus));
+    WcCensus* c = calloc(1, sizeof(WcCensus));
     assert(c);
     wc_census_init(c); // the reader keeps the caller's ceiling, so it must be set
     assert(wc_capture_service_load(&store, "imp" WC_CAP_EXT, &m, c));
@@ -468,7 +470,7 @@ static void test_import_service_from_pcap(void) {
 }
 
 static void test_settings_service_defaults_roundtrip_and_corruption(void) {
-    FakeStore *store_data = calloc(1, sizeof(FakeStore));
+    FakeStore* store_data = calloc(1, sizeof(FakeStore));
     assert(store_data);
     WcStorePort store = fake_store_port(store_data);
 
@@ -522,17 +524,17 @@ static void test_settings_service_defaults_roundtrip_and_corruption(void) {
 // A merge that overflows the ceiling must still succeed AND say what it threw away: the count
 // alone reads exactly like two captures that happened to overlap.
 static void test_merge_service_reports_what_the_ceiling_dropped(void) {
-    FakeStore *store_data = calloc(1, sizeof(FakeStore));
+    FakeStore* store_data = calloc(1, sizeof(FakeStore));
     assert(store_data);
     WcStorePort store = fake_store_port(store_data);
 
-    WcCensus *full = calloc(1, sizeof(WcCensus));
-    WcCensus *more = calloc(1, sizeof(WcCensus));
+    WcCensus* full = calloc(1, sizeof(WcCensus));
+    WcCensus* more = calloc(1, sizeof(WcCensus));
     assert(full && more);
     wc_census_init(full);
     wc_census_init(more);
     // Two disjoint sets of stable MACs, each filling the ceiling on its own.
-    for (uint16_t i = 0; i < WC_CENSUS_MAX_DEVICES; i++) {
+    for(uint16_t i = 0; i < WC_CENSUS_MAX_DEVICES; i++) {
         WcSignature sig;
         memset(&sig, 0, sizeof(sig));
         sig.mac[0] = 0x00;
@@ -557,16 +559,16 @@ static void test_merge_service_reports_what_the_ceiling_dropped(void) {
 
     uint16_t devices = 0;
     uint16_t dropped = 0;
-    assert(wc_merge_service_run(&store, "full" WC_CAP_EXT, "more" WC_CAP_EXT, "both", &devices,
-                                &dropped));
+    assert(wc_merge_service_run(
+        &store, "full" WC_CAP_EXT, "more" WC_CAP_EXT, "both", &devices, &dropped));
     assert(devices == WC_CENSUS_MAX_DEVICES);
     assert(dropped == WC_CENSUS_MAX_DEVICES); // none of the second file fitted
 
     // A merge that fits reports nothing dropped, so the warning cannot cry wolf.
     uint16_t d2 = 0;
     uint16_t dropped2 = 1;
-    assert(
-        wc_merge_service_run(&store, "full" WC_CAP_EXT, "full" WC_CAP_EXT, "same", &d2, &dropped2));
+    assert(wc_merge_service_run(
+        &store, "full" WC_CAP_EXT, "full" WC_CAP_EXT, "same", &d2, &dropped2));
     assert(d2 == WC_CENSUS_MAX_DEVICES);
     assert(dropped2 == 0);
 
@@ -580,31 +582,31 @@ static void test_merge_service_reports_what_the_ceiling_dropped(void) {
 // A v1 capture's records are shorter than today's. Merging one means striding by ITS size, not
 // by the current one, or every record after the first is read from the middle of its neighbour.
 static void test_merge_reads_a_v1_capture(void) {
-    FakeStore *store_data = calloc(1, sizeof(FakeStore));
+    FakeStore* store_data = calloc(1, sizeof(FakeStore));
     assert(store_data);
     WcStorePort store = fake_store_port(store_data);
 
     // Hand-build a v1 file with two devices, so a wrong stride shows on the second.
     const size_t v1_rec = 6 + 1 + 1 + 1 + 1 + 4 + 4 + 4 + WC_SIG_MAX_SSIDS * (WC_SSID_MAX_LEN + 1);
     size_t hdr = wc_capture_header_size();
-    uint8_t *buf = calloc(1, hdr + 2 * v1_rec);
+    uint8_t* buf = calloc(1, hdr + 2 * v1_rec);
     assert(buf);
     memcpy(buf, "WCEN", 4);
-    buf[4] = 1;       // version 1
+    buf[4] = 1; // version 1
     buf[hdr - 2] = 2; // count = 2
-    for (int i = 0; i < 2; i++) {
-        uint8_t *r = buf + hdr + (size_t)i * v1_rec;
+    for(int i = 0; i < 2; i++) {
+        uint8_t* r = buf + hdr + (size_t)i * v1_rec;
         r[0] = 0x00;
         r[1] = 0x1B;
         r[2] = 0x21;
         r[5] = (uint8_t)(0x40 + i); // two distinct stable MACs
-        r[9] = 1;                   // obs_count = 1
+        r[9] = 1; // obs_count = 1
     }
     assert(store.write_file(store.self, "old" WC_CAP_EXT, buf, hdr + 2 * v1_rec));
     free(buf);
 
     // A current-format capture to merge it into.
-    WcCensus *now = calloc(1, sizeof(WcCensus));
+    WcCensus* now = calloc(1, sizeof(WcCensus));
     assert(now);
     wc_census_init(now);
     WcSignature sig;
@@ -620,8 +622,8 @@ static void test_merge_reads_a_v1_capture(void) {
     assert(wc_capture_service_save(&store, "now", &meta, now));
 
     uint16_t devices = 0, dropped = 0;
-    assert(wc_merge_service_run(&store, "now" WC_CAP_EXT, "old" WC_CAP_EXT, "both", &devices,
-                                &dropped));
+    assert(wc_merge_service_run(
+        &store, "now" WC_CAP_EXT, "old" WC_CAP_EXT, "both", &devices, &dropped));
     assert(devices == 3); // one of ours plus both of theirs, none garbled into a duplicate
     assert(dropped == 0);
 
@@ -633,7 +635,7 @@ static void test_merge_reads_a_v1_capture(void) {
 // A card that accepts the writes and then fails to flush must not be reported as a save: the
 // scan is freed straight after, so "saved" is the last word anyone gets.
 static void test_a_failed_close_is_not_a_save(void) {
-    FakeStore *store_data = calloc(1, sizeof(FakeStore));
+    FakeStore* store_data = calloc(1, sizeof(FakeStore));
     assert(store_data);
     WcStorePort store = fake_store_port(store_data);
     WcCensus c;

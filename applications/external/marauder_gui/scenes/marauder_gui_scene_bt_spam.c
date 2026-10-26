@@ -67,11 +67,13 @@ const char* marauder_gui_bt_spam_type_arg(size_t index) {
 }
 
 const char* marauder_gui_bt_spam_type_description(size_t index) {
-    return (index < MARAUDER_BT_SPAM_TYPE_COUNT) ? marauder_bt_spam_types[index].description_tr : "?";
+    return (index < MARAUDER_BT_SPAM_TYPE_COUNT) ? marauder_bt_spam_types[index].description_tr :
+                                                   "?";
 }
 
 const char* marauder_gui_bt_spam_type_description_en(size_t index) {
-    return (index < MARAUDER_BT_SPAM_TYPE_COUNT) ? marauder_bt_spam_types[index].description_en : "?";
+    return (index < MARAUDER_BT_SPAM_TYPE_COUNT) ? marauder_bt_spam_types[index].description_en :
+                                                   "?";
 }
 
 static void marauder_gui_scene_bt_spam_tick(MarauderGuiApp* app) {

@@ -65,7 +65,9 @@ void marauder_gui_scene_pcap_packet_hex_on_enter(void* context) {
         furi_string_set(text, marauder_gui_text(app, "Okunamadi", "Could not read"));
     } else if(e->incl_len > got) {
         furi_string_cat_printf(
-            text, marauder_gui_text(app, "\n(+%u bayt daha)", "\n(+%u more bytes)"), (unsigned)(e->incl_len - got));
+            text,
+            marauder_gui_text(app, "\n(+%u bayt daha)", "\n(+%u more bytes)"),
+            (unsigned)(e->incl_len - got));
     }
 
     widget_add_text_scroll_element(app->widget, 0, 0, 128, 64, furi_string_get_cstr(text));

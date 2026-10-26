@@ -106,19 +106,19 @@ typedef struct {
     Gui* gui;
     ViewPort* view_port;
     FuriMutex* mutex;
-    
+
     // App state
     AppState current_state;
     bool running;
     bool started;
-    
+
     // BME680 sensor
     bool is_sensor_initialized;
     struct bme68x_dev bme;
     struct bme68x_conf conf;
     struct bme68x_data sensor_data[3];
     int8_t last_error;
-    
+
     // User config
     uint8_t i2c_address;
     uint8_t op_mode;
@@ -127,7 +127,7 @@ typedef struct {
     float altitude_m;
     // bool test_option_enabled; // Commented out
     bool key_beep_enabled; // Toggle key beep feedback
-    
+
     // Sensor readings
     float temperature;
     float pressure;
@@ -135,19 +135,19 @@ typedef struct {
     uint32_t gas_resistance;
     float dew_point_c;
     uint8_t data_status;
-    
+
     // Timers
     uint16_t sample_interval_ms;
     uint16_t sample_elapsed_ms;
     uint16_t heatr_dur_ms;
-    
+
     // UI
     uint8_t settings_cursor;
     uint8_t list_offset;
     int16_t legend_pan_x;
     int16_t legend_pan_y;
     uint8_t about_scroll;
-    
+
     // Gas safety system
     GasSafetyState gas_safety_state;
     uint32_t gas_safety_timer_ms;
@@ -544,7 +544,7 @@ static bool read_bme680(BME680App* app) {
         // 5) Zaktualizuj odczyty
         const struct bme68x_data* d = &app->sensor_data[idx];
         furi_mutex_acquire(app->mutex, FuriWaitForever);
-        
+
         // When gas sensor is enabled, temperature and humidity are affected by heater
         // so we don't update them to avoid false readings
         if(!app->gas_enabled) {
@@ -561,7 +561,7 @@ static bool read_bme680(BME680App* app) {
             // In gas mode, keep previous T/H values or set to invalid values
             // This prevents displaying inaccurate readings affected by the heater
         }
-        
+
         // Pressure is not significantly affected by the heater, so always update it
         app->pressure = d->pressure / 100.0f;
         app->gas_resistance = (uint32_t)d->gas_resistance;
@@ -1056,14 +1056,19 @@ static void draw_settings_screen(Canvas* canvas, BME680App* app) {
         case SettingsItem_KeyBeep:
             canvas_draw_str(canvas, 5, y_pos + 5, "Key Beep:");
             canvas_draw_str_aligned(
-                canvas, 113, y_pos - 1, AlignRight, AlignTop, app->key_beep_enabled ? "(*)" : "( )");
+                canvas,
+                113,
+                y_pos - 1,
+                AlignRight,
+                AlignTop,
+                app->key_beep_enabled ? "(*)" : "( )");
             break;
 
-        // case SettingsItem_TestOption: // ⭐ RYSOWANIE NOWEJ OPCJI - ZAKOMENTOWANE
-        //     canvas_draw_str(canvas, 5, y_pos + 5, "Test Option:");
-        //     canvas_draw_str_aligned(
-        //         canvas, 113, y_pos - 1, AlignRight, AlignTop, app->test_option_enabled ? "(*)" : "( )");
-        //     break;
+            // case SettingsItem_TestOption: // ⭐ RYSOWANIE NOWEJ OPCJI - ZAKOMENTOWANE
+            //     canvas_draw_str(canvas, 5, y_pos + 5, "Test Option:");
+            //     canvas_draw_str_aligned(
+            //         canvas, 113, y_pos - 1, AlignRight, AlignTop, app->test_option_enabled ? "(*)" : "( )");
+            //     break;
         }
         canvas_set_color(canvas, ColorBlack);
     }
@@ -1081,7 +1086,7 @@ static void draw_about_screen(Canvas* canvas, BME680App* app) {
     canvas_draw_str_aligned(canvas, 64, 5, AlignCenter, AlignTop, "About");
 
     canvas_set_font(canvas, FontSecondary);
-    
+
     // Definicja wszystkich linii tekstu do wyświetlenia
     const char* text_lines[] = {
         "BME680 Application",
@@ -1089,7 +1094,7 @@ static void draw_about_screen(Canvas* canvas, BME680App* app) {
         "",
         "Features:",
         "- Temperature measurement",
-        "- Humidity measurement", 
+        "- Humidity measurement",
         "- Pressure measurement",
         "- Gas resistance detection",
         "- Safety alarm system",
@@ -1106,27 +1111,27 @@ static void draw_about_screen(Canvas* canvas, BME680App* app) {
         "",
         "Version: 1.2",
         "Author: Dr.Mosfet",
-        "Built: Nov 2025"
-    };
-    
+        "Built: Nov 2025"};
+
     const uint8_t total_lines = sizeof(text_lines) / sizeof(text_lines[0]);
     const uint8_t visible_lines = 4; // 4 linie na ekran
     const uint8_t line_height = 8;
     const uint8_t start_y = 18;
-    
+
     // Oblicz zakres widocznych linii na podstawie scroll offset
     uint8_t first_line = app->about_scroll * visible_lines;
     uint8_t last_line = first_line + visible_lines;
     if(last_line > total_lines) last_line = total_lines;
-    
+
     // Wyświetl widoczne linie
     for(uint8_t i = first_line; i < last_line; i++) {
         uint8_t y_pos = start_y + (i - first_line) * line_height;
         canvas_draw_str_aligned(canvas, 64, y_pos, AlignCenter, AlignTop, text_lines[i]);
     }
-    
+
     // Pokazuj przewodnik nawigacji na dole
-    canvas_draw_str_aligned(canvas, 64, 62, AlignCenter, AlignBottom, "[Up/Down] Scroll [Ok] Back");
+    canvas_draw_str_aligned(
+        canvas, 64, 62, AlignCenter, AlignBottom, "[Up/Down] Scroll [Ok] Back");
 }
 
 static void draw_start_confirm_screen(Canvas* canvas, BME680App* app) {
@@ -1196,8 +1201,8 @@ static void bme680_render_callback(Canvas* canvas, void* ctx) {
  * w zależności od aktualnego stanu aplikacji (current_state)
  */
 static void bme680_input_callback(InputEvent* input_event, void* ctx) {
-    furi_assert(ctx);  // Sprawdź czy kontekst nie jest NULL (bezpieczeństwo)
-    BME680App* app = (BME680App*)ctx;  // Rzutuj kontekst na naszą strukturę
+    furi_assert(ctx); // Sprawdź czy kontekst nie jest NULL (bezpieczeństwo)
+    BME680App* app = (BME680App*)ctx; // Rzutuj kontekst na naszą strukturę
 
     // Only handle short presses and repeats
     if(input_event->type == InputTypeShort || input_event->type == InputTypeRepeat) {
@@ -1205,11 +1210,10 @@ static void bme680_input_callback(InputEvent* input_event, void* ctx) {
         if(app->key_beep_enabled && app->notification) {
             notification_message(app->notification, &sequence_click_short);
         }
-        
+
         // === SWITCH PO STANACH APLIKACJI ===
         // Każdy stan ma swoją logikę obsługi przycisków
         switch(app->current_state) {
-            
         // --- EKRAN GŁÓWNY (pomiary czujnika) ---
         case AppState_Main:
             if(input_event->key == InputKeyOk) {
@@ -1311,7 +1315,7 @@ static void bme680_input_callback(InputEvent* input_event, void* ctx) {
                 } // else if(app->settings_cursor == SettingsItem_TestOption) { // ⭐ OBSŁUGA NOWEJ OPCJI - ZAKOMENTOWANE
                 //     app->test_option_enabled = !app->test_option_enabled;
                 //     bme680_save_config(app);
-                // } 
+                // }
                 else if(app->settings_cursor == SettingsItem_Legend) {
                     // Open Legend screen and reset pan
                     app->legend_pan_x = 0;
@@ -1328,7 +1332,7 @@ static void bme680_input_callback(InputEvent* input_event, void* ctx) {
             const uint8_t total_lines = 23; // Liczba wszystkich linii tekstu
             const uint8_t visible_lines = 4; // Linie widoczne na ekranie
             const uint8_t max_scroll_pages = (total_lines + visible_lines - 1) / visible_lines;
-            
+
             if(input_event->key == InputKeyUp) {
                 if(app->about_scroll > 0) {
                     app->about_scroll--;

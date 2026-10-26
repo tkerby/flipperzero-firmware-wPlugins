@@ -41,7 +41,7 @@ typedef struct DropDetectApp {
 
     // Capture state
     bool capturing;
-    bool capture_started;  // Track if we've started capture for current view
+    bool capture_started; // Track if we've started capture for current view
     uint32_t samples_captured;
     uint32_t total_samples_to_capture;
 

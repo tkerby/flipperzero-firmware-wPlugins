@@ -184,8 +184,7 @@ static void draw_home(Canvas* canvas, App* app) {
     snprintf(buf, sizeof(buf), "%s (%s)", weekday_names_fa[wd], weekday_names_en[wd]);
     canvas_draw_str_aligned(canvas, 64, 37, AlignCenter, AlignCenter, buf);
 
-    snprintf(
-        buf, sizeof(buf), "%d %s %d", dt.day, gregorian_month_names[dt.month - 1], dt.year);
+    snprintf(buf, sizeof(buf), "%d %s %d", dt.day, gregorian_month_names[dt.month - 1], dt.year);
     canvas_draw_str_aligned(canvas, 64, 48, AlignCenter, AlignCenter, buf);
 
     canvas_draw_str_aligned(canvas, 1, 63, AlignLeft, AlignBottom, "Back: Exit");
@@ -259,8 +258,8 @@ static void draw_edit(Canvas* canvas, App* app) {
     }
 
     canvas_set_font(canvas, FontSecondary);
-    const char* month_name =
-        jalali ? jalali_month_names[app->e_month - 1] : gregorian_month_names[app->e_month - 1];
+    const char* month_name = jalali ? jalali_month_names[app->e_month - 1] :
+                                      gregorian_month_names[app->e_month - 1];
     canvas_draw_str_aligned(canvas, 64, 45, AlignCenter, AlignCenter, month_name);
 
     canvas_draw_str_aligned(canvas, 1, 63, AlignLeft, AlignBottom, "^v value  <> field");
@@ -472,9 +471,8 @@ static void handle_input(App* app, InputEvent* event) {
         }
         break;
     case ScreenSettings:
-        if(press &&
-           (event->key == InputKeyLeft || event->key == InputKeyRight ||
-            event->key == InputKeyOk)) {
+        if(press && (event->key == InputKeyLeft || event->key == InputKeyRight ||
+                     event->key == InputKeyOk)) {
             app->variant = (app->variant + 1) % CalVariantCount;
         } else if(press && event->key == InputKeyBack) {
             settings_save(app);

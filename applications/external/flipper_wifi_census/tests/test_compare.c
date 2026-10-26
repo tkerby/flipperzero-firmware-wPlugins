@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 
-static WcObservation obs_of(const uint8_t mac[6], const char *ssid, bool beacon) {
+static WcObservation obs_of(const uint8_t mac[6], const char* ssid, bool beacon) {
     WcObservation o;
     memset(&o, 0, sizeof(o));
     memcpy(o.mac, mac, 6);
@@ -14,7 +14,7 @@ static WcObservation obs_of(const uint8_t mac[6], const char *ssid, bool beacon)
     o.rssi = -60;
     o.channel = 6;
     o.is_beacon = beacon;
-    if (ssid) {
+    if(ssid) {
         strncpy(o.probed_ssid, ssid, WC_SSID_MAX_LEN);
     }
     return o;

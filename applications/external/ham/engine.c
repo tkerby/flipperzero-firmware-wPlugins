@@ -10,20 +10,34 @@ static uint32_t rng(HamEngine* e) {
     x ^= x << 5;
     return e->random = x;
 }
-static float unit(HamEngine* e) { return (rng(e) >> 8) / 16777216.0f; }
+static float unit(HamEngine* e) {
+    return (rng(e) >> 8) / 16777216.0f;
+}
 static unsigned between(HamEngine* e, unsigned lo, unsigned hi) {
     return lo + (unsigned)(unit(e) * (hi - lo + 1));
 }
-static bool chance(HamEngine* e, unsigned percent) { return unit(e) * 100 < percent; }
-static bool ready(uint32_t now, uint32_t deadline) { return (int32_t)(now - deadline) >= 0; }
-static float pause_scale(unsigned a) { return powf(3.0f, 1.0f - 2.0f * a / 100.0f); }
+static bool chance(HamEngine* e, unsigned percent) {
+    return unit(e) * 100 < percent;
+}
+static bool ready(uint32_t now, uint32_t deadline) {
+    return (int32_t)(now - deadline) >= 0;
+}
+static float pause_scale(unsigned a) {
+    return powf(3.0f, 1.0f - 2.0f * a / 100.0f);
+}
 static uint32_t skew(HamEngine* e, unsigned lo, unsigned hi) {
     return lo + (uint32_t)((hi - lo) * unit(e) * unit(e));
 }
 
 HamProfile ham_defaults(void) {
-    return (HamProfile){.activity=50, .radius=600, .duration_seconds=600,
-                        .wpm_min=100, .wpm_max=130, .click_percent=25, .seed=0};
+    return (HamProfile){
+        .activity = 50,
+        .radius = 600,
+        .duration_seconds = 600,
+        .wpm_min = 100,
+        .wpm_max = 130,
+        .click_percent = 25,
+        .seed = 0};
 }
 void ham_init(HamEngine* e, HamProfile profile, const char* text, uint32_t seed) {
     memset(e, 0, sizeof(*e));
@@ -64,11 +78,13 @@ unsigned ham_duration_step(unsigned seconds, int direction) {
     static const unsigned presets[] = {300, 600, 1800, 3600, 7200};
     if(direction > 0) {
         if(!seconds) return 0;
-        for(unsigned i = 0; i < 5; ++i) if(presets[i] > seconds) return presets[i];
+        for(unsigned i = 0; i < 5; ++i)
+            if(presets[i] > seconds) return presets[i];
         return 0;
     }
     if(!seconds) return 7200;
-    for(unsigned i = 5; i > 0; --i) if(presets[i - 1] < seconds) return presets[i - 1];
+    for(unsigned i = 5; i > 0; --i)
+        if(presets[i - 1] < seconds) return presets[i - 1];
     return 300;
 }
 
@@ -86,7 +102,8 @@ static void type_begin(HamEngine* e, uint32_t now, bool edit) {
     e->count = e->index = e->hesitations = e->words = 0;
     if(edit && e->known_text && e->recent_count) {
         unsigned n = between(e, 1, e->recent_count);
-        for(unsigned i = 0; i < n; ++i) e->burst[e->count++] = '\b';
+        for(unsigned i = 0; i < n; ++i)
+            e->burst[e->count++] = '\b';
         for(unsigned i = e->recent_count - n; i < e->recent_count; ++i)
             e->burst[e->count++] = e->recent[i];
         e->due = now + between(e, 400, 1200);
@@ -95,7 +112,8 @@ static void type_begin(HamEngine* e, uint32_t now, bool edit) {
     e->episode = HamType;
     unsigned band = between(e, 0, 99);
     unsigned target = band < 85 ? between(e, 3, 20) :
-                      band < 97 ? between(e, 21, 35) : between(e, 36, 50);
+                      band < 97 ? between(e, 21, 35) :
+                                  between(e, 36, 50);
     bool typo = false;
     while(e->count < sizeof(e->burst) - 5 && e->words < target) {
         char c = e->text[e->text_pos++];
@@ -122,11 +140,17 @@ static void point(HamEngine* e, float radius, float* x, float* y) {
 static void bound(HamEngine* e, float* x, float* y) {
     float d = sqrtf(*x * *x + *y * *y);
     float r = e->profile.radius;
-    if(d > r && d > 0) { *x *= r / d; *y *= r / d; }
+    if(d > r && d > 0) {
+        *x *= r / d;
+        *y *= r / d;
+    }
 }
-static void trajectory(HamEngine* e, uint32_t now, float tx, float ty, unsigned min_ms, unsigned max_ms) {
-    e->p0x = e->x; e->p0y = e->y;
-    e->p3x = tx; e->p3y = ty;
+static void
+    trajectory(HamEngine* e, uint32_t now, float tx, float ty, unsigned min_ms, unsigned max_ms) {
+    e->p0x = e->x;
+    e->p0y = e->y;
+    e->p3x = tx;
+    e->p3y = ty;
     float dx = tx - e->x, dy = ty - e->y;
     float bend = (unit(e) - .5f) * .65f;
     e->p1x = e->x + dx * .3f - dy * bend;
@@ -147,7 +171,8 @@ static void move_leg(HamEngine* e, uint32_t now) {
     if(p < 70) {
         /* Sharp local movements with gentle recentering, rather than an outward walk. */
         point(e, e->profile.radius * .16f, &tx, &ty);
-        tx += e->x * .92f; ty += e->y * .92f;
+        tx += e->x * .92f;
+        ty += e->y * .92f;
     } else if(p < 95) {
         point(e, e->profile.radius * .55f, &tx, &ty);
     } else {
@@ -155,14 +180,25 @@ static void move_leg(HamEngine* e, uint32_t now) {
         point(e, e->profile.radius * .9f, &tx, &ty);
     }
     bound(e, &tx, &ty);
-    e->final_x = tx; e->final_y = ty;
+    e->final_x = tx;
+    e->final_y = ty;
     e->correcting = chance(e, 10);
     if(e->correcting) {
-        tx += (unit(e) - .5f) * 8; ty += (unit(e) - .5f) * 8;
+        tx += (unit(e) - .5f) * 8;
+        ty += (unit(e) - .5f) * 8;
         bound(e, &tx, &ty);
     }
-    trajectory(e, now, tx, ty, p < 70 ? 70 : p < 95 ? 100 : 130,
-               p < 70 ? 150 : p < 95 ? 200 : 240);
+    trajectory(
+        e,
+        now,
+        tx,
+        ty,
+        p < 70 ? 70 :
+        p < 95 ? 100 :
+                 130,
+        p < 70 ? 150 :
+        p < 95 ? 200 :
+                 240);
     ++e->moves;
 }
 static void move_begin(HamEngine* e, uint32_t now) {
@@ -183,7 +219,8 @@ static void next(HamEngine* e, uint32_t now) {
         return;
     }
     unsigned p = between(e, 0, 99), action = 0;
-    while(action < 3 && p >= weights[prev][action]) p -= weights[prev][action++];
+    while(action < 3 && p >= weights[prev][action])
+        p -= weights[prev][action++];
     if(action == HamEdit && (!e->known_text || !e->recent_count)) action = HamType;
     ++e->episodes;
     /* Slowly change speed around the session's initial pace. */
@@ -191,9 +228,12 @@ static void next(HamEngine* e, uint32_t now) {
         int speed = (int)e->wpm + (chance(e, 50) ? 1 : -1);
         if(speed >= (int)e->profile.wpm_min && speed <= (int)e->profile.wpm_max) e->wpm = speed;
     }
-    if(action == HamRead) read_begin(e, now, prev == HamType);
-    else if(action == HamMove) move_begin(e, now);
-    else type_begin(e, now, action == HamEdit);
+    if(action == HamRead)
+        read_begin(e, now, prev == HamType);
+    else if(action == HamMove)
+        move_begin(e, now);
+    else
+        type_begin(e, now, action == HamEdit);
 }
 static uint32_t key_interval(HamEngine* e, char c) {
     /* Five characters per word; approximately preserve WPM before extra thinking pauses. */
@@ -204,7 +244,10 @@ static uint32_t key_interval(HamEngine* e, char c) {
     if(c == '\b') interval += between(e, 150, 600);
     if(c == ' ') {
         if(chance(e, 8)) interval += between(e, 60, 180);
-        if(e->hesitations < 1 && chance(e, 2)) { interval += between(e, 250, 700); ++e->hesitations; }
+        if(e->hesitations < 1 && chance(e, 2)) {
+            interval += between(e, 250, 700);
+            ++e->hesitations;
+        }
     }
     if((c == '.' || c == ',' || c == '?' || c == '!') && chance(e, 25))
         interval += between(e, 100, 350);
@@ -229,15 +272,19 @@ HamEvent ham_tick(HamEngine* e, uint32_t now) {
         int dx = (int)between(e, 0, 4) - 2, dy = (int)between(e, 0, 4) - 2;
         float tx = e->x + dx, ty = e->y + dy;
         if(tx * tx + ty * ty <= e->profile.radius * e->profile.radius) {
-            out.kind = HamMouseMove; out.dx = dx; out.dy = dy;
-            e->x = tx; e->y = ty;
+            out.kind = HamMouseMove;
+            out.dx = dx;
+            out.dy = dy;
+            e->x = tx;
+            e->y = ty;
         }
         return out;
     }
     if(!ready(now, e->due)) return out;
     if(e->key_down) {
         e->key_down = false;
-        out.kind = HamKeyUp; out.character = e->held;
+        out.kind = HamKeyUp;
+        out.character = e->held;
         e->due = ready(now, e->next_key) ? now + 1 : e->next_key;
         return out;
     }
@@ -249,15 +296,21 @@ HamEvent ham_tick(HamEngine* e, uint32_t now) {
         return out;
     }
     if(e->episode == HamType || e->episode == HamEdit) {
-        if(e->index == e->count) { next(e, now); return out; }
+        if(e->index == e->count) {
+            next(e, now);
+            return out;
+        }
         char c = e->burst[e->index++];
-        e->held = c; e->key_down = true;
+        e->held = c;
+        e->key_down = true;
         e->correction_stage = skew(e, 22, 48);
         e->next_key = now + key_interval(e, c);
         e->due = now + e->correction_stage;
-        out.kind = HamKeyDown; out.character = c;
-        if(c == '\b') { if(e->recent_count) --e->recent_count; }
-        else {
+        out.kind = HamKeyDown;
+        out.character = c;
+        if(c == '\b') {
+            if(e->recent_count) --e->recent_count;
+        } else {
             if(e->recent_count == sizeof(e->recent)) {
                 memmove(e->recent, e->recent + 1, sizeof(e->recent) - 1);
                 --e->recent_count;
@@ -272,8 +325,10 @@ HamEvent ham_tick(HamEngine* e, uint32_t now) {
         float t = (float)(now - e->move_start) / e->move_duration;
         if(t > 1) t = 1;
         float s = t * t * (3 - 2 * t), u = 1 - s;
-        float x = u*u*u*e->p0x + 3*u*u*s*e->p1x + 3*u*s*s*e->p2x + s*s*s*e->p3x;
-        float y = u*u*u*e->p0y + 3*u*u*s*e->p1y + 3*u*s*s*e->p2y + s*s*s*e->p3y;
+        float x = u * u * u * e->p0x + 3 * u * u * s * e->p1x + 3 * u * s * s * e->p2x +
+                  s * s * s * e->p3x;
+        float y = u * u * u * e->p0y + 3 * u * u * s * e->p1y + 3 * u * s * s * e->p2y +
+                  s * s * s * e->p3y;
         float dx_float = x - e->x, dy_float = y - e->y;
         float largest = fmaxf(fabsf(dx_float), fabsf(dy_float));
         /* Scale the whole vector: independently clipping axes distorts fast paths. */
@@ -285,10 +340,13 @@ HamEvent ham_tick(HamEngine* e, uint32_t now) {
         bound(e, &next_x, &next_y);
         /* Rounding can exceed the continuous circular bound by <1 input count. */
         int dx = lroundf(next_x) - (int)e->x, dy = lroundf(next_y) - (int)e->y;
-        e->x += dx; e->y += dy;
-        out.kind = HamMouseMove; out.dx = dx; out.dy = dy;
+        e->x += dx;
+        e->y += dy;
+        out.kind = HamMouseMove;
+        out.dx = dx;
+        out.dy = dy;
         e->due = now + between(e, 10, 20);
-        if(t >= 1 && fabsf(e->x-e->p3x) <= .5f && fabsf(e->y-e->p3y) <= .5f) {
+        if(t >= 1 && fabsf(e->x - e->p3x) <= .5f && fabsf(e->y - e->p3y) <= .5f) {
             if(e->correcting) {
                 e->correcting = false;
                 trajectory(e, now + 50, e->final_x, e->final_y, 80, 200);
@@ -302,11 +360,14 @@ HamEvent ham_tick(HamEngine* e, uint32_t now) {
         if(chance(e, e->profile.click_percent)) {
             out.kind = HamClickDown;
             e->click_down = true;
-            e->known_text = false; e->recent_count = 0;
+            e->known_text = false;
+            e->recent_count = 0;
             e->due = now + between(e, 60, 140);
             ++e->clicks;
-        } else next(e, now);
-    } else next(e, now);
+        } else
+            next(e, now);
+    } else
+        next(e, now);
     return out;
 }
 const char* ham_episode_name(const HamEngine* e) {

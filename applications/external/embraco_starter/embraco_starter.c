@@ -19,17 +19,17 @@ static const GpioPin* PWM_PIN = &gpio_ext_pa7;
 
 /* Геометрия скроллбара и таймера (фиксированные значения под экран 128x64) */
 enum {
-    SCROLLBAR_X = 124,   /* X-координата пунктирной дорожки справа */
-    SCROLLBAR_W = 3,     /* ширина бегунка (ползунка) скроллбара */
-    TIMER_MARGIN = 6,    /* фиксированный отступ таймера от правого края скроллбара */
+    SCROLLBAR_X = 124, /* X-координата пунктирной дорожки справа */
+    SCROLLBAR_W = 3, /* ширина бегунка (ползунка) скроллбара */
+    TIMER_MARGIN = 6, /* фиксированный отступ таймера от правого края скроллбара */
 };
 
 /* ===== GPIO helpers / Вспомогательные функции для безопасных состояний ножки ===== */
-static inline void pin_to_hiz(void){
+static inline void pin_to_hiz(void) {
     /* Переводим ножку в Hi‑Z (вход без подтяжек) — электрически безопасное состояние. */
     furi_hal_gpio_init(PWM_PIN, GpioModeInput, GpioPullNo, GpioSpeedLow);
 }
-static inline void pin_to_pp_low(void){
+static inline void pin_to_pp_low(void) {
     /* Выставляем "0" push‑pull — безопасная нагрузка в «низ». */
     furi_hal_gpio_init(PWM_PIN, GpioModeOutputPushPull, GpioPullNo, GpioSpeedVeryHigh);
     furi_hal_gpio_write(PWM_PIN, false);
@@ -38,16 +38,16 @@ static inline void pin_to_pp_low(void){
 /* ===== Hardware PWM (PA7) ===== */
 #define PWM_CH FuriHalPwmOutputIdTim1PA7
 
-static inline void pwm_hw_stop_safe(bool* running){
+static inline void pwm_hw_stop_safe(bool* running) {
     /* Аккуратная остановка PWM: сначала стоп, короткая задержка, снимем флаг. */
-    if(running && *running){
+    if(running && *running) {
         furi_hal_pwm_stop(PWM_CH);
         furi_delay_ms(1); /* дать периферии «успокоиться» */
         *running = false;
     }
 }
 
-static inline void pwm_hw_start_safe(uint32_t freq_hz, bool* running){
+static inline void pwm_hw_start_safe(uint32_t freq_hz, bool* running) {
     /* Запуск PWM на заданной частоте с 50% duty (по требованиям). */
     furi_hal_pwm_start(PWM_CH, freq_hz, 50); // duty 50%
     if(running) *running = true;
@@ -55,22 +55,22 @@ static inline void pwm_hw_start_safe(uint32_t freq_hz, bool* running){
 
 /* ===== Modes / Режимы работы с дефолтными таймаутами (при Limit=Yes) ===== */
 typedef struct {
-    const char* name;       /* отображаемое имя в меню */
-    uint32_t freq_hz;       /* частота PWM; 0 = выключено */
-    uint8_t led_blink_hz;   /* мигание RGB-индикатора (0 — выкл.) */
-    uint32_t default_secs;  /* дефолтный лимит работы в секундах */
+    const char* name; /* отображаемое имя в меню */
+    uint32_t freq_hz; /* частота PWM; 0 = выключено */
+    uint8_t led_blink_hz; /* мигание RGB-индикатора (0 — выкл.) */
+    uint32_t default_secs; /* дефолтный лимит работы в секундах */
 } Mode;
 
 /* Порядок важен — индексы используются в меню:
  * 0 — Power off; 1 — Low; 2 — Mid; 3 — Max
  */
 static const Mode kModes[] = {
-    {"Power off", 0,   0,   0},   // 0 — выключено
-    {"Low speed", 55,  1, 120},   // 1 — 2 мин
-    {"Mid speed", 100, 2,  60},   // 2 — 1 мин
-    {"Max speed", 160, 4,  30},   // 3 — 30 сек
+    {"Power off", 0, 0, 0}, // 0 — выключено
+    {"Low speed", 55, 1, 120}, // 1 — 2 мин
+    {"Mid speed", 100, 2, 60}, // 2 — 1 мин
+    {"Max speed", 160, 4, 30}, // 3 — 30 сек
 };
-#define MODE_COUNT (sizeof(kModes)/sizeof(kModes[0]))
+#define MODE_COUNT (sizeof(kModes) / sizeof(kModes[0]))
 
 /* ===== Help text (без заголовка, выравнивается кодом отступом сверху) ===== */
 static const char* HELP_LINES[] = {
@@ -113,13 +113,13 @@ static const char* HELP_LINES[] = {
     "",
     "Press BACK to start.",
 };
-#define HELP_LINES_COUNT (sizeof(HELP_LINES)/sizeof(HELP_LINES[0]))
+#define HELP_LINES_COUNT (sizeof(HELP_LINES) / sizeof(HELP_LINES[0]))
 
 /* ===== Screens / Экраны приложения ===== */
 typedef enum {
-    ScreenMenu = 0,   /* основное меню режимов + Settings + Help */
-    ScreenHelp,       /* подробная помощь (скролл-текст) */
-    ScreenSettings,   /* настройки (один параметр: Limit run time) */
+    ScreenMenu = 0, /* основное меню режимов + Settings + Help */
+    ScreenHelp, /* подробная помощь (скролл-текст) */
+    ScreenSettings, /* настройки (один параметр: Limit run time) */
 } ScreenId;
 
 /* ===== App state / Состояние всего приложения ===== */
@@ -128,15 +128,15 @@ typedef struct {
     ScreenId screen;
 
     /* Навигация по списку на главном экране */
-    uint8_t cursor;         // индекс текущей строки (0..ROW_TOTAL-1)
-    uint8_t first_visible;  // верхняя видимая строка в окне из 4 строк
-    uint8_t active;         // применённый режим (0..MODE_COUNT-1)
+    uint8_t cursor; // индекс текущей строки (0..ROW_TOTAL-1)
+    uint8_t first_visible; // верхняя видимая строка в окне из 4 строк
+    uint8_t active; // применённый режим (0..MODE_COUNT-1)
 
     /* Прокрутка экрана Help */
-    uint8_t help_top_line;  // индекс верхней видимой строки в Help
+    uint8_t help_top_line; // индекс верхней видимой строки в Help
 
     /* Настройка ограничения времени работы */
-    bool limit_runtime;     // Yes (true) / No (false)
+    bool limit_runtime; // Yes (true) / No (false)
 
     /* Индикация (зелёный светодиод) */
     NotificationApp* notif;
@@ -151,10 +151,10 @@ typedef struct {
     FuriTimer* hint_timer;
 
     /* Таймеры времени работы: один на UI-тиканье, второй — точный one-shot для авто-OFF */
-    FuriTimer* tick_timer;      // 1 Гц для обновления секунд на экране
-    FuriTimer* off_timer;       // одновыстрел для точного выключения по лимиту
-    uint32_t remaining_ms;      // сколько осталось (для отображения), мс
-    bool timeout_expired;       // событие «время вышло» для главного цикла
+    FuriTimer* tick_timer; // 1 Гц для обновления секунд на экране
+    FuriTimer* off_timer; // одновыстрел для точного выключения по лимиту
+    uint32_t remaining_ms; // сколько осталось (для отображения), мс
+    bool timeout_expired; // событие «время вышло» для главного цикла
 
     /* IO: GUI/ViewPort/очередь */
     Gui* gui;
@@ -163,22 +163,24 @@ typedef struct {
 } AppState;
 
 /* ===== LED control / Управление зелёной индикацией ===== */
-static void led_set(NotificationApp* n, bool on){
+static void led_set(NotificationApp* n, bool on) {
     if(!n) return;
-    if(on) notification_message(n, &sequence_set_green_255);
-    else   notification_message(n, &sequence_reset_rgb);
+    if(on)
+        notification_message(n, &sequence_set_green_255);
+    else
+        notification_message(n, &sequence_reset_rgb);
 }
 
-static void led_timer_cb(void* ctx){
+static void led_timer_cb(void* ctx) {
     /* Периодическое мигание LED с частотой, заданной в режиме. */
     AppState* s = ctx;
     s->led_on = !s->led_on;
     led_set(s->notif, s->led_on);
 }
 
-static void led_apply(AppState* s, uint8_t blink_hz){
+static void led_apply(AppState* s, uint8_t blink_hz) {
     /* Перенастройка мигания под текущий режим. 0 — выключить. */
-    if(s->led_timer){
+    if(s->led_timer) {
         furi_timer_stop(s->led_timer);
         furi_timer_free(s->led_timer);
         s->led_timer = NULL;
@@ -198,15 +200,15 @@ static void led_apply(AppState* s, uint8_t blink_hz){
  * total_steps — количество дискретных позиций (элементов).
  * pos         — текущая позиция (0..total_steps-1), бегунок мгновенно следует за курсором.
  */
-static void draw_scrollbar_dotted(Canvas* c, uint16_t total_steps, uint16_t pos){
+static void draw_scrollbar_dotted(Canvas* c, uint16_t total_steps, uint16_t pos) {
     if(total_steps <= 1) return;
 
-    const uint16_t x = SCROLLBAR_X;  // вертикальная пунктирная «дорожка»
-    const uint16_t y0 = 2;           // верхняя точка пунктира
-    const uint16_t y1 = 62;          // нижняя точка пунктира
+    const uint16_t x = SCROLLBAR_X; // вертикальная пунктирная «дорожка»
+    const uint16_t y0 = 2; // верхняя точка пунктира
+    const uint16_t y1 = 62; // нижняя точка пунктира
 
     /* Рисуем пунктир: точка каждые 3px. */
-    for(uint16_t y = y0; y <= y1; y += 3){
+    for(uint16_t y = y0; y <= y1; y += 3) {
         canvas_draw_dot(c, x, y);
     }
 
@@ -228,23 +230,25 @@ static void draw_scrollbar_dotted(Canvas* c, uint16_t total_steps, uint16_t pos)
 }
 
 /* ===== Рисуем аккуратную галочку статуса (7x7), baseline_y — базовая линия текста ===== */
-static void draw_checkmark(Canvas* c, int x, int baseline_y){
+static void draw_checkmark(Canvas* c, int x, int baseline_y) {
     /* Галочка из двух линий: короткая вниз-вправо, длинная вверх-вправо */
     int y = baseline_y - 5;
-    canvas_draw_line(c, x,     y+3, x+2, y+5);
-    canvas_draw_line(c, x+2,   y+5, x+7, y   );
+    canvas_draw_line(c, x, y + 3, x + 2, y + 5);
+    canvas_draw_line(c, x + 2, y + 5, x + 7, y);
 }
 
 /* ===== Countdown: 1 Гц тиканье (UI) и точный one-shot (авто‑OFF) ===== */
-static void tick_timer_cb(void* ctx){
+static void tick_timer_cb(void* ctx) {
     /* Тикаем раз в секунду: уменьшаем оставшееся время для отображения. */
     AppState* s = ctx;
-    if(s->remaining_ms >= 1000) s->remaining_ms -= 1000;
-    else s->remaining_ms = 0;
+    if(s->remaining_ms >= 1000)
+        s->remaining_ms -= 1000;
+    else
+        s->remaining_ms = 0;
     if(s->vp) view_port_update(s->vp);
 }
 
-static void off_timer_cb(void* ctx){
+static void off_timer_cb(void* ctx) {
     /* Ровно по окончании лимита — сигнал в главный цикл выключить режим. */
     AppState* s = ctx;
     s->remaining_ms = 0;
@@ -252,55 +256,61 @@ static void off_timer_cb(void* ctx){
     if(s->vp) view_port_update(s->vp);
 }
 
-static void stop_timers(AppState* s){
+static void stop_timers(AppState* s) {
     /* Останавливаем оба таймера (без освобождения). */
     if(s->tick_timer) furi_timer_stop(s->tick_timer);
-    if(s->off_timer)  furi_timer_stop(s->off_timer);
+    if(s->off_timer) furi_timer_stop(s->off_timer);
 }
 
-static void free_timers(AppState* s){
+static void free_timers(AppState* s) {
     /* Безопасно освобождаем оба таймера. */
-    if(s->tick_timer){ furi_timer_free(s->tick_timer); s->tick_timer = NULL; }
-    if(s->off_timer){  furi_timer_free(s->off_timer);  s->off_timer = NULL; }
+    if(s->tick_timer) {
+        furi_timer_free(s->tick_timer);
+        s->tick_timer = NULL;
+    }
+    if(s->off_timer) {
+        furi_timer_free(s->off_timer);
+        s->off_timer = NULL;
+    }
 }
 
-static void start_tick_timer_if_needed(AppState* s){
+static void start_tick_timer_if_needed(AppState* s) {
     /* Старт/рестарт таймеров для режима, с учётом настройки Limit. */
     stop_timers(s);
     s->remaining_ms = 0;
     s->timeout_expired = false;
 
-    if(!s->limit_runtime) return;     // без лимита — таймеры не запускаем
-    if(s->active == 0) return;        // Power off — отсчитывать нечего
+    if(!s->limit_runtime) return; // без лимита — таймеры не запускаем
+    if(s->active == 0) return; // Power off — отсчитывать нечего
     uint32_t secs = kModes[s->active].default_secs;
-    if(secs == 0) return;             // на всякий случай
+    if(secs == 0) return; // на всякий случай
 
     s->remaining_ms = secs * 1000U;
 
     if(!s->tick_timer) s->tick_timer = furi_timer_alloc(tick_timer_cb, FuriTimerTypePeriodic, s);
-    if(!s->off_timer)  s->off_timer  = furi_timer_alloc(off_timer_cb,  FuriTimerTypeOnce,     s);
+    if(!s->off_timer) s->off_timer = furi_timer_alloc(off_timer_cb, FuriTimerTypeOnce, s);
 
     /* Тикаем раз в секунду для UI, а one‑shot выключит ровно по лимиту (без «+1с» лагов). */
     furi_timer_start(s->tick_timer, furi_ms_to_ticks(1000));
-    furi_timer_start(s->off_timer,  furi_ms_to_ticks(s->remaining_ms));
+    furi_timer_start(s->off_timer, furi_ms_to_ticks(s->remaining_ms));
 }
 
 /* ===== Apply mode / Применение выбранного режима ===== */
-static void apply_mode(AppState* s, uint8_t idx){
+static void apply_mode(AppState* s, uint8_t idx) {
     /* Безопасно переключаемся между частотами: стоп → старт, а для OFF — тянем «вниз». */
     if(idx >= MODE_COUNT) return;
     s->active = idx;
 
     const Mode* m = &kModes[idx];
 
-    if(m->freq_hz == 0){
+    if(m->freq_hz == 0) {
         /* Выключение: стоп PWM, безопасный «0» на пине, сброс таймеров. */
         pwm_hw_stop_safe(&s->pwm_running);
         pin_to_pp_low();
         stop_timers(s);
         s->remaining_ms = 0;
         s->timeout_expired = false;
-    }else{
+    } else {
         /* Включение новой частоты: сначала стоп предыдущего PWM, затем старт нового. */
         pwm_hw_stop_safe(&s->pwm_running);
         pwm_hw_start_safe(m->freq_hz, &s->pwm_running);
@@ -311,7 +321,7 @@ static void apply_mode(AppState* s, uint8_t idx){
 }
 
 /* ===== Hint timer / Таймер скрытия подсказки про длинный Back ===== */
-static void hint_timer_cb(void* ctx){
+static void hint_timer_cb(void* ctx) {
     AppState* s = ctx;
     s->hint_visible = false;
     if(s->vp) view_port_update(s->vp);
@@ -320,7 +330,7 @@ static void hint_timer_cb(void* ctx){
 /* ===== Alert / Подтверждение отключения лимита времени =====
  * Нативный диалог Flipper: заголовок по центру, текст с отступом, кнопки Cancel/Confirm по краям.
  */
-static bool show_limit_alert_confirm(void){
+static bool show_limit_alert_confirm(void) {
     DialogsApp* dialogs = furi_record_open(RECORD_DIALOGS);
     DialogMessage* msg = dialog_message_alloc();
 
@@ -333,7 +343,10 @@ static bool show_limit_alert_confirm(void){
         "Long run without condenser\n"
         "and evaporator fans may\n"
         "damage compressor parts.",
-        6, 16, AlignLeft, AlignTop);
+        6,
+        16,
+        AlignLeft,
+        AlignTop);
 
     /* Кнопки: Cancel слева, Confirm справа. Центральная кнопка не используется (NULL). */
     dialog_message_set_buttons(msg, "Cancel", NULL, "Confirm");
@@ -346,10 +359,10 @@ static bool show_limit_alert_confirm(void){
 }
 
 /* ===== Help layout helpers / Вспомогательное вычисление параметров раскладки Help ===== */
-static inline void help_layout_params(uint8_t* out_max_lines, uint8_t* out_max_top_line){
+static inline void help_layout_params(uint8_t* out_max_lines, uint8_t* out_max_top_line) {
     /* Гарантируем одинаковое вычисление доступных строк и последнего «top» по всему коду. */
-    const uint8_t top = 10;    /* отступ сверху, чтобы текст не прилипал к рамке дисплея */
-    const uint8_t line_h = 9;  /* высота строки шрифта FontSecondary */
+    const uint8_t top = 10; /* отступ сверху, чтобы текст не прилипал к рамке дисплея */
+    const uint8_t line_h = 9; /* высота строки шрифта FontSecondary */
     uint8_t ml = (uint8_t)((64 - top) / line_h);
     if(ml < 1) ml = 1;
     uint8_t mtl = (HELP_LINES_COUNT > ml) ? (uint8_t)(HELP_LINES_COUNT - ml) : 0;
@@ -358,7 +371,7 @@ static inline void help_layout_params(uint8_t* out_max_lines, uint8_t* out_max_t
 }
 
 /* ===== UI: Menu / Главный экран ===== */
-static void draw_menu(Canvas* c, const AppState* s){
+static void draw_menu(Canvas* c, const AppState* s) {
     canvas_clear(c);
 
     /* Заголовок (слева) */
@@ -367,9 +380,9 @@ static void draw_menu(Canvas* c, const AppState* s){
     canvas_draw_str(c, 4, 14, "Embraco Starter");
 
     /* Таймер (секунды), выровнен по правой стороне с фиксированным отступом от скроллбара. */
-    if(s->remaining_ms > 0){
+    if(s->remaining_ms > 0) {
         char tbuf[16];
-        unsigned long sec = (unsigned long)((s->remaining_ms + 999)/1000);
+        unsigned long sec = (unsigned long)((s->remaining_ms + 999) / 1000);
         snprintf(tbuf, sizeof(tbuf), "%lus", sec);
         uint16_t w = canvas_string_width(c, tbuf);
         uint16_t right_x = (uint16_t)(SCROLLBAR_X - TIMER_MARGIN);
@@ -379,35 +392,35 @@ static void draw_menu(Canvas* c, const AppState* s){
 
     /* Список: 4 видимые строки, курсор «>», активный режим помечен галочкой справа. */
     canvas_set_font(c, FontSecondary);
-    const int y0 = 26;            // строки на Y: 26, 38, 50, 62
+    const int y0 = 26; // строки на Y: 26, 38, 50, 62
     const int dy = 12;
 
     const uint8_t ROW_TOTAL = MODE_COUNT + 2; /* режимы + Settings + Help */
     uint8_t first_visible = s->first_visible;
-    if(first_visible + 4 > ROW_TOTAL){
+    if(first_visible + 4 > ROW_TOTAL) {
         first_visible = (ROW_TOTAL > 4) ? (uint8_t)(ROW_TOTAL - 4) : 0;
     }
 
-    for(uint8_t i=0;i<4;i++){
+    for(uint8_t i = 0; i < 4; i++) {
         uint8_t row = (uint8_t)(first_visible + i);
         if(row >= ROW_TOTAL) break;
-        int y = y0 + i*dy;
+        int y = y0 + i * dy;
 
         if(row == s->cursor) canvas_draw_str(c, 2, y, ">");
 
-        if(row < MODE_COUNT){
+        if(row < MODE_COUNT) {
             /* Режимы */
             canvas_draw_str(c, 14, y, kModes[row].name);
-            if(row == s->active){
+            if(row == s->active) {
                 /* Галочка выровнена справа от текста, с запасом от скроллбара. */
                 int check_x = (int)SCROLLBAR_X - TIMER_MARGIN - 10;
                 if(check_x < 90) check_x = 90; /* не уезжаем слишком влево на коротких строках */
                 draw_checkmark(c, check_x, y);
             }
-        }else if(row == MODE_COUNT){
+        } else if(row == MODE_COUNT) {
             /* Settings */
             canvas_draw_str(c, 14, y, "Settings");
-        }else{
+        } else {
             /* Help */
             canvas_draw_str(c, 14, y, "Help");
         }
@@ -417,7 +430,7 @@ static void draw_menu(Canvas* c, const AppState* s){
     draw_scrollbar_dotted(c, ROW_TOTAL, s->cursor);
 
     /* Всплывающая подсказка (внизу, белый текст на чёрной плашке по всей ширине). */
-    if(s->hint_visible){
+    if(s->hint_visible) {
         const char* msg = "Long press back to exit";
         canvas_set_font(c, FontSecondary);
         uint16_t text_w = canvas_string_width(c, msg);
@@ -433,7 +446,7 @@ static void draw_menu(Canvas* c, const AppState* s){
 }
 
 /* ===== UI: Help / Экран помощи (без заголовка) ===== */
-static void draw_help(Canvas* c, const AppState* s){
+static void draw_help(Canvas* c, const AppState* s) {
     canvas_clear(c);
     canvas_set_font(c, FontSecondary);
     canvas_set_color(c, ColorBlack);
@@ -443,10 +456,10 @@ static void draw_help(Canvas* c, const AppState* s){
 
     const uint8_t top = 10;
     const uint8_t line_h = 9;
-    for(uint8_t i=0;i<max_lines;i++){
+    for(uint8_t i = 0; i < max_lines; i++) {
         uint8_t idx = (uint8_t)(s->help_top_line + i);
         if(idx >= HELP_LINES_COUNT) break;
-        canvas_draw_str(c, 2, (uint8_t)(top + i*line_h), HELP_LINES[idx]);
+        canvas_draw_str(c, 2, (uint8_t)(top + i * line_h), HELP_LINES[idx]);
     }
 
     /* Скроллбар по верхней видимой строке: total_steps = max_top_line+1,
@@ -457,7 +470,7 @@ static void draw_help(Canvas* c, const AppState* s){
 }
 
 /* ===== UI: Settings / Экран настроек ===== */
-static void draw_settings(Canvas* c, const AppState* s){
+static void draw_settings(Canvas* c, const AppState* s) {
     canvas_clear(c);
 
     /* Заголовок (слева) */
@@ -482,36 +495,46 @@ static void draw_settings(Canvas* c, const AppState* s){
 }
 
 /* ===== Draw dispatch / Коммутатор отрисовки по экрану ===== */
-static void draw_cb(Canvas* c, void* ctx){
+static void draw_cb(Canvas* c, void* ctx) {
     AppState* s = ctx;
-    switch(s->screen){
-        case ScreenMenu:      draw_menu(c, s); break;
-        case ScreenHelp:      draw_help(c, s); break;
-        case ScreenSettings:  draw_settings(c, s); break;
-        default:              draw_menu(c, s); break;
+    switch(s->screen) {
+    case ScreenMenu:
+        draw_menu(c, s);
+        break;
+    case ScreenHelp:
+        draw_help(c, s);
+        break;
+    case ScreenSettings:
+        draw_settings(c, s);
+        break;
+    default:
+        draw_menu(c, s);
+        break;
     }
 }
 
 /* ===== Input plumbing (queue) / Прокладка ввода через очередь ===== */
-typedef struct { FuriMessageQueue* q; } InputCtx;
-static void vp_input_cb(InputEvent* e, void* ctx){
+typedef struct {
+    FuriMessageQueue* q;
+} InputCtx;
+static void vp_input_cb(InputEvent* e, void* ctx) {
     InputCtx* ic = ctx;
     InputEvent ev = *e; /* копия, чтобы не держать чужую память */
     furi_message_queue_put(ic->q, &ev, 0);
 }
 
 /* ===== Main / Точка входа приложения ===== */
-int32_t embraco_starter(void* p){
+int32_t embraco_starter(void* p) {
     UNUSED(p);
 
     /* Инициализируем всё состояние. По безопасности — стартуем в Help. */
     AppState s = {
-        .screen = ScreenHelp,     // старт в Help
+        .screen = ScreenHelp, // старт в Help
         .cursor = 0,
         .first_visible = 0,
         .active = 0,
         .help_top_line = 0,
-        .limit_runtime = true,    // ограничение времени включено по умолчанию
+        .limit_runtime = true, // ограничение времени включено по умолчанию
         .notif = furi_record_open(RECORD_NOTIFICATION),
         .led_timer = NULL,
         .led_on = false,
@@ -547,9 +570,9 @@ int32_t embraco_starter(void* p){
 
     bool exit = false;
     InputEvent ev;
-    while(!exit){
+    while(!exit) {
         /* Обработка таймаута из one‑shot: делаем Power off в главном цикле. */
-        if(s.timeout_expired){
+        if(s.timeout_expired) {
             s.timeout_expired = false;
             apply_mode(&s, 0); // Power off
             s.cursor = 0;
@@ -558,74 +581,75 @@ int32_t embraco_starter(void* p){
         }
 
         /* Чтение событий ввода (с таймаутом 100 мс). */
-        if(furi_message_queue_get(s.q, &ev, 100) == FuriStatusOk){
-            if(s.screen == ScreenHelp){
+        if(furi_message_queue_get(s.q, &ev, 100) == FuriStatusOk) {
+            if(s.screen == ScreenHelp) {
                 /* Прокрутка списка Help + Back в меню. */
-                if(ev.type == InputTypeShort || ev.type == InputTypeRepeat){
+                if(ev.type == InputTypeShort || ev.type == InputTypeRepeat) {
                     uint8_t max_lines, max_top_line;
                     help_layout_params(&max_lines, &max_top_line);
 
-                    if(ev.key == InputKeyUp){
-                        if(s.help_top_line>0) s.help_top_line--;
-                    }else if(ev.key == InputKeyDown){
+                    if(ev.key == InputKeyUp) {
+                        if(s.help_top_line > 0) s.help_top_line--;
+                    } else if(ev.key == InputKeyDown) {
                         if(s.help_top_line < max_top_line) s.help_top_line++;
-                    }else if(ev.key == InputKeyBack){
+                    } else if(ev.key == InputKeyBack) {
                         s.screen = ScreenMenu;
                         s.cursor = 0;
                         s.first_visible = 0;
                         apply_mode(&s, 0);
                     }
                 }
-            } else if(s.screen == ScreenSettings){
+            } else if(s.screen == ScreenSettings) {
                 /* Единственная настройка: Limit run time (Yes/No). */
-                if(ev.type == InputTypeShort){
-                    if(ev.key == InputKeyOk){
-                        if(s.limit_runtime){
+                if(ev.type == InputTypeShort) {
+                    if(ev.key == InputKeyOk) {
+                        if(s.limit_runtime) {
                             /* Смена Yes -> No требует подтверждения. */
                             bool confirm = show_limit_alert_confirm();
-                            if(confirm){
+                            if(confirm) {
                                 s.limit_runtime = false; // Unlimited
                                 stop_timers(&s);
                                 s.remaining_ms = 0;
                             }
-                        }else{
+                        } else {
                             /* Смена No -> Yes — без предупреждений. */
                             s.limit_runtime = true;
                             if(s.active != 0) start_tick_timer_if_needed(&s);
                         }
-                    }else if(ev.key == InputKeyBack){
+                    } else if(ev.key == InputKeyBack) {
                         s.screen = ScreenMenu;
                     }
                 }
             } else { // ScreenMenu
                 /* Навигация по главному меню (Up/Down/Ok/Back/Back long). */
-                if(ev.type == InputTypeShort){
-                    if(ev.key == InputKeyUp){
-                        if(s.cursor == 0){
+                if(ev.type == InputTypeShort) {
+                    if(ev.key == InputKeyUp) {
+                        if(s.cursor == 0) {
                             s.cursor = (uint8_t)(ROW_TOTAL - 1);
-                            s.first_visible = (ROW_TOTAL > MAX_ROWS) ? (uint8_t)(ROW_TOTAL - MAX_ROWS) : 0;
-                        }else{
+                            s.first_visible =
+                                (ROW_TOTAL > MAX_ROWS) ? (uint8_t)(ROW_TOTAL - MAX_ROWS) : 0;
+                        } else {
                             s.cursor--;
                             if(s.cursor < s.first_visible) s.first_visible = s.cursor;
                         }
-                    }else if(ev.key == InputKeyDown){
-                        if(s.cursor == (uint8_t)(ROW_TOTAL - 1)){
+                    } else if(ev.key == InputKeyDown) {
+                        if(s.cursor == (uint8_t)(ROW_TOTAL - 1)) {
                             s.cursor = 0;
                             s.first_visible = 0;
-                        }else{
+                        } else {
                             s.cursor++;
-                            if(s.cursor >= s.first_visible + MAX_ROWS){
+                            if(s.cursor >= s.first_visible + MAX_ROWS) {
                                 s.first_visible = (uint8_t)(s.cursor - (MAX_ROWS - 1));
                             }
                         }
-                    }else if(ev.key == InputKeyOk){
-                        if(s.cursor < MODE_COUNT){
+                    } else if(ev.key == InputKeyOk) {
+                        if(s.cursor < MODE_COUNT) {
                             /* Применяем выбранный режим. */
                             apply_mode(&s, s.cursor);
-                        }else if(s.cursor == MODE_COUNT){
+                        } else if(s.cursor == MODE_COUNT) {
                             /* Заходим в Settings. */
                             s.screen = ScreenSettings;
-                        }else{
+                        } else {
                             /* Help: перед входом — стоп PWM и таймеры, Hi‑Z, LED off. */
                             pwm_hw_stop_safe(&s.pwm_running);
                             pin_to_hiz();
@@ -635,20 +659,20 @@ int32_t embraco_starter(void* p){
                             s.timeout_expired = false;
                             s.screen = ScreenHelp;
                             s.help_top_line = 0;
-                            s.active = 0;       // визуально — Power off
+                            s.active = 0; // визуально — Power off
                             s.cursor = 0;
                             s.first_visible = 0;
                         }
-                    }else if(ev.key == InputKeyBack){
+                    } else if(ev.key == InputKeyBack) {
                         /* Короткий Back — показываем подсказку про удержание для выхода. */
                         s.hint_visible = true;
-                        if(!s.hint_timer){
+                        if(!s.hint_timer) {
                             s.hint_timer = furi_timer_alloc(hint_timer_cb, FuriTimerTypeOnce, &s);
                         }
                         furi_timer_start(s.hint_timer, furi_ms_to_ticks(1500));
                     }
-                }else if(ev.type == InputTypeLong){
-                    if(ev.key == InputKeyBack){
+                } else if(ev.type == InputTypeLong) {
+                    if(ev.key == InputKeyBack) {
                         /* Долгое удержание Back — выход из приложения. */
                         exit = true;
                     }
@@ -659,8 +683,16 @@ int32_t embraco_starter(void* p){
     }
 
     /* ===== Cleanup / Финальная уборка ресурсов ===== */
-    if(s.led_timer){ furi_timer_stop(s.led_timer); furi_timer_free(s.led_timer); s.led_timer = NULL; }
-    if(s.hint_timer){ furi_timer_stop(s.hint_timer); furi_timer_free(s.hint_timer); s.hint_timer = NULL; }
+    if(s.led_timer) {
+        furi_timer_stop(s.led_timer);
+        furi_timer_free(s.led_timer);
+        s.led_timer = NULL;
+    }
+    if(s.hint_timer) {
+        furi_timer_stop(s.hint_timer);
+        furi_timer_free(s.hint_timer);
+        s.hint_timer = NULL;
+    }
     stop_timers(&s);
     free_timers(&s);
     pwm_hw_stop_safe(&s.pwm_running);

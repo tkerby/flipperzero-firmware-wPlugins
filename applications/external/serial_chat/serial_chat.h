@@ -18,11 +18,11 @@
 #include <toolbox/stream/buffered_file_stream.h>
 #include <storage/storage.h>
 
-#define UART_CH (FuriHalSerialIdUsart)
+#define UART_CH                 (FuriHalSerialIdUsart)
 #define SERIAL_CHAT_CONFIG_PATH APP_DATA_PATH("serial_chat.conf")
-#define TEXT_INPUT_SIZE 128
-#define MESSAGE_BUFFER_SIZE 32
-#define MESSAGE_MAX_LEN 256
+#define TEXT_INPUT_SIZE         128
+#define MESSAGE_BUFFER_SIZE     32
+#define MESSAGE_MAX_LEN         256
 
 typedef enum {
     SerialChatViewSubmenu,
@@ -71,16 +71,16 @@ typedef struct {
     View* chat_view;
     Widget* widget;
     NotificationApp* notifications;
-    
+
     SerialChatConfig config;
     FuriHalSerialHandle* serial_handle;
     FuriStreamBuffer* rx_stream;
     FuriTimer* rx_timer;
-    
+
     ChatMessage messages[MESSAGE_BUFFER_SIZE];
     uint8_t message_count;
     uint8_t message_scroll_offset;
-    
+
     char text_input_buffer[TEXT_INPUT_SIZE];
     char rx_line_buffer[MESSAGE_MAX_LEN];
     size_t rx_line_pos;
@@ -117,13 +117,13 @@ void serial_chat_scene_about_on_exit(void* context);
 extern const SceneManagerHandlers serial_chat_scene_handlers;
 
 // Scene on_enter handlers
-extern void (* const serial_chat_scene_on_enter_handlers[])(void*);
+extern void (*const serial_chat_scene_on_enter_handlers[])(void*);
 
-// Scene on_event handlers  
-extern bool (* const serial_chat_scene_on_event_handlers[])(void*, SceneManagerEvent);
+// Scene on_event handlers
+extern bool (*const serial_chat_scene_on_event_handlers[])(void*, SceneManagerEvent);
 
 // Scene on_exit handlers
-extern void (* const serial_chat_scene_on_exit_handlers[])(void*);
+extern void (*const serial_chat_scene_on_exit_handlers[])(void*);
 
 // View get methods
 View* serial_chat_view_get(SerialChatApp* app);

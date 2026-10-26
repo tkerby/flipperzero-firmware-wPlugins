@@ -25,11 +25,12 @@ static void marauder_gui_scene_wifi_clone_sta_mac_redraw(MarauderGuiApp* app) {
         AlignCenter,
         AlignTop,
         app->last_uart_line[0] != '\0' ? app->last_uart_line :
-                                          marauder_gui_text(app, "Gonderiliyor...", "Sending..."),
+                                         marauder_gui_text(app, "Gonderiliyor...", "Sending..."),
         false);
 }
 
-static void marauder_gui_scene_wifi_clone_sta_mac_uart_line(MarauderGuiApp* app, const char* line) {
+static void
+    marauder_gui_scene_wifi_clone_sta_mac_uart_line(MarauderGuiApp* app, const char* line) {
     if(line[0] == '\0') return;
     strncpy(app->last_uart_line, line, MARAUDER_LINE_MAX - 1);
     app->last_uart_line[MARAUDER_LINE_MAX - 1] = '\0';

@@ -44,9 +44,7 @@ bool debug_mode_scene_mark_resolved_lesson_text_on_event(void* context, SceneMan
         if(!ok) {
             snprintf(app->message_title, sizeof(app->message_title), "Save Failed");
             snprintf(
-                app->message_body,
-                sizeof(app->message_body),
-                "Could not mark the case resolved.");
+                app->message_body, sizeof(app->message_body), "Could not mark the case resolved.");
             app->message_return_scene = DebugModeSceneCaseView;
             scene_manager_next_scene(app->scene_manager, DebugModeSceneMessage);
         } else {

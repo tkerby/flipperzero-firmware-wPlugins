@@ -6,8 +6,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-static WcSignature *add_device(WcCensus *c, const uint8_t mac[6], bool random, WcDeviceType type,
-                               int8_t rssi, uint32_t obs, uint32_t first, uint32_t last) {
+static WcSignature* add_device(
+    WcCensus* c,
+    const uint8_t mac[6],
+    bool random,
+    WcDeviceType type,
+    int8_t rssi,
+    uint32_t obs,
+    uint32_t first,
+    uint32_t last) {
     WcSignature d;
     memset(&d, 0, sizeof(d));
     memcpy(d.mac, mac, 6);
@@ -25,7 +32,7 @@ static void test_round_trip(void) {
     wc_census_init(&c);
     uint8_t m1[6] = {0xB8, 0x27, 0xEB, 1, 2, 3};
     uint8_t m2[6] = {0xDA, 0, 0, 0, 0, 9};
-    WcSignature *d0 = add_device(&c, m1, false, WcDeviceIot, -55, 10, 100, 200);
+    WcSignature* d0 = add_device(&c, m1, false, WcDeviceIot, -55, 10, 100, 200);
     wc_signature_add_ssid(d0, "Home,Net"); // comma to stress CSV, ok in binary
     d0->ie_hash = 0xDEADBEEFu;
     d0->ie_vendor = WcVendorApple;
@@ -74,7 +81,7 @@ static void test_rejects_capture_over_cap(void) {
     WcCensus c;
     wc_census_init(&c);
     wc_census_set_max(&c, big); // writer allowed to build an oversized file (as a PC tool would)
-    for (uint16_t i = 0; i < big; i++) {
+    for(uint16_t i = 0; i < big; i++) {
         uint8_t mac[6] = {0x00, 0x1B, 0x21, (uint8_t)(i >> 8), (uint8_t)i, 0x01};
         add_device(&c, mac, false, WcDeviceLaptop, -60, 1, 100, 200);
     }
@@ -84,7 +91,7 @@ static void test_rejects_capture_over_cap(void) {
     memset(&meta, 0, sizeof(meta));
     meta.epoch = 1758200000u;
     size_t need = wc_capture_size(&c);
-    uint8_t *buf = malloc(need);
+    uint8_t* buf = malloc(need);
     assert(buf);
     assert(wc_capture_write(buf, need, &meta, &c) == need);
 
@@ -112,19 +119,19 @@ static void test_reads_v1_capture(void) {
     o = 4;
     buf[o++] = 1; // version 1 (LE)
     buf[o++] = 0;
-    o += WC_LABEL_MAX;  // label (zeros)
+    o += WC_LABEL_MAX; // label (zeros)
     o += 4 + 4 + 2 + 1; // epoch, duration, channels, mode (zeros)
-    buf[o++] = 1;       // count = 1
+    buf[o++] = 1; // count = 1
     buf[o++] = 0;
     size_t rec = o;
     const uint8_t mac[6] = {0x00, 0x1B, 0x21, 1, 2, 3};
     memcpy(buf + o, mac, 6);
     o += 6;
-    buf[o++] = 0;                                  // mac_random
-    buf[o++] = WcDeviceLaptop;                     // type
-    buf[o++] = (uint8_t)(-50);                     // rssi
-    buf[o++] = 0;                                  // ssid_count
-    o += 4 + 4 + 4;                                // obs, first, last
+    buf[o++] = 0; // mac_random
+    buf[o++] = WcDeviceLaptop; // type
+    buf[o++] = (uint8_t)(-50); // rssi
+    buf[o++] = 0; // ssid_count
+    o += 4 + 4 + 4; // obs, first, last
     o += WC_SIG_MAX_SSIDS * (WC_SSID_MAX_LEN + 1); // ssid slots
     size_t v1_len = o;
     (void)rec;
@@ -169,7 +176,7 @@ static void test_read_rejects_bad_input(void) {
     size_t n = wc_capture_write(good, sizeof(good), &m0, &empty);
     assert(n > 0);
     assert(wc_capture_read(&meta, &c, good, n)); // sanity: empty round-trips
-    good[4] = 0xFF;                              // clobber version low byte
+    good[4] = 0xFF; // clobber version low byte
     assert(!wc_capture_read(&meta, &c, good, n));
 }
 
@@ -191,7 +198,7 @@ static void test_csv(void) {
     WcCensus c;
     wc_census_init(&c);
     uint8_t mac[6] = {0xAB, 0xCD, 0xEF, 0x01, 0x02, 0x03};
-    WcSignature *d0 = add_device(&c, mac, false, WcDeviceIot, -55, 7, 100, 200);
+    WcSignature* d0 = add_device(&c, mac, false, WcDeviceIot, -55, 7, 100, 200);
     wc_signature_add_ssid(d0, "Cafe,WiFi"); // comma must be quoted
     WcCaptureMeta meta;
     memset(&meta, 0, sizeof(meta));
@@ -216,7 +223,7 @@ static void test_csv(void) {
 static void test_peek_count_from_header(void) {
     WcCensus c;
     wc_census_init(&c);
-    for (uint16_t i = 0; i < 7; i++) {
+    for(uint16_t i = 0; i < 7; i++) {
         WcSignature sig;
         memset(&sig, 0, sizeof(sig));
         sig.mac[5] = (uint8_t)i;
@@ -226,7 +233,7 @@ static void test_peek_count_from_header(void) {
     memset(&meta, 0, sizeof(meta));
     snprintf(meta.label, sizeof(meta.label), "peek");
     size_t need = wc_capture_size(&c);
-    uint8_t *buf = malloc(need);
+    uint8_t* buf = malloc(need);
     assert(buf);
     assert(wc_capture_write(buf, need, &meta, &c) == need);
 

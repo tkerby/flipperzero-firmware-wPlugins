@@ -20,7 +20,7 @@ enum {
 };
 
 #define KARMA_WAIT_BEFORE_HTML_TICKS 3 /* ~300ms: give the ESP32 time to start reading */
-#define KARMA_WAIT_AFTER_HTML_TICKS 15 /* ~1.5s: past Serial's default 1s silence timeout */
+#define KARMA_WAIT_AFTER_HTML_TICKS  15 /* ~1.5s: past Serial's default 1s silence timeout */
 
 /* Minimal fake WiFi login page - EvilPortal's server posts submissions to "/get" with "email"
    and "password" fields (see EvilPortal.cpp), so the form must use those exact names. Two
@@ -74,7 +74,8 @@ static void marauder_gui_scene_karma_status_redraw(MarauderGuiApp* app) {
                              marauder_gui_text(app, "HTML gonderiliyor...", "Sending HTML...");
 
     widget_reset(app->widget);
-    widget_add_string_element(app->widget, 64, 2, AlignCenter, AlignTop, FontPrimary, "Evil Portal (Karma)");
+    widget_add_string_element(
+        app->widget, 64, 2, AlignCenter, AlignTop, FontPrimary, "Evil Portal (Karma)");
     widget_add_text_box_element(app->widget, 0, 13, 128, 14, AlignCenter, AlignTop, target, true);
     widget_add_text_box_element(app->widget, 0, 28, 128, 20, AlignCenter, AlignTop, status, true);
     widget_add_button_element(

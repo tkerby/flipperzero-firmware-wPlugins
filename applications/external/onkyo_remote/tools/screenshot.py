@@ -49,6 +49,8 @@ def find_port():
         if port.vid == FLIPPER_VID and port.pid == FLIPPER_PID:
             return port.device
     raise SystemExit("no Flipper found; pass --port /dev/ttyACMx")
+
+
 F_START, F_STOP, F_FRAME = 20, 21, 22  # PB_Main field numbers
 
 

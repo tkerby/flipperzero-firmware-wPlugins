@@ -13,18 +13,15 @@
 #include <printf_tiny.h>
 
 // Function to open the file browser
-bool open_file_browser(const char *path, const char *file_extension)
-{
+bool open_file_browser(const char* path, const char* file_extension) {
     // Set default file extension if not provided
-    if (file_extension == NULL)
-    {
+    if(file_extension == NULL) {
         file_extension = ".js";
     }
 
     // Open the dialogs record
-    DialogsApp *dialogs = furi_record_open(RECORD_DIALOGS);
-    if (!dialogs)
-    {
+    DialogsApp* dialogs = furi_record_open(RECORD_DIALOGS);
+    if(!dialogs) {
         return false;
     }
 
@@ -40,15 +37,15 @@ bool open_file_browser(const char *path, const char *file_extension)
     browser_options.hide_ext = false;
 
     // Allocate memory for the file path
-    FuriString *furi_file_path = furi_string_alloc_set_str(path);
-    if (!furi_file_path)
-    {
+    FuriString* furi_file_path = furi_string_alloc_set_str(path);
+    if(!furi_file_path) {
         furi_record_close(RECORD_DIALOGS);
         return false;
     }
 
     // Show the file browser dialog
-    bool result = dialog_file_browser_show(dialogs, furi_file_path, furi_file_path, &browser_options);
+    bool result =
+        dialog_file_browser_show(dialogs, furi_file_path, furi_file_path, &browser_options);
 
     // Clean up
     furi_string_free(furi_file_path);
@@ -57,21 +54,18 @@ bool open_file_browser(const char *path, const char *file_extension)
     return result;
 }
 
-typdef struct
-{
-    const char *title;
-    const char *items[];
+typdef struct {
+    const char* title;
+    const char* items[];
     size_t item_count;
     void callbacks[];
     void callback_context;
 } SubmenuData;
 
-bool create_submenu(SubmenuData *data, SubmenuView *view, ViewDispatcher *dispatcher)
-{
+bool create_submenu(SubmenuData* data, SubmenuView* view, ViewDispatcher* dispatcher) {
     // Allocate memory for the submenu
-    Submenu *submenu = submenu_alloc();
-    if (!submenu)
-    {
+    Submenu* submenu = submenu_alloc();
+    if(!submenu) {
         return false;
     }
 
@@ -79,8 +73,7 @@ bool create_submenu(SubmenuData *data, SubmenuView *view, ViewDispatcher *dispat
     submenu_set_header(submenu, data->title);
 
     // Add items to the submenu
-    for (size_t i = 0; i < data->item_count; ++i)
-    {
+    for(size_t i = 0; i < data->item_count; ++i) {
         submenu_add_item(submenu, data->items[i], i, data->callbacks[i], data->callback_context);
     }
 

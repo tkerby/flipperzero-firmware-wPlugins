@@ -184,26 +184,9 @@ static const uint32_t freq_presets[] = {
     915000000, // US ISM centre - bench testing
 };
 static const char* const freq_preset_names[] = {
-    "GMRS 1",
-    "GMRS 2",
-    "GMRS 3",
-    "GMRS 4",
-    "GMRS 5",
-    "GMRS 6",
-    "GMRS 7",
-    "GMRS 15",
-    "GMRS 16",
-    "GMRS 17",
-    "GMRS 18",
-    "GMRS 19",
-    "GMRS 20",
-    "GMRS 21",
-    "GMRS 22",
-    "315.000",
-    "432.300",
-    "433.920",
-    "446.000",
-    "915.000",
+    "GMRS 1",  "GMRS 2",  "GMRS 3",  "GMRS 4",  "GMRS 5",  "GMRS 6",  "GMRS 7",
+    "GMRS 15", "GMRS 16", "GMRS 17", "GMRS 18", "GMRS 19", "GMRS 20", "GMRS 21",
+    "GMRS 22", "315.000", "432.300", "433.920", "446.000", "915.000",
 };
 #define FREQ_PRESET_COUNT COUNT_OF(freq_presets)
 _Static_assert(COUNT_OF(freq_presets) <= 24, "preset_map in MorseApp is too small");
@@ -224,8 +207,18 @@ static const char* const quiet_names[] =
 static const char* const trigger_names[] = {"On activity", "Interval", "Both"};
 
 static const uint16_t period_values[] = {15, 30, 45, 60, 90, 120, 180, 300, 600, 900, 1800};
-static const char* const period_names[] = {"15 s", "30 s",  "45 s",  "60 s",  "90 s", "2 min",
-                                           "3 min", "5 min", "10 min", "15 min", "30 min"};
+static const char* const period_names[] = {
+    "15 s",
+    "30 s",
+    "45 s",
+    "60 s",
+    "90 s",
+    "2 min",
+    "3 min",
+    "5 min",
+    "10 min",
+    "15 min",
+    "30 min"};
 
 static const uint16_t interval_values[] = {0, 300, 600, 900, 1200, 1800, 3600};
 static const char* const interval_names[] =
@@ -388,7 +381,8 @@ static void about_wrap(Canvas* canvas, AboutViewModel* model) {
         canvas_set_font(canvas, bold ? FontPrimary : FontSecondary);
 
         size_t src_end = pos;
-        while(t[src_end] != '\0' && t[src_end] != '\n') src_end++;
+        while(t[src_end] != '\0' && t[src_end] != '\n')
+            src_end++;
 
         if(src_end == pos) { // blank line, kept for spacing
             model->line[model->count].start = pos;
@@ -435,7 +429,8 @@ static void about_wrap(Canvas* canvas, AboutViewModel* model) {
             model->count++;
 
             cur = line_end;
-            while(cur < src_end && t[cur] == ' ') cur++; // swallow the break space
+            while(cur < src_end && t[cur] == ' ')
+                cur++; // swallow the break space
         }
 
         pos = src_end;
@@ -489,8 +484,7 @@ static bool about_view_input(InputEvent* event, void* context) {
             app->about_view,
             AboutViewModel * model,
             {
-                if(model->count > ABOUT_VISIBLE &&
-                   model->scroll < model->count - ABOUT_VISIBLE) {
+                if(model->count > ABOUT_VISIBLE && model->scroll < model->count - ABOUT_VISIBLE) {
                     model->scroll++;
                 }
             },
@@ -589,8 +583,7 @@ static void beacon_view_draw(Canvas* canvas, void* model) {
         buf,
         sizeof(buf),
         "%s  IDs %lu  RX %lu",
-        (m->trigger == BeaconTriggerInterval) ? "TIMED" :
-                                                (m->status.armed ? "ARMED" : "waiting"),
+        (m->trigger == BeaconTriggerInterval) ? "TIMED" : (m->status.armed ? "ARMED" : "waiting"),
         (unsigned long)m->status.id_count,
         (unsigned long)m->status.traffic_count);
     canvas_draw_str(canvas, 2, 53, buf);
@@ -619,8 +612,7 @@ static void sending_view_draw(Canvas* canvas, void* model) {
         canvas, 64, 12, AlignCenter, AlignCenter, m->failed ? "Transmit failed" : "Transmitting");
 
     canvas_set_font(canvas, FontSecondary);
-    elements_text_box(
-        canvas, 2, 20, 124, 20, AlignCenter, AlignCenter, m->text, false);
+    elements_text_box(canvas, 2, 20, 124, 20, AlignCenter, AlignCenter, m->text, false);
 
     canvas_draw_frame(canvas, 2, 44, 124, 9);
     uint8_t fill = m->progress * 122 / 100;
@@ -682,8 +674,7 @@ static void link_view_draw(Canvas* canvas, void* model) {
         snprintf(buf, sizeof(buf), "Lines sent: %lu", (unsigned long)m->rx_count);
         canvas_draw_str(canvas, 2, 36, buf);
         if(m->last[0]) {
-            elements_text_box(
-                canvas, 2, 39, 124, 12, AlignLeft, AlignTop, m->last, false);
+            elements_text_box(canvas, 2, 39, 124, 12, AlignLeft, AlignTop, m->last, false);
         }
     }
 
@@ -737,8 +728,7 @@ static int32_t morse_tx_thread(void* context) {
         morse_stream_free(stream);
     }
 
-    with_view_model(
-        app->sending_view, SendingViewModel * model, { model->failed = !ok; }, true);
+    with_view_model(app->sending_view, SendingViewModel * model, { model->failed = !ok; }, true);
 
     app->tx_running = false;
     view_dispatcher_send_custom_event(app->view_dispatcher, MorseEventTxDone);
@@ -815,10 +805,9 @@ static void morse_link_line_received(const char* line, void* context) {
 
 static void morse_link_enter(MorseApp* app) {
     bool radio_ok = morse_radio_acquire(app);
-    bool link_ok = radio_ok && morse_link_start(
-                                   app->link,
-                                   (LinkSource)app->config.link_source,
-                                   app->config.link_baudrate);
+    bool link_ok = radio_ok &&
+                   morse_link_start(
+                       app->link, (LinkSource)app->config.link_source, app->config.link_baudrate);
 
     with_view_model(
         app->link_view,
@@ -851,7 +840,6 @@ static void morse_link_leave(MorseApp* app) {
 /* ----------------------------------------------------------------- settings */
 
 static void number_input_callback(void* context, int32_t number);
-
 
 static void setting_mode_changed(VariableItem* item) {
     MorseApp* app = variable_item_get_context(item);
@@ -1024,7 +1012,6 @@ static void setting_id_on_start_changed(VariableItem* item) {
     variable_item_set_current_value_text(item, onoff_names[index]);
 }
 
-
 static const char* const anchor_names[] = {"End of TX", "Start of TX"};
 
 static void setting_anchor_changed(VariableItem* item) {
@@ -1137,8 +1124,8 @@ static void settings_rebuild(MorseApp* app) {
         app->preset_map[app->preset_count++] = i;
     }
     if(app->preset_count > 0) {
-        item = settings_add(
-            app, SettingPreset, "Preset", app->preset_count, setting_preset_changed);
+        item =
+            settings_add(app, SettingPreset, "Preset", app->preset_count, setting_preset_changed);
         variable_item_set_current_value_index(item, preset_index);
         variable_item_set_current_value_text(
             item,
@@ -1351,8 +1338,7 @@ static void submenu_callback(void* context, uint32_t index) {
         view_dispatcher_switch_to_view(app->view_dispatcher, MorseViewSettings);
         break;
     case SubmenuIndexAbout:
-        with_view_model(
-            app->about_view, AboutViewModel * model, { model->scroll = 0; }, false);
+        with_view_model(app->about_view, AboutViewModel * model, { model->scroll = 0; }, false);
         app->current_view = MorseViewAbout;
         view_dispatcher_switch_to_view(app->view_dispatcher, MorseViewAbout);
         break;
@@ -1465,7 +1451,8 @@ static MorseApp* morse_app_alloc(void) {
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
     view_dispatcher_set_navigation_event_callback(app->view_dispatcher, morse_navigation_callback);
     view_dispatcher_set_custom_event_callback(app->view_dispatcher, morse_custom_event_callback);
-    view_dispatcher_set_tick_event_callback(app->view_dispatcher, morse_tick_callback, MORSE_TICK_MS);
+    view_dispatcher_set_tick_event_callback(
+        app->view_dispatcher, morse_tick_callback, MORSE_TICK_MS);
 
     app->submenu = submenu_alloc();
     submenu_add_item(app->submenu, "Beacon ID", SubmenuIndexBeacon, submenu_callback, app);
@@ -1483,12 +1470,7 @@ static MorseApp* morse_app_alloc(void) {
 
     app->text_input = text_input_alloc();
     text_input_set_result_callback(
-        app->text_input,
-        text_input_callback,
-        app,
-        app->text_buffer,
-        MORSE_MAX_TEXT,
-        false);
+        app->text_input, text_input_callback, app, app->text_buffer, MORSE_MAX_TEXT, false);
     view_dispatcher_add_view(
         app->view_dispatcher, MorseViewTextInput, text_input_get_view(app->text_input));
 

@@ -2,7 +2,7 @@
 
 #include <furi.h>
 
-int32_t wc_app(void *p) {
+int32_t wc_app(void* p) {
     UNUSED(p);
     return wc_app_run();
 }

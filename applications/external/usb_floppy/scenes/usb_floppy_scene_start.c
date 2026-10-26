@@ -36,11 +36,7 @@ void usb_floppy_scene_start_on_enter(void* context) {
     variable_item_list_add(app->variable_item_list, "Select disk image", 0, NULL, NULL);
 
     VariableItem* item = variable_item_list_add(
-        app->variable_item_list,
-        "Transport",
-        FloppyTransportNum,
-        usb_floppy_transport_change,
-        app);
+        app->variable_item_list, "Transport", FloppyTransportNum, usb_floppy_transport_change, app);
     variable_item_set_current_value_index(item, app->transport);
     variable_item_set_current_value_text(item, transport_names[app->transport]);
 

@@ -149,7 +149,7 @@ static int32_t cd_thread_worker(void* context) {
 
                     bool cmd_ok =
                         scsi_cd_cmd_start(&scsi, cbw.cmd, MIN(cbw.cmd_len, sizeof(cbw.cmd)));
-                    host_dir = !cbw.len                                ? CdDataNone :
+                    host_dir = !cbw.len                               ? CdDataNone :
                                (cbw.flags & CBW_FLAGS_DEVICE_TO_HOST) ? CdDataIn :
                                                                         CdDataOut;
                     data_len = cmd_ok ? scsi.data_len : 0;
@@ -227,9 +227,8 @@ static int32_t cd_thread_worker(void* context) {
                         state = StateBuildStatus;
                         continue;
                     }
-                    if(!buf_len &&
-                       !scsi_cd_cmd_tx_data(
-                           &scsi, buf, &buf_len, MIN(data_left, USB_MSC_BUF_MAX))) {
+                    if(!buf_len && !scsi_cd_cmd_tx_data(
+                                       &scsi, buf, &buf_len, MIN(data_left, USB_MSC_BUF_MAX))) {
                         FURI_LOG_W(TAG, "tx data failed");
                         usbd_ep_stall(dev, USB_MSC_TX_EP);
                         status = CSW_STATUS_NOK;

@@ -32,15 +32,7 @@ void marauder_gui_scene_pcap_delete_confirm_on_enter(void* context) {
         FontPrimary,
         marauder_gui_text(app, "Dosyayi Sil", "Delete File"));
     widget_add_text_box_element(
-        app->widget,
-        0,
-        14,
-        128,
-        22,
-        AlignCenter,
-        AlignTop,
-        app->pcap_view_filename,
-        false);
+        app->widget, 0, 14, 128, 22, AlignCenter, AlignTop, app->pcap_view_filename, false);
     widget_add_string_element(
         app->widget,
         64,

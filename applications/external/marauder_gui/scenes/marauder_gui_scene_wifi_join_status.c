@@ -19,7 +19,8 @@ enum {
    "connected to X" label. Heuristic (strips the last space-separated token if it looks like the
    trailing rssi number), not bulletproof against SSIDs containing spaces AND ending in a number,
    but this is only ever used for a display label, never for a protocol command. */
-static void marauder_gui_scene_wifi_join_extract_ssid(const char* line, char* out, size_t out_size) {
+static void
+    marauder_gui_scene_wifi_join_extract_ssid(const char* line, char* out, size_t out_size) {
     const char* p = line;
     if(*p == '[') {
         p = strchr(p, ']');
@@ -29,7 +30,8 @@ static void marauder_gui_scene_wifi_join_extract_ssid(const char* line, char* ou
         p = strchr(p, ']');
         if(p) p++;
     }
-    while(p && *p == ' ') p++;
+    while(p && *p == ' ')
+        p++;
     if(!p || !*p) p = line;
 
     strncpy(out, p, out_size - 1);
@@ -73,7 +75,13 @@ static void marauder_gui_scene_wifi_join_status_redraw(MarauderGuiApp* app) {
 
     widget_reset(app->widget);
     widget_add_string_element(
-        app->widget, 64, 2, AlignCenter, AlignTop, FontPrimary, marauder_gui_text(app, "WiFi Baglan", "Join WiFi"));
+        app->widget,
+        64,
+        2,
+        AlignCenter,
+        AlignTop,
+        FontPrimary,
+        marauder_gui_text(app, "WiFi Baglan", "Join WiFi"));
     widget_add_text_box_element(app->widget, 0, 13, 128, 14, AlignCenter, AlignTop, target, true);
     widget_add_text_box_element(app->widget, 0, 28, 128, 12, AlignCenter, AlignTop, status, true);
     widget_add_text_box_element(
@@ -162,7 +170,9 @@ void marauder_gui_scene_wifi_join_status_on_enter(void* context) {
             app->wifi_pending_label[sizeof(app->wifi_pending_label) - 1] = '\0';
         } else {
             strncpy(
-                app->wifi_pending_label, app->wifi_connected_label, sizeof(app->wifi_pending_label) - 1);
+                app->wifi_pending_label,
+                app->wifi_connected_label,
+                sizeof(app->wifi_pending_label) - 1);
             app->wifi_pending_label[sizeof(app->wifi_pending_label) - 1] = '\0';
         }
 
@@ -182,7 +192,11 @@ void marauder_gui_scene_wifi_join_status_on_enter(void* context) {
 
         char cmd[96];
         snprintf(
-            cmd, sizeof(cmd), "join -a %d -p \"%s\"", app->selected_ap_index, app->wifi_join_password);
+            cmd,
+            sizeof(cmd),
+            "join -a %d -p \"%s\"",
+            app->selected_ap_index,
+            app->wifi_join_password);
         marauder_uart_send_line(app->uart, cmd);
     }
 }

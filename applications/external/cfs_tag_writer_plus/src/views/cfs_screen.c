@@ -113,7 +113,8 @@ static void cfs_screen_draw(Canvas* canvas, void* model) {
     }
 }
 
-static bool cfs_screen_input_menu(CfsScreen* screen, CfsScreenModel* m, InputEvent* e, uint32_t* send) {
+static bool
+    cfs_screen_input_menu(CfsScreen* screen, CfsScreenModel* m, InputEvent* e, uint32_t* send) {
     CfsMenuModel* menu = &m->menu;
     if(menu->count == 0) return false;
     if((e->type == InputTypeShort || e->type == InputTypeRepeat) &&
@@ -138,7 +139,8 @@ static bool cfs_screen_input_menu(CfsScreen* screen, CfsScreenModel* m, InputEve
     return false;
 }
 
-static bool cfs_screen_input_picker(CfsScreen* screen, CfsScreenModel* m, InputEvent* e, uint32_t* send) {
+static bool
+    cfs_screen_input_picker(CfsScreen* screen, CfsScreenModel* m, InputEvent* e, uint32_t* send) {
     CfsPickerModel* p = &m->picker;
     const bool press = e->type == InputTypeShort || e->type == InputTypeRepeat;
     if(press && (e->key == InputKeyLeft || e->key == InputKeyRight)) {
@@ -171,7 +173,8 @@ static bool cfs_screen_input_picker(CfsScreen* screen, CfsScreenModel* m, InputE
     return false;
 }
 
-static bool cfs_screen_input_card(CfsScreen* screen, CfsScreenModel* m, InputEvent* e, uint32_t* send) {
+static bool
+    cfs_screen_input_card(CfsScreen* screen, CfsScreenModel* m, InputEvent* e, uint32_t* send) {
     if(e->type != InputTypeShort) return false;
     if(e->key == InputKeyLeft && m->card.button_left) {
         *send = screen->ev_left;
@@ -338,9 +341,8 @@ void cfs_screen_show_menu(
             m->menu.items = m->menu_items;
             m->menu.count = count;
             m->menu.selected = selected < count ? selected : 0;
-            m->menu.window = m->menu.selected >= CFS_MENU_ROWS ?
-                                 m->menu.selected + 1 - CFS_MENU_ROWS :
-                                 0;
+            m->menu.window =
+                m->menu.selected >= CFS_MENU_ROWS ? m->menu.selected + 1 - CFS_MENU_ROWS : 0;
             m->ticks = 0;
             m->spin_left = 0;
         },

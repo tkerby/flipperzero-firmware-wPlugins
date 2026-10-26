@@ -3,18 +3,10 @@
 void serial_chat_scene_about_on_enter(void* context) {
     SerialChatApp* app = context;
     Widget* widget = app->widget;
-    
+
     widget_add_text_box_element(
-        widget,
-        0,
-        0,
-        128,
-        14,
-        AlignCenter,
-        AlignCenter,
-        "\e#Serial Chat\e#",
-        false);
-    
+        widget, 0, 0, 128, 14, AlignCenter, AlignCenter, "\e#Serial Chat\e#", false);
+
     widget_add_text_scroll_element(
         widget,
         0,
@@ -33,7 +25,7 @@ void serial_chat_scene_about_on_enter(void* context) {
         "for Flipper Zero\n"
         "\n"
         "Press Back to return");
-    
+
     view_dispatcher_switch_to_view(app->view_dispatcher, SerialChatViewAbout);
 }
 

@@ -4,10 +4,10 @@
 #include <storage/storage.h>
 
 /* ---- Fixed limits ---- */
-#define DEBUG_MODE_MAX_TITLE_LEN   32
-#define DEBUG_MODE_MAX_TEXT_LEN    96
-#define DEBUG_MODE_MAX_ENTRIES     200
-#define DEBUG_MODE_MAX_CASES       50
+#define DEBUG_MODE_MAX_TITLE_LEN 32
+#define DEBUG_MODE_MAX_TEXT_LEN  96
+#define DEBUG_MODE_MAX_ENTRIES   200
+#define DEBUG_MODE_MAX_CASES     50
 
 /* ---- Enums ---- */
 #define DEBUG_MODE_CATEGORY_COUNT 7
@@ -31,9 +31,9 @@ extern const char* const debug_mode_result_presets[DEBUG_MODE_RESULT_PRESET_COUN
 #define DEBUG_MODE_NEXTSTEP_PRESET_COUNT 8
 extern const char* const debug_mode_nextstep_presets[DEBUG_MODE_NEXTSTEP_PRESET_COUNT];
 
-#define DEBUG_MODE_DATA_FOLDER  "/ext/apps_data/debug_mode"
-#define DEBUG_MODE_CASES_FOLDER DEBUG_MODE_DATA_FOLDER "/cases"
-#define DEBUG_MODE_EXPORT_FOLDER DEBUG_MODE_DATA_FOLDER "/exports"
+#define DEBUG_MODE_DATA_FOLDER    "/ext/apps_data/debug_mode"
+#define DEBUG_MODE_CASES_FOLDER   DEBUG_MODE_DATA_FOLDER "/cases"
+#define DEBUG_MODE_EXPORT_FOLDER  DEBUG_MODE_DATA_FOLDER "/exports"
 #define DEBUG_MODE_NFC_LINKS_PATH DEBUG_MODE_DATA_FOLDER "/nfc_links.txt"
 
 typedef struct {

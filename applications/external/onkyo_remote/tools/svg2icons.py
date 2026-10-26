@@ -49,8 +49,10 @@ def coverage(svg, size, render):
     png = subprocess.run(
         [
             "rsvg-convert",
-            "-w", str(render * SUPERSAMPLE),
-            "-h", str(render * SUPERSAMPLE),
+            "-w",
+            str(render * SUPERSAMPLE),
+            "-h",
+            str(render * SUPERSAMPLE),
             os.path.join(SRC, svg),
         ],
         capture_output=True,

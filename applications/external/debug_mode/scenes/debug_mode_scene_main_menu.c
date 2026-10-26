@@ -43,7 +43,11 @@ void debug_mode_scene_main_menu_on_enter(void* context) {
         debug_mode_scene_main_menu_submenu_callback,
         app);
     submenu_add_item(
-        app->submenu, "About", MainMenuIndexAbout, debug_mode_scene_main_menu_submenu_callback, app);
+        app->submenu,
+        "About",
+        MainMenuIndexAbout,
+        debug_mode_scene_main_menu_submenu_callback,
+        app);
     view_dispatcher_switch_to_view(app->view_dispatcher, DebugModeViewIdSubmenu);
 }
 

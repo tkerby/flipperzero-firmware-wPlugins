@@ -10,9 +10,9 @@ typedef struct {
     uint8_t first_byte[8];
 } Collector;
 
-static void collect(void *ctx, const uint8_t *frame, size_t len) {
-    Collector *c = ctx;
-    if (c->count < 8) {
+static void collect(void* ctx, const uint8_t* frame, size_t len) {
+    Collector* c = ctx;
+    if(c->count < 8) {
         c->first_byte[c->count] = frame[0];
     }
     c->last_len = len;
@@ -24,7 +24,7 @@ static const uint8_t k_gh[24] = {0xD4, 0xC3, 0xB2, 0xA1, 0x02, 0x00, 0x04, 0x00,
                                  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                                  0x00, 0x10, 0x00, 0x00, 105,  0x00, 0x00, 0x00};
 
-static void put_rec(uint8_t *buf, size_t *o, const uint8_t *frame, uint32_t len) {
+static void put_rec(uint8_t* buf, size_t* o, const uint8_t* frame, uint32_t len) {
     memset(buf + *o, 0, 8); // timestamp
     buf[*o + 8] = (uint8_t)len;
     buf[*o + 9] = (uint8_t)(len >> 8);
@@ -86,23 +86,23 @@ static void test_rejects_bad(void) {
     trunc[o + 11] = 0;
     Collector c2 = {0};
     assert(wc_pcap_read(trunc, sizeof(trunc), collect, &c2)); // header ok
-    assert(c2.count == 0);                                    // record dropped, no over-read
+    assert(c2.count == 0); // record dropped, no over-read
 }
 
 // Streaming must see exactly the same frames as reading the whole buffer, including when the
 // window has to refill mid-file.
 typedef struct {
-    const uint8_t *data;
+    const uint8_t* data;
     size_t len;
 } PullSrc;
 
-static size_t pull_from(const void *ctx, size_t offset, uint8_t *buf, size_t cap) {
-    const PullSrc *s = ctx;
-    if (offset >= s->len) {
+static size_t pull_from(const void* ctx, size_t offset, uint8_t* buf, size_t cap) {
+    const PullSrc* s = ctx;
+    if(offset >= s->len) {
         return 0;
     }
     size_t n = s->len - offset;
-    if (n > cap) {
+    if(n > cap) {
         n = cap;
     }
     memcpy(buf, s->data + offset, n);
@@ -111,7 +111,7 @@ static size_t pull_from(const void *ctx, size_t offset, uint8_t *buf, size_t cap
 
 static uint32_t g_stream_frames = 0;
 static uint32_t g_stream_bytes = 0;
-static void count_frame(void *ctx, const uint8_t *frame, size_t len) {
+static void count_frame(void* ctx, const uint8_t* frame, size_t len) {
     (void)ctx;
     (void)frame;
     g_stream_frames++;
@@ -120,7 +120,7 @@ static void count_frame(void *ctx, const uint8_t *frame, size_t len) {
 
 static uint32_t g_buf_frames = 0;
 static uint32_t g_buf_bytes = 0;
-static void count_frame_buf(void *ctx, const uint8_t *frame, size_t len) {
+static void count_frame_buf(void* ctx, const uint8_t* frame, size_t len) {
     (void)ctx;
     (void)frame;
     g_buf_frames++;
@@ -136,7 +136,7 @@ static void test_stream_matches_whole_buffer(void) {
     memcpy(pcap, hdr, sizeof(hdr));
     o = sizeof(hdr);
     uint16_t made = 0;
-    while (o + 16 + 300 < sizeof(pcap)) {
+    while(o + 16 + 300 < sizeof(pcap)) {
         const uint32_t fl = 300;
         memset(pcap + o, 0, 8);
         pcap[o + 8] = (uint8_t)fl;

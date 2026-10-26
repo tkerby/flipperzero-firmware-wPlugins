@@ -47,7 +47,8 @@ void bible_bsb_view_verse_select_draw(Canvas* canvas, void* ctx) {
 
     char start_label[24];
     char end_label[24];
-    snprintf(start_label, sizeof(start_label), "Start: %u", (unsigned int)state->selected_start_verse);
+    snprintf(
+        start_label, sizeof(start_label), "Start: %u", (unsigned int)state->selected_start_verse);
     snprintf(end_label, sizeof(end_label), "End: %u", (unsigned int)state->selected_end_verse);
     const char* rows[3] = {"All verses", start_label, end_label};
     const int16_t row_y[3] = {VERSE_SELECT_ROW_1_Y, VERSE_SELECT_ROW_2_Y, VERSE_SELECT_ROW_3_Y};

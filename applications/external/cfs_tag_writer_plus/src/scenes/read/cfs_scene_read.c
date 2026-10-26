@@ -20,7 +20,8 @@ static void cfs_read_show_error(CfsApp* app, const char* text) {
 }
 
 static void cfs_read_start(CfsApp* app) {
-    cfs_ui_show_working(app, "Reading", "Hold a CFS tag\nto the back of\nyour Flipper", NULL, false);
+    cfs_ui_show_working(
+        app, "Reading", "Hold a CFS tag\nto the back of\nyour Flipper", NULL, false);
     cfs_nfc_worker_start_read(app->worker);
 }
 

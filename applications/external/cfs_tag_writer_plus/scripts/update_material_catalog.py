@@ -22,7 +22,11 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 C_REL = Path("src/data/cfs_data.c")
 C_BEGIN = "// BEGIN GENERATED MATERIAL CATALOG"
 C_END = "// END GENERATED MATERIAL CATALOG"
-BRANDS = {"Generic": "CfsBrandGeneric", "Creality": "CfsBrandCreality", "eSUN": "CfsBrandESUN"}
+BRANDS = {
+    "Generic": "CfsBrandGeneric",
+    "Creality": "CfsBrandCreality",
+    "eSUN": "CfsBrandESUN",
+}
 
 
 class CatalogError(ValueError):
@@ -47,7 +51,11 @@ def load_catalog(json_path: Path) -> list[dict]:
         source = json.load(
             f, object_pairs_hook=_pairs_no_duplicates, parse_constant=_not_json_constant
         )
-    if not isinstance(source, dict) or type(source.get("code")) is not int or source["code"] != 0:
+    if (
+        not isinstance(source, dict)
+        or type(source.get("code")) is not int
+        or source["code"] != 0
+    ):
         raise CatalogError("expected a successful response with 'code': 0")
     result = source.get("result")
     if not isinstance(result, dict) or not isinstance(result.get("list"), list):
@@ -67,7 +75,9 @@ def load_catalog(json_path: Path) -> list[dict]:
         base = record["base"]
         ident = base.get("id")
         if not isinstance(ident, str) or re.fullmatch(r"[0-9A-Z]{5}", ident) is None:
-            raise CatalogError(f"{prefix}.base.id: expected five uppercase alphanumeric characters")
+            raise CatalogError(
+                f"{prefix}.base.id: expected five uppercase alphanumeric characters"
+            )
         if ident in used_ids:
             raise CatalogError(f"duplicate material id {ident}")
         used_ids.add(ident)
@@ -84,9 +94,13 @@ def load_catalog(json_path: Path) -> list[dict]:
         for field in ("minTemp", "maxTemp"):
             value = base.get(field)
             if type(value) is not int or not (0 <= value <= 65535):
-                raise CatalogError(f"{prefix} ({ident}): base.{field} must be a uint16 temperature")
+                raise CatalogError(
+                    f"{prefix} ({ident}): base.{field} must be a uint16 temperature"
+                )
         if base["minTemp"] > base["maxTemp"]:
-            raise CatalogError(f"{prefix} ({ident}): minimum temperature exceeds maximum")
+            raise CatalogError(
+                f"{prefix} ({ident}): minimum temperature exceeds maximum"
+            )
 
         materials.append(base)
     return sorted(materials, key=lambda row: row["id"])
@@ -113,7 +127,8 @@ def render_c(materials: list[dict]) -> str:
     ]
     for base in materials:
         lines.append(
-            "    {" + ", ".join(
+            "    {"
+            + ", ".join(
                 (
                     c_string(base["id"]),
                     BRANDS[base["brand"]],
@@ -122,7 +137,8 @@ def render_c(materials: list[dict]) -> str:
                     str(base["minTemp"]),
                     str(base["maxTemp"]),
                 )
-            ) + "},"
+            )
+            + "},"
         )
     lines.append("};")
     return "\n".join(lines)
@@ -136,13 +152,17 @@ def replace_region(original: str, begin: str, end: str, generated: str) -> str:
     stop = original.index(end)
     if start >= stop:
         raise CatalogError(f"incorrect order of {begin!r} and {end!r}")
-    if not original[start:stop].startswith("\n") or not original[start:stop].endswith("\n"):
+    if not original[start:stop].startswith("\n") or not original[start:stop].endswith(
+        "\n"
+    ):
         raise CatalogError(f"generated region {begin!r} must be surrounded by newlines")
     return original[:start] + "\n" + generated + "\n" + original[stop:]
 
 
 def atomic_write(path: Path, content: str) -> None:
-    fd, temp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
+    fd, temp_name = tempfile.mkstemp(
+        prefix=f".{path.name}.", suffix=".tmp", dir=path.parent
+    )
     try:
         with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
             f.write(content)
@@ -155,11 +175,19 @@ def atomic_write(path: Path, content: str) -> None:
 
 def run(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("json", type=Path, help="the external material_database.json source")
-    parser.add_argument("--repo-root", type=Path, default=REPO_ROOT, help=argparse.SUPPRESS)
+    parser.add_argument(
+        "json", type=Path, help="the external material_database.json source"
+    )
+    parser.add_argument(
+        "--repo-root", type=Path, default=REPO_ROOT, help=argparse.SUPPRESS
+    )
     mode = parser.add_mutually_exclusive_group()
-    mode.add_argument("--check", action="store_true", help="report drift and exit 1, never write")
-    mode.add_argument("--dry-run", action="store_true", help="show diffs without writing")
+    mode.add_argument(
+        "--check", action="store_true", help="report drift and exit 1, never write"
+    )
+    mode.add_argument(
+        "--dry-run", action="store_true", help="show diffs without writing"
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -175,10 +203,17 @@ def run(argv: list[str] | None = None) -> int:
     print(f"Validated {len(materials)} materials.")
     changed = old != new
     if changed and (args.check or args.dry_run):
-        print("".join(difflib.unified_diff(
-            old.splitlines(keepends=True), new.splitlines(keepends=True),
-            fromfile=str(path) + " (current)", tofile=str(path) + " (generated)",
-        )), end="")
+        print(
+            "".join(
+                difflib.unified_diff(
+                    old.splitlines(keepends=True),
+                    new.splitlines(keepends=True),
+                    fromfile=str(path) + " (current)",
+                    tofile=str(path) + " (generated)",
+                )
+            ),
+            end="",
+        )
     elif changed:
         atomic_write(path, new)
         print(f"Updated {path}")

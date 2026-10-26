@@ -30,7 +30,8 @@ static void marauder_gui_scene_bt_tracker_status_redraw(MarauderGuiApp* app) {
         AlignCenter,
         AlignTop,
         FontPrimary,
-        app->bt_tracker_action == 0 ? marauder_gui_text(app, "Ses Calma", "Playing Sound") : "Spoof");
+        app->bt_tracker_action == 0 ? marauder_gui_text(app, "Ses Calma", "Playing Sound") :
+                                      "Spoof");
     widget_add_text_box_element(app->widget, 0, 13, 128, 14, AlignCenter, AlignTop, target, true);
     widget_add_text_box_element(
         app->widget, 0, 28, 128, 20, AlignCenter, AlignTop, app->last_uart_line, true);

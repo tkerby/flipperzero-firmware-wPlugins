@@ -30,7 +30,8 @@ void bible_word_wrap(
     uint8_t budget = (max_chars > prefix_len) ? (uint8_t)(max_chars - prefix_len) : 1;
 
     const char* p = text;
-    while(*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r') p++;
+    while(*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r')
+        p++;
 
     while(*p != '\0') {
         const char* word = p;
@@ -65,7 +66,8 @@ void bible_word_wrap(
                     }
                     line->verse_number = verse_number;
                     line->is_verse_number = false;
-                    if(line->text[0] && prefix_len && memcmp(line->text, prefix, prefix_len) == 0) {
+                    if(line->text[0] && prefix_len &&
+                       memcmp(line->text, prefix, prefix_len) == 0) {
                         line->is_verse_number = true;
                     }
                     (*out_count)++;
@@ -85,7 +87,8 @@ void bible_word_wrap(
             current_len = (uint8_t)(current_len + piece);
             taken = (uint8_t)(taken + piece);
         }
-        while(*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r') p++;
+        while(*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r')
+            p++;
     }
 
     if(current_len > 0 && *out_count < max_lines) {

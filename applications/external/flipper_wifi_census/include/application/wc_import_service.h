@@ -13,5 +13,9 @@
 // `out_dropped` (nullable) receives how many devices the ceiling refused: a big pcap holds far
 // more than the device can, and without this the loss happens before the file exists and is
 // therefore invisible forever after.
-bool wc_import_service_run(const WcStorePort *store, WcClockPort clock, const char *pcap_path,
-                           const char *out_basename, uint16_t *out_dropped);
+bool wc_import_service_run(
+    const WcStorePort* store,
+    WcClockPort clock,
+    const char* pcap_path,
+    const char* out_basename,
+    uint16_t* out_dropped);

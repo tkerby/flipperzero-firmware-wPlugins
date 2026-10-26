@@ -12,7 +12,13 @@
 static void marauder_gui_scene_wifi_clone_ap_mac_redraw(MarauderGuiApp* app) {
     widget_reset(app->widget);
     widget_add_string_element(
-        app->widget, 64, 2, AlignCenter, AlignTop, FontPrimary, marauder_gui_text(app, "AP MAC Klonla", "Clone AP MAC"));
+        app->widget,
+        64,
+        2,
+        AlignCenter,
+        AlignTop,
+        FontPrimary,
+        marauder_gui_text(app, "AP MAC Klonla", "Clone AP MAC"));
     widget_add_text_box_element(
         app->widget,
         0,
@@ -22,7 +28,7 @@ static void marauder_gui_scene_wifi_clone_ap_mac_redraw(MarauderGuiApp* app) {
         AlignCenter,
         AlignTop,
         app->last_uart_line[0] != '\0' ? app->last_uart_line :
-                                          marauder_gui_text(app, "Gonderiliyor...", "Sending..."),
+                                         marauder_gui_text(app, "Gonderiliyor...", "Sending..."),
         false);
 }
 

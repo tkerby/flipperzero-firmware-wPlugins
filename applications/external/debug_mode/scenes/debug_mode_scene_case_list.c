@@ -24,7 +24,8 @@ static uint8_t debug_mode_priority_rank(const char* priority) {
     return 2;
 }
 
-static void debug_mode_case_list_sort(CaseHeader* headers, uint32_t count, DebugModeCaseListSort sort) {
+static void
+    debug_mode_case_list_sort(CaseHeader* headers, uint32_t count, DebugModeCaseListSort sort) {
     for(uint32_t i = 0; i < count; i++) {
         for(uint32_t j = i + 1; j < count; j++) {
             int cmp = 0;
@@ -82,8 +83,8 @@ void debug_mode_scene_case_list_on_enter(void* context) {
             "%s",
             app->case_list_show_archived ?
                 "Nothing has been archived yet." :
-                (app->case_list_show_resolved ? "Nothing has been resolved yet."
-                                              : "Create a case to get started."));
+                (app->case_list_show_resolved ? "Nothing has been resolved yet." :
+                                                "Create a case to get started."));
         app->message_return_scene = DebugModeSceneMainMenu;
         scene_manager_next_scene(app->scene_manager, DebugModeSceneMessage);
         return;

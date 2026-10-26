@@ -55,11 +55,7 @@ bool debug_mode_scene_case_action_confirm_on_event(void* context, SceneManagerEv
                 ok = case_store_set_status(app->storage, app->current_case_id, "Archived");
             }
 
-            snprintf(
-                app->message_title,
-                sizeof(app->message_title),
-                "%s",
-                ok ? "Done" : "Failed");
+            snprintf(app->message_title, sizeof(app->message_title), "%s", ok ? "Done" : "Failed");
             snprintf(
                 app->message_body,
                 sizeof(app->message_body),

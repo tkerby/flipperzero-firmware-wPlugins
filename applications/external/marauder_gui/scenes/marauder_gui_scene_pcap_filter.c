@@ -84,8 +84,14 @@ static void marauder_pcap_filter_relabel(MarauderGuiApp* app, size_t item_index)
             name_en);
     } else if(item_index == PCAP_FILTER_SSID_ROW_INDEX) {
         if(app->pcap_filter_ssid_count == 0) {
-            snprintf(marauder_pcap_filter_labels_tr[item_index], sizeof(marauder_pcap_filter_labels_tr[item_index]), "SSID: (hepsi)");
-            snprintf(marauder_pcap_filter_labels_en[item_index], sizeof(marauder_pcap_filter_labels_en[item_index]), "SSID: (all)");
+            snprintf(
+                marauder_pcap_filter_labels_tr[item_index],
+                sizeof(marauder_pcap_filter_labels_tr[item_index]),
+                "SSID: (hepsi)");
+            snprintf(
+                marauder_pcap_filter_labels_en[item_index],
+                sizeof(marauder_pcap_filter_labels_en[item_index]),
+                "SSID: (all)");
         } else {
             snprintf(
                 marauder_pcap_filter_labels_tr[item_index],
@@ -99,11 +105,23 @@ static void marauder_pcap_filter_relabel(MarauderGuiApp* app, size_t item_index)
                 (unsigned)app->pcap_filter_ssid_count);
         }
     } else if(item_index == PCAP_FILTER_RENAME_ROW_INDEX) {
-        snprintf(marauder_pcap_filter_labels_tr[item_index], sizeof(marauder_pcap_filter_labels_tr[item_index]), "Yeniden Adlandir>");
-        snprintf(marauder_pcap_filter_labels_en[item_index], sizeof(marauder_pcap_filter_labels_en[item_index]), "Rename>");
+        snprintf(
+            marauder_pcap_filter_labels_tr[item_index],
+            sizeof(marauder_pcap_filter_labels_tr[item_index]),
+            "Yeniden Adlandir>");
+        snprintf(
+            marauder_pcap_filter_labels_en[item_index],
+            sizeof(marauder_pcap_filter_labels_en[item_index]),
+            "Rename>");
     } else {
-        snprintf(marauder_pcap_filter_labels_tr[item_index], sizeof(marauder_pcap_filter_labels_tr[item_index]), "Dosyayi Sil>");
-        snprintf(marauder_pcap_filter_labels_en[item_index], sizeof(marauder_pcap_filter_labels_en[item_index]), "Delete File>");
+        snprintf(
+            marauder_pcap_filter_labels_tr[item_index],
+            sizeof(marauder_pcap_filter_labels_tr[item_index]),
+            "Dosyayi Sil>");
+        snprintf(
+            marauder_pcap_filter_labels_en[item_index],
+            sizeof(marauder_pcap_filter_labels_en[item_index]),
+            "Delete File>");
     }
 }
 
@@ -137,8 +155,10 @@ void marauder_gui_scene_pcap_filter_on_enter(void* context) {
         marauder_pcap_filter_relabel(app, real);
         marauder_pcap_filter_items[slot].label_tr = marauder_pcap_filter_labels_tr[real];
         marauder_pcap_filter_items[slot].label_en = marauder_pcap_filter_labels_en[real];
-        marauder_pcap_filter_items[slot].description_tr = marauder_pcap_filter_descriptions_tr[real];
-        marauder_pcap_filter_items[slot].description_en = marauder_pcap_filter_descriptions_en[real];
+        marauder_pcap_filter_items[slot].description_tr =
+            marauder_pcap_filter_descriptions_tr[real];
+        marauder_pcap_filter_items[slot].description_en =
+            marauder_pcap_filter_descriptions_en[real];
     }
 
     marauder_gui_menu_set_items(

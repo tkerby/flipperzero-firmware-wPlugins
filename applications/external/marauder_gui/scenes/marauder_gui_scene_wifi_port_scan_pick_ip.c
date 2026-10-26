@@ -7,9 +7,11 @@
    to build the list live (populating IPs to pick a port-scan target from). */
 #define WIFI_PORT_PICK_REFRESH_TICKS 15 /* ~1.5s at the app's 100ms tick period */
 #define WIFI_PORT_PICK_MARQUEE_TICKS 3
-#define WIFI_PORT_PICK_MARQUEE_DELAY_TICKS 30 /* ~3s pause before a highlighted row starts scrolling */
+#define WIFI_PORT_PICK_MARQUEE_DELAY_TICKS \
+    30 /* ~3s pause before a highlighted row starts scrolling */
 
-static void marauder_gui_scene_wifi_port_scan_pick_ip_uart_line(MarauderGuiApp* app, const char* line) {
+static void
+    marauder_gui_scene_wifi_port_scan_pick_ip_uart_line(MarauderGuiApp* app, const char* line) {
     if(line[0] != '[') return;
 
     long idx = strtol(line + 1, NULL, 10);

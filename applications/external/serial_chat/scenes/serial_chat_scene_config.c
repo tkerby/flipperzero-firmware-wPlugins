@@ -1,6 +1,6 @@
 #include "serial_chat.h"
 
-void (* const serial_chat_scene_on_enter_handlers[])(void*) = {
+void (*const serial_chat_scene_on_enter_handlers[])(void*) = {
     serial_chat_scene_menu_on_enter,
     serial_chat_scene_chat_on_enter,
     serial_chat_scene_settings_on_enter,
@@ -8,7 +8,7 @@ void (* const serial_chat_scene_on_enter_handlers[])(void*) = {
     serial_chat_scene_about_on_enter,
 };
 
-bool (* const serial_chat_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
+bool (*const serial_chat_scene_on_event_handlers[])(void*, SceneManagerEvent) = {
     serial_chat_scene_menu_on_event,
     serial_chat_scene_chat_on_event,
     serial_chat_scene_settings_on_event,
@@ -16,7 +16,7 @@ bool (* const serial_chat_scene_on_event_handlers[])(void*, SceneManagerEvent) =
     serial_chat_scene_about_on_event,
 };
 
-void (* const serial_chat_scene_on_exit_handlers[])(void*) = {
+void (*const serial_chat_scene_on_exit_handlers[])(void*) = {
     serial_chat_scene_menu_on_exit,
     serial_chat_scene_chat_on_exit,
     serial_chat_scene_settings_on_exit,

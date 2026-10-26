@@ -15,11 +15,7 @@ void debug_mode_scene_new_case_priority_on_enter(void* context) {
 
     for(uint32_t i = 0; i < COUNT_OF(priority_options); i++) {
         submenu_add_item(
-            app->submenu,
-            priority_options[i],
-            i,
-            debug_mode_scene_new_case_priority_callback,
-            app);
+            app->submenu, priority_options[i], i, debug_mode_scene_new_case_priority_callback, app);
     }
 
     view_dispatcher_switch_to_view(app->view_dispatcher, DebugModeViewIdSubmenu);

@@ -8,6 +8,7 @@ light -> dark, so the Flipper picker can browse by hue family, then shade.
 
 usage: python3 scripts/gen_color_shades.py colornames.csv out.c
 """
+
 import colorsys
 import csv
 import io
@@ -57,29 +58,49 @@ def family_of(r, g, b):
     return 8
 
 
-MODIFIERS = set("""light dark pale deep bright pastel neon dusty soft warm cool medium
-vivid muted royal baby hot electric burnt off true pure classic metallic matte""".split())
+MODIFIERS = set(
+    """light dark pale deep bright pastel neon dusty soft warm cool medium
+vivid muted royal baby hot electric burnt off true pure classic metallic matte""".split()
+)
 
 FAMILY_WORDS = [
-    set("""white gray grey black silver charcoal graphite smoke ash snow ivory pearl
-    platinum titanium stone slate jet onyx ink obsidian gunmetal steel raven bone""".split()),
-    set("""red crimson scarlet cherry ruby maroon burgundy wine blood brick tomato fire
-    raspberry strawberry""".split()),
-    set("""orange tangerine apricot peach pumpkin carrot amber rust terracotta copper
-    coral salmon flame""".split()),
-    set("""yellow lemon canary mustard gold golden banana honey sunshine sand cream""".split()),
-    set("""green lime mint emerald jade sage moss olive forest pine fern grass kiwi
-    pistachio avocado chartreuse jungle hunter kelly army leaf bottle apple""".split()),
+    set(
+        """white gray grey black silver charcoal graphite smoke ash snow ivory pearl
+    platinum titanium stone slate jet onyx ink obsidian gunmetal steel raven bone""".split()
+    ),
+    set(
+        """red crimson scarlet cherry ruby maroon burgundy wine blood brick tomato fire
+    raspberry strawberry""".split()
+    ),
+    set(
+        """orange tangerine apricot peach pumpkin carrot amber rust terracotta copper
+    coral salmon flame""".split()
+    ),
+    set(
+        """yellow lemon canary mustard gold golden banana honey sunshine sand cream""".split()
+    ),
+    set(
+        """green lime mint emerald jade sage moss olive forest pine fern grass kiwi
+    pistachio avocado chartreuse jungle hunter kelly army leaf bottle apple""".split()
+    ),
     set("""teal turquoise aqua cyan petrol lagoon sea marine""".split()),
-    set("""blue navy cobalt sapphire azure sky denim ocean indigo ultramarine cerulean
-    ice arctic glacier steel midnight periwinkle""".split()),
-    set("""purple violet lavender lilac plum grape eggplant amethyst orchid heather
-    indigo mauve""".split()),
-    set("""pink rose magenta fuchsia blush flamingo bubblegum candy watermelon berry
-    salmon coral""".split()),
-    set("""brown beige tan khaki chocolate coffee mocha caramel walnut cinnamon espresso
+    set(
+        """blue navy cobalt sapphire azure sky denim ocean indigo ultramarine cerulean
+    ice arctic glacier steel midnight periwinkle""".split()
+    ),
+    set(
+        """purple violet lavender lilac plum grape eggplant amethyst orchid heather
+    indigo mauve""".split()
+    ),
+    set(
+        """pink rose magenta fuchsia blush flamingo bubblegum candy watermelon berry
+    salmon coral""".split()
+    ),
+    set(
+        """brown beige tan khaki chocolate coffee mocha caramel walnut cinnamon espresso
     chestnut mahogany sepia umber sienna camel taupe nude wood oak earth clay mud
-    bronze linen sand ochre hazel""".split()),
+    bronze linen sand ochre hazel""".split()
+    ),
 ]
 VOCAB = MODIFIERS.union(*FAMILY_WORDS)
 
@@ -90,7 +111,11 @@ def words(name):
 
 def plain_in_family(name, fam):
     w = words(name)
-    return bool(w) and all(x in VOCAB for x in w) and any(x in FAMILY_WORDS[fam] for x in w)
+    return (
+        bool(w)
+        and all(x in VOCAB for x in w)
+        and any(x in FAMILY_WORDS[fam] for x in w)
+    )
 
 
 def lab(r, g, b):
@@ -183,7 +208,11 @@ def main(src, out):
         for name, r, g, b in pick:
             lines.append(f'    {{"{name}", 0x{r:02X}, 0x{g:02X}, 0x{b:02X}}},')
         idx += len(pick)
-    lines += ["};", "", "const CfsShadeFamily cfs_shade_families[CFS_SHADE_FAMILY_COUNT] = {"]
+    lines += [
+        "};",
+        "",
+        "const CfsShadeFamily cfs_shade_families[CFS_SHADE_FAMILY_COUNT] = {",
+    ]
     for fi, (s, n) in enumerate(starts):
         lines.append(f'    {{"{FAMILIES[fi]}", &shades[{s}], {n}}},')
     lines += ["};", ""]

@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-static bool parse(const char *line, WcObservation *o) {
+static bool parse(const char* line, WcObservation* o) {
     return wc_parse_summary_line(line, strlen(line), o);
 }
 
@@ -57,8 +57,11 @@ static void test_garbage_rejected(void) {
 static void test_ssid_over_32_truncated(void) {
     WcObservation o;
     char line[128];
-    snprintf(line, sizeof(line), "MAC: 00:1B:21:00:00:01 SSID: %s",
-             "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"); // 40 A's
+    snprintf(
+        line,
+        sizeof(line),
+        "MAC: 00:1B:21:00:00:01 SSID: %s",
+        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"); // 40 A's
     assert(parse(line, &o));
     assert(strlen(o.probed_ssid) == WC_SSID_MAX_LEN); // clamped to 32
 }
@@ -86,7 +89,7 @@ static void test_long_digit_run_does_not_overflow(void) {
     // A pathological RSSI with ~150 digits must not overflow the accumulator (UBSan).
     char line[220];
     int k = snprintf(line, sizeof(line), "MAC: 00:1B:21:00:00:04 RSSI:");
-    for (int i = k; i < 200; i++)
+    for(int i = k; i < 200; i++)
         line[i] = '9';
     line[200] = '\0';
     assert(wc_parse_summary_line(line, strlen(line), &o));
@@ -141,7 +144,7 @@ static void test_marauder_v117_directed_underscore_ssid(void) {
 // as the network a client was asking for, and that string can become a permanent known rule.
 static void test_bssid_is_not_an_ssid(void) {
     WcObservation o;
-    const char *line = "RSSI: -50 Ch: 6 BSSID: 00:11:22:33:44:55 ESSID: HomeNet";
+    const char* line = "RSSI: -50 Ch: 6 BSSID: 00:11:22:33:44:55 ESSID: HomeNet";
     assert(wc_parse_summary_line(line, strlen(line), &o));
     // The MAC text must not become the network name, and the real name must not be lost.
     assert(strcmp(o.probed_ssid, "HomeNet") == 0);
@@ -153,7 +156,7 @@ static void test_bssid_is_not_an_ssid(void) {
 // it out of the linking rule and out of every comparison.
 static void test_a_network_named_beacon_is_not_a_beacon(void) {
     WcObservation o;
-    const char *line = "MAC: 02:11:22:33:44:55 RSSI: -60 SSID: BEACON";
+    const char* line = "MAC: 02:11:22:33:44:55 RSSI: -60 SSID: BEACON";
     assert(wc_parse_summary_line(line, strlen(line), &o));
     assert(!o.is_beacon);
     assert(strcmp(o.probed_ssid, "BEACON") == 0);

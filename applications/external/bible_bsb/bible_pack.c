@@ -52,8 +52,7 @@ bool bible_pack_find(
     uint32_t hi = count;
     while(lo < hi) {
         uint32_t mid = lo + (hi - lo) / 2;
-        const uint8_t* rec =
-            pack + BIBLE_PACK_HEADER_SIZE + (size_t)mid * BIBLE_PACK_RECORD_SIZE;
+        const uint8_t* rec = pack + BIBLE_PACK_HEADER_SIZE + (size_t)mid * BIBLE_PACK_RECORD_SIZE;
         BiblePackEntry entry;
         bible_pack_read_entry(rec, &entry);
 

@@ -2,6 +2,6 @@
 
 #include "include/version.h"
 
-const char *wc_version(void) {
+const char* wc_version(void) {
     return WIFI_CENSUS_VERSION;
 }

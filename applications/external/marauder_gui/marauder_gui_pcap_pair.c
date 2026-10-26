@@ -32,13 +32,11 @@ bool marauder_pcap_pair_feed(
         if(data[1] & 0x80) header += 4; /* HT Control */
     }
     static const uint8_t snap[] = {0xAA, 0xAA, 3, 0, 0, 0, 0x88, 0x8E};
-    if(len < header + sizeof(snap) + 99 ||
-       memcmp(data + header, snap, sizeof(snap)) != 0)
+    if(len < header + sizeof(snap) + 99 || memcmp(data + header, snap, sizeof(snap)) != 0)
         return false;
     const uint8_t* eapol = data + header + sizeof(snap);
     const uint16_t body_len = be16(eapol + 2);
-    if(eapol[1] != 3 || body_len < 95 ||
-       header + sizeof(snap) + 4 + body_len > frame_len)
+    if(eapol[1] != 3 || body_len < 95 || header + sizeof(snap) + 4 + body_len > frame_len)
         return false;
     const uint8_t* key = eapol + 4;
     const uint16_t info = be16(key + 1);
@@ -50,8 +48,8 @@ bool marauder_pcap_pair_feed(
     const bool mic = (info & 0x100) != 0;
     const uint8_t* ap = data + (ds == 2 ? 10 : 4);
     const uint8_t* station = data + (ds == 2 ? 4 : 10);
-    if((ap[0] & 1) || (station[0] & 1) || !nonzero(ap, 6) ||
-       !nonzero(station, 6) || memcmp(ap, station, 6) == 0)
+    if((ap[0] & 1) || (station[0] & 1) || !nonzero(ap, 6) || !nonzero(station, 6) ||
+       memcmp(ap, station, 6) == 0)
         return false;
     if(!nonzero(key + 13, 32)) return false;
 
@@ -60,9 +58,8 @@ bool marauder_pcap_pair_feed(
         size_t index = MARAUDER_PCAP_PAIR_SLOTS;
         for(size_t i = 0; i < MARAUDER_PCAP_PAIR_SLOTS; i++) {
             MarauderPcapPairSlot* s = &tracker->slots[i];
-            if(s->valid && memcmp(s->ap, ap, 6) == 0 &&
-               memcmp(s->station, station, 6) == 0 && memcmp(s->replay, key + 5, 8) == 0 &&
-               memcmp(s->nonce, key + 13, 32) == 0) {
+            if(s->valid && memcmp(s->ap, ap, 6) == 0 && memcmp(s->station, station, 6) == 0 &&
+               memcmp(s->replay, key + 5, 8) == 0 && memcmp(s->nonce, key + 13, 32) == 0) {
                 index = i;
                 break;
             }
@@ -82,9 +79,8 @@ bool marauder_pcap_pair_feed(
         for(size_t i = 0; i < MARAUDER_PCAP_PAIR_SLOTS; i++) {
             const MarauderPcapPairSlot* s = &tracker->slots[i];
             if(s->valid && time_us >= s->time_us &&
-               time_us - s->time_us <= MARAUDER_PCAP_PAIR_WINDOW_US &&
-               memcmp(s->ap, ap, 6) == 0 && memcmp(s->station, station, 6) == 0 &&
-               memcmp(s->replay, key + 5, 8) == 0 &&
+               time_us - s->time_us <= MARAUDER_PCAP_PAIR_WINDOW_US && memcmp(s->ap, ap, 6) == 0 &&
+               memcmp(s->station, station, 6) == 0 && memcmp(s->replay, key + 5, 8) == 0 &&
                memcmp(s->nonce, key + 13, 32) != 0) {
                 memcpy(ap_out, ap, 6);
                 return true;

@@ -6,15 +6,15 @@
 #include <inttypes.h>
 #include <stddef.h>
 
-#define CAN_OK (0)
-#define CAN_FAILINIT (1)
-#define CAN_FAILTX (2)
-#define CAN_MSGAVAIL (3)
-#define CAN_NOMSG (4)
-#define CAN_CTRLERROR (5)
+#define CAN_OK             (0)
+#define CAN_FAILINIT       (1)
+#define CAN_FAILTX         (2)
+#define CAN_MSGAVAIL       (3)
+#define CAN_NOMSG          (4)
+#define CAN_CTRLERROR      (5)
 #define CAN_GETTXBFTIMEOUT (6)
 #define CAN_SENDMSGTIMEOUT (7)
-#define CAN_FAIL (0xff)
+#define CAN_FAIL           (0xff)
 
 // clock
 typedef enum {

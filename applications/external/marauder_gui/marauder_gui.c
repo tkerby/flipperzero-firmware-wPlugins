@@ -96,7 +96,8 @@ static void marauder_gui_pcap_live_frame_callback(void* ctx, const uint8_t* data
         }
     }
     if(row == app->pcap_live_ap_count) {
-        if(app->pcap_live_ap_count >= MARAUDER_AP_LIST_MAX) return; /* dashboard full - keep tracking what we already have */
+        if(app->pcap_live_ap_count >= MARAUDER_AP_LIST_MAX)
+            return; /* dashboard full - keep tracking what we already have */
         memcpy(app->pcap_live_aps[row].bssid, bssid, 6);
         app->pcap_live_aps[row].ssid[0] = '\0';
         memset(app->pcap_live_aps[row].counts, 0, sizeof(app->pcap_live_aps[row].counts));

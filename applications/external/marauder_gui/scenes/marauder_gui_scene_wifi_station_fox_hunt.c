@@ -6,10 +6,12 @@
    wifi_station_scan.c's on_enter unconditionally sends "select -a <ap>" for filterActive()'s
    sake (needed by Targeted Deauth, irrelevant here) before this scene ever runs, so that has to
    be undone on the way out - same fix as wifi_clone_sta_mac.c for the same reason. */
-static void marauder_gui_scene_wifi_station_fox_hunt_uart_line(MarauderGuiApp* app, const char* line) {
+static void
+    marauder_gui_scene_wifi_station_fox_hunt_uart_line(MarauderGuiApp* app, const char* line) {
     if(line[0] == '\0') return;
     marauder_gui_log_scan_append(app, line);
-    marauder_gui_log_scan_redraw(app, marauder_gui_text(app, "Istemci Fox Hunt", "Client Fox Hunt"));
+    marauder_gui_log_scan_redraw(
+        app, marauder_gui_text(app, "Istemci Fox Hunt", "Client Fox Hunt"));
 }
 
 static void marauder_gui_scene_wifi_station_fox_hunt_start(MarauderGuiApp* app) {
@@ -17,7 +19,8 @@ static void marauder_gui_scene_wifi_station_fox_hunt_start(MarauderGuiApp* app) 
     snprintf(
         cmd, sizeof(cmd), "foxhunt -s %d %d", app->selected_ap_index, app->selected_station_index);
     marauder_uart_send_line(app->uart, cmd);
-    marauder_gui_log_scan_redraw(app, marauder_gui_text(app, "Istemci Fox Hunt", "Client Fox Hunt"));
+    marauder_gui_log_scan_redraw(
+        app, marauder_gui_text(app, "Istemci Fox Hunt", "Client Fox Hunt"));
 }
 
 void marauder_gui_scene_wifi_station_fox_hunt_on_enter(void* context) {

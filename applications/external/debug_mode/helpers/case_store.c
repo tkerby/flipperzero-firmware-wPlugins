@@ -309,7 +309,8 @@ bool case_store_create_with_priority(
     case_store_sanitize(safe_title);
 
     char safe_priority[16];
-    copy_field(safe_priority, sizeof(safe_priority), priority && priority[0] ? priority : "Medium");
+    copy_field(
+        safe_priority, sizeof(safe_priority), priority && priority[0] ? priority : "Medium");
     case_store_sanitize(safe_priority);
 
     char now[20];
@@ -549,7 +550,8 @@ FuriString* case_store_build_timeline_text(Storage* storage, uint32_t id) {
     storage_file_free(file);
 
     if(n == 0) {
-        furi_string_cat_str(out, "No entries yet.\nUse Add Entry to log the first symptom or test.");
+        furi_string_cat_str(
+            out, "No entries yet.\nUse Add Entry to log the first symptom or test.");
     }
 
     return out;
@@ -922,7 +924,8 @@ bool case_store_export_story_md(Storage* storage, uint32_t id) {
             const char* note = fields[4];
 
             entry_count++;
-            furi_string_cat_printf(timeline, "%lu. **%s** - %s\n", (unsigned long)entry_count, type, text);
+            furi_string_cat_printf(
+                timeline, "%lu. **%s** - %s\n", (unsigned long)entry_count, type, text);
             furi_string_cat_printf(timeline, "   - Time: %s\n", timestamp);
             if(outcome[0] != '\0') {
                 furi_string_cat_printf(timeline, "   - Outcome: %s\n", outcome);
@@ -1028,7 +1031,7 @@ bool case_store_export_story_md(Storage* storage, uint32_t id) {
         (unsigned long)stats.root_causes,
         (unsigned long)stats.lessons,
         furi_string_empty(first_symptom) ? "No symptom captured yet." :
-                                          furi_string_get_cstr(first_symptom),
+                                           furi_string_get_cstr(first_symptom),
         furi_string_empty(tests) ? "- No tests captured yet.\n" : furi_string_get_cstr(tests),
         furi_string_empty(results) ? "- No results captured yet.\n" :
                                      furi_string_get_cstr(results),
@@ -1036,12 +1039,13 @@ bool case_store_export_story_md(Storage* storage, uint32_t id) {
                                          furi_string_get_cstr(root_causes),
         furi_string_empty(next_steps) ? "- No next steps captured yet.\n" :
                                         furi_string_get_cstr(next_steps),
-        furi_string_empty(resolution) ? "- Not resolved yet.\n" :
-                                        furi_string_get_cstr(resolution),
-        furi_string_empty(notes) ? "- Add what you learned, what surprised you, or what you would do differently next time.\n" :
-                                   furi_string_get_cstr(notes),
+        furi_string_empty(resolution) ? "- Not resolved yet.\n" : furi_string_get_cstr(resolution),
+        furi_string_empty(notes) ?
+            "- Add what you learned, what surprised you, or what you would do differently next time.\n" :
+            furi_string_get_cstr(notes),
         furi_string_empty(lessons) ? "" : furi_string_get_cstr(lessons),
-        furi_string_empty(timeline) ? "No timeline entries yet.\n" : furi_string_get_cstr(timeline));
+        furi_string_empty(timeline) ? "No timeline entries yet.\n" :
+                                      furi_string_get_cstr(timeline));
 
     char export_path[96];
     snprintf(

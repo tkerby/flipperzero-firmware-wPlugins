@@ -75,15 +75,19 @@ static bool drop_view_input(InputEvent* event, void* context) {
         return false;
     }
 
-    with_view_model(view, DropModel* m, {
-        if(m->phase == DropPhaseArming) {
-            m->phase = DropPhaseCountdown;
-            m->phase_start_frame = m->now_frame;
-        } else if(m->phase == DropPhaseDone) {
-            m->phase = DropPhaseArming;
-            m->phase_start_frame = m->now_frame;
-        }
-    }, true);
+    with_view_model(
+        view,
+        DropModel * m,
+        {
+            if(m->phase == DropPhaseArming) {
+                m->phase = DropPhaseCountdown;
+                m->phase_start_frame = m->now_frame;
+            } else if(m->phase == DropPhaseDone) {
+                m->phase = DropPhaseArming;
+                m->phase_start_frame = m->now_frame;
+            }
+        },
+        true);
 
     return true;
 }
@@ -95,18 +99,22 @@ void drop_view_tick(View* view, uint32_t frame) {
 
     IconAnimation* restart_anim = NULL;
 
-    with_view_model(view, DropModel* m, {
-        m->now_frame = frame;
-        uint32_t local = frame - m->phase_start_frame;
+    with_view_model(
+        view,
+        DropModel * m,
+        {
+            m->now_frame = frame;
+            uint32_t local = frame - m->phase_start_frame;
 
-        if(m->phase == DropPhaseCountdown && local >= COUNTDOWN_FRAMES) {
-            m->phase = DropPhaseFalling;
-            m->phase_start_frame = frame;
-            restart_anim = m->anim;
-        } else if(m->phase == DropPhaseFalling && local >= FALLING_FRAMES) {
-            m->phase = DropPhaseDone;
-        }
-    }, true);
+            if(m->phase == DropPhaseCountdown && local >= COUNTDOWN_FRAMES) {
+                m->phase = DropPhaseFalling;
+                m->phase_start_frame = frame;
+                restart_anim = m->anim;
+            } else if(m->phase == DropPhaseFalling && local >= FALLING_FRAMES) {
+                m->phase = DropPhaseDone;
+            }
+        },
+        true);
 
     if(restart_anim) {
         icon_animation_start(restart_anim);
@@ -118,12 +126,16 @@ void drop_view_reset(View* view) {
 
     IconAnimation* anim_to_restart = NULL;
 
-    with_view_model(view, DropModel* m, {
-        m->phase = DropPhaseArming;
-        m->phase_start_frame = 0;
-        m->now_frame = 0;
-        anim_to_restart = m->anim;
-    }, true);
+    with_view_model(
+        view,
+        DropModel * m,
+        {
+            m->phase = DropPhaseArming;
+            m->phase_start_frame = 0;
+            m->now_frame = 0;
+            anim_to_restart = m->anim;
+        },
+        true);
 
     if(anim_to_restart) {
         icon_animation_start(anim_to_restart);
@@ -143,9 +155,7 @@ View* drop_view_alloc(void) {
     view_tie_icon_animation(view, anim);
     icon_animation_start(anim);
 
-    with_view_model(view, DropModel* m, {
-        m->anim = anim;
-    }, false);
+    with_view_model(view, DropModel * m, { m->anim = anim; }, false);
 
     view_set_draw_callback(view, drop_view_draw);
     view_set_input_callback(view, drop_view_input);
@@ -157,10 +167,14 @@ void drop_view_free(View* view) {
     if(!view) return;
 
     IconAnimation* anim = NULL;
-    with_view_model(view, DropModel* m, {
-        anim = m->anim;
-        m->anim = NULL;
-    }, false);
+    with_view_model(
+        view,
+        DropModel * m,
+        {
+            anim = m->anim;
+            m->anim = NULL;
+        },
+        false);
 
     if(anim) {
         icon_animation_stop(anim);

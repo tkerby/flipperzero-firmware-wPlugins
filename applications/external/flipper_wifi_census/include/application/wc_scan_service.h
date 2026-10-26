@@ -13,9 +13,9 @@ typedef struct {
     WcClockPort clock;
 } WcScanService;
 
-void wc_scan_init(WcScanService *svc, WcClockPort clock);
+void wc_scan_init(WcScanService* svc, WcClockPort clock);
 
 // WcSerialLineFn-compatible: `ctx` is a WcScanService*. Parses the line and folds it in.
-void wc_scan_on_line(void *ctx, const char *line, size_t len);
+void wc_scan_on_line(void* ctx, const char* line, size_t len);
 
-WcCensusStats wc_scan_stats(const WcScanService *svc);
+WcCensusStats wc_scan_stats(const WcScanService* svc);

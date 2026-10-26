@@ -13,7 +13,7 @@ static WcSignature sig_stable(const uint8_t mac[6]) {
     return s;
 }
 
-static WcSignature sig_random_with_ssid(const char *ssid) {
+static WcSignature sig_random_with_ssid(const char* ssid) {
     WcSignature s;
     memset(&s, 0, sizeof(s));
     const uint8_t mac[6] = {0xDA, 0, 0, 0, 0, 1};
@@ -57,7 +57,7 @@ static void test_rule_ssid_direct(void) {
     wc_known_init(&db);
     assert(wc_known_add(&db, &k));
     WcSignature phone = sig_random_with_ssid("Casa_Ana");
-    const WcKnown *m = wc_known_match(&db, &phone);
+    const WcKnown* m = wc_known_match(&db, &phone);
     assert(m && strcmp(m->label, "Ana") == 0);
     // An empty SSID is rejected.
     assert(!wc_known_rule_ssid(&k, "", "x"));
@@ -78,7 +78,7 @@ static void test_remove(void) {
     assert(db.count == 2);
     assert(strcmp(db.items[0].ssid, "A") == 0);
     assert(strcmp(db.items[1].ssid, "C") == 0); // C shifted down
-    assert(!wc_known_remove(&db, 5));           // out of range
+    assert(!wc_known_remove(&db, 5)); // out of range
 }
 
 static void test_match(void) {
@@ -93,7 +93,7 @@ static void test_match(void) {
     assert(wc_known_add(&db, &bymac));
     assert(wc_known_add(&db, &byssid));
 
-    const WcKnown *m = wc_known_match(&db, &s);
+    const WcKnown* m = wc_known_match(&db, &s);
     assert(m && strcmp(m->label, "Pi lab") == 0);
 
     WcSignature other_phone = sig_random_with_ssid("Ekin_Casa");

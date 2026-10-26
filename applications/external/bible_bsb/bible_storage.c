@@ -610,8 +610,8 @@ bool bible_storage_load_verses_for_entry(BibleAppState* state, uint8_t entry_ind
     state->line_count = 0;
 
     /* 2. Load the chapter from SD (directly into lines, no verse array) */
-    bool loaded = bible_load_chapter(
-        e->book_index, e->chapter, e->start_verse, e->end_verse, state);
+    bool loaded =
+        bible_load_chapter(e->book_index, e->chapter, e->start_verse, e->end_verse, state);
 
     if(!loaded) {
         /* Restore previous display state if possible */

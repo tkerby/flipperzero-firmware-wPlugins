@@ -12,10 +12,11 @@
    "Frames:"/"Last Seen:" wording) - reusing the indexed WifiList view instead turns each entry
    into its own row (marquee-scrollable when selected, like a long AP SSID) rather than a wall of
    repeating text, and the existing freeze/resume convention applies for free. */
-#define MACTRACK_MARQUEE_TICKS 3
+#define MACTRACK_MARQUEE_TICKS       3
 #define MACTRACK_MARQUEE_DELAY_TICKS 30 /* ~3s pause before a highlighted row starts scrolling */
 
-static void marauder_gui_scene_wifi_detect_mactrack_uart_line(MarauderGuiApp* app, const char* line) {
+static void
+    marauder_gui_scene_wifi_detect_mactrack_uart_line(MarauderGuiApp* app, const char* line) {
     if(strcmp(line, "---------------") == 0) {
         /* Start of a fresh table - the ranking can reorder entirely between refreshes (sorted
            by frame count, which keeps climbing), so this can't be append-only-dedup by index

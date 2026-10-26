@@ -233,8 +233,8 @@ static bool cd_mode_sense(CdSession* cd, bool ten) {
     uint8_t* resp = cd->resp;
     uint32_t header_len = ten ? 8 : 4;
     memset(resp, 0, header_len);
-    uint32_t len = header_len +
-                   cd_mode_pages(resp + header_len, page, page_control == 1, cd->locked);
+    uint32_t len =
+        header_len + cd_mode_pages(resp + header_len, page, page_control == 1, cd->locked);
     if(ten) {
         put_be16(resp, len - 2); // mode data length
         return cd_respond(cd, len, get_be16(cd->cmd + 7));
@@ -375,8 +375,7 @@ static bool cd_get_configuration(CdSession* cd) {
     if(p) {
         p[4] = 0x20 | 0x08 | 0x04 | 0x01; // tray loader, eject, no prevent jumper, lock
     }
-    p = cd_feature(
-        cd, &len, CD_FEATURE_RANDOM_READABLE, 0, media ? CD_FEATURE_CURRENT : 0, 8);
+    p = cd_feature(cd, &len, CD_FEATURE_RANDOM_READABLE, 0, media ? CD_FEATURE_CURRENT : 0, 8);
     if(p) {
         put_be32(p + 4, CD_BLOCK_SIZE);
         put_be16(p + 8, dvd ? 16 : 1); // blocking, sectors per ECC block

@@ -7,7 +7,13 @@
 static void marauder_gui_scene_device_info_redraw(MarauderGuiApp* app) {
     widget_reset(app->widget);
     widget_add_string_element(
-        app->widget, 64, 2, AlignCenter, AlignTop, FontPrimary, marauder_gui_text(app, "Cihaz Bilgisi", "Device Info"));
+        app->widget,
+        64,
+        2,
+        AlignCenter,
+        AlignTop,
+        FontPrimary,
+        marauder_gui_text(app, "Cihaz Bilgisi", "Device Info"));
     widget_add_text_scroll_element(app->widget, 0, 13, 128, 40, app->terminal_log);
 }
 

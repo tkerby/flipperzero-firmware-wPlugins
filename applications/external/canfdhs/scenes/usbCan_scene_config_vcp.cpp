@@ -11,7 +11,9 @@
 #include "../usb_can_app_i.hpp"
 #include <furi_hal.h>
 
-typedef enum { UsbUartLineIndexVcp } LineIndex;
+typedef enum {
+    UsbUartLineIndexVcp
+} LineIndex;
 
 /** @brief VCP channel to be proposed to the user. These are the values proposed to user when "USB channel" item is selected.*/
 static const char* vcp_ch[] = {"0 (CLI)", "1"};

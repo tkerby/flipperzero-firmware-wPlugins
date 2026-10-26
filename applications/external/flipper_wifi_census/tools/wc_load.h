@@ -15,9 +15,9 @@
 
 #define WC_TOOL_MAX_DEVICES 60000 // off-device ceiling: effectively "all of them"
 
-static inline void wc_tool_on_frame(void *ctx, const uint8_t *frame, size_t len) {
+static inline void wc_tool_on_frame(void* ctx, const uint8_t* frame, size_t len) {
     WcObservation o;
-    if (wc_parse_probe_frame(frame, len, &o)) {
+    if(wc_parse_probe_frame(frame, len, &o)) {
         wc_census_observe(ctx, &o, 0);
     }
 }
@@ -26,8 +26,8 @@ static inline void wc_tool_on_frame(void *ctx, const uint8_t *frame, size_t len)
 // which no census keeps. That walk assumes a classic little-endian libpcap of linktype 105, so
 // it has to check first: without this a nanosecond-resolution capture (what modern tcpdump
 // writes by default) is walked as garbage and the tool reports a confident result about it.
-static inline bool wc_tool_is_classic_le_pcap(const uint8_t *b, size_t sz) {
-    if (sz < 24) {
+static inline bool wc_tool_is_classic_le_pcap(const uint8_t* b, size_t sz) {
+    if(sz < 24) {
         return false;
     }
     const bool magic = b[0] == 0xD4 && b[1] == 0xC3 && b[2] == 0xB2 && b[3] == 0xA1;
@@ -38,26 +38,29 @@ static inline bool wc_tool_is_classic_le_pcap(const uint8_t *b, size_t sz) {
 
 // Say so if the ceiling ever refused a device. Off-device it must not happen; when it does the
 // count is short, and silence is the worst way to learn that.
-static inline void wc_tool_report_dropped(const char *what, const WcCensus *c) {
-    if (c->dropped > 0) {
-        fprintf(stderr, "! %s: %u devices DROPPED at the ceiling - the count is short\n", what,
-                c->dropped);
+static inline void wc_tool_report_dropped(const char* what, const WcCensus* c) {
+    if(c->dropped > 0) {
+        fprintf(
+            stderr,
+            "! %s: %u devices DROPPED at the ceiling - the count is short\n",
+            what,
+            c->dropped);
     }
 }
 
 // Write a census as a .wcen, streamed record by record so a venue-sized one needs no buffer of
 // its own size. Without this the host tools could only emit CSV, which nothing reads back: no
 // chained merges, and no way to bring a PC-built census to the Flipper.
-static inline bool wc_tool_write_wcen(const char *path, const WcCaptureMeta *meta,
-                                      const WcCensus *c) {
-    FILE *f = fopen(path, "wb");
-    if (!f) {
+static inline bool
+    wc_tool_write_wcen(const char* path, const WcCaptureMeta* meta, const WcCensus* c) {
+    FILE* f = fopen(path, "wb");
+    if(!f) {
         return false;
     }
     uint8_t rec[256];
     wc_capture_put_header(rec, meta, c->count);
     bool ok = fwrite(rec, 1, wc_capture_header_size(), f) == wc_capture_header_size();
-    for (uint16_t i = 0; ok && i < c->count; i++) {
+    for(uint16_t i = 0; ok && i < c->count; i++) {
         wc_capture_put_record(rec, &c->devices[i]);
         ok = fwrite(rec, 1, wc_capture_record_size(), f) == wc_capture_record_size();
     }
@@ -66,20 +69,20 @@ static inline bool wc_tool_write_wcen(const char *path, const WcCaptureMeta *met
 
 // Loads `path` into `into` (already init'd). Returns false if the file is neither format.
 // `inline` so a tool that only needs one of these two helpers still compiles clean.
-static inline bool wc_tool_load_file(const char *path, WcCensus *into) {
-    FILE *f = fopen(path, "rb");
-    if (!f) {
+static inline bool wc_tool_load_file(const char* path, WcCensus* into) {
+    FILE* f = fopen(path, "rb");
+    if(!f) {
         return false;
     }
     fseek(f, 0, SEEK_END);
     long size = ftell(f);
     fseek(f, 0, SEEK_SET);
     bool ok = false;
-    if (size > 0) {
-        uint8_t *buf = malloc((size_t)size);
-        if (buf && fread(buf, 1, (size_t)size, f) == (size_t)size) {
+    if(size > 0) {
+        uint8_t* buf = malloc((size_t)size);
+        if(buf && fread(buf, 1, (size_t)size, f) == (size_t)size) {
             WcCaptureMeta meta;
-            if (wc_capture_read(&meta, into, buf, (size_t)size)) {
+            if(wc_capture_read(&meta, into, buf, (size_t)size)) {
                 ok = true; // a .wcen capture
             } else {
                 wc_census_init(into);

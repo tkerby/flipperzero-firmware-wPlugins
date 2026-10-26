@@ -52,9 +52,7 @@ int32_t drop_detect_app(void* p) {
         return -1;
     }
 
-    view_dispatcher_switch_to_view(
-        app->view_dispatcher,
-        DropDetectViewSubmenu);
+    view_dispatcher_switch_to_view(app->view_dispatcher, DropDetectViewSubmenu);
 
     // Initialize IMU with 100Hz sample rate for both accel and gyro (if available)
     if(imu) {
@@ -65,10 +63,10 @@ int32_t drop_detect_app(void* p) {
     } else {
         FURI_LOG_E(TAG, "IMU is NULL after alloc!");
     }
-    
+
     view_dispatcher_run(app->view_dispatcher);
     FURI_LOG_I(TAG, "dispatcher stopped");
-    
+
     drop_detect_app_free(app);
     FURI_LOG_I(TAG, "=== APP END ===");
 
@@ -102,11 +100,20 @@ void drop_detect_app_request_view(DropDetectApp* app, DropDetectView view) {
     // Reset the per-view model + restart icon animations so visuals begin
     // from frame 0 on every entry.
     switch(view) {
-    case DropDetectViewDrop:    drop_view_reset(app->drop_view);       break;
-    case DropDetectViewIdle:    idle_view_reset(app->idle_view);       break;
-    case DropDetectViewWalking: walking_view_reset(app->walking_view); break;
-    case DropDetectViewFidget:  fidget_view_reset(app->fidget_view);   break;
-    default: break;
+    case DropDetectViewDrop:
+        drop_view_reset(app->drop_view);
+        break;
+    case DropDetectViewIdle:
+        idle_view_reset(app->idle_view);
+        break;
+    case DropDetectViewWalking:
+        walking_view_reset(app->walking_view);
+        break;
+    case DropDetectViewFidget:
+        fidget_view_reset(app->fidget_view);
+        break;
+    default:
+        break;
     }
 
     view_dispatcher_switch_to_view(app->view_dispatcher, view);
@@ -119,14 +126,14 @@ void drop_detect_app_request_view(DropDetectApp* app, DropDetectView view) {
 
 static void drop_detect_start_capture(DropDetectApp* app) {
     FURI_LOG_I(TAG, "START CAPTURE ENTER");
-    
+
     if(!app) {
         FURI_LOG_E(TAG, "NULL app");
         return;
     }
-    
+
     FURI_LOG_I(TAG, "app=%p", (void*)app);
-    
+
     // Use get_imu to ensure we have valid IMU
     ICM42688P* local_imu = get_imu();
     if(!local_imu) {
@@ -134,7 +141,7 @@ static void drop_detect_start_capture(DropDetectApp* app) {
         app->capturing = false;
         return;
     }
-    
+
     FURI_LOG_I(TAG, "IMU=%p", (void*)local_imu);
 
     // Only capture for data recording views (not submenu)
@@ -144,7 +151,7 @@ static void drop_detect_start_capture(DropDetectApp* app) {
         app->capture_started = true;
         return;
     }
-    
+
     // Drop: fixed 300-sample clip. All other views: run until back is pressed.
     uint32_t num_samples = (app->active_view == DropDetectViewDrop) ? 300 : UINT32_MAX;
     FURI_LOG_I(TAG, "starting capture: %lu samples", num_samples);
@@ -156,11 +163,20 @@ static void drop_detect_start_capture(DropDetectApp* app) {
 
     const char* label = "unknown";
     switch(app->active_view) {
-    case DropDetectViewDrop:    label = "drop";    break;
-    case DropDetectViewIdle:    label = "idle";    break;
-    case DropDetectViewWalking: label = "walking"; break;
-    case DropDetectViewFidget:  label = "fidget";  break;
-    default: break;
+    case DropDetectViewDrop:
+        label = "drop";
+        break;
+    case DropDetectViewIdle:
+        label = "idle";
+        break;
+    case DropDetectViewWalking:
+        label = "walking";
+        break;
+    case DropDetectViewFidget:
+        label = "fidget";
+        break;
+    default:
+        break;
     }
 
     FURI_LOG_I(TAG, "calling capture() with local_imu=%p label=%s", (void*)local_imu, label);
@@ -251,20 +267,20 @@ static void drop_detect_anim_tick(void* context) {
     app->frame++;
 
     switch(app->active_view) {
-        case DropDetectViewDrop:
-            drop_view_tick(app->drop_view, app->frame);
-            break;
-        case DropDetectViewIdle:
-            idle_view_tick(app->idle_view, app->frame);
-            break;
-        case DropDetectViewWalking:
-            walking_view_tick(app->walking_view, app->frame);
-            break;
-        case DropDetectViewFidget:
-            fidget_view_tick(app->fidget_view, app->frame);
-            break;
-        default:
-            break;
+    case DropDetectViewDrop:
+        drop_view_tick(app->drop_view, app->frame);
+        break;
+    case DropDetectViewIdle:
+        idle_view_tick(app->idle_view, app->frame);
+        break;
+    case DropDetectViewWalking:
+        walking_view_tick(app->walking_view, app->frame);
+        break;
+    case DropDetectViewFidget:
+        fidget_view_tick(app->fidget_view, app->frame);
+        break;
+    default:
+        break;
     }
 
     if(app->capturing && app->capture_started && capture_is_done()) {
@@ -282,7 +298,8 @@ static void drop_detect_anim_tick(void* context) {
     if(app->active_view == DropDetectViewDrop && app->exit_delay_frames > 0) {
         app->exit_delay_frames--;
         if(app->exit_delay_frames == 0) {
-            view_dispatcher_send_custom_event(app->view_dispatcher, DROP_DETECT_EVENT_RETURN_TO_SUBMENU);
+            view_dispatcher_send_custom_event(
+                app->view_dispatcher, DROP_DETECT_EVENT_RETURN_TO_SUBMENU);
         }
     }
 }
@@ -292,27 +309,27 @@ static void drop_detect_anim_tick(void* context) {
  * ========================= */
 static DropDetectApp* drop_detect_app_alloc(void) {
     FURI_LOG_I(TAG, "alloc start");
-    
+
     // Comment out IMU to test if that's the issue
-     FURI_LOG_I(TAG, "calling icm42688p_alloc...");
-     imu_spi_handle = malloc(sizeof(FuriHalSpiBusHandle));
-     memcpy(imu_spi_handle, &furi_hal_spi_bus_handle_external, sizeof(FuriHalSpiBusHandle));
-     imu_spi_handle->cs = &gpio_ext_pc3;
-     imu = icm42688p_alloc(imu_spi_handle, &gpio_ext_pb2);
-     FURI_LOG_I(TAG, "icm42688p_alloc returned %p", (void*)imu);
-     if(!imu) {
+    FURI_LOG_I(TAG, "calling icm42688p_alloc...");
+    imu_spi_handle = malloc(sizeof(FuriHalSpiBusHandle));
+    memcpy(imu_spi_handle, &furi_hal_spi_bus_handle_external, sizeof(FuriHalSpiBusHandle));
+    imu_spi_handle->cs = &gpio_ext_pc3;
+    imu = icm42688p_alloc(imu_spi_handle, &gpio_ext_pb2);
+    FURI_LOG_I(TAG, "icm42688p_alloc returned %p", (void*)imu);
+    if(!imu) {
         FURI_LOG_E(TAG, "IMU alloc failed");
-         return NULL;
-     }
-    
-     FURI_LOG_I(TAG, "calling icm42688p_init...");
-     if(!icm42688p_init(imu)) {
-         FURI_LOG_E(TAG, "IMU init failed");
-         icm42688p_free(imu);
-         imu = NULL;
-         return NULL;
-     }
-     FURI_LOG_I(TAG, "IMU init success");
+        return NULL;
+    }
+
+    FURI_LOG_I(TAG, "calling icm42688p_init...");
+    if(!icm42688p_init(imu)) {
+        FURI_LOG_E(TAG, "IMU init failed");
+        icm42688p_free(imu);
+        imu = NULL;
+        return NULL;
+    }
+    FURI_LOG_I(TAG, "IMU init success");
 
     FURI_LOG_I(TAG, "IMU done - global imu=%p", (void*)imu);
     DropDetectApp* app = malloc(sizeof(DropDetectApp));
@@ -330,7 +347,7 @@ static DropDetectApp* drop_detect_app_alloc(void) {
         free(app);
         return NULL;
     }
-    
+
     app->notif = furi_record_open(RECORD_NOTIFICATION);
     if(!app->notif) {
         FURI_LOG_E(TAG, "open notification failed");
@@ -347,20 +364,15 @@ static DropDetectApp* drop_detect_app_alloc(void) {
     }
     FURI_LOG_I(TAG, "dispatcher done");
 
-    view_dispatcher_attach_to_gui(
-        app->view_dispatcher,
-        app->gui,
-        ViewDispatcherTypeFullscreen);
+    view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
 
     view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
 
     view_dispatcher_set_navigation_event_callback(
-        app->view_dispatcher,
-        drop_detect_navigation_event_callback);
+        app->view_dispatcher, drop_detect_navigation_event_callback);
 
     view_dispatcher_set_custom_event_callback(
-        app->view_dispatcher,
-        drop_detect_custom_event_callback);
+        app->view_dispatcher, drop_detect_custom_event_callback);
 
     /* submenu */
     FURI_LOG_I(TAG, "alloc submenu");
@@ -374,15 +386,15 @@ static DropDetectApp* drop_detect_app_alloc(void) {
 
     submenu_set_header(app->submenu, "FliPort");
 
-    submenu_add_item(app->submenu, "Drop",    DropDetectMenuDrop,    drop_detect_submenu_callback, app);
-    submenu_add_item(app->submenu, "Idle",    DropDetectMenuIdle,    drop_detect_submenu_callback, app);
-    submenu_add_item(app->submenu, "Walking", DropDetectMenuWalking, drop_detect_submenu_callback, app);
-    submenu_add_item(app->submenu, "Fidget",  DropDetectMenuFidget,  drop_detect_submenu_callback, app);
+    submenu_add_item(app->submenu, "Drop", DropDetectMenuDrop, drop_detect_submenu_callback, app);
+    submenu_add_item(app->submenu, "Idle", DropDetectMenuIdle, drop_detect_submenu_callback, app);
+    submenu_add_item(
+        app->submenu, "Walking", DropDetectMenuWalking, drop_detect_submenu_callback, app);
+    submenu_add_item(
+        app->submenu, "Fidget", DropDetectMenuFidget, drop_detect_submenu_callback, app);
 
     view_dispatcher_add_view(
-        app->view_dispatcher,
-        DropDetectViewSubmenu,
-        submenu_get_view(app->submenu));
+        app->view_dispatcher, DropDetectViewSubmenu, submenu_get_view(app->submenu));
     FURI_LOG_I(TAG, "submenu view added");
 
     /* views */
@@ -425,17 +437,14 @@ static DropDetectApp* drop_detect_app_alloc(void) {
 
     /* timer */
     FURI_LOG_I(TAG, "alloc timer");
-    app->anim_timer = furi_timer_alloc(
-        drop_detect_anim_tick,
-        FuriTimerTypePeriodic,
-        app);
+    app->anim_timer = furi_timer_alloc(drop_detect_anim_tick, FuriTimerTypePeriodic, app);
 
     if(!app->anim_timer) {
         FURI_LOG_E(TAG, "timer alloc failed");
         free(app);
         return NULL;
     }
-    
+
     if(app->anim_timer) {
         furi_timer_start(app->anim_timer, furi_ms_to_ticks(ANIM_TICK_MS));
     }
@@ -453,7 +462,7 @@ static DropDetectApp* drop_detect_app_alloc(void) {
  * ========================= */
 static void drop_detect_app_free(DropDetectApp* app) {
     FURI_LOG_I(TAG, "free start - global imu=%p", (void*)imu);
-    
+
     if(!app) {
         FURI_LOG_E(TAG, "NULL app in free");
         return;
@@ -481,21 +490,21 @@ static void drop_detect_app_free(DropDetectApp* app) {
     walking_view_free(app->walking_view);
     fidget_view_free(app->fidget_view);
 
-     view_dispatcher_free(app->view_dispatcher);
-     
-     FURI_LOG_I(TAG, "freeing IMU...");
-     if(imu) {
-         icm42688p_deinit(imu);
-         icm42688p_free(imu);
-         imu = NULL;
-     }
-     if(imu_spi_handle) {
-         free(imu_spi_handle);
-         imu_spi_handle = NULL;
-     }
-     furi_record_close(RECORD_NOTIFICATION);
-     furi_record_close(RECORD_GUI);
+    view_dispatcher_free(app->view_dispatcher);
 
-     free(app);
-     FURI_LOG_I(TAG, "free complete");
+    FURI_LOG_I(TAG, "freeing IMU...");
+    if(imu) {
+        icm42688p_deinit(imu);
+        icm42688p_free(imu);
+        imu = NULL;
+    }
+    if(imu_spi_handle) {
+        free(imu_spi_handle);
+        imu_spi_handle = NULL;
+    }
+    furi_record_close(RECORD_NOTIFICATION);
+    furi_record_close(RECORD_GUI);
+
+    free(app);
+    FURI_LOG_I(TAG, "free complete");
 }

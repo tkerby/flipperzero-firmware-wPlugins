@@ -42,7 +42,8 @@ void draw_petting_face(Canvas* canvas, uint32_t ticks, uint32_t petting_duration
     const uint32_t petting_phase_location = ticks * 100 / petting_duration;
     const uint32_t frame1_start = 60;
     const uint32_t frame1_end = 90;
-    const uint8_t frame_index = petting_phase_location >= frame1_start && petting_phase_location < frame1_end ? 1 : 0;
+    const uint8_t frame_index =
+        petting_phase_location >= frame1_start && petting_phase_location < frame1_end ? 1 : 0;
 
     canvas_set_color(canvas, ColorWhite);
     canvas_draw_bitmap(
@@ -79,7 +80,7 @@ void draw_happy_idle(Canvas* canvas, uint32_t ticks) {
         I_happy_face_mask.frames[0]);
 
     const uint32_t cycle_duration_ms = 10000;
-    const uint32_t frame0_duration_ms  = 9000;
+    const uint32_t frame0_duration_ms = 9000;
     uint32_t cycle_time = ticks % cycle_duration_ms;
 
     // Choose the frame based on the elapsed time in the cycle.
@@ -88,17 +89,12 @@ void draw_happy_idle(Canvas* canvas, uint32_t ticks) {
     // Draw the overlay with the chosen frame.
     canvas_set_color(canvas, ColorBlack);
     canvas_draw_bitmap(
-        canvas,
-        0,
-        0,
-        A_happy_idle.width,
-        A_happy_idle.height,
-        A_happy_idle.frames[happy_frame]);
+        canvas, 0, 0, A_happy_idle.width, A_happy_idle.height, A_happy_idle.frames[happy_frame]);
 }
 
 void draw_neutral_idle(Canvas* canvas, uint32_t ticks) {
     const uint32_t cycle_duration_ms = 10000;
-    const uint32_t frame0_duration_ms  = 9000;
+    const uint32_t frame0_duration_ms = 9000;
     uint32_t cycle_time = ticks % cycle_duration_ms;
 
     // Choose the frame based on the elapsed time in the cycle.
@@ -120,21 +116,11 @@ void draw_sad_idle(Canvas* canvas, uint32_t ticks) {
 
     canvas_set_color(canvas, ColorWhite);
     canvas_draw_bitmap(
-        canvas,
-        0,
-        0,
-        I_sad_face_mask.width,
-        I_sad_face_mask.height,
-        I_sad_face_mask.frames[0]);
+        canvas, 0, 0, I_sad_face_mask.width, I_sad_face_mask.height, I_sad_face_mask.frames[0]);
 
     canvas_set_color(canvas, ColorBlack);
     canvas_draw_bitmap(
-        canvas,
-        0,
-        0,
-        A_sad_idle.width,
-        A_sad_idle.height,
-        A_sad_idle.frames[frame_index]);
+        canvas, 0, 0, A_sad_idle.width, A_sad_idle.height, A_sad_idle.frames[frame_index]);
 }
 
 void draw_prompt_box(Canvas* canvas) {
@@ -146,14 +132,14 @@ void draw_prompt_box(Canvas* canvas) {
 void draw_pet_prompt(Canvas* canvas, uint32_t ticks, bool pet_limit_reached) {
     bool draw = (ticks / 2000) % 2;
 
-    if (draw) {
+    if(draw) {
         draw_prompt_box(canvas);
         canvas_draw_str(canvas, 100, 41, "Press");
         canvas_draw_str(canvas, 106, 50, "OK");
         canvas_draw_str(canvas, 100, 59, "to pet");
     }
 
-    if (pet_limit_reached) {
+    if(pet_limit_reached) {
         draw_prompt_box(canvas);
         canvas_draw_str(canvas, 106, 41, "Out");
         canvas_draw_str(canvas, 110, 50, "of");
@@ -173,10 +159,5 @@ void draw_speech_bubble(Canvas* canvas) {
 
     canvas_set_color(canvas, ColorBlack);
     canvas_draw_bitmap(
-        canvas,
-        0,
-        0,
-        I_speech_bubble.width,
-        I_speech_bubble.height,
-        I_speech_bubble.frames[0]);
+        canvas, 0, 0, I_speech_bubble.width, I_speech_bubble.height, I_speech_bubble.frames[0]);
 }

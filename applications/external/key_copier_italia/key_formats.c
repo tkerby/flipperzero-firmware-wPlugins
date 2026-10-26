@@ -20,7 +20,7 @@ const KeyFormat all_formats[] = {
      .macs = 4,
      .clearance = 3},
 
-     {.manufacturer = "CISA",
+    {.manufacturer = "CISA",
      .format_name = "Cisa 3 pin",
      .format_link = "test",
      .first_pin_inch = 0.1772,
@@ -38,7 +38,7 @@ const KeyFormat all_formats[] = {
      .macs = 9,
      .clearance = 3},
 
-     {.manufacturer = "CISA",
+    {.manufacturer = "CISA",
      .format_name = "Cisa 4 pin",
      .format_link = "test",
      .first_pin_inch = 0.1772,
@@ -56,7 +56,7 @@ const KeyFormat all_formats[] = {
      .macs = 9,
      .clearance = 3},
 
-     {.manufacturer = "CISA",
+    {.manufacturer = "CISA",
      .format_name = "Cisa 5 pin",
      .format_link = "test",
      .first_pin_inch = 0.1772,
@@ -308,7 +308,7 @@ const KeyFormat all_formats[] = {
      .max_depth_ind = 6,
      .macs = 5,
      .clearance = 3},
-     
+
     {.manufacturer = "Weiser",
      .format_name = "WR3",
      .format_link = "https://www.lockwiki.com/index.php/Weiser_Classic",

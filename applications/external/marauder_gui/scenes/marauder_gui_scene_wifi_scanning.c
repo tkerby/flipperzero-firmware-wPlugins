@@ -8,10 +8,11 @@
    poll it periodically while "scanall" keeps running to build the list live. */
 #define WIFI_SCAN_REFRESH_TICKS 15 /* ~1.5s at the app's 100ms tick period */
 #define WIFI_LIST_MARQUEE_TICKS 3 /* advance the marquee once every N ticks - "slowly" */
-#define WIFI_LIST_MARQUEE_DELAY_TICKS 30 /* ~3s pause on a newly-highlighted row before it scrolls */
-#define WIFI_LIST_ROW_HEIGHT 12
+#define WIFI_LIST_MARQUEE_DELAY_TICKS \
+    30 /* ~3s pause on a newly-highlighted row before it scrolls */
+#define WIFI_LIST_ROW_HEIGHT    12
 #define WIFI_LIST_HEADER_HEIGHT 11
-#define WIFI_LIST_VISIBLE_ROWS 4
+#define WIFI_LIST_VISIBLE_ROWS  4
 
 /* ---- Custom list View: Submenu doesn't scroll long labels, and SSIDs routinely don't fit the
    128px screen, so the highlighted row needs its own marquee (via elements_scrollable_text_line)
@@ -20,8 +21,7 @@
    on the single ViewDispatcher thread - no real locking is needed. ---- */
 
 void marauder_gui_wifi_list_redraw(MarauderGuiApp* app) {
-    with_view_model(
-        app->wifi_list_view, MarauderGuiApp * *model, { UNUSED(model); }, true);
+    with_view_model(app->wifi_list_view, MarauderGuiApp * *model, { UNUSED(model); }, true);
 }
 
 /* Small ascending-bars "signal" glyph plus a count, drawn top-right of the header - opt-in via
@@ -90,13 +90,7 @@ static void marauder_gui_wifi_list_draw_callback(Canvas* canvas, void* model) {
 
             FuriString* text = furi_string_alloc_set_str(app->ap_list[idx]);
             elements_scrollable_text_line(
-                canvas,
-                2,
-                y,
-                canvas_width(canvas) - 4,
-                text,
-                app->wifi_list_marquee_tick,
-                false);
+                canvas, 2, y, canvas_width(canvas) - 4, text, app->wifi_list_marquee_tick, false);
             furi_string_free(text);
 
             canvas_set_color(canvas, ColorBlack);
@@ -123,8 +117,8 @@ static bool marauder_gui_wifi_list_input_callback(InputEvent* event, void* conte
     if(event->type != InputTypeShort && event->type != InputTypeRepeat) return false;
 
     if(event->key == InputKeyUp) {
-        app->wifi_list_selected =
-            (app->wifi_list_selected == 0) ? app->ap_count - 1 : app->wifi_list_selected - 1;
+        app->wifi_list_selected = (app->wifi_list_selected == 0) ? app->ap_count - 1 :
+                                                                   app->wifi_list_selected - 1;
         app->wifi_list_marquee_tick = 0;
         app->wifi_list_marquee_hold = 0;
         app->wifi_list_marquee_delay = WIFI_LIST_MARQUEE_DELAY_TICKS;

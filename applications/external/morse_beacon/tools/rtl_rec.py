@@ -8,8 +8,10 @@ RATE = int(sys.argv[4])
 SECONDS = float(sys.argv[5])
 OUT = sys.argv[6]
 
+
 def cmd(s, c, v):
     s.sendall(struct.pack(">BI", c, v))
+
 
 s = None
 for attempt in range(5):
@@ -24,13 +26,13 @@ if s is None:
 hdr = s.recv(12)
 print(f"magic={hdr[:4]!r} tuner={hdr[4:8].hex()} gains={hdr[8:12].hex()}", flush=True)
 
-cmd(s, 0x02, RATE)      # sample rate
+cmd(s, 0x02, RATE)  # sample rate
 time.sleep(0.1)
-cmd(s, 0x03, 0)         # tuner gain mode: 0 = automatic
+cmd(s, 0x03, 0)  # tuner gain mode: 0 = automatic
 time.sleep(0.1)
-cmd(s, 0x08, 0)         # RTL AGC off
+cmd(s, 0x08, 0)  # RTL AGC off
 time.sleep(0.1)
-cmd(s, 0x01, FREQ)      # center frequency
+cmd(s, 0x01, FREQ)  # center frequency
 time.sleep(0.3)
 
 need = int(RATE * 2 * SECONDS)
@@ -45,4 +47,6 @@ with open(OUT, "wb") as f:
         f.write(b)
         got += len(b)
 s.close()
-print(f"wrote {got} bytes ({got/2/RATE:.2f} s) in {time.time()-t0:.1f}s wall", flush=True)
+print(
+    f"wrote {got} bytes ({got/2/RATE:.2f} s) in {time.time()-t0:.1f}s wall", flush=True
+)

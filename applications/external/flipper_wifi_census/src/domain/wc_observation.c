@@ -21,105 +21,103 @@ static const OuiEntry k_oui_table[] = {
 };
 
 WcVendor wc_oui_vendor(const uint8_t mac[6]) {
-    if (wc_mac_is_random(mac)) {
+    if(wc_mac_is_random(mac)) {
         return WcVendorUnknown;
     }
-    for (unsigned i = 0; i < sizeof(k_oui_table) / sizeof(k_oui_table[0]); i++) {
-        if (memcmp(mac, k_oui_table[i].oui, 3) == 0) {
+    for(unsigned i = 0; i < sizeof(k_oui_table) / sizeof(k_oui_table[0]); i++) {
+        if(memcmp(mac, k_oui_table[i].oui, 3) == 0) {
             return k_oui_table[i].vendor;
         }
     }
     return WcVendorUnknown;
 }
 
-const char *wc_vendor_name(WcVendor v) {
-    switch (v) {
-        case WcVendorApple:
-            return "Apple";
-        case WcVendorSamsung:
-            return "Samsung";
-        case WcVendorHuawei:
-            return "Huawei";
-        case WcVendorXiaomi:
-            return "Xiaomi";
-        case WcVendorGoogle:
-            return "Google";
-        case WcVendorIntel:
-            return "Intel";
-        case WcVendorDell:
-            return "Dell";
-        case WcVendorMicrosoft:
-            return "Microsoft";
-        case WcVendorEspressif:
-            return "Espressif";
-        case WcVendorRaspberryPi:
-            return "Raspberry Pi";
-        case WcVendorQualcomm:
-            return "Qualcomm";
-        case WcVendorBroadcom:
-            return "Broadcom";
-        case WcVendorUnknown:
-        default:
-            return "";
+const char* wc_vendor_name(WcVendor v) {
+    switch(v) {
+    case WcVendorApple:
+        return "Apple";
+    case WcVendorSamsung:
+        return "Samsung";
+    case WcVendorHuawei:
+        return "Huawei";
+    case WcVendorXiaomi:
+        return "Xiaomi";
+    case WcVendorGoogle:
+        return "Google";
+    case WcVendorIntel:
+        return "Intel";
+    case WcVendorDell:
+        return "Dell";
+    case WcVendorMicrosoft:
+        return "Microsoft";
+    case WcVendorEspressif:
+        return "Espressif";
+    case WcVendorRaspberryPi:
+        return "Raspberry Pi";
+    case WcVendorQualcomm:
+        return "Qualcomm";
+    case WcVendorBroadcom:
+        return "Broadcom";
+    case WcVendorUnknown:
+    default:
+        return "";
     }
 }
 
-const char *wc_oui_vendor_name(const uint8_t mac[6]) {
+const char* wc_oui_vendor_name(const uint8_t mac[6]) {
     return wc_vendor_name(wc_oui_vendor(mac));
 }
 
 WcVendor wc_vendor_from_ie_oui(const uint8_t oui[3]) {
     // Only real device-maker OUIs; the common WPS (00:50:F2), WFA (50:6F:9A) and similar are
     // generic capability IEs present regardless of brand, so they map to Unknown.
-    if (oui[0] == 0x00 && oui[1] == 0x17 && oui[2] == 0xF2)
-        return WcVendorApple;
-    if (oui[0] == 0x8C && oui[1] == 0xFD && oui[2] == 0xF0)
-        return WcVendorQualcomm;
-    if ((oui[0] == 0x00 && oui[1] == 0x10 && oui[2] == 0x18) ||
-        (oui[0] == 0x00 && oui[1] == 0x90 && oui[2] == 0x4C))
+    if(oui[0] == 0x00 && oui[1] == 0x17 && oui[2] == 0xF2) return WcVendorApple;
+    if(oui[0] == 0x8C && oui[1] == 0xFD && oui[2] == 0xF0) return WcVendorQualcomm;
+    if((oui[0] == 0x00 && oui[1] == 0x10 && oui[2] == 0x18) ||
+       (oui[0] == 0x00 && oui[1] == 0x90 && oui[2] == 0x4C))
         return WcVendorBroadcom;
     return WcVendorUnknown;
 }
 
-WcDeviceType wc_device_type_guess(const WcObservation *obs) {
-    if (obs->is_beacon) {
+WcDeviceType wc_device_type_guess(const WcObservation* obs) {
+    if(obs->is_beacon) {
         return WcDeviceAp;
     }
-    if (obs->mac_random) {
+    if(obs->mac_random) {
         // Randomized MAC probing: the modern-phone signature.
         return WcDevicePhone;
     }
-    switch (wc_oui_vendor(obs->mac)) {
-        case WcVendorApple:
-        case WcVendorSamsung:
-        case WcVendorHuawei:
-        case WcVendorXiaomi:
-        case WcVendorGoogle:
-            return WcDevicePhone;
-        case WcVendorIntel:
-        case WcVendorDell:
-        case WcVendorMicrosoft:
-            return WcDeviceLaptop;
-        case WcVendorEspressif:
-        case WcVendorRaspberryPi:
-            return WcDeviceIot;
-        default:
-            return WcDeviceUnknown;
+    switch(wc_oui_vendor(obs->mac)) {
+    case WcVendorApple:
+    case WcVendorSamsung:
+    case WcVendorHuawei:
+    case WcVendorXiaomi:
+    case WcVendorGoogle:
+        return WcDevicePhone;
+    case WcVendorIntel:
+    case WcVendorDell:
+    case WcVendorMicrosoft:
+        return WcDeviceLaptop;
+    case WcVendorEspressif:
+    case WcVendorRaspberryPi:
+        return WcDeviceIot;
+    default:
+        return WcDeviceUnknown;
     }
 }
 
-const char *wc_device_type_name(WcDeviceType type) {
-    switch (type) {
-        case WcDevicePhone:
-            return "phone";
-        case WcDeviceLaptop:
-            return "laptop";
-        case WcDeviceIot:
-            return "iot";
-        case WcDeviceAp:
-            return "ap";
-        case WcDeviceUnknown:
-        default:
-            return "unknown";
+const char* wc_device_type_name(WcDeviceType type) {
+    switch(type) {
+    case WcDevicePhone:
+        return "phone";
+    case WcDeviceLaptop:
+        return "laptop";
+    case WcDeviceIot:
+        return "iot";
+    case WcDeviceAp:
+        return "ap";
+    case WcDeviceUnknown:
+    default:
+        return "unknown";
     }
 }

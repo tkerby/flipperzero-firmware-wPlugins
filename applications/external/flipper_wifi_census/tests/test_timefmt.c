@@ -21,7 +21,7 @@ static void test_filesystem_safe(void) {
     char buf[32];
     wc_default_capture_name(1789825500u, buf, sizeof(buf));
     // No characters a FAT filename dislikes.
-    for (const char *p = buf; *p; p++) {
+    for(const char* p = buf; *p; p++) {
         assert(*p != '/' && *p != '\\' && *p != ':' && *p != ' ');
     }
 }

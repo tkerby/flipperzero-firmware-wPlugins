@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-static WcObservation obs_of(const uint8_t mac[6], int8_t rssi, const char *ssid, bool beacon) {
+static WcObservation obs_of(const uint8_t mac[6], int8_t rssi, const char* ssid, bool beacon) {
     WcObservation o;
     memset(&o, 0, sizeof(o));
     memcpy(o.mac, mac, 6);
@@ -13,7 +13,7 @@ static WcObservation obs_of(const uint8_t mac[6], int8_t rssi, const char *ssid,
     o.rssi = rssi;
     o.channel = 6;
     o.is_beacon = beacon;
-    if (ssid) {
+    if(ssid) {
         strncpy(o.probed_ssid, ssid, WC_SSID_MAX_LEN);
     }
     return o;
@@ -43,7 +43,7 @@ static void test_oui_vendor(void) {
 // OUIs added by the IEEE-registry expansion (not in the original hand-curated set), each
 // verified against the registry. Proves the generated table is wired in and correct.
 static void test_oui_vendor_expanded(void) {
-    uint8_t esp[6] = {0x00, 0x4B, 0x12, 1, 2, 3};  // Espressif Inc.
+    uint8_t esp[6] = {0x00, 0x4B, 0x12, 1, 2, 3}; // Espressif Inc.
     uint8_t brcm[6] = {0x00, 0x05, 0xB5, 1, 2, 3}; // Broadcom
     assert(wc_oui_vendor(esp) == WcVendorEspressif);
     assert(strcmp(wc_oui_vendor_name(esp), "Espressif") == 0);
@@ -108,13 +108,13 @@ static void test_signature_ssid_cap(void) {
     assert(sig.ssid_count == 1);
     // Fill the rest of the slots, then confirm further adds are rejected.
     char name[8];
-    for (int i = 1; i < WC_SIG_MAX_SSIDS; i++) {
+    for(int i = 1; i < WC_SIG_MAX_SSIDS; i++) {
         snprintf(name, sizeof(name), "net%d", i);
         assert(wc_signature_add_ssid(&sig, name));
     }
     assert(sig.ssid_count == WC_SIG_MAX_SSIDS);
     assert(!wc_signature_add_ssid(&sig, "overflow")); // full
-    assert(!wc_signature_add_ssid(&sig, ""));         // empty ignored
+    assert(!wc_signature_add_ssid(&sig, "")); // empty ignored
 }
 
 // Zero means "not measured", not a reading. A pcap carries no clock and no signal level, so a

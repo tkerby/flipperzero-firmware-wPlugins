@@ -28,11 +28,7 @@ void usb_cdrom_scene_start_on_enter(void* context) {
     variable_item_list_add(app->variable_item_list, "Insert disc", 0, NULL, NULL);
 
     VariableItem* item = variable_item_list_add(
-        app->variable_item_list,
-        "Disc type",
-        UsbCdromDiscTypeNum,
-        usb_cdrom_disc_type_change,
-        app);
+        app->variable_item_list, "Disc type", UsbCdromDiscTypeNum, usb_cdrom_disc_type_change, app);
     variable_item_set_current_value_index(item, app->disc_type);
     variable_item_set_current_value_text(item, disc_type_names[app->disc_type]);
 

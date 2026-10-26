@@ -8,11 +8,11 @@
 #include <knit_counter_icons.h>
 
 #define MAX_COUNT 99
-#define BOXTIME 2
-#define BOXWIDTH 30
-#define MIDDLE_X 64 - BOXWIDTH / 2
-#define MIDDLE_Y 32 - BOXWIDTH / 2
-#define OFFSET_Y 9
+#define BOXTIME   2
+#define BOXWIDTH  30
+#define MIDDLE_X  64 - BOXWIDTH / 2
+#define MIDDLE_Y  32 - BOXWIDTH / 2
+#define OFFSET_Y  9
 
 typedef struct {
     FuriMessageQueue* input_queue;

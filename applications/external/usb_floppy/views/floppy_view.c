@@ -43,7 +43,8 @@ static void floppy_view_draw_callback(Canvas* canvas, void* _model) {
     canvas_draw_icon(canvas, 8, 14, &I_Drive_112x35);
 
     canvas_set_font(canvas, FontPrimary);
-    canvas_draw_str_aligned(canvas, canvas_width(canvas) / 2, 0, AlignCenter, AlignTop, "USB Floppy");
+    canvas_draw_str_aligned(
+        canvas, canvas_width(canvas) / 2, 0, AlignCenter, AlignTop, "USB Floppy");
 
     canvas_set_font(canvas, FontSecondary);
     elements_string_fit_width(canvas, model->file_name, 89 - 2);
@@ -120,7 +121,10 @@ View* floppy_view_get_view(FloppyView* floppy_view) {
 void floppy_view_set_file_name(FloppyView* floppy_view, FuriString* name) {
     furi_assert(name);
     with_view_model(
-        floppy_view->view, FloppyViewModel * model, { furi_string_set(model->file_name, name); }, true);
+        floppy_view->view,
+        FloppyViewModel * model,
+        { furi_string_set(model->file_name, name); },
+        true);
 }
 
 void floppy_view_set_info(FloppyView* floppy_view, FuriString* info) {

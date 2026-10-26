@@ -13,7 +13,7 @@ App(
         "views/walking_view.c",
         "views/fidget_view.c",
         "datarecord.c",
-        "driver/ICM42688P.c"
+        "driver/ICM42688P.c",
     ],
     fap_category="Tools",
     fap_author="FliPort",

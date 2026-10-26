@@ -40,8 +40,11 @@ const char* marauder_pcap_frame_type_label(MarauderPcapFrameType type, bool engl
    Beacon/Probe frames, extracts a truncated SSID into ssid_out (ssid_out[0] = '\0' if not
    applicable or the frame is too short to contain one). Safe to call with any length >= 0;
    returns MarauderPcapFrameOther for anything malformed/too short to classify. */
-MarauderPcapFrameType
-    marauder_pcap_classify_frame(const uint8_t* data, size_t len, char* ssid_out, size_t ssid_out_size);
+MarauderPcapFrameType marauder_pcap_classify_frame(
+    const uint8_t* data,
+    size_t len,
+    char* ssid_out,
+    size_t ssid_out_size);
 
 /* Reads a .pcap file's global header (24 bytes) and every following [16-byte record
    header][incl_len bytes] pair, classifying each with marauder_pcap_classify_frame() into out[]

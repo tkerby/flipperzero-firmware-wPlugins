@@ -52,15 +52,15 @@ typedef enum {
 } WorkerEvtFlags;
 
 /** @brief used as condition to exit waiting routine for @ref usb_can_worker() */
-#define WORKER_ALL_RX_EVENTS (WorkerEvtStop | WorkerEvtRxDone | WorkerEvtCfgChange)
+#define WORKER_ALL_RX_EVENTS            (WorkerEvtStop | WorkerEvtRxDone | WorkerEvtCfgChange)
 /** @brief used as condition to exit waiting routine for @ref usb_can_tx_thread()**/
-#define WORKER_ALL_TX_EVENTS (WorkerEvtTxStop | WorkerEvtCdcRx)
+#define WORKER_ALL_TX_EVENTS            (WorkerEvtTxStop | WorkerEvtCdcRx)
 /** @brief used to allocate space on local USB CDC Rx buffer*/
-#define USB_CAN_RX_BUF_SIZE (USB_CDC_PKT_LEN * 5)
+#define USB_CAN_RX_BUF_SIZE             (USB_CDC_PKT_LEN * 5)
 /** @brief SLCAN command max length */
 #define USB_CAN_BRIDGE_MAX_INPUT_LENGTH 28
 /** @brief CAN test message length "CANLIVE"+termination character */
-#define TEST_MESSAGE_LENGTH 8
+#define TEST_MESSAGE_LENGTH             8
 /* ----------------------------------------------------------- LOCAL FUNCTIONS DECLARATIONS--------------------------------------------------------------- */
 static void vcp_on_cdc_tx_complete(void* context);
 static void vcp_on_cdc_rx(void* context);

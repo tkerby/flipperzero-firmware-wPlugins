@@ -57,7 +57,8 @@ static CfsApp* cfs_app_alloc(void) {
         variable_item_list_get_view(app->variable_item_list));
     app->screen = cfs_screen_alloc();
     cfs_screen_set_callback(app->screen, cfs_ui_screen_callback, app);
-    view_dispatcher_add_view(app->view_dispatcher, CfsViewScreen, cfs_screen_get_view(app->screen));
+    view_dispatcher_add_view(
+        app->view_dispatcher, CfsViewScreen, cfs_screen_get_view(app->screen));
 
     app->worker = cfs_nfc_worker_alloc();
     cfs_nfc_worker_set_callback(app->worker, cfs_worker_callback, app);

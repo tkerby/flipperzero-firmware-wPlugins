@@ -76,9 +76,8 @@ void bible_bsb_view_chapter_list_draw(Canvas* canvas, void* ctx) {
     if(total_rows > CHAPTER_LIST_MAX_ROWS) {
         int32_t thumb_height = (CHAPTER_LIST_MAX_ROWS * 50) / total_rows;
         if(thumb_height < 4) thumb_height = 4;
-        int32_t thumb_y = 14 +
-                          (int32_t)start_row * (50 - thumb_height) /
-                              (int32_t)(total_rows - CHAPTER_LIST_MAX_ROWS);
+        int32_t thumb_y = 14 + (int32_t)start_row * (50 - thumb_height) /
+                                   (int32_t)(total_rows - CHAPTER_LIST_MAX_ROWS);
         canvas_draw_box(canvas, 126, thumb_y, 2, (uint8_t)thumb_height);
     }
 }

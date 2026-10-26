@@ -26,9 +26,10 @@
    leave set (which is also exactly what the "Starting TARGETED PMKID sniff ... on channel N"
    line reports), so a target on ch 8 would be sniffed on, say, ch 132 and capture nothing. */
 
-#define PCAP_LIVE_REFRESH_TICKS       5 /* ~0.5s at the app's 100ms tick period */
-#define PCAP_LIVE_MARQUEE_TICKS       3 /* advance the marquee once every N ticks - "slowly" */
-#define PCAP_LIVE_MARQUEE_DELAY_TICKS 30 /* ~3s pause on a newly-highlighted row before it scrolls */
+#define PCAP_LIVE_REFRESH_TICKS 5 /* ~0.5s at the app's 100ms tick period */
+#define PCAP_LIVE_MARQUEE_TICKS 3 /* advance the marquee once every N ticks - "slowly" */
+#define PCAP_LIVE_MARQUEE_DELAY_TICKS \
+    30 /* ~3s pause on a newly-highlighted row before it scrolls */
 
 /* AP lines look like "[N][CH:6] ssid rssi" - same parser wifi_attack.c uses. */
 static int marauder_gui_scene_pcap_sniff_parse_channel(const char* line) {

@@ -32,8 +32,7 @@ void debug_mode_scene_entry_preset_on_enter(void* context) {
     uint32_t count = 0;
     const char* const* presets = debug_mode_get_presets(app->pending_entry_type, &count);
     for(uint32_t i = 0; i < count; i++) {
-        submenu_add_item(
-            app->submenu, presets[i], i, debug_mode_scene_entry_preset_callback, app);
+        submenu_add_item(app->submenu, presets[i], i, debug_mode_scene_entry_preset_callback, app);
     }
     submenu_add_item(
         app->submenu, "Custom...", count, debug_mode_scene_entry_preset_callback, app);

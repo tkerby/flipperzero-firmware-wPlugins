@@ -19,17 +19,17 @@
 #define SPI_DEFAULT_BUFFER_LENGTH 96
 
 //extern SPIClass* pSPI;
-#define spi_readwrite(X) pSPI->transfer(X)
-#define spi_read() spi_readwrite(0x00)
+#define spi_readwrite(X)   pSPI->transfer(X)
+#define spi_read()         spi_readwrite(0x00)
 #define spi_write(spi_val) spi_readwrite(spi_val)
-#define SPI_BEGIN() pSPI->beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0))
-#define SPI_END() pSPI->endTransaction();
+#define SPI_BEGIN()        pSPI->beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0))
+#define SPI_END()          pSPI->endTransaction();
 
 // *****************************************************************************
 // *****************************************************************************
 // Section: Defines
 
-#define CRCBASE 0xFFFF
+#define CRCBASE  0xFFFF
 #define CRCUPPER 1
 
 //! Reverse order of bits in byte

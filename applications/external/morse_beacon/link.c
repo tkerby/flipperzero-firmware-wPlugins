@@ -135,8 +135,7 @@ static bool link_start_ble(MorseLink* link) {
         return false;
     }
 
-    ble_profile_serial_set_event_callback(
-        link->profile, LINK_RX_BUFFER, link_ble_callback, link);
+    ble_profile_serial_set_event_callback(link->profile, LINK_RX_BUFFER, link_ble_callback, link);
     furi_hal_bt_start_advertising();
 
     morse_log("link: BLE serial profile up, advertising");
@@ -213,8 +212,7 @@ static int32_t link_worker(void* context) {
 
         // nothing queued: flush a partial line that has gone quiet
         furi_mutex_acquire(link->mutex, FuriWaitForever);
-        if(link->line_len > 0 &&
-           furi_get_tick() - link->last_byte_tick >= LINK_IDLE_FLUSH_MS) {
+        if(link->line_len > 0 && furi_get_tick() - link->last_byte_tick >= LINK_IDLE_FLUSH_MS) {
             link_flush_line(link);
         }
         furi_mutex_release(link->mutex);

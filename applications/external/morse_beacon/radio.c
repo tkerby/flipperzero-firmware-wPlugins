@@ -102,8 +102,7 @@ static void cw_radio_build_preset(CwRadio* radio, const CwRadioParams* params) {
         if(radio->preset[i] == CC1101_REG_MDMCFG4) mdmcfg4 = radio->preset[i + 1];
     }
     CwRxBw bw = (params->rx_bw < CwRxBwCount) ? params->rx_bw : CwRxBw270;
-    cw_preset_put(
-        radio->preset, &len, CC1101_REG_MDMCFG4, cc1101_chanbw[bw] | (mdmcfg4 & 0x0F));
+    cw_preset_put(radio->preset, &len, CC1101_REG_MDMCFG4, cc1101_chanbw[bw] | (mdmcfg4 & 0x0F));
     if(bw != CwRxBw270) {
         cw_preset_put(radio->preset, &len, CC1101_REG_FSCTRL1, CC1101_FSCTRL1_152K);
     }
