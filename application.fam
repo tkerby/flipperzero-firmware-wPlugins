@@ -5,7 +5,7 @@ App(
     entry_point="wi_fir_app",
     requires=["gui", "notification", "storage", "nfc"],
     stack_size=8 * 1024,
-    fap_version=(1, 0),
+    fap_version=(2, 0),
     fap_author="amd989",
     fap_icon="flipper/images/infrafi_10px.png",
     fap_icon_assets="flipper/images",
