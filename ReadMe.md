@@ -82,6 +82,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [Portal Putt v0.1 (By rseufert)](https://github.com/rseufert/portal_putt)
 - Updated: [Hanzi Cards v0.5 (By rseufert)](https://github.com/rseufert/hanzi_cards)
 - Added: [Servo Tester+ v0.5 (By Enlighten Tech)](https://github.com/gbhobbytech/flipper-servo-tester)
+- Added: [Varta v1.0 (By mishamyte)](https://github.com/mishamyte/varta)
 
 <a name="release"></a>
 
@@ -1042,6 +1043,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [USB Midi Capturing v0.1 (By fgreil)](https://github.com/fgreil/mitzi-midi)
 - [USB Midi v1.0 (By DrZlo13 & kribesk)](https://github.com/kribesk/flipper-zero-usb-midi) [Instructions by ESurge](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/blob/420/applications/plugins/usb_midi/ReadMe.md)
 - [UV Meter v1.0 (By michaelbaisch)](https://github.com/michaelbaisch/uv_meter) `Req: AS7331`
+- [Varta v1.0 (By mishamyte)](https://github.com/mishamyte/varta)
 - [VB Migration Assistant v1.3 (By GMMan)](https://github.com/GMMan/flipperzero-vb-migrate)
 - [VEML7700 Lux Meter v1.1 (By kamylwnb)](https://github.com/kamylwnb/Flipper-zero-app-VEML7700)
 - [VGM Air Mouse v1.4 (By nminaylov)](https://github.com/flipperdevices/flipperzero-good-faps/tree/nm/motion_mouse_app) `Req: ICM42688, or Video Game Module By Flipper Devices`
