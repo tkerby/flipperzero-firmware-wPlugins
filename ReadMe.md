@@ -79,6 +79,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Nice O-Code v2.0 (By zero-mega & xMasterX)](https://github.com/DarkFlippers/unleashed-firmware) [UL remote creation and certificate encoder updates](https://github.com/DarkFlippers/unleashed-firmware/commit/4c5e74cce3cef90e6d7865f5fd75e1b4a254a7f2)
 - Updated: [Bleepsentry v1.1 (By hdyrawan)](https://github.com/hdyrawan/bleepsentry) [Calibration prompt, RSSI scale/readout and screen-layout fixes (By hdyrawan)](https://github.com/hdyrawan/bleepsentry/commit/017c7b695cd88f0ccdbbbed4b6df04452f1751c9)
 - Updated: [Sub-GHz RAW Edit v1.8 (By Lechnio)](https://github.com/Lechnio/SubGHz-RAW-Edit)
+- Added: [Portal Putt v0.1 (By rseufert)](https://github.com/rseufert/portal_putt)
 
 <a name="release"></a>
 
@@ -323,6 +324,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Pocket Battle+ v2.0 (By HermeticCode)](https://github.com/HermeticCode/showdown-current)
 - [Pod v1.0 (By thecoolguy2001)](https://github.com/thecoolguy2001/flipper-pod)
 - [Pong v1.4 (By nmrr)](https://github.com/nmrr/flipperzero-pong)
+- [Portal Putt v0.1 (By rseufert)](https://github.com/rseufert/portal_putt)
 - [Prince Of Arabia v1.0.12 (By apfxtech)](https://github.com/apfxtech/FlipperPrinceOfArabia)
 - [Puck Girl v0.3 (By fgreil)](https://github.com/fgreil/mitzi-puck)
 - [Quadrastic v1.0.2 (By ivanbarsukov)](https://github.com/ivanbarsukov/flipperzero-quadrastic)

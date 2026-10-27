@@ -12,7 +12,9 @@ ICON = """
 ####.#....
 .##.###...
 ...#####..
-""".strip("\n").splitlines()
+""".strip(
+    "\n"
+).splitlines()
 
 img = Image.new("1", (10, 10), 1)
 for y, row in enumerate(ICON):
