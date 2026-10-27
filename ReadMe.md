@@ -78,6 +78,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [CLI-GUI Bridge v0.2 (By ranchordo)](https://github.com/ranchordo/flipperzero-cli-bridge) [Ported to RM’s current CLI with resumable background sessions (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/ec1910adb60afb8117b4f19bfd84fde60e1b9fc0)
 - Updated: [Nice O-Code v2.0 (By zero-mega & xMasterX)](https://github.com/DarkFlippers/unleashed-firmware) [UL remote creation and certificate encoder updates](https://github.com/DarkFlippers/unleashed-firmware/commit/4c5e74cce3cef90e6d7865f5fd75e1b4a254a7f2)
 - Updated: [Bleepsentry v1.1 (By hdyrawan)](https://github.com/hdyrawan/bleepsentry) [Calibration prompt, RSSI scale/readout and screen-layout fixes (By hdyrawan)](https://github.com/hdyrawan/bleepsentry/commit/017c7b695cd88f0ccdbbbed4b6df04452f1751c9)
+- Updated: [Sub-GHz RAW Edit v1.8 (By Lechnio)](https://github.com/Lechnio/SubGHz-RAW-Edit)
 
 <a name="release"></a>
 
@@ -969,7 +970,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Sub-GHz Keystore Decryptor v1.1 (By Lechnio)](https://github.com/Lechnio/KeeLoq-Keystore-Decryptor)
 - [Sub-GHz Playlist Creator v0.2 (By coolerUA)](https://github.com/coolerUA/Sub-Ghz-Playlist-Creator)
 - [Sub-GHz Playlist v1.0.1 (By darmiel)](https://github.com/darmiel/flipper-playlist)
-- [Sub-GHz RAW Edit v1.7 (By Lechnio)](https://github.com/Lechnio/SubGHz-RAW-Edit)
+- [Sub-GHz RAW Edit v1.8 (By Lechnio)](https://github.com/Lechnio/SubGHz-RAW-Edit)
 - [Sub-GHz Remote v1.9 (By gid9798)](https://github.com/DarkFlippers/SubGHz_Remote)
 - [Sub-GHz Rolling Flaws v1.5 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials)
 - [Sub-GHz Scheduler v3.4 (By shalebridge)](https://github.com/shalebridge/flipper-subghz-scheduler)
