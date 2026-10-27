@@ -81,6 +81,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Sub-GHz RAW Edit v1.8 (By Lechnio)](https://github.com/Lechnio/SubGHz-RAW-Edit)
 - Added: [Portal Putt v0.1 (By rseufert)](https://github.com/rseufert/portal_putt)
 - Updated: [Hanzi Cards v0.5 (By rseufert)](https://github.com/rseufert/hanzi_cards)
+- Added: [Servo Tester+ v0.5 (By Enlighten Tech)](https://github.com/gbhobbytech/flipper-servo-tester)
 
 <a name="release"></a>
 
@@ -935,6 +936,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Sentry Safe v2.0 (By H4ckd4ddy)](https://github.com/H4ckd4ddy/flipperzero-sentry-safe-plugin) ([Pin Out](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/tree/420/applications/sentry_safe) from [UberGuidoZ](https://github.com/UberGuidoZ/)
 - [Seos compatible v1.3 (By bettse)](https://github.com/bettse/seos_compatible)
 - [Serial Chat v1.0 (By Osman Gokce)](https://github.com/osmangokc/flipper_serial_chat)
+- [Servo Tester+ v0.5 (By Enlighten Tech)](https://github.com/gbhobbytech/flipper-servo-tester)
 - [ServoTester (2) v0.2 (By mhasbini)](https://github.com/mhasbini/ServoTesterApp)
 - [Servotester v1.2 (By spin7ion)](https://github.com/spin7ion/flipper-servotester)
 - [ShapShup v1.2 (By derskythe)](https://github.com/derskythe/flipperzero-shapshup)
