@@ -12,7 +12,7 @@ Mandarin flashcards for the [Flipper Zero](https://flipperzero.one): simplified 
 
 ## What it does
 
-- **Decks:** HSK 1 (150 words), HSK 2 (156), HSK 3 (292) and HSK 4 (601), plus four small themed decks: Numbers and time, Food, Travel and Measure words. Each has its own progress. HSK 1 and 2 are in a rough learning order; HSK 3 and 4 are shuffled.
+- **Decks:** HSK 1 (150 words), HSK 2 (156), HSK 3 (292), HSK 4 (601), HSK 5 (1298) and HSK 6 (2498), plus four small themed decks: Numbers and time, Food, Travel and Measure words. Each has its own progress. HSK 1 and 2 are in a rough learning order; HSK 3 to 6 are shuffled.
 - **Characters:** simplified or traditional, switchable at any time.
 - **Flashcards:** the front shows the characters. Flip it to see the pinyin and the English.
 - **Tone quiz:** instead of flipping, pick the tone of each syllable with the D-pad. The card then shows the right answer with any wrong syllables inverted, and is marked Good only if every tone was right.
@@ -55,7 +55,7 @@ Left/Right step through the deck (hold to keep going), Up/Down jump ten cards, O
 
 | Setting | Values |
 | --- | --- |
-| Deck | HSK 1 to 4, Numbers, Food, Travel or Measures |
+| Deck | HSK 1 to 6, Numbers, Food, Travel or Measures |
 | Mode | Flashcards or Tone quiz |
 | Characters | Simplified or Traditional |
 | Front | Hanzi or English (flashcards only) |
@@ -74,6 +74,8 @@ python tools/build_deck.py decks/hsk1.tsv assets/hsk1.deck
 ```
 
 The script needs [Pillow](https://python-pillow.org) and the fonts `NotoSansCJKsc-Regular.otf` and `NotoSansCJKtc-Regular.otf` from [noto-cjk](https://github.com/notofonts/noto-cjk/tree/main/Sans/OTF) in a `fonts/` folder (or pass `--font` and `--trad-font`). A new deck also needs an entry in the `decks` table in `hanzi_cards.c`.
+
+The HSK 5 and 6 lists are generated from [complete-hsk-vocabulary](https://github.com/drkameleon/complete-hsk-vocabulary) (MIT), the HSK 2.0 level 5 and 6 words, by `tools/hsk_from_json.py`. It picks the HSK reading for words the dictionary lists under several readings, shortens the glosses to fit the card, and shuffles each list once with a fixed seed. Two four-character idioms whose pinyin does not fit a card are left out.
 
 ## Build and install
 
