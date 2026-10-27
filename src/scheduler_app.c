@@ -2,6 +2,9 @@
 
 #include <applications/drivers/subghz/cc1101_ext/cc1101_ext_interconnect.h>
 #include <lib/subghz/devices/devices.h>
+#include <power/power_service/power.h>
+
+#include <furi_hal_power.h>
 
 #define TAG "Sub-GHzSchedulerApp"
 
@@ -33,6 +36,46 @@ static void scheduler_make_app_folder(SchedulerApp* app) {
     furi_record_close(RECORD_STORAGE);
 }
 
+static void scheduler_app_ext_device_cleanup(void) {
+    Power* power = furi_record_open(RECORD_POWER);
+    power_enable_otg(power, false);
+    furi_record_close(RECORD_POWER);
+}
+
+static bool scheduler_app_ext_device_init() {
+    Power* power = furi_record_open(RECORD_POWER);
+    power_enable_otg(power, true);
+    furi_record_close(RECORD_POWER);
+
+    bool is_powered = false;
+
+    // Wait up to 500ms for OTG power
+    for(uint8_t i = 0; i < 5; i++) {
+        is_powered = furi_hal_power_is_otg_enabled() || furi_hal_power_get_usb_voltage() >= 4.5f;
+
+        if(is_powered) break;
+        furi_delay_ms(100);
+    }
+
+    bool present = false;
+
+    if(is_powered) {
+        subghz_devices_init();
+
+        const SubGhzDevice* device = subghz_devices_get_by_name(SUBGHZ_DEVICE_CC1101_EXT_NAME);
+
+        present = subghz_devices_is_connect(device);
+
+        subghz_devices_deinit();
+    }
+
+    if(!present) {
+        scheduler_app_ext_device_cleanup();
+    }
+
+    return present;
+}
+
 SchedulerApp* scheduler_app_alloc(void) {
     SchedulerApp* app = calloc(1, sizeof(SchedulerApp));
 
@@ -55,7 +98,7 @@ SchedulerApp* scheduler_app_alloc(void) {
     view_dispatcher_set_navigation_event_callback(
         app->view_dispatcher, scheduler_app_back_event_callback);
     view_dispatcher_set_tick_event_callback(
-        app->view_dispatcher, scheduler_app_tick_event_callback, 500);
+        app->view_dispatcher, scheduler_app_tick_event_callback, furi_ms_to_ticks(500));
     view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
 
     app->text_input = text_input_alloc();
@@ -96,10 +139,7 @@ SchedulerApp* scheduler_app_alloc(void) {
     app->scheduler = scheduler_alloc();
 
     // Test for external device
-    subghz_devices_init();
-    const SubGhzDevice* device = subghz_devices_get_by_name(SUBGHZ_DEVICE_CC1101_EXT_NAME);
-    app->ext_radio_present = subghz_devices_is_connect(device);
-    subghz_devices_deinit();
+    app->ext_radio_present = scheduler_app_ext_device_init();
     if(app->ext_radio_present) {
         FURI_LOG_I(TAG, "External radio detected.");
         scheduler_set_radio(app->scheduler, 1);
@@ -109,6 +149,8 @@ SchedulerApp* scheduler_app_alloc(void) {
     }
 
     app->should_reset = true;
+    app->tx_line = -1;
+    app->edit_line = -1;
 
     scene_manager_next_scene(app->scene_manager, SchedulerSceneMenu);
 
@@ -123,6 +165,8 @@ void scheduler_app_free(SchedulerApp* app) {
         furi_thread_free(app->thread);
         app->thread = NULL;
     }
+
+    scheduler_app_ext_device_cleanup();
 
     view_dispatcher_remove_view(app->view_dispatcher, SchedulerAppViewInterval);
     scheduler_interval_view_free(app->interval_view);
