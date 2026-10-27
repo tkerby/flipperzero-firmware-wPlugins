@@ -16,7 +16,7 @@
 #define GLYPH_GAP     2
 #define MAX_HANZI     4
 #define TEXT_LEN      24
-#define MAX_CARDS     640
+#define MAX_CARDS     2560
 #define MAX_SYLLABLES (MAX_HANZI + 1)
 #define NO_CARD       0xFFFF
 
@@ -36,6 +36,8 @@ static const DeckInfo decks[] = {
     {"HSK 2", "hsk2"},
     {"HSK 3", "hsk3"},
     {"HSK 4", "hsk4"},
+    {"HSK 5", "hsk5"},
+    {"HSK 6", "hsk6"},
     {"Numbers", "numbers"},
     {"Food", "food"},
     {"Travel", "travel"},

@@ -4,7 +4,7 @@ Mandarin flashcards: simplified or traditional characters, pinyin with tone mark
 
 ## Features
 
-- **Decks:** HSK 1 to 4 (about 1200 words) plus Numbers, Food, Travel and Measure word decks, each with its own progress
+- **Decks:** HSK 1 to 6 (about 5000 words) plus Numbers, Food, Travel and Measure word decks, each with its own progress
 - **Characters:** simplified or traditional, switchable at any time
 - **Flashcards:** the front shows the characters; flip to see the pinyin and the English
 - **Tone quiz:** pick each syllable's tone with the D-pad and see which you got right

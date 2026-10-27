@@ -80,6 +80,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Bleepsentry v1.1 (By hdyrawan)](https://github.com/hdyrawan/bleepsentry) [Calibration prompt, RSSI scale/readout and screen-layout fixes (By hdyrawan)](https://github.com/hdyrawan/bleepsentry/commit/017c7b695cd88f0ccdbbbed4b6df04452f1751c9)
 - Updated: [Sub-GHz RAW Edit v1.8 (By Lechnio)](https://github.com/Lechnio/SubGHz-RAW-Edit)
 - Added: [Portal Putt v0.1 (By rseufert)](https://github.com/rseufert/portal_putt)
+- Updated: [Hanzi Cards v0.5 (By rseufert)](https://github.com/rseufert/hanzi_cards)
 
 <a name="release"></a>
 
@@ -662,7 +663,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [HAM v0.6 (By lumen-rot)](https://github.com/lumen-rot/flipper-ham)
 - [Ham Scanner v1.1 (By Clawzman)](https://github.com/Clawzman/Flipper-HAM-Scanner)
 - [Handpan Chords v1.0 (By KingBoa / NoodleNugget-com)](https://github.com/NoodleNugget-com/handpan_chords)
-- [Hanzi Cards v0.4 (By rseufert)](https://github.com/rseufert/hanzi_cards)
+- [Hanzi Cards v0.5 (By rseufert)](https://github.com/rseufert/hanzi_cards)
 - [Hard Hat Brigade IR v0.1 (By Anomalous68)](https://github.com/Anomalous68/HHB-Flipper-App) `Req: Hard Hat Brigade Hat`
 - [HC-11 Modem v1.3 (By Giraut)](https://github.com/Giraut/flipper_zero_hc11_wireless_modem) `Req: HC-11`
 - [Hermes v1.3 (By at0m-b0mb)](https://github.com/at0m-b0mb/Hermes-FlipperZero)
