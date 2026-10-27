@@ -7,13 +7,13 @@
 
 #include <stdio.h>
 
-#define SERVO_ANGLE_MIN 0
-#define SERVO_ANGLE_MAX 180
-#define SERVO_ANGLE_STEP 10
-#define SERVO_PULSE_MIN_US 1000
-#define SERVO_PULSE_MAX_US 2000
+#define SERVO_ANGLE_MIN     0
+#define SERVO_ANGLE_MAX     180
+#define SERVO_ANGLE_STEP    10
+#define SERVO_PULSE_MIN_US  1000
+#define SERVO_PULSE_MAX_US  2000
 #define SERVO_FRAME_REST_MS 18
-#define SWEEP_DWELL_MS 2000
+#define SWEEP_DWELL_MS      2000
 
 typedef enum {
     ServoModeManual,
@@ -161,16 +161,20 @@ static void servo_set_mode(ServoTesterApp* app, ServoMode mode) {
         furi_timer_start(app->sweep_timer, furi_ms_to_ticks(SWEEP_DWELL_MS));
     } else {
         furi_timer_stop(app->sweep_timer);
-        if(mode == ServoModeCenter) servo_set_angle(app, 90);
-        else view_port_update(app->view_port);
+        if(mode == ServoModeCenter)
+            servo_set_angle(app, 90);
+        else
+            view_port_update(app->view_port);
     }
 }
 
 static void servo_process_input(ServoTesterApp* app, InputEvent* event) {
     if(event->key == InputKeyBack && event->type == InputTypeShort) {
         furi_mutex_acquire(app->mutex, FuriWaitForever);
-        if(app->show_help) app->show_help = false;
-        else app->running = false;
+        if(app->show_help)
+            app->show_help = false;
+        else
+            app->running = false;
         furi_mutex_release(app->mutex);
         view_port_update(app->view_port);
         return;
@@ -201,11 +205,13 @@ static void servo_process_input(ServoTesterApp* app, InputEvent* event) {
         view_port_update(app->view_port);
     } else if(event->key == InputKeyUp) {
         ServoMode next = mode == ServoModeManual ? ServoModeSweep :
-                         mode == ServoModeSweep ? ServoModeCenter : ServoModeManual;
+                         mode == ServoModeSweep  ? ServoModeCenter :
+                                                   ServoModeManual;
         servo_set_mode(app, next);
     } else if(event->key == InputKeyDown) {
         ServoMode next = mode == ServoModeManual ? ServoModeCenter :
-                         mode == ServoModeCenter ? ServoModeSweep : ServoModeManual;
+                         mode == ServoModeCenter ? ServoModeSweep :
+                                                   ServoModeManual;
         servo_set_mode(app, next);
     } else if(mode == ServoModeManual && event->key == InputKeyLeft) {
         servo_set_angle(app, angle >= SERVO_ANGLE_STEP ? angle - SERVO_ANGLE_STEP : 0);
