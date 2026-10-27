@@ -75,7 +75,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Added: [USB Floppy v0.1.3 (By piersroberts)](https://github.com/piersroberts/flipperfloppy)
 - OFW: [NFC: Add MIFARE Classic 1K EV1 support #4480 (By MickaelBergem)](https://github.com/flipperdevices/flipperzero-firmware/pull/4480)
 - Added: [FM Radio RDS v0.1 (By victormico)](https://github.com/victormico/flipperzero-radio) [Si4703 volume control and RDS station names/radio text (By victormico)](https://github.com/victormico/flipperzero-radio/pull/3)
-- Added: [CLI-GUI Bridge v0.2 (By ranchordo)](https://github.com/ranchordo/flipperzero-cli-bridge) [Ported to RM’s current CLI with resumable background sessions (By RogueMaster)]()
+- Added: [CLI-GUI Bridge v0.2 (By ranchordo)](https://github.com/ranchordo/flipperzero-cli-bridge) [Ported to RM’s current CLI with resumable background sessions (By RogueMaster)](https://github.com/RogueMaster/flipperzero-firmware-wPlugins/commit/ec1910adb60afb8117b4f19bfd84fde60e1b9fc0)
 - Updated: [Nice O-Code v2.0 (By zero-mega & xMasterX)](https://github.com/DarkFlippers/unleashed-firmware) [UL remote creation and certificate encoder updates](https://github.com/DarkFlippers/unleashed-firmware/commit/4c5e74cce3cef90e6d7865f5fd75e1b4a254a7f2)
 - Updated: [Bleepsentry v1.1 (By hdyrawan)](https://github.com/hdyrawan/bleepsentry) [Calibration prompt, RSSI scale/readout and screen-layout fixes (By hdyrawan)](https://github.com/hdyrawan/bleepsentry/commit/017c7b695cd88f0ccdbbbed4b6df04452f1751c9)
 
