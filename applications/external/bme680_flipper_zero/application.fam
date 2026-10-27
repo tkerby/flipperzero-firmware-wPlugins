@@ -7,15 +7,6 @@ App(
         "APP_BME680",
         "BME68X_FLOAT_POINT_COMPENSATION",
     ],
-    requires=[
-        "gui",
-        "furi",
-        "furi_hal_i2c",
-        "bus",
-        "storage",
-        "notification",
-        "furi_hal_rtc",
-    ],
     sources=[
         # Main application file and BME680 driver
         "bme680_app.cpp",

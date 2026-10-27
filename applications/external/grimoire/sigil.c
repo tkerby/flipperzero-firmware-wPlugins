@@ -56,9 +56,7 @@ P(Y1, -1, -1, 0, 0, 1, -1)
 P(Y2, 0, 0, 0, 1)
 P(Z1, -0.9f, -1, 0.9f, -1, -0.9f, 1, 0.9f, 1)
 
-static const Stroke glyph_A[] = {
-	POLY(A1),
-	POLY(A2)};
+static const Stroke glyph_A[] = {POLY(A1), POLY(A2)};
 static const Stroke glyph_B[] = {
     POLY(B1),
     ARC(-0.7f, -0.5f, 0.5f, -90, 90),

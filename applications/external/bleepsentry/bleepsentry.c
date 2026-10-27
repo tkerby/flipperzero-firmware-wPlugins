@@ -19,8 +19,8 @@
 #define RSSI_POLL_PERIOD_MS 100
 #define BASELINE_SAMPLE_MS  2000
 #define ALERT_MARGIN_DB     12.0f
-#define RSSI_MIN_DBM        -100.0f
-#define RSSI_MAX_DBM        0.0f
+#define RSSI_MIN_DBM        -115.0f
+#define RSSI_MAX_DBM        -25.0f
 
 typedef enum {
     BsEventTypeTick,
@@ -169,39 +169,52 @@ static void bs_draw_callback(Canvas* canvas, void* context) {
         (frequencies[app->freq_index] / 10000) % 100);
     canvas_draw_str(canvas, 2, 22, buf);
 
-    snprintf(buf, sizeof(buf), "RSSI: %d dBm", (int)app->rssi);
-    canvas_draw_str(canvas, 2, 33, buf);
+    /* One range for both the readout and the bar, so the number can never
+     * print a value the meter cannot show. */
+    int rssi_dbm = (int)app->rssi;
+    if(rssi_dbm < (int)RSSI_MIN_DBM) rssi_dbm = (int)RSSI_MIN_DBM;
+    if(rssi_dbm > (int)RSSI_MAX_DBM) rssi_dbm = (int)RSSI_MAX_DBM;
 
-    if(app->has_baseline) {
+    snprintf(buf, sizeof(buf), "RSSI: %d dBm", rssi_dbm);
+    canvas_draw_str(canvas, 2, 32, buf);
+
+    if(app->mode == BsModeCalibrating || app->mode == BsModeSweepCalibrating) {
+        /* A calibration is already running: prompting for OK here would
+         * invite the user to restart it. */
+        canvas_draw_str(canvas, 2, 42, "Sampling noise floor");
+    } else if(app->has_baseline) {
         snprintf(buf, sizeof(buf), "Base: %d  Thr: %d", (int)app->baseline, (int)app->threshold);
-        canvas_draw_str(canvas, 2, 43, buf);
+        canvas_draw_str(canvas, 2, 42, buf);
     } else {
-        canvas_draw_str(canvas, 2, 43, "No baseline (press OK)");
+        canvas_draw_str(canvas, 2, 42, "No baseline (press OK)");
     }
 
     /* RSSI bar */
-    int32_t bar_x = 2, bar_y = 48, bar_w = 120, bar_h = 8;
+    int32_t bar_x = 2, bar_y = 45, bar_w = 120, bar_h = 8;
     canvas_draw_frame(canvas, bar_x, bar_y, bar_w, bar_h);
-    float frac = (app->rssi - RSSI_MIN_DBM) / (RSSI_MAX_DBM - RSSI_MIN_DBM);
+    float frac = (rssi_dbm - RSSI_MIN_DBM) / (RSSI_MAX_DBM - RSSI_MIN_DBM);
     if(frac < 0) frac = 0;
     if(frac > 1) frac = 1;
     int32_t fill_w = (int32_t)(frac * (bar_w - 2));
     if(fill_w > 0) canvas_draw_box(canvas, bar_x + 1, bar_y + 1, fill_w, bar_h - 2);
 
+    /* Bottom line sits at y=61 rather than the usual 63: the secondary font
+     * descends two rows below the baseline, so 63 would put the glyph tails
+     * on the last pixel row with nothing under them. This keeps row 63 clear. */
     if(app->mode == BsModeCalibrating) {
-        canvas_draw_str(canvas, 2, 63, "Calibrating baseline...");
+        canvas_draw_str(canvas, 2, 61, "Calibrating...");
     } else if(app->mode == BsModeSweepCalibrating) {
         snprintf(buf, sizeof(buf), "Sweep calib %u/%u", (unsigned)app->freq_index + 1, FREQ_COUNT);
-        canvas_draw_str(canvas, 2, 63, buf);
+        canvas_draw_str(canvas, 2, 61, buf);
     } else if(app->alerting) {
         canvas_set_font(canvas, FontPrimary);
-        canvas_draw_str(canvas, 70, 63, "ALERT");
+        canvas_draw_str(canvas, 70, 61, "ALERT");
     } else if(app->mode == BsModeSweeping) {
         snprintf(buf, sizeof(buf), "Sweeping  Log:%lu", (unsigned long)app->events_logged);
-        canvas_draw_str(canvas, 2, 63, buf);
+        canvas_draw_str(canvas, 2, 61, buf);
     } else {
         snprintf(buf, sizeof(buf), "Logged: %lu", (unsigned long)app->events_logged);
-        canvas_draw_str(canvas, 2, 63, buf);
+        canvas_draw_str(canvas, 2, 61, buf);
     }
 
     furi_mutex_release(app->mutex);

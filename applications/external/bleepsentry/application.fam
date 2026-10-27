@@ -11,6 +11,6 @@ App(
     fap_category="Sub-GHz",
     fap_author="hdyrawan",
     fap_weburl="https://github.com/hdyrawan/bleepsentry",
-    fap_version="1.0",
+    fap_version="1.1",
     fap_description="Passive RF anomaly sentry for red-team recon and TSCM bug sweeps",
 )
