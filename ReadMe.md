@@ -79,7 +79,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Nice O-Code v2.0 (By zero-mega & xMasterX)](https://github.com/DarkFlippers/unleashed-firmware) [UL remote creation and certificate encoder updates](https://github.com/DarkFlippers/unleashed-firmware/commit/4c5e74cce3cef90e6d7865f5fd75e1b4a254a7f2)
 - Updated: [Bleepsentry v1.1 (By hdyrawan)](https://github.com/hdyrawan/bleepsentry) [Calibration prompt, RSSI scale/readout and screen-layout fixes (By hdyrawan)](https://github.com/hdyrawan/bleepsentry/commit/017c7b695cd88f0ccdbbbed4b6df04452f1751c9)
 
-
 <a name="release"></a>
 
 ## Install Latest Release
