@@ -35,6 +35,7 @@
 #include "../../fsd_logic/fsd_events.h"
 #include "../../fsd_logic/fsd_can_ops.h"  // tesla_can_rx_accept
 #include "../../fsd_logic/fsd_bms.h"      // fsd_bms_temp_fresh
+#include "../../fsd_logic/fsd_freshness.h" // fsd_tx_fresh — stale-frame TX gate (#176)
 #include "prefs.h"
 #include "ota_verify.h"
 #include "power_log.h"
@@ -1173,6 +1174,12 @@ static void update_led() {
 // ── CAN frame dispatcher ──────────────────────────────────────────────────────
 static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
     uint32_t now = millis();
+    // Freshness gate (#176): true when this frame was received recently enough
+    // that a modified copy of it still tracks the car's live frame. A drain pass
+    // that empties a backlog hands us frames up to ~0.5 s old; their modified
+    // copies must NOT go on the bus (stale counters/payload). Receive-side state
+    // below updates for every frame regardless — only the outgoing copy is gated.
+    bool fresh = fsd_tx_fresh(frame.rx_ms, now);
     // Every id the handlers act on is an 11-bit data frame. Extended frames can
     // alias a target id and remote frames carry no payload, so they are only
     // recorded (captures stay complete), never parsed, modified or re-sent.
@@ -1502,8 +1509,9 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
         bool cp_tx = fsd_can_transmit(&g_state);
         state_exit();
         // Counted only once the copy is out: a send refused by a full TX queue
-        // is not one the dashboard should report.
-        if (modified && cp_tx && send_on_bus(bus, f)) {
+        // is not one the dashboard should report. fresh gates a stale backlog
+        // copy before the send (#176).
+        if (modified && cp_tx && fresh && send_on_bus(bus, f)) {
             state_enter();
             g_state.cp_type_tx_count++;
             state_exit();
@@ -1531,7 +1539,9 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
         nag.ap_active          = g_state.ap_active;
         nag.das_seen           = g_state.das_seen;
         nag.das_hands_on_state = g_state.das_hands_on_state;
-        bool fired = (tx && ap_ok) ? fsd_handle_nag_killer(&g_state, &frame, &echo, millis()) : false;
+        // fresh: a backlogged 0x370 would echo with a counter ahead of the car's
+        // live one — the exact burst seen in #176. Build + send only when fresh.
+        bool fired = (tx && ap_ok && fresh) ? fsd_handle_nag_killer(&g_state, &frame, &echo, millis()) : false;
         nag.nag_echo_count     = g_state.nag_echo_count;
         state_exit();
         bool sent = false;
@@ -1567,9 +1577,11 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
         bool minimal_ok = !(g_state.ap_first_minimal &&
                             g_state.ap_inject_count >= AP_MINIMAL_INJECT_FRAMES);
         bool modified = minimal_ok && fsd_handle_legacy_autopilot(&g_state, &f);
-        if (modified && ap_ok && g_state.ap_first_minimal) g_state.ap_inject_count++;
+        // fresh gates both the send and the inject-budget tick: a stale-frame
+        // copy must not go out, nor spend this engagement's injection budget (#176).
+        if (modified && ap_ok && fresh && g_state.ap_first_minimal) g_state.ap_inject_count++;
         state_exit();
-        if (modified && tx && ap_ok) send_on_bus(bus, f);
+        if (modified && tx && ap_ok && fresh) send_on_bus(bus, f);
         return;
     }
 
@@ -1615,7 +1627,7 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
         s.hw_version == TeslaHW_HW4 &&
         s.suppress_speed_chime) {
         CanFrame f = frame;
-        if (fsd_handle_isa_speed_chime(&f) && tx)
+        if (fsd_handle_isa_speed_chime(&f) && tx && fresh)
             send_on_bus(bus, f);
         return;
     }
@@ -1628,7 +1640,7 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
         fsd_handle_follow_distance(&g_state, &frame);
         bool modified = fsd_handle_driver_assist_override(&g_state, &f);
         state_exit();
-        if (modified && tx) send_on_bus(bus, f);
+        if (modified && tx && fresh) send_on_bus(bus, f);
         return;
     }
 
@@ -1638,7 +1650,7 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
         state_enter();
         bool modified = fsd_handle_tlssc_restore(&g_state, &f);
         state_exit();
-        if (modified && tx) send_on_bus(bus, f);
+        if (modified && tx && fresh) send_on_bus(bus, f);
         return;
     }
 
@@ -1649,7 +1661,7 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
         state_enter();
         bool modified = fsd_handle_track_mode_inject(&g_state, &f);
         state_exit();
-        if (modified && tx) send_on_bus(bus, f);
+        if (modified && tx && fresh) send_on_bus(bus, f);
         return;
     }
 
@@ -1668,7 +1680,7 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
                           (unsigned)before, (unsigned)after);
             can_dump_log("ACCEL 0x334 override %u -> %u", (unsigned)before, (unsigned)after);
         }
-        if (modified && tx) send_on_bus(bus, f);
+        if (modified && tx && fresh) send_on_bus(bus, f);
         return;
     }
 
@@ -1681,9 +1693,11 @@ static NOINLINE void process_frame(CanBusId bus, const CanFrame &frame) {
         bool minimal_ok = !(g_state.ap_first_minimal &&
                             g_state.ap_inject_count >= AP_MINIMAL_INJECT_FRAMES);
         bool modified = minimal_ok && fsd_handle_autopilot_frame(&g_state, &f);
-        if (modified && ap_ok && g_state.ap_first_minimal) g_state.ap_inject_count++;
+        // fresh gates both the send and the inject-budget tick (see 0x3EE): a
+        // stale backlog copy of 0x3FD must not reach the bus or spend budget (#176).
+        if (modified && ap_ok && fresh && g_state.ap_first_minimal) g_state.ap_inject_count++;
         state_exit();
-        if (modified && tx && ap_ok) send_on_bus(bus, f);
+        if (modified && tx && ap_ok && fresh) send_on_bus(bus, f);
         return;
     }
 }
