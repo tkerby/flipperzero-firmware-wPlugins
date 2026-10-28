@@ -76,6 +76,8 @@ static const uint8_t SETTLE_CHOICES[] = {1, 2, 3, 5, 8, 12, 20};
 #define CONF_ROW_TXTEST  14
 #define CONF_ROW_REPLAY  15
 #define CONF_ROW_TXFRAME 16
+#define CONF_ROW_BRUTE   17
+#define BRUTE_PAGE       32 // codes per press: ~3 s of airtime, never an open-ended loop
 #define REP_MAX_EDGES   2048 // ~8 KB of the last capture, kept for replay
 #endif
 
@@ -138,7 +140,7 @@ static bool tune_rx(uint32_t f) {
 #define VIEW_CONF  1
 #define VIEW_RANGE 2 // custom start/end frequency editor
 #define VIEW_CAP   3 // .sub capture screen
-#define PAGE_N     6 // spectrum pages: bars, connected, waterfall, numeric, history, cadence
+#define PAGE_N     7 // bars, connected, waterfall, numeric, history, cadence, hunt
 #define SCR_W      128
 #define RE_MIN     3000 // 300.0 MHz in 100 kHz units (the CC1101 low-band floor)
 #define RE_MAX     9280 // 928.0 MHz
@@ -395,6 +397,8 @@ typedef struct {
     uint16_t rep_n;
     uint32_t rep_freq;
     uint8_t rep_preset;
+    uint32_t brute_next; // next Princeton code the brutal page will start from
+    VariableItem* it_brute;
 #endif
     char cap_decode[40]; // decoded protocol string from the firmware's decoder chain
     volatile bool cap_decoded;
@@ -941,6 +945,14 @@ static void park_loop(App* app, Storage* storage) {
         uint32_t now = furi_get_tick();
         float rf = radio_rssi();
         int8_t r = (rf < -127.0f) ? (int8_t)-127 : (int8_t)rf;
+        // the same strength-tracked vibro the sweep uses: rate rises with the carrier, so you
+        // can walk toward a source without looking at the screen
+        if(app->haptic && app->notif) {
+            haptic_sample(app, r);
+            haptic_pump(app, now);
+        } else if(app->hap_on) {
+            haptic_off(app);
+        }
         app->park_env[app->park_head] = r;
         app->park_head = (uint16_t)((app->park_head + 1) % PARK_N);
         if(app->park_count < PARK_N) app->park_count++;
@@ -979,6 +991,7 @@ static void park_loop(App* app, Storage* storage) {
         furi_delay_ms(PARK_SAMPLE_MS);
     }
     rfs_park_stop(&app->park); // mid-burst stop: the elapsed time is a lower bound, not data
+    haptic_off(app); // never leave the motor latched when parked mode ends
     if(cf) { // flush + close whatever the user left open
         if(coff) storage_file_write(cf, app->csv_line, (size_t)coff);
         storage_file_close(cf);
@@ -2229,6 +2242,55 @@ static void draw_cadence(Canvas* canvas, App* app) {
     canvas_draw_str(canvas, 2, 63, s);
 }
 
+// Fox hunt: one frequency, one number, one bar, and the vibro. No statistics -- the question is
+// "am I getting warmer", and the answer has to be readable at arm's length while walking.
+static void draw_hunt(Canvas* canvas, App* app) {
+    canvas_set_font(canvas, FontSecondary);
+    char s[32];
+    uint32_t f = app->park_freq;
+    snprintf(
+        s,
+        sizeof(s),
+        "%lu.%03lu MHz",
+        (unsigned long)(f / 1000000),
+        (unsigned long)((f / 1000) % 1000));
+    canvas_draw_str(canvas, 2, 9, s);
+    canvas_draw_str_aligned(
+        canvas, SCR_W - 1, 9, AlignRight, AlignBottom, app->haptic ? "vibro" : "haptic off");
+
+    if(!app->parked) {
+        canvas_draw_str(canvas, 2, 30, "OK: start hunting");
+        canvas_draw_str(canvas, 2, 42, "Up/Down: tune");
+        canvas_draw_str(canvas, 2, 54, "max signal = the source");
+        return;
+    }
+
+    int cnt = app->park_count;
+    int8_t cur = cnt ? app->park_env[(app->park_head + PARK_N - 1) % PARK_N] : -127;
+
+    // big dBm readout
+    canvas_set_font(canvas, FontBigNumbers);
+    snprintf(s, sizeof(s), "%d", cur);
+    canvas_draw_str_aligned(canvas, SCR_W / 2, 34, AlignCenter, AlignBottom, s);
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str_aligned(canvas, SCR_W / 2, 40, AlignCenter, AlignBottom, "dBm");
+
+    // bar: -105 .. -40 dBm across the full width. Deliberately fixed rather than autoscaled --
+    // an autoscaling bar always "looks full" and defeats the whole point of walking.
+    const int lo = -105, hi = -40;
+    int v = cur;
+    if(v < lo) v = lo;
+    if(v > hi) v = hi;
+    int len = (v - lo) * (SCR_W - 4) / (hi - lo);
+    canvas_draw_frame(canvas, 2, 44, SCR_W - 4, 9);
+    if(len > 0) canvas_draw_box(canvas, 3, 45, len, 7);
+
+    if(cur > app->trigger)
+        canvas_draw_str(canvas, 2, 62, "signal above trigger");
+    else
+        canvas_draw_str(canvas, 2, 62, "below trigger");
+}
+
 static void spectrum_draw(Canvas* canvas, void* model) {
     UNUSED(model);
     App* app = g_app;
@@ -2236,7 +2298,9 @@ static void spectrum_draw(Canvas* canvas, void* model) {
     canvas_clear(canvas);
     canvas_set_font(canvas, FontSecondary);
 
-    if(app->page == 5) {
+    if(app->page == 6) {
+        draw_hunt(canvas, app); // full-height fox-hunt page
+    } else if(app->page == 5) {
         draw_cadence(canvas, app); // full-height zero-span page, draws its own layout
     } else if(app->page == 3) {
         draw_numeric(canvas, app); // bars show absolute freqs; the Capture pill is below
@@ -2300,7 +2364,7 @@ static void spectrum_draw(Canvas* canvas, void* model) {
     }
 
     // native pill hints (the waterfall and cadence pages draw their own layout instead)
-    if(app->page != 2 && app->page != 5) {
+    if(app->page != 2 && app->page != 5 && app->page != 6) {
         elements_button_left(canvas, "Page");
         if(app->page == 0) elements_button_center(canvas, "Zoom");
         if(app->page == 3) elements_button_center(canvas, "Capture"); // OK on the cursor row
@@ -2354,20 +2418,20 @@ static bool spectrum_input(InputEvent* event, void* context) {
     }
     // long Up/Down: hold the traces / clear the holds. Kept off the short presses so the time
     // window and page flips keep their existing meaning.
-    if(event->key == InputKeyUp && lp && app->page != 5) {
+    if(event->key == InputKeyUp && lp && app->page != 5 && app->page != 6) {
         app->frozen = !app->frozen;
         FURI_LOG_I(TAG, "input: hold %s", app->frozen ? "on" : "off");
         spec_redraw(app);
         return true;
     }
-    if(event->key == InputKeyDown && lp && app->page != 5) {
+    if(event->key == InputKeyDown && lp && app->page != 5 && app->page != 6) {
         app->clear_peaks = true; // max-hold and min-hold both re-seed from the next sweep
         spec_redraw(app);
         return true;
     }
     // Cadence page: OK parks on (or releases) the selected frequency. Nothing is tuned here --
     // the sweep worker sees the flag at the top of its loop and hands the radio to park_loop.
-    if(event->key == InputKeyOk && sp && app->page == 5) {
+    if(event->key == InputKeyOk && sp && (app->page == 5 || app->page == 6)) {
         if(app->parked) {
             app->parked = false;
         } else {
@@ -2379,7 +2443,7 @@ static bool spectrum_input(InputEvent* event, void* context) {
     }
     // while parked, Up/Down walks the frequency in 10 kHz steps so you can watch RSSI rise and
     // land exactly on the carrier instead of guessing from a swept bin.
-    if(app->page == 5 && app->parked && sp &&
+    if((app->page == 5 || app->page == 6) && app->parked && sp &&
        (event->key == InputKeyUp || event->key == InputKeyDown)) {
         uint32_t f = app->park_freq;
         if(event->key == InputKeyUp)
@@ -3373,6 +3437,34 @@ static void conf_enter(void* ctx, uint32_t index) {
         return;
     }
 #ifdef RFS_LAB
+    if(index == CONF_ROW_BRUTE) {
+        // LAB ONLY. One PAGE per press, then it stops and waits to be asked again. No
+        // loop-forever path: 32 codes x 3 repeats is ~3 s of airtime, the cursor advances, and
+        // the row shows where the next press starts. Region-gated like every other TX.
+        if(app->brute_next <= 0xFFFFFFu) {
+            uint32_t f = app->f_start + (uint32_t)(app->nbins / 2) * app->f_step;
+            app->running = false;
+            if(app->worker) {
+                furi_thread_join(app->worker);
+                furi_thread_free(app->worker);
+                app->worker = NULL;
+            }
+            RfTxStatus st =
+                rf_tx_code_page(f, PRESETS[0].regs, app->brute_next, BRUTE_PAGE, 3, 350);
+            FURI_LOG_I(TAG, "brute page %06lX -> %d", (unsigned long)app->brute_next, (int)st);
+            app->brute_next += BRUTE_PAGE;
+            if(app->it_brute) {
+                char b[12];
+                snprintf(b, sizeof(b), "%06lX", (unsigned long)app->brute_next);
+                variable_item_set_current_value_text(app->it_brute, b);
+            }
+            app->running = true;
+            app->reconfig = true;
+            app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
+            furi_thread_start(app->worker);
+        }
+        return;
+    }
     if(index == CONF_ROW_TXFRAME) {
         // LAB ONLY. Synthesises a Princeton frame from nothing but arithmetic -- no capture,
         // no decoder. The encoder lives in rf_logic.h and is unit-tested on the PC, so the
@@ -3642,6 +3734,10 @@ int32_t rf_survey_app(void* p) {
     variable_item_set_current_value_text(vi, "OK");
     vi = variable_item_list_add(app->conf, "TX frame", 1, NULL, app);
     variable_item_set_current_value_text(vi, "OK");
+    app->it_brute = variable_item_list_add(app->conf, "Code page", 1, NULL, app);
+    variable_item_set_current_value_text(app->it_brute, "000000");
+    app->it_brute = variable_item_list_add(app->conf, "Code page", 1, NULL, app);
+    variable_item_set_current_value_text(app->it_brute, "000000");
 #endif
     variable_item_list_set_enter_callback(app->conf, conf_enter, app);
     view_set_enter_callback(variable_item_list_get_view(app->conf), conf_view_enter);
