@@ -751,6 +751,17 @@ void view_dispatcher_run(ViewDispatcher* vd) {
         }
         sim_press(v, InputKeyRight, InputTypeLong); // long = next page
     }
+    // the rest of the app's screens: config list, range editor, capture, help
+    static const struct {
+        uint32_t id;
+        const char* name;
+    } other[] = {{1, "config"}, {2, "range"}, {3, "capture"}, {4, "help"}};
+    for(size_t i = 0; i < sizeof(other) / sizeof(other[0]); i++) {
+        View* ov = find_view(vd, other[i].id);
+        if(!ov || !ov->draw) continue;
+        sim_scene(other[i].name);
+        ov->draw(&g_canvas, ov->ctx);
+    }
     sim_scene_flush(); // the last scene never gets a successor to trigger its write
 }
 View* sim_current_view(ViewDispatcher* vd) {
@@ -760,32 +771,75 @@ Canvas* sim_canvas(void) {
     return &g_canvas;
 }
 
-// ---------------------------------------------------------------------------- misc stubs
-struct VariableItemList {
-    int unused;
-};
+// ---------------------------------------------------------------------------- variable item list
+// Enough of the real widget to judge the menu: five rows, 11 px leading, the selected row
+// inverted, label left and value right. The real one also draws a scrollbar and icons.
+#define VIL_ROWS 5
 struct VariableItem {
-    int unused;
+    VariableItemList* list;
+    int idx;
 };
+struct VariableItemList {
+    int n;
+    int selected;
+    char label[24][24];
+    char value[24][24];
+    View* view;
+};
+
+static void vil_draw(Canvas* c, void* ctx) {
+    VariableItemList* l = ctx;
+    u8g2_ClearBuffer(&g_u8g2);
+    u8g2_SetDrawColor(&g_u8g2, 1);
+    u8g2_SetFont(&g_u8g2, u8g2_font_haxrcorp4089_tr);
+    int first = 0;
+    if(l->selected >= VIL_ROWS) first = l->selected - VIL_ROWS + 1;
+    for(int row = 0; row < VIL_ROWS && first + row < l->n; row++) {
+        int i = first + row;
+        int y = row * 11;
+        if(i == l->selected) {
+            u8g2_SetDrawColor(&g_u8g2, 0);
+            u8g2_DrawBox(&g_u8g2, 0, (u8g2_uint_t)y, 128, 11);
+            u8g2_SetDrawColor(&g_u8g2, 1);
+        }
+        u8g2_DrawUTF8(&g_u8g2, 2, (u8g2_uint_t)(y + 9), l->label[i]);
+        int w = (int)u8g2_GetUTF8Width(&g_u8g2, l->value[i]);
+        u8g2_DrawUTF8(&g_u8g2, (u8g2_uint_t)(126 - w), (u8g2_uint_t)(y + 9), l->value[i]);
+    }
+    u8g2_SetDrawColor(&g_u8g2, 1);
+    (void)c;
+}
+
 VariableItemList* variable_item_list_alloc(void) {
     VariableItemList* l = sim_alloc(sizeof(VariableItemList));
+    if(!l) return NULL;
+    memset(l, 0, sizeof(*l));
+    l->view = view_alloc();
+    view_set_context(l->view, l);
+    view_set_draw_callback(l->view, vil_draw);
     return l;
 }
 void variable_item_list_free(VariableItemList* l) {
+    view_free(l->view);
     sim_free(l);
 }
 View* variable_item_list_get_view(VariableItemList* l) {
-    (void)l;
-    return view_alloc();
+    return l->view;
 }
 VariableItem* variable_item_list_add(
     VariableItemList* l, const char* lab, uint8_t v, void (*cb)(VariableItem*), void* c) {
-    (void)l;
     (void)v;
     (void)cb;
     (void)c;
-    fprintf(stderr, "[i] config row: %s\n", lab);
-    return sim_alloc(sizeof(VariableItem));
+    if(l->n >= 24) return NULL;
+    VariableItem* it = sim_alloc(sizeof(VariableItem));
+    if(!it) return NULL;
+    it->list = l;
+    it->idx = l->n;
+    snprintf(l->label[l->n], sizeof(l->label[0]), "%s", lab);
+    snprintf(l->value[l->n], sizeof(l->value[0]), "%s", " ");
+    l->n++;
+    return it;
 }
 void variable_item_list_set_enter_callback(VariableItemList* l, void (*cb)(void*, uint32_t), void* c) {
     (void)l;
@@ -797,8 +851,8 @@ void variable_item_set_current_value_index(VariableItem* i, uint8_t idx) {
     (void)idx;
 }
 void variable_item_set_current_value_text(VariableItem* i, const char* t) {
-    (void)i;
-    (void)t;
+    if(!i || !i->list || !t) return;
+    snprintf(i->list->value[i->idx], sizeof(i->list->value[0]), "%s", t);
 }
 uint8_t variable_item_get_current_value_index(VariableItem* i) {
     (void)i;

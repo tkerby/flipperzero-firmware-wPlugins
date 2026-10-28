@@ -158,9 +158,9 @@ static bool tune_rx(uint32_t f) {
 #define RE_MIN     3000 // 300.0 MHz in 100 kHz units (the CC1101 low-band floor)
 #define RE_MAX     9280 // 928.0 MHz
 #define RE_SPAN    10 // minimum span: 1.0 MHz
-#define BASE_Y     50 // spectrum baseline (room for pill buttons below)
-#define MAX_H      28 // tallest bar
-#define BODY_Y0    22 // top of the page body
+#define BASE_Y     62 // spectrum baseline: the plot now runs to the bottom edge
+#define MAX_H      48 // tallest bar
+#define BODY_Y0    14 // top of the plot
 #define WF_ROWS    40 // waterfall freq rows (full-bleed height)
 #define WF_COLS    120 // waterfall time columns: one per completed sweep, ring
 #define WF_H       49 // waterfall heatmap height; y 49..63 holds the time scale + hints
@@ -248,9 +248,6 @@ static const FreqBand KNOWN_BANDS[] = {
     {925000000, 928000000, "GSM900 DL", ModFM}, // tower downlink
 };
 
-static const char* mod_str(Mod m) {
-    return m == ModAM ? "AM" : "FM";
-}
 
 static const FreqBand* band_lookup(uint32_t f) {
     for(size_t i = 0; i < COUNT_OF(KNOWN_BANDS); i++) {
@@ -1815,31 +1812,6 @@ static void zoom_out(App* app) {
     FURI_LOG_I(TAG, "zoom out depth=%u", app->zdepth);
 }
 
-// peak line: "<freq>.<d> <dBm> ~<band> <AM/FM>" for a given frequency+dBm
-static void draw_info(Canvas* canvas, uint32_t f, int dbm) {
-    char s[48];
-    const FreqBand* b = band_lookup(f);
-    if(b) {
-        snprintf(
-            s,
-            sizeof(s),
-            "%lu.%lu %d ~%s %s",
-            (unsigned long)(f / 1000000),
-            (unsigned long)((f / 100000) % 10),
-            dbm,
-            b->name,
-            mod_str(b->mod));
-    } else {
-        snprintf(
-            s,
-            sizeof(s),
-            "%lu.%lu MHz  %d dBm",
-            (unsigned long)(f / 1000000),
-            (unsigned long)((f / 100000) % 10),
-            dbm);
-    }
-    canvas_draw_str(canvas, 2, 18, s);
-}
 
 static void draw_bars(Canvas* canvas, App* app, int floor, int ceil) {
     // the Trigger IS the baseline: only signal that clears the floor draws a bar, and it gets the
@@ -2099,7 +2071,7 @@ static void draw_numeric(Canvas* canvas, App* app) {
     numeric_top4(app, tv, tb);
     int floor, ceil;
     autoscale(app, &floor, &ceil);
-    const int pitch = 12, bh = 10;
+    const int pitch = 13, bh = 11;
     // M1 = the strongest peak; every other row is labelled as a delta from it (frequency offset
     // and dB below). "How far is this from the reference, and how much weaker" is the question
     // you actually ask when a known transmitter is sitting next to an unknown one.
@@ -2231,9 +2203,8 @@ static void draw_history(Canvas* canvas, App* app) {
             (unsigned)b[k].mhz,
             (unsigned long)pct,
             bd ? bd->name : "");
-        canvas_draw_str(canvas, 2, 22 + (int)k * 10, line);
+        canvas_draw_str(canvas, 2, 16 + (int)k * 11, line); // 11 px leading, ends at 49
     }
-    canvas_draw_str(canvas, 2, 62, "% of sweeps above trigger");
 }
 
 // ---- help ------------------------------------------------------------------
@@ -2241,20 +2212,19 @@ static void draw_history(Canvas* canvas, App* app) {
 // has with them in the field.
 static void help_draw(Canvas* canvas, void* model) {
     UNUSED(model);
+    // five lines at 11 px leading: the seven-line version overlapped itself at 7 px spacing
     static const char* const LINES[] = {
-        "L/R   page / cursor",
-        "U/D   window / tune",
-        "OK    zoom/park/capture",
-        "OK lo log on-off",
-        "U lo  hold traces",
-        "D lo  clear holds",
-        "Back  zoom out / exit",
+        "L/R  page (hold on bars)",
+        "U/D  window / tune",
+        "OK   zoom / park / capture",
+        "hold OK   log on-off",
+        "hold U/D  hold / clear",
     };
     canvas_clear(canvas);
     canvas_set_font(canvas, FontSecondary);
     canvas_draw_str(canvas, 2, 8, "Controls");
     for(size_t i = 0; i < COUNT_OF(LINES); i++)
-        canvas_draw_str(canvas, 2, 18 + (int)i * 7, LINES[i]);
+        canvas_draw_str(canvas, 2, 18 + (int)i * 11, LINES[i]);
 }
 
 static bool help_input(InputEvent* e, void* ctx) {
@@ -2611,11 +2581,40 @@ static void spectrum_draw(Canvas* canvas, void* model) {
                 (unsigned long)(app->f_start / 1000000),
                 (unsigned long)(app->f_end / 1000000),
                 hb ? hb->name : "");
-        canvas_draw_str(canvas, 2, 8, hdr);
-        // "!" = the configured dwell is too short for this filter width, so weak carriers are
-        // being under-read. Same slot as the cadence "~": a degraded-measurement marker.
-        // one slot, by priority: a held trace explains the screen, a flat battery explains
-        // everything else, and an under-settled sweep explains the numbers
+        // ONE readout line. Two lines of header cost the plot 8 px of its 48 -- and the range
+        // is already obvious from the axis, so the band prose was paying rent for nothing.
+        if(app->page == 0) {
+            int8_t cur, pk;
+            grp_max(app, app->cursor, &cur, &pk);
+            snprintf(
+                hdr,
+                sizeof(hdr),
+                "%lu.%lu %d",
+                (unsigned long)(grp_freq(app, app->cursor) / 1000000),
+                (unsigned long)((grp_freq(app, app->cursor) / 100000) % 10),
+                cur);
+        } else {
+            int pmax = -200;
+            uint16_t pidx = 0;
+            for(uint16_t i = 0; i < app->nbins; i++)
+                if(app->rssi[i] > pmax) {
+                    pmax = app->rssi[i];
+                    pidx = i;
+                }
+            uint32_t pf = app->f_start + (uint32_t)pidx * app->f_step;
+            snprintf(
+                hdr,
+                sizeof(hdr),
+                "%lu.%lu %d",
+                (unsigned long)(pf / 1000000),
+                (unsigned long)((pf / 100000) % 10),
+                pmax);
+        }
+        canvas_draw_str(canvas, 2, 9, hdr);
+
+        // right slot, by priority: a held trace explains the screen, a low battery explains
+        // everything else, an under-settled sweep explains the numbers, otherwise show where
+        // you are in the page ring
         char mark[8] = "";
         if(app->frozen)
             snprintf(mark, sizeof(mark), "HOLD");
@@ -2623,23 +2622,18 @@ static void spectrum_draw(Canvas* canvas, void* model) {
             snprintf(mark, sizeof(mark), "%u%%", (unsigned)app->batt_pct);
         else if(app->settle_ms < settle_min_ms(app->f_step))
             snprintf(mark, sizeof(mark), "!");
-        if(mark[0])
-            canvas_draw_str_aligned(canvas, SCR_W - 1, 8, AlignRight, AlignBottom, mark);
-        // info line: cursor readout on bars, global peak on connected
-        if(app->page == 0) {
+        else if(app->page == 1) { // connected: the averaging window
+            char w[8];
+            fmt_win(WIN_SECS[app->win_idx], w, sizeof(w));
+            snprintf(mark, sizeof(mark), "%s", w);
+        } else { // bars: the peak-hold of the band the cursor is on
             int8_t cur, pk;
             grp_max(app, app->cursor, &cur, &pk);
-            draw_info(canvas, grp_freq(app, app->cursor), cur);
-        } else {
-            int pmax = -200;
-            uint16_t pidx = 0;
-            for(uint16_t i = 0; i < app->nbins; i++) {
-                if(app->rssi[i] > pmax) {
-                    pmax = app->rssi[i];
-                    pidx = i;
-                }
-            }
-            draw_info(canvas, app->f_start + (uint32_t)pidx * app->f_step, pmax);
+            snprintf(mark, sizeof(mark), "pk%d", pk);
+        }
+        canvas_draw_str_aligned(canvas, SCR_W - 1, 9, AlignRight, AlignBottom, mark);
+        // (the info line that used to sit at y=18 is gone; see the single readout above)
+        if(0) {
         }
         int floor, ceil;
         autoscale(app, &floor, &ceil);
@@ -2650,16 +2644,10 @@ static void spectrum_draw(Canvas* canvas, void* model) {
     }
 
     // native pill hints (the waterfall and cadence pages draw their own layout instead)
-    if(app->page != 2 && app->page != 5 && app->page != 6 && app->page != 7) {
+    if(app->page != 0 && app->page != 1 && app->page != 2 && app->page != 5 && app->page != 6 &&
+       app->page != 7) {
         // the left pill was the word "Page" on every screen, which told you the key existed but
         // not where you were. A position readout answers the question you actually have.
-        char pg[8];
-        snprintf(pg, sizeof(pg), "%u/%u", (unsigned)(app->page + 1), (unsigned)PAGE_N);
-        elements_button_left(canvas, pg);
-        if(app->page == 0) {
-            elements_button_center(canvas, "Zoom");
-            elements_button_right(canvas, "Page"); // long L/R here: short moves the cursor
-        }
         if(app->page == 3) elements_button_center(canvas, "Capture"); // OK on the cursor row
     }
 
