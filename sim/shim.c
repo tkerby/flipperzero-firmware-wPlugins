@@ -89,6 +89,22 @@ void sim_free(void* p) {
     free(h);
 }
 
+void* sim_calloc(size_t n, size_t size) {
+    void* p = sim_alloc(n * size);
+    if(p) memset(p, 0, n * size);
+    return p;
+}
+
+void* sim_realloc(void* p, size_t n) {
+    if(!p) return sim_alloc(n);
+    SimHdr* h = (SimHdr*)((char*)p - sizeof(SimHdr));
+    void* q = sim_alloc(n);
+    if(!q) return NULL; // the caller keeps its block, like the real realloc contract
+    memcpy(q, p, h->size < n ? h->size : n);
+    sim_free(p);
+    return q;
+}
+
 void sim_heap_report(void) {
     fprintf(stderr, "[i] heap peak %zu / %zu bytes in %zu blocks\n", g_heap.peak, g_heap.total,
             g_heap.blocks);
@@ -492,8 +508,11 @@ bool storage_file_open(File* f, const char* path, FS_AccessMode m, FS_OpenMode o
         if(!sf) return false;
         sf->used = true;
         snprintf(sf->path, sizeof(sf->path), "%s", path);
-        sf->cap = 8192;
-        sf->data = sim_alloc(sf->cap);
+        // Card contents are NOT heap: a real SD card does not consume Flipper RAM, so the file
+        // buffer uses plain malloc and grows on demand. Budgeting it against SIM_HEAP made a
+        // healthy recording look like a full card after eight rows.
+        sf->cap = 4096;
+        sf->data = malloc(sf->cap);
         if(!sf->data) {
             sf->used = false;
             return false;
@@ -519,8 +538,33 @@ size_t storage_file_read(File* f, void* buf, size_t n) {
 }
 size_t storage_file_write(File* f, const void* buf, size_t n) {
     if(!f || !f->f) return 0;
+    // SIM_SD_FAIL=bytes makes every write fail after that many bytes in total, i.e. a card that
+    // fills up mid-recording. The app's CSV/sidecar/export error paths are otherwise never run.
+    {
+        static long budget = -2;
+        if(budget == -2) {
+            const char* e = getenv("SIM_SD_FAIL");
+            budget = e ? strtol(e, NULL, 10) : -1;
+        }
+        if(budget >= 0) {
+            if((long)n > budget) {
+                fprintf(stderr, "[!] SD full: write of %zu refused (%ld left)\n", n, budget);
+                return 0;
+            }
+            budget -= (long)n;
+        }
+    }
     SimFile* s = f->f;
-    if(s->pos + n > s->cap) n = s->cap - s->pos;
+    if(s->pos + n > s->cap) { // grow like a file on a card, up to 1 MB
+        size_t want = s->cap;
+        while(want < s->pos + n && want < (1u << 20)) want *= 2;
+        if(want > (1u << 20)) want = 1u << 20;
+        uint8_t* d = realloc(s->data, want);
+        if(!d) return 0;
+        s->data = d;
+        s->cap = want;
+        if(s->pos + n > s->cap) n = s->cap - s->pos;
+    }
     memcpy(s->data + s->pos, buf, n);
     s->pos += n;
     if(s->pos > s->len) s->len = s->pos;
@@ -734,6 +778,10 @@ void view_dispatcher_run(ViewDispatcher* vd) {
         fprintf(stderr, "[!] spectrum view not registered\n");
         return;
     }
+    // SIM_RECORD=1 starts CSV logging before the tour, so the write paths (cadence CSV, sidecar,
+    // export) run -- the only way to exercise their failure branches off-device.
+    if(getenv("SIM_RECORD")) sim_press(v, InputKeyOk, InputTypeLong);
+
     for(int i = 0; i < 30; i++) usleep(50000); // let the worker fill the buffers
 
     for(int page = 0; page < SIM_PAGES; page++) {

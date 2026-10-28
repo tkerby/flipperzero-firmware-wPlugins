@@ -13,8 +13,11 @@ for f in "$FW"/lib/u8g2/*.c; do
     SRCS="$SRCS $f"
 done
 
-cc -std=c11 -O1 -g -ffunction-sections -fdata-sections \
-   -I sim/include -I . -I "$FW/lib/u8g2" \
-   sim/run.c sim/shim.c rf_survey.c $SRCS \
+CFLAGS="-std=c11 -O1 -g -ffunction-sections -fdata-sections -I sim/include -I . -I $FW/lib/u8g2 -I $FW/lib/u8g2/.."
+
+# The app is compiled on its own with the allocation override, so its malloc/free go through the
+# simulator's budgeted heap and the OOM numbers mean something.
+cc $CFLAGS -include sim/alloc_override.h -c rf_survey.c -o sim/out/rf_survey.o
+cc $CFLAGS sim/run.c sim/shim.c sim/out/rf_survey.o $SRCS \
    -o sim/out/rfsim -lm -lpthread -Wl,-dead_strip
 echo "built sim/out/rfsim"
