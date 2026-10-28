@@ -159,9 +159,11 @@ bool archive_favorites_read(void* context) {
                 }
             } else {
                 if(storage_common_exists(storage, furi_string_get_cstr(buffer))) {
-                    storage_common_stat(storage, furi_string_get_cstr(buffer), &file_info);
-                    archive_add_file_item(
-                        browser, file_info_is_dir(&file_info), furi_string_get_cstr(buffer));
+                    const bool is_dir =
+                        (storage_common_stat(storage, furi_string_get_cstr(buffer), &file_info) ==
+                         FSE_OK) &&
+                        file_info_is_dir(&file_info);
+                    archive_add_file_item(browser, is_dir, furi_string_get_cstr(buffer));
                     file_count++;
                 } else {
                     need_refresh = true;

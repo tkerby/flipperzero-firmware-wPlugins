@@ -139,6 +139,11 @@ bool archive_scene_browser_on_event(void* context, SceneManagerEvent event) {
             consumed = true;
             break;
         case ArchiveBrowserEventFileMenuFavorite: {
+            if(!selected) {
+                archive_show_file_menu(browser, false, false);
+                consumed = true;
+                break;
+            }
             const char* name = archive_get_name(browser);
             if(favorites) {
                 archive_favorites_delete("%s", name);
@@ -237,6 +242,10 @@ bool archive_scene_browser_on_event(void* context, SceneManagerEvent event) {
             break;
         case ArchiveBrowserEventFileMenuCut:
             archive_show_file_menu(browser, false, false);
+            if(!selected) {
+                consumed = true;
+                break;
+            }
             if(!favorites) {
                 with_view_model(
                     browser->view,
@@ -253,6 +262,10 @@ bool archive_scene_browser_on_event(void* context, SceneManagerEvent event) {
             break;
         case ArchiveBrowserEventFileMenuCopy:
             archive_show_file_menu(browser, false, false);
+            if(!selected) {
+                consumed = true;
+                break;
+            }
             if(!favorites) {
                 with_view_model(
                     browser->view,
@@ -291,6 +304,10 @@ bool archive_scene_browser_on_event(void* context, SceneManagerEvent event) {
             consumed = true;
             break;
         case ArchiveBrowserEventEnterDir:
+            if(!selected) {
+                consumed = true;
+                break;
+            }
             if(favorites) {
                 archive_switch_tab(browser, TAB_LEFT);
             }
@@ -320,6 +337,10 @@ bool archive_scene_browser_on_event(void* context, SceneManagerEvent event) {
             break;
         case ArchiveBrowserEventEnterFavMove:
             archive_show_file_menu(browser, false, false);
+            if(!selected) {
+                consumed = true;
+                break;
+            }
             furi_string_set(archive->fav_move_str, selected->path);
             archive_favorites_move_mode(archive->browser, true);
             consumed = true;

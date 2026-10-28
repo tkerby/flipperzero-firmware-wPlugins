@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1
+
+- Let Back out of the Read and Check Reader screens while they are still working, rather than only from the result. The firmware's Loading view consumes every key, Back included, so a read that was going nowhere had to be waited out to the end; its input callback is now replaced with one that releases Back. Leaving early is as safe as leaving a result screen - both scenes already undo in their `on_exit` everything they started, so the worker is stopped, the carrier dropped and both timers cancelled on the way out. On Check Reader the press lands at once, because its step only takes a snapshot of the detector; on Read it waits out the step in flight, and a failing protection check is a sweep of three bit rates, so a second or two can pass before the screen reacts
+
 ## 1.0
 
 - Initial release: read, identify and emulate Варта-М intercom keys, and build a complete working key from nothing but the number printed on the fob

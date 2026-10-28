@@ -20,6 +20,10 @@ void archive_scene_rename_on_enter(void* context) {
 
     TextInput* text_input = archive->text_input;
     ArchiveFile_t* current = archive_get_current_file(archive->browser);
+    if(!current) {
+        scene_manager_previous_scene(archive->scene_manager);
+        return;
+    }
     const bool is_file = current->type != ArchiveFileTypeFolder;
 
     FuriString* path_name = furi_string_alloc();
@@ -68,6 +72,10 @@ bool archive_scene_rename_on_event(void* context, SceneManagerEvent event) {
 
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == SCENE_RENAME_CUSTOM_EVENT) {
+            if(!archive_get_current_file(archive->browser)) {
+                scene_manager_previous_scene(archive->scene_manager);
+                return true;
+            }
             const char* path_src = archive_get_name(archive->browser);
 
             FuriString* path_dst;
@@ -111,5 +119,13 @@ bool archive_scene_rename_on_event(void* context, SceneManagerEvent event) {
 
 void archive_scene_rename_on_exit(void* context) {
     ArchiveApp* archive = context;
+    // text_input_reset forgets the validator context without freeing it.
+    if(text_input_get_validator_callback(archive->text_input) == validator_is_file_callback) {
+        void* validator_context = text_input_get_validator_callback_context(archive->text_input);
+        text_input_set_validator(archive->text_input, NULL, NULL);
+        if(validator_context) {
+            validator_is_file_free(validator_context);
+        }
+    }
     text_input_reset(archive->text_input);
 }

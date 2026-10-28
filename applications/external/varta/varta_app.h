@@ -166,6 +166,9 @@ typedef struct {
 } VartaApp;
 
 typedef enum {
+    // Abortable by contract: varta_app_loading_input_callback() lets Back out of this view, so a
+    // scene that shows it must undo in its on_exit everything it started, and must not show it
+    // across anything that cannot be abandoned half-done - a T5577 write, say.
     VartaAppViewLoading,
     VartaAppViewSubmenu,
     VartaAppViewTextInput,

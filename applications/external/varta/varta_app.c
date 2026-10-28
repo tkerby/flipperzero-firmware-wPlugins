@@ -14,6 +14,23 @@ static bool varta_app_back_event_callback(void* context) {
     return scene_manager_handle_back_event(app->scene_manager);
 }
 
+// loading.c's own input callback returns true for every key, Back included, so work in progress
+// could not be left until it reached a verdict. This one releases Back to the view dispatcher's
+// navigation callback - which navigates on a short or long press and drops the rest - and keeps
+// the other keys inert as the module does.
+//
+// Leaving early is as safe as leaving a result screen: both scenes that show this view already
+// undo in their on_exit everything they started. VartaAppViewLoading is where that contract is
+// written down.
+//
+// The wait differs by scene. Check Reader's step only snapshots the detector, so Back lands on
+// the next pass of the loop. Read blocks the loop inside a step, so the press waits that step
+// out - see VartaApp::step_timer for how long one is.
+static bool varta_app_loading_input_callback(InputEvent* event, void* context) {
+    UNUSED(context);
+    return event->key != InputKeyBack;
+}
+
 static void varta_app_step_timer_callback(void* context) {
     furi_assert(context);
     VartaApp* app = context;
@@ -146,6 +163,7 @@ static VartaApp* varta_app_alloc(void) {
     app->loading = loading_alloc();
     view_dispatcher_add_view(
         app->view_dispatcher, VartaAppViewLoading, loading_get_view(app->loading));
+    view_set_input_callback(loading_get_view(app->loading), varta_app_loading_input_callback);
 
     app->submenu = submenu_alloc();
     view_dispatcher_add_view(
