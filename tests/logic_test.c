@@ -307,6 +307,32 @@ static void test_clusters(void) {
     CHECK(rfs_period_clusters(few, 2, c, 4) == 0);
 }
 
+static void test_distance(void) {
+    // 433.92 MHz, +10 dBm TX, 0 dBi, n = 2.7, -85 dBm RX -> ~385 m
+    CASE("distance: -85 dBm at 433 MHz, urban is a few hundred metres");
+    RfsDistance d = rfs_estimate_distance(-85, 433920000u, 10, 0, 27, 6);
+    CHECK(d.valid);
+    CHECK(d.m > 300 && d.m < 480);
+    CHECK(d.lo < d.m && d.m < d.hi);
+
+    CASE("distance: the interval brackets the estimate by the margin");
+    // +-6 dB at n = 2.7 is a factor of ~1.7 either way
+    CHECK((float)d.hi / (float)d.m > 1.4f && (float)d.hi / (float)d.m < 2.0f);
+    CHECK((float)d.m / (float)d.lo > 1.4f && (float)d.m / (float)d.lo < 2.0f);
+
+    CASE("distance: 10 dB stronger is roughly a third of the distance");
+    RfsDistance close = rfs_estimate_distance(-75, 433920000u, 10, 0, 27, 6);
+    CHECK(close.m * 2 < d.m);
+
+    CASE("distance: a tighter environment shortens the estimate");
+    RfsDistance indoor = rfs_estimate_distance(-85, 433920000u, 10, 0, 35, 6);
+    CHECK(indoor.m < d.m);
+
+    CASE("distance: out-of-range input is not a claim");
+    CHECK(!rfs_estimate_distance(-85, 1000u, 10, 0, 27, 6).valid);
+    CHECK(!rfs_estimate_distance(-85, 433920000u, 10, 0, 99, 6).valid);
+}
+
 int main(void) {
     printf("rf_logic host tests\n\n");
     test_wf_col_at();
@@ -322,6 +348,7 @@ int main(void) {
     test_preamble();
     test_princeton();
     test_clusters();
+    test_distance();
 
     printf("\n%s (%d failure%s)\n", g_fail ? "FAILED" : "PASSED", g_fail, g_fail == 1 ? "" : "s");
     return g_fail ? 1 : 0;

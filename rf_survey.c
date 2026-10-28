@@ -75,6 +75,7 @@ static const uint8_t SETTLE_CHOICES[] = {1, 2, 3, 5, 8, 12, 20};
 #define CONF_ROW_HELP    18
 #define CONF_ROW_PROFILE 19
 #define CONF_ROW_SAVEPRF 20
+#define CONF_ROW_PATH    21
 #define PROFILE_N        4 // numbered slots: no text input on this device
 #ifdef RFS_LAB
 #define CONF_ROW_TXTEST  14
@@ -375,6 +376,7 @@ typedef struct {
     VariableItem* it_step; // "Step" -> force-synced when a band change would overflow MAX_BINS
     VariableItem* it_band; // "Band" -> re-selected after a profile load
     uint8_t profile_slot; // 0 = none, else 1..PROFILE_N
+    uint8_t path_n; // 0 open / 1 urban / 2 indoor / 3 dense -- feeds the distance estimate
     VariableItem* it_trigger; // "Trigger" -> text re-synced when Auto trig moves the floor
     VariableItem* it_settle; // "Settle" -> per-bin dwell time
 
@@ -762,6 +764,10 @@ static void radio_async_stop(void) {
     else
         furi_hal_subghz_stop_async_rx();
 }
+
+// path loss exponent x10: the single biggest source of error in any RSSI distance number, so
+// it is the user's choice rather than a hidden constant
+static const uint8_t PATH_N10[] = {20, 27, 35, 45};
 
 // CC1101 RSSI needs a few symbol periods to settle after a retune; below this the reading is
 // biased low and a weak carrier reads as noise. Rough but honest, and monotonic in bandwidth.
@@ -2468,11 +2474,20 @@ static void draw_cadence(Canvas* canvas, App* app) {
     canvas_draw_str(canvas, 2, 63, s);
 }
 
+// metres -> "385m" / "1.2km", short enough for a 128 px line
+static void fmt_dist(char* buf, size_t n, uint32_t m) {
+    if(m > 99999) m = 99999; // the model clamps here too; keeps the buffer arithmetic bounded
+    if(m < 1000)
+        snprintf(buf, n, "%lum", (unsigned long)m);
+    else
+        snprintf(buf, n, "%lu.%lukm", (unsigned long)(m / 1000), (unsigned long)((m / 100) % 10));
+}
+
 // Fox hunt: one frequency, one number, one bar, and the vibro. No statistics -- the question is
 // "am I getting warmer", and the answer has to be readable at arm's length while walking.
 static void draw_hunt(Canvas* canvas, App* app) {
     canvas_set_font(canvas, FontSecondary);
-    char s[32];
+    char s[48];
     uint32_t f = app->park_freq;
     snprintf(
         s,
@@ -2511,10 +2526,24 @@ static void draw_hunt(Canvas* canvas, App* app) {
     canvas_draw_frame(canvas, 2, 44, SCR_W - 4, 9);
     if(len > 0) canvas_draw_box(canvas, 3, 45, len, 7);
 
-    if(cur > app->trigger)
-        canvas_draw_str(canvas, 2, 62, "signal above trigger");
-    else
+    // Distance as a BAND, never a number: the interval is what +-6 dB of RSSI uncertainty does
+    // to the inverse of the path loss model. Anything narrower would be fake precision.
+    if(cur > app->trigger) {
+        uint16_t gain = 0;
+        UNUSED(gain);
+        RfsDistance d = rfs_estimate_distance(
+            cur, f, 10, 0, PATH_N10[app->path_n < COUNT_OF(PATH_N10) ? app->path_n : 1], 6);
+        if(d.valid) {
+            char p1[12], p2[12], p3[12];
+            fmt_dist(p1, sizeof(p1), d.m);
+            fmt_dist(p2, sizeof(p2), d.lo);
+            fmt_dist(p3, sizeof(p3), d.hi);
+            snprintf(s, sizeof(s), "~%s (%s-%s)", p1, p2, p3);
+            canvas_draw_str(canvas, 2, 62, s);
+        }
+    } else {
         canvas_draw_str(canvas, 2, 62, "below trigger");
+    }
 }
 
 static void spectrum_draw(Canvas* canvas, void* model) {
@@ -3575,6 +3604,15 @@ static void settle_cb(VariableItem* item) {
     variable_item_set_current_value_text(item, t);
 }
 
+static const char* const PATH_TXT[] = {"Open", "Urban", "Indoor", "Dense"};
+static void path_cb(VariableItem* item) {
+    App* app = variable_item_get_context(item);
+    uint8_t idx = variable_item_get_current_value_index(item);
+    if(idx >= COUNT_OF(PATH_TXT)) idx = 1;
+    app->path_n = idx;
+    variable_item_set_current_value_text(item, PATH_TXT[idx]);
+}
+
 static const char* const TRACE_TXT[] = {"Live", "Max hold", "Min hold"};
 static void trace_cb(VariableItem* item) {
     App* app = variable_item_get_context(item);
@@ -4024,6 +4062,9 @@ int32_t rf_survey_app(void* p) {
     variable_item_set_current_value_text(vi, app->profile_slot ? "1" : "off");
     vi = variable_item_list_add(app->conf, "Save prof.", 1, NULL, app);
     variable_item_set_current_value_text(vi, "OK");
+    vi = variable_item_list_add(app->conf, "Path loss", COUNT_OF(PATH_TXT), path_cb, app);
+    variable_item_set_current_value_index(vi, app->path_n);
+    variable_item_set_current_value_text(vi, PATH_TXT[app->path_n]);
 #ifdef RFS_LAB
     vi = variable_item_list_add(app->conf, "TX test", 1, NULL, app); // lab build only
     variable_item_set_current_value_text(vi, "OK");

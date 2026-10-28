@@ -6,14 +6,16 @@
 // ships can be compiled on a PC and hammered with adversarial input (tests/logic_test.c)
 // instead of being validated by reading it carefully and hoping.
 //
-// Rules for this file: no furi, no gui, no storage, no floating point. Static inline so the
-// firmware inlines it exactly as before and the host build gets the same behaviour.
+// Rules for this file: no furi, no gui, no storage. Float is allowed only where the physics
+// needs a logarithm (the distance model); everything else is integer so results are identical
+// on the device and on the host.
 
 #pragma once
 
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <math.h> // log10f/powf: only the distance model needs them
 
 // ------------------------------------------------------------------ sweep geometry
 
@@ -107,6 +109,53 @@ static inline void rfs_frame_estimate(
     if(!started || edges < 4) return;
     *frame_us = sum;
     *bits = (uint16_t)(edges / 2);
+}
+
+// ------------------------------------------------------------------ distance estimate
+
+typedef struct {
+    uint32_t m; // point estimate, metres
+    uint32_t lo; // with the RSSI uncertainty applied
+    uint32_t hi;
+    bool valid;
+} RfsDistance;
+
+// Log-distance path loss, inverted. Honest about its own error: the interval comes from the
+// RSSI uncertainty (CC1101 is roughly +-6 dB, and that alone is a factor of 1.7 at n=2.7),
+// so the answer is a band, never a number. It also cannot see antenna orientation, body
+// shadowing, or the difference between line of sight and two walls -- treat it as "near" or
+// "far", not as a measurement.
+//
+//   PL(d) = 20*log10(d) + 20*log10(f) - 147.55     (d in m, f in Hz)
+//   P_rx  = p_tx + gain - PL(d) - 10*(n/10)*log10(d)
+static inline RfsDistance rfs_estimate_distance(
+    int8_t rssi_dbm,
+    uint32_t freq_hz,
+    int8_t p_tx_dbm,
+    int8_t gain_db,
+    uint8_t n10, // path loss exponent x10: 20 free space, 27 urban, 35 indoor, 45 dense
+    uint8_t margin_db) {
+    RfsDistance r = {0, 0, 0, false};
+    if(freq_hz < 100000000u || freq_hz > 1000000000u || n10 < 15 || n10 > 60) return r;
+
+    float pl1m = 20.0f * log10f((float)freq_hz) - 147.55f; // path loss at 1 m
+    float budget = (float)p_tx_dbm + (float)gain_db - (float)rssi_dbm - pl1m;
+    float n = (float)n10 / 10.0f;
+    if(budget <= 0.0f) { // closer than 1 m: the model has nothing useful to say
+        r.valid = true;
+        r.m = 1;
+        r.lo = 1;
+        r.hi = 1;
+        return r;
+    }
+    r.m = (uint32_t)powf(10.0f, budget / (10.0f * n));
+    r.lo = (uint32_t)powf(10.0f, (budget - (float)margin_db) / (10.0f * n));
+    r.hi = (uint32_t)powf(10.0f, (budget + (float)margin_db) / (10.0f * n));
+    if(r.lo < 1) r.lo = 1;
+    if(r.hi > 99999u) r.hi = 99999u;
+    if(r.m > 99999u) r.m = 99999u;
+    r.valid = true;
+    return r;
 }
 
 // ------------------------------------------------------------------ period clustering
