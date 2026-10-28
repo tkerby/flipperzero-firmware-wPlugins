@@ -3774,6 +3774,7 @@ static void radio_cb(VariableItem* item) {
 
 static void conf_enter(void* ctx, uint32_t index) {
     App* app = ctx;
+    FURI_LOG_D(TAG, "conf_enter %lu", (unsigned long)index);
     // action rows act in place and stay on the config screen. Both are one-shots consumed by
     // the sweep worker: the radio has exactly one owner, and that owner is not this thread.
     if(index == CONF_ROW_TRIGGER) {
@@ -3805,6 +3806,7 @@ static void conf_enter(void* ctx, uint32_t index) {
         return;
     }
     if(index == CONF_ROW_HELP) {
+        FURI_LOG_I(TAG, "config: open help");
         view_dispatcher_switch_to_view(app->vd, VIEW_HELP);
         return;
     }

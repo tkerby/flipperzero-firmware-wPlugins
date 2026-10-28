@@ -751,6 +751,19 @@ void view_dispatcher_run(ViewDispatcher* vd) {
         }
         sim_press(v, InputKeyRight, InputTypeLong); // long = next page
     }
+    // Exercise every config row and print index -> label -> action. The row indices are
+    // compile-time constants that must match the construction order; getting them wrong makes
+    // "Help" start a scan (and, in the lab build, fire the transmitter). This walk makes any
+    // future drift visible in one run instead of in the field.
+    {
+        View* cv = find_view(vd, 2); // VIEW_CONF == 1, but the list view is registered as 1
+        (void)cv;
+    }
+    {
+        extern void sim_walk_config(void);
+        sim_walk_config();
+    }
+
     // the rest of the app's screens: config list, range editor, capture, help
     static const struct {
         uint32_t id;
@@ -779,9 +792,13 @@ struct VariableItem {
     VariableItemList* list;
     int idx;
 };
+static VariableItemList* g_vil;
+
 struct VariableItemList {
     int n;
     int selected;
+    void (*enter)(void*, uint32_t);
+    void* enter_ctx;
     char label[24][24];
     char value[24][24];
     View* view;
@@ -812,6 +829,7 @@ static void vil_draw(Canvas* c, void* ctx) {
 
 VariableItemList* variable_item_list_alloc(void) {
     VariableItemList* l = sim_alloc(sizeof(VariableItemList));
+    g_vil = l;
     if(!l) return NULL;
     memset(l, 0, sizeof(*l));
     l->view = view_alloc();
@@ -842,9 +860,8 @@ VariableItem* variable_item_list_add(
     return it;
 }
 void variable_item_list_set_enter_callback(VariableItemList* l, void (*cb)(void*, uint32_t), void* c) {
-    (void)l;
-    (void)cb;
-    (void)c;
+    l->enter = cb;
+    l->enter_ctx = c;
 }
 void variable_item_set_current_value_index(VariableItem* i, uint8_t idx) {
     (void)i;
@@ -861,6 +878,16 @@ uint8_t variable_item_get_current_value_index(VariableItem* i) {
 void* variable_item_get_context(VariableItem* i) {
     (void)i;
     return NULL;
+}
+
+void sim_walk_config(void) {
+    if(!g_vil || !g_vil->enter) return;
+    fprintf(stderr, "[i] --- config rows ---\n");
+    for(int i = 0; i < g_vil->n; i++) {
+        fprintf(stderr, "[i] %2d  %-14s -> ", i, g_vil->label[i]);
+        fflush(stderr);
+        g_vil->enter(g_vil->enter_ctx, (uint32_t)i);
+    }
 }
 
 const NotificationSequence sequence_set_vibro_on = {1};
@@ -939,8 +966,8 @@ float furi_hal_subghz_get_rssi(void) {
         long d = (long)g_freq - (long)peaks[i].f;
         if(d < 0) d = -d;
         if(d < peaks[i].width) {
-            int edge = (int)(d * 12 / peaks[i].width); // roll off toward the skirts
-            float v = (float)(peaks[i].level + edge);
+            int edge = (int)(d * 12 / peaks[i].width); // attenuation toward the skirts
+            float v = (float)(peaks[i].level - edge);
             if(v > r) r = v;
         }
     }
