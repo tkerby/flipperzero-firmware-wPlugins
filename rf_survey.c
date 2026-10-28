@@ -2674,16 +2674,15 @@ static void spectrum_draw(Canvas* canvas, void* model) {
         if(app->page == 3) elements_button_center(canvas, "Capture"); // OK on the cursor row
     }
 
-    // recording indicator (long-OK toggles): filled dot + row count, top-right.
+    // Recording indicator: a dot in the extreme corner, no text. It used to draw a dot AND a
+    // row count at y=8, which collided with every page's right-hand readout (pk-99, n=99,
+    // AM10 FM10, haptic off) -- the screenshots made that obvious and nothing else did.
+    // The row count still goes to the log; the dot is a status light.
     // XOR on the full-bleed pages (2/3) so it reads over lit/dark cells.
     if(app->recording) {
         bool fb = (app->page == 2 || app->page == 3 || app->page == 5);
         if(fb) canvas_set_color(canvas, ColorXOR);
-        char s[16];
-        snprintf(s, sizeof(s), "REC %lu", (unsigned long)app->rec_rows);
-        int w = (int)canvas_string_width(canvas, s);
-        canvas_draw_disc(canvas, SCR_W - w - 7, 4, 2);
-        canvas_draw_str(canvas, SCR_W - w - 1, 8, s);
+        canvas_draw_disc(canvas, SCR_W - 3, 3, 2);
         if(fb) canvas_set_color(canvas, ColorBlack);
     }
 }
