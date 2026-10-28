@@ -308,6 +308,7 @@ typedef struct {
         uint32_t lo, hi;
     } bm[8];
     uint8_t bm_n;
+    volatile uint8_t batt_pct; // cached: the worker polls it, the draw callback must not
     volatile bool frozen; // traces hold: the worker stops measuring and leaves the buffers alone
     uint8_t trace; // 0 Live / 1 Max hold / 2 Min hold -- what the Bars page draws
     volatile bool wf_export; // one-shot: worker writes the waterfall as a PGM between sweeps
@@ -420,6 +421,8 @@ typedef struct {
     FuriThread* carrier_worker;
     VariableItem* it_brute;
 #endif
+    volatile bool cap_listen; // listen mode: decode continuously, write no file
+    volatile uint16_t cap_packets; // decoded packets this session
     char cap_decode[40]; // decoded protocol string from the firmware's decoder chain
     volatile bool cap_decoded;
     uint16_t cap_pw[PW_N]; // |duration| histogram of this capture (signature line)
@@ -1612,8 +1615,11 @@ static int32_t sweep_worker(void* ctx) {
             app->wf_export = false;
             wf_export_pgm(app, storage);
         }
-        if((app->sweeps & 0x0F) == 0)
+        if((app->sweeps & 0x0F) == 0) {
+            // the draw callback must not hit the fuel gauge every 150 ms, so the worker caches it
+            app->batt_pct = furi_hal_power_get_pct();
             FURI_LOG_D(TAG, "worker: sweep %lu", (unsigned long)app->sweeps);
+        }
 
         // one-shot: derive the Trigger from this sweep's own noise floor. The 25th percentile
         // bounds the floor without being dragged up by the handful of strong bins, and +8 dB
@@ -2594,10 +2600,17 @@ static void spectrum_draw(Canvas* canvas, void* model) {
         canvas_draw_str(canvas, 2, 8, hdr);
         // "!" = the configured dwell is too short for this filter width, so weak carriers are
         // being under-read. Same slot as the cadence "~": a degraded-measurement marker.
+        // one slot, by priority: a held trace explains the screen, a flat battery explains
+        // everything else, and an under-settled sweep explains the numbers
+        char mark[8] = "";
         if(app->frozen)
-            canvas_draw_str_aligned(canvas, SCR_W - 1, 8, AlignRight, AlignBottom, "HOLD");
+            snprintf(mark, sizeof(mark), "HOLD");
+        else if(app->batt_pct && app->batt_pct < 15)
+            snprintf(mark, sizeof(mark), "%u%%", (unsigned)app->batt_pct);
         else if(app->settle_ms < settle_min_ms(app->f_step))
-            canvas_draw_str_aligned(canvas, SCR_W - 1, 8, AlignRight, AlignBottom, "!");
+            snprintf(mark, sizeof(mark), "!");
+        if(mark[0])
+            canvas_draw_str_aligned(canvas, SCR_W - 1, 8, AlignRight, AlignBottom, mark);
         // info line: cursor readout on bars, global peak on connected
         if(app->page == 0) {
             int8_t cur, pk;
@@ -3011,6 +3024,7 @@ static void cap_decode_cb(SubGhzReceiver* rx, SubGhzProtocolDecoderBase* base, v
             app->cap_decode[n] = (c[n] == '\n' || c[n] == '\r') ? ' ' : c[n];
         app->cap_decode[n] = 0;
         app->cap_decoded = true;
+        if(app->cap_packets < 0xFFFF) app->cap_packets++;
     }
     furi_string_free(str);
     subghz_receiver_reset(rx); // one frame per burst; the next frame re-syncs
@@ -3101,11 +3115,15 @@ static int32_t capture_worker(void* ctx) {
         dt.second,
         (unsigned long)(furi_get_tick() % 1000)); // tick suffix: never overwrite a prior .sub
 
-    FlipperFormat* ff = flipper_format_file_alloc(storage);
+    // Listen mode decodes without touching the card: some sensors (weather, TPMS) transmit once
+    // a minute, so the useful interaction is "leave it listening", not "catch a burst by hand".
+    const bool to_file = !app->cap_listen;
+    FlipperFormat* ff = to_file ? flipper_format_file_alloc(storage) : NULL;
     int32_t* buf = malloc(sizeof(int32_t) * 512);
     app->cap_stream = furi_stream_buffer_alloc(sizeof(int32_t) * CAP_STREAM, sizeof(int32_t));
-    bool ok = buf && app->cap_stream && flipper_format_file_open_always(ff, path);
-    if(ok) {
+    bool ok = buf && app->cap_stream &&
+              (!to_file || flipper_format_file_open_always(ff, path));
+    if(ok && to_file) {
         uint32_t ver = 1, freq = app->cap_freq;
         ok = flipper_format_write_header_cstr(ff, "Flipper SubGhz RAW File", ver) &&
              flipper_format_write_uint32(ff, "Frequency", &freq, 1) &&
@@ -3123,10 +3141,16 @@ static int32_t capture_worker(void* ctx) {
         app->capturing = false;
     } else {
         FURI_LOG_I(
-            TAG, "cap: recording %lu Hz %s -> %s", (unsigned long)app->cap_freq, ps->name, path);
+            TAG,
+            "cap: %s %lu Hz %s -> %s",
+            to_file ? "recording" : "listening",
+            (unsigned long)app->cap_freq,
+            ps->name,
+            to_file ? path : "-");
         app->cap_run_active = false; // never carry a run over from a previous capture
         app->cap_decode[0] = 0;
         app->cap_decoded = false;
+        app->cap_packets = 0;
         app->cap_edge_n = 0;
 #ifdef RFS_LAB
         app->rep_n = 0;
@@ -3193,7 +3217,8 @@ static int32_t capture_worker(void* ctx) {
                         buf[ind++] = pre[(uint16_t)((pre_i + CAP_PRERUN - pre_n + k) % CAP_PRERUN)];
                         app->cap_samples++;
                         if(ind == 512) {
-                            if(!(werr = !flipper_format_write_int32(ff, "RAW_Data", buf, 512)))
+                            if(to_file &&
+                               !(werr = !flipper_format_write_int32(ff, "RAW_Data", buf, 512)))
                                 break;
                             ind = 0;
                         }
@@ -3212,7 +3237,7 @@ static int32_t capture_worker(void* ctx) {
 #endif
                 if(dec) subghz_receiver_decode(dec, d > 0, m);
                 if(ind == 512) {
-                    werr = !flipper_format_write_int32(ff, "RAW_Data", buf, 512);
+                    if(to_file) werr = !flipper_format_write_int32(ff, "RAW_Data", buf, 512);
                     ind = 0;
                 }
             }
@@ -3238,15 +3263,15 @@ static int32_t capture_worker(void* ctx) {
             if(app->cap_pw[b] < 0xFFFF) app->cap_pw[b]++;
             app->cap_pw_n++;
             if(ind == 512) { // keep draining the tail instead of dropping it at 512
-                flipper_format_write_int32(ff, "RAW_Data", buf, 512);
+                if(to_file) flipper_format_write_int32(ff, "RAW_Data", buf, 512);
                 ind = 0;
             }
         }
-        if(ind > 0) flipper_format_write_int32(ff, "RAW_Data", buf, (uint16_t)ind);
+        if(ind > 0 && to_file) flipper_format_write_int32(ff, "RAW_Data", buf, (uint16_t)ind);
         if(pre) free(pre);
         radio_teardown();
         // analysis sidecar: computed from the same edge buffer the displays use
-        {
+        if(to_file) {
             uint32_t abase, aframe;
             uint16_t abits;
             rfs_frame_estimate(app->cap_edge, app->cap_edge_n, &abase, &aframe, &abits);
@@ -3359,7 +3384,8 @@ static void capture_draw(Canvas* canvas, void* model) {
     const SurveyPreset* ps = &PRESETS[app->cap_preset < PRESET_N ? app->cap_preset : 0];
 
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, 2, 9, "Capture .sub");
+    canvas_draw_str(
+        canvas, 2, 9, (app->capturing && app->cap_listen) ? "Listening" : "Capture .sub");
     canvas_draw_str_aligned(canvas, 126, 9, AlignRight, AlignBottom, ps->name); // preset, right
 
     canvas_draw_box(canvas, 2, 12, 124, 22);
@@ -3381,7 +3407,12 @@ static void capture_draw(Canvas* canvas, void* model) {
     canvas_set_font(canvas, FontSecondary);
     char line[40];
     if(app->capturing) {
-        if(app->cap_gate && app->cap_paused)
+        if(app->cap_listen) {
+            if(app->cap_decoded)
+                snprintf(line, sizeof(line), "%s", app->cap_decode);
+            else
+                snprintf(line, sizeof(line), "listening... %u pkts", (unsigned)app->cap_packets);
+        } else if(app->cap_gate && app->cap_paused)
             snprintf(line, sizeof(line), "signal below range (%d)", app->cap_rssi);
         else
             snprintf(
@@ -3398,8 +3429,13 @@ static void capture_draw(Canvas* canvas, void* model) {
         // idle after a capture: the envelope's duration signature (family, not a decoder)
         pw_signature(app, line, sizeof(line));
     } else {
-        // idle: Up/Dn tunes the frequency, long-OK toggles the filter
-        snprintf(line, sizeof(line), "Up/Dn tune  filter:%s", app->cap_gate ? "on" : "off");
+        // idle: Up/Dn tunes the frequency, long-OK switches file/listen, long-L/R the filter
+        snprintf(
+            line,
+            sizeof(line),
+            "%s  filt:%s",
+            app->cap_listen ? "LISTEN" : "FILE",
+            app->cap_gate ? "on" : "off");
     }
     canvas_draw_str(canvas, 2, 45, line);
 
@@ -3461,7 +3497,10 @@ static bool capture_input(InputEvent* e, void* ctx) {
         else
             capture_start(app);
     } else if(e->key == InputKeyOk && lp && !app->capturing) {
-        app->cap_gate = !app->cap_gate; // long-OK: RSSI filter on/off (off = record everything)
+        app->cap_listen = !app->cap_listen; // long-OK: write a .sub, or just listen and decode
+    } else if((e->key == InputKeyLeft || e->key == InputKeyRight) &&
+              e->type == InputTypeLong && !app->capturing) {
+        app->cap_gate = !app->cap_gate; // long-Left/Right: RSSI filter on/off
     } else if(!app->capturing && sp && (e->key == InputKeyLeft || e->key == InputKeyRight)) {
         // Left/Right: capture modulation (OOK vs 2FSK) -- the user must match the signal
         if(e->key == InputKeyRight)
