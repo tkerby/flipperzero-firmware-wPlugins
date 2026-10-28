@@ -872,7 +872,7 @@ static void run_script(View* v, const char* path) {
         if(sscanf(line, "%15s %63s", cmd, arg) < 1) continue;
         if(!strcmp(cmd, "scene")) {
             sim_scene(arg[0] ? arg : "scene");
-            if(v->draw) v->draw(&g_canvas, NULL);
+            if(v->draw) v->draw(&g_canvas, v->ctx);
         } else if(!strcmp(cmd, "key")) {
             script_key(v, arg);
         } else if(!strcmp(cmd, "wait")) {
@@ -914,13 +914,13 @@ void view_dispatcher_run(ViewDispatcher* vd) {
         char name[24];
         snprintf(name, sizeof(name), "page%d", page);
         sim_scene(name);
-        v->draw(&g_canvas, NULL);
+        v->draw(&g_canvas, v->ctx);
 
         if(page == 5) { // cadence: park, collect, draw that state as well
             sim_press(v, InputKeyOk, InputTypeShort);
             for(int i = 0; i < 16; i++) usleep(50000);
             sim_scene("page5_parked");
-            v->draw(&g_canvas, NULL);
+            v->draw(&g_canvas, v->ctx);
             sim_press(v, InputKeyOk, InputTypeShort);
         }
         sim_press(v, InputKeyRight, InputTypeLong); // long = next page

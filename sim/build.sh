@@ -19,6 +19,6 @@ CFLAGS="-std=c11 -O1 -g -DSIM_ENTRY=$ENTRY -ffunction-sections -fdata-sections -
 # The app is compiled on its own with the allocation override, so its malloc/free go through the
 # simulator's budgeted heap and the OOM numbers mean something.
 cc $CFLAGS -include sim/alloc_override.h -c rf_survey.c -o sim/out/rf_survey.o
-cc $CFLAGS sim/run.c sim/shim.c sim/out/rf_survey.o $SRCS \
+cc $CFLAGS sim/run.c sim/shim.c sim/gui.c sim/demo_menu.c sim/out/rf_survey.o $SRCS \
    -o sim/out/rfsim -lm -lpthread -Wl,-dead_strip
 echo "built sim/out/rfsim"

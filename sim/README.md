@@ -45,10 +45,20 @@ What this does and does not cover:
   notification and the sub-GHz device abstraction.
 - **Needs more shim headers**: apps using `furi_hal.h`, `input/input.h`,
   `gui/scene_manager.h`, `dialogs/dialogs.h`, the sub-GHz block library.
-- **Needs the firmware's GUI library compiled in**: apps that draw through stock
-  widgets (Menu, Popup, Widget, Dialog, TextInput). Those render themselves inside the
-  firmware; reimplementing them here would make the simulator lie the moment it drifted.
+- **Stock GUI modules are ported** (`sim/gui.c`): Menu, Popup, Widget and the scene
+  manager. The menu's geometry is copied from the firmware source -- three rows at
+  baselines 14/36/58, labels at x=22, framed middle row at y=21 -- so it renders like the
+  device. What is NOT reproduced is icon artwork (it lives in a generated asset blob), so
+  the icon slot stays empty.
+- **Still missing**: DialogEx, TextInput, VariableItemList's real widget, the sub-GHz
+  protocol block library (`lib/subghz/blocks/*`), `lib/flipper_application`.
 - **Never**: the physical layer. NFC, LF, IR, BLE and the CC1101's actual RF behaviour
   are stubs, and a passing run says nothing about them.
+
+`sim/demo_menu.c` is a five-line app that exists to prove the ported modules work:
+
+```sh
+SIM_ENTRY=demo_menu_app SIM_SCRIPT=/tmp/demo.script ./sim/build.sh && ./sim/out/rfsim out/
+```
 
 `SIM_VERBOSE=1` shows every log line the app emits.

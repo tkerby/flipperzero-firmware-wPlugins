@@ -21,6 +21,10 @@
 #define COUNT_OF(x) (sizeof(x) / sizeof((x)[0]))
 #define UNUSED(x) ((void)(x))
 
+// ------------------------------------------------------------------ simulator heap
+void* sim_alloc(size_t n);
+void sim_free(void* p);
+
 // ------------------------------------------------------------------ logging
 #define FURI_LOG_E(tag, ...) sim_log('E', (tag), __VA_ARGS__)
 #define FURI_LOG_W(tag, ...) sim_log('W', (tag), __VA_ARGS__)
@@ -152,6 +156,94 @@ size_t canvas_string_width(Canvas* c, const char* s);
 void elements_button_left(Canvas* c, const char* s);
 void elements_button_center(Canvas* c, const char* s);
 void elements_button_right(Canvas* c, const char* s);
+// ------------------------------------------------------------------ stock GUI modules
+typedef struct {
+    uint8_t width;
+    uint8_t height;
+    const uint8_t* data;
+} Icon;
+
+typedef struct Menu Menu;
+typedef struct Popup Popup;
+typedef struct Widget Widget;
+typedef void (*MenuItemCallback)(void* context, uint32_t index);
+
+Menu* menu_alloc(void);
+void menu_free(Menu* m);
+View* menu_get_view(Menu* m);
+void menu_reset(Menu* m);
+void menu_add_item(Menu* m, const char* label, const Icon* icon, uint32_t index, MenuItemCallback cb, void* ctx);
+void menu_set_selected_item(Menu* m, uint32_t index);
+uint32_t menu_get_selected_item(Menu* m);
+void menu_set_header(Menu* m, const char* header);
+const char* menu_get_header(Menu* m);
+
+Popup* popup_alloc(void);
+void popup_free(Popup* p);
+View* popup_get_view(Popup* p);
+void popup_reset(Popup* p);
+void popup_set_header(Popup* p, const char* text, uint8_t x, uint8_t y, Align ha, Align va);
+void popup_set_text(Popup* p, const char* text, uint8_t x, uint8_t y, Align ha, Align va);
+void popup_set_icon(Popup* p, uint8_t x, uint8_t y, const Icon* icon);
+void popup_set_timeout(Popup* p, uint32_t timeout);
+void popup_enable_timeout(Popup* p);
+void popup_set_callback(Popup* p, void (*cb)(void*));
+void popup_set_context(Popup* p, void* ctx);
+
+Widget* widget_alloc(void);
+void widget_free(Widget* w);
+View* widget_get_view(Widget* w);
+void widget_reset(Widget* w);
+void widget_add_string_element(Widget* w, uint8_t x, uint8_t y, Align ha, Align va, Font font, const char* text);
+void widget_add_text_box_element(Widget* w, uint8_t x, uint8_t y, uint8_t width, uint8_t height, Align ha, Align va, const char* text, bool inverted);
+void widget_add_button_element(Widget* w, InputKey key, const char* text, void* cb, void* ctx);
+void widget_add_icon_element(Widget* w, uint8_t x, uint8_t y, const Icon* icon);
+void widget_add_frame_element(Widget* w, uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t radius);
+void widget_add_xbm_animation(Widget* w, uint8_t x, uint8_t y, void* animation);
+
+// ---- scene manager
+typedef struct SceneManager SceneManager;
+typedef enum {
+    SceneManagerEventTypeCustom = 0,
+    SceneManagerEventTypeBack = 1,
+    SceneManagerEventTypeTick = 2,
+} SceneManagerEventType;
+typedef struct {
+    SceneManagerEventType type;
+    uint32_t event;
+} SceneManagerEvent;
+typedef void (*AppSceneOnEnterCallback)(void* context);
+typedef bool (*AppSceneOnEventCallback)(void* context, SceneManagerEvent event);
+typedef void (*AppSceneOnExitCallback)(void* context);
+typedef struct {
+    const AppSceneOnEnterCallback on_enter;
+    const AppSceneOnEventCallback on_event;
+    const AppSceneOnExitCallback on_exit;
+    const uint32_t scene_state;
+} AppScene;
+typedef struct {
+    const uint8_t scenes_count;
+    const AppScene* scenes;
+} SceneManagerHandlers;
+
+SceneManager* scene_manager_alloc(const SceneManagerHandlers* h, void* context);
+void scene_manager_free(SceneManager* sm);
+bool scene_manager_handle_back_event(SceneManager* sm);
+void scene_manager_handle_custom_event(SceneManager* sm, uint32_t event);
+void scene_manager_handle_tick_event(SceneManager* sm);
+void scene_manager_next_scene(SceneManager* sm, uint32_t id);
+void scene_manager_set_scene_state(SceneManager* sm, uint32_t id, uint32_t state);
+uint32_t scene_manager_get_scene_state(SceneManager* sm, uint32_t id);
+bool scene_manager_has_previous_scene(SceneManager* sm, uint32_t id);
+bool scene_manager_search_and_switch_to_previous_scene(SceneManager* sm, uint32_t id);
+bool scene_manager_search_and_switch_to_another_scene(SceneManager* sm, uint32_t id);
+void scene_manager_stop(SceneManager* sm);
+#define SCENE_STATE_DEFAULT 0
+
+void elements_frame(Canvas* c, uint8_t x, uint8_t y, uint8_t width, uint8_t height);
+void elements_scrollbar(Canvas* c, uint16_t pos, uint16_t total);
+void elements_scrollbar_pos(Canvas* c, uint8_t x, uint8_t y, uint8_t height, uint16_t pos, uint16_t total);
+
 
 typedef enum {
     ViewModelTypeLocking = 0,
