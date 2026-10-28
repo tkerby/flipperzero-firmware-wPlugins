@@ -835,6 +835,10 @@ VariableItemList* variable_item_list_alloc(void) {
     if(!l) return NULL;
     memset(l, 0, sizeof(*l));
     l->view = view_alloc();
+    if(!l->view) { // the real widget allocates its view internally and fails as a whole
+        sim_free(l);
+        return NULL;
+    }
     view_set_context(l->view, l);
     view_set_draw_callback(l->view, vil_draw);
     return l;

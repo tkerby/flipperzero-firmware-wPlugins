@@ -2300,6 +2300,11 @@ static void carrier_start(App* app) {
     app->carrier_abort = false;
     app->carrier_on = true;
     app->carrier_worker = furi_thread_alloc_ex("rfsurvey_carrier", 3072, carrier_worker, app);
+    if(!app->carrier_worker) {
+        FURI_LOG_E(TAG, "carrier: out of memory, not starting");
+        app->carrier_on = false;
+        return;
+    }
     furi_thread_start(app->carrier_worker);
 }
 
@@ -3667,6 +3672,11 @@ static void capture_start(App* app) {
     memset(app->cap_pw, 0, sizeof(app->cap_pw)); // signature is per-capture
     app->cap_pw_n = 0;
     app->cap_worker = furi_thread_alloc_ex("rfsurvey_cap", 3072, capture_worker, app);
+    if(!app->cap_worker) { // no thread -> nothing to join later; report and stay idle
+        FURI_LOG_E(TAG, "capture: out of memory, not starting");
+        app->capturing = false;
+        return;
+    }
     furi_thread_start(app->cap_worker);
 }
 
@@ -4076,8 +4086,20 @@ int32_t rf_survey_app(void* p) {
     app->vd = view_dispatcher_alloc();
     view_dispatcher_attach_to_gui(app->vd, app->gui, ViewDispatcherTypeFullscreen);
 
+    // Every allocation below is furi_check'd by the firmware, so NULL means an assert. Fail
+    // loudly and leave instead of dereferencing it. (The leak on this path is deliberate: the
+    // alternative is a crash on a device with no debugger.)
+#define ALLOC_OR_BAIL(p)                                     \
+    do {                                                     \
+        if(!(p)) {                                           \
+            FURI_LOG_E(TAG, "out of memory: " #p);           \
+            return -1;                                       \
+        }                                                    \
+    } while(0)
+
     // spectrum view (custom): Back returns to config
     app->view = view_alloc();
+    ALLOC_OR_BAIL(app->view);
     view_allocate_model(app->view, ViewModelTypeLockFree, sizeof(void*));
     view_set_context(app->view, app);
     view_set_draw_callback(app->view, spectrum_draw);
@@ -4090,6 +4112,7 @@ int32_t rf_survey_app(void* p) {
     // config view (VariableItemList): pick a band preset (full spectrum / full band /
     // known allocation) -> fills range; also Range readout, Modulation preset and Step. OK scans.
     app->conf = variable_item_list_alloc();
+    ALLOC_OR_BAIL(app->conf);
     // PAGE 1 -- what the sweep measures, in the order you would change it while sweeping.
     bool band_exact = false;
     uint16_t bi = band_index(app->f_start, app->f_end, &band_exact);
@@ -4156,6 +4179,7 @@ int32_t rf_survey_app(void* p) {
     // PAGE 2 -- actions and exports. Nothing here changes what the sweep measures, so it is a
     // separate page rather than rows 11..18 of the same list.
     app->conf2 = variable_item_list_alloc();
+    ALLOC_OR_BAIL(app->conf2);
     vi = variable_item_list_add(app->conf2, "Haptic", 2, haptic_cb, app);
     variable_item_set_current_value_index(vi, app->haptic ? 1 : 0);
     variable_item_set_current_value_text(vi, app->haptic ? "On" : "Off");
@@ -4194,6 +4218,7 @@ int32_t rf_survey_app(void* p) {
 
     // custom range editor view (Back returns to config)
     app->range_view = view_alloc();
+    ALLOC_OR_BAIL(app->range_view);
     view_allocate_model(app->range_view, ViewModelTypeLockFree, sizeof(void*));
     view_set_context(app->range_view, app);
     view_set_draw_callback(app->range_view, range_draw);
@@ -4203,6 +4228,7 @@ int32_t rf_survey_app(void* p) {
 
     // .sub capture view (Back is handled in its input callback: stop + restart the survey)
     app->cap_view = view_alloc();
+    ALLOC_OR_BAIL(app->cap_view);
     view_allocate_model(app->cap_view, ViewModelTypeLockFree, sizeof(void*));
     view_set_context(app->cap_view, app);
     view_set_draw_callback(app->cap_view, capture_draw);
@@ -4210,6 +4236,7 @@ int32_t rf_survey_app(void* p) {
     view_dispatcher_add_view(app->vd, VIEW_CAP, app->cap_view);
 
     app->help_view = view_alloc();
+    ALLOC_OR_BAIL(app->help_view);
     view_allocate_model(app->help_view, ViewModelTypeLockFree, sizeof(void*));
     view_set_context(app->help_view, app);
     view_set_draw_callback(app->help_view, help_draw);
