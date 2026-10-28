@@ -1,0 +1,20 @@
+#!/bin/sh
+# Build the UI simulator. Needs the firmware source for u8g2 and its fonts.
+set -eu
+FW=${FLIPPER_FW:-$HOME/Repos/flipper/flipperzero-firmware}
+[ -d "$FW/lib/u8g2" ] || { echo "set FLIPPER_FW to the firmware checkout" >&2; exit 1; }
+cd "$(dirname "$0")/.."
+mkdir -p sim/out
+
+# u8g2_glue.c pulls in furi_hal (panel driver); the sim renders into its own framebuffer
+SRCS=""
+for f in "$FW"/lib/u8g2/*.c; do
+    case "$f" in *u8g2_glue.c) continue ;; esac
+    SRCS="$SRCS $f"
+done
+
+cc -std=c11 -O1 -g -ffunction-sections -fdata-sections \
+   -I sim/include -I . -I "$FW/lib/u8g2" \
+   sim/run.c sim/shim.c rf_survey.c $SRCS \
+   -o sim/out/rfsim -lm -lpthread -Wl,-dead_strip
+echo "built sim/out/rfsim"

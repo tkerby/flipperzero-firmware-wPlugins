@@ -66,22 +66,25 @@ static const uint8_t SETTLE_CHOICES[] = {1, 2, 3, 5, 8, 12, 20};
 #define TRIG_MIN -100
 #define TRIG_MAX (-45)
 // config rows with an action instead of a value (see conf_enter)
+// Row indices, in the exact order the rows are constructed. These were off by four from
+// Help onwards for a while, which made OK on "Help" and "Path loss" start a scan and, in the
+// lab build, made "Help" fire the transmitter. Keep them adjacent to the construction site.
 #define CONF_ROW_TRIGGER 4
 #define CONF_ROW_CLEARPK 9
 #define CONF_ROW_WFSAVE  10
 #define CONF_ROW_TRACE   11
 #define CONF_ROW_BM      12
 #define CONF_ROW_SAVEBM  13
-#define CONF_ROW_HELP    18
-#define CONF_ROW_PROFILE 19
-#define CONF_ROW_SAVEPRF 20
-#define CONF_ROW_PATH    21
+#define CONF_ROW_HELP    14
+#define CONF_ROW_PROFILE 15
+#define CONF_ROW_SAVEPRF 16
+#define CONF_ROW_PATH    17
 #define PROFILE_N        4 // numbered slots: no text input on this device
 #ifdef RFS_LAB
-#define CONF_ROW_TXTEST  14
-#define CONF_ROW_REPLAY  15
-#define CONF_ROW_TXFRAME 16
-#define CONF_ROW_BRUTE   17
+#define CONF_ROW_TXTEST  18
+#define CONF_ROW_REPLAY  19
+#define CONF_ROW_TXFRAME 20
+#define CONF_ROW_BRUTE   21
 #define BRUTE_PAGE       32 // codes per press: ~3 s of airtime, never an open-ended loop
 #define REP_MAX_EDGES   2048 // ~8 KB of the last capture, kept for replay
 #endif
@@ -2399,10 +2402,16 @@ static void draw_cadence(Canvas* canvas, App* app) {
         (unsigned long)((f / 1000) % 1000),
         PRESETS[p].name);
     canvas_draw_str(canvas, 2, 8, s);
+    // The modulation contrast lives in the header: the three body lines were 8 px apart in a
+    // 9 px font and visibly collided (the simulator caught it; the device would show the same).
+    if(app->park_ab_done) {
+        snprintf(s, sizeof(s), "AM%d FM%d", app->park_ab[0], app->park_ab[1]);
+        canvas_draw_str_aligned(canvas, SCR_W - 1, 8, AlignRight, AlignBottom, s);
+    }
     // "~" = the numbers on this page are degraded: an observation hole happened in the last
     // 5 s, so some bursts were missed and their intervals were discarded
     if(app->park.gap_t && (furi_get_tick() - app->park.gap_t) < 5000)
-        canvas_draw_str_aligned(canvas, SCR_W - 1, 8, AlignRight, AlignBottom, "~");
+        canvas_draw_str_aligned(canvas, SCR_W - 1, 18, AlignRight, AlignBottom, "~");
 
     // envelope strip: last PARK_N samples, one pixel column each, filled to the baseline
     int cnt = app->park_count;
@@ -2419,7 +2428,7 @@ static void draw_cadence(Canvas* canvas, App* app) {
         hi = -70;
     }
     if(hi - lo < 20) hi = lo + 20;
-    const int y0 = 12, y1 = 38;
+    const int y0 = 12, y1 = 36;
     for(int i = 0; i < cnt; i++) {
         int idx = (app->park_head + PARK_N - cnt + i) % PARK_N;
         int v = app->park_env[idx];
@@ -2455,29 +2464,29 @@ static void draw_cadence(Canvas* canvas, App* app) {
     // one snapshot: the worker can zero the denominator between the test and the divide
     uint32_t nsamp = app->park.n_samples;
     uint32_t duty = nsamp ? (app->park.n_above * 100u) / nsamp : 0;
-    if(mean_ms >= 1000) {
-        unsigned t = mean_ms / 100; // tenths of a second
-        snprintf(s, sizeof(s), "P %u.%us  duty %lu%%", t / 10, t % 10, (unsigned long)duty);
-    } else {
-        snprintf(s, sizeof(s), "P %lums  duty %lu%%", (unsigned long)mean_ms, (unsigned long)duty);
-    }
-    canvas_draw_str(canvas, 2, 56, s);
-
     unsigned last = app->park.dur_n ?
                         app->park.dur[(app->park.dur_i + PARK_RING - 1) % PARK_RING] :
                         0;
-    if(app->park_ab_done)
+    unsigned rep = app->park.rep_last ? app->park.rep_last : app->park.rep;
+    if(mean_ms >= 1000)
         snprintf(
             s,
             sizeof(s),
-            "AM%d FM%d  x%u %ums",
-            app->park_ab[0],
-            app->park_ab[1],
-            (unsigned)(app->park.rep_last ? app->park.rep_last : app->park.rep),
-            (unsigned)last);
+            "P%u.%us d%lu%% x%u",
+            (unsigned)(mean_ms / 1000),
+            (unsigned)((mean_ms / 100) % 10),
+            (unsigned long)duty,
+            rep);
     else
-        snprintf(s, sizeof(s), "AM-- FM--  x%u %ums", (unsigned)app->park.rep, (unsigned)last);
-    canvas_draw_str(canvas, 2, 63, s);
+        snprintf(
+            s,
+            sizeof(s),
+            "P%lums d%lu%% x%u %ums",
+            (unsigned long)mean_ms,
+            (unsigned long)duty,
+            rep,
+            (unsigned)last);
+    canvas_draw_str(canvas, 2, 58, s);
 }
 
 // metres -> "385m" / "1.2km", short enough for a 128 px line
@@ -2575,8 +2584,11 @@ static void spectrum_draw(Canvas* canvas, void* model) {
         draw_history(canvas, app);
     } else {
         // header: range + likely band name (+ window seconds on the connected page)
-        uint32_t fc = app->f_start / 2 + app->f_end / 2;
-        const FreqBand* hb = band_lookup(fc);
+        // The band tag is looked up at the CENTRE of the range, which is a lie for a wide
+        // sweep: 779-927 MHz is not "LTE800 UL", it just contains it. Only name the band when
+        // the whole range actually fits inside one.
+        const FreqBand* hb = band_lookup(app->f_start);
+        if(hb != band_lookup(app->f_end)) hb = NULL;
         char hdr[48];
         if(app->page == 1) {
             char w[8];
@@ -2637,10 +2649,16 @@ static void spectrum_draw(Canvas* canvas, void* model) {
 
     // native pill hints (the waterfall and cadence pages draw their own layout instead)
     if(app->page != 2 && app->page != 5 && app->page != 6 && app->page != 7) {
-        elements_button_left(canvas, "Page");
-        if(app->page == 0) elements_button_center(canvas, "Zoom");
+        // the left pill was the word "Page" on every screen, which told you the key existed but
+        // not where you were. A position readout answers the question you actually have.
+        char pg[8];
+        snprintf(pg, sizeof(pg), "%u/%u", (unsigned)(app->page + 1), (unsigned)PAGE_N);
+        elements_button_left(canvas, pg);
+        if(app->page == 0) {
+            elements_button_center(canvas, "Zoom");
+            elements_button_right(canvas, "Page"); // long L/R here: short moves the cursor
+        }
         if(app->page == 3) elements_button_center(canvas, "Capture"); // OK on the cursor row
-        // (zoom-out is Back -- no right pill, Right flips pages like elsewhere)
     }
 
     // recording indicator (long-OK toggles): filled dot + row count, top-right.
@@ -2672,19 +2690,27 @@ static bool spectrum_input(InputEvent* event, void* context) {
         }
         return false; // -> config
     }
+    // On the bars page short Left/Right is the cursor and LONG is the page flip. It used to fall
+    // through to a page change at the edges, so leaving the page from the middle took 16 presses
+    // and the "Page" hint was a lie. Now the mapping is the same shape everywhere: short acts on
+    // the page, long changes it.
     if(event->key == InputKeyLeft && (sp || lp)) {
-        if(sp && app->page == 0 && app->cursor > 0)
-            app->cursor--; // move cursor
-        else
-            app->page = (uint8_t)((app->page + PAGE_N - 1) % PAGE_N); // edge / long -> prev page
+        if(sp && app->page == 0) {
+            if(app->cursor > 0) app->cursor--;
+        } else {
+            app->page = (uint8_t)((app->page + PAGE_N - 1) % PAGE_N);
+        }
+        app->parked = (app->page == 5 || app->page == 6) ? app->parked : false;
         spec_redraw(app);
         return true;
     }
     if(event->key == InputKeyRight && (sp || lp)) {
-        if(sp && app->page == 0 && app->cursor < NBARS - 1)
-            app->cursor++;
-        else
-            app->page = (uint8_t)((app->page + 1) % PAGE_N); // edge / long -> next page
+        if(sp && app->page == 0) {
+            if(app->cursor < NBARS - 1) app->cursor++;
+        } else {
+            app->page = (uint8_t)((app->page + 1) % PAGE_N);
+        }
+        app->parked = (app->page == 5 || app->page == 6) ? app->parked : false;
         spec_redraw(app);
         return true;
     }
@@ -2828,6 +2854,9 @@ static void spec_exit(void* ctx) {
     // in the sweep loop). Touching hap_on/the motor from this GUI thread races the worker and can
     // latch the motor ON (worker turns it on between our hap_on read and write).
     app->spec_active = false;
+    // parking is a property of the cadence/hunt pages: leaving the spectrum entirely (Back to
+    // config) must stop it, or a later sweep display looks live while the worker is still parked
+    app->parked = false;
 }
 
 // ---- custom range editor (VIEW_RANGE) --------------------------------------
@@ -4002,6 +4031,10 @@ int32_t rf_survey_app(void* p) {
     // cadence defaults to the middle of the range so the page shows a real frequency before the
     // first park (the user re-targets it from the bars cursor / numeric selection anyway)
     app->park_freq = app->f_start + (uint32_t)(app->nbins / 2) * app->f_step;
+    // wf[] is a dBm ring and -128 is "no data". The app struct is zeroed, so without this the
+    // waterfall treats every untouched cell as 0 dBm -- i.e. lit. Invisible on a device that
+    // fills the ring within seconds; the simulator caught it immediately.
+    memset(app->wf, -128, sizeof(app->wf));
     for(uint16_t i = 0; i < app->nbins; i++) {
         app->rssi[i] = -128;
         app->peak[i] = -128;
@@ -4111,8 +4144,6 @@ int32_t rf_survey_app(void* p) {
     variable_item_set_current_value_text(vi, "OK");
     vi = variable_item_list_add(app->conf, "TX frame", 1, NULL, app);
     variable_item_set_current_value_text(vi, "OK");
-    app->it_brute = variable_item_list_add(app->conf, "Code page", 1, NULL, app);
-    variable_item_set_current_value_text(app->it_brute, "000000");
     app->it_brute = variable_item_list_add(app->conf, "Code page", 1, NULL, app);
     variable_item_set_current_value_text(app->it_brute, "000000");
 #endif

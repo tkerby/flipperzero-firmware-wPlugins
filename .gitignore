@@ -3,3 +3,5 @@ dist/
 build/
 *.elf
 .vscode/
+sim/out/*.pgm
+sim/out/rfsim
