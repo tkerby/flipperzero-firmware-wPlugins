@@ -366,6 +366,14 @@ static void test_boundaries(void) {
     CHECK(rfs_encode_princeton(0, 5000, e, 8) == 0);
     CHECK(rfs_encode_princeton(0, 50, e, 8) == 0); // buffer too small
 
+    CASE("bounds: a frame longer than 32 bits is clamped, not wrapped");
+    int32_t big[RFS_FRAME_EDGES];
+    for(int i = 0; i < RFS_FRAME_EDGES; i++) big[i] = (i & 1) ? -600000000 : 600000000;
+    uint32_t fb, ff;
+    uint16_t fbits;
+    rfs_frame_estimate(big, RFS_FRAME_EDGES, &fb, &ff, &fbits);
+    CHECK(ff == 0xFFFFFFFFu || ff == 0); // either "cannot report" outcome, never a small lie
+
     CASE("bounds: park machine survives an extreme trigger");
     RfsPark s2;
     rfs_park_clear(&s2);

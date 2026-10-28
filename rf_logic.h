@@ -52,6 +52,13 @@ static inline uint16_t rfs_wf_col_at(uint16_t head, uint16_t cols, uint16_t cnt,
     return (uint16_t)((head + cols + 1u - cnt + k) % cols);
 }
 
+// |duration| without the signed overflow of -INT32_MIN. Durations come from a merged capture
+// (clamped to 0x3FFFFFFF) so the magnitude is representable, but the helper is what makes that
+// a property of the code rather than of the caller's discipline.
+static inline uint32_t rfs_edge_mag(int32_t d) {
+    return (d < 0) ? (0u - (uint32_t)d) : (uint32_t)d;
+}
+
 // ------------------------------------------------------------------ frame estimation
 
 #define RFS_FRAME_EDGES 192
@@ -76,7 +83,7 @@ static inline void rfs_frame_estimate(
     uint32_t sorted[RFS_FRAME_EDGES];
     for(uint16_t i = 0; i < n; i++) {
         int32_t d = e[i];
-        sorted[i] = (uint32_t)(d < 0 ? -d : d);
+        sorted[i] = rfs_edge_mag(d);
     }
     for(uint16_t i = 1; i < n; i++) { // insertion sort, <= 96 entries
         uint32_t k = sorted[i];
@@ -91,14 +98,14 @@ static inline void rfs_frame_estimate(
     if(base < 50) base = 50; // the ISR drops anything shorter
     *base_us = base;
 
-    const uint32_t gap_thr = base * 6;
-    uint32_t sum = 0;
+    const uint64_t gap_thr = (uint64_t)base * 6u;
+    uint64_t sum = 0;
     uint16_t edges = 0;
     bool started = false;
     for(uint16_t i = 0; i < n; i++) {
         int32_t d = e[i];
-        uint32_t a = (uint32_t)(d < 0 ? -d : d);
-        if(a > gap_thr) {
+        uint32_t a = rfs_edge_mag(d);
+        if((uint64_t)a > gap_thr) {
             if(started) break; // the second silence closes the frame
             continue; // still inside a partial first frame
         }
@@ -107,7 +114,9 @@ static inline void rfs_frame_estimate(
         edges++;
     }
     if(!started || edges < 4) return;
-    *frame_us = sum;
+    // a frame longer than the output type cannot be reported honestly, so it is clamped rather
+    // than wrapped into a small number that looks like a measurement
+    *frame_us = (sum > 0xFFFFFFFFu) ? 0xFFFFFFFFu : (uint32_t)sum;
     *bits = (uint16_t)(edges / 2);
 }
 
@@ -148,12 +157,14 @@ static inline RfsDistance rfs_estimate_distance(
         r.hi = 1;
         return r;
     }
-    r.m = (uint32_t)powf(10.0f, budget / (10.0f * n));
-    r.lo = (uint32_t)powf(10.0f, (budget - (float)margin_db) / (10.0f * n));
-    r.hi = (uint32_t)powf(10.0f, (budget + (float)margin_db) / (10.0f * n));
-    if(r.lo < 1) r.lo = 1;
-    if(r.hi > 99999u) r.hi = 99999u;
-    if(r.m > 99999u) r.m = 99999u;
+    // clamp in FLOAT: converting an out-of-range (or infinite) float to uint32 is undefined,
+    // and the exponent can produce one from perfectly valid-looking inputs
+#define RFS_DIST_CLAMP(x)                                       \
+    (((x) != (x) || (x) < 1.0f) ? 1u : ((x) > 99999.0f ? 99999u : (uint32_t)(x)))
+    r.m = RFS_DIST_CLAMP(powf(10.0f, budget / (10.0f * n)));
+    r.lo = RFS_DIST_CLAMP(powf(10.0f, (budget - (float)margin_db) / (10.0f * n)));
+    r.hi = RFS_DIST_CLAMP(powf(10.0f, (budget + (float)margin_db) / (10.0f * n)));
+#undef RFS_DIST_CLAMP
     r.valid = true;
     return r;
 }
@@ -251,7 +262,7 @@ static inline RfsPreamble rfs_preamble(const int32_t* e, uint16_t n, uint32_t ba
     uint32_t sync = 0;
     for(uint16_t i = 0; i < n; i++) {
         int32_t d = e[i];
-        uint32_t a = (uint32_t)(d < 0 ? -d : d);
+        uint32_t a = rfs_edge_mag(d);
         if(a >= lo && a <= hi) {
             run++;
             continue;
@@ -303,7 +314,7 @@ static inline uint8_t rfs_code_kind(const int32_t* e, uint16_t n, uint32_t base_
         uint32_t a = 0;
         if(!end) {
             int32_t d = e[i];
-            a = (uint32_t)(d < 0 ? -d : d);
+            a = rfs_edge_mag(d);
             if(a > gap) end = true;
         }
         if(end) {
@@ -339,6 +350,7 @@ static inline uint8_t rfs_code_kind(const int32_t* e, uint16_t n, uint32_t base_
 // interval or duration that spans it is not a measurement.
 #define RFS_PARK_GAP_MS    40u
 #define RFS_PARK_REP_GAP_MS 250u // rising edges closer than this belong to the same press
+#define RFS_PARK_MAX_PERIOD_MS 600000u // 10 min: longer than any plausible sensor, shorter than a wrap
 
 typedef struct {
     // burst segmentation
@@ -417,8 +429,12 @@ static inline void rfs_park_feed(RfsPark* s, uint32_t now, int8_t rssi, int8_t t
             s->have_rise = true;
             if(s->gap_pending) {
                 s->gap_pending = false; // this interval crossed an unobserved hole
-            } else if(s->have_prev && now > s->prev_start) {
-                rfs_park_push(s->per, &s->per_n, &s->per_i, now - s->prev_start);
+            } else if(s->have_prev) {
+                // unsigned subtraction, not an ordering compare: the tick wraps every 49 days
+                // and `now > prev_start` silently dropped the one interval that spanned it
+                uint32_t elapsed = now - s->prev_start;
+                if(elapsed > 0 && elapsed <= RFS_PARK_MAX_PERIOD_MS)
+                    rfs_park_push(s->per, &s->per_n, &s->per_i, elapsed);
             }
             s->prev_start = now;
             s->have_prev = true;

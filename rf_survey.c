@@ -1065,8 +1065,14 @@ static void bm_parse(App* app, char* line) {
     char* c2 = strchr(c1, ',');
     if(!c2) return;
     *c2++ = 0;
-    uint32_t lo = (uint32_t)strtoul(c1, NULL, 10);
-    uint32_t hi = (uint32_t)strtoul(c2, NULL, 10);
+    char* end = NULL;
+    unsigned long vlo = strtoul(c1, &end, 10);
+    if(end == c1 || (*end && *end != ' ' && *end != '\t' && *end != '\r')) return;
+    unsigned long vhi = strtoul(c2, &end, 10);
+    if(end == c2 || (*end && *end != ' ' && *end != '\t' && *end != '\r')) return;
+    if(vlo > 0xFFFFFFFFul || vhi > 0xFFFFFFFFul) return; // strtoul overflows differently per ABI
+    uint32_t lo = (uint32_t)vlo;
+    uint32_t hi = (uint32_t)vhi;
     if(lo < 300000000u || hi > 928000000u || hi <= lo) return; // same gate as settings_load
     size_t l = strlen(line);
     while(l && (line[l - 1] == ' ' || line[l - 1] == '\t'))
@@ -2447,7 +2453,7 @@ static void draw_cadence(Canvas* canvas, App* app) {
 
     // one snapshot: the worker can zero the denominator between the test and the divide
     uint32_t nsamp = app->park.n_samples;
-    uint32_t duty = nsamp ? (app->park.n_above * 100u) / nsamp : 0;
+    uint32_t duty = nsamp ? (uint32_t)(((uint64_t)app->park.n_above * 100u) / nsamp) : 0;
     unsigned last = app->park.dur_n ?
                         app->park.dur[(app->park.dur_i + PARK_RING - 1) % PARK_RING] :
                         0;
