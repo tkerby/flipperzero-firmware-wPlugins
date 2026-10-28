@@ -1123,8 +1123,11 @@ size_t subghz_protocol_registry_count(const SubGhzProtocolRegistry* r) {
 }
 const SubGhzProtocolRegistry subghz_protocol_registry;
 
-// preset tables: the app only passes the pointer through to a stub, but it must be a real array
-const uint8_t subghz_device_cc1101_preset_ook_650khz_async_regs[] = {0x10, 0xF5, 0, 0};
-const uint8_t subghz_device_cc1101_preset_ook_270khz_async_regs[] = {0x10, 0xF8, 0, 0};
-const uint8_t subghz_device_cc1101_preset_2fsk_dev2_38khz_async_regs[] = {0x10, 0xF5, 0, 0};
-const uint8_t subghz_device_cc1101_preset_2fsk_dev47_6khz_async_regs[] = {0x10, 0xF5, 0, 0};
+// Preset tables: register pairs terminated by {0,0} followed by an 8-byte PA table, which is
+// the layout preset_regs() scans for. A bare 4-byte stub made the scan walk off the end -- a
+// shim artefact, but a useful one: it proved the scan has no bound of its own.
+#define SIM_PRESET_TAIL 0x10, 0xF5, 0x0B, 0x06, 0x00, 0x00, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0, 0xC0
+const uint8_t subghz_device_cc1101_preset_ook_650khz_async_regs[] = {SIM_PRESET_TAIL};
+const uint8_t subghz_device_cc1101_preset_ook_270khz_async_regs[] = {SIM_PRESET_TAIL};
+const uint8_t subghz_device_cc1101_preset_2fsk_dev2_38khz_async_regs[] = {SIM_PRESET_TAIL};
+const uint8_t subghz_device_cc1101_preset_2fsk_dev47_6khz_async_regs[] = {SIM_PRESET_TAIL};

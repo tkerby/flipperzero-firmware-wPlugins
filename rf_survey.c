@@ -573,9 +573,12 @@ static uint8_t bw_nibble(uint32_t step) {
 static const uint8_t* preset_regs(App* app, uint8_t p, uint8_t gain, uint8_t bwn) {
     const uint8_t* src = PRESETS[p].regs;
     if(gain == 0 && bwn == 0xFF) return src; // nothing to patch -> stock preset
+    // {0,0} terminates the reg pairs. The scan is bounded by the buffer we would copy into:
+    // a table that is not terminated (a different firmware's layout, a truncated array) would
+    // otherwise walk off the end and read whatever follows it in flash.
     size_t i = 0;
-    while(!(src[i] == 0 && src[i + 1] == 0))
-        i += 2; // {0,0} terminates the reg pairs
+    while(i + 1 < sizeof(app->preset_buf) && !(src[i] == 0 && src[i + 1] == 0))
+        i += 2;
     size_t total = i + 2 + 8; // pairs + terminator + 8-byte PA table
     if(total > sizeof(app->preset_buf)) return src; // too big -> fall back, never overflow
     memcpy(app->preset_buf, src, total);

@@ -333,6 +333,49 @@ static void test_distance(void) {
     CHECK(!rfs_estimate_distance(-85, 433920000u, 10, 0, 99, 6).valid);
 }
 
+// Boundary sweep: the functions are fed their own limits and just outside them. These are the
+// inputs a corrupt settings file, a truncated capture or a hostile .sub can produce.
+static void test_boundaries(void) {
+    uint16_t c[4];
+    uint16_t per[8];
+    int32_t e[8];
+
+    CASE("bounds: step_fit tolerates a degenerate range");
+    CHECK(rfs_step_fit(0, 0, 50000, 1024) == 50000);
+    CHECK(rfs_step_fit(928000000u, 300000000u, 50000, 1024) == 50000); // inverted
+    CHECK(rfs_step_fit(300000000u, 928000000u, 999999999u, 1024) == 650000u);
+
+    CASE("bounds: clusters with one distinct value");
+    for(int i = 0; i < 8; i++) per[i] = 2000;
+    CHECK(rfs_period_clusters(per, 8, c, 4) == 1);
+
+    CASE("bounds: clusters never writes past max");
+    per[0] = 100; per[1] = 2000; per[2] = 40000; per[3] = 60000;
+    CHECK(rfs_period_clusters(per, 4, c, 1) <= 1);
+
+    CASE("bounds: distance rejects a receive level above the transmitter");
+    CHECK(!rfs_estimate_distance(20, 433920000u, 10, 0, 27, 6).valid ||
+          rfs_estimate_distance(20, 433920000u, 10, 0, 27, 6).m == 1);
+
+    CASE("bounds: distance clamps absurd inputs instead of wrapping");
+    RfsDistance far = rfs_estimate_distance(-127, 300000000u, 20, 10, 20, 6);
+    CHECK(far.valid && far.m <= 99999 && far.hi <= 99999 && far.lo >= 1);
+
+    CASE("bounds: princeton rejects out-of-range timing");
+    CHECK(rfs_encode_princeton(0, 10, e, 8) == 0);
+    CHECK(rfs_encode_princeton(0, 5000, e, 8) == 0);
+    CHECK(rfs_encode_princeton(0, 50, e, 8) == 0); // buffer too small
+
+    CASE("bounds: park machine survives an extreme trigger");
+    RfsPark s2;
+    rfs_park_clear(&s2);
+    for(uint32_t t = 0; t < 200; t += 8) rfs_park_feed(&s2, t, -127, 127); // never above
+    CHECK(s2.bursts == 0);
+    for(uint32_t t = 200; t < 400; t += 8) rfs_park_feed(&s2, t, 127, -128); // always above
+    CHECK(s2.bursts == 1);
+    CHECK(s2.per_n == 0);
+}
+
 int main(void) {
     printf("rf_logic host tests\n\n");
     test_wf_col_at();
@@ -349,6 +392,7 @@ int main(void) {
     test_princeton();
     test_clusters();
     test_distance();
+    test_boundaries();
 
     printf("\n%s (%d failure%s)\n", g_fail ? "FAILED" : "PASSED", g_fail, g_fail == 1 ? "" : "s");
     return g_fail ? 1 : 0;
