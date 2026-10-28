@@ -93,6 +93,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [WiFi Marauder v0.7.12 - Marauder v1.20 CLI sync (By justcallmekoko)](https://github.com/0xchocolate/flipperzero-wifi-marauder)
 - Updated: [Archive and file-browser icon copy, sorting, and selection fixes (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/a23fea8740ed8bcfc6fe31feee5451340fefacba)
 - Updated: [Delete-dialog layout and text-box line spacing (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/33514cb3ce1b5ba47dc4d2821c1b2f7e7e8fe415)
+- ESP Flasher: [Comes with Marauder v1.20.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.20.0)
 
 <a name="release"></a>
 
@@ -122,7 +123,7 @@ This software is for experimental purposes only and is not meant for any illegal
 ## New on MNTM RM Branch!
 
 - TLDR: More Assets, Game Mode, RM Passport & Many more apps! Extra NFC, RFID & SubGHz features!
-- ESP Flasher: [Comes with Marauder v1.19.2 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.19.0)
+- ESP Flasher: [Comes with Marauder v1.20.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.20.0)
 - Animations: [Asset Packs for RM HERE](https://github.com/RogueMaster/awesome-flipperzero-withModules/tree/rogue_main/RM_AssetPacks)
 - Animations: [PREVIEW "RM Minimal" animations (build default)](https://www.patreon.com/posts/animation-rm-77441581) or [OTHER SETS](https://www.patreon.com/RogueMaster?filters[tag]=Animations)
 - Archive: Open MP3 from File Browser, thanks to [MP3 Player v3.5 (By coolshrimp)](https://github.com/coolshrimp/flipperzero-mp3-player)
