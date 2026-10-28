@@ -12,12 +12,22 @@
 // with a real font, so layout is judged on real glyph widths rather than an approximation.
 #include <shim.h>
 
+#define SIM_CHECK(p, what) do { if(!(p)) sim_check_fail(what); } while(0)
+
 #include <stdarg.h>
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
 
 // ---------------------------------------------------------------------------- logging
+
+// The firmware's furi_check() aborts the app. A simulator that quietly tolerates NULL teaches
+// the wrong lesson, so anything the device would assert on aborts here too, with the site named.
+void sim_check_fail(const char* what) {
+    fprintf(stderr, "[!] furi_check would abort: %s\n", what);
+    fflush(stderr);
+    abort();
+}
 
 void sim_log(char level, const char* tag, const char* fmt, ...) {
     if(level == 'D' && !getenv("SIM_VERBOSE")) return;
@@ -325,7 +335,21 @@ uint32_t furi_get_tick(void) {
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return (uint32_t)(((uint64_t)ts.tv_sec * 1000u + (uint64_t)ts.tv_nsec / 1000000u) - g_t0);
 }
+// Stack high-water. The host refuses a 3 KB pthread stack, so the limit cannot be reproduced --
+// but the USAGE can be measured. Every sample point records the address of a local, and the
+// thread reports (stack top - lowest address). x86-64 uses more stack than the Cortex-M4 for the
+// same code, so the number is a conservative upper bound on what the device would need.
+static uintptr_t g_sp_low; // lowest stack address seen on the current thread
+static uintptr_t g_stack_top;
+
+void sim_stack_probe(void) {
+    char probe;
+    uintptr_t sp = (uintptr_t)&probe;
+    if(g_sp_low == 0 || sp < g_sp_low) g_sp_low = sp;
+}
+
 void furi_delay_ms(uint32_t ms) {
+    sim_stack_probe();
     if(ms) usleep(ms * 10); // 10x faster than the device: enough sweeps to fill a waterfall
 }
 void furi_thread_yield(void) {
@@ -337,6 +361,7 @@ void furi_thread_yield(void) {
 // below PTHREAD_STACK_MIN, so the sim reports the gap instead of pretending. Heap limits are
 // exact, stack limits are not -- say so rather than fake it.
 struct FuriThread {
+    char name[24];
     FuriThreadCallback cb;
     void* ctx;
     uint32_t stack;
@@ -346,9 +371,9 @@ struct FuriThread {
 
 FuriThread*
     furi_thread_alloc_ex(const char* n, uint32_t stack, FuriThreadCallback cb, void* ctx) {
-    (void)n;
     FuriThread* t = sim_alloc(sizeof(FuriThread));
     if(!t) return NULL;
+    snprintf(t->name, sizeof(t->name), "%s", n ? n : "?");
     t->cb = cb;
     t->ctx = ctx;
     t->stack = stack;
@@ -360,11 +385,25 @@ void furi_thread_free(FuriThread* t) {
 }
 static void* thread_tramp(void* arg) {
     FuriThread* t = arg;
+#if defined(__APPLE__)
+    g_stack_top = (uintptr_t)pthread_get_stackaddr_np(pthread_self());
+#endif
+    g_sp_low = 0;
     t->cb(t->ctx);
+#if defined(__APPLE__)
+    if(g_sp_low && g_stack_top > g_sp_low)
+        fprintf(
+            stderr,
+            "[i] stack high-water %s: %lu bytes of a %u-byte request\n",
+            t->name,
+            (unsigned long)(g_stack_top - g_sp_low),
+            (unsigned)t->stack);
+#endif
     return NULL;
 }
 void furi_thread_start(FuriThread* t) {
-    if(!t || t->started) return;
+    SIM_CHECK(t, "furi_thread_start(NULL)");
+    if(t->started) return;
     pthread_attr_t a;
     pthread_attr_init(&a);
     size_t want = t->stack ? t->stack : 4096;
@@ -406,7 +445,7 @@ void furi_timer_free(FuriTimer* t) {
     sim_free(t);
 }
 void furi_timer_start(FuriTimer* t, uint32_t ms) {
-    (void)t;
+    SIM_CHECK(t, "furi_timer_start(NULL)");
     (void)ms;
 } // the driver calls redraw_cb itself
 void furi_timer_stop(FuriTimer* t) {
@@ -538,6 +577,16 @@ size_t storage_file_read(File* f, void* buf, size_t n) {
 }
 size_t storage_file_write(File* f, const void* buf, size_t n) {
     if(!f || !f->f) return 0;
+    // SIM_SD_MS=n models a slow card. A blocking write is exactly what punches holes in the
+    // cadence sample loop, so the gap accounting can be exercised instead of assumed.
+    {
+        static long sd_ms = -1;
+        if(sd_ms < 0) {
+            const char* e = getenv("SIM_SD_MS");
+            sd_ms = e ? strtol(e, NULL, 10) : 0;
+        }
+        if(sd_ms > 0) usleep((useconds_t)sd_ms * 1000);
+    }
     // SIM_SD_FAIL=bytes makes every write fail after that many bytes in total, i.e. a card that
     // fills up mid-recording. The app's CSV/sidecar/export error paths are otherwise never run.
     {
@@ -697,12 +746,15 @@ void view_allocate_model(View* v, ViewModelType t, size_t s) {
     (void)s;
 }
 void view_set_context(View* v, void* c) {
+    SIM_CHECK(v, "view_set_context(NULL)");
     v->ctx = c;
 }
 void view_set_draw_callback(View* v, void (*cb)(Canvas*, void*)) {
+    SIM_CHECK(v, "view_set_draw_callback(NULL)");
     v->draw = cb;
 }
 void view_set_input_callback(View* v, bool (*cb)(InputEvent*, void*)) {
+    SIM_CHECK(v, "view_set_input_callback(NULL)");
     v->input = cb;
 }
 void view_set_previous_callback(View* v, uint32_t (*cb)(void*)) {
@@ -958,6 +1010,7 @@ void notification_message(NotificationApp* n, const NotificationSequence* s) {
 // A synthetic spectrum: three carriers of different widths plus a noise floor. Enough for every
 // page to have something to draw, deterministic so two runs can be compared.
 static uint32_t g_freq = 433920000u;
+static uint32_t g_tune_tick;
 static uint32_t g_spectrum_seed = 12345u;
 
 void furi_hal_subghz_reset(void) {}
@@ -968,6 +1021,7 @@ void furi_hal_subghz_set_path(FuriHalSubGhzPath p) {
 }
 uint32_t furi_hal_subghz_set_frequency(uint32_t f) {
     g_freq = f;
+    g_tune_tick = furi_get_tick();
     return f;
 }
 uint32_t furi_hal_subghz_set_frequency_and_path(uint32_t f) {
@@ -1031,6 +1085,14 @@ float furi_hal_subghz_get_rssi(void) {
     // the jitter applies to the RESULT, not just the floor: a carrier sitting on a peak would
     // otherwise be perfectly flat, and the cadence strip would render as a single line
     r += (float)noise;
+
+    // A retune needs a few symbol periods before the RSSI means anything; reading earlier
+    // under-reads. This is the behaviour settle_min_ms() warns about, so the warning can be
+    // tested by setting Settle below it in the config.
+    {
+        uint32_t since = furi_get_tick() - g_tune_tick;
+        if(since < 4) r -= (float)(4 - since) * 3.0f;
+    }
     return r;
 }
 
