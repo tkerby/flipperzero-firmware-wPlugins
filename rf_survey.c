@@ -73,6 +73,8 @@ static const uint8_t SETTLE_CHOICES[] = {1, 2, 3, 5, 8, 12, 20};
 #define CONF_ROW_BM      12
 #ifdef RFS_LAB
 #define CONF_ROW_TXTEST 13
+#define CONF_ROW_REPLAY 14
+#define REP_MAX_EDGES   2048 // ~8 KB of the last capture, kept for replay
 #endif
 
 // A permissive region covering the three CC1101 bands, installed for the app's lifetime
@@ -385,6 +387,13 @@ typedef struct {
     volatile uint32_t cap_overflow; // ISR drops (stream full) -> capture may be corrupt
     int32_t cap_edge[RFS_FRAME_EDGES]; // first edges of the capture, for frame estimation
     uint16_t cap_edge_n;
+#ifdef RFS_LAB
+    // last capture's edges, kept so it can be replayed (lab builds only)
+    int32_t* rep_buf;
+    uint16_t rep_n;
+    uint32_t rep_freq;
+    uint8_t rep_preset;
+#endif
     char cap_decode[40]; // decoded protocol string from the firmware's decoder chain
     volatile bool cap_decoded;
     uint16_t cap_pw[PW_N]; // |duration| histogram of this capture (signature line)
@@ -2723,6 +2732,11 @@ static int32_t capture_worker(void* ctx) {
         app->cap_decode[0] = 0;
         app->cap_decoded = false;
         app->cap_edge_n = 0;
+#ifdef RFS_LAB
+        app->rep_n = 0;
+        app->rep_freq = app->cap_freq;
+        app->rep_preset = app->cap_preset;
+#endif
         // decoder chain: optional. If the environment or the receiver cannot be allocated the
         // capture still runs -- decoding is an enrichment, never a prerequisite.
         SubGhzEnvironment* env = subghz_environment_alloc();
@@ -2797,6 +2811,9 @@ static int32_t capture_worker(void* ctx) {
                 if(app->cap_pw[b] < 0xFFFF) app->cap_pw[b]++;
                 app->cap_pw_n++;
                 if(app->cap_edge_n < RFS_FRAME_EDGES) app->cap_edge[app->cap_edge_n++] = d;
+#ifdef RFS_LAB
+                if(app->rep_buf && app->rep_n < REP_MAX_EDGES) app->rep_buf[app->rep_n++] = d;
+#endif
                 if(dec) subghz_receiver_decode(dec, d > 0, m);
                 if(ind == 512) {
                     werr = !flipper_format_write_int32(ff, "RAW_Data", buf, 512);
@@ -3288,6 +3305,33 @@ static void conf_enter(void* ctx, uint32_t index) {
         return;
     }
 #ifdef RFS_LAB
+    if(index == CONF_ROW_REPLAY) {
+        // LAB ONLY. Re-sends the last capture through the same region gate as the TX test.
+        // The radio is handed over the same way: stop and join the worker first.
+        if(!app->rep_buf || app->rep_n < 8) {
+            FURI_LOG_W(TAG, "replay: nothing captured yet");
+            return;
+        }
+        app->running = false;
+        if(app->worker) {
+            furi_thread_join(app->worker);
+            furi_thread_free(app->worker);
+            app->worker = NULL;
+        }
+        uint8_t pi = app->rep_preset < PRESET_N ? app->rep_preset : 0;
+        RfTxStatus st = rf_tx_edges(app->rep_freq, PRESETS[pi].regs, app->rep_buf, app->rep_n);
+        FURI_LOG_I(
+            TAG,
+            "replay %lu Hz %u edges -> %d",
+            (unsigned long)app->rep_freq,
+            (unsigned)app->rep_n,
+            (int)st);
+        app->running = true;
+        app->reconfig = true;
+        app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
+        furi_thread_start(app->worker);
+        return;
+    }
     if(index == CONF_ROW_TXTEST) {
         // LAB ONLY. The radio has one owner and it is the sweep worker, so the worker is
         // stopped and joined before the transmitter touches it -- the same handover the capture
@@ -3495,6 +3539,8 @@ int32_t rf_survey_app(void* p) {
 #ifdef RFS_LAB
     vi = variable_item_list_add(app->conf, "TX test", 1, NULL, app); // lab build only
     variable_item_set_current_value_text(vi, "OK");
+    vi = variable_item_list_add(app->conf, "Replay last", 1, NULL, app);
+    variable_item_set_current_value_text(vi, "OK");
 #endif
     variable_item_list_set_enter_callback(app->conf, conf_enter, app);
     view_set_enter_callback(variable_item_list_get_view(app->conf), conf_view_enter);
@@ -3529,6 +3575,9 @@ int32_t rf_survey_app(void* p) {
     app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
     furi_thread_start(app->worker);
 
+#ifdef RFS_LAB
+    app->rep_buf = malloc(sizeof(int32_t) * REP_MAX_EDGES);
+#endif
     app->redraw = furi_timer_alloc(redraw_cb, FuriTimerTypePeriodic, app);
     furi_timer_start(app->redraw, 150);
 
@@ -3566,6 +3615,9 @@ int32_t rf_survey_app(void* p) {
     furi_record_close(RECORD_GUI);
     furi_record_close(RECORD_NOTIFICATION);
     g_app = NULL; // defensive: a stray draw after this sees NULL, not freed memory
+#ifdef RFS_LAB
+    if(app->rep_buf) free(app->rep_buf);
+#endif
     free(app);
     FURI_LOG_I(TAG, "app: end");
     return 0;
