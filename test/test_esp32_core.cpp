@@ -20,6 +20,7 @@
 #include "fsd_cp_status.h" // 0x25D CP_status decode + plug guard + rewrite predicate (#228)
 #include "fsd_steer.h"     // 0x129 steering-angle decode + freshness
 #include "fsd_bms.h"       // 0x312 pack-temperature gate
+#include "fsd_freshness.h" // stale-frame TX gate + nag fault/override guard (#176)
 #include "blackbox_flush.h" // black-box ring push, window search, save slices
 #include "blackbox_ram.h"   // black-box RAM-backend save memory discipline (#191)
 #include "blackbox_name.h"  // black-box event names and their order across reboots
@@ -2101,8 +2102,134 @@ static void test_blackbox_ram_save_mem(void) {
     cap_free(empty.buf);
 }
 
+// ── #176: stale-frame TX gate ────────────────────────────────────────────────
+// A drain pass that empties a receive backlog hands process_frame() frames up to
+// ~0.5 s old; a read-modify-retransmit path must emit a modified copy only from a
+// fresh frame. This drives the same decision main.cpp makes for the 0x370 nag
+// echo: fsd_handle_epas_status() runs for every frame (receive-side state), the
+// echo is gated on fsd_tx_fresh(frame.rx_ms, now).
+static void test_fresh_tx_gate(void) {
+    const uint32_t now = 100000u;
+    // The gate itself.
+    CHECK(fsd_tx_fresh(now - 2u, now), "2 ms old is fresh");
+    CHECK(fsd_tx_fresh(now - FSD_FRESH_TX_MAX_AGE_MS, now), "exactly the threshold is fresh");
+    CHECK(!fsd_tx_fresh(now - (FSD_FRESH_TX_MAX_AGE_MS + 1u), now),
+          "one ms past the threshold is stale");
+    CHECK(!fsd_tx_fresh(now - 200u, now), "200 ms backlog is stale");
+    CHECK(fsd_tx_fresh(0u, now), "unstamped (0) treated as fresh");
+
+    FSDState s;
+    memset(&s, 0, sizeof(s));
+    s.nag_killer = true;
+    s.das_hands_on_state = 0xFF;   // no DAS frame seen -> conservative echo
+
+    // Eight stale 0x370 frames (counters running ahead), then one fresh frame —
+    // the shape of the #176 record. Drive the nag decision per frame.
+    const int kStale = 8;
+    int echoes = 0, processed = 0;
+    uint8_t last_cnt_out = 0xFF;
+    for (int i = 0; i <= kStale; i++) {
+        bool is_fresh_frame = (i == kStale);
+        CanFrame f;
+        memset(&f, 0, sizeof(f));
+        f.id = CAN_ID_EPAS_STATUS;
+        f.dlc = 8;
+        f.data[2] = 0x08; f.data[3] = 0x02;   // torsionBarTorque raw 2050 = 0 Nm
+        f.data[4] = 0x00;                       // handsOnLevel = 0 (nag imminent)
+        f.data[6] = (uint8_t)(i & 0x0F);        // counter runs ahead across the backlog
+        f.rx_ms = is_fresh_frame ? (now - 2u) : (now - 200u);
+
+        // Receive-side state updates for every frame, stale or not.
+        fsd_handle_epas_status(&s, &f);
+        processed++;
+
+        // main.cpp: build + send the echo only when the input is fresh.
+        bool fresh = fsd_tx_fresh(f.rx_ms, now);
+        CanFrame out;
+        memset(&out, 0, sizeof(out));
+        bool fired = fresh && fsd_handle_nag_killer(&s, &f, &out, now);
+        if (fired) { echoes++; last_cnt_out = (uint8_t)(out.data[6] & 0x0F); }
+    }
+    CHECK(echoes == 1, "exactly one echo from a 9-frame backlog, got %d", echoes);
+    CHECK(processed == kStale + 1, "receive-side state updated for every frame (%d)", processed);
+    CHECK(s.torsion_bar_torque_seen, "epas torque parsed for every frame");
+    CHECK(last_cnt_out == (uint8_t)((kStale + 1) & 0x0F),
+          "the one echo carries the fresh frame's counter+1, got %u", last_cnt_out);
+
+    // Control: with no gate (every frame treated fresh) the same backlog emits
+    // nine echoes — the burst #176 reported with counters ahead of the car's.
+    int ungated = 0;
+    for (int i = 0; i <= kStale; i++) {
+        CanFrame f; memset(&f, 0, sizeof(f));
+        f.id = CAN_ID_EPAS_STATUS; f.dlc = 8;
+        f.data[2] = 0x08; f.data[3] = 0x02; f.data[4] = 0x00; f.data[6] = (uint8_t)(i & 0x0F);
+        CanFrame out; memset(&out, 0, sizeof(out));
+        if (fsd_handle_nag_killer(&s, &f, &out, now)) ungated++;
+    }
+    CHECK(ungated == kStale + 1, "ungated backlog would echo every frame (%d)", ungated);
+
+    // A lone fresh frame still echoes.
+    CanFrame lone; memset(&lone, 0, sizeof(lone));
+    lone.id = CAN_ID_EPAS_STATUS; lone.dlc = 8;
+    lone.data[2] = 0x08; lone.data[3] = 0x02; lone.data[4] = 0x00; lone.data[6] = 0x05;
+    lone.rx_ms = now - 1u;
+    CanFrame lout; memset(&lout, 0, sizeof(lout));
+    CHECK(fsd_tx_fresh(lone.rx_ms, now) && fsd_handle_nag_killer(&s, &lone, &lout, now),
+          "a lone fresh frame still echoes");
+}
+
+// ── #176 secondary: nag echo during AP fault / driver override ────────────────
+static void test_nag_fault_override(void) {
+    CanFrame f;
+    memset(&f, 0, sizeof(f));
+    f.id = CAN_ID_EPAS_STATUS;
+    f.dlc = 8;
+    f.data[4] = 0x00;   // handsOnLevel = 0 (nag imminent)
+    f.data[6] = 0x05;
+
+    FSDState base;
+    memset(&base, 0, sizeof(base));
+    base.nag_killer = true;
+    base.das_hands_on_state = 0xFF;   // conservative echo
+
+    CanFrame out;
+    FSDState s;
+
+    // Baseline: engaged, hands off, ~0 torque -> normal nag echo fires.
+    s = base; s.das_ap_state = 3; s.torsion_bar_torque_nm = 0.3f;
+    memset(&out, 0, sizeof(out));
+    CHECK(fsd_handle_nag_killer(&s, &f, &out, 1000u),
+          "normal nag still echoes (engaged, hands-off, low torque)");
+
+    // AP aborting / aborted -> suppressed.
+    s = base; s.das_ap_state = 8; s.torsion_bar_torque_nm = 0.0f;
+    CHECK(!fsd_handle_nag_killer(&s, &f, &out, 1000u), "no echo while AP ABORTING (8)");
+    s = base; s.das_ap_state = 9;
+    CHECK(!fsd_handle_nag_killer(&s, &f, &out, 1000u), "no echo while AP ABORTED (9)");
+
+    // Driver clearly steering -> suppressed, either sign.
+    s = base; s.das_ap_state = 3; s.torsion_bar_torque_nm = 3.2f;
+    CHECK(!fsd_handle_nag_killer(&s, &f, &out, 1000u), "no echo while driver applies +3.2 Nm");
+    s = base; s.das_ap_state = 3; s.torsion_bar_torque_nm = -3.2f;
+    CHECK(!fsd_handle_nag_killer(&s, &f, &out, 1000u), "no echo while driver applies -3.2 Nm");
+
+    // Boundary at FSD_NAG_DRIVER_TORQUE_NM.
+    s = base; s.das_ap_state = 3; s.torsion_bar_torque_nm = 2.5f;
+    CHECK(!fsd_handle_nag_killer(&s, &f, &out, 1000u), "2.5 Nm suppresses (>=)");
+    s = base; s.das_ap_state = 3; s.torsion_bar_torque_nm = 2.4f;
+    CHECK(fsd_handle_nag_killer(&s, &f, &out, 1000u), "2.4 Nm still echoes");
+
+    // The shared guard predicate directly.
+    CHECK(fsd_nag_suppress_fault(8, 0.0f) && fsd_nag_suppress_fault(9, 0.0f),
+          "guard: abort states suppress");
+    CHECK(!fsd_nag_suppress_fault(3, 0.5f), "guard: engaged + light torque allowed");
+    CHECK(fsd_nag_suppress_fault(3, -2.6f), "guard: heavy torque suppresses");
+}
+
 int main() {
     printf("test_esp32_core: ESP32 firmware handler host tests\n");
+    test_fresh_tx_gate();
+    test_nag_fault_override();
     test_gear_tx_route();
     test_perf_accel_timer();
     test_perf_brake_timer();
