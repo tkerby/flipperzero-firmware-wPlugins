@@ -69,22 +69,29 @@ static const uint8_t SETTLE_CHOICES[] = {1, 2, 3, 5, 8, 12, 20};
 // Row indices, in the exact order the rows are constructed. These were off by four from
 // Help onwards for a while, which made OK on "Help" and "Path loss" start a scan and, in the
 // lab build, made "Help" fire the transmitter. Keep them adjacent to the construction site.
+// PAGE 1 (scan): what the sweep measures. PAGE 2 (tools): one-shot actions and exports.
+// Eighteen rows on a five-row screen is thirteen presses to the bottom; two pages of about
+// ten is at most five. Each page has its OWN index space -- keep the constants next to the
+// construction and the simulator's config walk will catch any drift.
 #define CONF_ROW_TRIGGER 4
-#define CONF_ROW_CLEARPK 9
-#define CONF_ROW_WFSAVE  10
-#define CONF_ROW_TRACE   11
-#define CONF_ROW_BM      12
-#define CONF_ROW_SAVEBM  13
-#define CONF_ROW_HELP    14
-#define CONF_ROW_PROFILE 15
-#define CONF_ROW_SAVEPRF 16
-#define CONF_ROW_PATH    17
+#define CONF_ROW_PATH    8
+#define CONF_ROW_TRACE   9
+#define CONF_ROW_TOOLS   10 // switching row
+
+#define CONF2_ROW_CLEARPK 1
+#define CONF2_ROW_WFSAVE  2
+#define CONF2_ROW_BM      3
+#define CONF2_ROW_SAVEBM  4
+#define CONF2_ROW_PROFILE 5
+#define CONF2_ROW_SAVEPRF 6
+#define CONF2_ROW_HELP    7
+#define CONF2_ROW_SCAN    8 // switching row
 #define PROFILE_N        4 // numbered slots: no text input on this device
 #ifdef RFS_LAB
-#define CONF_ROW_TXTEST  18
-#define CONF_ROW_REPLAY  19
-#define CONF_ROW_TXFRAME 20
-#define CONF_ROW_BRUTE   21
+#define CONF2_ROW_TXTEST  9
+#define CONF2_ROW_REPLAY  10
+#define CONF2_ROW_TXFRAME 11
+#define CONF2_ROW_BRUTE   12
 #define BRUTE_PAGE       32 // codes per press: ~3 s of airtime, never an open-ended loop
 #define REP_MAX_EDGES   2048 // ~8 KB of the last capture, kept for replay
 #endif
@@ -149,6 +156,7 @@ static bool tune_rx(uint32_t f) {
 #define VIEW_RANGE 2 // custom start/end frequency editor
 #define VIEW_CAP   3 // .sub capture screen
 #define VIEW_HELP  4 // key reference
+#define VIEW_CONF2 5 // second config page: the action rows
 #ifdef RFS_LAB
 #define PAGE_N     8 // + carrier test
 #else
@@ -371,7 +379,8 @@ typedef struct {
     Gui* gui;
     ViewDispatcher* vd;
     View* view; // spectrum
-    VariableItemList* conf; // config screen
+    VariableItemList* conf; // config page 1: what the sweep measures
+    VariableItemList* conf2; // config page 2: one-shot actions and exports
     VariableItem* it_range; // "Range MHz" readout, updated when a band is picked
     VariableItem* it_preset; // "Modulation" preset (AM650/AM270/FM238/FM476)
     VariableItem* it_step; // "Step" -> force-synced when a band change would overflow MAX_BINS
@@ -2821,6 +2830,168 @@ static bool spectrum_input(InputEvent* event, void* context) {
     return true;
 }
 
+// PAGE 2: actions. Everything here runs in place or opens another view; nothing navigates to
+// the spectrum by accident, because OK on a value row is the only path that does.
+static void conf2_enter(void* ctx, uint32_t index) {
+    App* app = ctx;
+    FURI_LOG_D(TAG, "tools row %lu", (unsigned long)index);
+    if(index == CONF2_ROW_HELP) {
+        FURI_LOG_I(TAG, "config: open help");
+        view_dispatcher_switch_to_view(app->vd, VIEW_HELP);
+        return;
+    }
+    if(index == CONF2_ROW_SAVEPRF) {
+        if(!app->profile_slot) {
+            FURI_LOG_W(TAG, "save profile: no slot selected");
+            return;
+        }
+        char path[64];
+        profile_path(path, sizeof(path), app->profile_slot);
+        Storage* st = furi_record_open(RECORD_STORAGE);
+        settings_save(app, st, path);
+        furi_record_close(RECORD_STORAGE);
+        FURI_LOG_I(TAG, "profile %u saved", (unsigned)app->profile_slot);
+        return;
+    }
+    if(index == CONF2_ROW_SAVEBM) {
+        OccBucket b[4];
+        uint8_t n = occ_top(app, b, COUNT_OF(b));
+        if(!n) {
+            FURI_LOG_W(TAG, "save busy: nothing measured yet");
+            return;
+        }
+        Storage* st = furi_record_open(RECORD_STORAGE);
+        bookmarks_write_auto(app, st, b, n);
+        furi_record_close(RECORD_STORAGE);
+        FURI_LOG_I(TAG, "save busy: wrote %u channels", (unsigned)n);
+        return;
+    }
+    if(index == CONF2_ROW_CLEARPK) {
+        app->clear_peaks = true;
+        FURI_LOG_I(TAG, "config: clear peaks queued");
+        return;
+    }
+    if(index == CONF2_ROW_WFSAVE) {
+        app->wf_export = true;
+        FURI_LOG_I(TAG, "config: waterfall export queued");
+        return;
+    }
+#ifdef RFS_LAB
+    if(index == CONF2_ROW_BRUTE) {
+        // LAB ONLY. One PAGE per press, then it stops and waits to be asked again. No
+        // loop-forever path: 32 codes x 3 repeats is ~3 s of airtime, the cursor advances, and
+        // the row shows where the next press starts. Region-gated like every other TX.
+        if(app->brute_next <= 0xFFFFFFu) {
+            uint32_t f = app->f_start + (uint32_t)(app->nbins / 2) * app->f_step;
+            app->running = false;
+            if(app->worker) {
+                furi_thread_join(app->worker);
+                furi_thread_free(app->worker);
+                app->worker = NULL;
+            }
+            RfTxStatus st =
+                rf_tx_code_page(f, PRESETS[0].regs, app->brute_next, BRUTE_PAGE, 3, 350);
+            FURI_LOG_I(TAG, "brute page %06lX -> %d", (unsigned long)app->brute_next, (int)st);
+            app->brute_next += BRUTE_PAGE;
+            if(app->it_brute) {
+                char b[12];
+                snprintf(b, sizeof(b), "%06lX", (unsigned long)app->brute_next);
+                variable_item_set_current_value_text(app->it_brute, b);
+            }
+            app->running = true;
+            app->reconfig = true;
+            app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
+            furi_thread_start(app->worker);
+        }
+        return;
+    }
+    if(index == CONF2_ROW_TXFRAME) {
+        // LAB ONLY. Synthesises a Princeton frame from nothing but arithmetic -- no capture,
+        // no decoder. The encoder lives in rf_logic.h and is unit-tested on the PC, so the
+        // waveform shape is verified before it is allowed near a transmitter.
+        uint32_t f = app->f_start + (uint32_t)(app->nbins / 2) * app->f_step;
+        uint16_t n = 0;
+        for(uint8_t r = 0; r < 6 && app->rep_buf; r++) {
+            uint16_t k = rfs_encode_princeton(
+                0x0A5C3Eu, 350, app->rep_buf + n, (uint16_t)(REP_MAX_EDGES - n));
+            if(!k) break;
+            n = (uint16_t)(n + k);
+        }
+        if(n) {
+            app->running = false;
+            if(app->worker) {
+                furi_thread_join(app->worker);
+                furi_thread_free(app->worker);
+                app->worker = NULL;
+            }
+            RfTxStatus st = rf_tx_edges(f, PRESETS[0].regs, app->rep_buf, n);
+            FURI_LOG_I(TAG, "tx frame %lu Hz %u edges -> %d", (unsigned long)f, (unsigned)n,
+                       (int)st);
+            app->running = true;
+            app->reconfig = true;
+            app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
+            furi_thread_start(app->worker);
+        }
+        return;
+    }
+    if(index == CONF2_ROW_REPLAY) {
+        // LAB ONLY. Re-sends the last capture through the same region gate as the TX test.
+        // The radio is handed over the same way: stop and join the worker first.
+        if(!app->rep_buf || app->rep_n < 8) {
+            FURI_LOG_W(TAG, "replay: nothing captured yet");
+            return;
+        }
+        app->running = false;
+        if(app->worker) {
+            furi_thread_join(app->worker);
+            furi_thread_free(app->worker);
+            app->worker = NULL;
+        }
+        uint8_t pi = app->rep_preset < PRESET_N ? app->rep_preset : 0;
+        RfTxStatus st = rf_tx_edges(app->rep_freq, PRESETS[pi].regs, app->rep_buf, app->rep_n);
+        FURI_LOG_I(
+            TAG,
+            "replay %lu Hz %u edges -> %d",
+            (unsigned long)app->rep_freq,
+            (unsigned)app->rep_n,
+            (int)st);
+        app->running = true;
+        app->reconfig = true;
+        app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
+        furi_thread_start(app->worker);
+        return;
+    }
+    if(index == CONF2_ROW_TXTEST) {
+        // LAB ONLY. The radio has one owner and it is the sweep worker, so the worker is
+        // stopped and joined before the transmitter touches it -- the same handover the capture
+        // screen does. 20 pulses x 500 us is ~20 ms of airtime: a connectivity test, not a
+        // carrier.
+        uint32_t f = app->f_start + (uint32_t)(app->nbins / 2) * app->f_step;
+        app->running = false;
+        if(app->worker) {
+            furi_thread_join(app->worker);
+            furi_thread_free(app->worker);
+            app->worker = NULL;
+        }
+        RfTxStatus st =
+            rf_tx_burst(f, subghz_device_cc1101_preset_ook_650khz_async_regs, 20, 500, 500);
+        FURI_LOG_I(TAG, "tx test %lu Hz -> %d", (unsigned long)f, (int)st);
+        app->running = true;
+        app->reconfig = true;
+        app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
+        furi_thread_start(app->worker);
+        return;
+    }
+#endif
+    if(index == CONF2_ROW_SCAN) { // back to page 1
+        FURI_LOG_I(TAG, "config: -> scan");
+        view_dispatcher_switch_to_view(app->vd, VIEW_CONF);
+        return;
+    }
+    FURI_LOG_I(TAG, "config: OK -> spectrum");
+    view_dispatcher_switch_to_view(app->vd, VIEW_SPEC);
+}
+
 static uint32_t view_exit(void* ctx) {
     UNUSED(ctx);
     return VIEW_NONE;
@@ -3772,9 +3943,11 @@ static void radio_cb(VariableItem* item) {
     FURI_LOG_I(TAG, "radio: switched to %s (worker restarted)", RADIO_TXT[idx]);
 }
 
+// The two config pages share the action bodies but not their indices, so the page number is
+// part of the call. index 10 on page 1 and index 8 on page 2 are the switching rows.
 static void conf_enter(void* ctx, uint32_t index) {
     App* app = ctx;
-    FURI_LOG_D(TAG, "conf_enter %lu", (unsigned long)index);
+    FURI_LOG_D(TAG, "scan row %lu", (unsigned long)index);
     // action rows act in place and stay on the config screen. Both are one-shots consumed by
     // the sweep worker: the radio has exactly one owner, and that owner is not this thread.
     if(index == CONF_ROW_TRIGGER) {
@@ -3782,154 +3955,11 @@ static void conf_enter(void* ctx, uint32_t index) {
         FURI_LOG_I(TAG, "config: trigger auto-cal queued");
         return;
     }
-    if(index == CONF_ROW_CLEARPK) {
-        app->clear_peaks = true;
-        FURI_LOG_I(TAG, "config: clear peaks queued");
+    if(index == CONF_ROW_TOOLS) { // switch to page 2
+        FURI_LOG_I(TAG, "config: -> tools");
+        view_dispatcher_switch_to_view(app->vd, VIEW_CONF2);
         return;
     }
-    if(index == CONF_ROW_WFSAVE) {
-        app->wf_export = true;
-        FURI_LOG_I(TAG, "config: waterfall export queued");
-        return;
-    }
-    if(index == CONF_ROW_SAVEPRF) {
-        if(!app->profile_slot) {
-            FURI_LOG_W(TAG, "save profile: no slot selected");
-            return;
-        }
-        char path[64];
-        profile_path(path, sizeof(path), app->profile_slot);
-        Storage* st = furi_record_open(RECORD_STORAGE);
-        settings_save(app, st, path);
-        furi_record_close(RECORD_STORAGE);
-        FURI_LOG_I(TAG, "profile %u saved", (unsigned)app->profile_slot);
-        return;
-    }
-    if(index == CONF_ROW_HELP) {
-        FURI_LOG_I(TAG, "config: open help");
-        view_dispatcher_switch_to_view(app->vd, VIEW_HELP);
-        return;
-    }
-    if(index == CONF_ROW_SAVEBM) {
-        OccBucket b[4];
-        uint8_t n = occ_top(app, b, COUNT_OF(b));
-        if(!n) {
-            FURI_LOG_W(TAG, "save busy: nothing measured yet");
-            return;
-        }
-        Storage* st = furi_record_open(RECORD_STORAGE);
-        bookmarks_write_auto(app, st, b, n);
-        furi_record_close(RECORD_STORAGE);
-        FURI_LOG_I(TAG, "save busy: wrote %u channels", (unsigned)n);
-        return;
-    }
-#ifdef RFS_LAB
-    if(index == CONF_ROW_BRUTE) {
-        // LAB ONLY. One PAGE per press, then it stops and waits to be asked again. No
-        // loop-forever path: 32 codes x 3 repeats is ~3 s of airtime, the cursor advances, and
-        // the row shows where the next press starts. Region-gated like every other TX.
-        if(app->brute_next <= 0xFFFFFFu) {
-            uint32_t f = app->f_start + (uint32_t)(app->nbins / 2) * app->f_step;
-            app->running = false;
-            if(app->worker) {
-                furi_thread_join(app->worker);
-                furi_thread_free(app->worker);
-                app->worker = NULL;
-            }
-            RfTxStatus st =
-                rf_tx_code_page(f, PRESETS[0].regs, app->brute_next, BRUTE_PAGE, 3, 350);
-            FURI_LOG_I(TAG, "brute page %06lX -> %d", (unsigned long)app->brute_next, (int)st);
-            app->brute_next += BRUTE_PAGE;
-            if(app->it_brute) {
-                char b[12];
-                snprintf(b, sizeof(b), "%06lX", (unsigned long)app->brute_next);
-                variable_item_set_current_value_text(app->it_brute, b);
-            }
-            app->running = true;
-            app->reconfig = true;
-            app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
-            furi_thread_start(app->worker);
-        }
-        return;
-    }
-    if(index == CONF_ROW_TXFRAME) {
-        // LAB ONLY. Synthesises a Princeton frame from nothing but arithmetic -- no capture,
-        // no decoder. The encoder lives in rf_logic.h and is unit-tested on the PC, so the
-        // waveform shape is verified before it is allowed near a transmitter.
-        uint32_t f = app->f_start + (uint32_t)(app->nbins / 2) * app->f_step;
-        uint16_t n = 0;
-        for(uint8_t r = 0; r < 6 && app->rep_buf; r++) {
-            uint16_t k = rfs_encode_princeton(
-                0x0A5C3Eu, 350, app->rep_buf + n, (uint16_t)(REP_MAX_EDGES - n));
-            if(!k) break;
-            n = (uint16_t)(n + k);
-        }
-        if(n) {
-            app->running = false;
-            if(app->worker) {
-                furi_thread_join(app->worker);
-                furi_thread_free(app->worker);
-                app->worker = NULL;
-            }
-            RfTxStatus st = rf_tx_edges(f, PRESETS[0].regs, app->rep_buf, n);
-            FURI_LOG_I(TAG, "tx frame %lu Hz %u edges -> %d", (unsigned long)f, (unsigned)n,
-                       (int)st);
-            app->running = true;
-            app->reconfig = true;
-            app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
-            furi_thread_start(app->worker);
-        }
-        return;
-    }
-    if(index == CONF_ROW_REPLAY) {
-        // LAB ONLY. Re-sends the last capture through the same region gate as the TX test.
-        // The radio is handed over the same way: stop and join the worker first.
-        if(!app->rep_buf || app->rep_n < 8) {
-            FURI_LOG_W(TAG, "replay: nothing captured yet");
-            return;
-        }
-        app->running = false;
-        if(app->worker) {
-            furi_thread_join(app->worker);
-            furi_thread_free(app->worker);
-            app->worker = NULL;
-        }
-        uint8_t pi = app->rep_preset < PRESET_N ? app->rep_preset : 0;
-        RfTxStatus st = rf_tx_edges(app->rep_freq, PRESETS[pi].regs, app->rep_buf, app->rep_n);
-        FURI_LOG_I(
-            TAG,
-            "replay %lu Hz %u edges -> %d",
-            (unsigned long)app->rep_freq,
-            (unsigned)app->rep_n,
-            (int)st);
-        app->running = true;
-        app->reconfig = true;
-        app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
-        furi_thread_start(app->worker);
-        return;
-    }
-    if(index == CONF_ROW_TXTEST) {
-        // LAB ONLY. The radio has one owner and it is the sweep worker, so the worker is
-        // stopped and joined before the transmitter touches it -- the same handover the capture
-        // screen does. 20 pulses x 500 us is ~20 ms of airtime: a connectivity test, not a
-        // carrier.
-        uint32_t f = app->f_start + (uint32_t)(app->nbins / 2) * app->f_step;
-        app->running = false;
-        if(app->worker) {
-            furi_thread_join(app->worker);
-            furi_thread_free(app->worker);
-            app->worker = NULL;
-        }
-        RfTxStatus st =
-            rf_tx_burst(f, subghz_device_cc1101_preset_ook_650khz_async_regs, 20, 500, 500);
-        FURI_LOG_I(TAG, "tx test %lu Hz -> %d", (unsigned long)f, (int)st);
-        app->running = true;
-        app->reconfig = true;
-        app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
-        furi_thread_start(app->worker);
-        return;
-    }
-#endif
     if(index == 1) { // "Range MHz" row -> open the custom range editor
         app->re_start = app->f_start / 100000;
         app->re_end = app->f_end / 100000;
@@ -4051,8 +4081,7 @@ int32_t rf_survey_app(void* p) {
     // config view (VariableItemList): pick a band preset (full spectrum / full band /
     // known allocation) -> fills range; also Range readout, Modulation preset and Step. OK scans.
     app->conf = variable_item_list_alloc();
-    // every row is initialised from app state, not from a literal: settings_load() may have
-    // replaced the defaults before we get here.
+    // PAGE 1 -- what the sweep measures, in the order you would change it while sweeping.
     bool band_exact = false;
     uint16_t bi = band_index(app->f_start, app->f_end, &band_exact);
     VariableItem* vi = variable_item_list_add(app->conf, "Band", PRESET_COUNT, band_cb, app);
@@ -4086,16 +4115,6 @@ int32_t rf_survey_app(void* p) {
         snprintf(t, sizeof(t), "%d", app->trigger);
         variable_item_set_current_value_text(app->it_trigger, t);
     }
-    vi = variable_item_list_add(app->conf, "Haptic", 2, haptic_cb, app);
-    variable_item_set_current_value_index(vi, app->haptic ? 1 : 0);
-    variable_item_set_current_value_text(vi, app->haptic ? "On" : "Off");
-    vi = variable_item_list_add(app->conf, "Gain", COUNT_OF(GAIN_TXT), gain_cb, app);
-    variable_item_set_current_value_index(vi, app->gain);
-    variable_item_set_current_value_text(vi, GAIN_TXT[app->gain]);
-    vi = variable_item_list_add(app->conf, "Radio", COUNT_OF(RADIO_TXT), radio_cb, app);
-    variable_item_set_current_value_index(vi, app->radio);
-    variable_item_set_current_value_text(vi, RADIO_TXT[app->radio]);
-    // per-bin dwell: the sweep-speed vs weak-signal trade-off, previously hardcoded at 3 ms
     uint8_t se = 0;
     while((uint32_t)se + 1 < SETTLE_N && SETTLE_CHOICES[se + 1] <= app->settle_ms)
         se++;
@@ -4106,43 +4125,63 @@ int32_t rf_survey_app(void* p) {
         snprintf(t, sizeof(t), "%ums", app->settle_ms);
         variable_item_set_current_value_text(app->it_settle, t);
     }
-    // action rows: OK runs them in place, they never navigate
-    vi = variable_item_list_add(app->conf, "Clear peaks", 1, NULL, app);
-    variable_item_set_current_value_text(vi, "OK");
-    vi = variable_item_list_add(app->conf, "Save waterfall", 1, NULL, app);
-    variable_item_set_current_value_text(vi, "OK");
-    vi = variable_item_list_add(app->conf, "Trace", COUNT_OF(TRACE_TXT), trace_cb, app);
-    variable_item_set_current_value_index(vi, app->trace);
-    variable_item_set_current_value_text(vi, TRACE_TXT[app->trace]);
-    vi = variable_item_list_add(app->conf, "Bookmark", app->bm_n + 1, bm_cb, app);
-    variable_item_set_current_value_index(vi, 0);
-    variable_item_set_current_value_text(vi, "-");
-    vi = variable_item_list_add(app->conf, "Save busy", 1, NULL, app);
-    variable_item_set_current_value_text(vi, "OK");
-    vi = variable_item_list_add(app->conf, "Help", 1, NULL, app);
-    variable_item_set_current_value_text(vi, "OK");
-    vi = variable_item_list_add(app->conf, "Profile", PROFILE_N + 1, profile_cb, app);
-    variable_item_set_current_value_index(vi, app->profile_slot);
-    variable_item_set_current_value_text(vi, app->profile_slot ? "1" : "off");
-    vi = variable_item_list_add(app->conf, "Save prof.", 1, NULL, app);
-    variable_item_set_current_value_text(vi, "OK");
+    vi = variable_item_list_add(app->conf, "Gain", COUNT_OF(GAIN_TXT), gain_cb, app);
+    variable_item_set_current_value_index(vi, app->gain);
+    variable_item_set_current_value_text(vi, GAIN_TXT[app->gain]);
+    vi = variable_item_list_add(app->conf, "Radio", COUNT_OF(RADIO_TXT), radio_cb, app);
+    variable_item_set_current_value_index(vi, app->radio);
+    variable_item_set_current_value_text(vi, RADIO_TXT[app->radio]);
     vi = variable_item_list_add(app->conf, "Path loss", COUNT_OF(PATH_TXT), path_cb, app);
     variable_item_set_current_value_index(vi, app->path_n);
     variable_item_set_current_value_text(vi, PATH_TXT[app->path_n]);
-#ifdef RFS_LAB
-    vi = variable_item_list_add(app->conf, "TX test", 1, NULL, app); // lab build only
-    variable_item_set_current_value_text(vi, "OK");
-    vi = variable_item_list_add(app->conf, "Replay last", 1, NULL, app);
-    variable_item_set_current_value_text(vi, "OK");
-    vi = variable_item_list_add(app->conf, "TX frame", 1, NULL, app);
-    variable_item_set_current_value_text(vi, "OK");
-    app->it_brute = variable_item_list_add(app->conf, "Code page", 1, NULL, app);
-    variable_item_set_current_value_text(app->it_brute, "000000");
-#endif
+    vi = variable_item_list_add(app->conf, "Trace", COUNT_OF(TRACE_TXT), trace_cb, app);
+    variable_item_set_current_value_index(vi, app->trace);
+    variable_item_set_current_value_text(vi, TRACE_TXT[app->trace]);
+    vi = variable_item_list_add(app->conf, "Tools", 1, NULL, app);
+    variable_item_set_current_value_text(vi, ">");
     variable_item_list_set_enter_callback(app->conf, conf_enter, app);
     view_set_enter_callback(variable_item_list_get_view(app->conf), conf_view_enter);
     view_set_previous_callback(variable_item_list_get_view(app->conf), view_exit);
     view_dispatcher_add_view(app->vd, VIEW_CONF, variable_item_list_get_view(app->conf));
+
+    // PAGE 2 -- actions and exports. Nothing here changes what the sweep measures, so it is a
+    // separate page rather than rows 11..18 of the same list.
+    app->conf2 = variable_item_list_alloc();
+    vi = variable_item_list_add(app->conf2, "Haptic", 2, haptic_cb, app);
+    variable_item_set_current_value_index(vi, app->haptic ? 1 : 0);
+    variable_item_set_current_value_text(vi, app->haptic ? "On" : "Off");
+    vi = variable_item_list_add(app->conf2, "Clear peaks", 1, NULL, app);
+    variable_item_set_current_value_text(vi, "OK");
+    vi = variable_item_list_add(app->conf2, "Save waterfall", 1, NULL, app);
+    variable_item_set_current_value_text(vi, "OK");
+    vi = variable_item_list_add(app->conf2, "Bookmark", app->bm_n + 1, bm_cb, app);
+    variable_item_set_current_value_index(vi, 0);
+    variable_item_set_current_value_text(vi, "-");
+    vi = variable_item_list_add(app->conf2, "Save busy", 1, NULL, app);
+    variable_item_set_current_value_text(vi, "OK");
+    vi = variable_item_list_add(app->conf2, "Profile", PROFILE_N + 1, profile_cb, app);
+    variable_item_set_current_value_index(vi, app->profile_slot);
+    variable_item_set_current_value_text(vi, app->profile_slot ? "1" : "off");
+    vi = variable_item_list_add(app->conf2, "Save prof.", 1, NULL, app);
+    variable_item_set_current_value_text(vi, "OK");
+    vi = variable_item_list_add(app->conf2, "Help", 1, NULL, app);
+    variable_item_set_current_value_text(vi, "OK");
+    vi = variable_item_list_add(app->conf2, "Scan", 1, NULL, app);
+    variable_item_set_current_value_text(vi, "<");
+#ifdef RFS_LAB
+    vi = variable_item_list_add(app->conf2, "TX test", 1, NULL, app); // lab build only
+    variable_item_set_current_value_text(vi, "OK");
+    vi = variable_item_list_add(app->conf2, "Replay last", 1, NULL, app);
+    variable_item_set_current_value_text(vi, "OK");
+    vi = variable_item_list_add(app->conf2, "TX frame", 1, NULL, app);
+    variable_item_set_current_value_text(vi, "OK");
+    app->it_brute = variable_item_list_add(app->conf2, "Code page", 1, NULL, app);
+    variable_item_set_current_value_text(app->it_brute, "000000");
+#endif
+    variable_item_list_set_enter_callback(app->conf2, conf2_enter, app);
+
+    view_set_previous_callback(variable_item_list_get_view(app->conf2), to_conf);
+    view_dispatcher_add_view(app->vd, VIEW_CONF2, variable_item_list_get_view(app->conf2));
 
     // custom range editor view (Back returns to config)
     app->range_view = view_alloc();
@@ -4216,11 +4255,13 @@ int32_t rf_survey_app(void* p) {
     view_dispatcher_remove_view(app->vd, VIEW_RANGE);
     view_dispatcher_remove_view(app->vd, VIEW_CAP);
     view_dispatcher_remove_view(app->vd, VIEW_HELP);
+    view_dispatcher_remove_view(app->vd, VIEW_CONF2);
     view_free(app->view);
     view_free(app->range_view);
     view_free(app->cap_view);
     view_free(app->help_view);
     variable_item_list_free(app->conf);
+    variable_item_list_free(app->conf2);
     view_dispatcher_free(app->vd);
     furi_record_close(RECORD_GUI);
     furi_record_close(RECORD_NOTIFICATION);

@@ -768,7 +768,7 @@ void view_dispatcher_run(ViewDispatcher* vd) {
     static const struct {
         uint32_t id;
         const char* name;
-    } other[] = {{1, "config"}, {2, "range"}, {3, "capture"}, {4, "help"}};
+    } other[] = {{1, "config"}, {5, "tools"}, {2, "range"}, {3, "capture"}, {4, "help"}};
     for(size_t i = 0; i < sizeof(other) / sizeof(other[0]); i++) {
         View* ov = find_view(vd, other[i].id);
         if(!ov || !ov->draw) continue;
@@ -792,7 +792,9 @@ struct VariableItem {
     VariableItemList* list;
     int idx;
 };
-static VariableItemList* g_vil;
+#define SIM_VIL_MAX 4
+static VariableItemList* g_vil[SIM_VIL_MAX];
+static int g_vil_n;
 
 struct VariableItemList {
     int n;
@@ -829,7 +831,7 @@ static void vil_draw(Canvas* c, void* ctx) {
 
 VariableItemList* variable_item_list_alloc(void) {
     VariableItemList* l = sim_alloc(sizeof(VariableItemList));
-    g_vil = l;
+    if(g_vil_n < SIM_VIL_MAX) g_vil[g_vil_n++] = l;
     if(!l) return NULL;
     memset(l, 0, sizeof(*l));
     l->view = view_alloc();
@@ -881,12 +883,15 @@ void* variable_item_get_context(VariableItem* i) {
 }
 
 void sim_walk_config(void) {
-    if(!g_vil || !g_vil->enter) return;
-    fprintf(stderr, "[i] --- config rows ---\n");
-    for(int i = 0; i < g_vil->n; i++) {
-        fprintf(stderr, "[i] %2d  %-14s -> ", i, g_vil->label[i]);
-        fflush(stderr);
-        g_vil->enter(g_vil->enter_ctx, (uint32_t)i);
+    for(int L = 0; L < g_vil_n; L++) {
+        VariableItemList* l = g_vil[L];
+        if(!l || !l->enter) continue;
+        fprintf(stderr, "[i] --- config page %d ---\n", L + 1);
+        for(int i = 0; i < l->n; i++) {
+            fprintf(stderr, "[i] %2d  %-14s -> ", i, l->label[i]);
+            fflush(stderr);
+            l->enter(l->enter_ctx, (uint32_t)i);
+        }
     }
 }
 
