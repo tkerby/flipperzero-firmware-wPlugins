@@ -1,0 +1,24 @@
+# The default tour, as data. SIM_SCRIPT=sim/tour.script reproduces it.
+# keys: L R U D OK B, suffix ! = long press.  scenes are written to the output dir.
+record
+wait 400
+scene page0
+key R!
+scene page1
+key R!
+scene page2
+key R!
+scene page3
+key R!
+scene page4
+key R!
+scene page5
+wait 400
+key OK
+wait 500
+scene page5_parked
+key OK
+key R!
+scene page6
+scene config
+walk

@@ -823,11 +823,85 @@ static void sim_press(View* v, InputKey k, InputType t) {
 #define SIM_PAGES 7
 #define VIEW_SPEC 0
 
+// A key name plus whether it is a long press: "OK", "OK!", "R!", "B".
+static void script_key(View* v, const char* tok) {
+    bool lp = false;
+    size_t n = strlen(tok);
+    if(n && tok[n - 1] == '!') {
+        lp = true;
+        n--;
+    }
+    InputKey k;
+    if(n == 1 && (tok[0] == 'R' || tok[0] == 'r'))
+        k = InputKeyRight;
+    else if(n == 1 && (tok[0] == 'L' || tok[0] == 'l'))
+        k = InputKeyLeft;
+    else if(n == 1 && (tok[0] == 'U' || tok[0] == 'u'))
+        k = InputKeyUp;
+    else if(n == 1 && (tok[0] == 'D' || tok[0] == 'd'))
+        k = InputKeyDown;
+    else if(n == 1 && (tok[0] == 'B' || tok[0] == 'b'))
+        k = InputKeyBack;
+    else if(n == 2 && (tok[0] == 'O' || tok[0] == 'o'))
+        k = InputKeyOk;
+    else {
+        fprintf(stderr, "[!] script: unknown key '%.*s'\n", (int)n, tok);
+        return;
+    }
+    sim_press(v, k, lp ? InputTypeLong : InputTypeShort);
+}
+
+// Drive the app from a text script instead of a hard-coded tour. This is what makes the
+// simulator reusable: the app-specific part is now data, not C.
+//
+//   scene <name>   render the current screen into <name>.pgm
+//   key <tok>      press a key: L R U D OK B, suffix ! for a long press
+//   wait <ms>      let the workers run
+//   record on      start CSV logging (drive the write paths)
+//   walk           run the config-row walk
+static void run_script(View* v, const char* path) {
+    FILE* f = fopen(path, "r");
+    if(!f) {
+        fprintf(stderr, "[!] script: cannot open %s\n", path);
+        return;
+    }
+    char line[128];
+    while(fgets(line, sizeof(line), f)) {
+        char cmd[16] = "", arg[64] = "";
+        if(line[0] == '#' || line[0] == '\n') continue;
+        if(sscanf(line, "%15s %63s", cmd, arg) < 1) continue;
+        if(!strcmp(cmd, "scene")) {
+            sim_scene(arg[0] ? arg : "scene");
+            if(v->draw) v->draw(&g_canvas, NULL);
+        } else if(!strcmp(cmd, "key")) {
+            script_key(v, arg);
+        } else if(!strcmp(cmd, "wait")) {
+            unsigned ms = arg[0] ? (unsigned)strtoul(arg, NULL, 10) : 100;
+            for(unsigned t = 0; t < ms; t += 20) usleep(20000);
+        } else if(!strcmp(cmd, "record")) {
+            sim_press(v, InputKeyOk, InputTypeLong);
+        } else if(!strcmp(cmd, "walk")) {
+            extern void sim_walk_config(void);
+            sim_walk_config();
+        } else {
+            fprintf(stderr, "[!] script: unknown command '%s'\n", cmd);
+        }
+    }
+    fclose(f);
+}
+
 void view_dispatcher_run(ViewDispatcher* vd) {
     view_dispatcher_switch_to_view(vd, VIEW_SPEC);
     View* v = find_view(vd, vd->current);
     if(!v || !v->draw) {
         fprintf(stderr, "[!] spectrum view not registered\n");
+        return;
+    }
+
+    const char* script = getenv("SIM_SCRIPT");
+    if(script) {
+        run_script(v, script);
+        sim_scene_flush();
         return;
     }
     // SIM_RECORD=1 starts CSV logging before the tour, so the write paths (cadence CSV, sidecar,

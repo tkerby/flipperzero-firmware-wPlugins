@@ -13,7 +13,8 @@ for f in "$FW"/lib/u8g2/*.c; do
     SRCS="$SRCS $f"
 done
 
-CFLAGS="-std=c11 -O1 -g -ffunction-sections -fdata-sections -I sim/include -I . -I $FW/lib/u8g2 -I $FW/lib/u8g2/.."
+ENTRY=${SIM_ENTRY:-rf_survey_app}
+CFLAGS="-std=c11 -O1 -g -DSIM_ENTRY=$ENTRY -ffunction-sections -fdata-sections -I sim/include -I . -I $FW/lib/u8g2 -I $FW/lib/u8g2/.."
 
 # The app is compiled on its own with the allocation override, so its malloc/free go through the
 # simulator's budgeted heap and the OOM numbers mean something.
