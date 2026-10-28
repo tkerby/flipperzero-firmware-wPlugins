@@ -83,6 +83,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Hanzi Cards v0.5 (By rseufert)](https://github.com/rseufert/hanzi_cards)
 - Added: [Servo Tester+ v0.5 (By Enlighten Tech)](https://github.com/gbhobbytech/flipper-servo-tester)
 - Added: [Varta v1.0 (By mishamyte)](https://github.com/mishamyte/varta)
+- Updated: [FlipBIP Crypto Wallet v2.0 (By xtruan)](https://github.com/xtruan/FlipBIP)
+- Updated: [Tesla Mod v2.17.0b3 (By hypery11)](https://github.com/hypery11/flipper-tesla-fsd)
 
 <a name="release"></a>
 

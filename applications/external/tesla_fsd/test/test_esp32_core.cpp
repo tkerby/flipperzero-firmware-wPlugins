@@ -20,7 +20,9 @@
 #include "fsd_cp_status.h" // 0x25D CP_status decode + plug guard + rewrite predicate (#228)
 #include "fsd_steer.h" // 0x129 steering-angle decode + freshness
 #include "fsd_bms.h" // 0x312 pack-temperature gate
+#include "fsd_freshness.h" // stale-frame TX gate + nag fault/override guard (#176)
 #include "blackbox_flush.h" // black-box ring push, window search, save slices
+#include "blackbox_ram.h" // black-box RAM-backend save memory discipline (#191)
 #include "blackbox_name.h" // black-box event names and their order across reboots
 #include "gear_tx_route.h" // Continuous AP 0x229 press bus choice
 
@@ -2440,8 +2442,265 @@ static void test_blackbox_names(void) {
     CHECK(strcmp(nm, "ev000008_abort") == 0, "next after a reboot: %s", nm);
 }
 
+// A heap with a hard byte cap, to prove the RAM black-box save (blackbox_ram.h)
+// never needs two windows of memory at once (#191). Each block carries its own
+// size ahead of the pointer so free() can return it to the budget, and the peak
+// high-water mark lets a test assert how much was outstanding at once.
+static size_t g_cap_bytes = 0;
+static size_t g_outstanding = 0;
+static size_t g_cap_peak = 0;
+static int g_live_allocs = 0;
+
+static void* cap_alloc(size_t n) {
+    if(g_outstanding + n > g_cap_bytes) return NULL;
+    void* raw = malloc(n + sizeof(size_t));
+    if(!raw) return NULL;
+    *(size_t*)raw = n;
+    g_outstanding += n;
+    if(g_outstanding > g_cap_peak) g_cap_peak = g_outstanding;
+    g_live_allocs++;
+    return (char*)raw + sizeof(size_t);
+}
+static void cap_free(void* p) {
+    if(!p) return;
+    void* raw = (char*)p - sizeof(size_t);
+    g_outstanding -= *(size_t*)raw;
+    g_live_allocs--;
+    free(raw);
+}
+static void cap_reset(size_t cap) {
+    g_cap_bytes = cap;
+    g_outstanding = 0;
+    g_cap_peak = 0;
+    g_live_allocs = 0;
+}
+
+static void test_blackbox_ram_save_mem(void) {
+    // A classic-ESP32 internal-RAM window: 3000 frames at 19 B each (~57 KB),
+    // the safety cap in blackbox.cpp. The no-PSRAM board #191 was filed on has
+    // room for one window but not two.
+    const size_t WINDOW = 3000u * 19u;
+    const size_t TIGHT = WINDOW + WINDOW / 2u; // 1.5 windows free
+
+    // The OLD two-copy path under the tight cap: a scratch copy of the window,
+    // then the slot copy allocated while the scratch is still held. The second
+    // allocation needs a second window and fails — the event is dropped (#191).
+    cap_reset(TIGHT);
+    void* scratch = cap_alloc(WINDOW);
+    CHECK(scratch != NULL, "two-copy path: the scratch window allocates");
+    void* slot_old = cap_alloc(WINDOW); // still holding scratch
+    CHECK(slot_old == NULL, "two-copy path: the second window can't be had (the #191 drop)");
+    cap_free(scratch);
+
+    // The FIX: bb_ram_reserve() frees the previous event first, then takes one
+    // window, and the caller copies the ring straight in. It succeeds under the
+    // same tight cap the two-copy path failed under, and the peak never passes
+    // one window.
+    cap_reset(TIGHT);
+    BBRamSlot slot = {NULL, 0};
+    void* b1 = bb_ram_reserve(&slot, WINDOW, cap_alloc, cap_free);
+    CHECK(
+        b1 != NULL && slot.buf == b1 && slot.bytes == WINDOW,
+        "reserve: one window succeeds where two copies failed");
+    CHECK(
+        g_cap_peak <= WINDOW, "reserve: peak stays at one window (%zu <= %zu)", g_cap_peak, WINDOW);
+
+    // A second event reuses the budget: the old buffer is freed before the new
+    // one, so even back-to-back saves never need two windows.
+    void* b2 = bb_ram_reserve(&slot, WINDOW, cap_alloc, cap_free);
+    CHECK(b2 != NULL && slot.bytes == WINDOW, "reserve: a second event fits in the same budget");
+    CHECK(g_live_allocs == 1, "reserve: exactly one window is live at a time (%d)", g_live_allocs);
+    CHECK(g_cap_peak <= WINDOW, "reserve: peak still one window across saves (%zu)", g_cap_peak);
+    cap_free(slot.buf);
+
+    // A real OOM: not even one window fits. Seed a previous event first, then
+    // shrink the budget below a window. The reserve reports OOM and leaves the
+    // slot empty — the dashboard shows a save failure, not a stale event — and
+    // the previous event is gone too (the price of a one-window peak).
+    cap_reset(WINDOW);
+    BBRamSlot tiny = {NULL, 0};
+    void* seed = bb_ram_reserve(&tiny, WINDOW, cap_alloc, cap_free);
+    CHECK(seed != NULL, "seed: a first event is stored");
+    g_cap_bytes = WINDOW - 1u; // now a window no longer fits
+    void* oom = bb_ram_reserve(&tiny, WINDOW, cap_alloc, cap_free);
+    CHECK(oom == NULL, "reserve: a window too large for the heap reports OOM");
+    CHECK(
+        tiny.buf == NULL && tiny.bytes == 0,
+        "reserve: the slot is empty after an OOM (no stale event)");
+    CHECK(g_live_allocs == 0, "reserve: the OOM freed the previous event too (nothing live)");
+
+    // A zero-frame window still owns a valid 1-byte buffer (empty but real),
+    // so the backend's frame pointer is never NULL for a kept event.
+    cap_reset(64u);
+    BBRamSlot empty = {NULL, 0};
+    void* z = bb_ram_reserve(&empty, 0u, cap_alloc, cap_free);
+    CHECK(z != NULL && empty.bytes == 1u, "reserve: an empty window still owns a buffer");
+    cap_free(empty.buf);
+}
+
+// ── #176: stale-frame TX gate ────────────────────────────────────────────────
+// A drain pass that empties a receive backlog hands process_frame() frames up to
+// ~0.5 s old; a read-modify-retransmit path must emit a modified copy only from a
+// fresh frame. This drives the same decision main.cpp makes for the 0x370 nag
+// echo: fsd_handle_epas_status() runs for every frame (receive-side state), the
+// echo is gated on fsd_tx_fresh(frame.rx_ms, now).
+static void test_fresh_tx_gate(void) {
+    const uint32_t now = 100000u;
+    // The gate itself.
+    CHECK(fsd_tx_fresh(now - 2u, now), "2 ms old is fresh");
+    CHECK(fsd_tx_fresh(now - FSD_FRESH_TX_MAX_AGE_MS, now), "exactly the threshold is fresh");
+    CHECK(
+        !fsd_tx_fresh(now - (FSD_FRESH_TX_MAX_AGE_MS + 1u), now),
+        "one ms past the threshold is stale");
+    CHECK(!fsd_tx_fresh(now - 200u, now), "200 ms backlog is stale");
+    CHECK(fsd_tx_fresh(0u, now), "unstamped (0) treated as fresh");
+
+    FSDState s;
+    memset(&s, 0, sizeof(s));
+    s.nag_killer = true;
+    s.das_hands_on_state = 0xFF; // no DAS frame seen -> conservative echo
+
+    // Eight stale 0x370 frames (counters running ahead), then one fresh frame —
+    // the shape of the #176 record. Drive the nag decision per frame.
+    const int kStale = 8;
+    int echoes = 0, processed = 0;
+    uint8_t last_cnt_out = 0xFF;
+    for(int i = 0; i <= kStale; i++) {
+        bool is_fresh_frame = (i == kStale);
+        CanFrame f;
+        memset(&f, 0, sizeof(f));
+        f.id = CAN_ID_EPAS_STATUS;
+        f.dlc = 8;
+        f.data[2] = 0x08;
+        f.data[3] = 0x02; // torsionBarTorque raw 2050 = 0 Nm
+        f.data[4] = 0x00; // handsOnLevel = 0 (nag imminent)
+        f.data[6] = (uint8_t)(i & 0x0F); // counter runs ahead across the backlog
+        f.rx_ms = is_fresh_frame ? (now - 2u) : (now - 200u);
+
+        // Receive-side state updates for every frame, stale or not.
+        fsd_handle_epas_status(&s, &f);
+        processed++;
+
+        // main.cpp: build + send the echo only when the input is fresh.
+        bool fresh = fsd_tx_fresh(f.rx_ms, now);
+        CanFrame out;
+        memset(&out, 0, sizeof(out));
+        bool fired = fresh && fsd_handle_nag_killer(&s, &f, &out, now);
+        if(fired) {
+            echoes++;
+            last_cnt_out = (uint8_t)(out.data[6] & 0x0F);
+        }
+    }
+    CHECK(echoes == 1, "exactly one echo from a 9-frame backlog, got %d", echoes);
+    CHECK(processed == kStale + 1, "receive-side state updated for every frame (%d)", processed);
+    CHECK(s.torsion_bar_torque_seen, "epas torque parsed for every frame");
+    CHECK(
+        last_cnt_out == (uint8_t)((kStale + 1) & 0x0F),
+        "the one echo carries the fresh frame's counter+1, got %u",
+        last_cnt_out);
+
+    // Control: with no gate (every frame treated fresh) the same backlog emits
+    // nine echoes — the burst #176 reported with counters ahead of the car's.
+    int ungated = 0;
+    for(int i = 0; i <= kStale; i++) {
+        CanFrame f;
+        memset(&f, 0, sizeof(f));
+        f.id = CAN_ID_EPAS_STATUS;
+        f.dlc = 8;
+        f.data[2] = 0x08;
+        f.data[3] = 0x02;
+        f.data[4] = 0x00;
+        f.data[6] = (uint8_t)(i & 0x0F);
+        CanFrame out;
+        memset(&out, 0, sizeof(out));
+        if(fsd_handle_nag_killer(&s, &f, &out, now)) ungated++;
+    }
+    CHECK(ungated == kStale + 1, "ungated backlog would echo every frame (%d)", ungated);
+
+    // A lone fresh frame still echoes.
+    CanFrame lone;
+    memset(&lone, 0, sizeof(lone));
+    lone.id = CAN_ID_EPAS_STATUS;
+    lone.dlc = 8;
+    lone.data[2] = 0x08;
+    lone.data[3] = 0x02;
+    lone.data[4] = 0x00;
+    lone.data[6] = 0x05;
+    lone.rx_ms = now - 1u;
+    CanFrame lout;
+    memset(&lout, 0, sizeof(lout));
+    CHECK(
+        fsd_tx_fresh(lone.rx_ms, now) && fsd_handle_nag_killer(&s, &lone, &lout, now),
+        "a lone fresh frame still echoes");
+}
+
+// ── #176 secondary: nag echo during AP fault / driver override ────────────────
+static void test_nag_fault_override(void) {
+    CanFrame f;
+    memset(&f, 0, sizeof(f));
+    f.id = CAN_ID_EPAS_STATUS;
+    f.dlc = 8;
+    f.data[4] = 0x00; // handsOnLevel = 0 (nag imminent)
+    f.data[6] = 0x05;
+
+    FSDState base;
+    memset(&base, 0, sizeof(base));
+    base.nag_killer = true;
+    base.das_hands_on_state = 0xFF; // conservative echo
+
+    CanFrame out;
+    FSDState s;
+
+    // Baseline: engaged, hands off, ~0 torque -> normal nag echo fires.
+    s = base;
+    s.das_ap_state = 3;
+    s.torsion_bar_torque_nm = 0.3f;
+    memset(&out, 0, sizeof(out));
+    CHECK(
+        fsd_handle_nag_killer(&s, &f, &out, 1000u),
+        "normal nag still echoes (engaged, hands-off, low torque)");
+
+    // AP aborting / aborted -> suppressed.
+    s = base;
+    s.das_ap_state = 8;
+    s.torsion_bar_torque_nm = 0.0f;
+    CHECK(!fsd_handle_nag_killer(&s, &f, &out, 1000u), "no echo while AP ABORTING (8)");
+    s = base;
+    s.das_ap_state = 9;
+    CHECK(!fsd_handle_nag_killer(&s, &f, &out, 1000u), "no echo while AP ABORTED (9)");
+
+    // Driver clearly steering -> suppressed, either sign.
+    s = base;
+    s.das_ap_state = 3;
+    s.torsion_bar_torque_nm = 3.2f;
+    CHECK(!fsd_handle_nag_killer(&s, &f, &out, 1000u), "no echo while driver applies +3.2 Nm");
+    s = base;
+    s.das_ap_state = 3;
+    s.torsion_bar_torque_nm = -3.2f;
+    CHECK(!fsd_handle_nag_killer(&s, &f, &out, 1000u), "no echo while driver applies -3.2 Nm");
+
+    // Boundary at FSD_NAG_DRIVER_TORQUE_NM.
+    s = base;
+    s.das_ap_state = 3;
+    s.torsion_bar_torque_nm = 2.5f;
+    CHECK(!fsd_handle_nag_killer(&s, &f, &out, 1000u), "2.5 Nm suppresses (>=)");
+    s = base;
+    s.das_ap_state = 3;
+    s.torsion_bar_torque_nm = 2.4f;
+    CHECK(fsd_handle_nag_killer(&s, &f, &out, 1000u), "2.4 Nm still echoes");
+
+    // The shared guard predicate directly.
+    CHECK(
+        fsd_nag_suppress_fault(8, 0.0f) && fsd_nag_suppress_fault(9, 0.0f),
+        "guard: abort states suppress");
+    CHECK(!fsd_nag_suppress_fault(3, 0.5f), "guard: engaged + light torque allowed");
+    CHECK(fsd_nag_suppress_fault(3, -2.6f), "guard: heavy torque suppresses");
+}
+
 int main() {
     printf("test_esp32_core: ESP32 firmware handler host tests\n");
+    test_fresh_tx_gate();
+    test_nag_fault_override();
     test_gear_tx_route();
     test_perf_accel_timer();
     test_perf_brake_timer();
@@ -2486,6 +2745,7 @@ int main() {
     test_blackbox_slice_budget();
     test_blackbox_arm_action();
     test_blackbox_trigger_during_save();
+    test_blackbox_ram_save_mem();
     test_blackbox_names();
 
     printf("\n%d passed, %d failed\n", g_pass, g_fail);
