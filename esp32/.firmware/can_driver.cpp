@@ -178,6 +178,7 @@ public:
             frame.req = msg.rtr  ? 1u : 0u;   // but never hands them to a handler
             frame.dlc = msg.data_length_code;
             memcpy(frame.data, msg.data, frame.dlc);
+            frame.rx_ms = millis();   // freshness stamp for the TX gate (#176)
             rx_count_++;
             return true;
         }
@@ -466,6 +467,7 @@ class Mcp2515Driver : public CanDriver {
             if (err != MCP2515::ERROR_OK) return;
             CanFrame frame;
             to_frame(f, frame);
+            frame.rx_ms = millis();   // stamp at enqueue: the drain reads it later (#176)
             bool ok = xQueueSend(rx_queue_, &frame, 0) == pdTRUE;
             rx_stats_.note_push(ok, uxQueueMessagesWaiting(rx_queue_));
         }
@@ -698,6 +700,7 @@ public:
         }
         if (err != MCP2515::ERROR_OK) return false;
         to_frame(f, frame);
+        frame.rx_ms = millis();   // direct chip read: stamp at reception (#176)
         rx_count_++;
         return true;
     }
@@ -1200,6 +1203,7 @@ public:
                 rx_rejected_++;
                 continue;
             }
+            frame.rx_ms = millis();   // freshness stamp for the TX gate (#176)
             rx_count_++;
             return true;
         }
