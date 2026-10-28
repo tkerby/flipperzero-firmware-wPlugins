@@ -261,6 +261,34 @@ static void test_preamble(void) {
     CHECK(p.count < 8); // the data alone does not look like a preamble
 }
 
+static void test_princeton(void) {
+    CASE("princeton: 24 bits + sync = 50 edges");
+    int32_t e[RFS_PRINCETON_EDGES];
+    uint16_t n = rfs_encode_princeton(0x000001u, 350, e, RFS_PRINCETON_EDGES);
+    CHECK(n == RFS_PRINCETON_EDGES);
+
+    CASE("princeton: bit 0 is a 1T/3T pair for '0'");
+    CHECK(e[0] == 350 && e[1] == -1050);
+
+    CASE("princeton: the last data bit is a 3T/1T pair for '1'");
+    CHECK(e[46] == 1050 && e[47] == -350);
+
+    CASE("princeton: sync is 1T high then 31T low");
+    CHECK(e[48] == 350);
+    CHECK(e[49] == -10850);
+
+    CASE("princeton: refuses a buffer that is too small");
+    CHECK(rfs_encode_princeton(0xFFFFFFFFu, 350, e, 10) == 0);
+
+    CASE("princeton: every edge is a multiple of T");
+    bool ok = true;
+    for(uint16_t i = 0; i < n; i++) {
+        int32_t v = e[i] < 0 ? -e[i] : e[i];
+        if(v % 350) ok = false;
+    }
+    CHECK(ok);
+}
+
 int main(void) {
     printf("rf_logic host tests\n\n");
     test_wf_col_at();
@@ -274,6 +302,7 @@ int main(void) {
     test_frame_estimate();
     test_code_kind();
     test_preamble();
+    test_princeton();
 
     printf("\n%s (%d failure%s)\n", g_fail ? "FAILED" : "PASSED", g_fail, g_fail == 1 ? "" : "s");
     return g_fail ? 1 : 0;

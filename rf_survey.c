@@ -71,9 +71,11 @@ static const uint8_t SETTLE_CHOICES[] = {1, 2, 3, 5, 8, 12, 20};
 #define CONF_ROW_WFSAVE  10
 #define CONF_ROW_TRACE   11
 #define CONF_ROW_BM      12
+#define CONF_ROW_SAVEBM  13
 #ifdef RFS_LAB
-#define CONF_ROW_TXTEST 13
-#define CONF_ROW_REPLAY 14
+#define CONF_ROW_TXTEST  14
+#define CONF_ROW_REPLAY  15
+#define CONF_ROW_TXFRAME 16
 #define REP_MAX_EDGES   2048 // ~8 KB of the last capture, kept for replay
 #endif
 
@@ -991,7 +993,16 @@ static void park_loop(App* app, Storage* storage) {
 // One line per bookmark: "name, start_hz, end_hz". A hand-editable file beats another menu:
 // the interesting ranges are personal (a specific gate, a specific meter), and hardcoding 26
 // bands was never going to cover them.
-#define BM_PATH APP_DATA_PATH("freqs.txt")
+// one 1 MHz channel's occupancy aggregate: the unit the History page and the auto-bookmark
+// writer both think in
+typedef struct {
+    uint16_t mhz;
+    uint32_t sum;
+    uint16_t cnt;
+} OccBucket;
+
+#define BM_PATH APP_DATA_PATH("freqs.txt") // hand-written, never touched by the app
+#define BM_AUTO APP_DATA_PATH("freqs_auto.txt") // regenerated from measured occupancy
 
 static void bm_parse(App* app, char* line) {
     if(!line[0] || line[0] == '#' || app->bm_n >= COUNT_OF(app->bm)) return;
@@ -1013,10 +1024,9 @@ static void bm_parse(App* app, char* line) {
     app->bm_n++;
 }
 
-static void bookmarks_load(App* app, Storage* storage) {
-    app->bm_n = 0;
+static void bookmarks_load_file(App* app, Storage* storage, const char* path) {
     File* f = storage_file_alloc(storage);
-    if(!storage_file_open(f, BM_PATH, FSAM_READ, FSOM_OPEN_EXISTING)) {
+    if(!storage_file_open(f, path, FSAM_READ, FSOM_OPEN_EXISTING)) {
         storage_file_free(f);
         return; // no file is a normal state, not an error
     }
@@ -1039,7 +1049,52 @@ static void bookmarks_load(App* app, Storage* storage) {
     }
     storage_file_close(f);
     storage_file_free(f);
+}
+
+static void bookmarks_load(App* app, Storage* storage) {
+    app->bm_n = 0;
+    bookmarks_load_file(app, storage, BM_PATH); // the user's own list first
+    bookmarks_load_file(app, storage, BM_AUTO); // then whatever the last scan measured
     FURI_LOG_I(TAG, "bookmarks: %u", (unsigned)app->bm_n);
+}
+
+// Top channels by measured occupancy, written as bookmarks. Deliberately a SEPARATE file: the
+// app must never rewrite a list the user hand-edited, and the file is regenerated wholesale
+// each time so stale entries cannot accumulate.
+static void bookmarks_write_auto(App* app, Storage* storage, const OccBucket* b, uint8_t n) {
+    File* f = storage_file_alloc(storage);
+    if(!storage_file_open(f, BM_AUTO, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+        storage_file_close(f);
+        storage_file_free(f);
+        return;
+    }
+    DateTime dt;
+    furi_hal_rtc_get_datetime(&dt);
+    int w = snprintf(
+        app->csv_line,
+        CSV_BUF,
+        "# RF Survey auto bookmarks %04u-%02u-%02u %02u:%02u  (n=%u sweeps)\n"
+        "# name, start_hz, end_hz -- one 1 MHz channel each, by measured occupancy\n",
+        dt.year,
+        dt.month,
+        dt.day,
+        dt.hour,
+        dt.minute,
+        (unsigned)app->occ_n);
+    if(w > 0 && w < CSV_BUF) storage_file_write(f, app->csv_line, (size_t)w);
+    for(uint8_t k = 0; k < n; k++) {
+        uint32_t lo = (uint32_t)b[k].mhz * 1000000u;
+        w = snprintf(
+            app->csv_line,
+            CSV_BUF,
+            "b%u, %lu, %lu\n",
+            (unsigned)b[k].mhz,
+            (unsigned long)lo,
+            (unsigned long)(lo + 999999u));
+        if(w > 0 && w < CSV_BUF) storage_file_write(f, app->csv_line, (size_t)w);
+    }
+    storage_file_close(f);
+    storage_file_free(f);
 }
 
 // ---- settings persistence -------------------------------------------------
@@ -1976,11 +2031,38 @@ static void draw_numeric(Canvas* canvas, App* app) {
 // window's sweeps that saw them above the trigger. This replaces a "one winner per sweep"
 // counter, which let the strongest carrier hide every other active channel, and it is a real
 // fraction rather than a popularity count.
-typedef struct {
-    uint16_t mhz;
-    uint32_t sum;
-    uint16_t cnt;
-} OccBucket;
+// Top 1 MHz channels by mean occupancy. Shared by the History page and the auto-bookmark
+// writer so the screen and the file can never disagree about what "busy" means.
+static uint8_t occ_top(const App* app, OccBucket* b, uint8_t max) {
+    uint8_t nb = 0;
+    for(uint16_t i = 0; i < app->nbins; i++) {
+        if(!app->occ[i]) continue;
+        uint16_t mhz = (uint16_t)((app->f_start + (uint32_t)i * app->f_step) / 1000000);
+        int k = -1;
+        for(uint8_t j = 0; j < nb; j++)
+            if(b[j].mhz == mhz) {
+                k = (int)j;
+                break;
+            }
+        if(k < 0) {
+            if(nb == max) continue;
+            k = (int)nb++;
+            b[k].mhz = mhz;
+            b[k].sum = 0;
+            b[k].cnt = 0;
+        }
+        b[k].sum += app->occ[i];
+        b[k].cnt++;
+    }
+    for(uint8_t i = 0; i < nb; i++) // rank by mean occupancy, cross-multiplied integers
+        for(uint8_t j = (uint8_t)(i + 1); j < nb; j++)
+            if(b[j].sum * b[i].cnt > b[i].sum * b[j].cnt) {
+                OccBucket t = b[i];
+                b[i] = b[j];
+                b[j] = t;
+            }
+    return nb;
+}
 
 static void draw_history(Canvas* canvas, App* app) {
     canvas_set_font(canvas, FontSecondary);
@@ -1997,34 +2079,7 @@ static void draw_history(Canvas* canvas, App* app) {
     }
 
     OccBucket b[8];
-    uint8_t nb = 0;
-    for(uint16_t i = 0; i < app->nbins; i++) {
-        if(!app->occ[i]) continue;
-        uint16_t mhz = (uint16_t)((app->f_start + (uint32_t)i * app->f_step) / 1000000);
-        int k = -1;
-        for(uint8_t j = 0; j < nb; j++)
-            if(b[j].mhz == mhz) {
-                k = (int)j;
-                break;
-            }
-        if(k < 0) {
-            if(nb == COUNT_OF(b)) continue;
-            k = (int)nb++;
-            b[k].mhz = mhz;
-            b[k].sum = 0;
-            b[k].cnt = 0;
-        }
-        b[k].sum += app->occ[i];
-        b[k].cnt++;
-    }
-    // rank by mean occupancy, compared cross-multiplied to stay in integers
-    for(uint8_t i = 0; i < nb; i++)
-        for(uint8_t j = (uint8_t)(i + 1); j < nb; j++)
-            if(b[j].sum * b[i].cnt > b[i].sum * b[j].cnt) {
-                OccBucket t = b[i];
-                b[i] = b[j];
-                b[j] = t;
-            }
+    uint8_t nb = occ_top(app, b, COUNT_OF(b));
 
     for(uint8_t k = 0; k < nb && k < 4; k++) {
         uint32_t pct = b[k].sum * 100u / ((uint32_t)b[k].cnt * n);
@@ -3304,7 +3359,49 @@ static void conf_enter(void* ctx, uint32_t index) {
         FURI_LOG_I(TAG, "config: waterfall export queued");
         return;
     }
+    if(index == CONF_ROW_SAVEBM) {
+        OccBucket b[4];
+        uint8_t n = occ_top(app, b, COUNT_OF(b));
+        if(!n) {
+            FURI_LOG_W(TAG, "save busy: nothing measured yet");
+            return;
+        }
+        Storage* st = furi_record_open(RECORD_STORAGE);
+        bookmarks_write_auto(app, st, b, n);
+        furi_record_close(RECORD_STORAGE);
+        FURI_LOG_I(TAG, "save busy: wrote %u channels", (unsigned)n);
+        return;
+    }
 #ifdef RFS_LAB
+    if(index == CONF_ROW_TXFRAME) {
+        // LAB ONLY. Synthesises a Princeton frame from nothing but arithmetic -- no capture,
+        // no decoder. The encoder lives in rf_logic.h and is unit-tested on the PC, so the
+        // waveform shape is verified before it is allowed near a transmitter.
+        uint32_t f = app->f_start + (uint32_t)(app->nbins / 2) * app->f_step;
+        uint16_t n = 0;
+        for(uint8_t r = 0; r < 6 && app->rep_buf; r++) {
+            uint16_t k = rfs_encode_princeton(
+                0x0A5C3Eu, 350, app->rep_buf + n, (uint16_t)(REP_MAX_EDGES - n));
+            if(!k) break;
+            n = (uint16_t)(n + k);
+        }
+        if(n) {
+            app->running = false;
+            if(app->worker) {
+                furi_thread_join(app->worker);
+                furi_thread_free(app->worker);
+                app->worker = NULL;
+            }
+            RfTxStatus st = rf_tx_edges(f, PRESETS[0].regs, app->rep_buf, n);
+            FURI_LOG_I(TAG, "tx frame %lu Hz %u edges -> %d", (unsigned long)f, (unsigned)n,
+                       (int)st);
+            app->running = true;
+            app->reconfig = true;
+            app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
+            furi_thread_start(app->worker);
+        }
+        return;
+    }
     if(index == CONF_ROW_REPLAY) {
         // LAB ONLY. Re-sends the last capture through the same region gate as the TX test.
         // The radio is handed over the same way: stop and join the worker first.
@@ -3536,10 +3633,14 @@ int32_t rf_survey_app(void* p) {
     vi = variable_item_list_add(app->conf, "Bookmark", app->bm_n + 1, bm_cb, app);
     variable_item_set_current_value_index(vi, 0);
     variable_item_set_current_value_text(vi, "-");
+    vi = variable_item_list_add(app->conf, "Save busy", 1, NULL, app);
+    variable_item_set_current_value_text(vi, "OK");
 #ifdef RFS_LAB
     vi = variable_item_list_add(app->conf, "TX test", 1, NULL, app); // lab build only
     variable_item_set_current_value_text(vi, "OK");
     vi = variable_item_list_add(app->conf, "Replay last", 1, NULL, app);
+    variable_item_set_current_value_text(vi, "OK");
+    vi = variable_item_list_add(app->conf, "TX frame", 1, NULL, app);
     variable_item_set_current_value_text(vi, "OK");
 #endif
     variable_item_list_set_enter_callback(app->conf, conf_enter, app);

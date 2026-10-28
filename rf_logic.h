@@ -109,6 +109,28 @@ static inline void rfs_frame_estimate(
     *bits = (uint16_t)(edges / 2);
 }
 
+// ------------------------------------------------------------------ Princeton frame encoder
+
+#define RFS_PRINCETON_BITS 24
+#define RFS_PRINCETON_EDGES ((RFS_PRINCETON_BITS * 2) + 2)
+
+// Encode a PT2262-style frame: every bit is 4T, a "0" is 1T high + 3T low and a "1" is 3T high
+// + 1T low, then a 1T/31T sync closes the frame. Pure arithmetic, so the shape can be checked
+// on a PC before any of it is allowed near a transmitter.
+static inline uint16_t
+    rfs_encode_princeton(uint32_t code, uint32_t t_us, int32_t* out, uint16_t max) {
+    if(!out || max < RFS_PRINCETON_EDGES || t_us < 50 || t_us > 2000) return 0;
+    uint16_t n = 0;
+    for(int i = RFS_PRINCETON_BITS - 1; i >= 0; i--) {
+        bool one = ((code >> i) & 1u) != 0;
+        out[n++] = (int32_t)(one ? 3u * t_us : t_us);
+        out[n++] = (int32_t)-(one ? t_us : 3u * t_us);
+    }
+    out[n++] = (int32_t)t_us; // sync high
+    out[n++] = -(int32_t)(31u * t_us); // sync low
+    return n;
+}
+
 // ------------------------------------------------------------------ preamble / sync
 
 typedef struct {
