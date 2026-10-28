@@ -2124,14 +2124,16 @@ static void draw_numeric(Canvas* canvas, App* app) {
             if(d100 > 9999999) d100 = 9999999;
             if(d100 < -9999999) d100 = -9999999;
             unsigned a = (unsigned)(d100 < 0 ? -d100 : d100);
-            snprintf(
-                tag,
-                sizeof(tag),
-                "%s%u.%uk -%d",
-                d100 < 0 ? "-" : "+",
-                a / 10,
-                a % 10,
-                tv[0] - tv[k]);
+            // 100 Hz units. Peaks far apart produced "+59150.0k" and ran off the screen; above
+            // 1 MHz the decimal is noise anyway, so switch unit rather than widen the line.
+            if(a >= 10000)
+                snprintf(
+                    tag, sizeof(tag), "%s%u.%uM -%d", d100 < 0 ? "-" : "+", a / 10000,
+                    (a / 1000) % 10, tv[0] - tv[k]);
+            else
+                snprintf(
+                    tag, sizeof(tag), "%s%u.%uk -%d", d100 < 0 ? "-" : "+", a / 10, a % 10,
+                    tv[0] - tv[k]);
         } else if(bw) {
             if(bw >= 1000000)
                 snprintf(
