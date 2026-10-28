@@ -83,7 +83,6 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Hanzi Cards v0.5 (By rseufert)](https://github.com/rseufert/hanzi_cards)
 - Added: [Servo Tester+ v0.5 (By Enlighten Tech)](https://github.com/gbhobbytech/flipper-servo-tester)
 - Added: [Varta v1.0 (By mishamyte)](https://github.com/mishamyte/varta)
-- Updated: [FlipBIP Crypto Wallet v2.0 (By xtruan)](https://github.com/xtruan/FlipBIP)
 - Updated: [Tesla Mod v2.17.0b4 (By hypery11)](https://github.com/hypery11/flipper-tesla-fsd)
 - Updated: [Delete-dialog layout and text-box line spacing (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/33514cb3ce1b5ba47dc4d2821c1b2f7e7e8fe415)
 - Updated: [Varta v1.1 (By mishamyte)](https://github.com/mishamyte/varta)
@@ -94,6 +93,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Archive and file-browser icon copy, sorting, and selection fixes (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/a23fea8740ed8bcfc6fe31feee5451340fefacba)
 - Updated: [Delete-dialog layout and text-box line spacing (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/33514cb3ce1b5ba47dc4d2821c1b2f7e7e8fe415)
 - ESP Flasher: [Comes with Marauder v1.20.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.20.0)
+- Updated: [FlipBIP Crypto Wallet v2.1 (By xtruan)](https://github.com/xtruan/FlipBIP)
 
 <a name="release"></a>
 
@@ -581,7 +581,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Flight Monitor v1.0 (By kamylwnb)](https://github.com/kamylwnb/flight_monitor)
 - [Flipagotchi v2.1.1 (By Matt-London)](https://github.com/Matt-London/pwnagotchi-flipper)
 - [FlipBase v0.1 (By Space-Raler)](https://github.com/Space-Raler/FlipBase)
-- [FlipBIP Crypto Wallet v2.0 (By xtruan)](https://github.com/xtruan/FlipBIP)
+- [FlipBIP Crypto Wallet v2.1 (By xtruan)](https://github.com/xtruan/FlipBIP)
 - [FlipBoard Blinky v3.6 (By jamisonderek)](https://github.com/jamisonderek/flipboard)
 - [FlipBoard Keyboard v3.9 (By jamisonderek)](https://github.com/jamisonderek/flipboard)
 - [FlipBoard Signal v3.13 (By jamisonderek)](https://github.com/jamisonderek/flipboard)
