@@ -72,6 +72,7 @@ static const uint8_t SETTLE_CHOICES[] = {1, 2, 3, 5, 8, 12, 20};
 #define CONF_ROW_TRACE   11
 #define CONF_ROW_BM      12
 #define CONF_ROW_SAVEBM  13
+#define CONF_ROW_HELP    18
 #ifdef RFS_LAB
 #define CONF_ROW_TXTEST  14
 #define CONF_ROW_REPLAY  15
@@ -140,6 +141,7 @@ static bool tune_rx(uint32_t f) {
 #define VIEW_CONF  1
 #define VIEW_RANGE 2 // custom start/end frequency editor
 #define VIEW_CAP   3 // .sub capture screen
+#define VIEW_HELP  4 // key reference
 #define PAGE_N     7 // bars, connected, waterfall, numeric, history, cadence, hunt
 #define SCR_W      128
 #define RE_MIN     3000 // 300.0 MHz in 100 kHz units (the CC1101 low-band floor)
@@ -376,6 +378,7 @@ typedef struct {
     // the stream; the GUI flips `capturing`. The survey worker is stopped while capturing so
     // there is never two owners of the one radio.
     View* cap_view;
+    View* help_view; // key reference; Back returns to config
     FuriThread* cap_worker;
     FuriStreamBuffer* cap_stream; // ISR -> capture thread (int32 signed durations)
     uint32_t cap_freq; // locked capture frequency (Hz)
@@ -1317,6 +1320,52 @@ static void wf_export_pgm(App* app, Storage* storage) {
     }
     storage_file_close(f);
     storage_file_free(f);
+
+    // The same snapshot as text. A PGM cannot be diffed, plotted or pasted into a report; this
+    // can. Columns are time (oldest first, one per sweep), rows are frequency.
+    if(ok) {
+        char cpath[96];
+        snprintf(cpath, sizeof(cpath), "%s", path);
+        char* dot = strrchr(cpath, '.');
+        if(dot) {
+            snprintf(dot, 5, ".csv");
+            File* cf = storage_file_alloc(storage);
+            if(cf && storage_file_open(cf, cpath, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+                int m = snprintf(
+                    app->csv_line,
+                    CSV_BUF,
+                    "# RF Survey waterfall %04u-%02u-%02u %02u:%02u:%02u\n"
+                    "# columns = time (oldest first), rows = frequency %lu..%lu MHz\n"
+                    "# y=0 is the lowest frequency row; -128 = no data\n"
+                    "row,t_ms,%s\n",
+                    dt.year,
+                    dt.month,
+                    dt.day,
+                    dt.hour,
+                    dt.minute,
+                    dt.second,
+                    (unsigned long)(app->f_start / 1000000),
+                    (unsigned long)(app->f_end / 1000000),
+                    "rssi");
+                if(m > 0 && m < CSV_BUF) storage_file_write(cf, app->csv_line, (size_t)m);
+                for(int r = 0; r < WF_ROWS; r++) {
+                    int off = snprintf(app->csv_line, CSV_BUF, "%d", r);
+                    for(uint16_t k = 0; k < cnt && off < CSV_BUF - 8; k++)
+                        off += snprintf(
+                            app->csv_line + off,
+                            (size_t)(CSV_BUF - off),
+                            ",%d",
+                            app->wf[r][wf_col_at(app, cnt, k)]);
+                    if(off < CSV_BUF - 1) app->csv_line[off++] = '\n';
+                    storage_file_write(cf, app->csv_line, (size_t)off);
+                }
+                storage_file_close(cf);
+                FURI_LOG_I(TAG, "wf export csv: %s", cpath);
+            }
+            if(cf) storage_file_free(cf);
+        }
+    }
+
     if(ok)
         FURI_LOG_I(TAG, "wf export: %s (%u cols)", path, (unsigned)cnt);
     else
@@ -2108,6 +2157,38 @@ static void draw_history(Canvas* canvas, App* app) {
         canvas_draw_str(canvas, 2, 22 + (int)k * 10, line);
     }
     canvas_draw_str(canvas, 2, 62, "% of sweeps above trigger");
+}
+
+// ---- help ------------------------------------------------------------------
+// The controls are dense enough that they belong on the device, not only in a README nobody
+// has with them in the field.
+static void help_draw(Canvas* canvas, void* model) {
+    UNUSED(model);
+    static const char* const LINES[] = {
+        "L/R   page / cursor",
+        "U/D   window / tune",
+        "OK    zoom/park/capture",
+        "OK lo log on-off",
+        "U lo  hold traces",
+        "D lo  clear holds",
+        "Back  zoom out / exit",
+    };
+    canvas_clear(canvas);
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str(canvas, 2, 8, "Controls");
+    for(size_t i = 0; i < COUNT_OF(LINES); i++)
+        canvas_draw_str(canvas, 2, 18 + (int)i * 7, LINES[i]);
+}
+
+static bool help_input(InputEvent* e, void* ctx) {
+    UNUSED(ctx);
+    App* app = g_app;
+    if(!app) return false;
+    if(e->key == InputKeyBack && e->type == InputTypeShort) {
+        view_dispatcher_switch_to_view(app->vd, VIEW_CONF);
+        return true;
+    }
+    return true;
 }
 
 // ---- cadence page (zero-span) ---------------------------------------------
@@ -3423,6 +3504,10 @@ static void conf_enter(void* ctx, uint32_t index) {
         FURI_LOG_I(TAG, "config: waterfall export queued");
         return;
     }
+    if(index == CONF_ROW_HELP) {
+        view_dispatcher_switch_to_view(app->vd, VIEW_HELP);
+        return;
+    }
     if(index == CONF_ROW_SAVEBM) {
         OccBucket b[4];
         uint8_t n = occ_top(app, b, COUNT_OF(b));
@@ -3727,6 +3812,8 @@ int32_t rf_survey_app(void* p) {
     variable_item_set_current_value_text(vi, "-");
     vi = variable_item_list_add(app->conf, "Save busy", 1, NULL, app);
     variable_item_set_current_value_text(vi, "OK");
+    vi = variable_item_list_add(app->conf, "Help", 1, NULL, app);
+    variable_item_set_current_value_text(vi, "OK");
 #ifdef RFS_LAB
     vi = variable_item_list_add(app->conf, "TX test", 1, NULL, app); // lab build only
     variable_item_set_current_value_text(vi, "OK");
@@ -3760,6 +3847,14 @@ int32_t rf_survey_app(void* p) {
     view_set_draw_callback(app->cap_view, capture_draw);
     view_set_input_callback(app->cap_view, capture_input);
     view_dispatcher_add_view(app->vd, VIEW_CAP, app->cap_view);
+
+    app->help_view = view_alloc();
+    view_allocate_model(app->help_view, ViewModelTypeLockFree, sizeof(void*));
+    view_set_context(app->help_view, app);
+    view_set_draw_callback(app->help_view, help_draw);
+    view_set_input_callback(app->help_view, help_input);
+    view_set_previous_callback(app->help_view, to_conf);
+    view_dispatcher_add_view(app->vd, VIEW_HELP, app->help_view);
 
     // install the permissive region for the scan (RX only); restored on exit
     const FuriHalRegion* orig_region = furi_hal_region_get();
@@ -3804,9 +3899,11 @@ int32_t rf_survey_app(void* p) {
     view_dispatcher_remove_view(app->vd, VIEW_CONF);
     view_dispatcher_remove_view(app->vd, VIEW_RANGE);
     view_dispatcher_remove_view(app->vd, VIEW_CAP);
+    view_dispatcher_remove_view(app->vd, VIEW_HELP);
     view_free(app->view);
     view_free(app->range_view);
     view_free(app->cap_view);
+    view_free(app->help_view);
     variable_item_list_free(app->conf);
     view_dispatcher_free(app->vd);
     furi_record_close(RECORD_GUI);
