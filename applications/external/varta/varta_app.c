@@ -121,8 +121,8 @@ bool varta_app_take_read_id(VartaApp* app) {
 
     // Any of the three EM4100 clock variants. The ID is the same five bytes whichever rate it
     // arrived at, and a key is built at the one rate the reader follows regardless.
-    if(protocol != LFRFIDProtocolEM4100 && protocol != LFRFIDProtocolEM4100_32 &&
-       protocol != LFRFIDProtocolEM4100_16) {
+    if(protocol != LFRFIDProtocolEM4100 && protocol != LFRFIDProtocolEM410032 &&
+       protocol != LFRFIDProtocolEM410016) {
         return false;
     }
 
