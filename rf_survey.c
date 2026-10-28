@@ -73,6 +73,9 @@ static const uint8_t SETTLE_CHOICES[] = {1, 2, 3, 5, 8, 12, 20};
 #define CONF_ROW_BM      12
 #define CONF_ROW_SAVEBM  13
 #define CONF_ROW_HELP    18
+#define CONF_ROW_PROFILE 19
+#define CONF_ROW_SAVEPRF 20
+#define PROFILE_N        4 // numbered slots: no text input on this device
 #ifdef RFS_LAB
 #define CONF_ROW_TXTEST  14
 #define CONF_ROW_REPLAY  15
@@ -366,6 +369,8 @@ typedef struct {
     VariableItem* it_range; // "Range MHz" readout, updated when a band is picked
     VariableItem* it_preset; // "Modulation" preset (AM650/AM270/FM238/FM476)
     VariableItem* it_step; // "Step" -> force-synced when a band change would overflow MAX_BINS
+    VariableItem* it_band; // "Band" -> re-selected after a profile load
+    uint8_t profile_slot; // 0 = none, else 1..PROFILE_N
     VariableItem* it_trigger; // "Trigger" -> text re-synced when Auto trig moves the floor
     VariableItem* it_settle; // "Settle" -> per-bin dwell time
 
@@ -441,6 +446,7 @@ static void autoscale(const App* app, int* floor, int* ceil); // used by the wor
 // defined with the config screen, needed earlier by the range editor
 static uint32_t step_fit(uint32_t lo, uint32_t hi, uint32_t want);
 static uint8_t step_index(uint32_t step);
+static uint16_t band_index(uint32_t lo, uint32_t hi, bool* exact);
 
 // max rssi over the bins that map to waterfall freq-row r (frequency fold is always max,
 // never average -- a narrow burst must not wash out).
@@ -1121,9 +1127,9 @@ static void bookmarks_write_auto(App* app, Storage* storage, const OccBucket* b,
 #define SETTINGS_PATH APP_DATA_PATH("settings.txt")
 #define SETTINGS_VER  1
 
-static void settings_save(App* app, Storage* storage) {
+static void settings_save(App* app, Storage* storage, const char* path) {
     FlipperFormat* ff = flipper_format_file_alloc(storage);
-    bool ok = ff && flipper_format_file_open_always(ff, SETTINGS_PATH) &&
+    bool ok = ff && flipper_format_file_open_always(ff, path) &&
               flipper_format_write_header_cstr(ff, "Flipper RF Survey Settings", SETTINGS_VER);
     if(ok) {
         uint32_t v;
@@ -1162,11 +1168,11 @@ static void settings_save(App* app, Storage* storage) {
 #define SETTINGS_READ(fn, key, dst, cnt) \
     (flipper_format_rewind(ff), fn(ff, key, dst, cnt))
 
-static void settings_load(App* app, Storage* storage) {
+static void settings_load(App* app, Storage* storage, const char* path) {
     FlipperFormat* ff = flipper_format_file_alloc(storage);
     FuriString* hdr = furi_string_alloc();
     uint32_t ver = 0, v;
-    bool ok = ff && flipper_format_file_open_existing(ff, SETTINGS_PATH) &&
+    bool ok = ff && flipper_format_file_open_existing(ff, path) &&
               flipper_format_read_header(ff, hdr, &ver) &&
               furi_string_cmp_str(hdr, "Flipper RF Survey Settings") == 0 && ver == SETTINGS_VER;
     if(ok) {
@@ -1370,6 +1376,50 @@ static void wf_export_pgm(App* app, Storage* storage) {
         FURI_LOG_I(TAG, "wf export: %s (%u cols)", path, (unsigned)cnt);
     else
         FURI_LOG_E(TAG, "wf export: write failed (SD full?)");
+}
+
+// Numbered slots, not named ones: this device has no keyboard, and a profile you cannot type a
+// name for is still worth having when the alternative is re-entering six values.
+static void profile_path(char* buf, size_t n, uint8_t slot) {
+    snprintf(buf, n, APP_DATA_PATH("profile%u.txt"), (unsigned)slot);
+}
+
+// Re-read every row from app state. Called after a profile load, where the values changed
+// behind the config screen's back.
+static void conf_sync_rows(App* app) {
+    if(app->it_range) {
+        char r[24];
+        snprintf(
+            r,
+            sizeof(r),
+            "%lu-%lu",
+            (unsigned long)(app->f_start / 1000000),
+            (unsigned long)(app->f_end / 1000000));
+        variable_item_set_current_value_text(app->it_range, r);
+    }
+    if(app->it_step) {
+        uint8_t si = step_index(app->f_step);
+        variable_item_set_current_value_index(app->it_step, si);
+        variable_item_set_current_value_text(app->it_step, STEP_TXT[si]);
+    }
+    if(app->it_preset) {
+        uint8_t pi = app->preset_idx < PRESET_N ? app->preset_idx : 0;
+        variable_item_set_current_value_index(app->it_preset, pi);
+        variable_item_set_current_value_text(app->it_preset, PRESETS[pi].name);
+    }
+    if(app->it_trigger) {
+        variable_item_set_current_value_index(
+            app->it_trigger, (uint8_t)((app->trigger - TRIG_MIN) / 5));
+        char t[8];
+        snprintf(t, sizeof(t), "%d", app->trigger);
+        variable_item_set_current_value_text(app->it_trigger, t);
+    }
+    if(app->it_band) {
+        bool exact = false;
+        uint16_t bi = band_index(app->f_start, app->f_end, &exact);
+        variable_item_set_current_value_index(app->it_band, bi);
+        variable_item_set_current_value_text(app->it_band, exact ? preset_at(bi)->name : "custom");
+    }
 }
 
 // ---- radio sweep worker ----------------------------------------------------
@@ -2287,7 +2337,12 @@ static void draw_cadence(Canvas* canvas, App* app) {
     uint8_t np = app->park.per_n;
     // absolute spread first: a 100 ms periodic device has CV ~0.02 purely from the 8 ms sample
     // clock, so "stddev within a few sample ticks" is the honest machine test, not CV alone
+    // two devices on one frequency make the period series bimodal; averaging them would
+    // report a period that belongs to neither, so this check comes first
+    uint16_t centers[4];
+    uint8_t ncl = rfs_period_clusters(app->park.per, app->park.per_n, centers, COUNT_OF(centers));
     const char* cls = (np < 3) ? "measuring..." :
+                      (ncl >= 2) ? "2+ devices" :
                       (sd_ms <= 3u * PARK_SAMPLE_MS) ? "MACHINE (crystal)" :
                       (cv_milli < 150) ? "semi-periodic" : "HUMAN / event";
     canvas_draw_str(canvas, 2, 48, cls);
@@ -3450,6 +3505,30 @@ static void bm_cb(VariableItem* item) {
                (unsigned long)hi);
 }
 
+static void profile_cb(VariableItem* item) {
+    App* app = variable_item_get_context(item);
+    uint8_t idx = variable_item_get_current_value_index(item);
+    if(idx > PROFILE_N) idx = 0;
+    app->profile_slot = idx;
+    char txt[8];
+    if(!idx) {
+        variable_item_set_current_value_text(item, "off");
+        return;
+    }
+    snprintf(txt, sizeof(txt), "%u", (unsigned)idx);
+    variable_item_set_current_value_text(item, txt);
+    char path[64];
+    profile_path(path, sizeof(path), idx);
+    Storage* st = furi_record_open(RECORD_STORAGE);
+    settings_load(app, st, path); // a missing slot leaves the current values alone
+    furi_record_close(RECORD_STORAGE);
+    app->f_step = step_fit(app->f_start, app->f_end, app->f_step);
+    conf_sync_rows(app);
+    app->parked = false;
+    app->reconfig = true;
+    FURI_LOG_I(TAG, "profile %u loaded", (unsigned)idx);
+}
+
 static void haptic_cb(VariableItem* item) {
     App* app = variable_item_get_context(item);
     app->haptic = variable_item_get_current_value_index(item) ? true : false;
@@ -3502,6 +3581,19 @@ static void conf_enter(void* ctx, uint32_t index) {
     if(index == CONF_ROW_WFSAVE) {
         app->wf_export = true;
         FURI_LOG_I(TAG, "config: waterfall export queued");
+        return;
+    }
+    if(index == CONF_ROW_SAVEPRF) {
+        if(!app->profile_slot) {
+            FURI_LOG_W(TAG, "save profile: no slot selected");
+            return;
+        }
+        char path[64];
+        profile_path(path, sizeof(path), app->profile_slot);
+        Storage* st = furi_record_open(RECORD_STORAGE);
+        settings_save(app, st, path);
+        furi_record_close(RECORD_STORAGE);
+        FURI_LOG_I(TAG, "profile %u saved", (unsigned)app->profile_slot);
         return;
     }
     if(index == CONF_ROW_HELP) {
@@ -3701,7 +3793,7 @@ int32_t rf_survey_app(void* p) {
     FURI_LOG_I(TAG, "radio: default %s", app->radio ? "External (detected)" : "Internal");
     {
         Storage* st = furi_record_open(RECORD_STORAGE);
-        settings_load(app, st); // overrides every default above when the file is valid
+        settings_load(app, st, SETTINGS_PATH); // overrides every default when valid
         bookmarks_load(app, st);
         furi_record_close(RECORD_STORAGE);
     }
@@ -3750,6 +3842,7 @@ int32_t rf_survey_app(void* p) {
     bool band_exact = false;
     uint16_t bi = band_index(app->f_start, app->f_end, &band_exact);
     VariableItem* vi = variable_item_list_add(app->conf, "Band", PRESET_COUNT, band_cb, app);
+    app->it_band = vi;
     variable_item_set_current_value_index(vi, bi);
     variable_item_set_current_value_text(vi, band_exact ? preset_at(bi)->name : "custom");
     app->it_range = variable_item_list_add(app->conf, "Range MHz", 1, NULL, app);
@@ -3813,6 +3906,11 @@ int32_t rf_survey_app(void* p) {
     vi = variable_item_list_add(app->conf, "Save busy", 1, NULL, app);
     variable_item_set_current_value_text(vi, "OK");
     vi = variable_item_list_add(app->conf, "Help", 1, NULL, app);
+    variable_item_set_current_value_text(vi, "OK");
+    vi = variable_item_list_add(app->conf, "Profile", PROFILE_N + 1, profile_cb, app);
+    variable_item_set_current_value_index(vi, app->profile_slot);
+    variable_item_set_current_value_text(vi, app->profile_slot ? "1" : "off");
+    vi = variable_item_list_add(app->conf, "Save prof.", 1, NULL, app);
     variable_item_set_current_value_text(vi, "OK");
 #ifdef RFS_LAB
     vi = variable_item_list_add(app->conf, "TX test", 1, NULL, app); // lab build only
@@ -3891,7 +3989,7 @@ int32_t rf_survey_app(void* p) {
     furi_hal_region_set((FuriHalRegion*)orig_region); // restore the user's region
     { // persist this session's config for the next launch
         Storage* st = furi_record_open(RECORD_STORAGE);
-        settings_save(app, st);
+        settings_save(app, st, SETTINGS_PATH);
         furi_record_close(RECORD_STORAGE);
     }
 

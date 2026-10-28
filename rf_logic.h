@@ -109,6 +109,55 @@ static inline void rfs_frame_estimate(
     *bits = (uint16_t)(edges / 2);
 }
 
+// ------------------------------------------------------------------ period clustering
+
+// How many distinct periodic sources are on this frequency? One sensor is the common case, but
+// two devices a few kHz apart (or the same model with different jumper settings) show up as a
+// BIMODAL period series, and averaging them produces a period that belongs to neither.
+// Single-linkage on the sorted periods: a new cluster starts when the gap exceeds a quarter of
+// the running mean. Clusters with fewer than 2 members are noise and are dropped.
+static inline uint8_t
+    rfs_period_clusters(const uint16_t* per, uint8_t n, uint16_t* center, uint8_t max) {
+    if(!per || n < 4 || max == 0) return 0;
+    uint16_t v[32];
+    if(n > 32) n = 32;
+    for(uint8_t i = 0; i < n; i++)
+        v[i] = per[i];
+    for(uint8_t i = 1; i < n; i++) { // insertion sort
+        uint16_t k = v[i];
+        int j = (int)i - 1;
+        while(j >= 0 && v[j] > k) {
+            v[j + 1] = v[j];
+            j--;
+        }
+        v[j + 1] = k;
+    }
+
+    uint8_t nc = 0;
+    uint32_t sum = v[0];
+    uint16_t cnt = 1;
+    uint16_t start = 0;
+    for(uint8_t i = 1; i <= n; i++) {
+        bool split = (i == n);
+        if(!split) {
+            uint32_t mean = sum / cnt;
+            uint32_t gap_min = (mean / 4) ? (mean / 4) : 1u;
+            split = (uint32_t)(v[i] - v[i - 1]) > gap_min;
+        }
+        if(split) {
+            if(cnt >= 2 && nc < max) center[nc++] = (uint16_t)(sum / cnt);
+            if(i == n) break;
+            sum = 0;
+            cnt = 0;
+            start = i;
+        }
+        sum += v[i];
+        cnt++;
+        (void)start;
+    }
+    return nc;
+}
+
 // ------------------------------------------------------------------ Princeton frame encoder
 
 #define RFS_PRINCETON_BITS 24

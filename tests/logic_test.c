@@ -289,6 +289,24 @@ static void test_princeton(void) {
     CHECK(ok);
 }
 
+static void test_clusters(void) {
+    uint16_t c[4];
+
+    CASE("clusters: one periodic source is one cluster");
+    uint16_t one[] = {2000, 2002, 1998, 2001, 1999, 2000};
+    CHECK(rfs_period_clusters(one, 6, c, 4) == 1);
+
+    CASE("clusters: two interleaved sources are two clusters");
+    uint16_t two[] = {2000, 45000, 2002, 45010, 1998, 44990, 2001, 45000};
+    CHECK(rfs_period_clusters(two, 8, c, 4) == 2);
+    CHECK(c[0] > 1900 && c[0] < 2100);
+    CHECK(c[1] > 44000);
+
+    CASE("clusters: too few samples is not a claim");
+    uint16_t few[] = {2000, 45000};
+    CHECK(rfs_period_clusters(few, 2, c, 4) == 0);
+}
+
 int main(void) {
     printf("rf_logic host tests\n\n");
     test_wf_col_at();
@@ -303,6 +321,7 @@ int main(void) {
     test_code_kind();
     test_preamble();
     test_princeton();
+    test_clusters();
 
     printf("\n%s (%d failure%s)\n", g_fail ? "FAILED" : "PASSED", g_fail, g_fail == 1 ? "" : "s");
     return g_fail ? 1 : 0;

@@ -228,6 +228,48 @@ def report_cadence(log: Log, threshold: float) -> None:
               f"{np.median(b.durations_ms):.0f}  max {b.durations_ms.max()} ms")
 
 
+def channel_occupancy(log: Log, threshold: float) -> dict[int, float]:
+    """Fraction of sweeps each 1 MHz channel spent above the threshold."""
+    dbm = log.data.astype(float)
+    dbm[dbm == INVALID] = np.nan
+    freqs = log.meta.get("binfreq", [0] * dbm.shape[1])
+    # per-bin fraction of sweeps above the threshold, then averaged across the bins of a
+    # channel. Collapsing each bin to a boolean first would turn a 50%-duty transmitter into
+    # "never heard" -- which is exactly the kind of quiet lie this tool exists to avoid.
+    fraction = np.nanmean(dbm > threshold, axis=0)
+    out: dict[int, list[float]] = {}
+    for i, f in enumerate(freqs):
+        out.setdefault(f // 1_000_000, []).append(float(fraction[i]))
+    return {mhz: float(np.mean(v)) for mhz, v in out.items()}
+
+
+def report_diff(a: Log, b: Log, threshold: float, top: int) -> None:
+    """What changed between two sessions: which channels got busier, which went quiet.
+
+    The useful question after a second survey is never "what is here" -- it is "what is here
+    NOW that was not here before", and that needs both files side by side.
+    """
+    ta = threshold if threshold is not None else float(np.nanpercentile(a.data, 75)) + 8
+    occ_a = channel_occupancy(a, ta)
+    occ_b = channel_occupancy(b, ta)
+
+    rows = []
+    for mhz in sorted(set(occ_a) | set(occ_b)):
+        before = occ_a.get(mhz, 0.0)
+        after = occ_b.get(mhz, 0.0)
+        delta = after - before
+        if abs(delta) >= 0.1:  # 10 percentage points is the smallest honest signal
+            rows.append((abs(delta), mhz, before, after))
+    rows.sort(reverse=True)
+
+    print(f"threshold {ta:.1f} dBm   {len(rows)} channel(s) changed by >=10%")
+    print(f"{'MHz':>8}  {'before':>7}  {'after':>7}  {'delta':>7}  trend")
+    for _, mhz, before, after in rows[:top]:
+        trend = "busier" if after > before else "quieter"
+        print(f"{mhz:8d}  {before * 100:6.1f}%  {after * 100:6.1f}%  "
+              f"{(after - before) * 100:+6.1f}%  {trend}")
+
+
 def report_survey(log: Log, threshold: float, top: int) -> None:
     dbm = log.data.astype(float)
     dbm[dbm == INVALID] = np.nan
@@ -302,7 +344,22 @@ def main(argv: list[str]) -> int:
                     help="dBm threshold (default: p25+8 for cadence, p75+8 for survey)")
     ap.add_argument("-n", "--top", type=int, default=6, help="survey: channels to list")
     ap.add_argument("-p", "--plot", type=Path, default=None)
+    ap.add_argument("-d", "--diff", action="store_true",
+                    help="compare the survey logs against each other instead of reporting one")
     args = ap.parse_args(argv)
+
+    if args.diff:
+        if len(args.files) < 2:
+            raise SystemExit("--diff needs at least two survey logs")
+        logs = [load(p) for p in args.files if p.exists()]
+        if any(lg.kind != "survey" for lg in logs):
+            raise SystemExit("--diff compares survey logs; cadence logs are single-frequency")
+        base = logs[0]
+        for idx, other in enumerate(logs[1:], start=1):
+            print(f"== {args.files[0].name}  ->  {args.files[idx].name}")
+            report_diff(base, other, args.trigger, args.top)
+            print()
+        return 0
 
     for i, path in enumerate(args.files):
         if not path.exists():
