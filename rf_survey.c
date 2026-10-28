@@ -145,7 +145,11 @@ static bool tune_rx(uint32_t f) {
 #define VIEW_RANGE 2 // custom start/end frequency editor
 #define VIEW_CAP   3 // .sub capture screen
 #define VIEW_HELP  4 // key reference
+#ifdef RFS_LAB
+#define PAGE_N     8 // + carrier test
+#else
 #define PAGE_N     7 // bars, connected, waterfall, numeric, history, cadence, hunt
+#endif
 #define SCR_W      128
 #define RE_MIN     3000 // 300.0 MHz in 100 kHz units (the CC1101 low-band floor)
 #define RE_MAX     9280 // 928.0 MHz
@@ -406,6 +410,12 @@ typedef struct {
     uint32_t rep_freq;
     uint8_t rep_preset;
     uint32_t brute_next; // next Princeton code the brutal page will start from
+    // carrier test page: bounded, cancellable, and the only TX that can run for long
+    volatile bool carrier_on;
+    volatile bool carrier_abort;
+    uint8_t carrier_secs; // index into CARRIER_SECS
+    uint32_t carrier_t0;
+    FuriThread* carrier_worker;
     VariableItem* it_brute;
 #endif
     char cap_decode[40]; // decoded protocol string from the firmware's decoder chain
@@ -2241,6 +2251,86 @@ static bool help_input(InputEvent* e, void* ctx) {
     return true;
 }
 
+#ifdef RFS_LAB
+// ---- carrier test (lab only) ----------------------------------------------
+// An unmodulated tone for bench work: PA check, antenna, receiver desense. Three things keep
+// it an instrument rather than a nuisance -- the API caps the duration at 60 s, the region gate
+// runs before the radio is touched, and OK cancels mid-count.
+static const uint8_t CARRIER_SECS[] = {5, 10, 20, 30, 60};
+
+static int32_t carrier_worker(void* ctx) {
+    App* app = ctx;
+    uint32_t f = app->f_start + (uint32_t)(app->nbins / 2) * app->f_step;
+    app->carrier_t0 = furi_get_tick();
+    RfTxStatus st = rf_tx_carrier(
+        f, subghz_device_cc1101_preset_ook_650khz_async_regs, CARRIER_SECS[app->carrier_secs],
+        &app->carrier_abort);
+    FURI_LOG_I(TAG, "carrier %lu Hz -> %d", (unsigned long)f, (int)st);
+    app->carrier_on = false;
+    return 0;
+}
+
+static void carrier_stop(App* app) {
+    if(!app->carrier_worker) return;
+    app->carrier_abort = true;
+    furi_thread_join(app->carrier_worker);
+    furi_thread_free(app->carrier_worker);
+    app->carrier_worker = NULL;
+    app->carrier_on = false;
+    // hand the radio back to the survey
+    app->running = true;
+    app->reconfig = true;
+    app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
+    furi_thread_start(app->worker);
+}
+
+static void carrier_start(App* app) {
+    // the sweep worker is the radio's owner; stop and join it before the transmitter runs
+    app->running = false;
+    if(app->worker) {
+        furi_thread_join(app->worker);
+        furi_thread_free(app->worker);
+        app->worker = NULL;
+    }
+    app->carrier_abort = false;
+    app->carrier_on = true;
+    app->carrier_worker = furi_thread_alloc_ex("rfsurvey_carrier", 3072, carrier_worker, app);
+    furi_thread_start(app->carrier_worker);
+}
+
+static void draw_carrier(Canvas* canvas, App* app) {
+    canvas_set_font(canvas, FontSecondary);
+    char s[32];
+    uint32_t f = app->f_start + (uint32_t)(app->nbins / 2) * app->f_step;
+    snprintf(
+        s,
+        sizeof(s),
+        "Carrier %lu.%03lu",
+        (unsigned long)(f / 1000000),
+        (unsigned long)((f / 1000) % 1000));
+    canvas_draw_str(canvas, 2, 9, s);
+
+    if(!app->carrier_on) {
+        canvas_draw_str(canvas, 2, 28, "OK: start");
+        snprintf(s, sizeof(s), "Up/Down: %u s", (unsigned)CARRIER_SECS[app->carrier_secs]);
+        canvas_draw_str(canvas, 2, 40, s);
+        canvas_draw_str(canvas, 2, 54, "unmodulated, capped at 60 s");
+        return;
+    }
+
+    uint32_t total = CARRIER_SECS[app->carrier_secs];
+    uint32_t elapsed = (furi_get_tick() - app->carrier_t0) / 1000;
+    uint32_t left = (elapsed >= total) ? 0 : total - elapsed;
+
+    canvas_set_font(canvas, FontBigNumbers);
+    snprintf(s, sizeof(s), "%lu", (unsigned long)left);
+    canvas_draw_str_aligned(canvas, SCR_W / 2, 36, AlignCenter, AlignBottom, s);
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str_aligned(canvas, SCR_W / 2, 42, AlignCenter, AlignBottom, "s left");
+    canvas_draw_str(canvas, 2, 56, "OK: stop now");
+}
+#endif
+
 // ---- cadence page (zero-span) ---------------------------------------------
 
 // Allan deviation of the period series (tau = one sample): consecutive differences cancel the
@@ -2434,7 +2524,11 @@ static void spectrum_draw(Canvas* canvas, void* model) {
     canvas_clear(canvas);
     canvas_set_font(canvas, FontSecondary);
 
-    if(app->page == 6) {
+    if(app->page == 7) {
+#ifdef RFS_LAB
+        draw_carrier(canvas, app);
+#endif
+    } else if(app->page == 6) {
         draw_hunt(canvas, app); // full-height fox-hunt page
     } else if(app->page == 5) {
         draw_cadence(canvas, app); // full-height zero-span page, draws its own layout
@@ -2500,7 +2594,7 @@ static void spectrum_draw(Canvas* canvas, void* model) {
     }
 
     // native pill hints (the waterfall and cadence pages draw their own layout instead)
-    if(app->page != 2 && app->page != 5 && app->page != 6) {
+    if(app->page != 2 && app->page != 5 && app->page != 6 && app->page != 7) {
         elements_button_left(canvas, "Page");
         if(app->page == 0) elements_button_center(canvas, "Zoom");
         if(app->page == 3) elements_button_center(canvas, "Capture"); // OK on the cursor row
@@ -2565,6 +2659,24 @@ static bool spectrum_input(InputEvent* event, void* context) {
         spec_redraw(app);
         return true;
     }
+#ifdef RFS_LAB
+    // Carrier page: OK starts/stops, Up/Down picks the duration while idle
+    if(app->page == 7 && event->key == InputKeyOk && sp) {
+        if(app->carrier_on)
+            carrier_stop(app);
+        else
+            carrier_start(app);
+        spec_redraw(app);
+        return true;
+    }
+    if(app->page == 7 && !app->carrier_on && sp &&
+       (event->key == InputKeyUp || event->key == InputKeyDown)) {
+        uint8_t n = COUNT_OF(CARRIER_SECS);
+        app->carrier_secs = (uint8_t)((app->carrier_secs + (event->key == InputKeyUp ? 1 : n - 1)) % n);
+        spec_redraw(app);
+        return true;
+    }
+#endif
     // Cadence page: OK parks on (or releases) the selected frequency. Nothing is tuned here --
     // the sweep worker sees the flag at the top of its loop and hands the radio to park_loop.
     if(event->key == InputKeyOk && sp && (app->page == 5 || app->page == 6)) {
@@ -3981,6 +4093,9 @@ int32_t rf_survey_app(void* p) {
     furi_timer_stop(app->redraw);
     furi_timer_free(app->redraw);
     capture_stop(app); // join a capture thread if one is somehow still running
+#ifdef RFS_LAB
+    carrier_stop(app);
+#endif
     app->running = false;
     if(app->worker) { // NULL only if we somehow exit mid-capture; normally restarted on Back
         furi_thread_join(app->worker);
