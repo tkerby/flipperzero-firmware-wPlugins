@@ -86,7 +86,14 @@ cd tests && cc -std=c11 -Wall -Wextra -Werror -O2 -I.. logic_test.c -o /tmp/t &&
 
 Each case is a scenario that was a real bug or one bad decision away from one: a ring that
 wraps, an observation hole landing inside a burst, a mid-burst stop, a repeat group, a
-percentile on a tiny sample. Full-device emulation is not a substitute — the firmware can be
+percentile on a tiny sample.
+
+The UI simulator lives in its own repository, [tbelbek/fap-sim](https://github.com/tbelbek/fap-sim):
+it builds a FAP against a host implementation of the firmware API, renders the real draw code
+with the firmware's own u8g2 fonts, and drives it from an input script. It is GPL-3.0 because it
+reimplements the firmware's GUI modules; this repository stays MIT.
+
+Full-device emulation is not a substitute — the firmware can be
 booted under Renode, but no emulator models the CC1101, which is the part that matters here.
 
 ## Analysing the logs on a PC

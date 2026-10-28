@@ -3,7 +3,3 @@ dist/
 build/
 *.elf
 .vscode/
-sim/out/*.pgm
-sim/out/rfsim
-sim/out/*.dSYM
-sim/out/page*.pgm
