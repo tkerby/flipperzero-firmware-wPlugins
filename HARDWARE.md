@@ -439,7 +439,31 @@ Any ESP32 dev board + any MCP2515 CAN module from Aliexpress.
 | **Total** | **~$8-12** |
 
 Wire: X179 CAN-H/CAN-L → MCP2515 module CAN-H/CAN-L. X179 12V → buck
-converter → ESP32 VIN. X179 GND → common GND.
+converter → ESP32 VIN + MCP2515 VCC (see below). X179 GND → common GND
+(ESP32, MCP2515 and the buck all share it).
+
+**Power the MCP2515 module from 5 V.** Almost every commodity MCP2515 +
+TJA1050 module is a 5 V board — the TJA1050 transceiver needs 5 V to swing
+the differential pair — so its VCC must get 5 V, not 3.3 V. Set the buck to
+**5.0 V** and feed both the ESP32's 5V/VIN pin and the module's VCC from it;
+the ESP32's own 3.3 V regulator then supplies the SoC. Size the buck for the
+ESP32's peak Wi-Fi current (the classic ESP32 draws bursts up to ~500 mA on
+TX) plus the transceiver — a 5 V supply rated for ~1 A is comfortable; verify
+your board's VIN range before wiring.
+
+**Level-shift MISO.** Because the module runs at 5 V, its **SO (MISO) output
+drives a 5 V high**, and the ESP32's GPIOs are 3.3 V only. Divide or
+level-shift SO down to 3.3 V before it reaches the ESP32 — see
+[MCP2515 MISO 5V to 3.3V voltage divider](#mcp2515-miso-5v-to-33v-voltage-divider)
+below. MOSI, SCK and CS are driven by the ESP32 at 3.3 V and need no shifting.
+
+**Decouple the supply.** A tester traced intermittent CAN faults to poor
+supply quality on a buck-powered build
+([#191](https://github.com/hypery11/flipper-tesla-fsd/issues/191)). Add a
+bulk capacitor across the buck's 5 V output (a ~100–470 µF electrolytic) and
+a 0.1 µF ceramic close to the MCP2515's VCC/GND pins. Keep the power leads
+short. Values are a sane starting point, not a hard requirement — verify on
+your module.
 
 Build with `pio run -e esp32-mcp2515` (from `esp32/`; targets classic ESP32),
 adjust pin config in `esp32/.firmware/config.h`.
@@ -670,16 +694,31 @@ shrink the joint and you're done.
 
 #### Verification
 
-Before powering the ESP32 with the MCP2515 connected, with **only** the
-MCP2515 module powered from 5 V, idle the SPI bus and probe the
-divider's output with a multimeter:
+Check the **divider ratio**, not the idle SO pin. The MCP2515's SO output is
+high-impedance (tri-stated) whenever CS is high — which is exactly the idle
+state — so probing SO at idle does **not** read a defined high. A floating
+pin reads whatever leakage and your meter's input impedance settle it at,
+anywhere from near 0 V to a few volts, and tells you nothing about the
+divider. An earlier version of this guide said SO "should idle high at
+~4.7–5.0 V"; that is wrong and could lead you to "fix" a divider that was
+correct.
 
-- MCP2515 SO pin (before divider): should idle high at ~4.7–5.0 V
-- ESP32 MISO pin (after divider): should be 3.0–3.4 V
+Verify the ratio with a **known input** instead. With the module unpowered,
+feed a known DC voltage into the SO side of the divider — the simplest source
+is the module's own 5 V VCC pin: briefly jumper the SO-side node to VCC, or
+apply 5 V from a bench supply — and measure the ESP32 side:
 
-If the divider output is below 2.5 V or above 3.6 V, double-check the
-resistor values and the wiring direction (R1 on the MCP2515 side, R2
-to GND).
+- 5 V in → ESP32 MISO side ≈ **3.0 V** (0.6 × Vin for the 2.2 kΩ / 3.3 kΩ
+  pair; scale for your resistor ratio)
+- Confirm it tracks: halve the input and the output should halve too
+
+If the output is not ~0.6 × the input, check the resistor values and the
+wiring direction (R1 on the MCP2515 SO side, R2 to GND).
+
+Alternatively, measure SO **while a transfer is running** (firmware up,
+reading registers, so CS is driven low and the MCP2515 actually drives SO) —
+but that needs the ESP32 powered and a scope or logic analyzer to catch it,
+whereas the ratio check above needs only a multimeter.
 
 ### Termination resistor
 

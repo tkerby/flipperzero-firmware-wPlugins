@@ -21,6 +21,7 @@
 #include "fsd_steer.h"     // 0x129 steering-angle decode + freshness
 #include "fsd_bms.h"       // 0x312 pack-temperature gate
 #include "blackbox_flush.h" // black-box ring push, window search, save slices
+#include "blackbox_ram.h"   // black-box RAM-backend save memory discipline (#191)
 #include "blackbox_name.h"  // black-box event names and their order across reboots
 #include "gear_tx_route.h" // Continuous AP 0x229 press bus choice
 
@@ -2007,6 +2008,99 @@ static void test_blackbox_names(void) {
     CHECK(strcmp(nm, "ev000008_abort") == 0, "next after a reboot: %s", nm);
 }
 
+// A heap with a hard byte cap, to prove the RAM black-box save (blackbox_ram.h)
+// never needs two windows of memory at once (#191). Each block carries its own
+// size ahead of the pointer so free() can return it to the budget, and the peak
+// high-water mark lets a test assert how much was outstanding at once.
+static size_t g_cap_bytes = 0;
+static size_t g_outstanding = 0;
+static size_t g_cap_peak = 0;
+static int    g_live_allocs = 0;
+
+static void* cap_alloc(size_t n) {
+    if (g_outstanding + n > g_cap_bytes) return NULL;
+    void* raw = malloc(n + sizeof(size_t));
+    if (!raw) return NULL;
+    *(size_t*)raw = n;
+    g_outstanding += n;
+    if (g_outstanding > g_cap_peak) g_cap_peak = g_outstanding;
+    g_live_allocs++;
+    return (char*)raw + sizeof(size_t);
+}
+static void cap_free(void* p) {
+    if (!p) return;
+    void* raw = (char*)p - sizeof(size_t);
+    g_outstanding -= *(size_t*)raw;
+    g_live_allocs--;
+    free(raw);
+}
+static void cap_reset(size_t cap) {
+    g_cap_bytes = cap; g_outstanding = 0; g_cap_peak = 0; g_live_allocs = 0;
+}
+
+static void test_blackbox_ram_save_mem(void) {
+    // A classic-ESP32 internal-RAM window: 3000 frames at 19 B each (~57 KB),
+    // the safety cap in blackbox.cpp. The no-PSRAM board #191 was filed on has
+    // room for one window but not two.
+    const size_t WINDOW = 3000u * 19u;
+    const size_t TIGHT  = WINDOW + WINDOW / 2u;   // 1.5 windows free
+
+    // The OLD two-copy path under the tight cap: a scratch copy of the window,
+    // then the slot copy allocated while the scratch is still held. The second
+    // allocation needs a second window and fails — the event is dropped (#191).
+    cap_reset(TIGHT);
+    void* scratch = cap_alloc(WINDOW);
+    CHECK(scratch != NULL, "two-copy path: the scratch window allocates");
+    void* slot_old = cap_alloc(WINDOW);   // still holding scratch
+    CHECK(slot_old == NULL, "two-copy path: the second window can't be had (the #191 drop)");
+    cap_free(scratch);
+
+    // The FIX: bb_ram_reserve() frees the previous event first, then takes one
+    // window, and the caller copies the ring straight in. It succeeds under the
+    // same tight cap the two-copy path failed under, and the peak never passes
+    // one window.
+    cap_reset(TIGHT);
+    BBRamSlot slot = {NULL, 0};
+    void* b1 = bb_ram_reserve(&slot, WINDOW, cap_alloc, cap_free);
+    CHECK(b1 != NULL && slot.buf == b1 && slot.bytes == WINDOW,
+          "reserve: one window succeeds where two copies failed");
+    CHECK(g_cap_peak <= WINDOW, "reserve: peak stays at one window (%zu <= %zu)",
+          g_cap_peak, WINDOW);
+
+    // A second event reuses the budget: the old buffer is freed before the new
+    // one, so even back-to-back saves never need two windows.
+    void* b2 = bb_ram_reserve(&slot, WINDOW, cap_alloc, cap_free);
+    CHECK(b2 != NULL && slot.bytes == WINDOW,
+          "reserve: a second event fits in the same budget");
+    CHECK(g_live_allocs == 1, "reserve: exactly one window is live at a time (%d)",
+          g_live_allocs);
+    CHECK(g_cap_peak <= WINDOW, "reserve: peak still one window across saves (%zu)", g_cap_peak);
+    cap_free(slot.buf);
+
+    // A real OOM: not even one window fits. Seed a previous event first, then
+    // shrink the budget below a window. The reserve reports OOM and leaves the
+    // slot empty — the dashboard shows a save failure, not a stale event — and
+    // the previous event is gone too (the price of a one-window peak).
+    cap_reset(WINDOW);
+    BBRamSlot tiny = {NULL, 0};
+    void* seed = bb_ram_reserve(&tiny, WINDOW, cap_alloc, cap_free);
+    CHECK(seed != NULL, "seed: a first event is stored");
+    g_cap_bytes = WINDOW - 1u;   // now a window no longer fits
+    void* oom = bb_ram_reserve(&tiny, WINDOW, cap_alloc, cap_free);
+    CHECK(oom == NULL, "reserve: a window too large for the heap reports OOM");
+    CHECK(tiny.buf == NULL && tiny.bytes == 0,
+          "reserve: the slot is empty after an OOM (no stale event)");
+    CHECK(g_live_allocs == 0, "reserve: the OOM freed the previous event too (nothing live)");
+
+    // A zero-frame window still owns a valid 1-byte buffer (empty but real),
+    // so the backend's frame pointer is never NULL for a kept event.
+    cap_reset(64u);
+    BBRamSlot empty = {NULL, 0};
+    void* z = bb_ram_reserve(&empty, 0u, cap_alloc, cap_free);
+    CHECK(z != NULL && empty.bytes == 1u, "reserve: an empty window still owns a buffer");
+    cap_free(empty.buf);
+}
+
 int main() {
     printf("test_esp32_core: ESP32 firmware handler host tests\n");
     test_gear_tx_route();
@@ -2053,6 +2147,7 @@ int main() {
     test_blackbox_slice_budget();
     test_blackbox_arm_action();
     test_blackbox_trigger_during_save();
+    test_blackbox_ram_save_mem();
     test_blackbox_names();
 
     printf("\n%d passed, %d failed\n", g_pass, g_fail);
