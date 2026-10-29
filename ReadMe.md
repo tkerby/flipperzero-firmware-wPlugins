@@ -94,6 +94,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Delete-dialog layout and text-box line spacing (By xMasterX)](https://github.com/DarkFlippers/unleashed-firmware/commit/33514cb3ce1b5ba47dc4d2821c1b2f7e7e8fe415)
 - ESP Flasher: [Comes with Marauder v1.20.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.20.0)
 - Updated: [FlipBIP Crypto Wallet v2.1 (By xtruan)](https://github.com/xtruan/FlipBIP)
+- Updated: [Ghost ESP v1.9 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 
 <a name="release"></a>
 
@@ -648,7 +649,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [GB Printer v0.5 (By kbembedded)](https://github.com/kbembedded/flipper-gb-printer) `Req: GB Link Cable / Malveke`
 - [Gemini IA v1.1 (By d4rks1d33 & jamisonderek)](https://github.com/d4rks1d33/Gemini-Flipper)
 - [Genie Recorder v3.2 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/subghz/apps/genie-recorder)
-- [Ghost ESP v1.8.3 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
+- [Ghost ESP v1.9 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 - [Ghost Tracker v1.0 (By Zinetick)](https://github.com/Zinetick/ghost_tracker)
 - [GhostBook v0.6 (By digitard)](https://github.com/digitard/ghostbook)
 - [GhostTag v2.0 (By at0m-b0mb)](https://github.com/at0m-b0mb/GhostTag-FlipperZero) `Req: ESP32`
