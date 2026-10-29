@@ -1,0 +1,122 @@
+name: Build and Release FAP
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (e.g. 1.9.0; a leading v is optional)"
+        required: true
+        type: string
+      release_name:
+        description: "Release title (optional, defaults to the tag)"
+        required: false
+        type: string
+        default: ""
+      prerelease:
+        description: "Mark this release as a pre-release"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build FAP and publish release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Normalize version
+        id: version
+        run: |
+          VERSION="${{ inputs.version }}"
+          VERSION="${VERSION#v}"
+
+          if [ -z "$VERSION" ]; then
+            echo "A version is required."
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Set FAP version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+
+          version = os.environ["VERSION"]
+          path = "application.fam"
+          with open(path, "r", encoding="utf-8") as f:
+              manifest = f.read()
+
+          manifest, count = re.subn(
+              r'(fap_version\s*=\s*")[^"]*(")',
+              rf'\g<1>{version}\g<2>',
+              manifest,
+          )
+          if count != 1:
+              raise SystemExit("Could not update fap_version in application.fam")
+
+          with open(path, "w", encoding="utf-8") as f:
+              f.write(manifest)
+
+          print(f"fap_version set to {version}")
+          PY
+
+      - name: Build with ufbt
+        id: build-app
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1.3
+        with:
+          sdk-channel: release
+
+      - name: Prepare release asset
+        run: |
+          mkdir -p release_assets
+          cp ${{ steps.build-app.outputs.fap-artifacts }} release_assets/
+          ls -lh release_assets
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
+          TITLE: ${{ inputs.release_name }}
+          PRERELEASE: ${{ inputs.prerelease }}
+        run: |
+          if [ -z "$TITLE" ]; then
+            TITLE="$TAG"
+          fi
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; updating assets."
+            gh release upload "$TAG" release_assets/*.fap --clobber
+            gh release edit "$TAG" --title "$TITLE"
+
+            if [ "$PRERELEASE" = "true" ]; then
+              gh release edit "$TAG" --prerelease
+            else
+              gh release edit "$TAG" --prerelease=false
+            fi
+          else
+            ARGS=(--title "$TITLE" --generate-notes)
+            if [ "$PRERELEASE" = "true" ]; then
+              ARGS+=(--prerelease)
+            fi
+
+            gh release create "$TAG" release_assets/*.fap "${ARGS[@]}"
+          fi
+
+          echo "Published $TAG"
