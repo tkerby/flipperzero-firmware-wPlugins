@@ -25,7 +25,7 @@ history, and logs everything for analysis on a PC. **Sub-GHz RX only — it neve
 - **Range config** — scroll a Band list (full-spectrum / full-band / ~26 known allocations,
   each tagged, e.g. 433 ISM, 868 ISM, PMR446, LTE800), or type an exact Start/End range in a
   Frequency-Analyzer-style editor. Pick modulation preset (AM650/AM270/FM238/FM476) and step.
-- **Six live views**, flip with Left/Right:
+- **Seven live views**, flip with Left/Right:
   - **Bars** — grouped bars with per-bin peak-hold, a movable cursor, and a dotted trigger
     line. OK zooms into the cursor band and **narrows the RX bandwidth** so a carrier shows a
     sharp peak, not a wide mountain.
@@ -44,6 +44,9 @@ history, and logs everything for analysis on a PC. **Sub-GHz RX only — it neve
     that can measure anything shorter than a sweep. A `~` in the header means an observation
     hole (a slow SD write, a preempted thread) landed in the last few seconds: the initial
     intervals and burst lengths that spanned it were discarded rather than averaged in.
+  - **Hunt** — fox hunting at one frequency: a single number, a bar and the vibro, readable at
+    arm's length while walking. OK starts at the selected frequency, Up/Down tunes it in 10 kHz
+    steps; the strongest reading is the source.
 - **Trigger** — a settable dBm floor that drives the waterfall, the haptic cue, capture and
   the burst segmentation on the Cadence page. Pressing OK on the Trigger row auto-calibrates
   it from the sweep's own 25th percentile (+8 dB).

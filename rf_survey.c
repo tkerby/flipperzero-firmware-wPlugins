@@ -2360,7 +2360,7 @@ static bool help_input(InputEvent* e, void* ctx) {
     App* app = g_app;
     if(!app) return false;
     if(e->key == InputKeyBack && e->type == InputTypeShort) {
-        view_dispatcher_switch_to_view(app->vd, VIEW_CONF);
+        view_dispatcher_switch_to_view(app->vd, VIEW_CONF2); // Help is opened from page 2
         return true;
     }
     return true;
@@ -2480,7 +2480,9 @@ static float park_adev(const App* app) {
 static void draw_cadence(Canvas* canvas, App* app) {
     canvas_set_font(canvas, FontSecondary);
     char s[40];
-    uint32_t f = app->park_freq;
+    // idle: show where OK WILL park (park_begin takes selected_freq), not the last parked
+    // frequency -- that one is stale and can sit outside the current range entirely
+    uint32_t f = app->parked ? app->park_freq : selected_freq(app);
     uint8_t p = app->preset_idx < PRESET_N ? app->preset_idx : 0;
 
     if(!app->parked) {
@@ -2608,7 +2610,7 @@ static void fmt_dist(char* buf, size_t n, uint32_t m) {
 static void draw_hunt(Canvas* canvas, App* app) {
     canvas_set_font(canvas, FontSecondary);
     char s[48];
-    uint32_t f = app->park_freq;
+    uint32_t f = app->parked ? app->park_freq : selected_freq(app); // see draw_cadence
     snprintf(
         s,
         sizeof(s),
@@ -3229,21 +3231,9 @@ static bool range_input(InputEvent* e, void* ctx) {
         app->f_end = app->re_end * 100000;
         // a hand-typed range can be wide enough that the current step would overflow MAX_BINS
         app->f_step = step_fit(app->f_start, app->f_end, app->f_step);
-        if(app->it_step) {
-            uint8_t si = step_index(app->f_step);
-            variable_item_set_current_value_index(app->it_step, si);
-            variable_item_set_current_value_text(app->it_step, STEP_TXT[si]);
-        }
+        conf_sync_rows(app); // range, step AND band: the Band row kept the old name before
         app->parked = false; // new range -> the parked frequency may be outside it
         app->reconfig = true;
-        char r[24];
-        snprintf(
-            r,
-            sizeof(r),
-            "%lu-%lu",
-            (unsigned long)(app->f_start / 1000000),
-            (unsigned long)(app->f_end / 1000000));
-        variable_item_set_current_value_text(app->it_range, r);
         FURI_LOG_I(
             TAG, "range: set %lu-%lu", (unsigned long)app->f_start, (unsigned long)app->f_end);
         view_dispatcher_switch_to_view(app->vd, VIEW_CONF);
@@ -4379,8 +4369,8 @@ int32_t rf_survey_app(void* p) {
     FURI_LOG_I(TAG, "app: region set permissive (was %s)", furi_hal_region_get_name());
 
     app->running = true;
-    // 3 KB stack: the sweep worker calls into the subghz HAL (SPI); past apps in this
-    // family hit an MPU/stack fault from underestimating, so leave headroom.
+    // 6 KB stack: the sweep worker calls into the subghz HAL (SPI) and peaks at ~1.6 KB on the
+    // device (measured with `top`); the rest is headroom, not a fix for the v1.3 crash.
     app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 6144, sweep_worker, app);
     furi_thread_start(app->worker);
 
