@@ -3440,7 +3440,7 @@ static void text_input_result_callback(void* context) {
         return;
     }
     if(input_state->connect_input_stage == 2) {
-        char buffer[256];
+        char buffer[320];
         snprintf(
             buffer,
             sizeof(buffer),
@@ -3450,8 +3450,18 @@ static void text_input_result_callback(void* context) {
         uart_send(input_state->uart_context, (uint8_t*)buffer, strlen(buffer));
         input_state->connect_input_stage = 0;
         input_state->connect_ssid[0] = '\0';
-    } else {
-        if(input_state->uart_command && strcmp(input_state->uart_command, "ir send") == 0) {
+        input_state->uart_command = NULL;
+        if(input_state->input_buffer) memset(input_state->input_buffer, 0, INPUT_BUFFER_SIZE);
+
+        // Leave the text input so a second submit can't be mistaken for a
+        // password and sent as "connect <password>".
+        uart_receive_data(
+            input_state->uart_context, input_state->view_dispatcher, input_state, "", "", "");
+        input_state->previous_view = VIEW_WIFI_NETWORK_CONN;
+        input_state->connect_log_active = true;
+        return;
+    } else if(input_state->uart_command) {
+        if(strcmp(input_state->uart_command, "ir send") == 0) {
             char cmd[256];
             snprintf(cmd, sizeof(cmd), "ir send %s\n", input_state->input_buffer);
             handle_ir_command_feedback_ex(input_state, cmd, true, true);
@@ -3606,6 +3616,7 @@ static void execute_menu_command(AppState* state, const MenuCommand* command) {
 
     if(command->needs_input && strcmp(command->command, "connect") == 0) {
         state->connect_input_stage = 1;
+        state->connect_log_active = false;
         state->uart_command = command->command;
         state->previous_view = state->current_view;
         text_input_reset(state->text_input);
@@ -4827,9 +4838,12 @@ bool back_event_callback(void* context) {
     if(cv == VIEW_CONFIRMATION) return false;
 
     if(cv == VIEW_TEXT_BOX) {
-        if(state->settings.stop_on_back_index) {
+        // A connect log is informational: leaving it should not stop the
+        // connection that was just started.
+        if(state->settings.stop_on_back_index && !state->connect_log_active) {
             send_uart_command(wifi_stop_command.command, state);
         }
+        state->connect_log_active = false;
         if(state->uart_context) {
             uart_reset_text_buffers(state->uart_context);
             uart_cleanup_capture_streams(state->uart_context);
@@ -4922,6 +4936,10 @@ bool text_view_input_handler(InputEvent* event, void* context) {
     bool consumed = false;
 
     if(event->type == InputTypeShort && event->key == InputKeyOk) {
+        if(state->connect_log_active) {
+            // Leaving the connect log must not cancel the connection.
+            return back_event_callback(state);
+        }
         send_uart_command(wifi_stop_command.command, state);
         consumed = true;
     } else if(event->type == InputTypeShort && event->key == InputKeyRight) {
@@ -4938,7 +4956,9 @@ bool text_view_input_handler(InputEvent* event, void* context) {
                 show_result_dialog(
                     state,
                     "Tip",
-                    "Scroll paused.\nPress Right arrow to resume.\nPress OK to send stop.");
+                    state->connect_log_active
+                        ? "Scroll paused.\nPress Right arrow to resume.\nPress OK to return."
+                        : "Scroll paused.\nPress Right arrow to resume.\nPress OK to send stop.");
             }
         }
 

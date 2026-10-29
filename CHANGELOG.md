@@ -2,25 +2,31 @@
 
 ## v1.9.0
 
-- Fixed "Set Evil Portal HTML" uploads being truncated or dropped for long/minified pages, so the uploaded HTML now starts correctly
-- Added "Start Flipper Portal" to launch the portal with the HTML currently stored on the ESP
-- Clarified the Evil Portal path prompt: use `default` to serve the HTML uploaded from the Flipper
-- Restored the IR Dazzler start warning with explicit confirmation and cancellation
-- Reordered some menus to put common actions first
-- All menu views now share a single Submenu instance
-- Reduced FAP size by ~8 KB
-- Added Handshake + Deauth, Channel Switch, Probe Flood, Bad Msg, Auth Flood, and GTK Abuse attacks to WiFi Attacks menu
-- Renamed Stop Deauth/SAE/EAPOL to Stop All Attacks, using the firmware's global stop command
-- Added List Saved PCAPs, Export PCAP to hc22000, and Sniff 802.15.4 to WiFi Packet Capture menu
-- Added WiFi Recon Tools menu: Enum Scan, Name Sniff, and channel hop plan controls
-- Added DNS Sinkhole submenu to WiFi Network menu
-- Added BLE Spam Detector to Flipper & Skimmer menu and OUI/vendor advertiser scans to Advertisers & Traffic menu
-- Added Trackers & Beacons submenu to BLE Scanning menu
-- Added Set Spam Name to BLE Attacks menu for a custom AirPods name
-- Added Govee Scan, Govee Control, and Wake-on-LAN to WiFi Network > IoT Control menu
-- Added Forget Saved WiFi and Auto-Reconnect to WiFi Network > WiFi Connection menu
-- Added GhostScript list/run/status/stop commands to WiFi Settings > Device & Debug menu
-- Added 3 new submenu views (Recon Tools, DNS Sinkhole, Trackers & Beacons)
+### Added
+
+- New WiFi attacks: Handshake + Deauth, Channel Switch, Probe Flood, Bad Msg, Auth Flood, and GTK Abuse
+- WiFi Packet Capture: List Saved PCAPs, Export PCAP to hc22000, and Sniff 802.15.4
+- WiFi Recon Tools: Enum Scan, Name Sniff, and channel hop plan controls
+- DNS Sinkhole submenu under WiFi Network
+- Trackers & Beacons submenu under BLE Scanning
+- BLE Spam Detector, OUI/vendor advertiser scans, and a custom AirPods spam name
+- Govee Scan, Govee Control, and Wake-on-LAN under WiFi Network > IoT Control
+- Forget Saved WiFi and Auto-Reconnect under WiFi Network > WiFi Connection
+- GhostScript list/run/status/stop commands under WiFi Settings > Device & Debug
+- Start Flipper Portal, for launching the HTML uploaded with Set Evil Portal HTML
+
+### Changed
+
+- Menus reordered to put common actions first
+- Stop Deauth/SAE/EAPOL renamed to Stop All Attacks
+- Evil Portal prompt now explains that `default` serves the uploaded HTML
+- IR Dazzler now asks for confirmation before starting
+- App size reduced by ~8 KB
+
+### Fixed
+
+- Set Evil Portal HTML no longer truncates or drops long/minified pages
+- Connect To WiFi no longer asks for the password twice or sends it as the SSID
 
 ## v1.8.3
 
