@@ -860,10 +860,13 @@ static const MenuCommand wifi_network_portal_commands[] = {
         .label = "Evil Portal",
         .command = "startportal",
         .needs_input = true,
-        .input_text = "<filepath> <SSID> <PSK (leave blank for open)>",
+        .input_text = "<path|default> <SSID> <PSK (leave blank for open)>",
         .details_header = "Evil Portal",
         .details_text = "Captive portal for credential\n"
-                        "harvest. Configure in WebUI.\n",
+                        "harvest. Configure in WebUI.\n\n"
+                        "Use 'default' to serve the HTML\n"
+                        "set from the Flipper, or a file\n"
+                        "on the ESP SD card.\n",
     },
     {
         .label = "List Portals",
@@ -879,6 +882,17 @@ static const MenuCommand wifi_network_portal_commands[] = {
         .details_header = "Set Evil Portal HTML",
         .details_text = "Send an HTML file to the ESP\n"
                         "for the evil portal.\n",
+    },
+    {
+        .label = "Start Flipper Portal",
+        .command = "startportal default",
+        .needs_input = true,
+        .input_text = "SSID [PSK]",
+        .details_header = "Evil Portal",
+        .details_text = "Starts the portal using the\n"
+                        "HTML sent with Set Evil\n"
+                        "Portal HTML. Enter the SSID\n"
+                        "then an optional password.\n",
     },
     {
         .label = "Clear Evil Portal HTML",
@@ -3533,9 +3547,11 @@ static void send_evil_portal_html(AppState* state) {
             const char* command_str = "evilportal -c sethtmlstr\n";
             uart_send(state->uart_context, (const uint8_t*)command_str, strlen(command_str));
 
-            // Begin HTML block
+            // Begin HTML block. The trailing newline puts the marker on its
+            // own line so the ESP starts capturing before the first HTML byte.
             const char* html_begin_marker = "[HTML/BEGIN]";
             uart_send(state->uart_context, (const uint8_t*)html_begin_marker, 12);
+            uart_send(state->uart_context, (const uint8_t*)"\n", 1);
 
             // Send HTML content
             uart_send(state->uart_context, the_html, html_size);

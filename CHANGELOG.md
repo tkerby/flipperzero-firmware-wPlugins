@@ -2,6 +2,9 @@
 
 ## v1.9.0
 
+- Fixed "Set Evil Portal HTML" uploads being truncated or dropped for long/minified pages, so the uploaded HTML now starts correctly
+- Added "Start Flipper Portal" to launch the portal with the HTML currently stored on the ESP
+- Clarified the Evil Portal path prompt: use `default` to serve the HTML uploaded from the Flipper
 - Restored the IR Dazzler start warning with explicit confirmation and cancellation
 - Reordered some menus to put common actions first
 - All menu views now share a single Submenu instance
