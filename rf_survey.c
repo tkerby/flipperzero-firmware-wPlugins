@@ -320,6 +320,7 @@ typedef struct {
     } bm[8];
     uint8_t bm_n;
     volatile bool shot_auto; // capture frames to SD (heartbeat + every key event)
+    bool fb_registered; // the GUI furi_checks a removal of a callback that was never added
     uint8_t shot_buf[1024]; // latest committed frame, copied under the canvas lock
     volatile uint32_t shot_seq; // bumped by the framebuffer callback
     volatile uint32_t shot_written; // last sequence written to the card
@@ -4107,7 +4108,14 @@ static void conf_enter(void* ctx, uint32_t index) {
 // The worker can move the Trigger behind the config screen's back (Auto trig), so the row text
 // is re-read whenever the screen is entered instead of only when the value is edited here.
 static void conf_view_enter(void* ctx) {
-    App* app = ctx;
+    // NOT `App* app = ctx`: the firmware calls an enter callback with the VIEW's context, and a
+    // VariableItemList's view context is the list itself (variable_item_list.c sets it). Reading
+    // it_trigger through that pointer read a "pointer" from ~12 KB past a 20-byte heap block and
+    // wrote through it on every switch to the config view: launch, Back from the spectrum,
+    // return from help/range. That was the v1.3 crash with a different fault every time.
+    UNUSED(ctx);
+    App* app = g_app;
+    if(!app) return;
     if(app->it_trigger) {
         // index AND text: the list picks the next value from the index, so a stale index would
         // make the first Left/Right after an auto-cal jump back to the old floor
@@ -4383,6 +4391,7 @@ int32_t rf_survey_app(void* p) {
     boot_trace_to("t_boot.txt", "registered-noshot");
     // EXPERIMENT: registration disabled to see whether it is the call that kills the app
     // gui_add_framebuffer_callback(app->gui, fb_callback, app);
+    // app->fb_registered = true; // re-enable together with the line above
 
     app->redraw = furi_timer_alloc(redraw_cb, FuriTimerTypePeriodic, app);
     furi_timer_start(app->redraw, 150);
@@ -4424,7 +4433,9 @@ int32_t rf_survey_app(void* p) {
     view_free(app->help_view);
     variable_item_list_free(app->conf);
     variable_item_list_free(app->conf2);
-    gui_remove_framebuffer_callback(app->gui, fb_callback, app);
+    // canvas_remove_framebuffer_callback() furi_checks that the pair is registered exactly once:
+    // removing one that the experiment above never added crashed EVERY exit (furi_check failed)
+    if(app->fb_registered) gui_remove_framebuffer_callback(app->gui, fb_callback, app);
     view_dispatcher_free(app->vd);
     furi_record_close(RECORD_GUI);
     furi_record_close(RECORD_NOTIFICATION);
