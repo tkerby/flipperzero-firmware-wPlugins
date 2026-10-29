@@ -2844,8 +2844,7 @@ static void confirmation_ok_callback(void* context) {
             AppState* state = cmd_ctx->state;
             state->current_view = state->previous_view;
             if(!handle_ir_command_feedback(state, cmd_ctx->command->command)) {
-                uart_receive_data(
-                    state->uart_context, state->view_dispatcher, state, "", "", "");
+                uart_receive_data(state->uart_context, state->view_dispatcher, state, "", "", "");
                 send_uart_command(cmd_ctx->command->command, state);
             }
         }
@@ -4956,9 +4955,9 @@ bool text_view_input_handler(InputEvent* event, void* context) {
                 show_result_dialog(
                     state,
                     "Tip",
-                    state->connect_log_active
-                        ? "Scroll paused.\nPress Right arrow to resume.\nPress OK to return."
-                        : "Scroll paused.\nPress Right arrow to resume.\nPress OK to send stop.");
+                    state->connect_log_active ?
+                        "Scroll paused.\nPress Right arrow to resume.\nPress OK to return." :
+                        "Scroll paused.\nPress Right arrow to resume.\nPress OK to send stop.");
             }
         }
 
