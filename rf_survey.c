@@ -1,5 +1,6 @@
 #include <furi.h>
 #include <stdlib.h> // strtoul for the bookmark file
+#include <stdarg.h>
 #include <math.h> // sqrtf for the cadence jitter (CV)
 #include <lib/subghz/receiver.h>
 #include <lib/subghz/environment.h>
@@ -149,6 +150,8 @@ static bool tune_rx(uint32_t f) {
 // (coming) logging/capture op is traced so a crash on the remote device can be pinned
 // from the serial `log` without a redeploy. Stream it with the CLI `log` command.
 #define TAG "RFSurvey"
+
+static void boot_trace_to(const char* name, const char* fmt, ...);
 
 #define MAX_BINS   1024 // enough for a full 300-928 MHz sweep @650k (~967 bins); int8 -> 2 KB
 #define VIEW_SPEC  0
@@ -316,6 +319,12 @@ typedef struct {
         uint32_t lo, hi;
     } bm[8];
     uint8_t bm_n;
+    volatile bool shot_auto; // capture frames to SD (heartbeat + every key event)
+    uint8_t shot_buf[1024]; // latest committed frame, copied under the canvas lock
+    volatile uint32_t shot_seq; // bumped by the framebuffer callback
+    volatile uint32_t shot_written; // last sequence written to the card
+    uint32_t shot_last; // framebuffer dump throttle
+    uint32_t shot_hash; // last dumped frame, so an unchanged screen costs nothing
     volatile uint8_t batt_pct; // cached: the worker polls it, the draw callback must not
     volatile bool frozen; // traces hold: the worker stops measuring and leaves the buffers alone
     uint8_t trace; // 0 Live / 1 Max hold / 2 Min hold -- what the Bars page draws
@@ -1463,8 +1472,10 @@ static void conf_sync_rows(App* app) {
 
 static int32_t sweep_worker(void* ctx) {
     App* app = ctx;
+    boot_trace_to("w0.txt", "entered free=%u", (unsigned)memmgr_get_free_heap());
     FURI_LOG_I(TAG, "worker: start, radio setup");
     radio_setup(app);
+    boot_trace_to("w1.txt", "radio ok ext=%d", s_ext ? 1 : 0);
 
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* csv = NULL; // open while recording; owned entirely by this thread
@@ -1629,6 +1640,7 @@ static int32_t sweep_worker(void* ctx) {
             if(app->wf_count < WF_COLS) app->wf_count++;
         }
         app->sweeps++;
+        if(app->sweeps == 1) boot_trace_to("w2.txt", "first sweep done nbins=%u", (unsigned)app->nbins);
         if(app->wf_export) { // one-shot from the config screen, run by the ring's owner
             app->wf_export = false;
             wf_export_pgm(app, storage);
@@ -1727,6 +1739,103 @@ static int32_t sweep_worker(void* ctx) {
     FURI_LOG_I(TAG, "worker: exit, radio teardown");
     radio_teardown();
     return 0;
+}
+
+// Writes a one-line trace to boot.txt. The device's log level can be reset between CLI
+// sessions, so a file is the only evidence that survives; this is how the screenshot path was
+// debugged.
+static void boot_trace_to(const char* name, const char* fmt, ...) {
+    Storage* st = furi_record_open(RECORD_STORAGE);
+    storage_common_mkdir(st, APP_DATA_PATH(""));
+    File* f = storage_file_alloc(st);
+    char path[72];
+    snprintf(path, sizeof(path), APP_DATA_PATH("%s"), name);
+    if(f && storage_file_open(f, path, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+        char buf[160];
+        va_list ap;
+        va_start(ap, fmt);
+        int n = vsnprintf(buf, sizeof(buf), fmt, ap);
+        va_end(ap);
+        if(n > 0) storage_file_write(f, buf, (size_t)n);
+        storage_file_close(f);
+    }
+    if(f) storage_file_free(f);
+    furi_record_close(RECORD_STORAGE);
+}
+
+// ---- on-device screenshots -------------------------------------------------
+// RPC is not an option for a screenshot: an RPC session takes ~20 KB of the FAP's heap and
+// this app needs ~15 KB just to start, so a remote capture is an OOM crash on a deep screen.
+// Instead the app dumps its own framebuffer to a file the moment the page changes, and a host
+// script reads it over the CLI. One 1 KB write per page flip.
+
+// 128x64 at 1 bpp, u8g2 page layout (vertical_top_lsb): one byte per column of eight vertical
+// pixels, so a row of the file is 16 bytes = 32 hex characters.
+
+static void dump_frame(const uint8_t* fb, uint8_t page) {
+    if(!fb) return;
+    Storage* st = furi_record_open(RECORD_STORAGE);
+    storage_common_mkdir(st, APP_DATA_PATH("frames"));
+    // one file per distinct frame, named by wall clock, so the sequence survives a crash and can
+    // be sorted on the host. The newest file is always the last thing the device drew.
+    DateTime dt;
+    furi_hal_rtc_get_datetime(&dt);
+    char path[72];
+    snprintf(
+        path,
+        sizeof(path),
+        APP_DATA_PATH("frames/f_%02u%02u%02u_%02u.hex"),
+        dt.hour,
+        dt.minute,
+        dt.second,
+        (unsigned)(furi_get_tick() % 100));
+    File* f = storage_file_alloc(st);
+    if(f && storage_file_open(f, path, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+        char line[40];
+        for(int y = 0; y < 64; y++) {
+            for(int b = 0; b < 16; b++)
+                snprintf(line + b * 2, 3, "%02x", fb[y * 16 + b]);
+            line[32] = '\n';
+            storage_file_write(f, line, 33);
+        }
+        storage_file_close(f);
+    }
+    if(f) storage_file_free(f);
+    furi_record_close(RECORD_STORAGE);
+    (void)page;
+}
+
+// Fires on every committed frame, whoever drew it -- including the firmware's own widgets, which
+// is why the config screens are capturable at all.
+//
+// This runs with the canvas mutex held (canvas_commit iterates its callback array under the
+// lock), so it must NEVER touch storage: an SD write here stalls the GUI thread with the canvas
+// locked and the watchdog reboots the device. It only copies 1 KB into RAM and bumps a counter.
+static void fb_callback(uint8_t* data, size_t size, CanvasOrientation orientation, void* context) {
+    UNUSED(orientation);
+    App* app = context;
+    if(!app || !data || size != 1024) {
+        boot_trace_to("t_fb_bad.txt", "size=%u data=%p", size, (void*)data);
+        return;
+    }
+    if(!app->shot_auto) return;
+    memcpy(app->shot_buf, data, 1024);
+    if(app->shot_seq == 0) boot_trace_to("t_fb.txt", "first frame, size=%u", (unsigned)size);
+    app->shot_seq++;
+}
+
+// Writes the newest copied frame. Called from the redraw timer (500 ms heartbeat) and from the
+// input handlers (so the screen BEFORE a key press is on the card even if the press crashes the
+// app). Never called from the framebuffer callback.
+static void shot_flush(App* app, bool force);
+__attribute__((unused)) static void shot_flush(App* app, bool force) {
+    uint32_t now = furi_get_tick();
+    if(!force && now - app->shot_last < 500) return;
+    if(app->shot_written == app->shot_seq && !force) return; // nothing new on screen
+    if(app->parked) return; // a write mid-measurement is the hole the cadence page warns about
+    app->shot_written = app->shot_seq;
+    app->shot_last = now;
+    dump_frame(app->shot_buf, 0);
 }
 
 // ---- bars view -------------------------------------------------------------
@@ -2688,6 +2797,7 @@ static void spectrum_draw(Canvas* canvas, void* model) {
 }
 
 static bool spectrum_input(InputEvent* event, void* context) {
+    // EXPERIMENT: shot_flush
     UNUSED(context);
     App* app = g_app;
     if(!app) return false;
@@ -3093,6 +3203,7 @@ static void range_draw(Canvas* canvas, void* model) {
 }
 
 static bool range_input(InputEvent* e, void* ctx) {
+    // EXPERIMENT: shot_flush
     UNUSED(ctx);
     App* app = g_app;
     if(!app) return false;
@@ -3680,6 +3791,7 @@ static void capture_start(App* app) {
 }
 
 static bool capture_input(InputEvent* e, void* ctx) {
+    // EXPERIMENT: shot_flush
     UNUSED(ctx);
     App* app = g_app;
     if(!app) return false;
@@ -4008,7 +4120,13 @@ static void conf_view_enter(void* ctx) {
 }
 
 static void redraw_cb(void* ctx) {
+    static bool traced;
     App* app = ctx;
+    if(!traced) {
+        traced = true;
+        boot_trace_to("t_timer.txt", "timer fired, seq=%lu", (unsigned long)app->shot_seq);
+    }
+    // EXPERIMENT: shot_flush(app, false);
     // commit only the view that is actually live + visible, so the timer does no work in the
     // config / range editor (they redraw on input) and never commits the hidden view. The two
     // live views are mutually exclusive: spec_active on the spectrum, capturing on the .sub screen.
@@ -4096,6 +4214,8 @@ int32_t rf_survey_app(void* p) {
         }                                                    \
     } while(0)
 
+    boot_trace_to("t_heap0.txt", "free=%u App=%u", (unsigned)memmgr_get_free_heap(), (unsigned)sizeof(App));
+
     // spectrum view (custom): Back returns to config
     app->view = view_alloc();
     ALLOC_OR_BAIL(app->view);
@@ -4174,6 +4294,7 @@ int32_t rf_survey_app(void* p) {
     view_set_enter_callback(variable_item_list_get_view(app->conf), conf_view_enter);
     view_set_previous_callback(variable_item_list_get_view(app->conf), view_exit);
     view_dispatcher_add_view(app->vd, VIEW_CONF, variable_item_list_get_view(app->conf));
+    boot_trace_to("t_heap1.txt", "after cfg1 free=%u", (unsigned)memmgr_get_free_heap());
 
     // PAGE 2 -- actions and exports. Nothing here changes what the sweep measures, so it is a
     // separate page rather than rows 11..18 of the same list.
@@ -4212,6 +4333,7 @@ int32_t rf_survey_app(void* p) {
 #endif
     variable_item_list_set_enter_callback(app->conf2, conf2_enter, app);
 
+    boot_trace_to("t_heap2.txt", "after cfg2 free=%u", (unsigned)memmgr_get_free_heap());
     view_set_previous_callback(variable_item_list_get_view(app->conf2), to_conf);
     view_dispatcher_add_view(app->vd, VIEW_CONF2, variable_item_list_get_view(app->conf2));
 
@@ -4257,6 +4379,11 @@ int32_t rf_survey_app(void* p) {
 #ifdef RFS_LAB
     app->rep_buf = malloc(sizeof(int32_t) * REP_MAX_EDGES);
 #endif
+    app->shot_auto = false; // EXPERIMENT: capture path disabled entirely
+    boot_trace_to("t_boot.txt", "registered-noshot");
+    // EXPERIMENT: registration disabled to see whether it is the call that kills the app
+    // gui_add_framebuffer_callback(app->gui, fb_callback, app);
+
     app->redraw = furi_timer_alloc(redraw_cb, FuriTimerTypePeriodic, app);
     furi_timer_start(app->redraw, 150);
 
@@ -4297,6 +4424,7 @@ int32_t rf_survey_app(void* p) {
     view_free(app->help_view);
     variable_item_list_free(app->conf);
     variable_item_list_free(app->conf2);
+    gui_remove_framebuffer_callback(app->gui, fb_callback, app);
     view_dispatcher_free(app->vd);
     furi_record_close(RECORD_GUI);
     furi_record_close(RECORD_NOTIFICATION);
