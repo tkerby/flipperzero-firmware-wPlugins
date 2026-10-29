@@ -95,6 +95,8 @@ This software is for experimental purposes only and is not meant for any illegal
 - ESP Flasher: [Comes with Marauder v1.20.0 (By justcallmekoko)](https://github.com/justcallmekoko/ESP32Marauder/releases/tag/v1.20.0)
 - Updated: [FlipBIP Crypto Wallet v2.1 (By xtruan)](https://github.com/xtruan/FlipBIP)
 - Updated: [Ghost ESP v1.9 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
+- Updated: [Networking NFC + QR v2.0 filename conflict handling and URL validation (By DonJulve)](https://github.com/DonJulve/Networking_NFC_QR_Flipper_Zero)
+- Added: [Tea Timer v1.0 (By igordanilov)](https://github.com/polarikus/FlipperZero-TeaTimer)
 
 <a name="release"></a>
 
@@ -1009,6 +1011,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [TamaConnect v1.0 (By s2013p)](https://github.com/s2013p/TamaConnect)
 - [Tasks v1.3 (By MadLadSquad)](https://github.com/MadLadSquad/FlipperTasks)
 - [TCL AC v1.0 (By xMasterX)](https://github.com/xMasterX/flipper_ac)
+- [Tea Timer v1.0 (By igordanilov)](https://github.com/polarikus/FlipperZero-TeaTimer)
 - [Telecrane Control v1.1 (By nmatt0 & xMasterX)](https://github.com/nmatt0/telecrane-contol)
 - [Telemeter v1.1 (By alaviation)](https://github.com/alaviation/flipper-telemeter)
 - [Telink SWS v0.1 (By ngxson)](https://github.com/ngxson/flipper-telink) `Req: Telink device`

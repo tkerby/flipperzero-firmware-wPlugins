@@ -94,9 +94,15 @@ this repository.
 
 ## Support
 
-If this saved you a spool, consider buying me a coffee:
+If this saved you a spool, you can buy a coffee for either of us.
+
+**P. Schattenberg**, who came up with the project and wrote the original CFS Tag Writer:
 
 [<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" height="41" width="174">](https://www.buymeacoffee.com/pschattenberg)
+
+**BaniMun**, who made CFS Tag Writer+:
+
+[<img src="https://img.shields.io/badge/Buy%20me%20a%20coffee-buycoffee.to-FFDD00?style=for-the-badge" height="41">](https://buycoffee.to/beastland.prints)
 
 ## Acknowledgments
 
