@@ -2331,7 +2331,9 @@ static void draw_history(Canvas* canvas, App* app) {
             (unsigned)b[k].mhz,
             (unsigned long)pct,
             bd ? bd->name : "");
-        canvas_draw_str(canvas, 2, 16 + (int)k * 11, line); // 11 px leading, ends at 49
+        // first baseline 20, not 16: the header's descenders ("p", "y" of "occupancy") reach
+        // y=10 and a row starting at 16 collided with them. 11 px leading, last row ends at 55.
+        canvas_draw_str(canvas, 2, 20 + (int)k * 11, line);
     }
 }
 
@@ -2631,12 +2633,19 @@ static void draw_hunt(Canvas* canvas, App* app) {
     int cnt = app->park_count;
     int8_t cur = cnt ? app->park_env[(app->park_head + PARK_N - 1) % PARK_N] : -127;
 
-    // big dBm readout
-    canvas_set_font(canvas, FontBigNumbers);
+    // big dBm readout, unit BESIDE the number on the same baseline: centred under it, "dBm"
+    // (bottom 40, ~7 px tall) landed on the number's last rows (bottom 34). The pair is centred
+    // as one, measured each time because "-45" and "-109" differ in width.
     snprintf(s, sizeof(s), "%d", cur);
-    canvas_draw_str_aligned(canvas, SCR_W / 2, 34, AlignCenter, AlignBottom, s);
+    canvas_set_font(canvas, FontBigNumbers);
+    uint16_t nw = canvas_string_width(canvas, s);
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str_aligned(canvas, SCR_W / 2, 40, AlignCenter, AlignBottom, "dBm");
+    uint16_t uw = canvas_string_width(canvas, "dBm");
+    int x0 = (SCR_W - (int)(nw + 3 + uw)) / 2;
+    canvas_set_font(canvas, FontBigNumbers);
+    canvas_draw_str_aligned(canvas, x0, 34, AlignLeft, AlignBottom, s);
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str_aligned(canvas, x0 + nw + 3, 34, AlignLeft, AlignBottom, "dBm");
 
     // bar: -105 .. -40 dBm across the full width. Deliberately fixed rather than autoscaled --
     // an autoscaling bar always "looks full" and defeats the whole point of walking.
