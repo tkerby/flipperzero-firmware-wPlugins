@@ -2394,7 +2394,7 @@ static void carrier_stop(App* app) {
     // hand the radio back to the survey
     app->running = true;
     app->reconfig = true;
-    app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
+    app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 6144, sweep_worker, app);
     furi_thread_start(app->worker);
 }
 
@@ -2408,7 +2408,7 @@ static void carrier_start(App* app) {
     }
     app->carrier_abort = false;
     app->carrier_on = true;
-    app->carrier_worker = furi_thread_alloc_ex("rfsurvey_carrier", 3072, carrier_worker, app);
+    app->carrier_worker = furi_thread_alloc_ex("rfsurvey_carrier", 6144, carrier_worker, app);
     if(!app->carrier_worker) {
         FURI_LOG_E(TAG, "carrier: out of memory, not starting");
         app->carrier_on = false;
@@ -3023,7 +3023,7 @@ static void conf2_enter(void* ctx, uint32_t index) {
             }
             app->running = true;
             app->reconfig = true;
-            app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
+            app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 6144, sweep_worker, app);
             furi_thread_start(app->worker);
         }
         return;
@@ -3052,7 +3052,7 @@ static void conf2_enter(void* ctx, uint32_t index) {
                        (int)st);
             app->running = true;
             app->reconfig = true;
-            app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
+            app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 6144, sweep_worker, app);
             furi_thread_start(app->worker);
         }
         return;
@@ -3080,7 +3080,7 @@ static void conf2_enter(void* ctx, uint32_t index) {
             (int)st);
         app->running = true;
         app->reconfig = true;
-        app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
+        app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 6144, sweep_worker, app);
         furi_thread_start(app->worker);
         return;
     }
@@ -3101,7 +3101,7 @@ static void conf2_enter(void* ctx, uint32_t index) {
         FURI_LOG_I(TAG, "tx test %lu Hz -> %d", (unsigned long)f, (int)st);
         app->running = true;
         app->reconfig = true;
-        app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
+        app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 6144, sweep_worker, app);
         furi_thread_start(app->worker);
         return;
     }
@@ -3781,7 +3781,7 @@ static void capture_start(App* app) {
     app->cap_overflow = 0;
     memset(app->cap_pw, 0, sizeof(app->cap_pw)); // signature is per-capture
     app->cap_pw_n = 0;
-    app->cap_worker = furi_thread_alloc_ex("rfsurvey_cap", 3072, capture_worker, app);
+    app->cap_worker = furi_thread_alloc_ex("rfsurvey_cap", 6144, capture_worker, app);
     if(!app->cap_worker) { // no thread -> nothing to join later; report and stay idle
         FURI_LOG_E(TAG, "capture: out of memory, not starting");
         app->capturing = false;
@@ -3806,7 +3806,7 @@ static bool capture_input(InputEvent* e, void* ctx) {
         app->parked = false;
         app->running = true;
         app->reconfig = true;
-        app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
+        app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 6144, sweep_worker, app);
         furi_thread_start(app->worker);
         view_dispatcher_switch_to_view(app->vd, VIEW_SPEC);
         return true;
@@ -4068,7 +4068,7 @@ static void radio_cb(VariableItem* item) {
     furi_thread_free(app->worker);
     app->radio = idx;
     app->running = true;
-    app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
+    app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 6144, sweep_worker, app);
     furi_thread_start(app->worker);
     FURI_LOG_I(TAG, "radio: switched to %s (worker restarted)", RADIO_TXT[idx]);
 }
@@ -4373,7 +4373,7 @@ int32_t rf_survey_app(void* p) {
     app->running = true;
     // 3 KB stack: the sweep worker calls into the subghz HAL (SPI); past apps in this
     // family hit an MPU/stack fault from underestimating, so leave headroom.
-    app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
+    app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 6144, sweep_worker, app);
     furi_thread_start(app->worker);
 
 #ifdef RFS_LAB
