@@ -2371,8 +2371,8 @@ static bool help_input(InputEvent* e, void* ctx) {
 #ifdef RFS_LAB
 // ---- carrier test (lab only) ----------------------------------------------
 // An unmodulated tone for bench work: PA check, antenna, receiver desense. Three things keep
-// it an instrument rather than a nuisance -- the API caps the duration at 60 s, the region gate
-// runs before the radio is touched, and OK cancels mid-count.
+// it an instrument rather than a nuisance -- the API caps the duration at 60 s, only frequencies
+// the CC1101 can tune are keyed (no region gate in the lab build), and OK cancels mid-count.
 static const uint8_t CARRIER_SECS[] = {5, 10, 20, 30, 60};
 
 static int32_t carrier_worker(void* ctx) {
@@ -2394,14 +2394,23 @@ static void carrier_stop(App* app) {
     furi_thread_free(app->carrier_worker);
     app->carrier_worker = NULL;
     app->carrier_on = false;
-    // hand the radio back to the survey
-    app->running = true;
-    app->reconfig = true;
-    app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 6144, sweep_worker, app);
-    furi_thread_start(app->worker);
+    // hand the radio back to the survey (once: nothing else restarts it while a carrier exists)
+    if(!app->worker) {
+        app->running = true;
+        app->reconfig = true;
+        app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 6144, sweep_worker, app);
+        furi_thread_start(app->worker);
+    }
 }
 
 static void carrier_start(App* app) {
+    // a carrier that ended by itself leaves a finished thread until lab_tick reaps it; reap it
+    // here too, or the pointer below would be overwritten and the thread leaked
+    if(app->carrier_worker) {
+        furi_thread_join(app->carrier_worker);
+        furi_thread_free(app->carrier_worker);
+        app->carrier_worker = NULL;
+    }
     // the sweep worker is the radio's owner; stop and join it before the transmitter runs
     app->running = false;
     if(app->worker) {
@@ -2418,6 +2427,16 @@ static void carrier_start(App* app) {
         return;
     }
     furi_thread_start(app->carrier_worker);
+}
+
+// GUI-thread tick (lab only). A carrier that runs out its time ends in its own thread, which can
+// neither free itself nor safely restart the sweep: app->worker is also changed on THIS thread by
+// OK, teardown and the TX rows. So carrier_worker only clears carrier_on, and the single owner
+// (this thread) reaps it and hands the radio back. Before this the survey stayed frozen after
+// every carrier that was not cancelled with OK.
+static void lab_tick(void* ctx) {
+    App* app = ctx;
+    if(app && app->carrier_worker && !app->carrier_on) carrier_stop(app);
 }
 
 static void draw_carrier(Canvas* canvas, App* app) {
@@ -3015,7 +3034,7 @@ static void conf2_enter(void* ctx, uint32_t index) {
     if(index == CONF2_ROW_BRUTE) {
         // LAB ONLY. One PAGE per press, then it stops and waits to be asked again. No
         // loop-forever path: 32 codes x 3 repeats is ~3 s of airtime, the cursor advances, and
-        // the row shows where the next press starts. Region-gated like every other TX.
+        // the row shows where the next press starts. No region gate in the lab build (see rf_tx.h).
         if(app->brute_next <= 0xFFFFFFu) {
             uint32_t f = app->f_start + (uint32_t)(app->nbins / 2) * app->f_step;
             app->running = false;
@@ -3027,7 +3046,9 @@ static void conf2_enter(void* ctx, uint32_t index) {
             RfTxStatus st =
                 rf_tx_code_page(f, PRESETS[0].regs, app->brute_next, BRUTE_PAGE, 3, 350);
             FURI_LOG_I(TAG, "brute page %06lX -> %d", (unsigned long)app->brute_next, (int)st);
-            app->brute_next += BRUTE_PAGE;
+            // advance only over codes that actually went out: a refused page must be retried, not
+            // silently skipped (it used to move on by 32 even when nothing was transmitted)
+            if(st == RfTxOk) app->brute_next += BRUTE_PAGE;
             if(app->it_brute) {
                 char b[12];
                 snprintf(b, sizeof(b), "%06lX", (unsigned long)app->brute_next);
@@ -3070,7 +3091,7 @@ static void conf2_enter(void* ctx, uint32_t index) {
         return;
     }
     if(index == CONF2_ROW_REPLAY) {
-        // LAB ONLY. Re-sends the last capture through the same region gate as the TX test.
+        // LAB ONLY. Re-sends the last capture through the same frequency checks as the TX test.
         // The radio is handed over the same way: stop and join the worker first.
         if(!app->rep_buf || app->rep_n < 8) {
             FURI_LOG_W(TAG, "replay: nothing captured yet");
@@ -4208,6 +4229,10 @@ int32_t rf_survey_app(void* p) {
     app->notif = furi_record_open(RECORD_NOTIFICATION);
     app->gui = furi_record_open(RECORD_GUI);
     app->vd = view_dispatcher_alloc();
+#ifdef RFS_LAB
+    view_dispatcher_set_event_callback_context(app->vd, app);
+    view_dispatcher_set_tick_event_callback(app->vd, lab_tick, 250);
+#endif
     view_dispatcher_attach_to_gui(app->vd, app->gui, ViewDispatcherTypeFullscreen);
 
     // Every allocation below is furi_check'd by the firmware, so NULL means an assert. Fail
