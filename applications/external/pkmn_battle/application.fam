@@ -1,0 +1,56 @@
+App(
+    appid="pkmn_battle",
+    name="Pokemon Battle [GBC]",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="pkb_app_main",
+    stack_size=4 * 1024,
+    fap_icon="icon_10px.png",
+    fap_file_assets="files",
+    sources=[
+        "app/pkb_app.c",
+        "app/gblink_clock_stub.c",
+        "app/storage_glue.c",
+        "app/link_glue.c",
+        "app/engine_glue.c",
+        "app/views/battle_view.c",
+        "app/views/team_view.c",
+        "app/scenes/pkb_scene.c",
+        "app/scenes/pkb_scene_main_menu.c",
+        "app/scenes/pkb_scene_error.c",
+        "app/scenes/pkb_scene_opponent.c",
+        "app/scenes/pkb_scene_boss_list.c",
+        "app/scenes/pkb_scene_levels.c",
+        "app/scenes/pkb_scene_view_team.c",
+        "app/scenes/pkb_scene_battle.c",
+        "app/scenes/pkb_scene_pins.c",
+        "app/scenes/pkb_scene_about.c",
+        "app/scenes/pkb_scene_music.c",
+        "app/scenes/pkb_scene_picture.c",
+    ],
+    fap_private_libs=[
+        # BSD-2. clock_timer.c (GPL-3.0, INT clock only) is deliberately left
+        # out; app/gblink_clock_stub.c provides the symbols instead.
+        Lib(
+            name="flipper-gblink",
+            fap_include_paths=["gblink/include", "./"],
+            sources=[
+                "gblink/gblink.c",
+                "gblink/gblink_pinconf.c",
+                "gblink/exti_workaround.c",
+            ],
+        ),
+        # Portable C11 core shared with the host build (no Flipper headers).
+        Lib(
+            name="pkb_core",
+            fap_include_paths=["include"],
+            sources=["*.c"],
+            cincludes=["lib/pkb_core/gen"],
+            cflags=["-Os"],
+        ),
+    ],
+    fap_category="GPIO",
+    fap_author="cycalo",
+    fap_weburl="https://github.com/cycalo/Flipper-Zero-Game-Boy-Pokemon-Battle",
+    fap_version=(0, 1),
+    fap_description="Link-cable battle opponent for Pokemon Crystal (Cable Club Colosseum)",
+)

@@ -97,6 +97,9 @@ This software is for experimental purposes only and is not meant for any illegal
 - Updated: [Ghost ESP v1.9 (By jaylikesbunda & Spooks4576)](https://github.com/Spooks4576/ghost_esp_app) `Req: ESP32` with [Ghost ESP Firmware](https://github.com/Spooks4576/Ghost_ESP)
 - Updated: [Networking NFC + QR v2.0 filename conflict handling and URL validation (By DonJulve)](https://github.com/DonJulve/Networking_NFC_QR_Flipper_Zero)
 - Added: [Tea Timer v1.0 (By igordanilov)](https://github.com/polarikus/FlipperZero-TeaTimer)
+- Added: [Pokemon Battle [GBC] v0.1 (By cycalo)](https://github.com/cycalo/Flipper-Zero-Game-Boy-Pokemon-Battle)
+- Updated: [RF Survey v1.3 - Cadence, Hunt and signal analysis (By tbelbek)](https://github.com/tbelbek/flipper-rf-survey)
+- Updated: [WiFi Marauder v0.8.0 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-wifi-marauder)
 
 <a name="release"></a>
 
@@ -897,6 +900,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Pocket CVSS v0.3 (By vavkamil)](https://github.com/vavkamil/pocket-cvss)
 - [PocketLab v1.6 (By PerfectoWeb)](https://github.com/PerfectoWeb/flipper-pocketlab)
 - [POCSAG Pager v1.4 (By XMasterx & Shmuma)](https://github.com/xMasterX/flipper-pager)
+- [Pokemon Battle [GBC] v0.1 (By cycalo)](https://github.com/cycalo/Flipper-Zero-Game-Boy-Pokemon-Battle)
 - [Pokemon Trading v2.3 (By EstebanFuentealba & kbembedded)](https://github.com/EstebanFuentealba/Flipper-Zero-Game-Boy-Trading-Pokemons)
 - [Polk MagnifiMini Remote v1.0 (By varunyellina)](https://github.com/varunyellina/flipper-ir-remote-polkmagnifi)
 - [Pomodoro 2 v2.4.1 (By Th3Un1q3)](https://github.com/Th3Un1q3/flipp_pomodoro)
@@ -925,7 +929,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [Remote Maker (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/487)
 - [Resistance Calculator v1.4 (By instantiator)](https://github.com/instantiator/flipper-zero-experimental-apps)
 - [Restaurant Pager Trigger v1.8 (By leedave)](https://github.com/leedave/flipper-zero-meal-pager)
-- [RF Survey v1.1 (By tbelbek)](https://github.com/tbelbek/flipper-rf-survey)
+- [RF Survey v1.3 (By tbelbek)](https://github.com/tbelbek/flipper-rf-survey)
 - [RFID Fuzzer v1.8 (By gid9798)](https://github.com/DarkFlippers/unleashed-firmware/pull/507)
 - [RFID Metal Detector v1.0 (By hnsvrdmn)](https://github.com/hnsvrdmn/flipper-rfid-metal-detector)
 - [RFIDMaker v0.9 (By KindaCharming / jeremydbean)](https://github.com/jeremydbean/FlipperRFIDMaker)
@@ -1086,7 +1090,7 @@ This software is for experimental purposes only and is not meant for any illegal
 - [WHC SWIO Flasher v1.1 (By sukvojte)](https://github.com/sukvojte/wch_swio_flasher)
 - [Wiegand Reader v1.4 (By jamisonderek)](https://github.com/jamisonderek/flipper-zero-tutorials/tree/main/gpio)
 - [WiFi (Deauther) V2 (By Timmotools)](https://github.com/Timmotools/flipperzero_esp8266_deautherv2) `Req: ESP8266`
-- [WiFi (Marauder) v0.7.12 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-wifi-marauder) `Req: ESP32` with [ESP32 MARAUDER Firmware](https://github.com/justcallmekoko/ESP32Marauder/releases/latest)
+- [WiFi (Marauder) v0.8.0 (By 0xchocolate & tcpassos)](https://github.com/0xchocolate/flipperzero-wifi-marauder) `Req: ESP32` with [ESP32 MARAUDER Firmware](https://github.com/justcallmekoko/ESP32Marauder/releases/latest)
 - [WiFi Census v0.1.31 (By Endika)](https://github.com/Endika/flipper-wifi-census) `Req: ESP32`
 - [Wifi Internet Watch v1.3 (By DruzhininPavel)](https://github.com/DruzhininPavel/wifi-internet-watch-flipper) `Req: ESP32`
 - [Wifi Mapping (By carvilsi)](https://github.com/carvilsi/flipper0-wifi-map/tree/main) `Req: ESP32`

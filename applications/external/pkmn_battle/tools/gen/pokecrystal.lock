@@ -1,0 +1,6 @@
+# Pinned pret/pokecrystal revisions used by every generator in tools/gen.
+# Changing these requires regenerating lib/pkb_core/gen and files/ and
+# re-auditing the engine port (tools/gen/asm_audit.py).
+repo=https://github.com/pret/pokecrystal
+master=3bc8daa4173e96a7f4011dad3922eb6fa5dad5c6
+symbols=887a080f34ffd6a4c1b2201e266ed0599654d222
