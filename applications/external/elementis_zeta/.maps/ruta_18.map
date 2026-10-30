@@ -1,0 +1,93 @@
+# Ruta 18 (C5b, contract 48), 30 x 14. column = i, row = j. The Autopista Mag's south end arrives at the WEST edge (i = 0..1, rows 6..7); the BOARDWALK (`bwalk`, rows 6..7) runs east to Ciudad Ambar (east edge
+# i = 29). Look (the user's mock "Ruta 18"): a coast promenade: the boardwalk with a rail on the sea side (a gap at i = 15..17 = the PIER: fish or surf from it), the open sea to the south (foam, 2 frames), grass and PALMS on the
+# land side with tall grass patches. Three trainers (a rider on the boardwalk, a scout, a fisherman). The west end has the Autopista's gate too (step triggers (1,6..7): walkers heading west are turned back).
+@map ruta_18
+@size 30 14
+@interior no
+@area ruta_18
+@bg 0
+@fill grass
+@spawn west 2 6 E
+@spawn east 28 6 W
+@spawn pier 16 8 S
+@spawn lengua_door 27 3 S       # C9 (contract 56): in front of the tinkerer's trade house door
+@encounters grass rate=20
+  flitwing 29 32 25
+  jabhawk 29 32 25
+  ferncairn 29 32 15
+  ibexer 29 31 15
+  munchmole 29 31 20
+@end
+# Open ground (contract 63, normal route): a step onto plain ground (not tall grass, water, a door, a ledge, an arrow floor) rolls this table when rand8 < 4 (4/256 per step).
+@open_rate 4
+# Roaming wild creatures (contract 55, rollout in 63): 3 creatures of this table wander the open ground (not the tall grass); touching one starts that wild battle.
+@roam 3 table=grass period=1800
+@encounters water rate=15
+  urchip 28 32 45
+  clubrimp 28 32 20
+  skipgoby 28 31 15
+  gleamlet 28 30 10
+  flopfin 22 26 10
+@end
+@encounters fish_old
+  flopfin 5 5 100
+@end
+@encounters fish_good rate=128
+  flopfin 10 10 25
+  skipgoby 10 10 30
+  clubrimp 10 10 25
+  lazatee 10 10 20
+@end
+@encounters fish_super
+  clubrimp 20 26 30
+  skipgoby 20 25 20
+  lazatee 20 26 20
+  urchip 20 26 20
+  gleamlet 20 24 10
+@end
+@legend
+  .  tile=grass
+  g  tile=tall_grass
+  p  tile=grass object=palm_0
+  P  tile=grass object=palm_0
+  =  tile=bwalk
+  R  tile=bwalk object=rail_i
+  E  tile=bwalk
+  X  tile=bwalk
+  w  tile=bwalk interact=step script=gate dirs=NW,N,W
+  t  tile=sea_tr
+  ~  tile=sea_o
+  s  object=sign text=r18.sign interact=look
+  S  tile=bwalk object=sign text=r18.sign2 interact=look
+  i  item=prime_salve
+  j  item=ward_spray
+  1  npc=explorador id=t1 face=S trainer=explorador_r18 range=4 text=tr.explorador_r18.pre after=tr.explorador_r18.after
+  2  npc=rider id=t2 face=W trainer=rider_r18 range=3 text=tr.rider_r18.pre after=tr.rider_r18.after
+  3  npc=pescador id=t3 face=S trainer=pescador_r18 range=3 text=tr.pescador_r18.pre after=tr.pescador_r18.after
+  q  npc=chica id=npc_a face=S text=r18.npc.a
+  H  object=house_f                  # C9: the tinkerer's house (Route 18 trade: a creature for a creature = Sagatee for Tonguard)
+  h  door=house_f
+  I  tile=tall_grass hidden=savia_max   # hidden (contract 80, hidden items)
+@grid
+  p.p.p.p.p.p.p.p.p.p.p.p.p.p.pp
+  ..................ggIggg......
+  ..P.ggggg.........gggggg.HHiP.
+  ....ggggg.1.P.....gggggg.Hh...
+  ....ggggg...............q.P...
+  ...s.j3.......P.......2.......
+  Xw===========================E
+  Xw===========================E
+  ~RRRRRRRRRRRRRR===SRRRRRRRRRR~
+  tttttttttttttttttttttttttttttt
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@warp E -> ciudad_ambar spawn=west
+@warp X -> autopista spawn=south
+@warp h -> casa_lengua spawn=door
+# The Autopista's gate on this side: a walker heading WEST (onto the road) is turned back; on the bicycle he passes (contract 42.6).
+@script gate step if !on_bike
+    say gl.c5a.gate.bike
+    hero_walk SE 1
+@end

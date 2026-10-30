@@ -1,0 +1,112 @@
+# Casa del Anciano (C4a, contract 39; C4b, contract 41), 9 x 7, interior. column = i, row = j. The old man of Pueblo Bruma is NOT home until he is rescued from the Torre de los Recuerdos (flag 808); his granddaughter
+# (`mama`) says so. After the rescue the tower warps the hero here (spawn `home`) and the old man (shown by flag 808) gives him the FLAUTA (`flauta`, flag 809; script `anciano_home` on entering, `anciano_talk` afterwards). A bed, a table, shelves with old photographs, candles on the shelf.
+@map casa_anciano
+@size 9 7
+@interior yes
+@flag anct_done 932   # F2 (contract 74): the quillord-for-quillara trade was done
+@var anct_res 12
+@var anct_want 10
+@var anct_give 11
+@bg 3
+@fill floor_wood
+@spawn door 4 5 N
+@spawn home 4 4 N
+@flag anciano_rescued 808
+@flag flauta_given 809
+@legend
+  .  tile=floor_wood
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  object=bed
+  f  object=bookshelf text=casa.books interact=look
+  g  object=bookshelf text=casa.photos interact=look
+  h  object=table
+  i  npc=mama id=grand face=SW script=grand_talk
+  m  npc=anciano id=anciano face=SE script=anciano_talk show_flag=808
+  j  object=candle_s
+  k  tile=mat
+  l  tile=floor_wood item=disc_43
+  n  tile=floor_wood npc=chica id=visitor face=E script=visitor
+@grid
+  abbcbbcbb
+  de...flg.
+  de.m.....
+  d..h.i...
+  d.j......
+  d.....n..
+  d...kk...
+@warp k -> pueblo_bruma spawn=casa_door
+# The granddaughter: before the rescue the old man is in the tower; after it he is back.
+@script grand_talk npc
+    npc_face_hero grand
+    jf anciano_rescued after
+    say casa.rel
+    end
+  after:
+    say casa.rel2
+@end
+# The rescue ends here (the tower warps the hero to spawn `home`): the old man thanks him and gives the FLAUTA; a full bag keeps flag 809 clear and he gives it at the next talk.
+@script anciano_home enter if anciano_rescued
+    jf flauta_given done
+    npc_face_hero anciano
+    say casa.anciano.hi
+    say casa.anciano.hi2
+    call anciano_gift
+  done:
+    end
+@end
+@script anciano_talk npc
+    npc_face_hero anciano
+    jf flauta_given said
+    call anciano_gift
+    end
+  said:
+    say casa.anciano.after
+    say d1.anciano.rumor
+    setf legend_rumor
+@end
+@script anciano_gift called
+    say casa.anciano.flute
+    give_item flauta 1
+    jv 0 0 full
+    item_var 0 flauta
+    say gl.gift
+    setf flauta_given
+    say casa.anciano.about
+    end
+  full:
+    say gl.found.full
+@end
+
+# F2 (contract 74): an in-game trade (quillord -> quillara, for a creature), nickname = the fixed ASCII text `tr_anc.nick` (the same in all four languages, contract 32.5). Flag 932 = it was done.
+@script visitor npc
+    npc_face_hero visitor
+    setv anct_want sp:quillord
+    setv anct_give sp:quillara
+    name_var 0 anct_want
+    name_var 1 anct_give
+    jf anct_done after
+    say tr_anc.hello
+    ask trueque.ask
+    jv 0 1 go
+    say trueque.no
+    end
+  go:
+    trade quillord quillara tr_anc.nick anct_res
+    jv anct_res 1 done
+    jv anct_res 255 cancel
+    say trueque.wrong
+    end
+  cancel:
+    say trueque.no
+    end
+  done:
+    setf anct_done
+    say trueque.done
+    end
+  after:
+    name_var 0 anct_give
+    say trueque.after
+@end

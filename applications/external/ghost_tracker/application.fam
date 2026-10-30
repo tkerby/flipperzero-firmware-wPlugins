@@ -1,0 +1,13 @@
+App(
+    appid="ghost_tracker",
+    name="Ghost Tracker",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="ghost_tracker_app",
+    stack_size=4 * 1024,
+    fap_icon="ghost_tracker.png",
+    fap_category="GPIO",
+    fap_author="Zinetick",
+    fap_weburl="https://github.com/Zinetick/ghost_tracker",
+    fap_version="1.0",
+    fap_description="Paranormal investigation instrument: EMF meter (ambient RF / external ADC), Spirit Box (real sub-GHz audio sweep) and REM Pod (capacitive GPIO/ADC proximity detection).",
+)

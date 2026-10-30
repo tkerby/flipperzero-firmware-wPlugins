@@ -1,0 +1,87 @@
+# Ruta 16 (C5b, contract 48), 30 x 20. column = i, row = j. Metropolis Neon's west exit arrives at the EAST edge (i = 29, rows 9..10); the road runs west. Look: the city's WEST OUTSKIRTS: lawn and a light asphalt
+# road with sidewalks (Ruta 8's pieces) and its own touch, the neon city's GRAFFITI RAILS along the first stretch. The SLEEPING CREATURE (Slumberth L30, the second of the chapter) fills the road's only cell in a wall of trees (i = 22):
+# without the Flauta it blocks the way; the Flauta wakes it for a fixed fight. West of it: three trainers, the FISHERMAN'S HOUSE (door (14,3): the Caña super, flag 833), a pocket closed by a CUTTABLE BUSH (6,5) with the GIRL'S HOUSE
+# (door (5,3): the Planeador, flag 834) and, at the south-west corner, the GATEHOUSE of the Autopista Mag across the road: the road turns south into a fenced corridor, and the step triggers (5..6,16) turn walkers back
+# (Autopista gate: bicycles only; `gate` script, contract 42.6). The south edge (5..6,19) leads onto the Autopista.
+@map ruta_16
+@size 30 20
+@interior no
+@area ruta_16
+@bg 0
+@fill lawn
+@spawn east 28 9 W
+@spawn cana_door 14 4 S
+@spawn plane_door 5 4 S
+@spawn south 5 18 N
+@encounters grass rate=20
+  flitwing 26 29 30
+  jabhawk 26 29 20
+  munchmole 27 30 20
+  ramplet 26 28 30
+@end
+# Open ground (contract 63, normal route): a step onto plain ground (not tall grass, water, a door, a ledge, an arrow floor) rolls this table when rand8 < 4 (4/256 per step).
+@open_rate 4
+# Roaming wild creatures (contract 55, rollout in 63): 3 creatures of this table wander the open ground (not the tall grass); touching one starts that wild battle.
+@roam 3 table=grass period=1800
+@legend
+  .  tile=lawn
+  y  object=tree
+  g  tile=tall_grass
+  k  tile=sidewalk
+  m  tile=sidewalk object=lamp_h
+  o  tile=asph
+  e  tile=asph
+  x  tile=asph
+  Z  tile=asph sleeper=slumberth level=30 npc=slumberth face=SE
+  B  tile=asph object=chain_j
+  a  object=graffiti_rail
+  f  object=chain_j
+  c  cut=yes
+  h  object=house_f
+  d  door=house_f
+  D  door=house_f
+  s  tile=sidewalk object=road_sign text=ruta16.sign interact=look
+  t  object=road_sign text=ruta16.gate.sign interact=look
+  u  object=sign text=ruta16.house.sign interact=look
+  v  object=gatehouse
+  w  tile=asph interact=step script=gate dirs=SW,S,W
+  1  npc=punk id=t1 face=S trainer=punk_r16a range=4 text=tr.punk_r16a.pre after=tr.punk_r16a.after
+  2  npc=rider id=t2 face=E trainer=rider_r16 range=4 text=tr.rider_r16.pre after=tr.rider_r16.after
+  3  npc=punk id=t3 face=S trainer=punk_r16b range=4 text=tr.punk_r16b.pre after=tr.punk_r16b.after
+  p  npc=vecino_m id=npc_a face=SE text=ruta16.npc.a
+  q  npc=mama id=npc_b face=S text=ruta16.npc.b
+  i  item=rich_salve
+  j  item=ward_spray
+  r  item=prime_salve
+  H  tile=lawn hidden=savia   # hidden (contract 80, hidden items)
+@grid
+  yyyyyyyyyyyyyyyyyyyyyyyyyyyyyy
+  y.........y...........y......y
+  y...hh....y..hh.ggggg.y......y
+  y.r.hd....y..hD.ggggg.y......y
+  y.........y.....u.....y......y
+  yyyyyycyyyy...........y.p....y
+  y......q....y....1..y.y......y
+  y.......3.............yaaaa..y
+  y..y...kkkkmkkkkkkkkkkykksmkky
+  y...foooooooooooooooooZooooooe
+  y...foooooooooooooooooBooooooe
+  y...fookkkkkkkkkkkmkkkykmkkkky
+  ygggfoof..............yaaaa..y
+  ygggfoof....2......y..y......y
+  ygggfoof......gggggg..y.gggg.y
+  ygjgfoovv.....gggggg..y.gggg.y
+  ygggfwwvv..y..gggggi..y.gggg.y
+  yH..footy.....gggggg.yy.gggg.y
+  y.y.foof..............y......y
+  yyyyyxxyyyyyyyyyyyyyyyyyyyyyyy
+@warp e -> metropolis_neon_2 spawn=west
+@warp x -> autopista spawn=north
+@warp d -> casa_planeador spawn=door
+@warp D -> casa_cana_super spawn=door
+# The bicycle-only gate of the Autopista Mag (Autopista gatehouse; contract 42.6 with the condition in the header, so mapc's reachability sees through it): a step trigger that turns a WALKER heading south back
+# (the road is shut to pedestrians); on the bicycle (flag 93 set) it does nothing. Coming back up on foot (heading north) is not stopped: `dirs` only lists the southward facings.
+@script gate step if !on_bike
+    say gl.c5a.gate.bike
+    hero_walk NE 1
+@end

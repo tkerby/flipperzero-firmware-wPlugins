@@ -20,14 +20,14 @@ void flipbip_scene_menu_on_enter(void* context) {
     //     flipbip_scene_menu_submenu_callback,
     //     app);
 
-    if(flipbip_has_file(FlipBipFileKey, NULL, false) &&
-       flipbip_has_file(FlipBipFileDat, NULL, false)) {
+    if(flipbip_wallet_format() != FlipBipWalletNone) {
         for(uint32_t coin_type = 0; coin_type < NUM_COINS; coin_type++) {
-            char wallet_menu_item[17] = "View      wallet";
-            strncpy(
-                wallet_menu_item + 5,
-                COIN_TEXT_ARRAY[coin_type][COIN_TEXT_LABEL],
-                strlen(COIN_TEXT_ARRAY[coin_type][COIN_TEXT_LABEL]));
+            char wallet_menu_item[32];
+            snprintf(
+                wallet_menu_item,
+                sizeof(wallet_menu_item),
+                "View %s wallet",
+                COIN_TEXT_ARRAY[coin_type][COIN_TEXT_MENU]);
             submenu_add_item(
                 app->submenu,
                 wallet_menu_item,
@@ -102,6 +102,7 @@ bool flipbip_scene_menu_on_event(void* context, SceneManagerEvent event) {
         } else if(event.event == SubmenuIndexSettings) {
             scene_manager_set_scene_state(
                 app->scene_manager, FlipBipSceneMenu, SubmenuIndexSettings);
+            scene_manager_set_scene_state(app->scene_manager, FlipBipSceneSettings, 0);
             scene_manager_next_scene(app->scene_manager, FlipBipSceneSettings);
             return true;
         } else if(event.event == SubmenuIndexNOP) {

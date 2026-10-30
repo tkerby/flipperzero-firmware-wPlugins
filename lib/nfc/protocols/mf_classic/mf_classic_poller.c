@@ -14,6 +14,12 @@
 
 #define MF_CLASSIC_MAX_BUFF_SIZE (64)
 
+// MIFARE Classic EV1 hidden sector 17 (signature), key B is the same on every card
+#define MF_CLASSIC_EV1_SIGNATURE_BLOCK (69)
+static const MfClassicKey mf_classic_ev1_signature_key_b = {
+    .data = {0x4B, 0x79, 0x1B, 0xEA, 0x7B, 0xCC},
+};
+
 // Ordered by frequency, labeled chronologically
 const MfClassicBackdoorKeyPair mf_classic_backdoor_keys[] = {
     {{{0xa3, 0x96, 0xef, 0xa4, 0xe2, 0x4f}}, MfClassicBackdoorAuth3}, // Fudan (static encrypted)
@@ -105,6 +111,19 @@ static NfcCommand mf_classic_poller_handle_data_update(MfClassicPoller* instance
     data_update->msb_count = instance->mode_ctx.dict_attack_ctx.msb_count;
     instance->mfc_event.type = MfClassicPollerEventTypeDataUpdate;
     return instance->callback(instance->general_event, instance->context);
+}
+
+// Sized by the poller's own sector count, not the loaded data's type as mf_classic_is_card_read()
+// does: the two diverge when the app hands over a dump of a different type than the card detected,
+// and the key counter below stops at the smaller of them, so this can only fail to report a
+// complete card, never report one early.
+static bool mf_classic_poller_is_card_read(MfClassicPoller* instance) {
+    uint8_t sectors_read = 0;
+    uint8_t keys_found = 0;
+    mf_classic_get_read_sectors_and_keys(instance->data, &sectors_read, &keys_found);
+
+    return (sectors_read == instance->sectors_total) &&
+           (keys_found == instance->sectors_total * 2);
 }
 
 static void mf_classic_poller_check_key_b_is_readable(
@@ -206,7 +225,18 @@ NfcCommand mf_classic_poller_handler_detect_type(MfClassicPoller* instance) {
         iso14443_3a_poller_get_data(instance->iso14443_3a_poller));
     const uint8_t sak = instance->data->iso14443_3a_data->sak;
 
-    if(sak == 0x09) { // Mini shares the 1K bit (0x08), so it must be matched first
+    if(instance->current_type_check == MfClassicType1kEv1) {
+        // Full auth rather than a nonce probe, so only cards holding the hidden sector match
+        MfClassicKey key = mf_classic_ev1_signature_key_b;
+        MfClassicError error = mf_classic_poller_auth(
+            instance, MF_CLASSIC_EV1_SIGNATURE_BLOCK, &key, MfClassicKeyTypeB, NULL, false);
+        if(error == MfClassicErrorNone) {
+            instance->data->type = MfClassicType1kEv1;
+            FURI_LOG_D(TAG, "1K EV1 detected");
+        }
+        instance->current_type_check = MfClassicType4k;
+        instance->state = MfClassicPollerStateStart;
+    } else if(sak == 0x09) { // Mini shares the 1K bit (0x08), so it must be matched first
         instance->data->type = MfClassicTypeMini;
         instance->current_type_check = MfClassicType4k;
         instance->state = MfClassicPollerStateStart;
@@ -221,12 +251,13 @@ NfcCommand mf_classic_poller_handler_detect_type(MfClassicPoller* instance) {
         if(mf_classic_poller_is_plus_2k_sl1(instance)) {
             instance->data->type = MfClassicType2k;
             FURI_LOG_D(TAG, "Plus 2K SL1 detected (SAK 08 + ATS)");
+            instance->current_type_check = MfClassicType4k;
+            instance->state = MfClassicPollerStateStart;
         } else {
             instance->data->type = MfClassicType1k;
             FURI_LOG_D(TAG, "1K detected (SAK)");
+            instance->current_type_check = MfClassicType1kEv1;
         }
-        instance->current_type_check = MfClassicType4k;
-        instance->state = MfClassicPollerStateStart;
     } else if(instance->current_type_check == MfClassicType4k) {
         MfClassicError error =
             mf_classic_poller_get_nt(instance, 254, MfClassicKeyTypeA, NULL, false);
@@ -244,12 +275,13 @@ NfcCommand mf_classic_poller_handler_detect_type(MfClassicPoller* instance) {
         if(error == MfClassicErrorNone) {
             instance->data->type = MfClassicType1k;
             FURI_LOG_D(TAG, "1K detected");
+            instance->current_type_check = MfClassicType1kEv1;
         } else {
             instance->data->type = MfClassicTypeMini;
             FURI_LOG_D(TAG, "Mini detected");
+            instance->current_type_check = MfClassicType4k;
+            instance->state = MfClassicPollerStateStart;
         }
-        instance->current_type_check = MfClassicType4k;
-        instance->state = MfClassicPollerStateStart;
     }
 
     return command;
@@ -802,6 +834,15 @@ NfcCommand mf_classic_poller_handler_backdoor_read_sector(MfClassicPoller* insta
 NfcCommand mf_classic_poller_handler_request_key(MfClassicPoller* instance) {
     NfcCommand command = NfcCommandContinue;
     MfClassicPollerDictAttackContext* dict_attack_ctx = &instance->mode_ctx.dict_attack_ctx;
+
+    // Key reuse fills sectors ahead of the cursor, so the card can be complete while the pass is
+    // still on sector 0. Checked here because answering a request is what costs the app a
+    // dictionary scan, and every continuing transition comes through this state.
+    if(mf_classic_poller_is_card_read(instance)) {
+        FURI_LOG_D(TAG, "Card complete, ending the dictionary pass");
+        instance->state = MfClassicPollerStateSuccess;
+        return command;
+    }
 
     instance->mfc_event.type = MfClassicPollerEventTypeRequestKey;
     command = instance->callback(instance->general_event, instance->context);
@@ -1977,6 +2018,13 @@ NfcCommand mf_classic_poller_handler_nested_controller(MfClassicPoller* instance
     MfClassicPollerDictAttackContext* dict_attack_ctx = &instance->mode_ctx.dict_attack_ctx;
     bool initial_dict_attack_iter = false;
     if(dict_attack_ctx->nested_phase == MfClassicNestedPhaseNone) {
+        // Guarded at the entry rather than at each of the three callers that route here: nested has
+        // nothing to recover on a card the dictionary pass already completed.
+        if(mf_classic_poller_is_card_read(instance)) {
+            FURI_LOG_D(TAG, "Card complete, skipping the nested attack");
+            instance->state = MfClassicPollerStateSuccess;
+            return command;
+        }
         dict_attack_ctx->auth_passed = true;
         bool backdoor_present = (dict_attack_ctx->backdoor != MfClassicBackdoorNone);
         if(!(backdoor_present)) {

@@ -3712,9 +3712,9 @@ renderTray();
 }
 function renderFire(m) {
 sub("fire");
-var t = $("bs-turn");
-t.textContent = m.yourTurn ? t("bs.your_turn_fire") : t("common.opp_turn", { nick: esc(m.opp) || t("common.opponent") });
-t.className = "turn" + (m.yourTurn ? " you" : "");
+var turnEl = $("bs-turn");
+turnEl.textContent = m.yourTurn ? t("bs.your_turn_fire") : t("common.opp_turn", { nick: esc(m.opp) || t("common.opponent") });
+turnEl.className = "turn" + (m.yourTurn ? " you" : "");
 $("bs-ships").textContent = t("common.you") + " " + m.myShips + " | " + t("common.them") + " " + m.oppShips;
 var TR = ["", "miss", "hit", "sunk"];
 var track = $("bs-track-grid");

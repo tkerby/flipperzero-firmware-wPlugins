@@ -1,0 +1,90 @@
+# Gimnasio Veneno (C5a, contract 47), 13 x 15, interior. column = i, row = j. The user's mock "Gimnasio Veneno": a dark DOJO with paper screens (`shoji_j` / `shoji_i` on the two back sides) and a floor of BIG LIGHT
+# TATAMI mats (2 x 2 tiles: `tatami_<i%2><j%2>`, never small tiles). has INVISIBLE walls: the whole floor is one tatami and a maze of `solid=yes` cells (the same ground tile, no art) is the only thing between the
+# door and KAI. The maze is a perfect maze of 6 x 6 cells (the cells are the odd tiles, the walls the even ones; the entrance is the gap of the south wall below cell (2,5)); the path to Kai has 24 cells, the four disciples
+# stand at the ends of straight side branches and look back along them (a world-axis facing: their art is the static 8-direction one), so they see the hero when he steps on the junction; Kai (a script NPC, the camera cuts
+# to him) waits in the dead end at the top. A win: flag 84 (Medalla Toxina, builtin `badge_toxina`, the card's 5th badge), Disc 06 (flag 832).
+@map gimnasio_ambar
+@size 13 15
+@interior yes
+@flag kai_disc 832         # Kai's Disc 06 was handed over (a full bag keeps it clear)
+@bg 0
+@fill tatami_00
+@spawn door 5 13 N
+@legend
+  .  tile=tatami_00
+  a  tile=none object=shoji_j
+  b  tile=none object=shoji_i
+  c  tile=tatami_11 npc=medium_s id=t2 face=SE trainer=ninja_g2 range=4 text=tr.ninja_g2.pre after=tr.ninja_g2.after
+  d  tile=tatami_01
+  e  tile=tatami_11
+  f  tile=tatami_01 solid=yes
+  g  tile=tatami_11 npc=kai id=kai face=SW script=kai
+  h  tile=tatami_10 solid=yes
+  i  tile=tatami_00 solid=yes
+  j  tile=tatami_10
+  k  tile=tatami_11 npc=aprendiz_s id=t3 face=SE trainer=ninja_g3 range=4 text=tr.ninja_g3.pre after=tr.ninja_g3.after
+  l  tile=tatami_11 npc=aprendiz_s id=t1 face=NE trainer=ninja_g1 range=4 text=tr.ninja_g1.pre after=tr.ninja_g1.after
+  m  tile=tatami_11 npc=cazabichos_s id=t4 face=NE trainer=ninja_g4 range=4 text=tr.ninja_g4.pre after=tr.ninja_g4.after
+  n  tile=tatami_11 object=candle
+  o  tile=tatami_01 object=candle
+  p  tile=tatami_00
+  q  tile=mat
+@grid
+  aaaaaaaaaaaaa
+  bcdededefgdef
+  bhihijijihiji
+  bededefedefef
+  bjihihihijiji
+  bedefkdededef
+  bjijihihihiji
+  befefededefef
+  bjijijihijiji
+  blfededefefmf
+  bjihihihijiji
+  bedefededefef
+  bhihijihihihi
+  dndndedeoednd
+  pjpjpqqjpjpjp
+@warp q -> ciudad_ambar spawn=gym_door
+# Kai. The camera cuts to him; his challenge, the fight (trainer kai: Smogkeg 37, Slickslime 39, Smogkeg 37, Twinkeg 43); a win = his speech, the Medalla Toxina (flag 84, the trainer card's 5th badge,
+# a poison drop), what it is, then Disc 06 (a full bag keeps kai_disc clear and he hands it over the next time you talk to him). A loss is the blackout. Afterwards a last line.
+@script kai npc
+    jf badge_toxina after
+    npc_face_hero kai
+    cam_npc kai
+    say gym.kai.pre
+    battle 119 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    say gym.kai.win
+    setf badge_toxina
+    say gym.kai.badge
+    say gym.kai.about
+    call kai_gift
+    cam_hero
+    end
+  after:
+    npc_face_hero kai
+    cam_npc kai
+    jf kai_disc said
+    call kai_gift
+    cam_hero
+    end
+  said:
+    say gym.kai.after
+    cam_hero
+@end
+@script kai_gift called
+    say gym.kai.disc
+    give_item disc_06 1
+    jv 0 0 full
+    item_var 0 disc_06
+    say gl.gift
+    setf kai_disc
+    say gym.kai.disc_about
+    end
+  full:
+    say gl.found.full
+@end

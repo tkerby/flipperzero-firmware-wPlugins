@@ -1,0 +1,16 @@
+Onkyo Remote bundles third-party artwork.
+
+Material Design Icons
+https://pictogrammers.com/library/mdi/
+Licensed under the Apache License, Version 2.0
+https://www.apache.org/licenses/LICENSE-2.0
+
+The SVG files in res/ are unmodified Material Design Icons: power, volume-off,
+play-pause, volume-minus, volume-plus, skip-previous, skip-next, equalizer and
+speaker. The 1-bit PNGs in images/ are generated from them by
+tools/svg2icons.py and are derivative works of those icons.
+
+Pictogrammers distributes the collection under the Pictogrammers Free License,
+which places the icons under Apache 2.0 and states that the collection is GPL
+friendly. The rest of this project is licensed under the GNU General Public
+License v3.0; see LICENSE.

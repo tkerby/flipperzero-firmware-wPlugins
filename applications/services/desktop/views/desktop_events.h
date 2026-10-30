@@ -39,6 +39,13 @@ typedef enum {
     _DesktopLockMenuEventDummyModeOff,
     DesktopLockMenuEventStealthModeOn,
     DesktopLockMenuEventStealthModeOff,
+    DesktopLockMenuEventOpenQuickSettings,
+
+    DesktopQuickSettingsEventBrightnessChanged,
+    DesktopQuickSettingsEventVolumeChanged,
+    DesktopQuickSettingsEventVibroChanged,
+    DesktopQuickSettingsEventSave,
+    DesktopQuickSettingsEventClose,
 
     DesktopAnimationEventCheckAnimation,
     DesktopAnimationEventNewIdleAnimation,
@@ -65,4 +72,5 @@ typedef enum {
     DesktopLockMenuEventLockPinOff,
     DesktopLockMenuEventCFW,
     DesktopLockMenuEventScreenSettings,
+    DesktopLockMenuEventLockKeypadOff,
 } DesktopEvent;

@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+"""Gitphin: Git remote helper (git-remote-flipper) and CLI (git flipper).
+
+Usage: git remote add origin flipper://<name>     then git push / fetch / clone as usual
+       git flipper list
+       git flipper create <name> [-d text] [-b branch]
+       git flipper delete <name> --yes
+       git flipper rename <old> <new>
+       git flipper describe <name> <text>
+       git flipper url <name>
+       git flipper gc <name>
+       git flipper webhook list|add <url>|remove <url>|secret <text>|test
+       git flipper backup [now|status|on|off|dir <path>]
+       git flipper mirror-add [remote] [--name <repo>]     git push also updates the Flipper
+       git flipper mirror-remove [remote]
+Env:   GITPHIN_URL      server base URL (default http://127.0.0.1:8080; FLIPPER_HUB_URL also works)
+
+One script, two names (install.sh makes the links). The name it runs under
+picks the mode: git-remote-flipper speaks the remote helper protocol on
+stdin/stdout (see `man gitremote-helpers`), git-flipper is the CLI.
+Only stdlib Python and the system `git`. Logs go to stderr, never stdout.
+The code is in pc/gitphin_git/ (api, gitutil, remote_helper, cli, cli_extra).
+"""
+
+import os
+import sys
+
+# The links in ~/.local/bin point here: find pc/ (gitphin_git, gitphin_bridge) from the real file.
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+from gitphin_git.api import HubError, log  # noqa: E402
+
+
+def main():
+    prog = os.path.basename(sys.argv[0])
+    try:
+        if prog == "git-flipper":
+            from gitphin_git.cli import cli_main
+            return cli_main(sys.argv[1:])
+        if prog == "git-remote-flipper":
+            from gitphin_git.remote_helper import helper_main
+            return helper_main(sys.argv[1:])
+        log("run as git-remote-flipper or git-flipper")
+        return 2
+    except HubError as e:
+        log(f"error: {e}")
+        return 1
+    except KeyboardInterrupt:
+        return 130
+
+
+if __name__ == "__main__":
+    sys.exit(main())

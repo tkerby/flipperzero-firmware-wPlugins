@@ -1,0 +1,1453 @@
+#pragma once
+
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "sr_capture_health.h"
+#include "sr_dialect.h"
+
+/*
+ * ★ Pure formatting for hand-drawn views. Must not include any furi header (ADR-003 / ADR-019 decision 4).
+ * Numeric formatting, tab wrapping, truncation by character count. The draw callback only consumes results from here.
+ */
+
+enum {
+    SR_VIEW_TAB_DASH = 0,
+    SR_VIEW_TAB_STREAM,
+    SR_VIEW_TAB_GPS,
+    SR_VIEW_TAB_SESSION,
+    SR_VIEW_TAB_COUNT
+};
+
+/* Safe upper bound for FontSecondary at 128 px; originally from scenes/scene_drive.c:38-45 */
+enum {
+    SR_VIEW_COLS = 20
+};
+
+static inline uint8_t sr_view_tab_next(uint8_t cur, int dir) {
+    if(cur >= (uint8_t)SR_VIEW_TAB_COUNT) {
+        return (uint8_t)SR_VIEW_TAB_DASH;
+    }
+    if(dir == 1) {
+        return (uint8_t)((cur + 1u) % (uint8_t)SR_VIEW_TAB_COUNT);
+    }
+    if(dir == -1) {
+        return (uint8_t)((cur + (uint8_t)SR_VIEW_TAB_COUNT - 1u) % (uint8_t)SR_VIEW_TAB_COUNT);
+    }
+    return cur;
+}
+
+/* Write a decimal into out. On insufficient cap, truncate to a prefix and still NUL-terminate. Returns the written length (excluding the NUL). */
+static inline size_t sr_fmt__udec(uint32_t v, char* out, size_t cap) {
+    char digs[10];
+    size_t nd = 0;
+    size_t i;
+    uint32_t x;
+
+    if(out == NULL || cap == 0) {
+        return 0;
+    }
+    if(v == 0u) {
+        if(cap < 2u) {
+            out[0] = '\0';
+            return 0;
+        }
+        out[0] = '0';
+        out[1] = '\0';
+        return 1;
+    }
+    x = v;
+    while(x > 0u && nd < sizeof(digs)) {
+        digs[nd++] = (char)('0' + (x % 10u));
+        x /= 10u;
+    }
+    if(nd + 1u > cap) {
+        size_t w = cap - 1u;
+        for(i = 0; i < w; i++) {
+            out[i] = digs[nd - 1u - i];
+        }
+        out[w] = '\0';
+        return w;
+    }
+    for(i = 0; i < nd; i++) {
+        out[i] = digs[nd - 1u - i];
+    }
+    out[nd] = '\0';
+    return nd;
+}
+
+static inline size_t sr_fmt__cpy(const char* src, size_t n, char* out, size_t cap) {
+    size_t w;
+    size_t i;
+
+    if(out == NULL || cap == 0) {
+        return 0;
+    }
+    w = n;
+    if(w + 1u > cap) {
+        w = cap - 1u;
+    }
+    for(i = 0; i < w; i++) {
+        out[i] = src[i];
+    }
+    out[w] = '\0';
+    return w;
+}
+
+static inline size_t sr_fmt_bytes(uint32_t bytes, char* out, size_t cap) {
+    char tmp[16];
+    size_t n;
+    uint32_t unit;
+    uint32_t whole;
+    uint32_t tenth;
+    char suffix;
+
+    if(out == NULL || cap == 0) {
+        return 0;
+    }
+
+    if(bytes < 1024u) {
+        n = sr_fmt__udec(bytes, tmp, sizeof(tmp));
+        if(n + 1u < sizeof(tmp)) {
+            tmp[n++] = 'B';
+            tmp[n] = '\0';
+        }
+        return sr_fmt__cpy(tmp, n, out, cap);
+    }
+
+    if(bytes < (1024u * 1024u)) {
+        unit = 1024u;
+        suffix = 'K';
+    } else {
+        unit = 1024u * 1024u;
+        suffix = 'M';
+    }
+    whole = bytes / unit;
+    tenth = (bytes % unit) * 10u / unit;
+    n = sr_fmt__udec(whole, tmp, sizeof(tmp));
+    if(n + 3u < sizeof(tmp)) {
+        tmp[n++] = '.';
+        tmp[n++] = (char)('0' + (char)tenth);
+        tmp[n++] = suffix;
+        tmp[n] = '\0';
+    }
+    return sr_fmt__cpy(tmp, n, out, cap);
+}
+
+static inline void sr_fmt__pad2(uint32_t v, char* p) {
+    p[0] = (char)('0' + ((v / 10u) % 10u));
+    p[1] = (char)('0' + (v % 10u));
+}
+
+static inline size_t sr_fmt_duration(uint32_t ms, char* out, size_t cap) {
+    char tmp[16];
+    size_t n;
+    uint32_t total_s;
+    uint32_t s;
+    uint32_t total_m;
+    uint32_t m;
+    uint32_t h;
+
+    if(out == NULL || cap == 0) {
+        return 0;
+    }
+
+    total_s = ms / 1000u;
+    s = total_s % 60u;
+    total_m = total_s / 60u;
+    m = total_m % 60u;
+    h = total_m / 60u;
+
+    if(ms < 3600000u) {
+        /* MM:SS. Under one hour the minutes run 0..59, zero-padded to two digits. */
+        sr_fmt__pad2(total_m, tmp);
+        tmp[2] = ':';
+        sr_fmt__pad2(s, tmp + 3);
+        tmp[5] = '\0';
+        n = 5;
+    } else {
+        n = sr_fmt__udec(h, tmp, sizeof(tmp));
+        if(n + 6u < sizeof(tmp)) {
+            tmp[n++] = ':';
+            sr_fmt__pad2(m, tmp + n);
+            n += 2u;
+            tmp[n++] = ':';
+            sr_fmt__pad2(s, tmp + n);
+            n += 2u;
+            tmp[n] = '\0';
+        }
+    }
+    return sr_fmt__cpy(tmp, n, out, cap);
+}
+
+static inline uint8_t sr_fmt_rssi_bars(int8_t rssi) {
+    if(rssi >= -55) {
+        return 4;
+    }
+    if(rssi >= -70) {
+        return 3;
+    }
+    if(rssi >= -80) {
+        return 2;
+    }
+    if(rssi >= -90) {
+        return 1;
+    }
+    return 0;
+}
+
+static inline char sr_fmt__san(unsigned char c) {
+    if(c < 0x20u || c > 0x7Eu) {
+        return '.';
+    }
+    return (char)c;
+}
+
+/*
+ * Truncate by bytes to max_cols. Only [src, src+len) is guaranteed readable on src;
+ * src[len] is not guaranteed to be a terminator (ADR-010). Do not scan it as a C string.
+ * When it overflows, the last byte is written as '~'.
+ */
+static inline size_t
+    sr_fmt_fit(const char* src, size_t len, size_t max_cols, char* out, size_t cap) {
+    size_t n;
+    size_t i;
+
+    if(out == NULL || cap == 0) {
+        return 0;
+    }
+    if(src == NULL) {
+        out[0] = '\0';
+        return 0;
+    }
+
+    n = len;
+    if(n > max_cols) {
+        n = max_cols;
+    }
+    if(n >= cap) {
+        n = cap - 1u;
+    }
+
+    if(n > 0) {
+        memcpy(out, src, n);
+        for(i = 0; i < n; i++) {
+            out[i] = sr_fmt__san((unsigned char)out[i]);
+        }
+    }
+    if(len > max_cols && n > 0) {
+        out[n - 1u] = '~';
+    }
+    out[n] = '\0';
+    return n;
+}
+
+enum {
+    SR_STREAM_ROWS = 5,
+    SR_STREAM_COLS = 17
+};
+
+/* Return the index of the first NUL within the first cap bytes of s, or cap if there is none. Never reads s[cap]. */
+static inline size_t sr_fmt_bounded_len(const char* s, size_t cap) {
+    size_t i;
+
+    if(s == NULL || cap == 0) {
+        return 0;
+    }
+    for(i = 0; i < cap; i++) {
+        if(s[i] == '\0') {
+            return i;
+        }
+    }
+    return cap;
+}
+
+static inline uint16_t sr_stream_clamp_top(uint16_t top, uint16_t count, uint8_t rows) {
+    uint16_t max_top;
+
+    if(count == 0 || rows == 0) {
+        return 0;
+    }
+    if(count <= (uint16_t)rows) {
+        return 0;
+    }
+    max_top = (uint16_t)(count - (uint16_t)rows);
+    if(top > max_top) {
+        return max_top;
+    }
+    return top;
+}
+
+/* dir=+1 moves older, dir=-1 moves newer. Saturates rather than wrapping. Any other dir only clamps. */
+static inline uint16_t sr_stream_scroll(uint16_t top, uint16_t count, uint8_t rows, int dir) {
+    if(dir == 1) {
+        if(top < 0xFFFFu) {
+            top = (uint16_t)(top + 1u);
+        }
+        return sr_stream_clamp_top(top, count, rows);
+    }
+    if(dir == -1) {
+        if(top == 0) {
+            return sr_stream_clamp_top(0, count, rows);
+        }
+        return sr_stream_clamp_top((uint16_t)(top - 1u), count, rows);
+    }
+    return sr_stream_clamp_top(top, count, rows);
+}
+
+/*
+ * The text portion of a Stream row (excluding bars and the scrollbar).
+ * Only [ssid, ssid+ssid_len) is guaranteed readable. Do not scan it as a C string.
+ */
+static inline size_t sr_fmt_stream_row(
+    const char* ssid,
+    size_t ssid_len,
+    bool ble,
+    uint8_t channel,
+    size_t max_cols,
+    char* out,
+    size_t cap) {
+    size_t pos;
+    size_t cols;
+    size_t ch_need;
+    size_t ch_nd;
+    char chbuf[4];
+    size_t ssid_budget;
+    const char* src;
+    size_t src_len;
+    size_t wrote;
+    size_t i;
+
+    if(out == NULL || cap == 0) {
+        return 0;
+    }
+
+    pos = 0;
+    cols = 0;
+    ch_need = 0;
+    ch_nd = 0;
+
+    if(channel != 0) {
+        ch_nd = sr_fmt__udec((uint32_t)channel, chbuf, sizeof(chbuf));
+        ch_need = 1u + ch_nd;
+    }
+
+    if(ssid == NULL || ssid_len == 0) {
+        src = "(hidden)";
+        src_len = 8;
+    } else {
+        src = ssid;
+        src_len = ssid_len;
+    }
+
+    /* Deduct the BLE prefix first, then the channel segment; whatever remains goes to the SSID. */
+    ssid_budget = max_cols;
+    if(ble && ssid_budget > 0) {
+        ssid_budget--;
+    }
+    if(ssid_budget > ch_need) {
+        ssid_budget -= ch_need;
+    } else {
+        ssid_budget = 0;
+    }
+
+    if(ble && cols < max_cols && pos + 1u < cap) {
+        out[pos++] = '*';
+        cols++;
+    }
+
+    if(ssid_budget > 0 && pos + 1u < cap) {
+        wrote = sr_fmt_fit(src, src_len, ssid_budget, out + pos, cap - pos);
+        pos += wrote;
+        cols += wrote;
+    }
+
+    if(channel != 0) {
+        if(cols < max_cols && pos + 1u < cap) {
+            out[pos++] = ' ';
+            cols++;
+        }
+        for(i = 0; i < ch_nd; i++) {
+            if(cols < max_cols && pos + 1u < cap) {
+                out[pos++] = chbuf[i];
+                cols++;
+            }
+        }
+    }
+
+    if(pos < cap) {
+        out[pos] = '\0';
+    } else {
+        out[cap - 1u] = '\0';
+        pos = cap - 1u;
+    }
+    return pos;
+}
+
+/*
+ * GPS numeric field -> display string.
+ *
+ * fix == false, or an empty value -> write "--".
+ * **Never display the raw value directly**: without a fix Marauder prints "0.0000000"
+ * (not an empty string), which on screen is a Null Island fake coordinate that looks like real data.
+ * Evidence: tools/host_test/fixtures/gpsdata.bin (captured from real hardware in T0.3).
+ *
+ * Only [val, val + bounded_len) is guaranteed readable on val; handle it per ADR-010 and never scan it to a terminator.
+ * Returns the written length (excluding the NUL).
+ */
+static inline size_t sr_fmt_gps_val(
+    const char* val,
+    size_t val_cap,
+    bool fix,
+    size_t max_cols,
+    char* out,
+    size_t out_cap) {
+    size_t vlen;
+
+    if(out == NULL || out_cap == 0) {
+        return 0;
+    }
+    if(!fix) {
+        return sr_fmt_fit("--", 2, max_cols, out, out_cap);
+    }
+    if(val == NULL) {
+        return sr_fmt_fit("--", 2, max_cols, out, out_cap);
+    }
+    vlen = sr_fmt_bounded_len(val, val_cap);
+    if(vlen == 0) {
+        return sr_fmt_fit("--", 2, max_cols, out, out_cap);
+    }
+    return sr_fmt_fit(val, vlen, max_cols, out, out_cap);
+}
+
+/*
+ * Fifth row of the GPS tab:
+ *   With a fix and a non-empty datetime -> the device timestamp verbatim (SR_DATETIME_MAX=19, which is just within SR_VIEW_COLS=20)
+ *   Otherwise               -> "Blocks: <n>" (without a fix this proves the gpsdata link is still receiving, which beats a row of "--")
+ * blocks goes through sr_fmt__udec; overflow is likewise caught by the '~' in sr_fmt_fit.
+ */
+static inline size_t sr_fmt_gps_stamp(
+    const char* dt,
+    size_t dt_cap,
+    bool fix,
+    uint32_t blocks,
+    char* out,
+    size_t cap) {
+    char tmp[32];
+    size_t n;
+    size_t dlen;
+
+    if(out == NULL || cap == 0) {
+        return 0;
+    }
+    if(fix) {
+        dlen = sr_fmt_bounded_len(dt, dt_cap);
+        if(dlen > 0) {
+            return sr_fmt_fit(dt, dlen, (size_t)SR_VIEW_COLS, out, cap);
+        }
+    }
+    n = sr_fmt__cpy("Blocks: ", 8, tmp, sizeof(tmp));
+    n += sr_fmt__udec(blocks, tmp + n, sizeof(tmp) - n);
+    return sr_fmt_fit(tmp, n, (size_t)SR_VIEW_COLS, out, cap);
+}
+
+/*
+ * SrSessionState numeric value -> display label.
+ *
+ * The ★ layer cannot see SrSessionState (sr_view_fmt.h includes only stdbool/stddef/stdint/string.h,
+ * and the selfcontained target compiles it in isolation), so it maps by numeric value:
+ *   0 = Idle / 1 = Running / 2 = Stopped (read from src/sr_model.h:37-41)
+ * The numeric assumption is pinned at compile time by the _Static_assert in views/sr_view_dash.c.
+ * Out of range always returns "?", never NULL (the caller feeds it straight to canvas_draw_str).
+ */
+static inline const char* sr_fmt_session_label(uint8_t state) {
+    if(state == 0) {
+        return "Idle";
+    }
+    if(state == 1) {
+        return "Running";
+    }
+    if(state == 2) {
+        return "Stopped";
+    }
+    return "?";
+}
+
+/*
+ * Hardware: prefix names the Scout Lite board, not the firmware.
+ * Firmware/app are SigRoam. Wire Firmware: stays "Marauder" (handshake).
+ * Bounded: never scan past hw_cap. Case-sensitive, same prefix as Probe.
+ */
+static inline bool sr_fmt_hw_is_scout_lite(const char* hw, size_t hw_cap) {
+    static const char k[] = "Scout Lite";
+    const size_t klen = sizeof(k) - 1u;
+    size_t n;
+    size_t i;
+
+    n = sr_fmt_bounded_len(hw, hw_cap);
+    if(n < klen) {
+        return false;
+    }
+    for(i = 0; i < klen; i++) {
+        if(hw[i] != k[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/*
+ * Sess tab status line for Scout Lite. Never copies the wire Firmware:
+ * token. Fitted to SR_VIEW_COLS.
+ *
+ * state: Diag: SCANNING(1)→Running, SEALED(4)→Sealed, UPLOADING(5)→Uploading;
+ * else FAP session label (Idle/Running/Stopped). duration: live elapsed while FAP session
+ * is Running (numeric 1), else board sess_ms. radio: permission bits;
+ * omitted when radio_rev==0. "Running 01:26 WiFi BLE" is 21 cols, so the
+ * radio token is W+B / W / B / --.
+ */
+static inline size_t sr_fmt_sess_sigroam_status(
+    uint8_t session,
+    bool diag_seen,
+    uint8_t diag_state,
+    uint32_t elapsed_ms,
+    uint32_t sess_ms,
+    uint32_t radio_rev,
+    uint8_t radio_wifi,
+    uint8_t radio_ble,
+    char* out,
+    size_t cap) {
+    char tmp[40];
+    char dur[16];
+    const char* st;
+    size_t n;
+    size_t slen;
+    uint32_t ms;
+
+    if(out == NULL || cap == 0) {
+        return 0;
+    }
+
+    if(diag_seen && diag_state == 5u) {
+        st = "Uploading";
+    } else if(diag_seen && diag_state == 4u) {
+        st = "Sealed";
+    } else if(diag_seen && diag_state == 1u) {
+        st = "Running";
+    } else {
+        st = sr_fmt_session_label(session);
+    }
+
+    ms = (session == 1u) ? elapsed_ms : sess_ms;
+    (void)sr_fmt_duration(ms, dur, sizeof(dur));
+
+    slen = sr_fmt_bounded_len(st, 16);
+    n = sr_fmt__cpy(st, slen, tmp, sizeof(tmp));
+    if(n + 1u < sizeof(tmp)) {
+        tmp[n++] = ' ';
+        tmp[n] = '\0';
+    }
+    n += sr_fmt__cpy(dur, sr_fmt_bounded_len(dur, sizeof(dur)), tmp + n, sizeof(tmp) - n);
+
+    if(radio_rev != 0u) {
+        if(n + 1u < sizeof(tmp)) {
+            tmp[n++] = ' ';
+            tmp[n] = '\0';
+        }
+        if(radio_wifi != 0u && radio_ble != 0u) {
+            n += sr_fmt__cpy("W+B", 3, tmp + n, sizeof(tmp) - n);
+        } else if(radio_wifi != 0u) {
+            n += sr_fmt__cpy("W", 1, tmp + n, sizeof(tmp) - n);
+        } else if(radio_ble != 0u) {
+            n += sr_fmt__cpy("B", 1, tmp + n, sizeof(tmp) - n);
+        } else {
+            n += sr_fmt__cpy("--", 2, tmp + n, sizeof(tmp) - n);
+        }
+    }
+
+    return sr_fmt_fit(tmp, n, (size_t)SR_VIEW_COLS, out, cap);
+}
+
+/*
+ * Join two bounded strings into a single display row.
+ *
+ *   both a and b non-empty -> "a b"
+ *   only one non-empty  -> that one
+ *   both empty          -> "?" (following the existing convention of field_or_q in scenes/scene_probe.c:6-8)
+ *
+ * b may be NULL or b_cap == 0, for rows carrying a single field (such as the hardware model).
+ * Only [p, p + bounded_len) is guaranteed readable on a and b; handle per ADR-010 and never scan to a terminator.
+ * Sanitizing and truncation reuse sr_fmt_fit. Returns the written length (excluding the NUL).
+ */
+static inline size_t sr_fmt_fw_pair(
+    const char* a,
+    size_t a_cap,
+    const char* b,
+    size_t b_cap,
+    size_t max_cols,
+    char* out,
+    size_t out_cap) {
+    char tmp[80];
+    size_t n;
+    size_t alen;
+    size_t blen;
+
+    if(out == NULL || out_cap == 0) {
+        return 0;
+    }
+
+    alen = sr_fmt_bounded_len(a, a_cap);
+    blen = sr_fmt_bounded_len(b, b_cap);
+
+    if(alen == 0 && blen == 0) {
+        return sr_fmt_fit("?", 1, max_cols, out, out_cap);
+    }
+
+    n = 0;
+    tmp[0] = '\0';
+    if(alen > 0) {
+        n = sr_fmt__cpy(a, alen, tmp, sizeof(tmp));
+    }
+    if(alen > 0 && blen > 0 && n + 1u < sizeof(tmp)) {
+        tmp[n++] = ' ';
+        tmp[n] = '\0';
+    }
+    if(blen > 0) {
+        n += sr_fmt__cpy(b, blen, tmp + n, sizeof(tmp) - n);
+    }
+    return sr_fmt_fit(tmp, n, max_cols, out, out_cap);
+}
+
+/*
+ * Dash status bar for the capture-health verdict (D19 / ADR-025: sunk to
+ * y61, `net` dropped as redundant with the big uniq, `SAT <NN>` added from
+ * the same Qual snapshot).
+ *
+ * Card §1.4 examples use CJK / emoji. FontSecondary is a `_tr` bitmap and
+ * cannot draw those glyphs; the strings below keep the frozen semantics
+ * (OK / WARN / CRIT / Acquiring + topd hint) in ASCII. Copy table (every
+ * fresh non-CRIT row ends in " SAT <NN>"; CRIT and the stale row
+ * deliberately carry no SAT):
+ *   fresh OK            "OK fix<pct>% <drop>drop SAT <NN>"
+ *   fresh WARN low-fix  "WARN fix<pct>% SAT <NN>"
+ *   fresh WARN no-fix   "WARN nofix SAT <NN>"
+ *   fresh WARN drop     "WARN drop <topd> SAT <NN>"
+ *   fresh CRIT (sd==0)  "SD not writing"
+ *   fresh Acquiring     "acquiring SAT <NN>"
+ *   stale               "- need SigRoam Qual"
+ * The 23-char OK string no longer fits SR_VIEW_COLS=20 (F2 rev2 §3); the
+ * caller fits it against SR_HEALTH_COLS_MAX (views/sr_view_dash.h) instead,
+ * still through sr_fmt_fit.
+ *
+ * unseen (qual_rev==0) is not "all zeros" — that would look like no-fix.
+ */
+static inline const char* sr_health_topd_hint(uint8_t reason) {
+    if(reason == (uint8_t)SrHealthReasonGps) {
+        return "gps";
+    }
+    if(reason == (uint8_t)SrHealthReasonSdDrop) {
+        return "sd";
+    }
+    if(reason == (uint8_t)SrHealthReasonLink) {
+        return "link";
+    }
+    if(reason == (uint8_t)SrHealthReasonQueue) {
+        return "queue";
+    }
+    if(reason == (uint8_t)SrHealthReasonScan) {
+        return "scan";
+    }
+    if(reason == (uint8_t)SrHealthReasonDedup) {
+        return "dedup";
+    }
+    return "?";
+}
+
+/*
+ * F2 rev2 §1B. How long a Qual: snapshot stays on screen before the
+ * headline degrades to the unknown state. 3xT of the §1A refresh period
+ * (5000 ms), chosen to tolerate two missed cycles before declaring stale.
+ * Card-frozen; do not retune here.
+ */
+enum {
+    SR_QUAL_STALE_MS = 15000
+};
+
+/*
+ * F2 rev2 §1A. Dash tick period for resending `info`, in ticks of
+ * SR_TICK_PERIOD_MS (100 ms). 5000 / 100 = 50. Shared here so host tests
+ * pin the production value instead of mirroring a magic 50u (E-2).
+ * This header must not include sigroam.h (ADR-003); scenes/scene_dash.c
+ * _Static_assert's the 5000/SR_TICK_PERIOD_MS identity.
+ */
+enum {
+    SR_QUAL_REFRESH_PERIOD_TICKS = 50
+};
+
+/*
+ * F2 rev2 §1B / §1C. Pure freshness predicate for the Dash render gate.
+ * Folds three conditions that all lead to the same "- need SigRoam Qual"
+ * unknown-state branch of sr_view_fmt_health, so there is exactly one
+ * source of truth for "should the verdict be painted right now":
+ *   - qual_rev == 0        : Qual: has never been seen (generic Marauder).
+ *   - sess_ms == 0          : the board's own Sess: line says no session is
+ *                             running (§1C; s_sess_snap boot-accumulated
+ *                             Qual: would otherwise misread as a verdict).
+ *   - now - qual_tick_ms > SR_QUAL_STALE_MS : superannuated (§1B).
+ * now / qual_tick_ms are furi ticks; the subtraction is unsigned and wraps
+ * correctly (same convention as scene_dash.c:78-79 / sr_model.c:179-182).
+ */
+static inline bool
+    sr_fmt_qual_fresh(uint32_t qual_rev, uint32_t qual_tick_ms, uint32_t sess_ms, uint32_t now) {
+    if(qual_rev == 0u) {
+        return false;
+    }
+    if(sess_ms == 0u) {
+        return false;
+    }
+    if((now - qual_tick_ms) > (uint32_t)SR_QUAL_STALE_MS) {
+        return false;
+    }
+    return true;
+}
+
+/*
+ * F2 rev2 §1A. Pure periodicity decision for the Dash tick chain's Qual
+ * refresh (dash_qual_refresh_tick in scenes/scene_dash.c): given the
+ * app-wide tick counter (app->tick_n, one per SR_TICK_PERIOD_MS) and the
+ * desired period expressed in ticks, decide whether this tick should
+ * resend `info`. Generic on purpose -- sigroam.h's SR_TICK_PERIOD_MS is a
+ * furi-adjacent constant and this file must not include it (ADR-003); the
+ * caller converts ms to ticks itself.
+ * period_ticks == 0 never fires (defensive; the real caller always passes
+ * a nonzero compile-time constant).
+ */
+static inline bool sr_qual_refresh_due(uint32_t tick_n, uint32_t period_ticks) {
+    if(period_ticks == 0u) {
+        return false;
+    }
+    return (tick_n % period_ticks) == 0u;
+}
+
+/*
+ * T6.5 half B. Dash BLE field (the value after "BLE=").
+ * radio_rev == 0: Radio: never seen — unknown, print the live count, never "OFF".
+ * radio_rev != 0 && radio_ble == 0: permission bit off — "OFF", not "0".
+ * else: live count (BLE on; indoor ap_ble==0 is still a count).
+ */
+static inline size_t
+    sr_fmt_ble_field(uint32_t radio_rev, uint8_t radio_ble, uint32_t ap_ble, char* out, size_t cap) {
+    if(out == NULL || cap == 0) {
+        return 0;
+    }
+    if(radio_rev != 0u && radio_ble == 0u) {
+        return sr_fmt__cpy("OFF", 3, out, cap);
+    }
+    return sr_fmt__udec(ap_ble, out, cap);
+}
+
+/*
+ * D19 / ADR-025. SAT count on the Dash status bar and the GPS tab first
+ * line: two-digit zero padding under 100 ("SAT 09"), built on sr_fmt__pad2;
+ * 100 and up prints all three digits verbatim (uint8_t cannot exceed 255).
+ */
+static inline size_t sr_fmt_sats(uint8_t sats, char* out, size_t cap) {
+    char tmp[4];
+
+    if(out == NULL || cap == 0) {
+        return 0;
+    }
+    if(sats >= 100u) {
+        return sr_fmt__udec((uint32_t)sats, out, cap);
+    }
+    sr_fmt__pad2((uint32_t)sats, tmp);
+    tmp[2] = '\0';
+    return sr_fmt__cpy(tmp, 2, out, cap);
+}
+
+/*
+ * D19 / ADR-025 decision 1. Status-bar mark selector: a stale Qual must
+ * never paint the leftover verdict (the pre-D19 code drew ✓ next to
+ * "- need SigRoam Qual"); stale folds to the Acquiring ring, fresh passes
+ * the verdict through. Drawn by sr_view_dash_draw_health_mark.
+ */
+static inline uint8_t sr_fmt_health_mark(bool fresh, uint8_t verdict) {
+    if(!fresh) {
+        return (uint8_t)SrHealthAcquiring;
+    }
+    return verdict;
+}
+
+static inline size_t sr_view_fmt_health(
+    const SrHealthEval* e,
+    const SrQualInfo* q,
+    bool fresh,
+    char* out,
+    size_t cap) {
+    char tmp[40];
+    size_t n;
+    const char* hint;
+    uint32_t fixpct_disp;
+    uint8_t sats;
+
+    if(out == NULL || cap == 0) {
+        return 0;
+    }
+    if(!fresh || e == NULL) {
+        return sr_fmt__cpy("- need SigRoam Qual", 19, out, cap);
+    }
+
+    /*
+     * F2 rev2 §4 / gate item 7: gps_task.c write-seq vs store_task.c
+     * read-seq can hand a Qual: line where ggafix > gga, so
+     * sr_capture_health_eval's fixpct (frozen, not clamped there by
+     * design) can exceed 100. Clamp only for display -- the eval layer's
+     * WARN-low-fix / drop-rate branch selection already ran on the
+     * unclamped value and must not change.
+     */
+    fixpct_disp = (uint32_t)e->fixpct;
+    if(fixpct_disp > 100u) {
+        fixpct_disp = 100u;
+    }
+    sats = (q != NULL) ? q->sats : 0u;
+
+    tmp[0] = '\0';
+    n = 0;
+    if(e->v == SrHealthCrit) {
+        /* Copy table: CRIT carries no SAT suffix. */
+        n = sr_fmt__cpy("SD not writing", 14, tmp, sizeof(tmp));
+        return sr_fmt__cpy(tmp, n, out, cap);
+    }
+    if(e->v == SrHealthAcquiring) {
+        n = sr_fmt__cpy("acquiring", 9, tmp, sizeof(tmp));
+    } else if(e->v == SrHealthOk) {
+        n = sr_fmt__cpy("OK fix", 6, tmp, sizeof(tmp));
+        n += sr_fmt__udec(fixpct_disp, tmp + n, sizeof(tmp) - n);
+        if(n + 2u < sizeof(tmp)) {
+            tmp[n++] = '%';
+            tmp[n++] = ' ';
+            tmp[n] = '\0';
+        }
+        n += sr_fmt__udec(q != NULL ? q->drop : 0u, tmp + n, sizeof(tmp) - n);
+        n += sr_fmt__cpy("drop", 4, tmp + n, sizeof(tmp) - n);
+    } else if(e->reason == (uint8_t)SrHealthReasonNoFix) {
+        n = sr_fmt__cpy("WARN nofix", 10, tmp, sizeof(tmp));
+    } else if(e->reason == (uint8_t)SrHealthReasonLowFix) {
+        n = sr_fmt__cpy("WARN fix", 8, tmp, sizeof(tmp));
+        n += sr_fmt__udec(fixpct_disp, tmp + n, sizeof(tmp) - n);
+        if(n + 1u < sizeof(tmp)) {
+            tmp[n++] = '%';
+            tmp[n] = '\0';
+        }
+    } else {
+        hint = sr_health_topd_hint(e->reason);
+        n = sr_fmt__cpy("WARN drop ", 10, tmp, sizeof(tmp));
+        n += sr_fmt__cpy(hint, sr_fmt_bounded_len(hint, 8), tmp + n, sizeof(tmp) - n);
+    }
+    /* Every fresh non-CRIT row ends with " SAT <NN>" (copy table above). */
+    n += sr_fmt__cpy(" SAT ", 5, tmp + n, sizeof(tmp) - n);
+    n += sr_fmt_sats(sats, tmp + n, sizeof(tmp) - n);
+    return sr_fmt__cpy(tmp, n, out, cap);
+}
+
+/*
+ * D19 ③ / ADR-025 decision 4. Duration compressed to HhMM: unpadded hours
+ * + 'h' + two-digit minutes, seconds truncated (1h24, 100h00). Used by
+ * sr_fmt_ap_row's L1 level.
+ */
+static inline size_t sr_fmt_hhmm(uint32_t ms, char* out, size_t cap) {
+    char tmp[16];
+    size_t n;
+    uint32_t total_m;
+    uint32_t m;
+    uint32_t h;
+
+    if(out == NULL || cap == 0) {
+        return 0;
+    }
+    total_m = (ms / 1000u) / 60u;
+    m = total_m % 60u;
+    h = total_m / 60u;
+    n = sr_fmt__udec(h, tmp, sizeof(tmp));
+    if(n + 3u < sizeof(tmp)) {
+        tmp[n++] = 'h';
+        sr_fmt__pad2(m, tmp + n);
+        n += 2u;
+        tmp[n] = '\0';
+    }
+    return sr_fmt__cpy(tmp, n, out, cap);
+}
+
+/*
+ * D19 ③ / ADR-025 decision 4. Dash Running AP row, three adaptive levels,
+ * width-cascaded against max_cols (the draw layer passes SR_VIEW_COLS=20):
+ *   L0  "AP=150 BLE=23 01:26"   full row; the duration keeps sr_fmt_duration's
+ *                               full H:MM:SS past 1h whenever the row fits
+ *                               (information first);
+ *   L1  "AP=1234 BLE=567 1h24"  L0 overflows AND duration >= 1h: compress to
+ *                               HhMM (sr_fmt_hhmm);
+ *   L2  "AP=15234 BLE=8921"     still over (or L0 over under 1h, where L1 is
+ *                               unavailable): drop the duration -- the Sess
+ *                               tab keeps the full value.
+ * The BLE field reuses sr_fmt_ble_field ("BLE=OFF" semantics unchanged);
+ * sr_fmt_fit is the final backstop. Level choice lives here, never in draw code.
+ * tmp is 48: the L2 base is at most 3+10+5+10=28 chars and a duration at
+ * most 15, so the space-join below can never overrun it.
+ */
+static inline size_t sr_fmt_ap_row(
+    uint32_t ap_wifi,
+    uint32_t radio_rev,
+    uint8_t radio_ble,
+    uint32_t ap_ble,
+    uint32_t elapsed_ms,
+    size_t max_cols,
+    char* out,
+    size_t cap) {
+    char tmp[48];
+    char ble[12];
+    char dur[16];
+    size_t n;
+    size_t blen;
+    size_t dlen;
+
+    if(out == NULL || cap == 0) {
+        return 0;
+    }
+
+    blen = sr_fmt_ble_field(radio_rev, radio_ble, ap_ble, ble, sizeof(ble));
+
+    /* L2 base: "AP=<wifi> BLE=<field>". */
+    n = sr_fmt__cpy("AP=", 3, tmp, sizeof(tmp));
+    n += sr_fmt__udec(ap_wifi, tmp + n, sizeof(tmp) - n);
+    n += sr_fmt__cpy(" BLE=", 5, tmp + n, sizeof(tmp) - n);
+    n += sr_fmt__cpy(ble, blen, tmp + n, sizeof(tmp) - n);
+
+    /* L0: append the full duration when the whole row still fits. */
+    dlen = sr_fmt_duration(elapsed_ms, dur, sizeof(dur));
+    if(n + 1u + dlen <= max_cols) {
+        tmp[n] = ' ';
+        n += 1u;
+        n += sr_fmt__cpy(dur, dlen, tmp + n, sizeof(tmp) - n);
+        return sr_fmt_fit(tmp, n, max_cols, out, cap);
+    }
+
+    /* L1: at one hour and beyond the duration compresses to HhMM. */
+    if(elapsed_ms >= 3600000u) {
+        dlen = sr_fmt_hhmm(elapsed_ms, dur, sizeof(dur));
+        if(n + 1u + dlen <= max_cols) {
+            tmp[n] = ' ';
+            n += 1u;
+            n += sr_fmt__cpy(dur, dlen, tmp + n, sizeof(tmp) - n);
+            return sr_fmt_fit(tmp, n, max_cols, out, cap);
+        }
+    }
+
+    /* L2: the duration leaves the row. */
+    return sr_fmt_fit(tmp, n, max_cols, out, cap);
+}
+
+/*
+ * D19 ⑦ / ADR-025 decision 5. GPS tab first line for both live sources
+ * (gps_src 1 and 2): "Fix: Yes SAT 09". SAT priority: the gpsdata
+ * snapshot's own sats string when non-empty -> fresh Qual sats (via
+ * sr_fmt_sats) -> "--" (Qual stale or absent: an honest unknown, never a
+ * leftover number). An all-digits snapshot within uint8_t range goes through
+ * sr_fmt_sats too, so both paths share the card's "SAT <NN>" format
+ * (review NIT-C); a non-digit or out-of-range device string copies verbatim
+ * as-is. Fitted to SR_VIEW_COLS.
+ */
+static inline size_t sr_fmt_gps_fix_line(
+    bool fix,
+    const char* snap_sats,
+    size_t snap_sats_cap,
+    bool qual_fresh,
+    uint8_t qual_sats,
+    char* out,
+    size_t cap) {
+    char tmp[24];
+    size_t n;
+    size_t slen;
+
+    if(out == NULL || cap == 0) {
+        return 0;
+    }
+
+    n = sr_fmt__cpy("Fix: ", 5, tmp, sizeof(tmp));
+    if(fix) {
+        n += sr_fmt__cpy("Yes", 3, tmp + n, sizeof(tmp) - n);
+    } else {
+        n += sr_fmt__cpy("No", 2, tmp + n, sizeof(tmp) - n);
+    }
+    n += sr_fmt__cpy(" SAT ", 5, tmp + n, sizeof(tmp) - n);
+
+    slen = sr_fmt_bounded_len(snap_sats, snap_sats_cap);
+    if(slen > 0u) {
+        uint32_t v = 0u;
+        size_t i = 0u;
+        bool digits = true;
+
+        for(i = 0u; i < slen; i++) {
+            if(snap_sats[i] < '0' || snap_sats[i] > '9') {
+                digits = false;
+                break;
+            }
+            v = v * 10u + (uint32_t)(snap_sats[i] - '0');
+            if(v > 255u) {
+                digits = false;
+                break;
+            }
+        }
+        if(digits) {
+            n += sr_fmt_sats((uint8_t)v, tmp + n, sizeof(tmp) - n);
+        } else {
+            n += sr_fmt__cpy(snap_sats, slen, tmp + n, sizeof(tmp) - n);
+        }
+    } else if(qual_fresh) {
+        n += sr_fmt_sats(qual_sats, tmp + n, sizeof(tmp) - n);
+    } else {
+        n += sr_fmt__cpy("--", 2, tmp + n, sizeof(tmp) - n);
+    }
+    return sr_fmt_fit(tmp, n, (size_t)SR_VIEW_COLS, out, cap);
+}
+
+/*
+ * Dash band row under the AP line. Three widths, same cascade as sr_fmt_ap_row:
+ *   "2.4G 812  5G 312"
+ *   "2.4G 812 5G 312"
+ *   "2G812 5G312"
+ * sr_fmt_fit is the backstop when even the short form exceeds max_cols.
+ * Callers draw only when ap_24 + ap_5 > 0.
+ */
+static inline size_t
+    sr_fmt_band_row(uint32_t ap_24, uint32_t ap_5, size_t max_cols, char* out, size_t cap) {
+    char a[12];
+    char b[12];
+    char tmp[40];
+    size_t na;
+    size_t nb;
+    size_t n;
+
+    if(out == NULL || cap == 0u) {
+        return 0u;
+    }
+    na = sr_fmt__udec(ap_24, a, sizeof(a));
+    nb = sr_fmt__udec(ap_5, b, sizeof(b));
+
+    n = sr_fmt__cpy("2.4G ", 5u, tmp, sizeof(tmp));
+    n += sr_fmt__cpy(a, na, tmp + n, sizeof(tmp) - n);
+    n += sr_fmt__cpy("  5G ", 5u, tmp + n, sizeof(tmp) - n);
+    n += sr_fmt__cpy(b, nb, tmp + n, sizeof(tmp) - n);
+    if(n <= max_cols) {
+        return sr_fmt_fit(tmp, n, max_cols, out, cap);
+    }
+
+    n = sr_fmt__cpy("2.4G ", 5u, tmp, sizeof(tmp));
+    n += sr_fmt__cpy(a, na, tmp + n, sizeof(tmp) - n);
+    n += sr_fmt__cpy(" 5G ", 4u, tmp + n, sizeof(tmp) - n);
+    n += sr_fmt__cpy(b, nb, tmp + n, sizeof(tmp) - n);
+    if(n <= max_cols) {
+        return sr_fmt_fit(tmp, n, max_cols, out, cap);
+    }
+
+    n = sr_fmt__cpy("2G", 2u, tmp, sizeof(tmp));
+    n += sr_fmt__cpy(a, na, tmp + n, sizeof(tmp) - n);
+    n += sr_fmt__cpy(" 5G", 3u, tmp + n, sizeof(tmp) - n);
+    n += sr_fmt__cpy(b, nb, tmp + n, sizeof(tmp) - n);
+    return sr_fmt_fit(tmp, n, max_cols, out, cap);
+}
+
+/*
+ * Idle summary status. diag_state 4/5 only when diag_known. The pending
+ * suffix is kept whole or dropped; it is not cut mid-phrase. 20 columns.
+ */
+static inline size_t sr_fmt_last_status(
+    uint8_t diag_state,
+    bool diag_known,
+    uint32_t up_q,
+    bool up_known,
+    char* out,
+    size_t cap) {
+    char tmp[40];
+    char num[12];
+    const char* base;
+    size_t blen;
+    size_t n;
+    size_t nd;
+
+    if(out == NULL || cap == 0u) {
+        return 0u;
+    }
+    if(diag_known && diag_state == 4u) {
+        base = "Sealed";
+        blen = 6u;
+    } else if(diag_known && diag_state == 5u) {
+        base = "Uploading...";
+        blen = 12u;
+    } else {
+        base = "Stopped";
+        blen = 7u;
+    }
+    n = sr_fmt__cpy(base, blen, tmp, sizeof(tmp));
+    if(up_known && up_q > 0u) {
+        nd = sr_fmt__udec(up_q, num, sizeof(num));
+        /* ", " + digits + " pending" */
+        if(n + 2u + nd + 8u <= (size_t)SR_VIEW_COLS && n + 2u + nd + 8u < sizeof(tmp)) {
+            tmp[n++] = ',';
+            tmp[n++] = ' ';
+            n += sr_fmt__cpy(num, nd, tmp + n, sizeof(tmp) - n);
+            n += sr_fmt__cpy(" pending", 8u, tmp + n, sizeof(tmp) - n);
+        }
+    }
+    return sr_fmt__cpy(tmp, n, out, cap);
+}
+
+/* 2 = SrSessionStopped. Numeric so this header stays free of sr_model.h.
+ * Pinned by the _Static_assert in views/sr_view_dash.c. */
+static inline bool sr_dash_idle_summary(uint8_t session, uint32_t ap_wifi, uint32_t ap_ble) {
+    return session == 2u && (ap_wifi > 0u || ap_ble > 0u);
+}
+
+/*
+ * Idle Dash pending-survey popup. session 1 = Running, scan_ui 0 = Idle
+ * (sr_model.h / sr_scan_ctl.h). Stopping is any non-idle scan_ui.
+ * dismissed is the once-per-launch latch.
+ */
+static inline bool sr_pending_prompt_should_show(
+    bool dismissed,
+    uint32_t qual_rev,
+    uint8_t session,
+    uint8_t scan_ui,
+    bool board_sealing,
+    bool no_sd,
+    bool up_known,
+    uint32_t up_q) {
+    if(dismissed || qual_rev == 0u) {
+        return false;
+    }
+    if(session == 1u || scan_ui != 0u) {
+        return false;
+    }
+    if(board_sealing || no_sd) {
+        return false;
+    }
+    return up_known && up_q > 0u;
+}
+
+/* Upload page config line, 20 columns. key 0 wins over a missing home. */
+static inline size_t sr_fmt_cfg_line(
+    uint8_t key,
+    uint8_t home,
+    const char* ssid,
+    size_t max_cols,
+    char* out,
+    size_t cap) {
+    char tmp[48];
+    size_t n;
+    size_t i;
+
+    if(out == NULL || cap == 0u) {
+        return 0u;
+    }
+    if(key == 0u) {
+        n = sr_fmt__cpy("Key: none", 9u, tmp, sizeof(tmp));
+        return sr_fmt_fit(tmp, n, max_cols, out, cap);
+    }
+    if(home == 0u || ssid == NULL || ssid[0] == '\0' || (ssid[0] == '-' && ssid[1] == '\0')) {
+        n = sr_fmt__cpy("Home: none", 10u, tmp, sizeof(tmp));
+        return sr_fmt_fit(tmp, n, max_cols, out, cap);
+    }
+    n = sr_fmt__cpy("Key: set  Home: ", 16u, tmp, sizeof(tmp));
+    for(i = 0u; ssid[i] != '\0' && n + 1u < sizeof(tmp); i++) {
+        tmp[n++] = ssid[i];
+    }
+    tmp[n] = '\0';
+    return sr_fmt_fit(tmp, n, max_cols, out, cap);
+}
+
+/* Running lite data row: FAP clock on the right of the text.
+ * Full keeps the row. DropUp reprints it without the "  Up <q>" segment.
+ * None draws no clock. Screen is 128 px. The 4 px gap is not an argument.
+ *   full + 4 + clock <= 128 -> Full
+ *   else noup + 4 + clock <= 128 -> DropUp
+ *   else None
+ * 128 still fits. The sum is 32-bit so a large width cannot wrap into a fit. */
+typedef enum {
+    SrLiteRowClockFull = 0,
+    SrLiteRowClockDropUp,
+    SrLiteRowClockNone,
+} SrLiteRowClockFit;
+
+enum {
+    SR_LITE_ROW_SCREEN_PX = 128,
+    SR_LITE_ROW_CLOCK_GAP_PX = 4
+};
+
+static inline SrLiteRowClockFit
+    sr_lite_row_clock_fit(uint16_t full_w, uint16_t noup_w, uint16_t clock_w) {
+    uint32_t full;
+    uint32_t bare;
+
+    full = (uint32_t)full_w + (uint32_t)SR_LITE_ROW_CLOCK_GAP_PX + (uint32_t)clock_w;
+    if(full <= (uint32_t)SR_LITE_ROW_SCREEN_PX) {
+        return SrLiteRowClockFull;
+    }
+    bare = (uint32_t)noup_w + (uint32_t)SR_LITE_ROW_CLOCK_GAP_PX + (uint32_t)clock_w;
+    if(bare <= (uint32_t)SR_LITE_ROW_SCREEN_PX) {
+        return SrLiteRowClockDropUp;
+    }
+    return SrLiteRowClockNone;
+}
+
+/* Scout Lite Running rows between the big-number baseline and the status
+ * bar. Status is the lite data row (the right-aligned clock sits on it).
+ * spread true: even integer gaps. Division truncates toward zero.
+ *   has_band: ap = B + (62-B)/3, band = B + (2*(62-B))/3, status = 62
+ *   no band:  ap = B + (62-B)/2, status = 62
+ * Adjacent baselines must differ by at least SR_LITE_ROW_MIN_GAP.
+ * Otherwise spread is false and the old stack is used:
+ *   ap = B+10
+ *   band at B+20 and status at B+30 only when has_band and B+30 <= 61
+ *   else no band and status = B+20
+ * band_y is 0 when draw_band is false. The 61 clip is the old stack's
+ * gate, not the pinned status baseline. */
+enum {
+    SR_LITE_STATUS_Y = 62,
+    SR_LITE_ROW_MIN_GAP = 9
+};
+
+typedef struct {
+    int32_t ap_y;
+    int32_t band_y;
+    int32_t status_y;
+    bool draw_band;
+    bool spread;
+} SrLiteStatusRows;
+
+static inline SrLiteStatusRows sr_lite_status_rows(int32_t big_baseline, bool has_band) {
+    SrLiteStatusRows rows;
+    const int32_t status = (int32_t)SR_LITE_STATUS_Y;
+    const int32_t gap = status - big_baseline;
+    int32_t ap;
+    int32_t band;
+    int32_t y_after_ap;
+
+    if(has_band) {
+        ap = big_baseline + gap / 3;
+        band = big_baseline + (gap * 2) / 3;
+        if((ap - big_baseline) >= (int32_t)SR_LITE_ROW_MIN_GAP &&
+           (band - ap) >= (int32_t)SR_LITE_ROW_MIN_GAP &&
+           (status - band) >= (int32_t)SR_LITE_ROW_MIN_GAP) {
+            rows.ap_y = ap;
+            rows.band_y = band;
+            rows.status_y = status;
+            rows.draw_band = true;
+            rows.spread = true;
+            return rows;
+        }
+    } else {
+        ap = big_baseline + gap / 2;
+        if((ap - big_baseline) >= (int32_t)SR_LITE_ROW_MIN_GAP &&
+           (status - ap) >= (int32_t)SR_LITE_ROW_MIN_GAP) {
+            rows.ap_y = ap;
+            rows.band_y = 0;
+            rows.status_y = status;
+            rows.draw_band = false;
+            rows.spread = true;
+            return rows;
+        }
+    }
+
+    rows.ap_y = big_baseline + 10;
+    y_after_ap = rows.ap_y + 10;
+    rows.band_y = 0;
+    rows.draw_band = false;
+    rows.status_y = y_after_ap;
+    rows.spread = false;
+    if(has_band && (y_after_ap + 10) <= 61) {
+        rows.band_y = y_after_ap;
+        rows.draw_band = true;
+        rows.status_y = y_after_ap + 10;
+    }
+    return rows;
+}
+
+/*
+ * Scout Lite Dash row, at most SR_VIEW_COLS. The string has no clock.
+ * Running draws the FAP clock to the right of this row in the view.
+ * <g> is sr_lite_counter_live on ggafix (the boot counter). 1 -> "Fix <n>sat",
+ * 0 -> "NoFix <n>sat", -1 -> "? <n>sat". The raw counter is never copied.
+ *
+ * Stale when qual_rev == 0 or (now_ms - qual_tick_ms) > SR_QUAL_STALE_MS.
+ * The subtract is unsigned, so a short tick wrap stays fresh. Do not use
+ * sr_fmt_qual_fresh: that treats sess_ms == 0 as stale, and Idle's board
+ * session is always 0. Stale writes "GPS ?" and keeps Up.
+ *
+ * Wider than 20 columns: drop the whole "  Up <q>" segment. No sr_fmt_fit.
+ * keep_up false drops that segment even when the row fits in 20 columns,
+ * so the view can reprint it beside the clock. Fields are not cut.
+ * with_dur and elapsed_ms are ignored so Idle and Running share the text.
+ */
+static inline size_t sr_fmt_lite_dash_row_ex(
+    uint32_t qual_rev,
+    uint32_t qual_tick_ms,
+    uint32_t now_ms,
+    uint8_t sats,
+    bool qual_prev_seen,
+    uint32_t prev_ggafix,
+    uint32_t ggafix,
+    bool up_known,
+    uint32_t up_q,
+    bool with_dur,
+    uint32_t elapsed_ms,
+    bool keep_up,
+    char* out,
+    size_t cap) {
+    char nbuf[4];
+    char qbuf[12];
+    char prefix[24];
+    char tmp[40];
+    size_t nn;
+    size_t nq;
+    size_t np;
+    size_t n;
+    bool fresh;
+    bool show_up;
+    int face;
+
+    (void)with_dur;
+    (void)elapsed_ms;
+    if(out == NULL || cap == 0u) {
+        return 0u;
+    }
+    out[0] = '\0';
+
+    fresh = qual_rev != 0u && (now_ms - qual_tick_ms) <= (uint32_t)SR_QUAL_STALE_MS;
+    if(!fresh) {
+        np = sr_fmt__cpy("GPS ?", 5u, prefix, sizeof(prefix));
+    } else {
+        nn = sr_fmt__udec((uint32_t)sats, nbuf, sizeof(nbuf));
+        face = sr_lite_counter_live(qual_prev_seen, prev_ggafix, ggafix);
+        if(face > 0) {
+            np = sr_fmt__cpy("Fix ", 4u, prefix, sizeof(prefix));
+        } else if(face == 0) {
+            np = sr_fmt__cpy("NoFix ", 6u, prefix, sizeof(prefix));
+        } else {
+            np = sr_fmt__cpy("? ", 2u, prefix, sizeof(prefix));
+        }
+        np += sr_fmt__cpy(nbuf, nn, prefix + np, sizeof(prefix) - np);
+        np += sr_fmt__cpy("sat", 3u, prefix + np, sizeof(prefix) - np);
+    }
+    if(!up_known) {
+        qbuf[0] = '?';
+        qbuf[1] = '\0';
+        nq = 1u;
+    } else {
+        nq = sr_fmt__udec(up_q, qbuf, sizeof(qbuf));
+    }
+
+    show_up = keep_up;
+    for(;;) {
+        n = np;
+        if(show_up) {
+            n += 5u + nq; /* "  Up " + value */
+        }
+        if(n <= (size_t)SR_VIEW_COLS) {
+            break;
+        }
+        if(show_up) {
+            show_up = false;
+            continue;
+        }
+        break;
+    }
+
+    n = sr_fmt__cpy(prefix, np, tmp, sizeof(tmp));
+    if(show_up) {
+        n += sr_fmt__cpy("  Up ", 5u, tmp + n, sizeof(tmp) - n);
+        n += sr_fmt__cpy(qbuf, nq, tmp + n, sizeof(tmp) - n);
+    }
+    return sr_fmt__cpy(tmp, n, out, cap);
+}
+
+/* Same row, keeping Up unless the 20-column rule drops that whole segment. */
+static inline size_t sr_fmt_lite_dash_row(
+    uint32_t qual_rev,
+    uint32_t qual_tick_ms,
+    uint32_t now_ms,
+    uint8_t sats,
+    bool qual_prev_seen,
+    uint32_t prev_ggafix,
+    uint32_t ggafix,
+    bool up_known,
+    uint32_t up_q,
+    bool with_dur,
+    uint32_t elapsed_ms,
+    char* out,
+    size_t cap) {
+    return sr_fmt_lite_dash_row_ex(
+        qual_rev,
+        qual_tick_ms,
+        now_ms,
+        sats,
+        qual_prev_seen,
+        prev_ggafix,
+        ggafix,
+        up_known,
+        up_q,
+        with_dur,
+        elapsed_ms,
+        true,
+        out,
+        cap);
+}
+
+/* Sess tab, lite peer, y51. Brand plus the product word. */
+static inline size_t sr_fmt_lite_sess_brand(const char* brand, char* out, size_t cap) {
+    int n;
+
+    if(out == NULL || cap == 0u) {
+        return 0u;
+    }
+    out[0] = '\0';
+    if(brand == NULL || brand[0] == '\0') {
+        brand = "?";
+    }
+    n = snprintf(out, cap, "%s Scout Lite", brand);
+    if(n < 0) {
+        out[0] = '\0';
+        return 0u;
+    }
+    if((size_t)n >= cap) {
+        return cap - 1u;
+    }
+    return (size_t)n;
+}
+
+/* Sess tab, lite peer, y61. Firmware name and Version, no labels. */
+static inline size_t
+    sr_fmt_lite_sess_fw(const char* firmware, const char* version, char* out, size_t cap) {
+    int n;
+
+    if(out == NULL || cap == 0u) {
+        return 0u;
+    }
+    out[0] = '\0';
+    if(firmware == NULL || firmware[0] == '\0') {
+        firmware = "?";
+    }
+    if(version == NULL || version[0] == '\0') {
+        version = "?";
+    }
+    n = snprintf(out, cap, "%s %s", firmware, version);
+    if(n < 0) {
+        out[0] = '\0';
+        return 0u;
+    }
+    if((size_t)n >= cap) {
+        return cap - 1u;
+    }
+    return (size_t)n;
+}

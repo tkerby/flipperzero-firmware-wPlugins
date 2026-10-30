@@ -1,0 +1,94 @@
+# Reserva Salvaje, area 2 (C5b, contract 48), 28 x 22. column = i, row = j. Area 1's north edge arrives at the SOUTH edge (spawn `south` (13,20); the south edge (12..14,21) leads back); the EAST edge (27,10..11) leads to
+# area 3; the REST HOUSE (a cottage, door (6,5) -> casa_descanso_1) stands in the north-west. The signature of this area: a big POND in the middle (the Reserva's best fishing: the alloy rod's Reefling at 15 %).
+@map reserva_2
+@size 28 22
+@interior no
+@area reserva
+@bg 0
+@fill sav
+@spawn south 13 20 N
+@spawn east 26 10 W
+@spawn rest_door 6 6 S
+@encounters grass rate=30
+  quillix 23 26 10   # C9 (contract 56): weight lowered to make room for the fill-in (the table still adds up to 100)
+  lanternmoth 24 27 5   # C9 (contract 56): weight lowered to make room for the fill-in (the table still adds up to 100)
+  shellfern 23 26 15
+  wombamma 26 29 15
+  gnucharge 25 28 15
+  razorfly 26 28 15
+  lambalm 23 25 5
+  quillara 23 26 5   # contract 58: the pair of the Quillix line
+  mossbud 23 26 5
+  dashkip 23 26 10   # C9 (contract 56): the fill-in of the design notes
+@end
+# Open ground (contract 63, wild zone): a step onto plain ground (not tall grass, water, a door, a ledge, an arrow floor) rolls this table when rand8 < 8 (8/256 per step).
+@open_rate 8
+# Roaming wild creatures (contract 55, rollout in 63): 3 creatures of this table wander the open ground (not the tall grass); touching one starts that wild battle.
+@roam 3 table=grass period=1800
+@encounters water rate=15
+  lazatee 24 28 40
+  skipgoby 24 28 30
+  flopfin 22 26 20
+  clubrimp 24 27 10
+@end
+@encounters fish_old
+  flopfin 5 5 100
+@end
+@encounters fish_good rate=128
+  flopfin 10 10 25
+  skipgoby 10 10 30
+  lazatee 10 10 25
+  clubrimp 10 10 20
+@end
+@encounters fish_super
+  lazatee 15 20 25
+  skipgoby 15 20 25
+  clubrimp 15 20 15
+  reefling 15 20 15
+  flopfin 15 20 20
+@end
+@legend
+  .  tile=sav
+  g  tile=dgrass
+  a  tile=sav object=acacia_0
+  b  tile=sav object=acacia_1
+  f  tile=sav object=rfence_i
+  F  tile=sav object=rfence_j
+  W  tile=canal_o
+  T  tile=canal_tr
+  r  tile=sav object=rock
+  y  tile=sav object=dry_bush
+  n  tile=sav
+  e  tile=sav
+  h  object=cottage
+  d  door=cottage
+  s  tile=sav object=sign text=rv.sign2 interact=look
+  i  item=prime_salve
+  j  item=limb_balm
+  H  tile=sav hidden=trozo_oro   # hidden (contract 80, hidden items)
+@grid
+  ffffffffffffffffffffffffffff
+  F...................r......F
+  F.......................a..F
+  F.r......a.........ggggggg.F
+  F....hh.....a..b...ggggggg.F
+  F....hd............gggggggbF
+  F.........TTTTTTTT.ggggggg.F
+  F.gggg....WWWWWWWW.ggggggg.F
+  F.gggg....WWWWWWWW......i..F
+  F.gggg....WWWWWWWW.........F
+  F.........WWWWWWWW...a.....e
+  F......y..WWWWWWWW....b....e
+  Fb.gggggg.....b............F
+  F..gggggg.........a........F
+  F..gggggb...ggggg..gggggg..F
+  F..jggggg...ggggg..ggggyg..F
+  F..gggggg...ggggg..gggggg..F
+  FH.gggggg...ggggg..gggggg.aF
+  F.............s....gggggg..F
+  F..a......a................F
+  F..........................F
+  ffffffffffffnnnfffffffffffff
+@warp n -> reserva_1 spawn=north
+@warp e -> reserva_3 spawn=west
+@warp d -> casa_descanso_1 spawn=door

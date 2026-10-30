@@ -1,0 +1,58 @@
+# Centro Comercial, 1F (C4a, contract 39), 14 x 11, interior. column = i, row = j. The user's mock "Centro comercial": BIG glossy 2 x 2 slabs (polished_<i%2><j%2>), display cases,
+# potted plants and the ESCALATOR (door cell (12,5) -> 2F). Two counters: the salves / balls clerk (`shop comercial_a`) and the discs clerk (`shop comercial_discos`).
+@map comercial_1
+@size 14 11
+@interior yes
+@bg 0
+@fill polished_00
+@spawn door 6 9 N
+@spawn esc 12 6 N
+@legend
+  .  tile=polished_00
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  tile=polished_11
+  f  tile=polished_01
+  g  tile=polished_11 object=sign text=mall.guide interact=look
+  h  tile=polished_10
+  i  tile=polished_10 npc=dependienta id=clerk_a face=SW script=clerk_a
+  j  tile=polished_10 npc=dependienta id=clerk_b face=SW script=clerk_b
+  k  tile=polished_01 object=vitrina
+  l  tile=polished_11 object=vitrina
+  m  tile=polished_01 object=counter
+  n  tile=polished_11 object=counter
+  o  tile=none object=wall_win_i
+  p  object=escalator
+  q  tile=polished_01 door=escalator
+  r  object=vitrina
+  s  tile=polished_10 object=vitrina
+  t  tile=polished_10 object=planter
+  u  tile=polished_10 npc=vecino_m id=shopper face=NE text=mall.shopper.a
+  v  tile=polished_11 object=planter
+  w  tile=polished_01 object=planter
+  x  
+  y  tile=polished_11
+  z  tile=polished_11 item=disc_25
+@grid
+  abbcbbcbbcbbbb
+  dzfefefgfefefe
+  dh.h.i.h.j.h.h
+  deklmnmefnmefe
+  oh.h.h.h.h.hph
+  defefefefefeqe
+  dhrs.h.h.t.h.h
+  defefefefefefe
+  oh.u.h.h.h.h.h
+  dvfefefefefewe
+  dh.h.hxy.h.h.h
+@warp q -> comercial_2 spawn=esc
+@warp x -> metropolis_neon spawn=dept_door
+@warp y -> metropolis_neon spawn=dept_door
+@script clerk_a npc
+    shop comercial_a
+@end
+@script clerk_b npc
+    shop comercial_discos
+@end

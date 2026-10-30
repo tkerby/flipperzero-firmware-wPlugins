@@ -30,6 +30,18 @@ sim/test/all.sh
 Scripted sessions driven straight against the engine, no browser. Not run in CI (that
 needs emsdk in the workflow).
 
+## Browser regression tests
+
+After building the web client and WASM engine, run `sim/serve.sh` and open
+`http://localhost:8123/sim/test/battleship-client.html` in a browser.
+The page reports PASS or FAIL and exposes `window.battleshipClientResult`
+for browser automation. Run it in Chromium and WebKit when available.
+
+This test replays the real engine's placement and firing messages through both
+phone clients. It checks turn labels, ship counts, both 100-cell boards, fleet
+visibility, and the waiting player's state. It catches client rendering failures
+that the headless engine tests cannot detect. It does not test WiFi or hardware.
+
 ## Finding memory bugs
 
 ```sh

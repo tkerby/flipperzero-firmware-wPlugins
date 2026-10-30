@@ -1,0 +1,14 @@
+App(
+    appid="knit_counter",
+    name="Knit Counter",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="knit_counter_app",
+    stack_size=2 * 1024,
+    fap_icon="knit_counter.png",
+    fap_icon_assets="images",
+    fap_category="Tools",
+    fap_author="fridgepoet",
+    fap_weburl="https://github.com/fridgepoet/knit-counter",
+    fap_version="1.0.2",
+    fap_description="Knitting row counter that saves its count between sessions.",
+)

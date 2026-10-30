@@ -1,0 +1,25 @@
+title Rutas - open countryside: a bright walking tune in D major, a soft step on every beat (low, high, low, high)
+tempo 126
+vol 240
+meter 4/4
+inst pep v=255,225,195,175,165
+inst held att=1 vib=1 vdelay=8 vper=16 slow lvl=0.9
+inst tock drum=g5 v=210,120 d=0,-45
+inst tap drum=d7 v=140,70 d=0,-30
+l8
+@pep
+# --- A (D G A D)
+o5 !tock:d f+ !tap:a f+ o6 !tock:d4 o5 !tap:a4 |
+o5 !tock:b o6 d !tap:g d o5 !tock:b4 !tap:g4 |
+o5 !tock:a o6 c+ !tap:e c+ o5 !tock:a4 !tap:e4 |
+o5 !tock:f+ a o6 !tap:d e !tock:f+4 !tap:d4 |
+# --- A answered (up to the high A, then settle)
+o5 !tock:d f+ !tap:a f+ o6 !tock:d4 o5 !tap:a4 |
+o5 !tock:b o6 d !tap:g d o5 !tock:b4 !tap:g4 |
+o5 !tock:a o6 c+ !tap:e c+ !tock:e4 !tap:a4 |
+o6 !tock:d4 o5 !tap:a4 !tock:f+4 !tap:d4 |
+# --- B: a hop up the chords (Bm G A, turnaround)
+o5 !tock:b o6 d !tap:f+4 o5 b o6 d !tock:f+4 |
+o5 !tock:g b o6 !tap:d4 o5 g b o6 !tock:d4 |
+o5 !tock:a o6 c+ !tap:e4 o5 a o6 c+ !tock:e4 |
+o5 !tap:e g !tock:a b o6 !tap:c+4 !tock:e4 |

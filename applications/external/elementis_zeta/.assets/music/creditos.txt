@@ -1,0 +1,39 @@
+title Creditos - the credits: a slow, nostalgic medley of the game's own tunes, each one slower and softer than when we first heard it: the village lullaby (G), the open road (D), the sea (C lydian), the title theme (D minor into F), then the lullaby again, high and tender, ending on a shimmering G (84 bpm, loops)
+tempo 84
+vol 215
+meter 4/4
+inst soft v=200,255,235,215,200,190,180
+inst held att=2 vib=1 vdelay=10 vper=16 slow
+inst chime arp=0,4,7 rate=2 lvl=0.8
+inst bell dec=3 sus=0.05 slow
+l4
+@soft
+# --- 1-4: the village lullaby (G)
+o5 g b o6 d e8 d8 |
+o5 b4. a8 g4 e4 |
+o5 e g o6 c d8 c8 |
+o5 b a f+ @held g4 @soft |
+@chime o5 d2 d2 |
+# --- 6-9: the open road (D)
+@soft o5 d8 f+8 a8 f+8 o6 d4 o5 a4 |
+o5 b8 o6 d8 g8 d8 o5 b4 g4 |
+o5 a8 o6 c+8 e8 c+8 o5 a4 e4 |
+o5 f+8 a8 o6 d8 e8 @held f+2 @soft |
+@chime o5 c2 c2 |
+# --- the sea (C lydian)
+@soft o5 c8 e8 g8 >c8< g8 e8 g8 e8 |
+@held o6 e2 g4 f+4 |
+@held o6 e2 d4 c4 |
+@chime o4 a2 a2 |
+# --- 11-14: the title theme (D minor, lifting to F)
+@soft o5 d8 f8 a4 o6 d4. c8 |
+o5 b-4 a8 g8 f4 a4 |
+o6 c8 c8 f4 e8 d8 c4 |
+o6 e4 c+4 @held o5 a2 @soft |
+@chime o4 g2 g2 |
+# --- 16-19: the lullaby again, an octave up, tender; the last chord shimmers
+@soft o6 g4 b4 >d4 e8 d8< |
+o6 b4. a8 g4 e4 |
+@bell o6 e4 g4 >c4 d8 c8< |
+@held o6 b4 a4 g2 |
+@chime o5 g2. r4 |

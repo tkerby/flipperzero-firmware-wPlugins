@@ -1,0 +1,354 @@
+# Gimnasio Voltio (C3, contract 34; the user's look of tools/c3_mock.py "Gym Voltio"), 14 x 17, interior, column = i, row = j, (0,0) = back corner.
+# The floor is made of BIG steel plates of 2 x 2 tiles: the four quarter tiles metal_<i%2><j%2> follow the parity of the cell (a / b / c / d = (0,0) (1,0) (0,1) (1,1)). Walls of dark steel panels with
+# sagging cables on the back sides. A divider wall (row 7) closes the leader's hall; the gap in it (7,7) is shut by an ELECTRIC BARRIER (an NPC that flickers: behavior=turn, hidden by flag 56 =
+# the puzzle is solved). South of the divider: switch puzzle with 15 FUSE CABINETS (gabinete de fusibles) in a 5 x 3 grid (script `can_<n>`, index n = row * 5 + column, at i = 3 + 2 * column,
+# j = 9 + 2 * row), two gym trainers in the entrance band (j = 16) looking along the diagonals that cross the hero's first steps (N / E, range 3; a diagonal line cannot cross the cabinet field) and the entrance mat (j = 16). The first switch lights a lamp (flag 57); a wrong second pick resets both and
+# re-rolls the first (the section 32.4 template). Capitan Ohm waits at the far end; the camera cuts to him. Flag 55 = he gave Disc 04, 82 = Medalla Voltio (builtin).
+@map gimnasio_dinamo
+@size 14 17
+@interior yes
+@bg 3
+@fill metal_00
+@spawn door 7 15 N
+@flag fuse_solved 56              # the puzzle is solved (hides the barrier for good)
+@flag fuse_light 57              # the first switch is on (shows the lamp)
+@flag ohm_disc 55               # Ohm gave Disc 04
+@var ff_first 10
+@var ff_second 11
+@var ff_stage 12
+@var ff_dir 1
+@legend
+  a  tile=metal_00                 # big steel plates: the quarter tile follows the cell's parity
+  b  tile=metal_10
+  c  tile=metal_01
+  d  tile=metal_11
+  J  tile=none object=cable_wall_j
+  K  tile=none object=cable_wall_j
+  I  tile=none object=cable_wall_i
+  e  tile=metal_00 object=cable_wall_j   # the divider wall
+  f  tile=metal_10 object=cable_wall_j
+  g  tile=metal_01 object=cable_wall_j
+  h  tile=metal_11 object=cable_wall_j
+  Z  tile=metal_11 npc=barrier id=barrier face=S behavior=turn period=500 text=gym.barrier hide_flag=56 gate=yes
+  L  tile=metal_01 npc=fuse_lamp id=lamp face=S show_flag=57 solid=no text=gym.lamp
+  U  tile=metal_10 object=fuse_box_on interact=look text=gym.lit
+  Y  tile=metal_11 npc=ohm id=ohm face=S script=ohm
+  1  tile=metal_00 npc=mecanico id=g1 face=N trainer=mecanico_g range=3 text=tr.mecanico_g.pre after=tr.mecanico_g.after
+  2  tile=metal_00 npc=aprendiz id=g2 face=E trainer=aprendiz_g range=3 text=tr.aprendiz_g.pre after=tr.aprendiz_g.after
+  m  tile=mat
+  A  tile=metal_11 object=fuse_box interact=look script=can_0
+  B  tile=metal_11 object=fuse_box interact=look script=can_1
+  C  tile=metal_11 object=fuse_box interact=look script=can_2
+  D  tile=metal_11 object=fuse_box interact=look script=can_3
+  E  tile=metal_11 object=fuse_box interact=look script=can_4
+  F  tile=metal_11 object=fuse_box interact=look script=can_5
+  G  tile=metal_11 object=fuse_box interact=look script=can_6
+  H  tile=metal_11 object=fuse_box interact=look script=can_7
+  M  tile=metal_11 object=fuse_box interact=look script=can_8
+  N  tile=metal_11 object=fuse_box interact=look script=can_9
+  O  tile=metal_11 object=fuse_box interact=look script=can_10
+  P  tile=metal_11 object=fuse_box interact=look script=can_11
+  Q  tile=metal_11 object=fuse_box interact=look script=can_12
+  R  tile=metal_11 object=fuse_box interact=look script=can_13
+  S  tile=metal_11 object=fuse_box interact=look script=can_14
+@grid
+  KJJJJJJJJJJJJJ
+  Idcdcdcdcdcdcd
+  IbaUabababaUab
+  IdcdcdcYcdcdcd
+  Ibabababababab
+  Idcdcdcdcdcdcd
+  IbabaLabababab
+  IhghghgZghghgh
+  Ibabababababab
+  IdcAcBcCcDcEcd
+  Ibabababababab
+  IdcFcGcHcMcNcd
+  Ibabababababab
+  IdcOcPcQcRcScd
+  Ibabababababab
+  Idcdcdcdcdcdcd
+  Ibab2bmmab1bab
+@warp m -> puerto_dinamo spawn=gym_door
+
+# Entering the gym (every map load, also Continuar): a puzzle in progress (the first switch is on: stage 1) is kept; otherwise the lamp is off and both switches are rolled again.
+@script fuse_enter on_enter if !fuse_solved
+    jv ff_stage 1 keep
+    clrf fuse_light
+    call roll
+  keep:
+@end
+# the first switch is a random cabinet (var ff_first), the second one a random ORTHOGONAL neighbour of it (ff_second): right +1, left -1, down +5, up -5 (a retry when that leaves the
+# 5 x 3 grid). Both are chosen once per visit (on_enter) and kept in vars, so they survive a save.
+@script roll called
+  top:
+    rand ff_first 15
+    rand ff_dir 4
+    copyv ff_second ff_first
+    jv ff_dir 0 right
+    jv ff_dir 1 left
+    jv ff_dir 2 down
+    jv ff_first 0 top
+    jv ff_first 1 top
+    jv ff_first 2 top
+    jv ff_first 3 top
+    jv ff_first 4 top
+    addv ff_second 251
+    end
+  right:
+    jv ff_first 4 top
+    jv ff_first 9 top
+    jv ff_first 14 top
+    addv ff_second 1
+    end
+  left:
+    jv ff_first 0 top
+    jv ff_first 5 top
+    jv ff_first 10 top
+    addv ff_second 255
+    end
+  down:
+    jv ff_first 10 top
+    jv ff_first 11 top
+    jv ff_first 12 top
+    jv ff_first 13 top
+    jv ff_first 14 top
+    addv ff_second 5
+@end
+@script found1 called
+    jv ff_stage 1 again
+    setv ff_stage 1
+    setf fuse_light
+    sfx confirm
+    say gym.fuse.first
+    end
+  again:
+    say gym.fuse.again
+@end
+@script found2 called
+    jv ff_stage 0 trash
+    setf fuse_solved
+    sfx item
+    say gym.fuse.second
+    end
+  trash:
+    say gym.fuse.trash
+@end
+@script miss called
+    jv ff_stage 1 reset
+    say gym.fuse.trash
+    end
+  reset:
+    setv ff_stage 0
+    clrf fuse_light
+    call roll
+    sfx cancel
+    say gym.fuse.reset
+@end
+@script can_0 interact if !fuse_solved
+    jv ff_first 0 hit1
+    jv ff_second 0 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_1 interact if !fuse_solved
+    jv ff_first 1 hit1
+    jv ff_second 1 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_2 interact if !fuse_solved
+    jv ff_first 2 hit1
+    jv ff_second 2 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_3 interact if !fuse_solved
+    jv ff_first 3 hit1
+    jv ff_second 3 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_4 interact if !fuse_solved
+    jv ff_first 4 hit1
+    jv ff_second 4 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_5 interact if !fuse_solved
+    jv ff_first 5 hit1
+    jv ff_second 5 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_6 interact if !fuse_solved
+    jv ff_first 6 hit1
+    jv ff_second 6 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_7 interact if !fuse_solved
+    jv ff_first 7 hit1
+    jv ff_second 7 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_8 interact if !fuse_solved
+    jv ff_first 8 hit1
+    jv ff_second 8 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_9 interact if !fuse_solved
+    jv ff_first 9 hit1
+    jv ff_second 9 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_10 interact if !fuse_solved
+    jv ff_first 10 hit1
+    jv ff_second 10 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_11 interact if !fuse_solved
+    jv ff_first 11 hit1
+    jv ff_second 11 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_12 interact if !fuse_solved
+    jv ff_first 12 hit1
+    jv ff_second 12 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_13 interact if !fuse_solved
+    jv ff_first 13 hit1
+    jv ff_second 13 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+@script can_14 interact if !fuse_solved
+    jv ff_first 14 hit1
+    jv ff_second 14 hit2
+    call miss
+    end
+  hit1:
+    call found1
+    end
+  hit2:
+    call found2
+@end
+# Capitan Ohm. Before the badge: the camera cuts to him, his challenge, the fight (trainer ohm: Spoolt 21, Zaphid 18, Voltgecko 24); a win = his speech, the Medalla Voltio
+# (flag 82, the trainer card's third badge), what it is, then Disc 04 (a full bag keeps ohm_disc clear and he hands it over the next time you talk to him). A loss is the blackout. Afterwards a last line.
+@script ohm npc
+    jf badge_voltio after
+    npc_face_hero ohm
+    cam_npc ohm
+    say dinamo.ohm.pre
+    battle 47 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    say dinamo.ohm.win
+    setf badge_voltio
+    say dinamo.badge
+    say dinamo.ohm.about
+    call ohm_gift
+    cam_hero
+    end
+  after:
+    npc_face_hero ohm
+    cam_npc ohm
+    jf ohm_disc said
+    call ohm_gift
+    cam_hero
+    end
+  said:
+    say dinamo.ohm.after
+    cam_hero
+@end
+@script ohm_gift called
+    say dinamo.ohm.disc
+    give_item disc_04 1
+    jv 0 0 full
+    item_var 0 disc_04
+    say gl.gift
+    setf ohm_disc
+    say dinamo.ohm.disc_about
+    end
+  full:
+    say gl.found.full
+@end

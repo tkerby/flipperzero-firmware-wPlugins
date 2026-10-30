@@ -20,7 +20,7 @@ typedef enum {
 #define SHOW_STOPSCAN_TIP (true)
 #define NO_TIP            (false)
 
-#define MAX_OPTIONS (17)
+#define MAX_OPTIONS (24)
 typedef struct {
     const char* item_string;
     const char* options_menu[MAX_OPTIONS];
@@ -41,6 +41,13 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
      NO_ARGS,
      FOCUS_CONSOLE_END,
      SHOW_STOPSCAN_TIP},
+    {"CSI Motion",
+     {"start", "status", "recalibrate"},
+     3,
+     {"csimotion start", "csimotion status", "csimotion recalibrate"},
+     TOGGLE_ARGS,
+     FOCUS_CONSOLE_END,
+     NO_TIP},
     {"Recon",
      {"wifi", "ble", "status", "stop"},
      4,
@@ -48,6 +55,13 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
      NO_ARGS,
      FOCUS_CONSOLE_END,
      SHOW_STOPSCAN_TIP},
+    {"Remote ID",
+     {"scan", "list", "track", "clear"},
+     4,
+     {"remoteid scan", "remoteid list", "remoteid track", "remoteid clear"},
+     NO_ARGS,
+     FOCUS_CONSOLE_END,
+     NO_TIP},
     {"SSID",
      {"add rand", "add name", "remove"},
      3,
@@ -56,16 +70,34 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
      FOCUS_CONSOLE_START,
      NO_TIP},
     {"List",
-     {"ap", "ssid", "station", "airtag", "IPs", "probes", "bluetooth"},
-     7,
-     {"list -a", "list -s", "list -c", "list -t", "list -i", "list -p", "list -b"},
+     {"ap",
+      "ssid",
+      "station",
+      "airtag",
+      "IPs",
+      "probes",
+      "bluetooth",
+      "flipper",
+      "pineapple",
+      "multissid"},
+     10,
+     {"list -a",
+      "list -s",
+      "list -c",
+      "list -t",
+      "list -i",
+      "list -p",
+      "list -b",
+      "list -f",
+      "list -x",
+      "list -m"},
      NO_ARGS,
      FOCUS_CONSOLE_START,
      NO_TIP},
     {"Select",
-     {"ap", "ssid", "station"},
-     3,
-     {"select -a", "select -s", "select -c"},
+     {"ap", "ap filter", "ssid", "station"},
+     4,
+     {"select -a", "select -a -f", "select -s", "select -c"},
      INPUT_ARGS,
      FOCUS_CONSOLE_END,
      NO_TIP},
@@ -80,7 +112,7 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
     {"Join WiFi",
      {"new", "saved"},
      2,
-     {"join -a <index> -p <password>", "join -s"},
+     {"join -a", "join -s"},
      INPUT_ARGS,
      FOCUS_CONSOLE_END,
      NO_TIP},
@@ -89,6 +121,15 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
      3,
      {"clearlist -a", "clearlist -s", "clearlist -c"},
      NO_ARGS,
+     FOCUS_CONSOLE_END,
+     NO_TIP},
+    {"Save List", {"ap", "ssid"}, 2, {"save -a", "save -s"}, NO_ARGS, FOCUS_CONSOLE_END, NO_TIP},
+    {"Load List", {"ap", "ssid"}, 2, {"load -a", "load -s"}, NO_ARGS, FOCUS_CONSOLE_END, NO_TIP},
+    {"Add Target",
+     {"ap", "station"},
+     2,
+     {"add -a -b", "add -c -b"},
+     INPUT_ARGS,
      FOCUS_CONSOLE_END,
      NO_TIP},
     {"Attack",
@@ -136,6 +177,13 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
      FOCUS_CONSOLE_END,
      NO_TIP},
     {"Wardrive", {""}, 1, {"wardrive"}, NO_ARGS, FOCUS_CONSOLE_END, SHOW_STOPSCAN_TIP},
+    {"Geofence",
+     {"list", "set", "clear"},
+     3,
+     {"geofence list", "geofence set", "geofence clear"},
+     TOGGLE_ARGS,
+     FOCUS_CONSOLE_START,
+     NO_TIP},
     {"Upload Wardrive",
      {"wdg", "wigle", "both"},
      3,
@@ -199,6 +247,7 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
       "bt",
       "skim",
       "airtag",
+      "ibeacon",
       "flipper",
       "flock",
       "meta",
@@ -207,7 +256,7 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
       "pineapple",
       "multissid",
       "sae"},
-     17,
+     18,
      {"sniffbeacon",
       "sniffdeauth",
       "sniffpmkid",
@@ -217,6 +266,7 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
       "sniffbt",
       "sniffskim",
       "sniffbt -t airtag",
+      "sniffbt -t ibeacon",
       "sniffbt -t flipper",
       "sniffbt -t flock",
       "sniffbt -t meta",
@@ -229,9 +279,15 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
      FOCUS_CONSOLE_END,
      SHOW_STOPSCAN_TIP},
     {"Fox Hunt",
-     {"wifi", "bluetooth"},
-     2,
-     {"foxhunt -w", "foxhunt -b"},
+     {"ap", "station", "bluetooth", "findmy", "flipper", "pineapple", "multissid"},
+     7,
+     {"foxhunt -w",
+      "foxhunt -s",
+      "foxhunt -b",
+      "foxhunt -t",
+      "foxhunt -f",
+      "foxhunt -p",
+      "foxhunt -m"},
      INPUT_ARGS,
      FOCUS_CONSOLE_END,
      SHOW_STOPSCAN_TIP},
@@ -244,19 +300,14 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
      NO_TIP},
     {"LED", {"hex", "pattern"}, 2, {"led -s", "led -p"}, INPUT_ARGS, FOCUS_CONSOLE_END, NO_TIP},
     {"GPS Data",
-     {"tracker", "stream", "fix", "sats", "lat", "lon", "alt", "date", "accuracy", "text", "nmea"},
-     11,
-     {"gps -t",
-      "gpsdata",
-      "gps -g fix",
-      "gps -g sat",
-      "gps -g lat",
-      "gps -g lon",
-      "gps -g alt",
-      "gps -g date",
-      "gps -g accuracy",
-      "gps -g text",
-      "gps -g nmea"},
+     {"tracker", "stream",   "fix",   "sats", "lat",       "lon",      "alt",
+      "date",    "accuracy", "text",  "nmea", "native",    "all",      "gps",
+      "glonass", "galileo",  "navic", "qzss", "beidou GB", "beidou BD"},
+     20,
+     {"gps -t",         "gpsdata",       "gps -g fix",  "gps -g sat",      "gps -g lat",
+      "gps -g lon",     "gps -g alt",    "gps -g date", "gps -g accuracy", "gps -g text",
+      "gps -g nmea",    "gps -n native", "gps -n all",  "gps -n gps",      "gps -n glonass",
+      "gps -n galileo", "gps -n navic",  "gps -n qzss", "gps -n beidou",   "gps -n beidou -b"},
      NO_ARGS,
      FOCUS_CONSOLE_END,
      SHOW_STOPSCAN_TIP},
@@ -268,29 +319,51 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
      NO_ARGS,
      FOCUS_CONSOLE_END,
      NO_TIP},
+    {"Wardrive POI",
+     {"default", "label"},
+     2,
+     {"wardrivepoi", "wardrivepoi"},
+     TOGGLE_ARGS,
+     FOCUS_CONSOLE_END,
+     NO_TIP},
     {"Settings",
      {"display",
       "restore",
-      "ForcePMKID",
-      "ForceProbe",
-      "SavePCAP",
-      "EnableLED",
-      "EPDeauth",
+      "ForcePMKID on",
+      "ForcePMKID off",
+      "ForceProbe on",
+      "ForceProbe off",
+      "SavePCAP on",
+      "SavePCAP off",
+      "EnableLED on",
+      "EnableLED off",
+      "EPDeauth on",
+      "EPDeauth off",
+      "Censor on",
+      "Censor off",
       "other"},
-     8,
+     15,
      {"settings",
       "settings -r",
       "settings -s ForcePMKID enable",
+      "settings -s ForcePMKID disable",
       "settings -s ForceProbe enable",
+      "settings -s ForceProbe disable",
       "settings -s SavePCAP enable",
+      "settings -s SavePCAP disable",
       "settings -s EnableLED enable",
+      "settings -s EnableLED disable",
       "settings -s EPDeauth enable",
+      "settings -s EPDeauth disable",
+      "settings -s Censor enable",
+      "settings -s Censor disable",
       "settings -s"},
      TOGGLE_ARGS,
      FOCUS_CONSOLE_START,
      NO_TIP},
     {"Shutdown WiFi", {""}, 1, {"stopscan -f"}, NO_ARGS, FOCUS_CONSOLE_START, NO_TIP},
     {"List SD", {""}, 1, {"ls /"}, INPUT_ARGS, FOCUS_CONSOLE_END, NO_TIP},
+    {"Protocol Info", {""}, 1, {"protocolinfo"}, NO_ARGS, FOCUS_CONSOLE_START, NO_TIP},
     {"Update", {"sd"}, 1, {"update -s"}, NO_ARGS, FOCUS_CONSOLE_END, NO_TIP},
     {"Reboot", {""}, 1, {"reboot"}, NO_ARGS, FOCUS_CONSOLE_END, NO_TIP},
     {"Help", {""}, 1, {"help"}, NO_ARGS, FOCUS_CONSOLE_START, SHOW_STOPSCAN_TIP},
@@ -312,6 +385,26 @@ const WifiMarauderItem items[NUM_MENU_ITEMS] = {
      NO_TIP},
 };
 
+static bool wifi_marauder_command_stops_on_exit(const char* command) {
+    if(command == NULL) return false;
+
+    return strcmp(command, "scanall") == 0 || strcmp(command, "pingscan") == 0 ||
+           strcmp(command, "arpscan") == 0 || strcmp(command, "recon wifi") == 0 ||
+           strcmp(command, "recon ble") == 0 || strcmp(command, "remoteid scan") == 0 ||
+           strcmp(command, "remoteid track") == 0 ||
+           strncmp(command, "attack ", strlen("attack ")) == 0 ||
+           strncmp(command, "blespam ", strlen("blespam ")) == 0 ||
+           strncmp(command, "spoofat ", strlen("spoofat ")) == 0 ||
+           strcmp(command, "wardrive") == 0 || strcmp(command, "evilportal -c start") == 0 ||
+           strncmp(command, "karma ", strlen("karma ")) == 0 ||
+           strncmp(command, "sniff", strlen("sniff")) == 0 || strcmp(command, "mactrack") == 0 ||
+           strcmp(command, "packetcount") == 0 ||
+           strncmp(command, "foxhunt ", strlen("foxhunt ")) == 0 ||
+           strncmp(command, "portscan ", strlen("portscan ")) == 0 ||
+           strcmp(command, "gps -t") == 0 || strcmp(command, "gpsdata") == 0 ||
+           strcmp(command, "nmea") == 0 || strcmp(command, "csimotion start") == 0;
+}
+
 static void wifi_marauder_scene_start_var_list_enter_callback(void* context, uint32_t index) {
     furi_assert(context);
     WifiMarauderApp* app = context;
@@ -328,7 +421,8 @@ static void wifi_marauder_scene_start_var_list_enter_callback(void* context, uin
     app->focus_console_start = (item->focus_console == FOCUS_CONSOLE_TOGGLE) ?
                                    (selected_option_index == 0) :
                                    item->focus_console;
-    app->show_stopscan_tip = item->show_stopscan_tip;
+    app->stop_on_exit = wifi_marauder_command_stops_on_exit(app->selected_tx_string);
+    app->show_stopscan_tip = app->stop_on_exit;
 
     if(!app->is_command && selected_option_index == 0) {
         // View Log from start
@@ -360,6 +454,20 @@ static void wifi_marauder_scene_start_var_list_enter_callback(void* context, uin
 
     bool needs_keyboard = (item->needs_keyboard == TOGGLE_ARGS) ? (selected_option_index != 0) :
                                                                   item->needs_keyboard;
+    if(strcmp(app->selected_tx_string, "remoteid track") == 0 ||
+       strcmp(app->selected_tx_string, "csimotion start") == 0) {
+        needs_keyboard = true;
+    } else if(
+        strcmp(app->selected_tx_string, "csimotion status") == 0 ||
+        strcmp(app->selected_tx_string, "csimotion recalibrate") == 0 ||
+        strcmp(app->selected_tx_string, "geofence list") == 0 ||
+        strcmp(app->selected_tx_string, "join -s") == 0 ||
+        strcmp(app->selected_tx_string, "randapmac") == 0 ||
+        strcmp(app->selected_tx_string, "randstamac") == 0 ||
+        (strncmp(app->selected_tx_string, "settings", strlen("settings")) == 0 &&
+         strcmp(app->selected_tx_string, "settings -s") != 0)) {
+        needs_keyboard = false;
+    }
     if(needs_keyboard) {
         view_dispatcher_send_custom_event(app->view_dispatcher, WifiMarauderEventStartKeyboard);
     } else {

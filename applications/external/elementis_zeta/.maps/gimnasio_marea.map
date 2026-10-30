@@ -1,0 +1,102 @@
+# Gimnasio de Agua de Ciudad Marea (C2, contract 31; the user's variant A of tools/c2_mock.py), 14 x 18, interior, column = i, row = j, (0,0) = back corner.
+# A swimming-pool hall: white pool deck (2 variants, joints), the POOL (water, 2 frames, a bank on its north / west sides), a long 2-wide WALKWAY from the entrance mat (j = 17) straight through the
+# pool to the leader at the far end, with a side branch east (Rich Salve) and a stub west, lane ropes with floats along the walkway, buoys, a diving board and a lifeguard chair on the deck, benches,
+# wave-band walls with the water-drop emblem. Two swimmers stand on the walkway (each on one of its two lanes, so a beaten one never closes it) and Nerea waits at its end; the camera cuts to her.
+@map gimnasio_marea
+@size 14 18
+@interior yes
+@bg 3
+@fill pool
+@spawn door 6 16 N
+@flag badge_marea 81            # the Medalla Oleaje (party.h FLAG_BADGE_FIRST + 1)
+@flag nerea_disc 47             # Nerea gave her Disc 02
+@legend
+  .  tile=pool                     # pool deck (2 variants)
+  J  tile=none object=gym_wall_j
+  I  tile=none object=gym_wall_i
+  w  tile=pool_w_o                 # the pool water (2 frames)
+  a  tile=pool_w_tl
+  b  tile=pool_w_tr
+  c  tile=pool_w_tl_tr
+  R  tile=pool_w_o object=lane_rope_j
+  u  tile=pool_w_o object=buoy
+  0  tile=walk_tl_tr
+  1  tile=walk_tl_bl
+  2  tile=walk_tr
+  3  tile=walk_bl
+  4  tile=walk_o
+  5  tile=walk_tl
+  6  tile=walk_br
+  i  tile=walk_bl item=rich_salve
+  m  tile=mat
+  D  object=diving_board
+  h  object=lifeguard_chair
+  f  object=bench
+  x  object=planter
+  T  tile=walk_tl npc=nadadora id=swim1 face=S trainer=nadadora_1 range=3 text=tr.nadadora_1.pre after=tr.nadadora_1.after
+  U  tile=walk_br npc=nadadora id=swim2 face=W trainer=nadadora_2 range=3 text=tr.nadadora_2.pre after=tr.nadadora_2.after
+  V  tile=walk_o npc=nerea id=nerea face=S script=nerea
+@grid
+  JJJJJJJJJJJJJJ
+  I.............
+  I.x...V..DD...
+  I.....44....h.
+  I.cbbb56cbubb.
+  I.awwR56Rwwww.
+  I.a02246awuww.
+  I.a1334Uawwww.
+  I.abbR56awwww.
+  I.auww5422222.
+  I.awww543333i.
+  I.awwR56Rbbbb.
+  I.awwRT6Rwwww.
+  I.awuR56Rwuww.
+  I.awww56awwww.
+  I.ff..44......
+  I.....44....x.
+  I.....mm......
+
+@warp m -> ciudad_marea spawn=gym_door
+# Nerea. Before the badge: the camera cuts to her, her challenge, the fight (trainer nerea: Tidalux 18 + Gleamjell 21, her star); a win = her speech, the Medalla Oleaje
+# (flag 81, the trainer card's second badge), what it is, then Disc 02 (Water Gun; a full bag keeps nerea_disc clear and she hands it over the next time you talk to her).
+# A loss is the normal blackout to the last Centro. Afterwards she only says her last line.
+@script nerea npc
+    jf badge_marea after
+    npc_face_hero nerea
+    cam_npc nerea
+    say marea.nerea.pre
+    battle 7 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    say marea.nerea.win
+    setf badge_marea
+    say marea.badge
+    say marea.nerea.about
+    call nerea_gift
+    cam_hero
+    end
+  after:
+    npc_face_hero nerea
+    cam_npc nerea
+    jf nerea_disc said
+    call nerea_gift
+    cam_hero
+    end
+  said:
+    say marea.nerea.after
+    cam_hero
+@end
+@script nerea_gift called
+    say marea.nerea.disc
+    give_item disc_02 1
+    jv 0 0 full
+    item_var 0 disc_02
+    say gl.gift
+    setf nerea_disc
+    say marea.nerea.disc_about
+    end
+  full:
+    say gl.found.full
+@end

@@ -1,0 +1,14 @@
+App(
+    appid="ham",
+    name="HAM",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="ham_app",
+    stack_size=4 * 1024,
+    fap_icon="icons/ham.png",
+    fap_icon_assets="icons",
+    fap_category="USB",
+    fap_author="lumen-rot",
+    fap_weburl="https://github.com/lumen-rot/flipper-ham",
+    fap_version="0.6",
+    fap_description="Human Activity Mimic: coordinated typing, movement and pauses",
+)

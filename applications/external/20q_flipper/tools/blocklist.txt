@@ -1,0 +1,34 @@
+# Substrings that disqualify a source assertion outright (SPEC 4.3 step 4).
+# Matched case-insensitively against subject, predicate and object.
+# This ships to a general audience including children; it is not optional.
+sex
+sexual
+porn
+nude
+naked
+rape
+kill
+murder
+suicide
+self-harm
+cocaine
+heroin
+meth
+cannabis
+drug
+nazi
+slave
+racist
+slur
+whore
+bitch
+bastard
+penis
+vagina
+breast
+nipple
+genital
+abort
+terroris
+bomb
+gun violence

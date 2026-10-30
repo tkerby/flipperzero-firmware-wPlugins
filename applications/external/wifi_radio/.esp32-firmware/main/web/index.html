@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flipper Radio</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin:0; font-family:system-ui,sans-serif; background:#0b0b0f; color:#f0f0f5;
+         display:flex; flex-direction:column; align-items:center; justify-content:center;
+         min-height:100vh; gap:1.2rem; text-align:center; padding:1.5rem; box-sizing:border-box; }
+  /* One measure for the whole column. The flex centring above sizes these to
+     their widest child -- the stats row -- and every narrower block then sat at
+     that container's left edge rather than its centre, which is what made the
+     status and hint lines read as skewed against the title and the button. */
+  #portal, #player { width:min(22rem,100%); }
+  h1 { font-size:1.5rem; margin:0; letter-spacing:.02em; }
+  #now { opacity:.7; font-size:.95rem; min-height:1.2em; }
+  button, .btn { font-size:1.1rem; padding:.9rem 2.2rem; border:0; border-radius:999px;
+           background:#ff8c1a; color:#111; font-weight:600; cursor:pointer;
+           display:inline-block; text-decoration:none; margin:1rem 0 .85rem; }
+  button:disabled, .btn.off { opacity:.5; pointer-events:none; }
+  .hint { opacity:.45; font-size:.8rem; max-width:22rem; margin-inline:auto; }
+  #msg { font-size:.9rem; max-width:22rem; min-height:1.2em; margin-inline:auto; }
+  #msg.err { color:#ff7a6b; opacity:1; }
+  #stats { opacity:.45; font-size:.75rem; margin-top:.3rem; }
+  .hidden { display:none !important; }
+  /* The address the user has to type by hand, so it has to be unmissable. */
+  .addr { font-size:1.6rem; font-weight:700; letter-spacing:.02em; color:#ff8c1a;
+          font-variant-numeric:tabular-nums; }
+  .card { background:#17171f; border-radius:.8rem; padding:1.2rem 1.1rem; max-width:22rem;
+          margin-inline:auto; line-height:1.5; font-size:.98rem; }
+  .step { display:flex; gap:.6rem; text-align:left; margin:.5rem 0; }
+  .step b { color:#ff8c1a; }
+  #done { color:#7ee081; font-size:.95rem; max-width:22rem; margin-inline:auto; }
+</style>
+</head>
+<body>
+  <h1 id="station">Flipper Radio</h1>
+
+  <!-- Sign-in sheet view. Shown when the phone sent us here from its
+       connectivity probe: that sheet cannot play audio, so the only useful
+       thing it can do is hand over the address and get itself dismissed
+       without iOS treating it as a declined login. -->
+  <div id="portal" class="hidden">
+    <div class="card">
+      <div class="step"><b>1.</b><span>Tap <b>Connect</b> below.</span></div>
+      <div class="step"><b>2.</b><span>Open <b>Safari</b> and go to:</span></div>
+      <div class="addr">192.168.4.1</div>
+      <div class="step"><b>3.</b><span>Press Listen there and the music plays.</span></div>
+    </div>
+    <a id="connect" class="btn" href="/connect?html=1">Connect</a>
+    <div id="done" class="hidden"></div>
+    <p class="hint">This sign-in window can't play audio &mdash; Safari can.</p>
+  </div>
+
+  <!-- Player view: a real browser, where playback is allowed. -->
+  <div id="player" class="hidden">
+    <div id="now">&mdash; live &mdash;</div>
+    <button id="play">&#9654; Listen</button>
+    <div id="msg"></div>
+    <div id="stats"></div>
+    <p class="hint">Stays playing while you use other apps.</p>
+  </div>
+
+  <audio id="audio" preload="none" playsinline></audio>
+  <script>
+  (function () {
+    var audio = document.getElementById('audio');
+    var play  = document.getElementById('play');
+    var msg   = document.getElementById('msg');
+
+    // The server decides this, not the page: a phone's connectivity probe is
+    // redirected to /?portal=1, while anyone reaching 192.168.4.1 themselves
+    // gets no query at all. outerHeight === 0 is kept only as a backstop for
+    // a sheet that arrives some other way.
+    var captive = /[?&]portal=1/.test(location.search) || window.outerHeight === 0;
+    document.getElementById(captive ? 'portal' : 'player').className = '';
+
+    // ------------------------------------------------------------ sheet view
+
+    if (captive) {
+      var connect = document.getElementById('connect');
+      var done    = document.getElementById('done');
+      // It is an <a href="/connect?html=1"> underneath. Scripting handles it
+      // in place when it can; if fetch is missing the browser just follows the
+      // link to a page that signs in and gives the same instructions.
+      connect.onclick = function (e) {
+        if (!window.fetch) return; // let the navigation happen
+        e.preventDefault();
+        connect.className = 'btn off';
+        connect.textContent = 'Connecting…';
+        // This is what makes the board start passing the probe, which is what
+        // turns this sheet's Cancel button into Done. Without it, dismissing
+        // the sheet drops the Wi-Fi and the stream with it.
+        fetch('/connect', { cache: 'no-store' }).then(function (r) {
+          if (!r.ok) throw new Error(r.status);
+          connect.textContent = 'Connected ✓';
+          done.className = '';
+          done.innerHTML = 'Signed in. Open <b>Safari</b> and go to ' +
+                           '<b>192.168.4.1</b> to listen.';
+          // iOS does not close this sheet because /connect was reached -- it
+          // closes when ITS OWN probe URL returns Success. Fetching /connect
+          // in the background never makes iOS re-check anything, which is why
+          // the sheet just sat there. Navigating to the probe forces the check
+          // now, and the board passes it for this client from here on.
+          setTimeout(function () {
+            location.href = 'http://captive.apple.com/hotspot-detect.html';
+          }, 2000);
+        }).catch(function () {
+          connect.className = 'btn';
+          connect.textContent = 'Connect';
+          done.className = '';
+          done.style.color = '#ff7a6b';
+          done.textContent = 'Could not reach the board. Make sure you are still ' +
+                             'joined to Flipper Radio and try again.';
+        });
+      };
+    }
+
+    // ----------------------------------------------------------- player view
+
+    var streamSeq = 0;
+
+    // A live stream has no seekable start to rewind to, so every start is a
+    // fresh request. This also REVIVES the element: once a media element has
+    // errored, play() on it rejects forever -- which is why pressing Listen a
+    // second time used to do nothing at all.
+    //
+    // Assigning src is enough on its own: a src change invokes the media
+    // element load algorithm, and that algorithm is what clears the error.
+    // Calling load() as well invoked it a SECOND time, and the board logged
+    // two /stream sockets 96 ms apart for every press -- two listener slots and
+    // two 6 KB task stacks per browser, which is what stopped a second device
+    // from being able to listen at all. The URL must differ every time or the
+    // assignment is not a change and nothing reloads, so a counter rides along
+    // with the clock to survive two presses inside one millisecond.
+    function attach() {
+      audio.src = '/stream?t=' + Date.now() + '.' + (++streamSeq);
+    }
+
+    // Detaching must not request anything. This used to reuse the function
+    // above, so pressing Stop opened a brand new stream that nobody was
+    // listening to and the board held that socket for its full 30 s idle
+    // timeout. Clearing src and calling load() with no source aborts the
+    // socket and ends at NETWORK_EMPTY without issuing a request.
+    function detach() {
+      audio.pause();
+      audio.removeAttribute('src');
+      audio.load();
+    }
+
+    // The element's own state is the difference between "the browser refused
+    // to start" and "the bytes arrived and would not decode".
+    function diag() {
+      var e = audio.error;
+      return ' [code ' + (e ? e.code : '-') +
+             ' net ' + audio.networkState +
+             ' ready ' + audio.readyState + ']';
+    }
+
+    function fail(text) {
+      msg.className = 'err';
+      msg.textContent = text + diag();
+      play.disabled = false;
+      play.textContent = '▶ Listen';
+    }
+
+    function stop() {
+      detach();
+      play.textContent = '▶ Listen';
+      msg.className = '';
+      msg.textContent = '';
+    }
+
+    function start() {
+      msg.className = '';
+      msg.textContent = 'connecting…';
+      play.disabled = true;
+      attach();
+
+      // play() REJECTS rather than throwing, and a dropped rejection is exactly
+      // why this button used to do nothing with no explanation whatsoever.
+      var p = audio.play();
+      if (!p || !p.catch) { play.disabled = false; return; }
+      p.then(function () {
+        msg.textContent = '';
+        play.textContent = '■ Stop';
+        play.disabled = false;
+      }).catch(function (e) {
+        var name = (e && e.name) ? e.name : String(e);
+        // Our own attach() aborts whatever play() was pending, so AbortError
+        // means "superseded", not "broken". Reporting it as a failure just
+        // buried the real error under noise on every second press.
+        if (name === 'AbortError') {
+          msg.className = '';
+          msg.textContent = '';
+          play.disabled = false;
+          return;
+        }
+        fail('play() rejected: ' + name);
+      });
+    }
+
+    if (play) {
+      // audio.paused is true after an error too, so this correctly treats a
+      // second press as "try again" rather than "stop".
+      play.onclick = function () { audio.paused ? start() : stop(); };
+      audio.onplaying = function () { msg.textContent = ''; play.textContent = '■ Stop'; };
+      audio.onstalled = function () { msg.textContent = 'stalled — waiting for audio'; };
+      audio.onerror = function () { fail('stream error'); };
+    }
+
+    // --------------------------------------------------------------- status
+
+    // Polling proves the page can reach the board even when audio cannot play,
+    // which separates "no network" from "the browser blocked it".
+    function poll() {
+      fetch('/status', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (s) {
+        if (s.station) document.getElementById('station').textContent = s.station;
+        var now = document.getElementById('now');
+        if (now && s.meta && s.meta.title) now.textContent = s.meta.title;
+        var stats = document.getElementById('stats');
+        if (stats) {
+          // Total bytes makes a stall unambiguous: if this is not climbing,
+          // the Flipper is not sending and the browser is not the problem.
+          var kb = Math.round((s.bytes || 0) / 1024);
+          stats.textContent =
+            s.listeners + ' of ' + (s.max || 8) + ' listening \u00B7 buffer ' + s.buf + '% \u00B7 ' +
+            kb + ' KB received' +
+            (s.link && s.link.up ? '' : ' \u00B7 no Flipper');
+
+          // Audio can be arriving and still be unplayable if the UART is
+          // dropping or corrupting frames, so show that rather than leave it
+          // looking like a browser problem.
+          var L = s.link || {};
+          var bad = (L.crc || 0) + (L.truncated || 0) + (L.oversize || 0) + (L.resyncs || 0);
+          if (bad) {
+            stats.textContent += ' \u00B7 link: crc ' + (L.crc || 0) +
+              ' resync ' + (L.resyncs || 0) + ' trunc ' + (L.truncated || 0);
+          }
+        }
+      }).catch(function () {});
+    }
+    poll();
+    setInterval(poll, 2000);
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+# Ruta 13 (C5a, contract 47), 34 x 16. column = i, row = j. Ruta 12 arrives at the EAST edge (i = 33, rows 12..13), Ruta 14 is the WEST edge (i = 0, rows 2..3).
+# Look (the user's mock "Rutas 13-14"): a MAZE of low post-and-rail fences (`rfence_i`) over a WILDFLOWER meadow with patches of tall grass: three bands, each one crossing the whole map: the bottom band (from the east
+# entrance west to the gap at the west end of the first fence), the middle band (east to the gap at the east end of the second fence) and the top band (west to the exit). Flowerbeds and a bench at the rest spot,
+# four trainers (bird keepers, a lass, a biker), a Prime Salve at the end of the top band.
+@map ruta_13
+@size 34 16
+@interior no
+@area ruta_13
+@bg 0
+@fill wildf
+@spawn east 32 12 W
+@spawn west 1 2 E
+@encounters grass rate=20
+  mossbud 27 30 30
+  flitter 27 29 15
+  shellfern 28 30 15
+  flitwing 29 31 20
+  lanternmoth 27 29 10
+  mossbloom 27 30 10
+@end
+# Open ground (contract 63, normal route): a step onto plain ground (not tall grass, water, a door, a ledge, an arrow floor) rolls this table when rand8 < 4 (4/256 per step).
+@open_rate 4
+# Roaming wild creatures (contract 55, rollout in 63): 3 creatures of this table wander the open ground (not the tall grass); touching one starts that wild battle.
+@roam 3 table=grass period=1800
+@legend
+  .  tile=wildf
+  a  object=tree
+  b  object=rfence_i
+  c  tile=tall_grass
+  d  object=bush
+  e  object=flowerbed
+  f  object=bench
+  g  object=sign text=ruta13.sign interact=look
+  h  object=sign text=ruta13.sign2 interact=look
+  i  item=prime_salve
+  j  npc=vecino_m id=npc_a face=SE text=ruta13.npc
+  k  npc=explorador id=t1 face=S trainer=explorador_r13a range=3 text=tr.explorador_r13a.pre after=tr.explorador_r13a.after
+  l  npc=chica id=t2 face=N trainer=chica_r13 range=4 text=tr.chica_r13.pre after=tr.chica_r13.after
+  m  npc=rider id=t3 face=S trainer=rider_r13 range=3 text=tr.rider_r13.pre after=tr.rider_r13.after
+  n  npc=explorador id=t4 face=N trainer=explorador_r13b range=3 text=tr.explorador_r13b.pre after=tr.explorador_r13b.after
+  o  tile=wildf
+  p  tile=wildf
+  q  tile=wildf item=disc_40
+  H  tile=wildf hidden=pp_extra   # hidden (contract 80, hidden items)
+@grid
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  a....j....ccccc.....q.........i..a
+  p..e......ccccc.....e...cccdc....a
+  p.......................ccccc....a
+  abbbbbbbbbbbbbbbbbbbbbbbbbbbbbb..a
+  a.h.....................m........a
+  a.....ccccc...de......cccccc...e.a
+  a.....ccccc...........cccccc....da
+  a...........n....H....cccccc.....a
+  a..bbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+  a.......ccccc....................a
+  a.......ccccc.......k...ccccc.g..a
+  a.......ccccc...f.......ccccc....o
+  a..................e....ccccc....o
+  a...e.....l......................a
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+@warp o -> ruta_12 spawn=south
+@warp p -> ruta_14 spawn=east

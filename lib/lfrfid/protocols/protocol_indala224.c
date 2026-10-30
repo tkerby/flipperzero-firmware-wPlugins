@@ -2,6 +2,7 @@
 #include <toolbox/protocols/protocol.h>
 #include <bit_lib/bit_lib.h>
 #include "lfrfid_protocols.h"
+#include "lfrfid_write_fill.h"
 
 #define INDALA224_PREAMBLE_BIT_SIZE  (30)
 #define INDALA224_PREAMBLE_DATA_SIZE (4)
@@ -84,7 +85,9 @@ static bool protocol_indala224_decoder_feed_internal(bool polarity, uint32_t tim
     size_t bit_count = (time / INDALA224_US_PER_BIT);
     bool result = false;
 
-    if(bit_count < INDALA224_ENCODED_BIT_SIZE) {
+    // A payload of all zeros holds the PSK2 carrier phase for a whole frame, so a run of
+    // exactly INDALA224_ENCODED_BIT_SIZE bits is legitimate and must not be discarded.
+    if(bit_count <= INDALA224_ENCODED_BIT_SIZE) {
         for(size_t i = 0; i < bit_count; i++) {
             bit_lib_push_bit(data, INDALA224_ENCODED_DATA_SIZE, polarity);
             if(protocol_indala224_can_be_decoded(data)) {
@@ -240,17 +243,11 @@ bool protocol_indala224_write_data(ProtocolIndala224* protocol, void* data) {
 
     if(request->write_type == LFRFIDWriteTypeT5577) {
         // Config: PSK2, RF/32, 7 data blocks (matches Proxmark3 T55X7_INDALA_224_CONFIG_BLOCK)
-        // T5577 data blocks contain raw data bits; the chip handles PSK2 modulation.
-        request->t5577.block[0] = LFRFID_T5577_BITRATE_RF_32 | LFRFID_T5577_MODULATION_PSK2 |
-                                  (7 << LFRFID_T5577_MAXBLOCK_SHIFT);
-        request->t5577.block[1] = bit_lib_get_bits_32(protocol->data, 0, 32);
-        request->t5577.block[2] = bit_lib_get_bits_32(protocol->data, 32, 32);
-        request->t5577.block[3] = bit_lib_get_bits_32(protocol->data, 64, 32);
-        request->t5577.block[4] = bit_lib_get_bits_32(protocol->data, 96, 32);
-        request->t5577.block[5] = bit_lib_get_bits_32(protocol->data, 128, 32);
-        request->t5577.block[6] = bit_lib_get_bits_32(protocol->data, 160, 32);
-        request->t5577.block[7] = bit_lib_get_bits_32(protocol->data, 192, 32);
-        request->t5577.blocks_to_write = 8;
+        lfrfid_write_fill_t5577(
+            request,
+            LFRFID_T5577_BITRATE_RF_32 | LFRFID_T5577_MODULATION_PSK2 |
+                (7 << LFRFID_T5577_MAXBLOCK_SHIFT),
+            protocol->data);
         result = true;
     }
     return result;

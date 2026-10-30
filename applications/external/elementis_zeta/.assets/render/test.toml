@@ -1,0 +1,24 @@
+# Calibration test boxes (procedural, flat per-face colours). Output goes to build/, not assets/.
+[[job]]
+name = "box_1x1x0.2"
+model = "procedural:box:1,1,0.2"
+fit = "none"
+fw = 1
+fh = 1
+out_dir = "build/art/test"
+
+[[job]]
+name = "box_2x1x1"
+model = "procedural:box:2,1,1"
+fit = "none"
+fw = 2
+fh = 1
+out_dir = "build/art/test"
+
+[[job]]
+name = "box_2x2x1.5"
+model = "procedural:box:2,2,1.5"
+fit = "none"
+fw = 2
+fh = 2
+out_dir = "build/art/test"

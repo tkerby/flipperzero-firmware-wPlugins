@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base.h"
+#include "public_api.h"
 
 #define SUBGHZ_PROTOCOL_FAAC_SLH_NAME "Faac SLH"
 
@@ -28,11 +29,23 @@ SubGhzProtocolStatus
     subghz_protocol_encoder_faac_slh_deserialize(void* context, FlipperFormat* flipper_format);
 
 /**
+ * Free SubGhzProtocolEncoderFaacSLH.
+ * @param context Pointer to a SubGhzProtocolEncoderFaacSLH instance
+ */
+void subghz_protocol_encoder_faac_slh_free(void* context);
+
+/**
  * Allocate SubGhzProtocolDecoderFaacSLH.
  * @param environment Pointer to a SubGhzEnvironment instance
  * @return SubGhzProtocolDecoderFaacSLH* pointer to a SubGhzProtocolDecoderFaacSLH instance
  */
 void* subghz_protocol_decoder_faac_slh_alloc(SubGhzEnvironment* environment);
+
+/**
+ * Free SubGhzProtocolDecoderFaacSLH.
+ * @param context Pointer to a SubGhzProtocolDecoderFaacSLH instance
+ */
+void subghz_protocol_decoder_faac_slh_free(void* context);
 
 /**
  * Parse a raw sequence of levels and durations received from the air.
@@ -70,6 +83,5 @@ SubGhzProtocolStatus
  */
 void subghz_protocol_decoder_faac_slh_get_string(void* context, FuriString* output);
 
-// Reset prog mode vars
+// Reset prog mode vars - faac_slh_reset_prog_mode() is declared in public_api.h
 // TODO: Remake in proper way
-// void faac_slh_reset_prog_mode(void);

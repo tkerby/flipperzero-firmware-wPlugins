@@ -48,6 +48,10 @@ CFWSettings cfw_settings = {
     .spoof_color = FuriHalVersionColorUnknown, // Real
     .rpc_color_fg = {{ScreenColorModeDefault, {.value = 0x000000}}}, // Default Black
     .rpc_color_bg = {{ScreenColorModeDefault, {.value = 0xFF8200}}}, // Default Orange
+    .game_menu_style = MenuStyleWii,
+    .game_start_point = 0,
+    .start_point = 0, // Apps Menu
+    .lock_menu_type = true, // Grid
 };
 
 typedef enum {
@@ -88,6 +92,10 @@ static const struct {
     {setting_bool(unlock_anims)},
     {setting_bool(game_mode)},
     {setting_enum(menu_style, MenuStyleCount)},
+    {setting_enum(game_menu_style, MenuStyleCount)},
+    {setting_uint(game_start_point, 0, UINT32_MAX)},
+    {setting_uint(start_point, 0, UINT32_MAX)},
+    {setting_bool(lock_menu_type)},
     {setting_bool(bad_pins_format)},
     {setting_bool(allow_locked_rpc_usb)},
     {setting_bool(allow_locked_rpc_ble)},

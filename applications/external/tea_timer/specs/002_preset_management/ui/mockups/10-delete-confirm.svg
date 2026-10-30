@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="256" viewBox="0 0 128 64" shape-rendering="crispEdges">
+<rect x="0" y="0" width="128" height="64" fill="#F4F1E3"/>
+<rect x="6" y="6" width="116" height="50" fill="#F4F1E3" stroke="#1A1A1A" stroke-width="2"/>
+<rect x="8" y="8" width="112" height="12" fill="#1A1A1A"/>
+<text x="64" y="17" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" font-size="9" fill="#F4F1E3" text-anchor="middle">Delete preset</text>
+<text x="64" y="33" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" font-size="9" fill="#1A1A1A" text-anchor="middle" font-weight="bold">Green Tea</text>
+<text x="64" y="45" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" font-size="8" fill="#1A1A1A" text-anchor="middle">green_tea.tea</text>
+<text x="64" y="63" font-family="Menlo, Consolas, DejaVu Sans Mono, monospace" font-size="9" fill="#1A1A1A" text-anchor="middle">OK: No   &gt;: Yes</text>
+</svg>

@@ -130,9 +130,13 @@ static const char* ndef_uri_prepends[] = {
 
 // ---=== card memory layout abstraction ===---
 
+// SmartPoster records nest NDEF messages, cap the recursion to bound stack usage
+#define NDEF_SMART_POSTER_MAX_DEPTH (8)
+
 // Shared context and state, read above
 typedef struct {
     FuriString* output;
+    uint8_t smart_poster_depth;
 #if NDEF_PROTO == NDEF_PROTO_RAW
     struct {
         const uint8_t* data;
@@ -614,8 +618,15 @@ bool ndef_parse_record(
     switch(tnf) {
     case NdefTnfWellKnownType:
         if(strncmp("Sp", type, type_len) == 0) {
+            if(ndef->smart_poster_depth >= NDEF_SMART_POSTER_MAX_DEPTH) {
+                furi_string_cat(ndef->output, "SmartPoster\nNesting too deep\n\n");
+                return false;
+            }
             furi_string_cat(ndef->output, "SmartPoster\nContained records below\n\n");
-            return ndef_parse_message(ndef, pos, len, 0, true);
+            ndef->smart_poster_depth++;
+            bool parsed = ndef_parse_message(ndef, pos, len, 0, true);
+            ndef->smart_poster_depth--;
+            return parsed;
         } else if(strncmp("U", type, type_len) == 0) {
             return ndef_parse_uri(ndef, pos, len);
         } else if(strncmp("T", type, type_len) == 0) {
@@ -893,8 +904,9 @@ static bool ndef_mfc_parse(const NfcDevice* device, FuriString* parsed_data) {
     const MfClassicData* data = nfc_device_get_data(device, NfcProtocolMfClassic);
 
     // Check card type can contain NDEF
-    if(data->type != MfClassicType1k && data->type != MfClassicType4k &&
-       data->type != MfClassicTypeMini && data->type != MfClassicType2k) {
+    if(data->type != MfClassicType1k && data->type != MfClassicType1kEv1 &&
+       data->type != MfClassicType4k && data->type != MfClassicTypeMini &&
+       data->type != MfClassicType2k) {
         return false;
     }
 

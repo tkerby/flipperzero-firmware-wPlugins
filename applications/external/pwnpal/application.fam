@@ -1,0 +1,16 @@
+App(
+    appid="pwnpal",
+    name="Pwnpal",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="pwnpal_app",
+    cdefines=["APP_PWNPAL"],
+    stack_size=4 * 1024,
+    fap_icon="pwnpal_10px.png",
+    fap_icon_assets="assets",
+    sources=["*.c", "!.tests", "!.tools"],
+    fap_category="GPIO/ESP32",
+    fap_author="mrq1911",
+    fap_weburl="https://github.com/mrq1911/pwnpal",
+    fap_version="3.0",
+    fap_description="A full pwnagotchi on your Flipper + ESP32: befriends other pwnagotchis over pwngrid, captures WPA/WPA2 handshakes & PMKIDs, de-cloaks hidden SSIDs, GPS wardrives, and grows a persona. Authorized use only; capture/deauth ship off behind a consent gate.",
+)

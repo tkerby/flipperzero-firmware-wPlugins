@@ -1,0 +1,57 @@
+# Torre Vertice, 1F (a corporation 1F: the lobby, C6, contract 49), 16 x 12, interior. column = i, row = j. The user's mock "Torre Vertice": an OFFICE floor of big light carpet tiles (`carpet_<i%2><j%2>`, 2 x 2), low glass
+# partitions, desks and a teleport pad. The entrance mat is at the bottom (7..8,11) (Cenit's `torre_door`); the stairs up (escalator, door (13,2)) are in the top right. The receptionist (script `recep`) and two Team Vertice grunts (trainers) hold the lobby.
+@map torre_vertice_1
+@size 16 12
+@interior yes
+@area torre_vertice
+@flag varo_vtx 852   # Director Varo was beaten: the receptionist is relieved
+@bg 0
+@fill carpet_00
+@spawn door 7 10 N
+@spawn up 13 3 S
+@legend
+  .  tile=carpet_11
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  tile=carpet_01
+  f  tile=carpet_11 object=escalator
+  g  tile=carpet_10
+  h  tile=carpet_00
+  i  tile=carpet_00 npc=dependienta id=recep face=SW script=recep
+  j  tile=carpet_00 object=sign text=vtx.dir interact=look
+  k  tile=carpet_10 door=escalator
+  l  tile=carpet_11 object=desk
+  m  tile=carpet_01 object=desk
+  n  tile=carpet_11 object=planter
+  o  tile=carpet_01 object=bench
+  p  tile=carpet_00 npc=vertice id=t1a face=E trainer=vertice_t1a range=4 text=tr.vertice_t1a.pre after=tr.vertice_t1a.after
+  q  tile=carpet_01 npc=vertice id=t1b face=N trainer=vertice_t1b range=4 text=tr.vertice_t1b.pre after=tr.vertice_t1b.after
+  r  tile=carpet_00 object=planter
+  s  tile=carpet_11 object=bench
+  t  tile=carpet_10 object=planter
+  u  tile=mat
+@grid
+  abbbcbbbbcbbbcbb
+  d.e.e.e.e.e.efe.
+  dghgighghgjghkhg
+  d.elmle.e.e.e.e.
+  dghghghghghghghg
+  dne.e.e.e.o.e.e.
+  dghghghghgpghghg
+  d.e.e.e.q.e.e.e.
+  dghghgrghghghghg
+  d.ese.e.e.e.e.e.
+  dthghghghghgrgrg
+  d.e.e.euu.e.e.e.
+@warp k -> torre_vertice_2 spawn=down
+@warp u -> ciudad_cenit spawn=torre_door
+@script recep npc
+    npc_face_hero recep
+    jf varo_vtx after
+    say vtx.recep
+    end
+  after:
+    say vtx.recep2
+@end

@@ -1,0 +1,19 @@
+title Centro - healing center: slow chords that shimmer as arpeggios, a long singing note above each (F, Am, Dm, G sus; F major)
+tempo 60
+vol 170
+meter 4/4
+inst maj7 arp=0,4,7,11 rate=6 tone=190,255,190
+inst min7 arp=0,3,7,10 rate=6 tone=190,255,190
+inst sus arp=0,5,7 rate=8 tone=190,255,190
+inst sing att=14 vib=1 vdelay=12 vper=16 slow lvl=0.85
+l2
+# --- the chords of a calm morning
+@maj7 o5 f @sing o6 c |
+@min7 o5 a @sing o6 e |
+@min7 o5 d @sing o5 a |
+@sus o5 g @sing o5 b |
+# --- the same, looking down
+@maj7 o5 f @sing o6 a |
+@min7 o5 a @sing o6 c |
+@min7 o5 d @sing o6 f |
+@sus o5 g @sing o6 d |

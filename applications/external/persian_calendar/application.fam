@@ -1,0 +1,13 @@
+App(
+    appid="persian_calendar",
+    name="Persian Calendar",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="persian_calendar_app",
+    stack_size=2 * 1024,
+    fap_icon="persian_calendar.png",
+    fap_category="Tools",
+    fap_author="amir",
+    fap_weburl="https://github.com/AmirNcode/flipper-persian-calendar",
+    fap_version="1.1",
+    fap_description="Persian (Jalali) calendar: today's date, date converter, weekday",
+)

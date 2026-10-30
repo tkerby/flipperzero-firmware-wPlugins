@@ -1,0 +1,28 @@
+title Varo - the boss battle (optional, for the villains' leaders): menacing E phrygian at 160 bpm, a pounding kick and snare under a chromatic bass riff, brassy stabs that lean on the half step, a tritone, a power-chord anthem, a chromatic climb and a snare roll
+tempo 160
+vol 205
+meter 4/4
+inst bass v=255,200,160
+inst brass v=255,255,230,205,190
+inst lead v=255,255,225,195,180
+inst pow arp=-12,0,7 rate=1 lvl=0.9
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+inst snr drum=a6 noise=25 seed=9 fall=12
+l8
+# --- 1-2: the riff (E, F, E, G, F, E, D sharp, E)
+@bass o3 [ !kick:e e !snr:f e ]2 |
+@bass o3 !kick:e e !snr:g f !kick:e e !snr:d+ e |
+# --- 3-4: brass stabs on the half step
+@brass o4 !kick:e4 !snr:e8 e8 !kick:f4 !snr:e4 |
+@brass o4 !kick:g4 !snr:f4 !kick:e4 !snr:d+4 |
+# --- 5-6: the tritone (E against B flat)
+@lead o5 !kick:e b- !snr:e b- !kick:e b- !snr:f4 |
+@lead o5 !kick:b- e !snr:b- e !kick:b- e !snr:f4 |
+# --- 7-8: the anthem in power chords
+@pow o4 !kick:e2 !snr:f2 |
+@pow o4 !kick:g2 f4 e4 |
+# --- 9-10: the chromatic climb
+@lead o4 e f f+ g g+ a b- b |
+@lead o5 c c+ d d+ e f f+ g |
+# --- 11: the snare roll into the loop
+[ !snr=9 ]8 [ !snr=5 ]12 !kick=18

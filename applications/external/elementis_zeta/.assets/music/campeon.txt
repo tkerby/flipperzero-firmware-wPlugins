@@ -1,0 +1,30 @@
+title Campeon - the final battle against the champion: relentless 168 bpm, a sixteenth-note bass riff under kick and snare (B minor: Bm, G, D, A), an epic anthem, held heroic notes, a chromatic run, power chords and a roll that crashes back into the riff
+tempo 168
+vol 205
+meter 4/4
+inst bass v=255,170,140
+inst lead v=255,255,225,195,180
+inst hero v=255,255,240,225,210,200
+inst pow arp=-12,0,7 rate=1 lvl=0.9
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+inst snr drum=a6 noise=25 seed=15 fall=12
+l16
+# --- 1-4: the riff (Bm, G, D, A), kick and snare in the bass
+@bass o3 [ !kick:b >b< b >b< !snr:b >b< b >b< ]2 |
+@bass o3 [ !kick:g >g< g >g< !snr:g >g< g >g< ]2 |
+@bass o3 [ !kick:d >d< d >d< !snr:d >d< d >d< ]2 |
+@bass o3 [ !kick:a >a< a >a< !snr:a >a< a >a< ]2 |
+# --- 5-8: the anthem (over Bm, G, D, A)
+@lead o5 b4. f+8 b4 >d4< |
+@lead o6 e4. d8 b4 g4 |
+@lead o6 f+4. e8 d4 c+4 |
+@lead o5 a4 b4 >c+4 e4< |
+# --- 9-12: the heroes hold the line
+@hero o6 f+2 e2 |
+@hero o6 d2 c+2 |
+@hero o5 b2 a2 |
+@hero o5 g2 f+2 |
+# --- 13-15: the chromatic run, the power chords, the roll
+@lead o5 b8 >c8 c+8 d8 d+8 e8 f8 f+8< |
+@pow o5 b2 f+2 |
+[ !snr16 ]16 |

@@ -1,0 +1,90 @@
+# Ruta 15 (C5a, contract 47), 36 x 14. column = i, row = j. Ruta 14 arrives at the EAST edge (i = 35, rows 6..7), Ciudad Ambar is the WEST edge (i = 0, rows 6..7).
+# Look (the user's mock "Ruta 15"): OPEN FIELDS: a wide wildflower meadow with a dirt trail along the middle, three animated WINDMILLS (its own touch: tall white towers with turning sails), tall-grass patches, flowerbeds
+# and a hedge here and there; four trainers watch the trail across the open ground (the diagonal lines of sight reach far in the open).
+@map ruta_15
+@size 36 14
+@interior no
+@area ruta_15
+@bg 0
+@fill wildf
+@spawn east 34 6 W
+@spawn west 1 6 E
+@flag aide_share_done 925   # F2 (contract 74): the aide gave the Reparto Total
+@encounters grass rate=20
+  mossbud 32 34 25
+  flitwing 32 34 20
+  ferncairn 32 34 15
+  jabhawk 33 35 20
+  lanternmoth 32 34 10
+  mossbloom 32 34 10
+@end
+# Open ground (contract 63, normal route): a step onto plain ground (not tall grass, water, a door, a ledge, an arrow floor) rolls this table when rand8 < 4 (4/256 per step).
+@open_rate 4
+# Roaming wild creatures (contract 55, rollout in 63): 3 creatures of this table wander the open ground (not the tall grass); touching one starts that wild battle.
+@roam 3 table=grass period=1800
+@legend
+  .  tile=wildf
+  a  object=tree
+  b  tile=trail
+  c  tile=tall_grass
+  d  object=windmill
+  e  object=flowerbed
+  f  object=bush
+  g  object=sign text=ruta15.sign interact=look
+  h  object=sign text=ruta15.sign2 interact=look
+  i  item=prime_salve
+  j  item=ward_spray
+  k  npc=vecino_m id=npc_a face=SW text=ruta15.npc
+  l  npc=rider id=t1 face=S trainer=rider_r15 range=4 text=tr.rider_r15.pre after=tr.rider_r15.after
+  m  npc=chica id=t2 face=N trainer=chica_r15 range=4 text=tr.chica_r15.pre after=tr.chica_r15.after
+  n  npc=explorador id=t3 face=S trainer=explorador_r15 range=4 text=tr.explorador_r15.pre after=tr.explorador_r15.after
+  o  npc=punk id=t4 face=N trainer=punk_r15 range=4 text=tr.punk_r15.pre after=tr.punk_r15.after
+  p  tile=trail
+  q  tile=trail
+  r  tile=wildf item=disc_27
+  H  tile=wildf hidden=ultra_cristal   # F2 (contract 74): a hidden item
+  A  tile=wildf npc=ayudante id=aide face=N script=aide   # F2 (contract 74): Profesora Lin's aide beside the trail (50 caught species -> the Reparto Total)
+@grid
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  a...ccccc............ccccc........ja
+  a...ccccc....f.......ccccc.........a
+  a...ccccc.d.......e..ccccc.......d.a
+  a.............n......cdccc....le...a
+  a.h.e.....................k........a
+  qbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbp
+  qbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbp
+  a..A....e................e.......g.a
+  a.cccco.........d.....m....cdcccc..a
+  a.cccc......cccccc.........cccccc..a
+  a.cccc......cccccc.........cccccc..a
+  aH.........icccccc...rf........f...a
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+@warp p -> ruta_14 spawn=west
+@warp q -> ciudad_ambar spawn=east
+
+# F2 (contract 74): another of Profesora Lin's aides (aide of the Route 15 gate: 50 species caught -> the Team Share). With at least 50 species CAUGHT in the Registro he gives the Reparto Total once (flag 925 = `aide_share_done`);
+# with fewer he says how many are still missing (`caught_ge` leaves the missing number in {v2}); with a full bag he waits (nothing is lost, the flag stays clear).
+@var aide_ok 5
+@script aide npc
+    npc_face_hero aide
+    jf aide_share_done said
+    say ruta15.aide.hi
+    caught_ge aide_ok 50
+    jv aide_ok 1 give
+    say ruta15.aide.more
+    end
+  give:
+    say ruta15.aide.give
+    give_item reparto_total 1
+    jv 0 0 full
+    setf aide_share_done
+    sfx item
+    say ruta15.aide.got
+    say ruta15.aide.about
+    end
+  full:
+    say gl.found.full
+    end
+  said:
+    say ruta15.aide.after
+@end

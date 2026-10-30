@@ -73,7 +73,7 @@ static void
             {
                 if(model->item_cnt <= BROWSER_SORT_THRESHOLD) {
                     FuriString* selected = NULL;
-                    if(model->item_idx >= 0) {
+                    if(model->item_idx >= 0 && archive_is_item_in_array(model, model->item_idx)) {
                         selected = furi_string_alloc_set(
                             files_array_get(model->files, model->item_idx)->path);
                     }
@@ -81,12 +81,13 @@ static void
                     files_array_sort(model->files);
 
                     if(selected != NULL) {
-                        for(uint32_t i = 0; i < model->item_cnt; i++) {
+                        for(uint32_t i = 0; i < files_array_size(model->files); i++) {
                             if(!furi_string_cmp(files_array_get(model->files, i)->path, selected)) {
                                 model->item_idx = i;
                                 break;
                             }
                         }
+                        furi_string_free(selected);
                     }
                 }
                 if(model->item_idx < 0) {
@@ -255,11 +256,13 @@ void archive_file_array_rm_selected(ArchiveBrowserView* browser) {
         browser->view,
         ArchiveBrowserViewModel * model,
         {
-            files_array_remove_v(
-                model->files,
-                model->item_idx - model->array_offset,
-                model->item_idx - model->array_offset + 1);
-            model->item_cnt--;
+            size_t idx = (size_t)(model->item_idx - model->array_offset);
+            if(idx < files_array_size(model->files)) {
+                files_array_remove_v(model->files, idx, idx + 1);
+            }
+            if(model->item_cnt > 0) {
+                model->item_cnt--;
+            }
             model->item_idx = CLAMP(model->item_idx, (int32_t)model->item_cnt - 1, 0);
             items_cnt = model->item_cnt;
         },
@@ -279,22 +282,24 @@ void archive_file_array_swap(ArchiveBrowserView* browser, int8_t dir) {
         browser->view,
         ArchiveBrowserViewModel * model,
         {
-            ArchiveFile_t temp;
-            size_t array_size = files_array_size(model->files) - 1;
-            uint8_t swap_idx = CLAMP((size_t)(model->item_idx + dir), array_size, 0u);
+            if(files_array_size(model->files) > 0) {
+                ArchiveFile_t temp;
+                size_t array_size = files_array_size(model->files) - 1;
+                uint8_t swap_idx = CLAMP((size_t)(model->item_idx + dir), array_size, 0u);
 
-            if(model->item_idx == 0 && dir < 0) {
-                ArchiveFile_t_init(&temp);
-                files_array_pop_at(&temp, model->files, array_size);
-                files_array_push_at(model->files, model->item_idx, temp);
-                ArchiveFile_t_clear(&temp);
-            } else if(((uint32_t)model->item_idx == array_size) && (dir > 0)) {
-                ArchiveFile_t_init(&temp);
-                files_array_pop_at(&temp, model->files, 0);
-                files_array_push_at(model->files, array_size, temp);
-                ArchiveFile_t_clear(&temp);
-            } else {
-                files_array_swap_at(model->files, model->item_idx, swap_idx);
+                if(model->item_idx == 0 && dir < 0) {
+                    ArchiveFile_t_init(&temp);
+                    files_array_pop_at(&temp, model->files, array_size);
+                    files_array_push_at(model->files, model->item_idx, temp);
+                    ArchiveFile_t_clear(&temp);
+                } else if(((uint32_t)model->item_idx == array_size) && (dir > 0)) {
+                    ArchiveFile_t_init(&temp);
+                    files_array_pop_at(&temp, model->files, 0);
+                    files_array_push_at(model->files, array_size, temp);
+                    ArchiveFile_t_clear(&temp);
+                } else {
+                    files_array_swap_at(model->files, model->item_idx, swap_idx);
+                }
             }
         },
         false);
@@ -347,12 +352,31 @@ ArchiveFile_t* archive_get_current_file(ArchiveBrowserView* browser) {
         browser->view,
         ArchiveBrowserViewModel * model,
         {
-            selected = files_array_size(model->files) ?
+            selected = model->item_idx >= 0 && archive_is_item_in_array(model, model->item_idx) ?
                            files_array_get(model->files, model->item_idx - model->array_offset) :
                            NULL;
         },
         false);
     return selected;
+}
+
+bool archive_copy_current_file(ArchiveBrowserView* browser, ArchiveFile_t* copy) {
+    furi_assert(browser);
+    furi_assert(copy);
+    bool found = false;
+    with_view_model(
+        browser->view,
+        ArchiveBrowserViewModel * model,
+        {
+            if(model->item_idx >= 0 && archive_is_item_in_array(model, model->item_idx)) {
+                ArchiveFile_t* current =
+                    files_array_get(model->files, model->item_idx - model->array_offset);
+                ArchiveFile_t_set(copy, current);
+                found = true;
+            }
+        },
+        false);
+    return found;
 }
 
 ArchiveFile_t* archive_get_file_at(ArchiveBrowserView* browser, size_t idx) {
@@ -364,8 +388,12 @@ ArchiveFile_t* archive_get_file_at(ArchiveBrowserView* browser, size_t idx) {
         browser->view,
         ArchiveBrowserViewModel * model,
         {
-            idx = CLAMP(idx - model->array_offset, files_array_size(model->files), 0u);
-            selected = files_array_size(model->files) ? files_array_get(model->files, idx) : NULL;
+            if(idx >= (size_t)model->array_offset) {
+                idx -= model->array_offset;
+                if(idx < files_array_size(model->files)) {
+                    selected = files_array_get(model->files, idx);
+                }
+            }
         },
         false);
     return selected;
@@ -395,7 +423,8 @@ bool archive_is_home(ArchiveBrowserView* browser) {
 
 const char* archive_get_name(ArchiveBrowserView* browser) {
     ArchiveFile_t* selected = archive_get_current_file(browser);
-    return furi_string_get_cstr(selected->path);
+    // Empty rather than NULL: callers hand this straight to printf and to path helpers
+    return selected ? furi_string_get_cstr(selected->path) : "";
 }
 
 void archive_set_tab(ArchiveBrowserView* browser, ArchiveTabEnum tab) {

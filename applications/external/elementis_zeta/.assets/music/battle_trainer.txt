@@ -1,0 +1,25 @@
+title Trainer battle - a challenge: a marching riff, then a heroic rising theme with held notes (A minor to C major, 12 bars)
+tempo 156
+vol 190
+meter 4/4
+inst march arp=-12,0,0,7 rate=10 tone=255,190,150,120
+inst lead v=255,255,215,185,170
+inst hero att=2 vib=1 vdelay=8 vper=16 slow
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+inst snr drum=a6 noise=25 seed=3 fall=12
+inst hat drum=c8 v=120,60
+l4
+# --- the march (Am, F), then the theme: a leap up a fifth and back down the scale
+@march o5 [ !kick:a !snr:a ]2 |
+@march o5 [ !kick:f !snr:f ]2 |
+@lead o5 a4. e8 o6 a4 g8 e8 |
+o6 f4. e8 d4 c4 |
+o5 g4. d8 o6 g4 f8 d8 |
+@hero o6 e2 c2 |
+# --- the march again (Am, G), the theme climbs and wins (C major)
+@march o5 [ !kick:a !snr:a ]2 |
+@march o5 [ !kick:g !snr:g ]2 |
+@lead o5 c4. g8 o6 c4 e8 g8 |
+o6 a4. g8 f4 e4 |
+o6 d4 e4 f4 g4 |
+@hero o6 c1 |

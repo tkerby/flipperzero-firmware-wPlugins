@@ -52,6 +52,7 @@ typedef enum {
     // Appended last on purpose: keeps Mini/1k/4k values stable for precompiled FAPs and any
     // type-indexed array. Not a Classic product -- a MIFARE Plus 2K in SL1 (see the poller).
     MfClassicType2k,
+    MfClassicType1kEv1,
 
     MfClassicTypeNum,
 } MfClassicType;

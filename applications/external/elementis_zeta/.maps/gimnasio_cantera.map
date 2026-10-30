@@ -1,0 +1,104 @@
+# Gimnasio de Pueblo Cantera (M5-D, contract 26;: the Rock gym), 12 x 14, interior, column = i, row = j, (0,0) = back corner.
+# The floor is the user's pick "G3": one big slab per 2 x 2 cells, so the tile of a cell depends on the parity of (i, j): the grid characters 0 1 2 3 are slab_<i%2><j%2>
+# (0 = i even / j even ... 3 = both odd); the cells of an object / NPC use the letter of THEIR parity (pillar P Q R T, boulder e f g h, guide u, apprentice x) so the joint lines
+# run through them like everywhere else. Garrick stands on his dais (stage, 2 x 2, cells (5..6, 1..2); he is at (6,1), the far-right cell; the stage is a counter, so the hero talks to him from (6,3) across the dais, and is not in front of him on the screen; he faces the entrance = SW). A row of pillars and boulders
+# (j = 8) leaves a 2-wide gap at i = 5, 6; the boulder at (6,7) shuts the way around it, so every way to Garrick passes (5,7), on the line of sight of the apprentice at (3,5)
+# (facing S, range 2: he sees (4,6) and (5,7)): like the usual Jr. Trainer, he cannot be avoided (the host test `m5` proves it with a flood fill). The guide is by the door.
+@map gimnasio_cantera
+@size 12 14
+@interior yes
+@bg 3
+@fill slab_11
+@spawn door 5 12 N
+@flag badge_cantera 80          # the Medalla Cantera (party.h FLAG_BADGE_FIRST)
+@flag garrick_disc 696         # (contract 80): Garrick handed over Disc 36. 696 = the pick-up flag of the pouch that lay in Pueblo Cantera until contract 80, so an old save that took it keeps it taken
+@legend
+  0  tile=slab_00
+  1  tile=slab_10
+  2  tile=slab_01
+  3  tile=slab_11
+  C  tile=none object=wall_corner
+  w  tile=none object=wall_j
+  |  tile=none object=wall_i
+  P  tile=slab_00 object=pillar
+  Q  tile=slab_10 object=pillar
+  R  tile=slab_01 object=pillar
+  e  tile=slab_00 object=boulder
+  f  tile=slab_10 object=boulder
+  g  tile=slab_01 object=boulder
+  s  tile=none object=stage
+  G  tile=none object=stage npc=garrick id=garrick face=SW script=garrick
+  u  tile=slab_10 npc=guia id=guide face=NW script=guide
+  x  tile=slab_11 npc=aprendiz id=apprentice face=S trainer=aprendiz_cantera range=2 text=tr.aprendiz_cantera.pre after=tr.aprendiz_cantera.after
+  m  tile=mat
+@grid
+  Cwwwwwwwwwww
+  |3232sG32323
+  |1010ss10101
+  |3R3232323R3
+  |10101010101
+  |32x23232323
+  |10101010101
+  |32323g32323
+  |QefP10QefeQ
+  |32323232323
+  |1P1010101P1
+  |32323232323
+  |101010u0101
+  |3232mm32323
+
+@warp m -> pueblo_cantera spawn=gym_door
+# The gym guide.
+@script guide npc
+    npc_face_hero guide
+    jf badge_cantera won
+    say cantera.gym.guide.a
+    end
+  won:
+    say cantera.gym.guide.b
+@end
+# Garrick: before the badge he speaks, battles (trainer garrick: Pebblump L12 + Boulderback L14); a win = his speech, the badge (flag 80), the explanation;
+# a loss = the normal blackout to the last Centro. Afterwards he only says his last line.
+@script garrick npc
+    jf badge_cantera after
+    npc_face_hero garrick
+    cam_npc garrick             # the camera cuts to him: from the floor his head would be above the top of the screen
+    say cantera.garrick.pre
+    battle 6 0                  # trainer 6 = garrick (position in assets/data/trainers.toml); var 0 = 1 won / 0 lost
+    jv 0 1 won
+    blackout
+    end
+  won:
+    say cantera.garrick.win
+    setf badge_cantera
+    say cantera.badge
+    say cantera.garrick.about
+    call garrick_gift
+    cam_hero
+    end
+  after:
+    npc_face_hero garrick
+    cam_npc garrick
+    jf garrick_disc said
+    call garrick_gift
+    cam_hero
+    end
+  said:
+    say cantera.garrick.after
+    cam_hero
+@end
+# (contract 80): after the badge he hands over a disc (here Disc 36, the Hold Fast role: Contencion). A full bag keeps garrick_disc clear and he hands it over the next time you talk to him.
+@script garrick_gift called
+    jf garrick_disc gone          # an old save that took the pouch (or a disc already handed over): nothing more
+    say gym.varo.disc
+    give_item disc_36 1
+    jv 0 0 full
+    item_var 0 disc_36
+    say gl.gift
+    setf garrick_disc
+    say extra.garrick.disc_about
+    end
+  full:
+    say gl.found.full
+  gone:
+@end

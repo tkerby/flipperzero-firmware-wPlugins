@@ -182,6 +182,12 @@ static void esp_apply_companion(EspLink* esp, const EspMsg* m) {
     case EspMsgBand:
         recon_app_set_band(app, m->u.band.sel, m->u.band.channels);
         break;
+    case EspMsgSigRevision:
+        recon_app_set_esp_sig_revision(app, m->u.sigrev.revision);
+        break;
+    case EspMsgSigTest:
+        recon_app_set_esp_sigtest(app, m->u.sigtest.hash, m->u.sigtest.pass);
+        break;
     case EspMsgGpsCfg:
         // Recorded regardless of the current source setting: it is the answer to
         // a question we asked, and the badge decides what to make of it. Storing
@@ -337,6 +343,18 @@ void esp_link_send(EspLink* esp, const char* cmd) {
     if(!esp->running || !esp->serial) return;
     furi_hal_serial_tx(esp->serial, (const uint8_t*)cmd, strlen(cmd));
     furi_hal_serial_tx(esp->serial, (const uint8_t*)"\n", 1);
+}
+
+void esp_link_send_kickoff(EspLink* esp, const char* cmd) {
+    ReconApp* app = esp->app;
+    if(app->settings.backend != EspBackendCompanion) return;
+    if(cmd) {
+        // Scenes call this from the GUI thread; the re-send below runs on the
+        // same thread (recon_app_gps_cfg_tick), so the string needs no lock.
+        strncpy(app->esp_kickoff, cmd, sizeof(app->esp_kickoff) - 1);
+        app->esp_kickoff[sizeof(app->esp_kickoff) - 1] = '\0';
+    }
+    if(app->esp_kickoff[0]) esp_link_send(esp, app->esp_kickoff);
 }
 
 // Index-aligned with ReconEspBand.

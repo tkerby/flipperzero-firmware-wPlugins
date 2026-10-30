@@ -67,6 +67,10 @@
   <esp-web-install-button data-env="lilygo-t2can" data-chip="ESP32-S3"></esp-web-install-button>
 </div>
 <div class="board">
+  <span class="name">LilyGo T-2CAN FD (H784-A, dual CAN) <span class="chip">· ESP32-S3</span></span>
+  <esp-web-install-button data-env="lilygo-t2can-fd" data-chip="ESP32-S3"></esp-web-install-button>
+</div>
+<div class="board">
   <span class="name">Waveshare ESP32-S3-CAN <span class="chip">· ESP32-S3</span></span>
   <esp-web-install-button data-env="waveshare-s3-can" data-chip="ESP32-S3"></esp-web-install-button>
 </div>
@@ -74,53 +78,117 @@
 <p id="relnote" class="sub" style="margin:0 0 20px">Looking up the latest firmware release&hellip;</p>
 
 <script>
-// Resolve the newest release (including pre-releases) and point each button at
-// its merged image. GitHub's /releases/latest/ only ever resolves to a stable
-// release, so it 404s while the current builds are pre-releases — this keeps
-// both the hosted page and a downloaded copy pointing at the real newest build.
+// Point each button at a release's merged image, served from GitHub Pages
+// (/firmware/, published by .github/workflows/pages.yml). GitHub's own
+// release download URLs send no CORS headers, so the browser can't fetch them
+// ("can't fetch"); Pages answers with Access-Control-Allow-Origin: *, which
+// works for this hosted page and for a downloaded copy opened from disk. The
+// absolute URL is deliberate for the downloaded copy.
+//
+// /firmware/ holds the newest stable release and is what gets installed by
+// default. /firmware/beta/ exists only while a newer test build is out; it is
+// offered as an opt-in link, or preselected with #beta in the address.
 (function () {
   var REPO = 'hypery11/flipper-tesla-fsd';
+  var FW = 'https://hypery11.github.io/flipper-tesla-fsd/firmware/';
   var note = document.getElementById('relnote');
-  fetch('https://api.github.com/repos/' + REPO + '/releases?per_page=10')
-    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(function (rels) {
-      var rel = null;
-      for (var i = 0; i < rels.length; i++) {
-        if (rels[i].draft) continue;
-        var hasMerged = (rels[i].assets || []).some(function (a) {
-          return /-merged\.bin$/.test(a.name);
-        });
-        if (hasMerged) { rel = rels[i]; break; }
-      }
-      if (!rel) throw new Error('no release with flashable images');
-      var byName = {};
-      rel.assets.forEach(function (a) { byName[a.name] = a.browser_download_url; });
-      var missing = 0;
-      document.querySelectorAll('esp-web-install-button').forEach(function (btn) {
-        var env = btn.getAttribute('data-env');
-        var url = byName['tesla-fsd-' + env + '-merged.bin'];
-        if (!url) { missing++; btn.setAttribute('disabled', ''); return; }
-        btn.setAttribute('manifest', 'data:application/json;charset=utf-8,' +
-          encodeURIComponent(JSON.stringify({
-            name: 'Tesla FSD (' + env + ')',
-            version: rel.tag_name,
-            new_install_prompt_erase: true,
-            builds: [{
-              chipFamily: btn.getAttribute('data-chip'),
-              parts: [{ path: url, offset: 0 }]
-            }]
-          })));
+  var stable = null, beta = null;
+
+  // Query strings bust the Pages CDN cache (up to 10 min) right after a release.
+  function load(dir) {
+    return fetch(FW + dir + 'latest.json?t=' + Date.now())
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (rel) {
+        if (!rel || !rel.tag || !rel.files || !rel.files.length)
+          throw new Error('no release with flashable images');
+        rel.dir = dir;
+        return rel;
       });
-      // Build with DOM APIs, never innerHTML: the tag name and any error text
-      // come from outside this file, so they are inserted as text and can never
-      // be parsed as markup.
-      var tag = document.createElement('b');
-      tag.textContent = rel.tag_name;
-      note.textContent = 'Installing firmware from ';
-      note.appendChild(tag);
-      note.appendChild(document.createTextNode(
-        missing ? ' — ' + missing + ' board(s) have no image in this release.' : '.'));
+  }
+
+  function point(rel) {
+    var have = {};
+    rel.files.forEach(function (n) { have[n] = true; });
+    var missing = 0;
+    document.querySelectorAll('esp-web-install-button').forEach(function (btn) {
+      var env = btn.getAttribute('data-env');
+      var name = 'tesla-fsd-' + env + '-merged.bin';
+      if (!have[name]) {
+        missing++;
+        btn.setAttribute('disabled', '');
+        btn.removeAttribute('manifest');
+        return;
+      }
+      btn.removeAttribute('disabled');
+      var url = FW + rel.dir + name + '?v=' + encodeURIComponent(rel.tag);
+      btn.setAttribute('manifest', 'data:application/json;charset=utf-8,' +
+        encodeURIComponent(JSON.stringify({
+          name: 'Tesla FSD (' + env + ')',
+          version: rel.tag,
+          new_install_prompt_erase: true,
+          builds: [{
+            chipFamily: btn.getAttribute('data-chip'),
+            parts: [{ path: url, offset: 0 }]
+          }]
+        })));
+    });
+    return missing;
+  }
+
+  function bold(text) {
+    var b = document.createElement('b');
+    b.textContent = text;
+    return b;
+  }
+
+  function switchLink(text, toBeta) {
+    var a = document.createElement('a');
+    a.href = toBeta ? '#beta' : '#';
+    a.textContent = text;
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      try { history.replaceState(null, '', toBeta ? '#beta' : location.pathname + location.search); } catch (x) {}
+      show(toBeta);
+    });
+    return a;
+  }
+
+  // Build with DOM APIs, never innerHTML: the tag names and any error text
+  // come from outside this file, so they are inserted as text and can never
+  // be parsed as markup.
+  function show(useBeta) {
+    var rel = (useBeta && beta) ? beta : stable;
+    var missing = point(rel);
+    note.textContent = '';
+    if (rel === beta) {
+      note.appendChild(document.createTextNode('Installing the test build '));
+      note.appendChild(bold(rel.tag));
+      note.appendChild(document.createTextNode('. Test builds carry new changes that fewer people have tried. '));
+      note.appendChild(switchLink('Back to ' + stable.tag, false));
+      note.appendChild(document.createTextNode('.'));
+    } else {
+      note.appendChild(document.createTextNode('Installing firmware from '));
+      note.appendChild(bold(rel.tag));
+      note.appendChild(document.createTextNode('.'));
+      if (beta) {
+        note.appendChild(document.createTextNode(' A newer test build is out: '));
+        note.appendChild(switchLink('use ' + beta.tag + ' instead', true));
+        note.appendChild(document.createTextNode('.'));
+      }
+    }
+    if (missing)
+      note.appendChild(document.createTextNode(' ' + missing + ' board(s) have no image in this release.'));
+  }
+
+  load('')
+    .then(function (rel) {
+      stable = rel;
+      // No beta directory just means no test build is newer than the stable one.
+      return load('beta/').then(function (b) {
+        if (b.tag !== stable.tag) beta = b;
+      }, function () {});
     })
+    .then(function () { show(/(^#|&)beta\b/.test(location.hash)); })
     .catch(function (e) {
       var head = document.createElement('b');
       head.style.color = '#f85149';
@@ -142,7 +210,7 @@
 <footer>
   Not sure which board you have, or need the wiring to your car? Open an issue on
   <a href="https://github.com/hypery11/flipper-tesla-fsd">GitHub</a>.
-  Each Install flashes the newest release build for that board.
+  Each Install flashes the newest stable release for that board; test builds are opt-in above.
   <br><br>
   This project is free and open source. If it saved you the cost of an aftermarket dongle,
   you can <a href="https://fsd.fkey.id/">support the research</a> (multi-chain crypto) —

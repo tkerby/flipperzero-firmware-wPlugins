@@ -1,0 +1,104 @@
+# Ruta 20 (Route 20: the sea west of the Islas Escarcha, C7, contract 53), 26 x 34. The Islas Escarcha's WEST mouth (12,3) opens on a small ice islet at the NORTH (spawn `island`); the route runs SOUTH across open
+# sea (two walls of rocks, rows 14 and 24, each with a swimmer watching the gap; two more swimmers on islets) to Isla Ceniza (the warp cells (12..13,33) -> `bay_e`). Wild water table + the three rods.
+@map ruta_20
+@size 26 34
+@interior no
+@area ruta_20
+@bg 0
+@nofollow yes                   # contract 69: the follower stays out of the ferry and the sea
+@surf yes
+@fill sea_o
+@encounters water rate=15
+  urchip 36 38 5
+  urchlord 36 40 50
+  gleamlet 36 39 15
+  lazatee 36 38 10
+  sagatee 38 40 5
+  smashrimp 38 40 10
+  skipgoby 36 38 5
+@end
+@encounters fish_old
+  flopfin 5 5 100
+@end
+@encounters fish_good rate=128
+  glidefin 22 26 40
+  inkit 22 26 40
+  flopfin 15 15 20
+@end
+@encounters fish_super
+  inkit 30 36 30
+  glidefin 30 36 30
+  barnacub 32 36 20
+  urchlord 34 38 20
+@end
+@spawn island 12 4 S
+@spawn south 12 32 N
+@legend
+  .  tile=sea_o
+  a  tile=sea_o object=sea_rock_a
+  b  tile=sea_o object=sea_rock_b
+  c  tile=sea_bl
+  d  tile=sea_tr
+  e  tile=ice_00
+  f  tile=ice_10
+  g  tile=sea_o object=kelp
+  h  tile=ice_11
+  i  tile=sea_o object=buoy
+  j  tile=ice_01
+  k  tile=sea_tl
+  l  tile=ice_10 object=snow_drift
+  m  tile=ice_11 object=ice_pillar
+  n  tile=sea_o object=sandbar
+  o  tile=sea_gate
+  p  tile=ice_01 object=ice_mouth
+  q  tile=ice_00 object=snow_drift
+  r  tile=ice_01 object=ice_pillar
+  s  tile=ice_01 object=snow_drift
+  t  tile=ice_01 object=sign interact=look text=r20.sign
+  u  tile=ice_11 object=snow_drift
+  v  tile=sea_tl_tr
+  w  tile=sand_a after=tr.nadador_r20c.after face=W id=sw3 npc=nadador range=3 text=tr.nadador_r20c.pre trainer=nadador_r20c
+  x  tile=sand_a after=tr.nadador_r20a.after face=N id=sw1 npc=nadador range=2 text=tr.nadador_r20a.pre trainer=nadador_r20a
+  y  tile=sea_tl object=sea_rock_b
+  z  tile=sand_a after=tr.nadadora_r20d.after face=E id=sw4 npc=nadadora range=3 text=tr.nadadora_r20d.pre trainer=nadadora_r20d
+  A  tile=sand_a after=tr.nadadora_r20b.after face=N id=sw2 npc=nadadora range=2 text=tr.nadadora_r20b.pre trainer=nadadora_r20b
+  B  tile=sea_tl object=sea_rock_a
+  C  tile=sea_gate
+  H  tile=ice_11 hidden=savia_max   # hidden (contract 80, hidden items)
+@grid
+  ..........................
+  .........cccccccc.........
+  .......ccfefefelekc.......
+  .......hjhjmpmjhjhjk......
+  .......felefefefqfek......
+  .......Hrhshjhthjujk......
+  .......ddfefefefevd.......
+  .........dddddddd.........
+  .....i..............i.....
+  ..a.................c.....
+  ...gg...............wk.b..
+  .............g......d.....
+  .........i................
+  ................c......i..
+  aaababababababa.xyabababab
+  ................d.........
+  ..........................
+  .......a......b......gg...
+  ....c.....gg..............
+  ....zk.........n..b.......
+  ....d........i..........a.
+  ......................i...
+  ...i......................
+  .......c..................
+  ababab.ABbabababababababab
+  .......d..................
+  ...n...................a..
+  ............a.............
+  ...................gg.....
+  ....gg..........i.........
+  ..b.......i...............
+  ........a.............b...
+  ............C.............
+  ............oo............
+@warp o -> isla_ceniza spawn=bay_e
+@warp p -> islas_escarcha_1 spawn=west

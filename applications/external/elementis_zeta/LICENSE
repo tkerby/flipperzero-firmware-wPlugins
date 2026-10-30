@@ -1,0 +1,63 @@
+Elementis Zeta
+Copyright (c) 2026 Daniel Jahziel
+
+This repository holds the source of "Elementis Zeta", a game for the Flipper Zero. It carries TWO different terms, by kind of file. The split below is by path.
+
+================================================================================
+1. CODE -- GNU General Public License version 3 (GPL-3.0). Full text: COPYING-GPL-3.0.txt
+================================================================================
+
+Applies to:
+  - nucleo/ : all C / C++ source and headers (nucleo/*.c, nucleo/*.cpp, nucleo/*.h, nucleo/lib/) and nucleo/application.fam.
+  - tools/  : the Python and shell programs (tools/*.py, tools/*.sh, tools/i18n/*.py and the like) and tools/mem_budget.toml.
+  - The build and project files at the top level: README.md, CHANGELOG.md, CREDITS.md, requirements.txt, .gitignore.
+
+You may use, study, change and redistribute the code under the terms of the GPL-3.0.
+
+================================================================================
+2. ART AND ALL GAME CONTENT -- ALL RIGHTS RESERVED. NOT covered by the GPL.
+================================================================================
+
+Copyright (c) 2026 Daniel Jahziel. All rights reserved.
+
+This is everything that makes up the game as a creative work: pictures, sprites, tiles, portraits and logo; the creature and character designs; the names of creatures,
+characters, places, moves and items; all texts and translations (Spanish, English, Japanese, Chinese); the maps and scripts; the music and sound data; the data tables
+(stats, learnsets, trainers, shops); and the hand-drawn font glyphs made for the game. By path:
+
+  - assets/        (all of it, including assets/art/ and the data, text, music and map-related sources)
+  - maps/
+  - nucleo/files/  (the generated game data packed into the app, EXCEPT the third-party font licence texts in nucleo/files/licenses/)
+  - nucleo/gen/    (the generated data headers compiled into the app)
+  - nucleo/catalog/ and screenshots/  (store texts and pictures of the game)
+  - tools/i18n/table.txt  (the translation table)
+
+The GPL does NOT apply to any of this, even though it sits in the same repository and the code reads it. Putting it here is not a licence. The only permissions given for
+this content are these:
+  (a) You may read and view it, and use the features GitHub gives every public repository (view, fork on GitHub).
+  (b) You may build the app from this repository (with `ufbt`, or with the tools/ pipeline) and run it for your own personal use.
+  (c) You may distribute the COMPLETE, UNMODIFIED compiled application files (the .fap) built from this repository, together with this LICENSE and CREDITS.md, for free or
+      through an app catalogue or store (for example the Flipper Apps Catalog and its mirrors), so that people can install and play the game.
+Anything else needs the author's written permission. In particular, without it you may not: copy, extract or reuse the art, names, texts, maps, music or data in another
+project; modify the content or publish a version with changed content; sell the content; or use it to train a machine-learning model.
+A fork may change, reuse and redistribute the CODE under the GPL-3.0, but it must bring its own art and content, and its own name and logo.
+
+================================================================================
+3. THIRD-PARTY COMPONENTS keep their own licences
+================================================================================
+
+The Japanese and Chinese bitmap fonts (Fusion Pixel Font and the fonts it is built from: the glyphs in assets/font/src/ and in nucleo/files/lang/ja and zh) are under the
+SIL Open Font License 1.1 and Misaki's own free licence. Their texts are in nucleo/files/licenses/ and the details in CREDITS.md. Nothing here changes those licences,
+and the "all rights reserved" of section 2 does not apply to the font glyphs that come from them.
+
+================================================================================
+TRADEMARKS
+================================================================================
+
+The name "Elementis" (in all its variants: Elementis Zeta, Elementis Zero), "Nucleo", the logo, and the names and look of the characters and creatures as brand identity
+are trademarks of the author and are EXCLUDED from the GPL-3.0 grant above and from every permission in section 2: you may not use them to identify a product of your own
+without written permission. A fork must use another name and logo. (You can of course say that your work is "based on Elementis Zeta".)
+
+NOT AFFILIATED. This project is an original work. It is not affiliated with, sponsored by or endorsed by any other game or company,
+and it uses no names, characters, creatures or art from them. All third-party trademarks belong to their owners.
+
+THE SOFTWARE AND THE CONTENT ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.

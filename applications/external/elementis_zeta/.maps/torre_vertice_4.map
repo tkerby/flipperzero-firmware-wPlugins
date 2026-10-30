@@ -1,0 +1,112 @@
+# Torre Vertice, 4F (a corporation 7F: the rival and a creature gift, C6, contract 49), 16 x 12, interior. column = i, row = j. A glass divider (col 8, gap (8,5..6)) splits the floor; THE RIVAL ambushes the hero at the gap
+# (step triggers (8,5) / (8,6), flag 849 shows him, 850 = beaten and gone: `music rival`, trainer rival_vtx: the LAST form of the starter that beats the player's, L40, Skyrrow 37, Pyromeer 35, Dewlash 38, Somnarch 35). East of the
+# gap: the stairs up (13,2) and a creature ROOM (9..15,8..11) shut by the second card-key door (12,7) (flag 844): a worker gives GLACIELLE (L25, flag 851; a full party sends it to the PC box).
+@map torre_vertice_4
+@size 16 12
+@interior yes
+@area torre_vertice
+@flag rival_vertice_here 849   # the rival ambushed the hero
+@flag rival_vertice_gone 850   # the rival was beaten and left
+@flag glacielle_given 851   # the worker gave Glacielle
+@flag kd2 844   # card-key door 2 (4F a creature room) opened
+@bg 0
+@fill carpet_00
+@spawn down 2 3 S
+@spawn up 13 3 S
+@legend
+  .  tile=carpet_11
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  tile=carpet_01 object=escalator
+  f  tile=carpet_01
+  g  tile=carpet_01 object=rail_i
+  h  tile=carpet_11 object=escalator
+  i  tile=carpet_10
+  j  tile=carpet_00 door=escalator
+  k  tile=carpet_00
+  l  tile=carpet_00 object=rail_i
+  m  tile=carpet_10 npc=rival id=rival face=SW script=rival_talk show_flag=rival_vertice_here hide_flag=rival_vertice_gone
+  n  tile=carpet_10 door=escalator
+  o  tile=carpet_11 object=desk
+  p  tile=carpet_01 object=desk
+  q  tile=carpet_10 object=desk
+  r  tile=carpet_00 object=desk
+  s  tile=carpet_01 script=rival_ambush interact=step dirs=SE,E,S,NE
+  t  tile=carpet_01 object=planter
+  u  tile=carpet_00 npc=vertice id=t4a face=E trainer=vertice_t4a range=4 text=tr.vertice_t4a.pre after=tr.vertice_t4a.after
+  v  tile=carpet_00 script=rival_ambush interact=step dirs=SE,E,S,NE
+  w  tile=carpet_01 keydoor=chip_acceso hide_flag=kd2
+  x  tile=carpet_11 npc=cientifico_s id=glacielle face=SW script=glacielle_worker
+  y  tile=carpet_01 object=pc text=vtx.pc.b interact=look
+  z  tile=carpet_10 object=planter
+  A  tile=carpet_10 npc=cientifico id=t4b face=N trainer=cientifico_t4a range=4 text=tr.cientifico_t4a.pre after=tr.cientifico_t4a.after
+  B  tile=carpet_00 object=planter
+  C  tile=carpet_10 item=vigor_drop
+@grid
+  abbbcbbbbcbbbcbb
+  d.e.f.f.g.f.fhf.
+  dijikikilikmknki
+  d.fop.f.g.f.f.f.
+  dikikikilikqriki
+  d.f.f.f.s.f.f.t.
+  dikiuikivikikiki
+  d.f.f.f.gbbbwbbb
+  dikqrikilikikiki
+  d.f.f.f.g.f.fxy.
+  dzkikABilCBikiki
+  d.f.f.f.g.f.f.f.
+@warp j -> torre_vertice_3 spawn=up
+@warp n -> torre_vertice_5 spawn=down
+# The rival: when the hero crosses the gap of the divider the first time his theme plays (`music rival`), he appears, walks to the gap, talks and fights (trainer rival_vtx, L40 last form +
+# 4 more); a win = two speeches and he leaves for good (flag 850); a loss is the blackout.
+@script rival_ambush step if !rival_vertice_gone
+    setf rival_vertice_here
+    music rival
+    cam_npc rival
+    wait 300
+    npc_walk rival SW 3
+    npc_walk rival NW 2
+    npc_face_hero rival
+    say vtx.rival.hey
+    cam_hero
+    call rival_fight
+@end
+@script rival_talk npc
+    npc_face_hero rival
+    say vtx.rival.again
+    call rival_fight
+@end
+@script rival_fight called
+    battle rival_vtx 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    say vtx.rival.lose
+    say vtx.rival.next
+    setf rival_vertice_gone
+@end
+# The a creature worker: GLACIELLE L25. The creature's picture shows over the text; a full party sends it to the PC box; a failed gift keeps the flag clear.
+@script glacielle_worker npc
+    npc_face_hero glacielle
+    jf glacielle_given said
+    say vtx.glacielle.hi
+    setv 0 103
+    name_var 0 0
+    mon_show 0
+    say vtx.glacielle.give
+    give_box glacielle 25
+    jv 0 0 fail
+    setf glacielle_given
+    sfx item
+    say gl.c6.gift.got
+    say vtx.glacielle.about
+    end
+  fail:
+    say gl.c6.gift.fail
+    end
+  said:
+    say vtx.glacielle.after
+@end

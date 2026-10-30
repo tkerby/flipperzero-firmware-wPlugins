@@ -1,0 +1,181 @@
+# Nucleo language table (contract 3.2 / 4). Read by tools/mkfont.py, tools/textc.py, tools/mapc.py.
+#
+# - `master` owns the key set and the key ORDER (text ids are identical in every language).
+# - Only languages with `enabled = true` are built into nucleo/files/lang/<dir>/ and into
+#   nucleo/gen/langs_gen.h (the C language table). A disabled language can still be linted/built
+#   for tests: `textc.py lint en`, `mkfont.py --preview en` (output under build/lang/).
+# - Per language the font is assembled from `[[lang.<xx>.font]]` sources (first source that has a
+#   glyph wins): kind "txt" (ASCII-art glyph file, see assets/font/font.txt) or "bdf".
+#   Source keys: path, kind, w/h (txt: glyph size), x/y (placement of the glyph box inside the
+#   cell), codes ("all" | "ascii" | "ui" | list of "XXXX-YYYY" hex ranges), adv (txt: advance in
+#   px; bdf: "table" takes the BDF DWIDTH of every glyph).
+# - Per language: cell_w/cell_h/pitch/baseline (see above), adv_narrow/adv_wide (default advance of
+#   codes below/above 0x90), `type_ms` (typewriter speed: ms per glyph), `native_name` (the
+#   language picker draws it with this language's own font; its characters are always in the font;
+#   the bitmaps are emitted to nucleo/gen/lang_names.h), `name` (ASCII fallback), `name_px`
+#   (optional: width reserved for a {player}/{rival} name in the lint, default [box].name_px),
+#   `wrap` ("word": break at spaces; "kana": spaces or between kana; "char": anywhere) plus the
+#   kinsoku lists `no_start` / `no_end` (characters that must not begin / end a line: lint rejects
+#   hand-broken lines that do), `ranges` (characters a text may use), `include` (ranges always put
+#   in the font), `extra` (characters always put in the font).
+# - The font code space: 0x20-0x7E ASCII, 0x7F v (more), 0x80 > (cursor), 0x81 ... , 0x82-0x8F
+#   reserved, 0x90+ = the language's other characters in Unicode order (mkfont decides).
+#   Characters of a language = ASCII + UI glyphs + every non-ASCII char used by its text file
+#   + `extra` + `include` ranges.
+# - `baseline` = index of the first cell row BELOW the baseline (row 9 for the 5x11 Latin font v2:
+#   capitals sit in rows 2-8). BDF glyphs are placed with their origin at that line.
+
+master = "es"
+
+[box]
+max_px = 120     # width of one text-box line in pixels (box width 128 - 2 * 4 margin)
+max_lines = 2    # lines per page
+max_codes = 199  # codes per text entry (TB_BUF - 1 in nucleo/config.h)
+name_px = 42     # width reserved for one {player} / {rival} substitution (7 glyphs x 6 px)
+# Worst-case width reserved by the lint for {v0} {v1} {v2} {v3} (runtime variables, nucleo/text.c
+# text_set_var / text_set_var_num). Convention: v0 = creature name (<= 10 Latin glyphs), v1 = move /
+# stat / type name (<= 12), v2 = a number (<= 4 digits), v3 = spare name. A language may override it
+# with `var_px = [..]`. The lint also checks that every gl.sp.* fits v0, gl.mv.* / gl.ty.* /
+# gl.bt.st.* fit v1 and gl.name.* (except gl.name.ask_*) fit name_px.
+var_px = [60, 72, 24, 60]
+
+[sysfont]        # built-in font: logo "NUCLEO", debug overlays (nucleo/gen/sysfont.h)
+path = "assets/font/font.txt"
+w = 5
+h = 10
+adv = 6
+
+[limits_px]      # text keys starting with the prefix must fit in this many pixels (one line)
+"gl.menu." = 56
+"gl.title." = 100
+"gl.party.stats" = 60  # the option box (Datos / Cancelar) is 14 px + the widest label wide
+"gl.party.cancel" = 60
+"gl.party.exp" = 36    # the EXP column of the summary (x 88 .. 126)
+"gl.party.next" = 36
+"gl.reg." = 56           # Registro screen labels (Visto / Capturado / Alt / Peso): the header holds two of them + two numbers in 124 px (contract 30)
+"gl.area." = 121         # the zone banner (nucleo/scene_world.c: box = text + 7 px from x 0) must fit the 128 px screen (contract 72)
+
+[limits_codes]   # text keys starting with the prefix must be at most this many codes long (END not counted; one line)
+"gl.area." = 19  # World.area_txt: AREA_TXT_CAP 20 codes with END (nucleo/world.h, contract 72)
+"gl.it." = 15    # an item name travels in a text variable ({v0}) of TEXT_VAR_LEN 16 codes with END (nucleo/text.h); longer ones are cut (contract 72)
+
+[lang.es]
+id = 0
+enabled = true
+dir = "es"
+name = "Espanol"          # ASCII fallback name
+native_name = "Español"   # drawn by the language picker with this font
+text = "assets/text/es.txt"
+cell_w = 5
+cell_h = 11
+adv_narrow = 6
+adv_wide = 6
+pitch = 11
+baseline = 9
+type_ms = 25
+wrap = "word"
+ranges = ["0020-007E", "00A1-00FF", "2026", "25B6", "25BC"]   # characters texts may use
+extra = "áéíóúÁÉÍÓÚñÑüÜ¿¡"  # always in the font, even when no text uses them
+[[lang.es.font]]
+kind = "txt"
+path = "assets/font/font_v2.txt"
+w = 5
+h = 11
+
+[lang.en]
+id = 1
+enabled = true
+dir = "en"
+name = "English"
+native_name = "English"
+text = "assets/text/en.txt"
+cell_w = 5
+cell_h = 11
+adv_narrow = 6
+adv_wide = 6
+pitch = 11
+baseline = 9
+type_ms = 25
+wrap = "word"
+ranges = ["0020-007E", "2026", "25B6", "25BC"]
+extra = ""
+[[lang.en.font]]
+kind = "txt"
+path = "assets/font/font_v2.txt"
+w = 5
+h = 11
+
+# Japanese, kana only (no kanji): Fusion Pixel 8 px (ja build, Misaki/Miseki based) for kana,
+# punctuation and ASCII; the UI glyphs (more-arrow, cursor, ellipsis) are our own (the Fusion ones
+# are oversized). Every hiragana / katakana is in the font so new texts never need a font change.
+[lang.ja]
+id = 2
+enabled = true
+dir = "ja"
+name = "Nihongo"
+native_name = "にほんご"
+text = "assets/text/ja.txt"
+cell_w = 8
+cell_h = 9
+adv_narrow = 5
+adv_wide = 8
+pitch = 10
+baseline = 7
+type_ms = 40
+wrap = "kana"
+name_px = 40                # 4-5 kana (presets are <= 4 kana)
+var_px = [48, 56, 20, 48]   # 6 kana creature, 7 kana move, 4 digits at adv 5
+no_start = "、。，．・：；！？）」』】〕ー…ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮ"
+no_end = "（「『【〔"
+ranges = ["0020-007E", "2026", "25B6", "25BC", "3001-3002", "300C-300F", "301C", "3041-3093", "30A1-30F6", "30FB-30FC",
+          "FF01", "FF08-FF09", "FF0C", "FF0E", "FF1A-FF1B", "FF1F"]
+include = ["3041-3093", "30A1-30F6", "30FB-30FC", "3001-3002", "300C-300F", "301C", "FF01", "FF08-FF09",
+           "FF0C", "FF0E", "FF1A-FF1B", "FF1F"]
+[[lang.ja.font]]
+kind = "txt"
+path = "assets/font/ui_8.txt"
+w = 8
+h = 9
+codes = "ui"
+adv = 8
+[[lang.ja.font]]
+kind = "bdf"
+path = "assets/font/src/fusion/fusion-pixel-8px-proportional-ja.bdf"
+adv = "table"
+
+# Simplified Chinese: Fusion Pixel 12 px (zh_hans build). The font is a SUBSET (the characters the
+# texts use + punctuation) and is bigger than FONT_RAM_MAX, so glyphs stream from the SD card.
+[lang.zh]
+id = 3
+enabled = true
+dir = "zh"
+name = "Zhongwen"
+native_name = "中文"
+text = "assets/text/zh.txt"
+cell_w = 12
+cell_h = 12
+adv_narrow = 6
+adv_wide = 12
+pitch = 12
+baseline = 10
+type_ms = 50
+wrap = "char"
+name_px = 36                # 3 hanzi
+var_px = [48, 48, 24, 48]   # 4 hanzi creature / move, 4 digits at adv 6
+no_start = "，。、；：！？）”’》」』】…·"
+no_end = "（“‘《「『【"
+ranges = ["0020-007E", "2026", "25B6", "25BC", "4E00-9FFF", "00B7", "2014", "2018-201D", "3001-3002",
+          "300A-300B", "300C-300F", "3010-3011", "FF01", "FF08-FF09", "FF0C", "FF1A-FF1B", "FF1F"]
+include = ["00B7", "2014", "2018-2019", "201C-201D", "3001-3002", "300A-300B", "300C-300F", "3010-3011",
+           "FF01", "FF08-FF09", "FF0C", "FF1A-FF1B", "FF1F"]
+[[lang.zh.font]]
+kind = "txt"
+path = "assets/font/ui_12.txt"
+w = 12
+h = 12
+codes = "ui"
+adv = 12
+[[lang.zh.font]]
+kind = "bdf"
+path = "assets/font/src/fusion/fusion-pixel-12px-proportional-zh_hans.bdf"
+adv = "table"

@@ -1,0 +1,13 @@
+title Badge received - a grand fanfare in D major: a drum roll, a rising chord in each bar (D, G, A) and a long shimmering chord
+tempo 156
+vol 220
+meter 4/4
+inst lead v=255,255,215,185,170
+inst maj arp=0,4,7 rate=2
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+inst snr drum=a6 noise=25 seed=5 fall=12
+[ !snr16 ]8 !kick2 |
+@lead o5 !kick:d8 f+8 a8 o6 d8 f+4 d4 |
+o5 !kick:g8 b8 o6 d8 g8 b4 g4 |
+o5 !kick:a8 o6 c+8 e8 a8 e4 c+4 |
+@maj o5 d1 |

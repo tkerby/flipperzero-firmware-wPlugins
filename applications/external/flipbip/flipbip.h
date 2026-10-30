@@ -15,8 +15,9 @@
 #include "scenes/flipbip_scene.h"
 #include "views/flipbip_scene_1.h"
 #include "flipbip_coins.h"
+#include "helpers/flipbip_file.h"
 
-#define FLIPBIP_VERSION  FAP_VERSION
+#define FLIPBIP_VERSION  "v2.1"
 #define TEXT_BUFFER_SIZE 256
 
 typedef struct {
@@ -28,11 +29,17 @@ typedef struct {
     VariableItemList* variable_item_list;
     TextInput* text_input;
     DialogEx* renew_dialog;
+    DialogEx* encryption_dialog;
     FlipBipScene1* flipbip_scene_1;
-    char* mnemonic_menu_text;
+    const char* mnemonic_menu_text;
     // Settings options
     int bip39_strength;
     int passphrase;
+    FlipBipEncryption encryption; // used for the next save, matches the saved wallet
+    // Secure enclave
+    bool enclave_available; // false on clones: legacy encryption only
+    FlipBipEncryption encryption_target; // for the Encryption scene
+    bool suggest_enclave; // ask to switch once back at the menu
     // Main menu options
     int coin_type;
     int overwrite_saved_seed;
@@ -40,19 +47,18 @@ typedef struct {
     // Text input
     int input_state;
     char passphrase_text[TEXT_BUFFER_SIZE];
-    char import_mnemonic_text[TEXT_BUFFER_SIZE];
     char input_text[TEXT_BUFFER_SIZE];
 
     void (*wallet_create)(void* context);
 } FlipBip;
 
 typedef enum {
-    FlipBipViewIdStartscreen,
     FlipBipViewIdMenu,
     FlipBipViewIdScene1,
     FlipBipViewIdSettings,
     FlipBipViewIdTextInput,
     FlipBipViewRenewConfirm,
+    FlipBipViewEncryptionConfirm,
 } FlipBipViewId;
 
 typedef enum {
@@ -67,6 +73,10 @@ typedef enum {
 } FlipBipPassphraseState;
 
 typedef enum {
+    FlipBipCustomEventSettingsEncryption = 100,
+} FlipBipSettingsEvent;
+
+typedef enum {
     FlipBipTextInputDefault,
     FlipBipTextInputPassphrase,
     FlipBipTextInputMnemonic
@@ -78,6 +88,7 @@ typedef enum {
     FlipBipStatusLoadError = 11,
     FlipBipStatusSaveError = 12,
     FlipBipStatusMnemonicCheckError = 13,
+    FlipBipStatusEnclaveError = 14,
 } FlipBipStatus;
 
 // There's a scene ID for each coin, then these scenes are after so need to offset the first entry by at least NUM_COINS
@@ -88,3 +99,9 @@ typedef enum {
     SubmenuIndexSettings,
     SubmenuIndexNOP,
 } SubmenuIndex;
+
+// After a wallet is generated or imported with legacy encryption on a Flipper
+// that has a secure enclave, offer to switch once back at the menu.
+static inline void flipbip_suggest_enclave(FlipBip* app) {
+    app->suggest_enclave = app->enclave_available && app->encryption == FlipBipEncryptionLegacy;
+}

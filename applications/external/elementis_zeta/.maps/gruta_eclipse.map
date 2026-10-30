@@ -1,0 +1,78 @@
+# Gruta del Eclipse (D1, contract 68: the hidden cave of the Piedra Eclipse), 20 x 16, a DARK cave (needs the Linterna to see it all: `@dark yes`; no wild creatures: a sanctuary). column = i, row = j. HARD TO FIND (contract 68.5):
+# its mouth is on an islet of Ruta 21 (Surf to the landing, Cortador for the bush, the Medalla Brasa for the heat); inside, the Empuje boulder at (10,9) must be pushed north (3 pushes from (10,10)) into the pit (10,6) to open the corridor to the altar
+# chamber. THE ALTAR (9,3): the stone (actor `estone`, the Piedra Eclipse, item 104) and the light shaft (actor `lshaft` at (8,2), falling from a crack in the roof) are SHOWN only at DAWN (05:00 .. 06:59) and around MIDNIGHT
+# (23:00 .. 00:59) by the Flipper's clock (`clock cave`, read in the casino plugin; DEV / host: the clk_* flags); outside the windows the altar is empty. The on_enter script sets / clears the flag cave_open (the NPCs' show flag); the stone
+# is taken once (has_item piedra_eclipse closes it for good). Look: the user's approved GRUTA scenes (tools/c10_mock.py): dark rock with light veins (`vrock`), the altar, stalagmites, the wall cubes of the Cueva Secreta (`swall`).
+@map gruta_eclipse
+@size 20 16
+@interior no
+@cave yes
+@dark yes
+@area gruta_eclipse
+@bg 0
+@fill vrock
+@spawn door 10 12 N
+@var gs 4
+@legend
+  .  tile=vrock
+  W  tile=none object=swall
+  r  tile=none object=srubble
+  _  tile=none
+  a  tile=vrock object=stalag_a
+  c  tile=vrock object=stalag_b
+  n  tile=vrock
+  b  tile=vrock boulder=yes
+  h  tile=vrock hole=gruta_pit
+  A  tile=vrock object=altar interact=look script=altar npc=estone id=stone face=S solid=yes show_flag=cave_open
+  L  tile=vrock npc=lshaft id=shaft face=S solid=yes text=gr.shaft show_flag=cave_open
+@grid
+  ____________________
+  ___WWWWWWWWWWWWW____
+  ___W....L.......r___
+  ___W.a...A....a.r___
+  ___W............r___
+  ____rrrrrW.rrrrr____
+  _________Whr________
+  _________W.r________
+  _________W.r________
+  ___WWWWWWWbWWWWW____
+  ___W............r___
+  ___W..a.......c.r___
+  ___W.c.......a..r___
+  ___W............r___
+  ____rrrrWnnrrrrr____
+  _________rr_________
+@warp n -> ruta_21 spawn=gruta_door
+# The shaft's window: on entering, the stone and the shaft are shown only when the clock is at dawn (05:00 .. 06:59) or around midnight (23:00 .. 00:59) AND the stone has not been taken (key item, never lost).
+@script cave_enter on_enter
+    has_item piedra_eclipse gs
+    jv gs 1 closed
+    clock cave gs
+    jv gs 0 closed
+    setf cave_open
+    end
+  closed:
+    clrf cave_open
+@end
+# The altar: with the stone shown (the window is open) the Piedra Eclipse is taken (the window is read again: it may have closed while the hero stood there); otherwise the altar is empty.
+@script altar called
+    jf cave_open try
+    say gr.altar.empty
+    end
+  try:
+    clock cave gs
+    jv gs 1 take
+    clrf cave_open
+    say gr.altar.faded
+    end
+  take:
+    say gr.altar.take
+    give_item piedra_eclipse 1
+    jv 0 0 full
+    clrf cave_open
+    sfx item
+    say gr.altar.got
+    end
+  full:
+    say gl.found.full
+@end

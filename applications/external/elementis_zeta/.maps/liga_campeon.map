@@ -1,0 +1,79 @@
+# Sala 5 de la Liga (the champion = the rival, C9, contract 56), 11 x 12, interior, ONE room of the League four run (contract 50.2): CHAMPION: marble, the banner walls (the crown on a hanging banner), PixelLab fluted columns and trophies. column = i, row = j. The hero arrives at (5,10) facing NE; the door BEHIND him (5,11) is a solid NPC that appears when league_run is set;
+# the champion stands at (5,4) facing SW; his script is the ending (Hall of Legacy, the credits, the save at home, back to the title). No door ahead, no warp.
+@map liga_campeon
+@size 11 12
+@interior yes
+@bg 0
+@fill marb_00
+@spawn in 5 10 NE
+@var champ_st 5          # (contract 80): the player's starter species (choose_starter), read by the script champ
+@legend
+  K  tile=none object=wall_corner
+  w  tile=none object=ban_j
+  |  tile=none object=ban_i
+  0  tile=marb_11 
+  1  tile=marb_01 
+  2  tile=marb_10 
+  3  tile=marb_00 
+  4  tile=marb_01 object=cpil
+  5  tile=marb_10 npc=rival_s id=champ face=SW script=champ
+  6  tile=marb_10 object=troph
+  7  tile=marb_00 object=cpil
+  8  tile=marb_11 npc=keydoor id=door_x face=S solid=yes gate=yes text=gl.c9.door.shut show_flag=league_run
+@grid
+  Kwwwwwwwwww
+  |0101010101
+  |2323232323
+  |0401010401
+  |2323532323
+  |0101010101
+  |6323232363
+  |0101010101
+  |2723232723
+  |0101010101
+  |2323232323
+  |0101810101
+# The champion. The fight, then the ending: Lin's words, the Hall of Legacy -> the record -> the save at home -> the credits (all inside `ending run`), then back to the
+# title (`ending title`, resident). A defeat is the blackout (the lobby, the run flags cleared). Afterwards (a rematch after the Hall of Legacy: the run flags are cleared by the ending) he says one line.
+@script champ npc
+    jf league_champ again
+    npc_face_hero champ
+    say lg.champ.pre
+    # (contract 80): sends the rival's starter LAST: the team is fixed in each of three trainers (his ace, the last form of the line that beats the player's starter, is the last slot), so the player's starter picks the entry
+    choose_starter champ_st
+    jv champ_st sp:embercub champ_e
+    jv champ_st sp:puddlet champ_p
+    battle rival_liga 0               # the player took Sprouton: the rival's ace is Pyrewolf
+    jmp fought
+  champ_e:
+    battle rival_liga_e 0             # Embercub: Tidalgard
+    jmp fought
+  champ_p:
+    battle rival_liga_p 0             # Puddlet: Grovestag
+  fought:
+    jv 0 1 won
+    blackout
+    end
+  won:
+    setf league_champ
+    say lg.champ.win
+    say lg.champ.lin
+    jf frag_8 end_run
+    say d1.champ.frag
+    give_item origin_shard 1
+    jv 0 0 end_run
+    setf frag_8
+    sfx item
+    say gl.d1.got
+  end_run:
+    ending run 1
+    jv 1 0 fail
+    ending title
+    end
+  fail:
+    say gl.c9.end.fail
+    end
+  again:
+    npc_face_hero champ
+    say lg.champ.after
+@end

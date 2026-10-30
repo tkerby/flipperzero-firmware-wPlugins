@@ -1,0 +1,10 @@
+.cmt{margin-top:var(--s3)}
+.cmt .h{display:flex;gap:var(--s2);align-items:baseline;flex-wrap:wrap;color:var(--muted);font-size:var(--fs-s);margin-bottom:var(--s2)}
+.cmt .h b{color:var(--fg)}.cmt .h .sp{flex:1}
+.cbox textarea{width:100%;min-height:100px}
+.wiki{display:grid;grid-template-columns:220px 1fr;gap:var(--s3);align-items:start}
+@media (max-width:720px){.wiki{grid-template-columns:1fr}}
+mark{background:rgba(255,130,0,.4);color:inherit}
+.hit{display:flex;gap:var(--s3);padding:2px 0;font:var(--mono)}
+.hit a{flex:none;min-width:44px;text-align:right;color:var(--muted);text-decoration:none}
+.hit span{white-space:pre-wrap;overflow-wrap:anywhere}

@@ -30,6 +30,7 @@ struct SubGhzProtocolDecoderCameAtomo {
 
     ManchesterState manchester_saved_state;
 };
+SUBGHZ_ASSERT_DECODER_COMMON_LAYOUT(SubGhzProtocolDecoderCameAtomo);
 
 struct SubGhzProtocolEncoderCameAtomo {
     SubGhzProtocolEncoderBase base;
@@ -37,6 +38,7 @@ struct SubGhzProtocolEncoderCameAtomo {
     SubGhzProtocolBlockEncoder encoder;
     SubGhzBlockGeneric generic;
 };
+SUBGHZ_ASSERT_ENCODER_GENERIC_LAYOUT(SubGhzProtocolEncoderCameAtomo);
 
 typedef enum {
     CameAtomoDecoderStepReset = 0,
@@ -44,6 +46,8 @@ typedef enum {
 } CameAtomoDecoderStep;
 
 static uint8_t came_atomo_counter_mode = 0;
+
+static uint32_t subghz_protocol_decoder_came_atomo_get_hash_data(void* context);
 
 const SubGhzProtocolDecoder subghz_protocol_came_atomo_decoder = {
     .alloc = subghz_protocol_decoder_came_atomo_alloc,
@@ -53,7 +57,7 @@ const SubGhzProtocolDecoder subghz_protocol_came_atomo_decoder = {
     .reset = subghz_protocol_decoder_came_atomo_reset,
 
     .get_hash_data = NULL,
-    .get_hash_data_long = subghz_protocol_decoder_common_get_hash_data,
+    .get_hash_data_long = subghz_protocol_decoder_came_atomo_get_hash_data,
     .serialize = subghz_protocol_decoder_common_serialize,
     .deserialize = subghz_protocol_decoder_came_atomo_deserialize,
     .get_string = subghz_protocol_decoder_came_atomo_get_string,
@@ -79,7 +83,16 @@ const SubGhzProtocol subghz_protocol_came_atomo = {
     .encoder = &subghz_protocol_came_atomo_encoder,
 };
 
-static void subghz_protocol_came_atomo_remote_controller(SubGhzBlockGeneric* instance);
+static uint64_t subghz_protocol_came_atomo_remote_controller(SubGhzBlockGeneric* instance);
+
+/* The mini counter rotates for as long as the button is held, so every parcel of one
+ * press is a different frame. Decode first and hash the serial instead. */
+static uint32_t subghz_protocol_decoder_came_atomo_get_hash_data(void* context) {
+    furi_assert(context);
+    SubGhzProtocolDecoderCameAtomo* instance = context;
+    subghz_protocol_came_atomo_remote_controller(&instance->generic);
+    return subghz_protocol_decoder_common_get_hash_data_serial(context);
+}
 
 /**
  * Defines the button value for the current btn_id
@@ -90,16 +103,11 @@ static uint8_t subghz_protocol_came_atomo_get_btn_code(void);
 
 void* subghz_protocol_encoder_came_atomo_alloc(SubGhzEnvironment* environment) {
     UNUSED(environment);
-    SubGhzProtocolEncoderCameAtomo* instance = malloc(sizeof(SubGhzProtocolEncoderCameAtomo));
-
-    instance->base.protocol = &subghz_protocol_came_atomo;
-    instance->generic.protocol_name = instance->base.protocol->name;
-
-    instance->encoder.repeat = 1;
-    instance->encoder.size_upload = 900; //actual size 766+
-    instance->encoder.upload = malloc(instance->encoder.size_upload * sizeof(LevelDuration));
-    instance->encoder.is_running = false;
-    return instance;
+    return subghz_protocol_encoder_common_alloc(
+        sizeof(SubGhzProtocolEncoderCameAtomo),
+        &subghz_protocol_came_atomo,
+        1,
+        900); //actual size 766+
 }
 
 static LevelDuration
@@ -430,10 +438,8 @@ SubGhzProtocolStatus
 
 void* subghz_protocol_decoder_came_atomo_alloc(SubGhzEnvironment* environment) {
     UNUSED(environment);
-    SubGhzProtocolDecoderCameAtomo* instance = malloc(sizeof(SubGhzProtocolDecoderCameAtomo));
-    instance->base.protocol = &subghz_protocol_came_atomo;
-    instance->generic.protocol_name = instance->base.protocol->name;
-    return instance;
+    return subghz_protocol_decoder_common_alloc(
+        sizeof(SubGhzProtocolDecoderCameAtomo), &subghz_protocol_came_atomo);
 }
 
 void subghz_protocol_decoder_came_atomo_reset(void* context) {
@@ -542,7 +548,9 @@ void subghz_protocol_decoder_came_atomo_feed(void* context, bool level, uint32_t
  * @param instance Pointer to a SubGhzBlockGeneric* instance
  * @param file_name Full path to rainbow table the file
  */
-static void subghz_protocol_came_atomo_remote_controller(SubGhzBlockGeneric* instance) {
+/* Returns the inverted and shifted frame the fields were read out of, which is what the
+ * key is shown as. generic.data itself is left alone so this can run more than once. */
+static uint64_t subghz_protocol_came_atomo_remote_controller(SubGhzBlockGeneric* instance) {
     /*
     * ***SkorP ver.***
     * 0x1fafef3ed0f7d9ef
@@ -607,18 +615,17 @@ static void subghz_protocol_came_atomo_remote_controller(SubGhzBlockGeneric* ins
     *        0x0 - Last zero nibble
     * */
 
-    instance->data ^= 0xFFFFFFFFFFFFFFFF;
-    instance->data <<= 4;
+    const uint64_t data = (instance->data ^ 0xFFFFFFFFFFFFFFFF) << 4;
 
     uint8_t pack[8] = {};
-    pack[0] = (instance->data >> 56);
-    pack[1] = ((instance->data >> 48) & 0xFF);
-    pack[2] = ((instance->data >> 40) & 0xFF);
-    pack[3] = ((instance->data >> 32) & 0xFF);
-    pack[4] = ((instance->data >> 24) & 0xFF);
-    pack[5] = ((instance->data >> 16) & 0xFF);
-    pack[6] = ((instance->data >> 8) & 0xFF);
-    pack[7] = (instance->data & 0xFF);
+    pack[0] = (data >> 56);
+    pack[1] = ((data >> 48) & 0xFF);
+    pack[2] = ((data >> 40) & 0xFF);
+    pack[3] = ((data >> 32) & 0xFF);
+    pack[4] = ((data >> 24) & 0xFF);
+    pack[5] = ((data >> 16) & 0xFF);
+    pack[6] = ((data >> 8) & 0xFF);
+    pack[7] = (data & 0xFF);
 
     atomo_decrypt(pack);
 
@@ -650,6 +657,7 @@ static void subghz_protocol_came_atomo_remote_controller(SubGhzBlockGeneric* ins
         subghz_custom_btn_set_original(instance->btn);
     }
     subghz_custom_btn_set_max(4);
+    return data;
 }
 
 void atomo_encrypt(uint8_t* buff) {
@@ -838,9 +846,9 @@ SubGhzProtocolStatus
 void subghz_protocol_decoder_came_atomo_get_string(void* context, FuriString* output) {
     furi_assert(context);
     SubGhzProtocolDecoderCameAtomo* instance = context;
-    subghz_protocol_came_atomo_remote_controller(&instance->generic);
-    uint32_t code_found_hi = instance->generic.data >> 32;
-    uint32_t code_found_lo = instance->generic.data & 0x00000000ffffffff;
+    const uint64_t data = subghz_protocol_came_atomo_remote_controller(&instance->generic);
+    uint32_t code_found_hi = data >> 32;
+    uint32_t code_found_lo = data & 0x00000000ffffffff;
 
     // push protocol data to global variable
     subghz_block_generic_global.cnt_is_available = true;

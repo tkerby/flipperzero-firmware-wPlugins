@@ -4,12 +4,18 @@
 #define CAN_ID_STW_ACTN_RQ    0x045u  // 69   - STW_ACTN_RQ:  steering stalk (Legacy follow distance)
 #define CAN_ID_TRIP_PLANNING  0x082u  // 130  - UI_tripPlanning: precondition trigger
 #define CAN_ID_ESP_STATUS     0x145u  // 325  - ESP_status: driver brake pedal state
+#define CAN_ID_ESP_WHEELSPD   0x175u  // 373  - ESP_wheelSpeeds: 4 wheel speeds (Party CAN, read-only)
+#define CAN_ID_VCSEC_TPMS     0x219u  // 537  - VCSEC_TPMSData: tyre pressures (Vehicle CAN, read-only)
 #define CAN_ID_STEER_ANGLE    0x129u  // 297  - SCCM_steeringAngleSensor (Soft Engage gate, #108)
 #define CAN_ID_BMS_HV_BUS     0x132u  // 306  - BMS_hvBusStatus: pack voltage / current
 #define CAN_ID_BMS_SOC        0x292u  // 658  - BMS_socStatus:   state of charge
+#define CAN_ID_UI_RANGE       0x33Au  // 826  - UI_range: SOC on the car's screen (#251)
 #define CAN_ID_BMS_THERMAL    0x312u  // 786  - BMS_thermalStatus: battery temp
 #define CAN_ID_GTW_CAR_STATE  0x318u  // 792  - GTW_carState:    OTA detection
 #define CAN_ID_UI_MAP_DATA    0x238u  // 568  - UI_driverAssistMapData: map speed limit
+// CAN_ID_DI_SPEED (0x257) — vehicle speed for the Autopark release gate (#180) —
+// comes from the shared fsd_logic/fsd_handler.h (via fsd_events.h), so it is not
+// redefined here (avoids adding to the config.h/shared CAN_ID_* redefinition set).
 #define CAN_ID_SCCM_RSTALK    0x229u  // 553  - GearLever / right stalk
 #define CAN_ID_DAS_CONTROL    0x2B9u  // 697  - DAS_control: cruise set speed / ACC state
 #define CAN_ID_DAS_STATUS2    0x389u  // 905  - DAS_status2: ACC speed limit
@@ -24,11 +30,48 @@
 #define CAN_ID_ISA_SPEED      0x399u  // 921  - ISA speed limit on HW4 only
 #define CAN_ID_DAS_STATUS_HW4 0x39Bu  // 923  - DAS_status on HW4 AP/DAS
 #define CAN_ID_TRACK_MODE_SET 0x313u  // 787  - UI_trackModeSettings: track mode request (checksummed)
+#define CAN_ID_UI_POWERTRAIN  0x334u  // 820  - UI_powertrainControl: pedal map (Acceleration Mode override, #211)
+#define CAN_ID_CP_STATUS      0x25Du  // 605  - CP_status: charge-port type / plug state (Vehicle CAN, #228)
+// Same replacement list as fsd_logic/fsd_handler.h, so main.cpp seeing both is not a redefinition.
+#define CAN_ID_DI_SYS_STATUS  0x118  // 280  - DI_systemStatus: DI_gear (Acceleration Mode standstill gate)
+#define CAN_ID_VCLEFT_SWITCH  0x3C2  // 962  - VCLEFT_switchStatus: tap check bus hint (#218), RX only
 // Vehicle/body bus reachability probes (#128) — RX presence only, never actuated.
 #define CAN_ID_UI_VEHICLE_CTRL 0x273u // 627  - UI_vehicleControl: mirror fold/lock/wiper/horn/seat heat
 #define CAN_ID_VCLEFT_DOOR     0x102u // 258  - VCLEFT_doorStatus: mirror state/tilt read-back
 #define CAN_ID_VCSEC_WINDOW    0x119u // 281  - VCSEC_windowRequests: windows
 #define CAN_ID_DAS_BODY        0x3E9u // 1001 - DAS_bodyControls: lights/hazards/turn/wipers
+
+// ── Build identity ────────────────────────────────────────────────────────────
+// Board name for the boot banner and the dashboard — same wording as the board
+// table in esp32/README.md. One entry per BOARD_* flag in platformio.ini.
+#if defined(BOARD_LILYGO_T2CAN_FD)
+  #define BOARD_NAME "LilyGO T-2CAN FD"
+#elif defined(BOARD_LILYGO_T2CAN)
+  #define BOARD_NAME "LilyGO T-2CAN"
+#elif defined(BOARD_LILYGO)
+  #define BOARD_NAME "LilyGO T-CAN485"
+#elif defined(BOARD_TTGO_DISPLAY)
+  #define BOARD_NAME "TTGO T-Display + MCP2515"
+#elif defined(BOARD_WAVESHARE_S3)
+  #define BOARD_NAME "Waveshare ESP32-S3-RS485-CAN"
+#elif defined(BOARD_M5STACK_ATOM_MATRIX)
+  #define BOARD_NAME "M5Stack ATOM Matrix + ATOMIC CAN Base"
+#elif defined(BOARD_M5STACK_ATOM)
+  #define BOARD_NAME "M5Stack ATOM Lite + ATOMIC CAN Base"
+#elif defined(BOARD_ESP32_GENERIC) && defined(CAN_DRIVER_MCP2515)
+  #define BOARD_NAME "Generic ESP32 + MCP2515 module"
+#elif defined(BOARD_ESP32_GENERIC)
+  #define BOARD_NAME "Classic ESP32 DevKit + SN65HVD230"
+#else
+  #define BOARD_NAME "ESP32"
+#endif
+
+// Release version. gen_version.py (PlatformIO pre-script) passes the release
+// tag or `git describe`; the fallback keeps host tests and other builds that
+// bypass PlatformIO compiling.
+#ifndef FW_VERSION
+#define FW_VERSION "dev"
+#endif
 
 // ── GPIO ──────────────────────────────────────────────────────────────────────
 #if defined(BOARD_LILYGO_T2CAN)
@@ -40,10 +83,21 @@
   #define PIN_MCP_SCK        12
   #define PIN_MCP_MOSI       11
   #define PIN_MCP_MISO       13
-  #define PIN_MCP_RST        9
   #define PIN_MCP_INT        8
-  #ifndef MCP_CRYSTAL_MHZ
-  #define MCP_CRYSTAL_MHZ    MCP_16MHZ
+  #if defined(BOARD_LILYGO_T2CAN_FD)
+    // T-2CAN FD (H784-A): an MCP2518FD on the same SPI pins. It has no reset
+    // pin; GPIO 9 goes to its INT0/GPIO0/XSTBY pin and GPIO 3 (through the DIP
+    // switch) to INT1/GPIO1. The driver polls over SPI and drives neither.
+    // Crystal: 40 MHz on LilyGO's T-2Can-Fd_V1.0 schematic. The driver
+    // measures it before the controller may leave Listen-Only.
+    #ifndef MCP2518FD_OSC_HZ
+    #define MCP2518FD_OSC_HZ   40000000u
+    #endif
+  #else
+    #define PIN_MCP_RST        9
+    #ifndef MCP_CRYSTAL_MHZ
+    #define MCP_CRYSTAL_MHZ    MCP_16MHZ
+    #endif
   #endif
   #define PRECONDITION_TX_BUS_INDEX 0
 #elif defined(BOARD_LILYGO)
@@ -108,12 +162,20 @@
 
 // ── Generated TX routing ─────────────────────────────────────────────────────
 // Bus index: 0=can0, 1=can1. Single-CAN builds only have can0.
+// The Continuous AP 0x229 press only goes out on a bus where the car's own
+// 0x229 is live (gear_tx_route.h); this picks the bus when both carry it.
 #ifndef GEAR_LEVER_TX_BUS_INDEX
 #if defined(BOARD_LILYGO_T2CAN)
 #define GEAR_LEVER_TX_BUS_INDEX 1
 #else
 #define GEAR_LEVER_TX_BUS_INDEX 0
 #endif
+#endif
+
+// Builds with an MCP2515: can0 on the MCP2515 boards, can1 on the classic
+// T-2CAN (the T-2CAN FD has an MCP2518FD there instead).
+#if defined(CAN_DRIVER_MCP2515) || (defined(CAN_DRIVER_T2CAN_DUAL) && !defined(BOARD_LILYGO_T2CAN_FD))
+#define CAN_HAS_MCP2515 1
 #endif
 
 // MCP2515 oscillator. Generic breakout modules often use 8 MHz; the LilyGO
@@ -124,6 +186,8 @@
 
 // ── Timing ────────────────────────────────────────────────────────────────────
 #define WIRING_WARN_MS        5000u   // Red LED / serial warning if no CAN after this
+#define WIRING_WARN_REPEAT_MS 60000u  // ...then that bus's warning at most once a minute
+#define OTA_SELF_VERIFY_MS   15000u   // Runtime before a new web-OTA image is confirmed
 #define PRECOND_INTERVAL_MS    500u   // Re-inject 0x082 precondition every N ms
 #define BMS_PRINT_MS          1000u   // BMS serial print interval
 #define BUTTON_DEBOUNCE_MS        50u
@@ -133,6 +197,7 @@
 #define FACTORY_RESET_WINDOW_MS 20000u  // Clean-boot window during which reset is possible
 #define STATUS_PRINT_MS       5000u   // Periodic status line when Active
 #define WIFI_STA_CONNECT_TIMEOUT_MS 10000u  // Try saved infrastructure WiFi before AP fallback
+#define WIFI_HOSTNAME_DEFAULT "tesla-fsd"  // Station hostname until the user sets one
 #ifndef GEAR_LEVER_CACHED_COUNTER_MAX_AGE_MS
 #define GEAR_LEVER_CACHED_COUNTER_MAX_AGE_MS 500u  // Immediate 0x229 TX only if latest live counter is fresh
 #endif
@@ -154,13 +219,14 @@
 #define CONT_AP_STALK_STOP_RECENT_MS     750u
 #define CONT_AP_MAX_RETRIES                 3u
 
-// OTA detection hardening on GTW_carState (0x318)
-// Some firmware versions keep non-zero states when no update is actively running.
-// We only treat one specific raw value as "update in progress" and require
-// consecutive-frame confirmation to avoid false positives.
-#define OTA_IN_PROGRESS_RAW_VALUE  1u
-#define OTA_ASSERT_FRAMES          3u
-#define OTA_CLEAR_FRAMES           6u
+// Summon EU Unlock safety: auto-disable on clear vehicle motion (0x257, #193).
+// Palladium S/X don't broadcast 0x229 on Party, so the gear-lever guard can't
+// fire there. Above this speed the car is clearly driving (well past Summon's
+// own crawl and the autopark creep window), so disarm the Summon override.
+#define SUMMON_DISABLE_SPEED_KPH          3.0f
+
+// OTA detection on GTW_carState (0x318): debounce thresholds are shared with the
+// Flipper in fsd_logic/fsd_ota.h.
 
 #if defined(BOARD_LILYGO)
   #define ME2107_EN 16

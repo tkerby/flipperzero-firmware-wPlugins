@@ -1,5 +1,6 @@
 #include "cli_main_commands.h"
 #include "cli_command_gpio.h"
+
 #include <toolbox/cli/cli_ansi.h>
 
 #include <core/thread.h>
@@ -13,6 +14,8 @@
 #include <lib/toolbox/args.h>
 #include <lib/toolbox/strint.h>
 #include <toolbox/pipe.h>
+
+void cli_gui_bridge_init(CliRegistry* main_registry);
 
 // Close to ISO, `date +'%Y-%m-%d %H:%M:%S %u'`
 #define CLI_DATE_FORMAT "%.4d-%.2d-%.2d %.2d:%.2d:%.2d %d"
@@ -611,4 +614,5 @@ void cli_on_system_start(void) {
     CliRegistry* registry = cli_registry_alloc();
     cli_main_commands_init(registry);
     furi_record_create(RECORD_CLI, registry);
+    cli_gui_bridge_init(registry);
 }

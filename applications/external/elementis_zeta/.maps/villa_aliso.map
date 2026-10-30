@@ -1,0 +1,110 @@
+# Villa Aliso - the starting village. column = i, row = j.
+# Zone identity (M4 polish): white picket fences (the border and a short yard fence beside each house), a mailbox by each house door, flower beds
+# and a small 2 x 2 pond (solid water tiles) in the south-west corner. Memory (contract 5.x): the map may not grow more than 256 B resident, so the
+# flowers / grass_c / path_b tiles and the cliff skirts under the border fence went, and the pond is static (its _1 frames are generated, see the catalog).
+@map villa_aliso
+@size 20 18
+@interior no
+@area villa_aliso
+@fly 0 villa_aliso 4 5 face=S   # the Planeador lands here, in front of the house door; slot 0 = visited flag 984 (contract 46.1)
+@bg 0
+@surf yes      # C7 (contract 53): the south shore is the sea of Ruta 21
+@fill grass_v
+@spawn casa_door 4 5 S
+@spawn lab_door 12 13 S
+@spawn rival_door 16 5 S      # F2 (contract 74): in front of the rival's house door (his sister lives there)
+@spawn route1 10 1 S         # arriving from Ruta 1 (one tile inside the north exit)
+@spawn shore 9 15 S          # C7: arriving from Ruta 21 over the water (the beach in front of the inlet)
+@legend
+  w  tile=water_tl_tr      # C7: the south shore (a 4-cell inlet): the pond's back-corner tile (already in the bank: foam along the land)
+  v  tile=sea_gate        # the last row of the inlet: the warp cells (water but not solid: only a surfing hero reaches them)
+  .  tile=grass_v             # grass_a + grass_b only (the flowers / grass_c tiles went: the flower beds and the pond took their bytes)
+  =  tile=path_a              # one path tile (path_b went, same reason)
+  f  object=flowerbed         # flower bed (raised stone border, white blossoms), was the flowers tile
+  m  object=mailbox           # beside each house door
+  T  object=tree
+  F  object=picket_j          # white picket fence (replaces the plain fence; the cliff skirts under it went: 300 B of the 256 B budget)
+  G  object=picket_i
+  q  object=picket_i          # a short yard fence beside each house
+  # the pond (2 x 2, water tiles are solid + water): each tile carries the bank / rim on the sides that face land
+  1  tile=water_tl_tr         # back corner (north-west of the pond: land toward -i and -j)
+  2  tile=water_tr_br
+  3  tile=water_tl_bl
+  4  tile=water_br_bl
+  P  object=house_player
+  p  door=house_player
+  R  object=house_rival
+  r  door=house_rival            # F2 (contract 74): the rival's house (his sister gives the Atlas)
+  L  object=lab
+  l  door=lab
+  S  object=sign interact=look text=sign.aliso
+  s  tile=path object=sign interact=look text=sign.lab
+  n  npc=vecino id=neighbour face=SW script=rumor_aliso
+  X  tile=path interact=step script=north     # the north exit: closed until a starter was chosen, then Ruta 1
+  Y  tile=path interact=step script=north_b   # (contract 80): the same exit's second cell (Lin runs up in the hero's own column)
+  Q  tile=grass npc=lin id=lin_out face=NE text=lin.b show_flag=1021   # Lin on her way to stop the hero: never shown (flag 1021 is never set) until the stop script npc_shows her
+@grid
+  TTTTTTTTTXYTTTTTTTTT
+  T........==........G
+  T........==........G
+  T..PPq...==...qRR..G
+  T..Ppq...==...qRr..G
+  T.m.=....==..m..=..G
+  T...=============..G
+  T..f.....==.....f..G
+  T.......S==........G
+  T........==........G
+  T...n....==........G
+  T........==LLL.....G
+  T........==LlL.....G
+  T........====s.....G
+  T................Q.G
+  T..12..............G
+  T..34...wwww.......G
+  FFFFFFFFvvvvFFFFFFFF
+@warp p -> villa_casa spawn=door
+@warp l -> villa_lab spawn=door
+@warp r -> casa_hermana spawn=door
+@warp v -> ruta_21 spawn=north
+# ---------------------------------------------------------------------------------------------------------------
+# North exit (the two path tiles of the top row, a step trigger): before choosing a starter it is "Wait! Don't go out!" (contract 80: Lin appears and leads the hero to the lab): Lin runs up the path from the south, stops the hero,
+# explains the tall grass is dangerous and walks him back down to the lab (the lab's own intro greets him there); afterwards it is the way to Ruta 1 (a script warp: fade + load; Ruta 1's south warp is the way back).
+@script north step
+    jf starter_chosen go
+    npc_place lin_out 9 5 NE
+    call lin_stop
+    end
+  go:
+    warp ruta_1 spawn=south
+@end
+@script north_b step
+    jf starter_chosen go
+    npc_place lin_out 10 5 NE
+    call lin_stop
+    end
+  go:
+    warp ruta_1 spawn=south
+@end
+@script lin_stop called
+    hero_face N
+    npc_show lin_out
+    wait 300
+    say extra.lin.stop1
+    npc_walk lin_out NE 4         # she runs up the path to the cell in front of the hero
+    npc_face_hero lin_out
+    say extra.lin.stop2
+    say extra.lin.stop3
+    npc_face lin_out SW
+    npc_walk_nb lin_out SW 11     # she leads the way down the path ...
+    hero_walk SW 10               # ... the hero follows
+    wait_idle
+    fade_out
+    warp villa_lab spawn=door     # (the lab's on_enter intro greets him; the tall grass waits)
+@end
+# D1 (contract 68): the first rumor of the legend (the Registro shows Genesa as a "???" silhouette from now on: flag legend_rumor)
+@script rumor_aliso npc
+    npc_face_hero neighbour
+    say vecino.a
+    say d1.aliso.rumor
+    setf legend_rumor
+@end

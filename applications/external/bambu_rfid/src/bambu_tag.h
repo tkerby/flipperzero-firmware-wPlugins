@@ -11,5 +11,6 @@ bool br_parse_dump(const BrTagDump* dump, BrTagInfo* info);
 bool br_parse_mf(const MfClassicData* data, BrTagInfo* info);
 
 bool br_load_tag_file(Storage* storage, const char* path, BrTagInfo* info);
+bool br_load_tag_dump(Storage* storage, const char* path, BrTagDump* dump, BrTagInfo* info);
 
 void br_format_uid(const uint8_t uid[BR_UID_SIZE], char out[BR_UID_SIZE * 2U + 1U]);

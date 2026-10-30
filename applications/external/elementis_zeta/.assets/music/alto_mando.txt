@@ -1,0 +1,29 @@
+title Cuarteto Cumbre - the Summit Four hall: a grand, solemn procession in D dorian (72 bpm), timpani on the beats, slow brass in half notes that rise and fall like marble steps, organ-like open fifths between the phrases, a bell and a last stroke
+tempo 72
+vol 220
+meter 4/4
+inst brass v=255,255,235,215,200
+inst organ arp=-12,-5,0 rate=4 att=6 lvl=0.7 slow
+inst bell dec=3 sus=0.1 slow
+inst tim drum=d4 v=255,220,180,140 d=0,-25,-45,-60
+l4
+# --- 1-2: the timpani, a heartbeat
+!tim4 r4 !tim4 r4 |
+!tim4 r4 !tim4 !tim4 |
+# --- 3-8: the procession (D dorian): up to the A, the D, down the steps, open fifths
+@brass o4 d2 a2 |
+@brass o5 d2 e4 d4 |
+@brass o5 c2 o4 b2 |
+@brass o4 a2 g4 a4 |
+@organ o4 d2 d2 |
+!tim4 r4 !tim4 r4 |
+# --- 9-14: the second climb, higher and grander (F, C, G, A)
+@brass o4 f2 a2 |
+@brass o5 c2 d4 e4 |
+@brass o5 f2 e4 d4 |
+@brass o5 c2 o4 b2 |
+@organ o4 g2 g2 |
+@brass o5 d2 c4 o4 b4 |
+# --- 15-16: the open fifth on A (the question), and the answer: D, bell and timpani
+@organ o4 a2 a2 |
+@bell o5 d2 !tim4 !tim4 |

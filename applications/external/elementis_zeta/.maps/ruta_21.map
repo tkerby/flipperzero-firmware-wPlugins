@@ -1,0 +1,105 @@
+# Ruta 21 (Route 21: the sea between Isla Ceniza and Villa Aliso, C7, contract 53), 26 x 36. Isla Ceniza arrives at the SOUTH edge (spawn `south`), Villa Aliso's shore at the NORTH edge ((9..10,0) -> `shore`). Two walls of rocks
+# (rows 26 and 14) with a swimmer on a sandbar east of the gap looking W (the route goes NORTH); two fishermen on islets. Kelp, buoys and rocks, wild water table (Plattypuzz, Origamorph) + the three rods.
+@map ruta_21
+@size 26 36
+@interior no
+@area ruta_21
+@bg 0
+@nofollow yes                   # contract 69: the follower stays out of the ferry and the sea
+@surf yes
+@fill sea_o
+@encounters water rate=15
+  urchip 38 41 5
+  urchlord 38 42 50
+  plattypuzz 36 40 15
+  origamorph 36 40 10
+  lazatee 38 40 10
+  sagatee 40 42 5
+  smashrimp 39 42 5
+@end
+@encounters fish_old
+  flopfin 5 5 100
+@end
+@encounters fish_good rate=128
+  glidefin 24 28 40
+  inkit 24 28 40
+  flopfin 15 15 20
+@end
+@encounters fish_super
+  inkit 32 38 30
+  glidefin 32 38 30
+  plattypuzz 32 38 20
+  urchlord 36 40 20
+@end
+@spawn south 6 34 N
+@spawn north 9 2 N
+@spawn gruta_door 22 27 S      # D1 (contract 68): back from the Gruta del Eclipse (in front of the mouth, beyond the bush)
+@legend
+  .  tile=sea_o
+  a  tile=sea_o object=sea_rock_a
+  b  tile=sea_o object=sea_rock_b
+  c  tile=sea_o object=kelp
+  d  tile=sea_o object=buoy
+  e  tile=sea_bl
+  f  tile=sea_tr
+  g  tile=sea_gate
+  h  tile=sea_gate
+  i  tile=sea_tl
+  j  tile=sea_o object=sandbar
+  k  tile=sea_gate
+  l  tile=sand_a after=tr.pescador_r21b.after face=E id=fisher2 npc=pescador range=3 text=tr.pescador_r21b.pre trainer=pescador_r21b
+  m  tile=sand_a after=tr.nadadora_r21b.after face=W id=sw2 npc=nadadora range=2 text=tr.nadadora_r21b.pre trainer=nadadora_r21b
+  n  tile=sea_tl object=sea_rock_b
+  o  tile=sand_a after=tr.pescador_r21a.after face=W id=fisher1 npc=pescador range=3 text=tr.pescador_r21a.pre trainer=pescador_r21a
+  p  tile=sand_a after=tr.nadador_r21a.after face=W id=sw1 npc=nadador range=2 text=tr.nadador_r21a.pre trainer=nadador_r21a
+  q  tile=sea_tl object=sea_rock_a
+  M  tile=sand_a object=gmouth             # D1 (contract 68): the mouth of the Gruta del Eclipse in the wall of rocks (a warp cell)
+  N  tile=sand_a                           # the cell in front of the mouth (the way out of the cave arrives here)
+  T  tile=sand_a interact=step script=gruta_gate   # the heat of the rock: closed until the Medalla Brasa
+  u  tile=sand_a cut=yes                   # the bush that hides the way (Cortador)
+  s  tile=sand_a                           # the landing of the islet (Surf)
+@grid
+  .........gg...............
+  ..........................
+  .........h................
+  .a.................a......
+  ......d...................
+  ..............cc........b.
+  ...e......................
+  ...li...........d.........
+  ...f......................
+  .......j..............cc..
+  ..............a...........
+  ...........d..............
+  ..b................d......
+  ......e...................
+  ababa.mnababababababababab
+  ......f...................
+  ...........b..............
+  ........................a.
+  ........cc...........e....
+  .....................oi...
+  .....................f....
+  ............cc............
+  ....a...............b.....
+  ......................d...
+  ...d........j.............
+  ...............e......a...
+  ababababababab.pqbababMbab
+  ...............f.....aNb..
+  .................a...bTa..
+  .........b...........aub..
+  ....cc..............ccs...
+  ..........................
+  ..........d...............
+  ..a...............d.......
+  ......h................b..
+  ......kk..................
+@warp k -> isla_ceniza spawn=bay_w
+@warp g -> villa_aliso spawn=shore
+@warp M -> gruta_eclipse spawn=door
+# D1 (contract 68): the islet's heat: only the bearer of the Medalla Brasa (the 7th badge) can go on to the mouth; the others are pushed back onto the bush's cell.
+@script gruta_gate step if !badge_brasa
+    say gr.gate.no
+    hero_walk S 1
+@end

@@ -1,0 +1,129 @@
+# Source-assertion -> question mapping (SPEC 4.1 step 3).
+#
+# Each source normalises an assertion to "predicate object" (lower case,
+# underscores collapsed to spaces) and matches it against these regexes.
+# `q` is the question id, `polarity` 1 means the match asserts yes, 0 asserts no.
+# `p` overrides the probability the match contributes (default: from the source).
+
+rules:
+  - {re: "^(is a|a) (mammal|dog|cat|horse)$", q: 4, polarity: 1}
+  - {re: "^(is a|a) bird$", q: 5, polarity: 1}
+  - {re: "^(is an|an) (insect|bug)$", q: 6, polarity: 1}
+  - {re: "^(is a|a) fish$", q: 7, polarity: 1}
+  - {re: "^(is a|a) (reptile|amphibian)$", q: 8, polarity: 1}
+  - {re: "^(is a|a) (vehicle|car)$", q: 9, polarity: 1}
+  - {re: "^(is a|a) (tool|utensil|instrument)$", q: 10, polarity: 1}
+  - {re: "^(is a|a) (building|place|location)$", q: 11, polarity: 1}
+  - {re: "^(is a|a) (machine|appliance)$", q: 12, polarity: 1}
+
+  - {re: "^(has|have) (fur|hair)$", q: 14, polarity: 1}
+  - {re: "^(has|have) feathers$", q: 15, polarity: 1}
+  - {re: "^(has|have) scales$", q: 16, polarity: 1}
+  - {re: "^(can|does) fly$", q: 17, polarity: 1}
+  - {re: "^lives? in (water|the sea|the ocean)$", q: 18, polarity: 1}
+  - {re: "^lays? eggs$", q: 19, polarity: 1}
+  - {re: "^is a pet$", q: 20, polarity: 1}
+  - {re: "^(has|have) (4|four) legs$", q: 21, polarity: 1}
+  - {re: "^(has|have) a tail$", q: 23, polarity: 1}
+  - {re: "^(has|have) (horns|antlers)$", q: 24, polarity: 1}
+  - {re: "^eats? (meat|animals)$", q: 25, polarity: 1}
+  - {re: "^(is a|a) farm animal$", q: 26, polarity: 1}
+  - {re: "^lives? in the ocean$", q: 27, polarity: 1}
+  - {re: "^(can|does) swim$", q: 31, polarity: 1}
+  - {re: "^(has|have) a beak$", q: 32, polarity: 1}
+  - {re: "^(has|have) wings$", q: 33, polarity: 1}
+  - {re: "^(has|have) (sharp teeth|claws)$", q: 34, polarity: 1}
+  - {re: "^lives? underground$", q: 35, polarity: 1}
+  - {re: "^is nocturnal$", q: 36, polarity: 1}
+  - {re: "^(has|have) a shell$", q: 37, polarity: 1}
+
+  - {re: "^is (large|big|huge)$", q: 41, polarity: 1}
+  - {re: "^is (small|tiny|little)$", q: 42, polarity: 1}
+  - {re: "^is heavy$", q: 45, polarity: 1}
+  - {re: "^is round$", q: 46, polarity: 1}
+  - {re: "^is flat$", q: 47, polarity: 1}
+  - {re: "^is (long|thin)$", q: 48, polarity: 1}
+  - {re: "^is soft$", q: 57, polarity: 1}
+
+  - {re: "^(is )?made of (metal|steel|iron)$", q: 58, polarity: 1}
+  - {re: "^(is )?made of wood$", q: 59, polarity: 1}
+  - {re: "^(is )?made of plastic$", q: 60, polarity: 1}
+  - {re: "^(is )?made of glass$", q: 61, polarity: 1}
+  - {re: "^(is )?made of (cloth|fabric)$", q: 62, polarity: 1}
+  - {re: "^(is )?made of paper$", q: 63, polarity: 1}
+  - {re: "^(is )?made of (stone|brick|concrete)$", q: 64, polarity: 1}
+  - {re: "^is hard$", q: 65, polarity: 1}
+  - {re: "^is (transparent|see through)$", q: 67, polarity: 1}
+  - {re: "^is (a )?liquid$", q: 68, polarity: 1}
+
+  - {re: "^is green$", q: 72, polarity: 1}
+  - {re: "^is red$", q: 73, polarity: 1}
+  - {re: "^is brown$", q: 74, polarity: 1}
+  - {re: "^is (black|grey|gray)$", q: 75, polarity: 1}
+  - {re: "^is white$", q: 76, polarity: 1}
+  - {re: "^is (yellow|orange)$", q: 77, polarity: 1}
+  - {re: "^is blue$", q: 78, polarity: 1}
+  - {re: "^is (colourful|colorful)$", q: 79, polarity: 1}
+  - {re: "^is shiny$", q: 80, polarity: 1}
+
+  - {re: "^(is )?found in (a )?(house|home)$", q: 82, polarity: 1}
+  - {re: "^(is )?(used|found) in (a )?kitchen$", q: 83, polarity: 1}
+  - {re: "^(is )?found in (a )?bathroom$", q: 84, polarity: 1}
+  - {re: "^(is )?found in (a )?bedroom$", q: 85, polarity: 1}
+  - {re: "^(is )?found in (an )?(office|school)$", q: 86, polarity: 1}
+  - {re: "^(is )?found outdoors$", q: 87, polarity: 1}
+  - {re: "^(is )?found in (a )?(garden|park)$", q: 88, polarity: 1}
+  - {re: "^(is )?found (on|in) (a )?farm$", q: 91, polarity: 1}
+  - {re: "^(is )?found in (a )?(forest|woods)$", q: 92, polarity: 1}
+  - {re: "^(is )?found in (a )?city$", q: 93, polarity: 1}
+  - {re: "^(is )?found in (a )?hospital$", q: 97, polarity: 1}
+
+  - {re: "^(is )?used for cooking$", q: 102, polarity: 1}
+  - {re: "^(is )?worn$", q: 103, polarity: 1}
+  - {re: "^(is )?used for cleaning$", q: 104, polarity: 1}
+  - {re: "^(is )?used for writing$", q: 105, polarity: 1}
+  - {re: "^(is )?used (for|to) cut", q: 106, polarity: 1}
+  - {re: "^(is )?used for (transport|travel)$", q: 107, polarity: 1}
+  - {re: "^(is )?used to (store|carry)", q: 108, polarity: 1}
+  - {re: "^(is )?used for (playing|fun)$", q: 109, polarity: 1}
+  - {re: "^(is )?used (for|to) (make )?music$", q: 110, polarity: 1}
+  - {re: "^(needs|uses) electricity$", q: 112, polarity: 1}
+  - {re: "^(has|have) a screen$", q: 113, polarity: 1}
+  - {re: "^(has|have) buttons$", q: 114, polarity: 1}
+  - {re: "^(has|have) wheels$", q: 115, polarity: 1}
+  - {re: "^(has|have) (an )?(engine|motor)$", q: 116, polarity: 1}
+
+  - {re: "^(is )?(edible|eaten)$", q: 128, polarity: 1}
+  - {re: "^(is a|a) fruit$", q: 129, polarity: 1}
+  - {re: "^(is a|a) vegetable$", q: 130, polarity: 1}
+  - {re: "^(is|tastes) sweet$", q: 131, polarity: 1}
+  - {re: "^(is )?drunk$", q: 132, polarity: 1}
+  - {re: "^(is )?cooked$", q: 133, polarity: 1}
+  - {re: "^grows? on (a )?(tree|bush)$", q: 137, polarity: 1}
+  - {re: "^grows? underground$", q: 138, polarity: 1}
+  - {re: "^(is|tastes) (spicy|sour|salty)$", q: 139, polarity: 1}
+  - {re: "^is healthy$", q: 140, polarity: 1}
+
+  - {re: "^makes? (a )?(sound|noise)$", q: 142, polarity: 1}
+  - {re: "^is (loud|noisy)$", q: 143, polarity: 1}
+  - {re: "^smells", q: 144, polarity: 1}
+  - {re: "^is (hot|warm)$", q: 145, polarity: 1}
+  - {re: "^is cold$", q: 146, polarity: 1}
+  - {re: "^is (wet|slimy)$", q: 147, polarity: 1}
+  - {re: "^is sharp$", q: 148, polarity: 1}
+  - {re: "^(can|does) float$", q: 150, polarity: 1}
+  - {re: "^is (scary|frightening)$", q: 153, polarity: 1}
+
+  - {re: "^(can|does) move$", q: 154, polarity: 1}
+  - {re: "^(has|have) moving parts$", q: 155, polarity: 1}
+  - {re: "^(can|does) (climb|jump)$", q: 160, polarity: 1}
+  - {re: "^(can|does) (spin|turn)$", q: 161, polarity: 1}
+  - {re: "^(does |)grow", q: 163, polarity: 1}
+
+  - {re: "^is expensive$", q: 167, polarity: 1}
+  - {re: "^is (common|everywhere)$", q: 168, polarity: 1}
+  - {re: "^is (rare|unusual)$", q: 169, polarity: 1}
+  - {re: "^is (old fashioned|antique)$", q: 171, polarity: 1}
+  - {re: "^is famous$", q: 173, polarity: 1}
+  - {re: "^is cheap$", q: 177, polarity: 1}
+  - {re: "^is dangerous$", q: 178, polarity: 1}

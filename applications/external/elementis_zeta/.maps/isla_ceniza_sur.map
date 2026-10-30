@@ -1,0 +1,44 @@
+# Isla Ceniza, south half (C7, contract 53), 36 x 14: the Mansion Calcinada's door (7,6) and the fire gym's (29,5), whose door has a LOCK on the only cell in front of it (29,6): a key door (`keydoor=llave_ceniza`, flag 858) opened by the
+# Llave Ceniza found in the mansion; ash, lava rocks, steam vents, palms, two signs and an old man who tells where the key is. The gap (16..19,0) leads back to the north half.
+@map isla_ceniza_sur
+@size 36 14
+@interior no
+@area isla_ceniza
+@bg 0
+@fill ash
+@flag gym_lock 858        # the gym's door was opened with the Llave Ceniza (hides the lock NPC for good)
+@spawn north 17 1 S
+@spawn mansion_door 7 7 S
+@spawn gym_door 29 7 S
+@legend
+  .  tile=ash
+  a  tile=ash object=lava_rock
+  b  tile=ash object=gym_fuego
+  c  tile=ash object=mansion_ruin
+  d  tile=ash
+  e  tile=ash object=palm_0
+  f  tile=ash object=steam_vent
+  g  tile=ash door=gym_fuego
+  h  tile=ash door=mansion_ruin
+  i  tile=ash object=sign interact=look text=ceniza.sign.gym
+  j  tile=ash hide_flag=gym_lock keydoor=llave_ceniza
+  k  tile=ash object=sign interact=look text=ceniza.sign.mansion
+  l  tile=ash face=SW id=npc_c npc=anciano text=ceniza.npc.c
+@grid
+  aaaaaaaaaaaaaaaaddddaaaaaaaaaaaaaaaa
+  a..................................a
+  a.........e..............e.........a
+  a...........a.........a............a
+  a..a........................bbb....a
+  a.....ccc...................bgb....a
+  a.....chc.....a............i.j.....a
+  a........k........f......l.......a.a
+  a...e..............................a
+  a..................................a
+  a..................a...........f...a
+  a..a.......a.............a.........a
+  a...............e...............a..a
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+@warp d -> isla_ceniza spawn=south
+@warp h -> mansion_calcinada_1 spawn=door
+@warp g -> gimnasio_fuego spawn=door

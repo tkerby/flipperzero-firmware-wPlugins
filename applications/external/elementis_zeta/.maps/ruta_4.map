@@ -1,0 +1,103 @@
+# Ruta 4 (C2, contract 31), 40x22. column = i, row = j. The Monte Eco cave arrives at the WEST end (i = 0), Ciudad Marea is the EAST end (i = 39): the route runs
+# along +i (screen down-right), downhill to the sea. Look (the user's variant A): grassy CLIFFS along the north, a beach with SEA (foam, 2 frames) and sailboats along the south, beach grass,
+# driftwood, rocks in the shallows; three columns of one-way LEDGES (hop SE = +i, a gap on the path keeps the route two-way; the cliff face is on the landing tile); a Paralyze Heal on the beach (it was a second Disc 03, polish round, contract 54);
+# two trainers; tall grass patches (wild table below).
+@map ruta_4
+@size 40 22
+@interior no
+@area ruta_4
+@bg 0
+@fill grass
+@spawn west 1 9 E              # arriving from Monte Eco
+@spawn east 38 10 W             # arriving from Ciudad Marea
+@flag fish_sold 223            # (contract 80): the Flopfin salesman sold his one Elementi (once)
+@var fish_res 5
+@encounters grass rate=20      # Route 4: the sand lizard, the leaf snake, the gruff bird and the common rodent
+  coilisp 8 12 65
+  jabbird 9 12 20
+  muncrit 9 12 10
+  flitter 8 11 5
+@end
+# Open ground (contract 63, normal route): a step onto plain ground (not tall grass, water, a door, a ledge, an arrow floor) rolls this table when rand8 < 4 (4/256 per step).
+@open_rate 4
+# Roaming wild creatures (contract 55, rollout in 63): 3 creatures of this table wander the open ground (not the tall grass); touching one starts that wild battle.
+@roam 3 table=grass period=1800
+@legend
+  .  tile=grass
+  =  tile=path
+  g  tile=tall_grass
+  C  tile=grass object=cliff_grass   # grassy sea cliffs (3 variants)
+  s  tile=sand                        # beach sand (4 variants, one with a shell)
+  w  tile=sea_o                       # the open sea (2 frames)
+  W  tile=sea_tr                      # the sea row at the shore (foam on its north side)
+  S  tile=sea_o object=sea_rock_a
+  Z  tile=sea_o object=sailboat
+  b  tile=sand object=beach_grass
+  q  tile=sand object=log
+  r  object=rock
+  B  object=boulder
+  T  object=bush
+  v  ledge=SE tile=ledge_lip_se
+  V  tile=ledge_foot_se
+  G  object=sign interact=look text=ruta4.sign
+  x  tile=path
+  d  tile=path
+  i  tile=sand item=limb_balm
+  1  npc=chica id=t1 face=S trainer=chica_r4 range=3 text=tr.chica_r4.pre after=tr.chica_r4.after
+  2  npc=explorador id=t2 face=E trainer=explorador_r4 range=3 text=tr.explorador_r4.pre after=tr.explorador_r4.after
+  a  tile=grass item=disc_13
+  F  tile=grass npc=pescador id=fishman face=S script=fishman   # the Flopfin salesman, just outside the Monte Eco exit
+  H  tile=grass hidden=exit_wisp   # hidden (contract 80, hidden items)
+@grid
+  CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+  CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+  ...CCC......CCC......CCCa.ggggCCC......C
+  ............vV..r..B1.vV..gggg.vV..gggg.
+  ............vV........vV..gggg.vV..gggg.
+  ............vV.................vV..gggg.
+  ............vV.============....vV..gggg.
+  ..............===============..vV.......
+  ...F.......====............===......G...
+  x=============........vV.....===........
+  x==========.....ggggg.vV......=========d
+  ...ggggg....vV..ggggg.vV...2....=======d
+  ...ggggg....vV..gggggHvVgggg............
+  ...ggggg....vV..ggggg.vVgggg...vV.......
+  ...ggggg....vV........vVggggr..vV.......
+  ssbssssbbssssssssssbsssssssbqsssssssssbs
+  sssssbsssqssbssbssbssbsssbsssssssbisssss
+  WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+  wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwZwwwwww
+  wwwwwwwSwwwwwwwZwwwwwwwwwwwwwwwwwwwwwwww
+  wwwwwwwwwwwwwwwwwwwwwwwwwwSwwwwwwwwwwwww
+  wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+@warp x -> monte_eco_1 spawn=north
+@warp d -> ciudad_marea spawn=west
+# (contract 80), salesman: for $500 he sells ONE Flopfin (the weak water-fish role: a creature) L5, once (flag fish_sold). The price is taken first, then the creature is given (a full party sends it to the PC box; party and box both
+# full: refused and the money comes back). Not enough money: his line and nothing happens.
+@script fishman npc
+    npc_face_hero fishman
+    jf fish_sold after
+    say extra.fish.hi
+    ask extra.fish.ask
+    jv 0 1 yes
+    say extra.fish.no
+    end
+  yes:
+    money_take 500 fish_res
+    jv fish_res 0 broke
+    give_box flopfin 5
+    jv 0 0 refused
+    setf fish_sold
+    say extra.fish.bought
+    end
+  broke:
+    say extra.fish.broke
+    end
+  refused:
+    money_add 500
+    say extra.fish.full
+    end
+  after:
+    say extra.fish.after
+@end

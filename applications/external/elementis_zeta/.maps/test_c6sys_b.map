@@ -1,0 +1,23 @@
+# TEST FIXTURE (id 222): the second end of the cross-map pad of test_c6sys (contract section 46.3). The wall at i 6 splits it: the pad F (9,5) and the person (10,3) on the east side are
+# reachable only through the pad of test_c6sys (4,12).
+@map test_c6sys_b
+@size 12 8
+@interior no
+@bg 0
+@fill dirt_a
+@spawn start 1 1 SE
+@legend
+  .  tile=dirt_a
+  W  tile=dirt_a solid=yes
+  P  tile=pad pad=yes
+  N  tile=dirt_a npc=vecino text=c6sys.person face=S
+@pad 9 5 -> test_c6sys 4 12 face=S
+@grid
+  ......W.....
+  ......W.....
+  ......W.....
+  ......W...N.
+  ......W.....
+  ......W..P..
+  ......W.....
+  ......W.....

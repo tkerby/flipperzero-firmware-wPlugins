@@ -1,0 +1,25 @@
+title Pueblo Ceniza - the volcanic island town: warm, smoky E minor with a blue note (B flat), a lazy plucked tune over a slow walking bass, embers crackling, and a far rumble from the mountain (84 bpm)
+tempo 84
+vol 225
+meter 4/4
+inst bass v=255,170,140
+inst pluck v=255,170,110,80
+inst fifth arp=-12,-5,0 rate=8 att=6 lvl=0.5 slow
+inst crack drum=c8 noise=60 seed=5 v=150,70,0,40,0,0,90 slow
+inst rumble drum=d3 noise=40 seed=3 v=30,70,120,170,200,170,120,70,30 slow
+l8
+# --- 1-4: the tune over the walking bass (Em, Am, B7 with the blue note, Em)
+@bass o3 e4 e8 g8 a4 b-8 b8 |
+@pluck o5 e4. g8 b4 a4 |
+@bass o3 a4 a8 b8 >c4< b8 a8 |
+@pluck o5 g4. e8 d4 e4 |
+# --- 5-8: it climbs a little, embers, the same walk
+@bass o3 c4 c8 d8 e4 d8 c8 |
+@pluck o5 c4. e8 g4 b-4 |
+@bass o3 b4 b8 >d+8 f+4 d+8< b8 |
+@pluck o5 b2 !crack4 r4 |
+# --- 9-12: the tune high and sweet, a long note, the mountain rumbles
+@pluck o5 e4. g8 b4 >e4< |
+@pluck o6 d4. b8 a4 g4 |
+@pluck o5 a4. g8 e4 d4 |
+!rumble2 @fifth o4 e2 |

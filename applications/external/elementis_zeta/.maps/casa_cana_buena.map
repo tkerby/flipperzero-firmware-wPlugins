@@ -1,0 +1,53 @@
+# Casa de la Caña buena (C5a, contract 47), 9 x 7, interior. column = i, row = j. A fisherman's house in Ciudad Ambar: he gives the CAÑA BUENA (`cana_fibra`, flag 831) the first
+# time you talk to him (a full bag keeps the flag clear and he gives it at the next talk). Lobster traps, a net rack, a bed, a table and a shelf of old logbooks.
+@map casa_cana_buena
+@size 9 7
+@interior yes
+@bg 3
+@fill floor_wood
+@spawn door 4 5 N
+@flag cana_buena_given 831
+@legend
+  .  tile=floor_wood
+  a  tile=none object=wall_corner
+  b  tile=none object=wall_j
+  c  tile=none object=wall_win_j
+  d  tile=none object=wall_i
+  e  object=bed
+  f  object=bookshelf text=casa.books interact=look
+  h  object=table
+  i  npc=pescador_s id=fisher face=SW script=fisher
+  j  object=trap
+  l  object=net_rack
+  k  tile=mat
+@grid
+  abbcbbcbb
+  de...fll.
+  de.......
+  d..hi....
+  d.j......
+  d........
+  d...kk...
+@warp k -> ciudad_ambar spawn=cana_door
+# The fisherman: the CAÑA BUENA at the first talk, then a last line.
+@script fisher npc
+    npc_face_hero fisher
+    jf cana_buena_given said
+    say cana.a
+    call fisher_gift
+    end
+  said:
+    say cana.after
+@end
+@script fisher_gift called
+    say cana.b
+    give_item cana_fibra 1
+    jv 0 0 full
+    item_var 0 cana_fibra
+    say gl.gift
+    setf cana_buena_given
+    say cana.about
+    end
+  full:
+    say gl.found.full
+@end

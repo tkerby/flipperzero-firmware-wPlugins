@@ -1,0 +1,1572 @@
+#include "sr_view_dash.h"
+
+#include "../sigroam.h"
+#include "../src/sr_resync.h"
+#include "../src/sr_capture_health.h"
+#include "../src/sr_scan_ctl.h"
+#include "../src/sr_dialect.h"
+#include "../src/sr_start_recover.h"
+
+#include <gui/elements.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/* sr_fmt_session_label maps by numeric value (the ★ layer cannot see SrSessionState).
+ * Inserting a value into the middle of the enum would silently display the wrong state on
+ * screen; this stops it at compile time. */
+_Static_assert(
+    (int)SrSessionIdle == 0 && (int)SrSessionRunning == 1 && (int)SrSessionStopped == 2,
+    "SrSessionState values changed; the sr_fmt_session_label mapping must be updated to match");
+
+/* Running + AP=0 BLE=0 copy. Exactly SR_VIEW_COLS; draw layer only — do not
+ * change sr_fmt_ap_row L0/L1/L2. Do not mix with wait_stage start/stop. */
+_Static_assert(
+    sizeof("Waiting for first AP") - 1u == (unsigned)SR_VIEW_COLS,
+    "Waiting for first AP must be exactly 20 cols");
+_Static_assert(
+    sizeof("Uploading...") - 1u <= (unsigned)SR_VIEW_COLS,
+    "Uploading... must fit 20 cols");
+_Static_assert(
+    sizeof("do not start") - 1u <= (unsigned)SR_VIEW_COLS,
+    "do not start must fit 20 cols");
+
+/* Tab bar height: y = 0..10, with the content area starting at 11 (UI-SPEC section 3).
+ * draw_tabs and draw_stream each hardcoded 11 before; T4.11 collapsed them into one constant. */
+enum {
+    SR_VIEW_TAB_H = 11
+};
+
+struct SrViewDash {
+    View* view;
+    SrViewDashCallback cb;
+    void* ctx;
+    SrViewDashCallback ok_cb;
+    void* ok_ctx;
+    SrViewDashCallback back_cb;
+    void* back_ctx;
+};
+
+/*
+ * The card's mark for the verdict (f2-capture-health.md §1.4), drawn as
+ * geometry rather than text.
+ *
+ * No font on the device can render ✓ / ⚠ / ✖. The firmware ELF carries
+ * exactly five u8g2 fonts — haxrcorp4089_tr (FontSecondary), helvB08_tr
+ * (FontPrimary), profont11_mr, profont22_tn, spleen5x8_mr — and in u8g2's
+ * naming the trailing letter is the character set: `r` is ASCII 32..127, `n` is
+ * digits plus date/time glyphs, and only an `f` variant carries 256 glyphs.
+ * None of the five is an `f`. canvas.h also exposes no UTF-8 entry point, only
+ * canvas_draw_str(const char*), so a literal "✓" would arrive as three bytes
+ * with no glyph behind any of them. Lines and a circle always render.
+ *
+ * A 7x7 box whose bottom sits one pixel above the text baseline, so the mark
+ * and the string share an optical line.
+ */
+static void sr_view_dash_draw_health_mark(Canvas* canvas, int32_t x, int32_t y, uint8_t verdict) {
+    const int32_t top = y - 7;
+    const int32_t bot = y - 1;
+
+    switch(verdict) {
+    case(uint8_t)SrHealthOk: /* check */
+        canvas_draw_line(canvas, x, y - 4, x + 2, bot);
+        canvas_draw_line(canvas, x + 2, bot, x + 6, top);
+        break;
+    case(uint8_t)SrHealthWarn: /* triangle with a bang */
+        canvas_draw_line(canvas, x + 3, top, x, bot);
+        canvas_draw_line(canvas, x + 3, top, x + 6, bot);
+        canvas_draw_line(canvas, x, bot, x + 6, bot);
+        canvas_draw_line(canvas, x + 3, y - 5, x + 3, y - 3);
+        canvas_draw_dot(canvas, x + 3, y - 2);
+        break;
+    case(uint8_t)SrHealthCrit: /* cross */
+        canvas_draw_line(canvas, x, top, x + 6, bot);
+        canvas_draw_line(canvas, x + 6, top, x, bot);
+        break;
+    default: /* Acquiring: a ring, "still working" rather than a verdict */
+        canvas_draw_circle(canvas, x + 3, y - 4, 3);
+        break;
+    }
+}
+
+/* Mark at x=0 (7 px) plus a 2 px gap; the string starts after it. Screen is
+ * 128 px wide (UI-SPEC section 3), which is what SR_VIEW_COLS is budgeted for. */
+enum {
+    SR_VIEW_HEALTH_MARK_W = 9,
+    SR_VIEW_SCREEN_W = 128
+};
+
+static void sr_view_dash_put_health(Canvas* canvas, int32_t y, const SrDashModel* m) {
+    SrHealthEval hv;
+    bool fresh;
+    char health[40];
+    char line[SR_HEALTH_COLS_MAX + 1];
+    size_t hn;
+    size_t cols;
+
+    hv = sr_capture_health_eval(&m->qual, m->elapsed_ms);
+    /* F2 rev2 §1B/§1C: qual_rev==0 / no board session / superannuated all fold into
+     * one "fresh" predicate -- see sr_fmt_qual_fresh's doc comment in sr_view_fmt.h. */
+    fresh = sr_fmt_qual_fresh(m->qual_rev, m->qual_tick_ms, m->sess_ms, furi_get_tick());
+    hn = sr_view_fmt_health(&hv, &m->qual, fresh, health, sizeof(health));
+    if(hn >= sizeof(health)) {
+        hn = sizeof(health) - 1u;
+    }
+    /* Set here rather than inherited: the mark is measured against this font and
+     * the running path has FontBigNumbers selected a few lines earlier.
+     * D19 / ADR-025 decision 1: the mark goes through the fresh gate -- stale
+     * never paints the leftover verdict (used to draw ✓ next to
+     * "- need SigRoam Qual"); it folds to the Acquiring ring. */
+    canvas_set_font(canvas, FontSecondary);
+    sr_view_dash_draw_health_mark(canvas, 0, y, sr_fmt_health_mark(fresh, (uint8_t)hv.v));
+
+    /*
+     * SR_HEALTH_COLS_MAX (F2 rev2 §3; was SR_VIEW_COLS=20 before, which cannot
+     * fit this row -- see sr_view_fmt.h's sr_view_fmt_health doc comment) is a
+     * character budget sized for the full 128 px line, and haxrcorp4089 is
+     * proportional — subtracting a fixed number of columns to pay for the
+     * mark would throw away characters that do fit. `OK fix100% 0drop SAT 08`
+     * is 23 characters, so a guessed allowance is the difference between
+     * showing the row count and cutting it off. Measure, and give back
+     * columns only while the rendered string really is too wide. Bounded by
+     * SR_HEALTH_COLS_MAX iterations; canvas_string_width is a glyph-table
+     * walk, which is what every other width check in this file already does
+     * at draw time.
+     */
+    cols = (size_t)SR_HEALTH_COLS_MAX;
+    for(;;) {
+        sr_fmt_fit(health, hn, cols, line, sizeof(line));
+        if(cols == 0u) {
+            break;
+        }
+        if(canvas_string_width(canvas, line) <=
+           (uint16_t)(SR_VIEW_SCREEN_W - SR_VIEW_HEALTH_MARK_W)) {
+            break;
+        }
+        cols--;
+    }
+    canvas_draw_str(canvas, SR_VIEW_HEALTH_MARK_W, y, line);
+}
+
+static void sr_view_dash_draw_tabs(Canvas* canvas, uint8_t cur) {
+    static const char* const labels[SR_VIEW_TAB_COUNT] = {"Dash", "Strm", "GPS", "Sess"};
+    int32_t x = 0;
+    uint8_t i;
+    const int32_t baseline = 9;
+    const size_t box_h = (size_t)SR_VIEW_TAB_H;
+
+    canvas_set_font(canvas, FontSecondary);
+    for(i = 0; i < (uint8_t)SR_VIEW_TAB_COUNT; i++) {
+        uint16_t w = canvas_string_width(canvas, labels[i]);
+        if(i == cur) {
+            canvas_set_color(canvas, ColorBlack);
+            canvas_draw_box(canvas, x, 0, (size_t)w + 3u, box_h);
+            canvas_set_color(canvas, ColorWhite);
+        } else {
+            canvas_set_color(canvas, ColorBlack);
+        }
+        canvas_draw_str(canvas, x + 1, baseline, labels[i]);
+        x += (int32_t)w + 6;
+    }
+    canvas_set_color(canvas, ColorBlack);
+}
+
+/*
+ * Draw a multi-line hint and return the next usable y.
+ * The return value must not be ignored: the caller advances by the actual number of rows and
+ * must not assume a fixed two-row jump -- a fixed 20 would push the four statistics rows to
+ * y=40/50/60/70, and the last baseline of 70 > SR_CANVAS_H(64) runs off screen
+ * (defect D1, confirmed by on-screen observation during B stage on 2026-08-19).
+ */
+static int32_t sr_view_dash_draw_hint(Canvas* canvas, int32_t y, const char* s) {
+    char buf[SR_VIEW_COLS + 1];
+    size_t n = 0;
+    int32_t row = y;
+    const char* p;
+
+    if(s == NULL) {
+        return y;
+    }
+    for(p = s;; p++) {
+        if(*p == '\n' || *p == '\0') {
+            buf[n] = '\0';
+            canvas_draw_str(canvas, 0, row, buf);
+            row += 10;
+            n = 0;
+            if(*p == '\0') {
+                break;
+            }
+        } else if(n < (size_t)SR_VIEW_COLS) {
+            buf[n++] = *p;
+        }
+    }
+    return row;
+}
+
+static void
+    sr_view_dash_put_line(Canvas* canvas, int32_t y, const char* raw, int n, size_t raw_cap) {
+    char line[SR_VIEW_COLS + 1];
+    size_t len;
+
+    if(n < 0) {
+        len = 0;
+    } else {
+        len = (size_t)n;
+    }
+    if(raw_cap > 0 && len >= raw_cap) {
+        len = raw_cap - 1u;
+    }
+    sr_fmt_fit(raw, len, (size_t)SR_VIEW_COLS, line, sizeof(line));
+    canvas_draw_str(canvas, 0, y, line);
+}
+
+static void sr_view_dash_put_band(Canvas* canvas, int32_t y, const SrDashModel* m) {
+    char raw[40];
+    int n;
+
+    if(m->ap_24 == 0u && m->ap_5 == 0u) {
+        return;
+    }
+    if(y > 61) {
+        return;
+    }
+    n = (int)sr_fmt_band_row(m->ap_24, m->ap_5, (size_t)SR_VIEW_COLS, raw, sizeof(raw));
+    sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+}
+
+/* Popup text sits inside the frame: x=4, and 19 columns so the last glyph
+ * stays left of the right border (20 columns fill the full 128 px). */
+#define SR_PENDING_X    4
+#define SR_PENDING_COLS 19u
+
+static void
+    sr_view_dash_put_pending(Canvas* canvas, int32_t y, const char* raw, int n, size_t cap) {
+    char line[SR_PENDING_COLS + 1u];
+    size_t len = n < 0 ? 0u : (size_t)n;
+
+    if(len >= cap) {
+        len = cap - 1u;
+    }
+    sr_fmt_fit(raw, len, SR_PENDING_COLS, line, sizeof(line));
+    canvas_draw_str(canvas, SR_PENDING_X, y, line);
+}
+
+static void sr_view_dash_draw_pending(Canvas* canvas, const SrDashModel* m) {
+    char raw[40];
+    int n;
+    const char* line2;
+
+    canvas_set_color(canvas, ColorWhite);
+    canvas_draw_box(canvas, 0, 14, 128, 48);
+    canvas_set_color(canvas, ColorBlack);
+    canvas_draw_frame(canvas, 0, 14, 128, 48);
+
+    n = snprintf(
+        raw,
+        sizeof(raw),
+        "%lu %s pending",
+        (unsigned long)m->up_q,
+        m->up_q == 1u ? "survey" : "surveys");
+    sr_view_dash_put_pending(canvas, 28, raw, n, sizeof(raw));
+    if(m->cfg_known && m->cfg_key == 0u) {
+        line2 = "Set WiGLE key";
+    } else if(m->cfg_known && m->cfg_home == 0u) {
+        line2 = "Set home Wi-Fi";
+    } else {
+        line2 = "OK: Upload";
+    }
+    n = snprintf(raw, sizeof(raw), "%s", line2);
+    sr_view_dash_put_pending(canvas, 38, raw, n, sizeof(raw));
+    n = snprintf(raw, sizeof(raw), "Back: Later");
+    sr_view_dash_put_pending(canvas, 48, raw, n, sizeof(raw));
+}
+
+/*
+ * Big-number row. **The only place in this file where FontBigNumbers is allowed** --
+ * `make font_guard` blocks it anywhere else.
+ *
+ * Three hard constraints (T4.11 / ADR-024, all verified by reading, not inferred):
+ *  (1) FontBigNumbers = u8g2 `profont22_tn`, and the `_n` suffix means **numbers only**
+ *      (official u8g2 wiki) -> it can draw digits only; letters come out blank. Labels must be
+ *      drawn separately with FontSecondary.
+ *  (2) The font height has **no authoritative source** (searches of the Flipper and u8g2 docs
+ *      found no measured value) -> hardcoding is forbidden; read it at runtime with
+ *      canvas_current_font_height() (available on both targets, returning size_t).
+ *  (3) FontSecondary **must be restored in pairs**: all four tab content areas inherit the one
+ *      font set by draw_tabs (UI-SPEC section 2), and failing to restore it contaminates
+ *      subsequent tabs. A static guard cannot prove this; the real criterion is the B-stage
+ *      observation B4.
+ *
+ * The baseline is computed from the font height (tab_h + h - lift) rather than supplied by the
+ * caller: the big font is far taller than the small one, and reusing the small font's 20 would
+ * push the cap height over the tab bar or even off the top of the screen.
+ * lift is 0 for every peer except Scout Lite, which moves the row up 3 px.
+ * profont22's box is 16 px above the baseline and 4 px below (u8g2 font header,
+ * max height 20, y offset -4). The clamp keeps that estimated ink top at or below
+ * the tab strip (y = 0..10). max_baseline is the caller's budget defense (D19 / ADR-025):
+ * the SigRoam running path passes 41, so the AP row it reports (baseline + 10) lands at or
+ * under y51, clear of the y61 status bar; the generic path passes 61 (the pre-D19 behavior).
+ * A baseline beyond it restores FontSecondary and returns -1 without drawing.
+ * dur_right, when non-NULL, is FontSecondary text right-aligned on this baseline.
+ * It is skipped when the big-number width plus that width exceeds 128 px, and the
+ * digits are not squeezed. Pass NULL to leave the row unchanged.
+ * Returns the next usable baseline; returns -1 when an abnormal font height leaves no room, and
+ * the caller falls back to the small-font path.
+ */
+static int32_t sr_view_dash_put_big(
+    Canvas* canvas,
+    uint32_t v,
+    const char* label,
+    int32_t max_baseline,
+    int32_t lift,
+    const char* dur_right) {
+    char num[12];
+    size_t h;
+    uint16_t wnum;
+    uint16_t wlab;
+    int32_t baseline;
+
+    sr_fmt__udec(v, num, sizeof(num));
+
+    canvas_set_font(canvas, FontBigNumbers);
+    h = canvas_current_font_height(canvas);
+    if(lift < 0) {
+        lift = 0;
+    }
+    baseline = (int32_t)SR_VIEW_TAB_H + (int32_t)h - lift;
+    if(baseline < (int32_t)SR_VIEW_TAB_H) {
+        baseline = (int32_t)SR_VIEW_TAB_H;
+    }
+    if(h >= 4u) {
+        int32_t top = baseline - ((int32_t)h - 4);
+        if(top < (int32_t)SR_VIEW_TAB_H) {
+            baseline += (int32_t)SR_VIEW_TAB_H - top;
+        }
+    }
+    if(baseline > max_baseline) {
+        /* Font height beyond expectations (no authoritative source, so defend): give up on the
+         * big font and let the caller take the small-font path. */
+        canvas_set_font(canvas, FontSecondary);
+        return -1;
+    }
+    canvas_draw_str(canvas, 0, baseline, num);
+    wnum = canvas_string_width(canvas, num);
+
+    /* The restore must happen before drawing labels: labels are letters, which BigNumbers cannot draw. */
+    canvas_set_font(canvas, FontSecondary);
+    if(dur_right != NULL && dur_right[0] != '\0') {
+        uint16_t wdur = canvas_string_width(canvas, dur_right);
+        if((int32_t)wnum + (int32_t)wdur <= (int32_t)SR_CANVAS_W) {
+            canvas_draw_str(canvas, (int32_t)SR_CANVAS_W - (int32_t)wdur, baseline, dur_right);
+        }
+    }
+    wlab = canvas_string_width(canvas, label);
+    if((int32_t)wnum + 3 + (int32_t)wlab <= (int32_t)SR_CANVAS_W) {
+        canvas_draw_str(canvas, (int32_t)wnum + 3, baseline, label);
+    }
+    return baseline + 10;
+}
+
+/* Width of the string put_line will draw. The lite clock uses this, not
+ * the unfitted source, so the gap is against the ink. */
+static uint16_t sr_view_dash_fitted_px(Canvas* canvas, const char* raw, size_t n) {
+    char line[SR_VIEW_COLS + 1];
+
+    sr_fmt_fit(raw, n, (size_t)SR_VIEW_COLS, line, sizeof(line));
+    return canvas_string_width(canvas, line);
+}
+
+/* Scout Lite data row. Idle (with_dur false) draws the text only.
+ * Running draws sr_fmt_duration in FontSecondary, right aligned, on this
+ * same baseline. full + 4 + clock > 128 reprints the row without
+ * "  Up <q>"; if that still does not fit, the clock is skipped. */
+static void
+    sr_view_dash_put_lite_row(Canvas* canvas, int32_t y, const SrDashModel* m, bool with_dur) {
+    char raw[40];
+    char bare[40];
+    char dur[16];
+    size_t n;
+    size_t nbare;
+    const char* left;
+    size_t nleft;
+    size_t left_cap;
+    uint16_t wclock;
+    uint32_t now_ms;
+    SrLiteRowClockFit fit;
+
+    /* 62 is the pinned lite status baseline. The old clip of 61 would
+     * skip that row. FontSecondary p/g is expected to end by y63; that
+     * has not been measured on a device. */
+    if(y > (int32_t)SR_LITE_STATUS_Y) {
+        return;
+    }
+    now_ms = furi_get_tick();
+    n = sr_fmt_lite_dash_row(
+        m->qual_rev,
+        m->qual_tick_ms,
+        now_ms,
+        m->qual.sats,
+        m->qual_prev_seen,
+        m->qual_prev_ggafix,
+        m->qual.ggafix,
+        m->up_known,
+        m->up_q,
+        with_dur,
+        m->elapsed_ms,
+        raw,
+        sizeof(raw));
+    if(!with_dur) {
+        sr_view_dash_put_line(canvas, y, raw, (int)n, sizeof(raw));
+        return;
+    }
+
+    nbare = sr_fmt_lite_dash_row_ex(
+        m->qual_rev,
+        m->qual_tick_ms,
+        now_ms,
+        m->qual.sats,
+        m->qual_prev_seen,
+        m->qual_prev_ggafix,
+        m->qual.ggafix,
+        m->up_known,
+        m->up_q,
+        with_dur,
+        m->elapsed_ms,
+        false,
+        bare,
+        sizeof(bare));
+    canvas_set_font(canvas, FontSecondary);
+    if(sr_fmt_duration(m->elapsed_ms, dur, sizeof(dur)) == 0u || dur[0] == '\0') {
+        sr_view_dash_put_line(canvas, y, raw, (int)n, sizeof(raw));
+        return;
+    }
+    wclock = canvas_string_width(canvas, dur);
+    fit = sr_lite_row_clock_fit(
+        sr_view_dash_fitted_px(canvas, raw, n),
+        sr_view_dash_fitted_px(canvas, bare, nbare),
+        wclock);
+    if(fit == SrLiteRowClockDropUp) {
+        left = bare;
+        nleft = nbare;
+        left_cap = sizeof(bare);
+    } else {
+        left = raw;
+        nleft = n;
+        left_cap = sizeof(raw);
+    }
+    sr_view_dash_put_line(canvas, y, left, (int)nleft, left_cap);
+    if(fit != SrLiteRowClockNone) {
+        canvas_draw_str(canvas, (int32_t)SR_CANVAS_W - (int32_t)wclock, y, dur);
+    }
+}
+
+static void sr_view_dash_draw_dash(Canvas* canvas, const SrDashModel* m) {
+    char a[12];
+    char b[12];
+    char c[12];
+    char raw[40];
+    int n;
+    int32_t y = 20;
+    bool big;
+
+    /* Six mutually exclusive states, evaluated in this order (T4.10 / D0-5; the Busy state was
+     * added during the acceptance review on 2026-08-31). */
+    if(!m->serial_open) {
+        /*
+         * State 1: serial not open. Hint plus small-font rows, losing nothing relative to before.
+         * NOTE: **no big font here**: with the serial closed uniq is always 0, and a giant "0" is
+         * worth less than a clearly worded hint.
+         * The acceptance review on 2026-08-31 removed the `big = m->serial_open && !m->debug_rows;`
+         * line that had been copied in -- inside the !serial_open branch it is always false, so it
+         * was dead code equivalent to taking the small-font path directly.
+         */
+        y = sr_view_dash_draw_hint(canvas, y, sigroam_io_status_hint((SrIoStatus)m->io_status));
+
+        /* First small-font row: uniq is the core F3 metric, so it goes on row 1. */
+        if(y > 61) {
+            return;
+        }
+        sr_fmt__udec(m->unique_est, a, sizeof(a));
+        sr_fmt__udec(m->with_gps_fix, b, sizeof(b));
+        n = snprintf(raw, sizeof(raw), "uniq=%s fix=%s", a, b);
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+
+        if(y > 61) {
+            return;
+        }
+        sr_fmt__udec(m->ap_wifi, a, sizeof(a));
+        sr_fmt_ble_field(m->radio_rev, m->radio.ble, m->ap_ble, b, sizeof(b));
+        n = snprintf(raw, sizeof(raw), "AP=%s BLE=%s", a, b);
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+
+        /*
+         * The rx row. NOTE: rx= is not a debug row: it is the only user-visible reading that tells
+         * whether the link is still alive, and the entire on-device observation of defect D10 relied
+         * on it (docs/HANDOFF.md:1131). Demoting it would invalidate existing SOPs.
+         */
+        if(y > 61) {
+            return;
+        }
+        sr_fmt_bytes(m->rx_bytes, a, sizeof(a));
+        sr_fmt_duration(m->elapsed_ms, b, sizeof(b));
+        n = snprintf(raw, sizeof(raw), "rx=%s %s", a, b);
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+
+        if(!m->debug_rows) {
+            return;
+        }
+
+        /* The next two rows are drawn only when Debug rows = On in Settings (for T5.1 long-run evidence). */
+        if(y > 61) {
+            return;
+        }
+        sr_fmt__udec(m->rx_dropped, a, sizeof(a));
+        sr_fmt__udec(m->rx_max_fill, b, sizeof(b));
+        n = snprintf(raw, sizeof(raw), "d=%s f=%s", a, b);
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+
+        if(y > 61) {
+            return;
+        }
+        sr_fmt__udec(m->heap_free / 1024u, a, sizeof(a));
+        sr_fmt__udec(m->heap_min / 1024u, b, sizeof(b));
+        sr_fmt__udec(m->heap_max_blk / 1024u, c, sizeof(c));
+        n = snprintf(raw, sizeof(raw), "h=%sK m=%sK b=%sK", a, b, c);
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        return;
+    }
+
+    /* Diag st=5: board is in STA upload epoch. Show before wait_stage /
+     * Running / Saving so a leftover FAP Running session cannot hide it. */
+    if(sr_scan_ctl_uploading(m->firmware.diag_seen, m->firmware.diag_state)) {
+        if(m->qual_rev != 0u && !m->debug_rows) {
+            n = snprintf(raw, sizeof(raw), "Uploading...");
+            sr_view_dash_put_line(canvas, 21, raw, n, sizeof(raw));
+            n = snprintf(raw, sizeof(raw), "do not start");
+            sr_view_dash_put_line(canvas, 31, raw, n, sizeof(raw));
+            sr_view_dash_put_health(canvas, 61, m);
+            return;
+        }
+        if(y > 61) {
+            return;
+        }
+        n = snprintf(raw, sizeof(raw), "Uploading...");
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+        if(y > 61) {
+            return;
+        }
+        n = snprintf(raw, sizeof(raw), "do not start");
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+        if(y > 61) {
+            return;
+        }
+        sr_fmt_bytes(m->rx_bytes, a, sizeof(a));
+        n = snprintf(raw, sizeof(raw), "rx=%s", a);
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        return;
+    }
+
+    if(m->wait_stage == (uint8_t)SR_RESYNC_HINT_BUSY ||
+       m->wait_stage == (uint8_t)SR_RESYNC_HINT_LOST) {
+        /* Packed into wait_stage so SrDashModel does not grow (sizeof == 712).
+         * Single line: a two-line hint pushes the Dash tab's fourth row off screen (D1). */
+        if(y > 61) {
+            return;
+        }
+        if(m->wait_stage == (uint8_t)SR_RESYNC_HINT_BUSY) {
+            n = snprintf(raw, sizeof(raw), "Resyncing...");
+        } else {
+            n = snprintf(raw, sizeof(raw), "Scan lost, press OK");
+        }
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+
+        if(y > 61) {
+            return;
+        }
+        sr_fmt_bytes(m->rx_bytes, a, sizeof(a));
+        n = snprintf(raw, sizeof(raw), "rx=%s", a);
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+
+        /*
+         * Resync diagnostics row. **Not** gated on debug_rows: the 5.4 unplug SOP needs it and
+         * Settings is not reachable mid-run. All three fields already exist in SrDashModel, so
+         * sizeof stays 712 (test_gps_sample.c:734).
+         *
+         * Why exactly these three. sr_resync.h reaches SrResyncLost through exactly two exits:
+         * giveup at trigger_ms+30000, or AwaitStop timing out with tries >= 3 at t1+12000.
+         * Session state alone separates them:
+         *   Running -> the first stopscan was never confirmed (all three tries failed);
+         *              Lost is the tries>=3 exit and the AwaitStart path never ran.
+         *   Stopped -> step 1 succeeded and we were parked in AwaitStart, so a Lost earlier
+         *              than 30 s would mean a real hole in that path.
+         * i (illegal_trans) then splits "the peer never answered" from "the peer answered but
+         * sr_model refused the transition" (src/sr_model.c:135-170: apply_started while already
+         * Running, and apply_stopped while not Running, both only bump illegal_trans).
+         * r (session_rev) is the absolute counter -- record it once before unplugging.
+         */
+        if(y > 61) {
+            return;
+        }
+        sr_fmt__udec(m->session_rev, a, sizeof(a));
+        sr_fmt__udec(m->illegal_trans, b, sizeof(b));
+        n = snprintf(raw, sizeof(raw), "%s r=%s i=%s", sr_fmt_session_label(m->session), a, b);
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+
+        if(!m->debug_rows) {
+            return;
+        }
+
+        if(y > 61) {
+            return;
+        }
+        sr_fmt__udec(m->rx_dropped, a, sizeof(a));
+        sr_fmt__udec(m->rx_max_fill, b, sizeof(b));
+        n = snprintf(raw, sizeof(raw), "d=%s f=%s", a, b);
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+
+        if(y > 61) {
+            return;
+        }
+        sr_fmt__udec(m->heap_free / 1024u, a, sizeof(a));
+        sr_fmt__udec(m->heap_min / 1024u, b, sizeof(b));
+        sr_fmt__udec(m->heap_max_blk / 1024u, c, sizeof(c));
+        n = snprintf(raw, sizeof(raw), "h=%sK m=%sK b=%sK", a, b, c);
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        return;
+    }
+
+    /* Scout Lite only. recover_ui stays 0 for every other peer. */
+    if(sr_dialect_lite_status(&m->firmware) && m->recover_ui != 0u) {
+        const char* l1 = sr_start_recover_line(m->recover_ui, 0u);
+        const char* l2 = sr_start_recover_line(m->recover_ui, 1u);
+        const char* l3 = sr_start_recover_line(m->recover_ui, 2u);
+
+        if(l1 != NULL) {
+            n = snprintf(raw, sizeof(raw), "%s", l1);
+            sr_view_dash_put_line(canvas, 21, raw, n, sizeof(raw));
+        }
+        if(l2 != NULL) {
+            n = snprintf(raw, sizeof(raw), "%s", l2);
+            sr_view_dash_put_line(canvas, 31, raw, n, sizeof(raw));
+        }
+        if(l3 != NULL) {
+            n = snprintf(raw, sizeof(raw), "%s", l3);
+            sr_view_dash_put_line(canvas, 41, raw, n, sizeof(raw));
+        }
+        return;
+    }
+
+    if(m->wait_stage != (uint8_t)SrWaitStageNone &&
+       !sr_scan_ctl_ident_yields_state4(
+           m->wait_stage == (uint8_t)SrWaitStageLink,
+           sr_scan_ctl_sd_dead(m->qual_rev, m->qual.sd, m->qual_tick_ms, furi_get_tick()),
+           m->board_sealing)) {
+        /* State 2: command in progress, or ident still waiting for Version.
+         * Ident Link must not hide State4 No SD / Saving (xu182). */
+        if(y > 61) {
+            return;
+        }
+        n = snprintf(raw, sizeof(raw), "Waiting...");
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+
+        if(y > 61) {
+            return;
+        }
+        if(m->wait_stage == (uint8_t)SrWaitStageLink) {
+            n = snprintf(raw, sizeof(raw), "for board data");
+        } else if(m->wait_stage == (uint8_t)SrWaitStageCmd) {
+            n = snprintf(raw, sizeof(raw), "for cmd accepted");
+        } else if(m->wait_stage == (uint8_t)SrWaitStageFunc && m->cmd_is_start) {
+            n = snprintf(raw, sizeof(raw), "for scan to start");
+        } else {
+            n = snprintf(raw, sizeof(raw), "Saving...");
+        }
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+
+        if(y > 61) {
+            return;
+        }
+        sr_fmt_bytes(m->rx_bytes, a, sizeof(a));
+        n = snprintf(raw, sizeof(raw), "rx=%s", a);
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+
+        if(!m->debug_rows) {
+            return;
+        }
+
+        if(y > 61) {
+            return;
+        }
+        sr_fmt__udec(m->rx_dropped, a, sizeof(a));
+        sr_fmt__udec(m->rx_max_fill, b, sizeof(b));
+        n = snprintf(raw, sizeof(raw), "d=%s f=%s", a, b);
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+
+        if(y > 61) {
+            return;
+        }
+        sr_fmt__udec(m->heap_free / 1024u, a, sizeof(a));
+        sr_fmt__udec(m->heap_min / 1024u, b, sizeof(b));
+        sr_fmt__udec(m->heap_max_blk / 1024u, c, sizeof(c));
+        n = snprintf(raw, sizeof(raw), "h=%sK m=%sK b=%sK", a, b, c);
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        return;
+    }
+
+    if(m->session == (uint8_t)SrSessionRunning) {
+        /* State 3: running.
+         * D19 / ADR-025: the SigRoam path (Qual seen, debug rows off) puts the big-font
+         * uniq back on top (same spot as the generic path), moves the duration onto the
+         * AP row (sr_fmt_ap_row's three-level fit), draws the band split on the row
+         * under it when that baseline is <= 53, and sinks the health status bar to
+         * y61. rx= leaves this path: Qual freshness (stale / sess_ms==0) covers the
+         * D10/D11 link-liveness detection within 15 s, stronger than watching a number.
+         * The generic Marauder path (qual_rev==0) and the debug_rows path below are
+         * unchanged. Scout Lite also stays on that generic path: it has Qual, so
+         * qual_rev != 0, but it does not use sr_fmt_ap_row or the health bar.
+         * Its last row is the lite data line, drawn where rx= sat. */
+        if(m->qual_rev != 0u && !m->debug_rows && !sr_dialect_lite_status(&m->firmware)) {
+            int32_t next = sr_view_dash_put_big(canvas, m->unique_est, "uniq", 41, 0, NULL);
+            if((m->scan_ui == (uint8_t)SrScanUiStopping ||
+                m->scan_ui == (uint8_t)SrScanUiStopFailed) &&
+               next >= 0) {
+                n = snprintf(raw, sizeof(raw), "Stopping...");
+                sr_view_dash_put_line(canvas, 21, raw, n, sizeof(raw));
+            }
+            if(next >= 0) {
+                if(m->ap_wifi == 0u && m->ap_ble == 0u) {
+                    n = snprintf(raw, sizeof(raw), "Waiting for first AP");
+                    sr_view_dash_put_line(canvas, next, raw, n, sizeof(raw));
+                } else {
+                    n = (int)sr_fmt_ap_row(
+                        m->ap_wifi,
+                        m->radio_rev,
+                        m->radio.ble,
+                        m->ap_ble,
+                        m->elapsed_ms,
+                        (size_t)SR_VIEW_COLS,
+                        raw,
+                        sizeof(raw));
+                    sr_view_dash_put_line(canvas, next, raw, n, sizeof(raw));
+                }
+                if(next + 10 <= 53) {
+                    sr_view_dash_put_band(canvas, next + 10, m);
+                }
+            } else {
+                /* Abnormal font height: small-font fallback, zero information loss
+                 * (uniq= fix= at y21, AP row at y31, status bar at y61). */
+                sr_fmt__udec(m->unique_est, a, sizeof(a));
+                sr_fmt__udec(m->with_gps_fix, b, sizeof(b));
+                n = snprintf(raw, sizeof(raw), "uniq=%s fix=%s", a, b);
+                sr_view_dash_put_line(canvas, 21, raw, n, sizeof(raw));
+
+                if(m->ap_wifi == 0u && m->ap_ble == 0u) {
+                    n = snprintf(raw, sizeof(raw), "Waiting for first AP");
+                } else {
+                    n = (int)sr_fmt_ap_row(
+                        m->ap_wifi,
+                        m->radio_rev,
+                        m->radio.ble,
+                        m->ap_ble,
+                        m->elapsed_ms,
+                        (size_t)SR_VIEW_COLS,
+                        raw,
+                        sizeof(raw));
+                }
+                sr_view_dash_put_line(canvas, 31, raw, n, sizeof(raw));
+                sr_view_dash_put_band(canvas, 41, m);
+            }
+            sr_view_dash_put_health(canvas, 61, m);
+            return;
+        }
+
+        /*
+         * The big font is drawn only when the serial is open AND debug rows are off:
+         *  - with the serial closed uniq is always 0, and a giant "0" is worth less than a clear hint;
+         *  - with debug rows on it would be the big font plus 5 small rows, which does not fit the
+         *    53 px content area.
+         * Both cases fall back to the small-font path, losing nothing.
+         */
+        big = m->serial_open && !m->debug_rows;
+        if(big) {
+            int32_t next;
+            if(sr_dialect_lite_status(&m->firmware)) {
+                /* Lift stays 3. The FAP clock is not on this row. */
+                next = sr_view_dash_put_big(canvas, m->unique_est, "uniq", 61, 3, NULL);
+            } else {
+                next = sr_view_dash_put_big(canvas, m->unique_est, "uniq", 61, 0, NULL);
+            }
+            if(next < 0) {
+                big = false; /* Abnormal font height; defensively fall back to the small font */
+            } else {
+                y = next;
+            }
+        }
+
+        if(!big) {
+            /* First small-font row: uniq moves up from row 2 to row 1 (it is the core F3 metric). */
+            if(y > 61) {
+                return;
+            }
+            sr_fmt__udec(m->unique_est, a, sizeof(a));
+            sr_fmt__udec(m->with_gps_fix, b, sizeof(b));
+            n = snprintf(raw, sizeof(raw), "uniq=%s fix=%s", a, b);
+            sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+            y += 10;
+
+            if(y > 61) {
+                return;
+            }
+            if(m->ap_wifi == 0u && m->ap_ble == 0u) {
+                n = snprintf(raw, sizeof(raw), "Waiting for first AP");
+            } else {
+                sr_fmt__udec(m->ap_wifi, a, sizeof(a));
+                sr_fmt_ble_field(m->radio_rev, m->radio.ble, m->ap_ble, b, sizeof(b));
+                n = snprintf(raw, sizeof(raw), "AP=%s BLE=%s", a, b);
+            }
+            sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+            y += 10;
+        } else if(sr_dialect_lite_status(&m->firmware)) {
+            /* put_big returns the big baseline plus 10. Spread the AP row
+             * and, when present, the band row between that baseline and
+             * the pinned status row. A gap under 9 px keeps the old
+             * y += 10 stack, including its y>61 stops. */
+            const SrLiteStatusRows rows =
+                sr_lite_status_rows(y - 10, m->ap_24 != 0u || m->ap_5 != 0u);
+
+            if(rows.ap_y > 61) {
+                return;
+            }
+            if(m->ap_wifi == 0u && m->ap_ble == 0u) {
+                n = snprintf(raw, sizeof(raw), "Waiting for first AP");
+            } else {
+                sr_fmt__udec(m->ap_wifi, a, sizeof(a));
+                sr_fmt_ble_field(m->radio_rev, m->radio.ble, m->ap_ble, b, sizeof(b));
+                sr_fmt__udec(m->with_gps_fix, c, sizeof(c));
+                n = snprintf(raw, sizeof(raw), "AP=%s BLE=%s fix=%s", a, b, c);
+            }
+            sr_view_dash_put_line(canvas, rows.ap_y, raw, n, sizeof(raw));
+            if(rows.spread) {
+                if(rows.draw_band) {
+                    sr_view_dash_put_band(canvas, rows.band_y, m);
+                }
+                sr_view_dash_put_lite_row(canvas, rows.status_y, m, true);
+                return;
+            }
+            if((rows.ap_y + 10) > 61) {
+                return;
+            }
+            if(rows.draw_band) {
+                sr_view_dash_put_band(canvas, rows.band_y, m);
+            }
+            sr_view_dash_put_lite_row(canvas, rows.status_y, m, true);
+            return;
+        } else {
+            /* Big-font mode: AP / BLE / fix share one row (measured: "AP=99 BLE=99 fix=99" = 19 <= 20). */
+            if(y > 61) {
+                return;
+            }
+            if(m->ap_wifi == 0u && m->ap_ble == 0u) {
+                n = snprintf(raw, sizeof(raw), "Waiting for first AP");
+            } else {
+                sr_fmt__udec(m->ap_wifi, a, sizeof(a));
+                sr_fmt_ble_field(m->radio_rev, m->radio.ble, m->ap_ble, b, sizeof(b));
+                sr_fmt__udec(m->with_gps_fix, c, sizeof(c));
+                n = snprintf(raw, sizeof(raw), "AP=%s BLE=%s fix=%s", a, b, c);
+            }
+            sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+            y += 10;
+        }
+
+        /*
+         * The rx row. NOTE: rx= is not a debug row: it is the only user-visible reading that tells
+         * whether the link is still alive, and the entire on-device observation of defect D10 relied
+         * on it (docs/HANDOFF.md:1131). Demoting it would invalidate existing SOPs.
+         * Scout Lite keeps this slot. Running draws the FAP clock on the
+         * right of that row. Idle passes with_dur false and does not.
+         * The band row is inserted only when the data row still lands at y<=61.
+         */
+        if(y > 61) {
+            return;
+        }
+        if(sr_dialect_lite_status(&m->firmware)) {
+            if((m->ap_24 != 0u || m->ap_5 != 0u) && (y + 10) <= 61) {
+                sr_view_dash_put_band(canvas, y, m);
+                y += 10;
+            }
+            sr_view_dash_put_lite_row(canvas, y, m, true);
+            y += 10;
+        } else {
+            sr_fmt_bytes(m->rx_bytes, a, sizeof(a));
+            sr_fmt_duration(m->elapsed_ms, b, sizeof(b));
+            n = snprintf(raw, sizeof(raw), "rx=%s %s", a, b);
+            sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+            y += 10;
+        }
+
+        if(!m->debug_rows) {
+            return;
+        }
+
+        /* The next two rows are drawn only when Debug rows = On in Settings (for T5.1 long-run evidence). */
+        if(y > 61) {
+            return;
+        }
+        sr_fmt__udec(m->rx_dropped, a, sizeof(a));
+        sr_fmt__udec(m->rx_max_fill, b, sizeof(b));
+        n = snprintf(raw, sizeof(raw), "d=%s f=%s", a, b);
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+
+        if(y > 61) {
+            return;
+        }
+        sr_fmt__udec(m->heap_free / 1024u, a, sizeof(a));
+        sr_fmt__udec(m->heap_min / 1024u, b, sizeof(b));
+        sr_fmt__udec(m->heap_max_blk / 1024u, c, sizeof(c));
+        n = snprintf(raw, sizeof(raw), "h=%sK m=%sK b=%sK", a, b, c);
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        return;
+    }
+
+    if(m->scan_ui == (uint8_t)SrScanUiBusy) {
+        /*
+         * Busy state: the command was never sent at all -- sr_worker_send_cmd returned false,
+         * meaning the command slot still holds a previous unsent command (src/sr_worker.h:32-37).
+         *
+         * No extra Busy-only field: this reuses the existing m->scan_ui -- sr_scan_ctl_eval returns
+         * exactly SrScanUiBusy on cmd_rejected (src/sr_scan_ctl.h:48-50), and dash_fill already
+         * fills it in. D12 added uint8_t gps_src; sizeof(SrDashModel) stayed 712 (the byte fit in
+         * existing padding). Layout sentinels at tools/host_test/test_gps_sample.c:733-735 are
+         * only to be edited when the main session authorizes each assertion by line.
+         *
+         * Why stating the cause outright is allowed (and does not violate ADR-022 decision 4): this
+         * is a **local fact**, derived directly from our own queue state, not a conclusion about the
+         * device inferred from "nothing observed for a while".
+         *
+         * Placed after state 3: while running, preserving the big-font uniq capture reading takes
+         * priority -- if a stop never went out the screen still reads RUNNING and the user just
+         * presses again; whereas the real ailment this state treats (pressing OK repeatedly in the
+         * ready state with no feedback at all) sits at state 4's position and is caught right here.
+         *
+         * NOTE: cmd_rejected is sticky: only the next successful send clears it (dash_queue_cmd in
+         * scenes/scene_dash.c). So the wording must offer an actionable next step, not merely report
+         * a state.
+         */
+        if(y > 61) {
+            return;
+        }
+        n = snprintf(raw, sizeof(raw), "Command not sent");
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+
+        if(y > 61) {
+            return;
+        }
+        n = snprintf(raw, sizeof(raw), "press OK again");
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+
+        if(y > 61) {
+            return;
+        }
+        sr_fmt_bytes(m->rx_bytes, a, sizeof(a));
+        n = snprintf(raw, sizeof(raw), "rx=%s", a);
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+
+        if(!m->debug_rows) {
+            return;
+        }
+
+        if(y > 61) {
+            return;
+        }
+        sr_fmt__udec(m->rx_dropped, a, sizeof(a));
+        sr_fmt__udec(m->rx_max_fill, b, sizeof(b));
+        n = snprintf(raw, sizeof(raw), "d=%s f=%s", a, b);
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+
+        if(y > 61) {
+            return;
+        }
+        sr_fmt__udec(m->heap_free / 1024u, a, sizeof(a));
+        sr_fmt__udec(m->heap_min / 1024u, b, sizeof(b));
+        sr_fmt__udec(m->heap_max_blk / 1024u, c, sizeof(c));
+        n = snprintf(raw, sizeof(raw), "h=%sK m=%sK b=%sK", a, b, c);
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        return;
+    }
+
+    /* State 4: readiness. Serial open, no pending command, not scanning. No big font.
+     * D19 / ADR-025: on the SigRoam path (Qual seen, debug rows off) the Board/OK rows
+     * sit at y21/y31 and the status bar sinks to y61 (same copy table as State 3; Idle
+     * always has sess_ms==0, so it shows the stale copy by design). rx= leaves this
+     * path. Scout Lite keeps this copy and draws its data row at
+     * SR_LITE_STATUS_Y with no duration.
+     * No SD / Saving... keep the health bar. The generic/debug path below is unchanged. */
+    if(m->qual_rev != 0u && !m->debug_rows) {
+        if(sr_scan_ctl_sd_dead(m->qual_rev, m->qual.sd, m->qual_tick_ms, furi_get_tick())) {
+            n = snprintf(raw, sizeof(raw), "No SD");
+            sr_view_dash_put_line(canvas, 21, raw, n, sizeof(raw));
+            n = snprintf(raw, sizeof(raw), "insert card");
+            sr_view_dash_put_line(canvas, 31, raw, n, sizeof(raw));
+            sr_view_dash_put_health(canvas, 61, m);
+            return;
+        }
+        if(m->board_sealing) {
+            n = snprintf(raw, sizeof(raw), "Saving...");
+            sr_view_dash_put_line(canvas, 21, raw, n, sizeof(raw));
+            n = snprintf(raw, sizeof(raw), "wait");
+            sr_view_dash_put_line(canvas, 31, raw, n, sizeof(raw));
+            sr_view_dash_put_health(canvas, 61, m);
+            return;
+        }
+        if(m->rx_bytes == 0u) {
+            n = snprintf(raw, sizeof(raw), "Board: no data");
+        } else {
+            n = snprintf(raw, sizeof(raw), "Board: data ok");
+        }
+        if(sr_dash_idle_summary(m->session, m->ap_wifi, m->ap_ble)) {
+            n = (int)sr_fmt_ap_row(
+                m->ap_wifi,
+                m->radio_rev,
+                m->radio.ble,
+                m->ap_ble,
+                m->last_elapsed_ms,
+                (size_t)SR_VIEW_COLS,
+                raw,
+                sizeof(raw));
+            sr_view_dash_put_line(canvas, 21, raw, n, sizeof(raw));
+            n = snprintf(raw, sizeof(raw), "OK: Start scan");
+            sr_view_dash_put_line(canvas, 31, raw, n, sizeof(raw));
+            sr_view_dash_put_band(canvas, 41, m);
+            n = (int)sr_fmt_last_status(
+                m->firmware.diag_state,
+                m->firmware.diag_seen,
+                m->up_q,
+                m->up_known,
+                raw,
+                sizeof(raw));
+            sr_view_dash_put_line(canvas, 51, raw, n, sizeof(raw));
+            if(sr_dialect_lite_status(&m->firmware)) {
+                sr_view_dash_put_lite_row(canvas, (int32_t)SR_LITE_STATUS_Y, m, false);
+            } else {
+                sr_view_dash_put_health(canvas, 61, m);
+            }
+            return;
+        }
+        sr_view_dash_put_line(canvas, 21, raw, n, sizeof(raw));
+
+        n = snprintf(raw, sizeof(raw), "OK: Start scan");
+        sr_view_dash_put_line(canvas, 31, raw, n, sizeof(raw));
+
+        if(sr_dialect_lite_status(&m->firmware)) {
+            sr_view_dash_put_lite_row(canvas, (int32_t)SR_LITE_STATUS_Y, m, false);
+        } else {
+            sr_view_dash_put_health(canvas, 61, m);
+        }
+        return;
+    }
+    if(y > 61) {
+        return;
+    }
+    if(sr_scan_ctl_sd_dead(m->qual_rev, m->qual.sd, m->qual_tick_ms, furi_get_tick())) {
+        n = snprintf(raw, sizeof(raw), "No SD");
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+        if(y > 61) {
+            return;
+        }
+        n = snprintf(raw, sizeof(raw), "insert card");
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+    } else if(m->board_sealing) {
+        n = snprintf(raw, sizeof(raw), "Saving...");
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+        if(y > 61) {
+            return;
+        }
+        n = snprintf(raw, sizeof(raw), "wait");
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+    } else {
+        if(m->rx_bytes == 0u) {
+            n = snprintf(raw, sizeof(raw), "Board: no data");
+        } else {
+            n = snprintf(raw, sizeof(raw), "Board: data ok");
+        }
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+
+        if(y > 61) {
+            return;
+        }
+        n = snprintf(raw, sizeof(raw), "OK: Start scan");
+        sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+        y += 10;
+    }
+    y += 10;
+
+    if(y > 61) {
+        return;
+    }
+    sr_fmt_bytes(m->rx_bytes, a, sizeof(a));
+    n = snprintf(raw, sizeof(raw), "rx=%s", a);
+    sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+    y += 10;
+
+    if(!m->debug_rows) {
+        return;
+    }
+
+    if(y > 61) {
+        return;
+    }
+    sr_fmt__udec(m->rx_dropped, a, sizeof(a));
+    sr_fmt__udec(m->rx_max_fill, b, sizeof(b));
+    n = snprintf(raw, sizeof(raw), "d=%s f=%s", a, b);
+    sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+    y += 10;
+
+    if(y > 61) {
+        return;
+    }
+    sr_fmt__udec(m->heap_free / 1024u, a, sizeof(a));
+    sr_fmt__udec(m->heap_min / 1024u, b, sizeof(b));
+    sr_fmt__udec(m->heap_max_blk / 1024u, c, sizeof(c));
+    n = snprintf(raw, sizeof(raw), "h=%sK m=%sK b=%sK", a, b, c);
+    sr_view_dash_put_line(canvas, y, raw, n, sizeof(raw));
+}
+
+/* Four cells: x=0,3,6,9, each 2 px wide, heights 2/4/6/8. Zero cells draw a 2x1 base line, which stays distinguishable from full. */
+static void sr_view_dash_draw_rssi_bars(Canvas* canvas, int32_t x, int32_t baseline, uint8_t n) {
+    static const uint8_t heights[4] = {2, 4, 6, 8};
+    uint8_t i;
+
+    if(n == 0) {
+        canvas_draw_box(canvas, x, baseline - 1, 2, 1);
+        return;
+    }
+    if(n > 4) {
+        n = 4;
+    }
+    for(i = 0; i < n; i++) {
+        uint8_t h = heights[i];
+        canvas_draw_box(canvas, x + (int32_t)i * 3, baseline - (int32_t)h, 2, (size_t)h);
+    }
+}
+
+static void sr_view_dash_draw_stream(Canvas* canvas, const SrDashModel* m) {
+    char buf[SR_STREAM_COLS + 1];
+    uint8_t i;
+    int32_t y;
+    const int32_t tab_h = SR_VIEW_TAB_H;
+
+    if(m->stream_count == 0) {
+        if(!m->serial_open) {
+            sr_view_dash_draw_hint(canvas, 20, sigroam_io_status_hint((SrIoStatus)m->io_status));
+        } else {
+            canvas_draw_str(canvas, 0, 21, "No APs yet");
+        }
+        return;
+    }
+
+    for(i = 0; i < m->stream_n && i < (uint8_t)SR_STREAM_ROWS; i++) {
+        const SrApBrief* r = &m->stream_rows[i];
+        size_t slen;
+
+        y = 21 + (int32_t)i * 10;
+        sr_view_dash_draw_rssi_bars(canvas, 0, y, sr_fmt_rssi_bars(r->rssi));
+        slen = sr_fmt_bounded_len(r->ssid, sizeof(r->ssid));
+        sr_fmt_stream_row(
+            r->ssid,
+            slen,
+            (r->flags & SR_AP_FLAG_BLE) != 0,
+            r->channel,
+            (size_t)SR_STREAM_COLS,
+            buf,
+            sizeof(buf));
+        canvas_draw_str(canvas, 12, y, buf);
+    }
+
+    if(m->stream_count > (uint16_t)SR_STREAM_ROWS) {
+        elements_scrollbar_pos(
+            canvas,
+            (int32_t)SR_CANVAS_W - 3,
+            tab_h,
+            (size_t)((int32_t)SR_CANVAS_H - tab_h),
+            (size_t)m->stream_top,
+            (size_t)m->stream_count);
+    }
+}
+
+/* During an active wardrive, dash_fill stores POI phase/gate in gps_phase/gps_gate
+ * so this existing fifth-line slot can show POI copy without a new SrDashModel field
+ * (sizeof pinned at 712). Idle GPS sampling still uses sr_gps_status_text. */
+static const char* sr_view_dash_gps_hint(const SrDashModel* m, bool idle_hint) {
+    if(m->session == (uint8_t)SrSessionRunning && m->scan_ui == (uint8_t)SrScanUiRunning) {
+        /* No wardrive CSV yet: y21 is already "No GPS data yet". Do not stack
+         * POI NoFix on top (that reads as a dead GPS lamp, not an empty log). */
+        if(m->gps_src == 0) {
+            return NULL;
+        }
+        return sr_poi_status_text(m->gps_phase, m->gps_gate);
+    }
+    return sr_gps_status_text(m->gps_phase, m->gps_gate, idle_hint);
+}
+
+static void sr_view_dash_draw_gps(Canvas* canvas, const SrDashModel* m) {
+    char raw[64];
+    char a[SR_VIEW_COLS + 1];
+    char b[SR_VIEW_COLS + 1];
+    int n;
+    const char* s;
+
+    if(m->gps_src == 0) {
+        if(!m->serial_open) {
+            int32_t y = sr_view_dash_draw_hint(
+                canvas, 20, sigroam_io_status_hint((SrIoStatus)m->io_status));
+            s = sr_view_dash_gps_hint(m, true);
+            if(s != NULL) {
+                canvas_draw_str(canvas, 0, y, s);
+            }
+        } else {
+            canvas_draw_str(canvas, 0, 21, "No GPS data yet");
+            s = sr_view_dash_gps_hint(m, true);
+            if(s != NULL) {
+                canvas_draw_str(canvas, 0, 31, s);
+            }
+        }
+        return;
+    }
+
+    /* D19 ⑦ / ADR-025 decision 5: both live sources share one first line,
+     * "Fix: Yes SAT 09". gps_src==2's old "  (live)" mislabeled the latest CSV
+     * record as a live stream (the y61 stamp already carries the moment);
+     * gps_src==1's "Sats:" folds into the same SAT field. SAT priority:
+     * snapshot sats -> fresh Qual sats -> "--". */
+    {
+        bool qfresh = sr_fmt_qual_fresh(m->qual_rev, m->qual_tick_ms, m->sess_ms, furi_get_tick());
+        n = (int)sr_fmt_gps_fix_line(
+            m->gps.fix, m->gps.sats, sizeof(m->gps.sats), qfresh, m->qual.sats, raw, sizeof(raw));
+    }
+    sr_view_dash_put_line(canvas, 21, raw, n, sizeof(raw));
+
+    sr_fmt_gps_val(m->gps.lat, sizeof(m->gps.lat), m->gps.fix, (size_t)SR_VIEW_COLS, a, sizeof(a));
+    n = snprintf(raw, sizeof(raw), "Lat: %s", a);
+    sr_view_dash_put_line(canvas, 31, raw, n, sizeof(raw));
+
+    sr_fmt_gps_val(m->gps.lon, sizeof(m->gps.lon), m->gps.fix, (size_t)SR_VIEW_COLS, a, sizeof(a));
+    n = snprintf(raw, sizeof(raw), "Lon: %s", a);
+    sr_view_dash_put_line(canvas, 41, raw, n, sizeof(raw));
+
+    sr_fmt_gps_val(m->gps.alt, sizeof(m->gps.alt), m->gps.fix, (size_t)SR_VIEW_COLS, a, sizeof(a));
+    sr_fmt_gps_val(m->gps.acc, sizeof(m->gps.acc), m->gps.fix, (size_t)SR_VIEW_COLS, b, sizeof(b));
+    /* D19 ⑦: '~' marks Acc as the firmware's hdop*5 estimate (Firmware gnss.c:95),
+     * not a receiver-reported accuracy figure. Only on a real value, never on "--". */
+    if(m->gps.fix && strcmp(b, "--") != 0) {
+        n = snprintf(raw, sizeof(raw), "Alt:%s Acc:~%s", a, b);
+    } else {
+        n = snprintf(raw, sizeof(raw), "Alt:%s Acc:%s", a, b);
+    }
+    sr_view_dash_put_line(canvas, 51, raw, n, sizeof(raw));
+
+    s = sr_view_dash_gps_hint(m, false);
+    if(s != NULL) {
+        canvas_draw_str(canvas, 0, 61, s);
+    } else {
+        n = (int)sr_fmt_gps_stamp(
+            m->gps.datetime, sizeof(m->gps.datetime), m->gps.fix, m->gps_blocks, raw, sizeof(raw));
+        sr_view_dash_put_line(canvas, 61, raw, n, sizeof(raw));
+    }
+}
+
+static void sr_view_dash_draw_session(Canvas* canvas, const SrDashModel* m) {
+    char raw[64];
+    char a[12];
+    char b[12];
+    int n;
+
+    n = snprintf(raw, sizeof(raw), "State %s", sr_fmt_session_label(m->session));
+    sr_view_dash_put_line(canvas, 21, raw, n, sizeof(raw));
+
+    sr_fmt__udec(m->session_rev, a, sizeof(a));
+    sr_fmt__udec(m->illegal_trans, b, sizeof(b));
+    n = snprintf(raw, sizeof(raw), "Changes %s Illegal %s", a, b);
+    sr_view_dash_put_line(canvas, 31, raw, n, sizeof(raw));
+
+    sr_fmt__udec(m->unknown_lines, a, sizeof(a));
+    sr_fmt__udec(m->malformed_lines, b, sizeof(b));
+    n = snprintf(raw, sizeof(raw), "Unknown %s Bad %s", a, b);
+    sr_view_dash_put_line(canvas, 41, raw, n, sizeof(raw));
+
+    if(sr_dialect_lite_status(&m->firmware)) {
+        n = (int)sr_fmt_lite_sess_brand(SR_BRAND_NAME, raw, sizeof(raw));
+        sr_view_dash_put_line(canvas, 51, raw, n, sizeof(raw));
+        n = (int)sr_fmt_lite_sess_fw(m->firmware.firmware, m->firmware.version, raw, sizeof(raw));
+        sr_view_dash_put_line(canvas, 61, raw, n, sizeof(raw));
+    } else if(m->firmware_rev == 0) {
+        n = snprintf(raw, sizeof(raw), "Firmware unknown");
+        sr_view_dash_put_line(canvas, 51, raw, n, sizeof(raw));
+        n = snprintf(raw, sizeof(raw), "Use Probe firmware");
+        sr_view_dash_put_line(canvas, 61, raw, n, sizeof(raw));
+    } else if(sr_dialect_is_sigroam(&m->firmware)) {
+        /* Product name, not UART Version: / Firmware: Marauder (ADR-027). */
+        n = snprintf(raw, sizeof(raw), "SigRoam");
+        sr_view_dash_put_line(canvas, 51, raw, n, sizeof(raw));
+        n = (int)sr_fmt_sess_sigroam_status(
+            m->session,
+            m->firmware.diag_seen,
+            m->firmware.diag_state,
+            m->elapsed_ms,
+            m->sess_ms,
+            m->radio_rev,
+            m->radio.wifi,
+            m->radio.ble,
+            raw,
+            sizeof(raw));
+        sr_view_dash_put_line(canvas, 61, raw, n, sizeof(raw));
+    } else {
+        n = (int)sr_fmt_fw_pair(
+            m->firmware.firmware,
+            sizeof(m->firmware.firmware),
+            NULL,
+            0,
+            (size_t)SR_VIEW_COLS,
+            raw,
+            sizeof(raw));
+        sr_view_dash_put_line(canvas, 51, raw, n, sizeof(raw));
+
+        n = (int)sr_fmt_fw_pair(
+            m->firmware.hardware,
+            sizeof(m->firmware.hardware),
+            NULL,
+            0,
+            (size_t)SR_VIEW_COLS,
+            raw,
+            sizeof(raw));
+        sr_view_dash_put_line(canvas, 61, raw, n, sizeof(raw));
+    }
+}
+
+/* draw: read the model and draw, nothing else. Does not dereference app, take locks, allocate, or do IO. */
+static void sr_view_dash_draw(Canvas* canvas, void* model) {
+    const SrDashModel* m = model;
+
+    canvas_clear(canvas);
+    if(m == NULL) {
+        return;
+    }
+
+    sr_view_dash_draw_tabs(canvas, m->tab);
+
+    if(m->tab == (uint8_t)SR_VIEW_TAB_DASH) {
+        sr_view_dash_draw_dash(canvas, m);
+        if(m->pending_prompt) {
+            sr_view_dash_draw_pending(canvas, m);
+        }
+        return;
+    }
+    if(m->tab == (uint8_t)SR_VIEW_TAB_STREAM) {
+        sr_view_dash_draw_stream(canvas, m);
+        return;
+    }
+    if(m->tab == (uint8_t)SR_VIEW_TAB_GPS) {
+        sr_view_dash_draw_gps(canvas, m);
+        return;
+    }
+    if(m->tab == (uint8_t)SR_VIEW_TAB_SESSION) {
+        sr_view_dash_draw_session(canvas, m);
+        return;
+    }
+    return;
+}
+
+static bool sr_view_dash_input(InputEvent* event, void* context) {
+    SrViewDash* d = context;
+    int dir;
+    bool scrolled = false;
+
+    if(event == NULL || d == NULL || d->view == NULL) {
+        return false;
+    }
+
+    if(event->key == InputKeyBack && event->type == InputTypeShort) {
+        bool eat = false;
+
+        with_view_model(
+            d->view,
+            SrDashModel * m,
+            {
+                if(m != NULL && m->pending_prompt && m->tab == (uint8_t)SR_VIEW_TAB_DASH) {
+                    eat = true;
+                }
+            },
+            false);
+        if(eat) {
+            if(d->back_cb != NULL) {
+                d->back_cb(d->back_ctx);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    if(event->key == InputKeyOk && event->type == InputTypeShort) {
+        bool ok_tab = false;
+
+        with_view_model(
+            d->view,
+            SrDashModel * m,
+            {
+                if(m != NULL &&
+                   (m->tab == (uint8_t)SR_VIEW_TAB_GPS || m->tab == (uint8_t)SR_VIEW_TAB_DASH)) {
+                    ok_tab = true;
+                }
+            },
+            false);
+        if(ok_tab) {
+            if(d->ok_cb != NULL) {
+                d->ok_cb(d->ok_ctx);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    if(event->key == InputKeyRight || event->key == InputKeyLeft) {
+        if(event->type != InputTypeShort) {
+            return false;
+        }
+        dir = (event->key == InputKeyRight) ? 1 : -1;
+        with_view_model(
+            d->view,
+            SrDashModel * m,
+            {
+                if(m != NULL) {
+                    m->tab = sr_view_tab_next(m->tab, dir);
+                    m->stream_top = 0;
+                }
+            },
+            true);
+        return true;
+    }
+
+    if(event->key == InputKeyUp || event->key == InputKeyDown) {
+        if(event->type != InputTypeShort && event->type != InputTypeRepeat) {
+            return false;
+        }
+        dir = (event->key == InputKeyDown) ? 1 : -1;
+        with_view_model(
+            d->view,
+            SrDashModel * m,
+            {
+                if(m != NULL && m->tab == (uint8_t)SR_VIEW_TAB_STREAM) {
+                    m->stream_top = sr_stream_scroll(
+                        m->stream_top, m->stream_count, (uint8_t)SR_STREAM_ROWS, dir);
+                    scrolled = true;
+                }
+            },
+            true);
+        /* The callback must live outside the with_view_model block; otherwise it would take the app
+         * lock while holding the ViewModel lock, inverting the lock order. */
+        if(scrolled && d->cb != NULL) {
+            d->cb(d->ctx);
+        }
+        return scrolled;
+    }
+
+    return false;
+}
+
+SrViewDash* sr_view_dash_alloc(void) {
+    SrViewDash* d = malloc(sizeof(SrViewDash));
+
+    furi_check(d);
+    memset(d, 0, sizeof(SrViewDash));
+
+    d->view = view_alloc();
+    view_allocate_model(d->view, ViewModelTypeLocking, sizeof(SrDashModel));
+    view_set_context(d->view, d);
+    view_set_draw_callback(d->view, sr_view_dash_draw);
+    view_set_input_callback(d->view, sr_view_dash_input);
+
+    with_view_model(d->view, SrDashModel * m, { memset(m, 0, sizeof(SrDashModel)); }, false);
+
+    return d;
+}
+
+void sr_view_dash_free(SrViewDash* d) {
+    if(d == NULL) {
+        return;
+    }
+    if(d->view) {
+        view_free(d->view);
+        d->view = NULL;
+    }
+    free(d);
+}
+
+View* sr_view_dash_get_view(SrViewDash* d) {
+    return d ? d->view : NULL;
+}
+
+void sr_view_dash_set_callback(SrViewDash* d, SrViewDashCallback cb, void* context) {
+    if(d == NULL) {
+        return;
+    }
+    d->cb = cb;
+    d->ctx = context;
+}
+
+void sr_view_dash_set_ok_callback(SrViewDash* d, SrViewDashCallback cb, void* context) {
+    if(d == NULL) {
+        return;
+    }
+    d->ok_cb = cb;
+    d->ok_ctx = context;
+}
+
+void sr_view_dash_set_back_callback(SrViewDash* d, SrViewDashCallback cb, void* context) {
+    if(d == NULL) {
+        return;
+    }
+    d->back_cb = cb;
+    d->back_ctx = context;
+}
+
+void sr_view_dash_set(View* v, const SrDashModel* src) {
+    uint8_t tab = (uint8_t)SR_VIEW_TAB_DASH;
+
+    if(v == NULL || src == NULL) {
+        return;
+    }
+    with_view_model(
+        v,
+        SrDashModel * m,
+        {
+            if(m != NULL) {
+                tab = m->tab;
+                *m = *src;
+                m->tab = tab;
+            }
+        },
+        true);
+}

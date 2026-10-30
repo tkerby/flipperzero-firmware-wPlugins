@@ -1,0 +1,80 @@
+# STYLE GATE candidates (Kenney CC0). Run: python3 tools/render_objects.py assets/render/gate.toml
+# Plain jobs use the frozen contract thresholds (0.78/0.50/0.26); *_b are the one-time tuned
+# versions (thresholds lowered because the Kenney albedo is dark: walls read white, roof 1, right
+# face 2, windows/door/edges 3).  Cavity was tried and rejected (adds speckle/mud).
+# Names are prefixed k_; out_dir is assets/art/objects (default).
+
+[[job]]
+name = "k_house_p"
+model = "models_dl/kenney/suburban/Models/GLB format/building-type-p.glb"
+rot_z = 270   # at 0 the door/pillar side faces +i; 270 puts the door on the +j face
+fit = "footprint"
+fw = 2
+fh = 2
+
+[[job]]
+name = "k_house_p_b"
+model = "models_dl/kenney/suburban/Models/GLB format/building-type-p.glb"
+rot_z = 270   # at 0 the door/pillar side faces +i; 270 puts the door on the +j face
+fit = "footprint"
+fw = 2
+fh = 2
+t0 = 0.30
+t1 = 0.20
+t2 = 0.10
+
+[[job]]
+name = "k_house_h"
+model = "models_dl/kenney/suburban/Models/GLB format/building-type-h.glb"
+fit = "footprint"
+fw = 2
+fh = 2
+
+[[job]]
+name = "k_house_h_b"
+model = "models_dl/kenney/suburban/Models/GLB format/building-type-h.glb"
+fit = "footprint"
+fw = 2
+fh = 2
+t0 = 0.50
+t1 = 0.38
+t2 = 0.22
+
+[[job]]
+name = "k_lab_e"
+model = "models_dl/kenney/commercial/Models/GLB format/building-e.glb"
+fit = "footprint"
+fw = 3
+fh = 2
+
+[[job]]
+name = "k_lab_e_b"
+model = "models_dl/kenney/commercial/Models/GLB format/building-e.glb"
+fit = "footprint"
+fw = 3
+fh = 2
+t0 = 0.42
+t1 = 0.27
+t2 = 0.13
+
+[[job]]
+name = "k_tree_oak"
+model = "models_dl/kenney/nature/Models/GLTF format/tree_oak.glb"
+fit = "height"
+px = 30
+fw = 1
+fh = 1
+t0 = 0.50
+t1 = 0.32
+t2 = 0.16
+
+[[job]]
+name = "k_tree_cone"
+model = "models_dl/kenney/nature/Models/GLTF format/tree_cone.glb"
+fit = "height"
+px = 30
+fw = 1
+fh = 1
+t0 = 0.50
+t1 = 0.32
+t2 = 0.16

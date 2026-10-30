@@ -15,7 +15,9 @@
 #include <gui/modules/popup.h>
 #include <gui/modules/text_input.h>
 #include <gui/modules/byte_input.h>
+#include <gui/modules/number_input.h>
 #include <gui/modules/widget.h>
+#include <gui/modules/variable_item_list.h>
 
 #include <lfrfid/views/lfrfid_view_read.h>
 
@@ -29,10 +31,14 @@
 #include <toolbox/protocols/protocol_dict.h>
 #include <toolbox/path.h>
 #include <lfrfid/lfrfid_dict_file.h>
+#include <lfrfid/tools/t5577_file.h>
+#include <lfrfid/lfrfid_settings.h>
+#include <lfrfid/lfrfid_write_targets.h>
 #include <lfrfid/protocols/lfrfid_protocols.h>
 #include <lfrfid/lfrfid_worker.h>
 
 #include <lfrfid/scenes/lfrfid_scene.h>
+#include "helpers/lfrfid_manual_format.h"
 
 #define LFRFID_KEY_NAME_SIZE   22
 #define LFRFID_TEXT_STORE_SIZE 40
@@ -43,8 +49,9 @@
 #define LFRFID_APP_FILENAME_EXTENSION        ".rfid"
 #define LFRFID_APP_SHADOW_FILENAME_EXTENSION ".shd"
 
-#define LFRFID_APP_RAW_ASK_EXTENSION ".ask.raw"
-#define LFRFID_APP_RAW_PSK_EXTENSION ".psk.raw"
+#define LFRFID_APP_RAW_ASK_EXTENSION    ".ask.raw"
+#define LFRFID_APP_RAW_PSK_EXTENSION    ".psk.raw"
+#define LFRFID_APP_RAW_ASK134_EXTENSION ".ask134.raw"
 
 #define SCREEN_WIDTH         (128)
 #define SCREEN_HEIGHT        (64)
@@ -61,18 +68,26 @@ enum LfRfidCustomEvent {
     LfRfidEventReadSenseCardEnd,
     LfRfidEventReadStartASK,
     LfRfidEventReadStartPSK,
+    LfRfidEventReadStartASK134,
     LfRfidEventReadDone,
     LfRfidEventReadOverrun,
     LfRfidEventReadError,
     LfRfidEventWipeProgress,
     LfRfidEventWriteOK,
     LfRfidEventWriteProtocolCannotBeWritten,
+    LfRfidEventWriteNoEnabledTarget,
     LfRfidEventWriteFobCannotBeWritten,
     LfRfidEventWriteTooLongToWrite,
     LfRfidEventWriteProgress,
     LfRfidEventRpcLoadFile,
     LfRfidEventRpcSessionClose,
     LfRfidEventEmulationTimeExpired,
+    LfRfidEventWriteCannotRead,
+    LfRfidEventWriteAlreadyProtected,
+    LfRfidEventWriteKeyNotStored,
+    LfRfidEventWritePasswordNotStored,
+    LfRfidEventWriteProtectionRefused,
+    LfRfidEventWriteProtectionUnchecked,
 };
 
 typedef enum {
@@ -123,6 +138,10 @@ struct LfRfid {
     uint8_t* old_key_data;
     uint8_t* new_key_data;
 
+    uint32_t manual_format; // Add Manually entry, see lfrfid_manual_format.h
+    uint64_t field_values[LFRFID_MANUAL_FORMAT_FIELDS_MAX]; // its fields entered so far
+    size_t field_index; // the field being entered
+
     uint8_t password[4];
 
     RpcAppSystem* rpc_ctx;
@@ -134,6 +153,8 @@ struct LfRfid {
     Popup* popup;
     TextInput* text_input;
     ByteInput* byte_input;
+    NumberInput* number_input;
+    VariableItemList* variable_item_list; // allocated on first use, see the settings scene
 
     // Custom views
     LfRfidReadView* read_view;
@@ -155,6 +176,8 @@ typedef enum {
     LfRfidViewWidget,
     LfRfidViewTextInput,
     LfRfidViewByteInput,
+    LfRfidViewNumberInput,
+    LfRfidViewVariableItemList,
     LfRfidViewRead,
 } LfRfidView;
 
@@ -163,11 +186,21 @@ typedef enum {
     LfRfidMenuIndexSaved,
     LfRfidMenuIndexAddManually,
     LfRfidMenuIndexExtraActions,
+    LfRfidMenuIndexSettings,
 } LfRfidMenuIndex;
 
 bool lfrfid_save_key(LfRfid* app);
 
-bool lfrfid_load_key_from_file_select(LfRfid* app);
+/** Show the saved list. True when a file was picked, with its path in app->file_path. */
+bool lfrfid_select_key_file(LfRfid* app);
+
+/** Hand the dump in app->file_path to the app that reads T5577 dumps.
+ *
+ * On success this app is stopped: the loader runs the other app, and then launches this one
+ * again on the saved list when it can find its own launch path. False means nothing was handed
+ * over and the caller is still running, with the reason already on screen.
+ */
+bool lfrfid_run_t5577_app(LfRfid* app);
 
 bool lfrfid_load_raw_key_from_file_select(LfRfid* app);
 

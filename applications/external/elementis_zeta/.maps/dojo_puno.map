@@ -1,0 +1,69 @@
+# Dojo del Puño (C6, contract 49), 13 x 15, interior. column = i, row = j. The user's mock "Dojo del Puño": a light wooden floor of BIG boards (`boards_<i%2><j%2>`, 2 x 2 tiles, never small ones),
+# scroll walls (calligraphy scrolls, dark posts), training DUMMIES and candles. The hall (rows 6..13) has four black belts who stand along rows 12 / 10 / 8 / 6 and look across the middle column (static 8-direction art: a world-axis
+# facing); the master (script `master`) fills the gap (6,5) of the partition wall. A win: `dojo_won` (838): he steps out of the way (a second master, shown by the flag, stands in the back room) and the two gift bags (`gift=`, ONE shared
+# hide flag 839) can be taken: Kickaroo L30 or Jabadillo L30.
+@map dojo_puno
+@size 13 15
+@interior yes
+@flag dojo_won 838   # the master was beaten: the gap opens and the gifts can be taken
+@flag dojo_gift 839   # one of the two gifts was taken (the group hides)
+@bg 0
+@fill boards_00
+@spawn door 6 13 N
+@legend
+  .  tile=boards_10
+  a  tile=none object=wall_corner
+  b  tile=none object=scroll_wall
+  c  tile=boards_11
+  d  tile=boards_01
+  e  tile=boards_11 object=candle
+  f  tile=boards_00
+  g  tile=boards_00 npc=maestro_dojo id=master2 face=SW script=master_after show_flag=dojo_won
+  h  tile=boards_10 gift=kickaroo level=30 hide_flag=dojo_gift
+  i  tile=boards_10 gift=jabadillo level=30 hide_flag=dojo_gift
+  j  tile=boards_11 object=scroll_wall
+  k  tile=boards_01 object=scroll_wall
+  l  tile=boards_01 npc=maestro_dojo id=master face=SW script=master hide_flag=dojo_won gate=yes
+  m  tile=boards_00 npc=karateka_s id=t4 face=NW trainer=karateka_d4 range=4 text=tr.karateka_d4.pre after=tr.karateka_d4.after
+  n  tile=boards_01 object=dummy
+  o  tile=boards_11 object=dummy
+  p  tile=boards_00 npc=karateka_s id=t3 face=SE trainer=karateka_d3 range=4 text=tr.karateka_d3.pre after=tr.karateka_d3.after
+  q  tile=boards_00 npc=karateka_s id=t2 face=NW trainer=karateka_d2 range=4 text=tr.karateka_d2.pre after=tr.karateka_d2.after
+  r  tile=boards_00 npc=karateka_s id=t1 face=SE trainer=karateka_d1 range=4 text=tr.karateka_d1.pre after=tr.karateka_d1.after
+  s  tile=mat
+@grid
+  abbbbbbbbbbbb
+  bcdedcdcdedcd
+  b.f.f.g.f.f.f
+  bcdcdcdcdcdcd
+  b.f.fhfif.f.f
+  bjkjkjljkjkjk
+  b.f.f.f.f.m.f
+  bcncdcdcdcdod
+  b.p.f.f.f.f.f
+  bcdcdcdcdcncd
+  b.f.f.f.f.q.f
+  bcncdcdcdcded
+  b.r.f.f.f.f.f
+  bedcdcdcdcncd
+  b.f.f.ssf.f.f
+@warp s -> ciudad_cenit_sur spawn=dojo_door
+# The master: the camera cuts to him; the fight (trainer maestro_dojo: Kickaroo 37, Jabadillo 37); a win: `dojo_won` (the gap opens, the second master and the two gifts are
+# reachable), his speech. A loss is the blackout.
+@script master npc
+    npc_face_hero master
+    cam_npc master
+    say dojo.master.pre
+    battle maestro_dojo 0
+    jv 0 1 won
+    blackout
+    end
+  won:
+    setf dojo_won
+    cam_hero
+    say dojo.master.win
+@end
+@script master_after npc
+    npc_face_hero master2
+    say dojo.master.after
+@end

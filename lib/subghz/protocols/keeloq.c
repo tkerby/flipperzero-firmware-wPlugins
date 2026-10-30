@@ -16,6 +16,15 @@
 
 #define TAG "SubGhzProtocolKeeloq"
 
+// Monarch discriminator, constant per remote but not the same constant on every remote.
+// The received value is kept in generic.seed so the encoder can reproduce it.
+#define KEELOQ_MONARCH_DISCRIMINATOR_A 0x100u
+#define KEELOQ_MONARCH_DISCRIMINATOR_B 0x280u
+
+// KEY discriminator, constant. Only one remote seen so far - add values here if another
+// one turns up with a different constant.
+#define KEELOQ_KEY_DISCRIMINATOR 0x2FFu
+
 //variable used to bypass CounterMode settings if user just change Counter or Button
 static bool bypass = false;
 
@@ -38,6 +47,7 @@ struct SubGhzProtocolDecoderKeeloq {
 
     FuriString* manufacture_from_file;
 };
+SUBGHZ_ASSERT_DECODER_COMMON_LAYOUT(SubGhzProtocolDecoderKeeloq);
 
 struct SubGhzProtocolEncoderKeeloq {
     SubGhzProtocolEncoderBase base;
@@ -50,6 +60,7 @@ struct SubGhzProtocolEncoderKeeloq {
 
     FuriString* manufacture_from_file;
 };
+SUBGHZ_ASSERT_ENCODER_GENERIC_LAYOUT(SubGhzProtocolEncoderKeeloq);
 
 typedef enum {
     KeeloqDecoderStepReset = 0,
@@ -115,19 +126,10 @@ static uint32_t subghz_protocol_keeloq_check_remote_controller(
 static uint8_t subghz_protocol_keeloq_get_btn_code(uint8_t last_btn_code);
 
 void* subghz_protocol_encoder_keeloq_alloc(SubGhzEnvironment* environment) {
-    SubGhzProtocolEncoderKeeloq* instance = malloc(sizeof(SubGhzProtocolEncoderKeeloq));
-
-    instance->base.protocol = &subghz_protocol_keeloq;
-    instance->generic.protocol_name = instance->base.protocol->name;
+    SubGhzProtocolEncoderKeeloq* instance = subghz_protocol_encoder_common_alloc(
+        sizeof(SubGhzProtocolEncoderKeeloq), &subghz_protocol_keeloq, 3, 1100);
     instance->keystore = subghz_environment_get_keystore(environment);
-
-    instance->encoder.repeat = 3;
-    instance->encoder.size_upload = 1100;
-    instance->encoder.upload = malloc(instance->encoder.size_upload * sizeof(LevelDuration));
-    instance->encoder.is_running = false;
-
     instance->manufacture_from_file = furi_string_alloc();
-
     return instance;
 }
 
@@ -169,12 +171,15 @@ static bool subghz_protocol_keeloq_gen_data(
             instance->manufacture_name = "Aprimatic";
         } else if(prog_mode == PROG_MODE_KEELOQ_DEA_MIO) {
             instance->manufacture_name = "Dea_Mio";
+        } else if(prog_mode == PROG_MODE_KEELOQ_ERREKA) {
+            instance->manufacture_name = "Erreka";
         }
-        // Custom button (programming mode button) for BFT, Aprimatic, Dea_Mio
+        // Custom button (programming mode button) for BFT, Aprimatic, Dea_Mio, Erreka
         uint8_t klq_last_custom_btn = 0xA;
         if((strcmp(instance->manufacture_name, "BFT") == 0) ||
            (strcmp(instance->manufacture_name, "Aprimatic") == 0) ||
            (strcmp(instance->manufacture_name, "Dea_Mio") == 0) ||
+           (strcmp(instance->manufacture_name, "Erreka") == 0) ||
            (strcmp(instance->manufacture_name, "NICE_MHOUSE") == 0)) {
             klq_last_custom_btn = 0xF;
         } else if(
@@ -241,11 +246,19 @@ static bool subghz_protocol_keeloq_gen_data(
         } else if(prog_mode == PROG_MODE_KEELOQ_DEA_MIO) {
             prog_mode = PROG_MODE_OFF;
         }
+    } else if(strcmp(instance->manufacture_name, "Erreka") == 0) {
+        // Erreka programming mode on / off conditions
+        if(btn == 0xF) {
+            prog_mode = PROG_MODE_KEELOQ_ERREKA;
+        } else if(prog_mode == PROG_MODE_KEELOQ_ERREKA) {
+            prog_mode = PROG_MODE_OFF;
+        }
     }
     subghz_custom_btn_set_prog_mode(prog_mode);
 
-    // If we using BFT programming mode we will trasmit its seed in hop part like original remote
-    if(prog_mode == PROG_MODE_KEELOQ_BFT) {
+    // In BFT and Erreka programming mode we transmit the seed in the hop part, in the clear,
+    // like the original remote does
+    if((prog_mode == PROG_MODE_KEELOQ_BFT) || (prog_mode == PROG_MODE_KEELOQ_ERREKA)) {
         hop = instance->generic.seed;
     } else if(prog_mode == PROG_MODE_KEELOQ_APRIMATIC) {
         // If we using Aprimatic programming mode we will trasmit some strange looking hop value, why? cuz manufacturer did it this way :)
@@ -390,6 +403,8 @@ static bool subghz_protocol_keeloq_gen_data(
                 (strcmp(instance->manufacture_name, "Cardin_S449") == 0) ||
                 (strcmp(instance->manufacture_name, "Stilmatic") == 0) ||
                 (strcmp(instance->manufacture_name, "Wisniowski") == 0) ||
+                (strcmp(instance->manufacture_name, "Wisniowski2") == 0) ||
+                (strcmp(instance->manufacture_name, "Wisniowski1Rv") == 0) ||
                 (strcmp(instance->manufacture_name, "ATA_PTX4") == 0) ||
                 (strcmp(instance->manufacture_name, "Fadini") == 0) ||
                 (strcmp(instance->manufacture_name, "Seav") == 0)) {
@@ -399,7 +414,7 @@ static bool subghz_protocol_keeloq_gen_data(
                 // Steelmate -> 12bit serial - normal learning
                 // Cardin_S449 -> 12bit serial - normal learning
                 // Stilmatic (r-tech) -> 12bit serial - normal learning
-                // Wisniowski -> 12bit serial - normal learning
+                // Wisniowski, Wisniowski2, Wisniowski1Rv -> 12bit serial - normal learning
                 // ATA_PTX4 -> 12bit serial - normal learning
                 // Fadini -> 12bit serial - simple learning
                 // Seav -> 12bit serial - normal learning
@@ -427,8 +442,17 @@ static bool subghz_protocol_keeloq_gen_data(
                 decrypt = btn << 28 | (0x1CE) << 16 | instance->generic.cnt;
                 // Centurion -> no serial in hop, uses fixed value 0x1CE - normal learning
             } else if(strcmp(instance->manufacture_name, "Monarch") == 0) {
-                decrypt = btn << 28 | (0x100) << 16 | instance->generic.cnt;
-                // Monarch -> no serial in hop, uses fixed value 0x100 - normal learning
+                // Monarch -> no serial in hop, fixed discriminator - normal learning.
+                // Value differs per remote, reuse the received one, seed holds it
+                uint16_t monarch_disc = (uint16_t)instance->generic.seed & 0xFFF;
+                if((monarch_disc != KEELOQ_MONARCH_DISCRIMINATOR_A) &&
+                   (monarch_disc != KEELOQ_MONARCH_DISCRIMINATOR_B)) {
+                    monarch_disc = KEELOQ_MONARCH_DISCRIMINATOR_A;
+                }
+                decrypt = btn << 28 | (uint32_t)monarch_disc << 16 | instance->generic.cnt;
+            } else if(strcmp(instance->manufacture_name, "KEY") == 0) {
+                // KEY -> no serial in hop, uses fixed value 0x2FF - simple learning
+                decrypt = btn << 28 | (KEELOQ_KEY_DISCRIMINATOR) << 16 | instance->generic.cnt;
             } else if(strcmp(instance->manufacture_name, "Dea_Mio") == 0) {
                 uint8_t first_disc_num = (instance->generic.serial >> 8) & 0xF;
                 uint8_t result_disc = (0xC + (first_disc_num % 4));
@@ -478,11 +502,46 @@ static bool subghz_protocol_keeloq_gen_data(
                                 fix, manufacture_code->key);
                             hop = subghz_protocol_keeloq_common_encrypt(decrypt, man);
                             break;
-                        case KEELOQ_LEARNING_AERF:
-                            man = subghz_protocol_keeloq_common_learning_aerf(
+                        case KEELOQ_LEARNING_MAGIC_SERIAL_TYPE_2:
+                            //Magic Serial Type 2 learning
+                            man = subghz_protocol_keeloq_common_magic_serial_type2_learning(
                                 fix, manufacture_code->key);
                             hop = subghz_protocol_keeloq_common_encrypt(decrypt, man);
                             break;
+                        case KEELOQ_LEARNING_MAGIC_SERIAL_TYPE_3:
+                            //Magic Serial Type 3 learning
+                            man = subghz_protocol_keeloq_common_magic_serial_type3_learning(
+                                instance->generic.serial, manufacture_code->key);
+                            hop = subghz_protocol_keeloq_common_encrypt(decrypt, man);
+                            break;
+                        case KEELOQ_LEARNING_AERF:
+                            man = subghz_protocol_keeloq_common_learning_aerf(
+                                fix, manufacture_code->key);
+                            /* The decoder undoes this with the round-limited variant, so the
+                             * encoder has to use the matching limited encryption. */
+                            hop = subghz_protocol_keeloq_common_encrypt_derived(
+                                decrypt, man, KEELOQ_NL_EXTEND_LIMIT_AERF_ENC);
+                            break;
+                        case KEELOQ_LEARNING_JCM_GEN2:
+                            man = subghz_protocol_keeloq_common_learning_jcm_gen2(
+                                fix, (uint8_t)instance->generic.seed, manufacture_code->key);
+                            hop = subghz_protocol_keeloq_common_encrypt(decrypt, man);
+                            break;
+                        case KEELOQ_LEARNING_STAGNOLI:
+                            man = subghz_protocol_keeloq_common_learning_stagnoli(
+                                fix, manufacture_code->key);
+                            hop = subghz_protocol_keeloq_common_encrypt(decrypt, man);
+                            break;
+                        case KEELOQ_LEARNING_TELCOMA_TABLE_HI: {
+                            uint32_t telcoma_table[4] = {0};
+                            if(subghz_protocol_keeloq_common_get_telcoma_table(
+                                   instance->keystore, telcoma_table)) {
+                                man = subghz_protocol_keeloq_common_learning_telcoma_table(
+                                    fix, telcoma_table);
+                                hop = subghz_protocol_keeloq_common_encrypt(decrypt, man);
+                            }
+                            break;
+                        }
                         case KEELOQ_LEARNING_ERREKA:
                             man = subghz_protocol_keeloq_common_learning_erreka(
                                 fix, instance->generic.seed, manufacture_code->key);
@@ -527,7 +586,8 @@ static bool subghz_protocol_keeloq_gen_data(
                 }
         }
     }
-    if(hop || (prog_mode == PROG_MODE_KEELOQ_DEA_MIO) || (prog_mode == PROG_MODE_KEELOQ_BFT)) {
+    if(hop || (prog_mode == PROG_MODE_KEELOQ_DEA_MIO) || (prog_mode == PROG_MODE_KEELOQ_BFT) ||
+       (prog_mode == PROG_MODE_KEELOQ_ERREKA)) {
         // If we have hop - we will save it to generic data var that will be used later in transmission
         uint64_t yek = (uint64_t)fix << 32 | hop;
         instance->generic.data =
@@ -840,14 +900,12 @@ void subghz_protocol_encoder_keeloq_stop(void* context) {
 }
 
 void* subghz_protocol_decoder_keeloq_alloc(SubGhzEnvironment* environment) {
-    SubGhzProtocolDecoderKeeloq* instance = malloc(sizeof(SubGhzProtocolDecoderKeeloq));
-    instance->base.protocol = &subghz_protocol_keeloq;
-    instance->generic.protocol_name = instance->base.protocol->name;
+    SubGhzProtocolDecoderKeeloq* instance = subghz_protocol_decoder_common_alloc(
+        sizeof(SubGhzProtocolDecoderKeeloq), &subghz_protocol_keeloq);
     instance->keystore = subghz_environment_get_keystore(environment);
     instance->manufacture_from_file = furi_string_alloc();
 
     subghz_custom_btn_set_prog_mode(PROG_MODE_OFF);
-
     return instance;
 }
 
@@ -1026,6 +1084,40 @@ static inline bool subghz_protocol_keeloq_check_decrypt_centurion(
     return false;
 }
 
+// Monarch specific check
+// Constant discriminator like Centurion, but one of two values - remember which one so
+// the encoder can rebuild the same hop
+static inline bool subghz_protocol_keeloq_check_decrypt_monarch(
+    SubGhzBlockGeneric* instance,
+    uint32_t decrypt,
+    uint8_t btn) {
+    furi_assert(instance);
+
+    uint16_t disc = ((uint16_t)(decrypt >> 16)) & 0xFFF;
+    if((decrypt >> 28 == btn) &&
+       ((disc == KEELOQ_MONARCH_DISCRIMINATOR_A) || (disc == KEELOQ_MONARCH_DISCRIMINATOR_B))) {
+        instance->cnt = decrypt & 0x0000FFFF;
+        instance->seed = disc;
+        return true;
+    }
+    return false;
+}
+
+// KEY specific check - constant discriminator, same situation as Monarch
+static inline bool subghz_protocol_keeloq_check_decrypt_key(
+    SubGhzBlockGeneric* instance,
+    uint32_t decrypt,
+    uint8_t btn) {
+    furi_assert(instance);
+
+    if((decrypt >> 28 == btn) &&
+       ((((uint16_t)(decrypt >> 16)) & 0xFFF) == KEELOQ_KEY_DISCRIMINATOR)) {
+        instance->cnt = decrypt & 0x0000FFFF;
+        return true;
+    }
+    return false;
+}
+
 // Pecinin specific check
 static inline bool subghz_protocol_keeloq_check_decrypt_pecinin(
     SubGhzBlockGeneric* instance,
@@ -1098,6 +1190,12 @@ static uint32_t subghz_protocol_keeloq_check_remote_controller_selector(
                             instance->btn = decrypt >> 28;
                             return decrypt;
                         }
+                    } else if((strcmp(furi_string_get_cstr(manufacture_code->name), "KEY") == 0)) {
+                        if(subghz_protocol_keeloq_check_decrypt_key(instance, decrypt, btn)) {
+                            *manufacture_name = furi_string_get_cstr(manufacture_code->name);
+                            keystore->mfname = *manufacture_name;
+                            return decrypt;
+                        }
                     } else {
                         if(subghz_protocol_keeloq_check_decrypt(
                                instance, decrypt, btn, end_serial)) {
@@ -1115,6 +1213,13 @@ static uint32_t subghz_protocol_keeloq_check_remote_controller_selector(
                     decrypt = subghz_protocol_keeloq_common_decrypt(hop, man);
                     if((strcmp(furi_string_get_cstr(manufacture_code->name), "Centurion") == 0)) {
                         if(subghz_protocol_keeloq_check_decrypt_centurion(instance, decrypt, btn)) {
+                            *manufacture_name = furi_string_get_cstr(manufacture_code->name);
+                            keystore->mfname = *manufacture_name;
+                            return decrypt;
+                        }
+                    } else if((strcmp(furi_string_get_cstr(manufacture_code->name), "Monarch") ==
+                               0)) {
+                        if(subghz_protocol_keeloq_check_decrypt_monarch(instance, decrypt, btn)) {
                             *manufacture_name = furi_string_get_cstr(manufacture_code->name);
                             keystore->mfname = *manufacture_name;
                             return decrypt;
@@ -1258,6 +1363,44 @@ static uint32_t subghz_protocol_keeloq_check_remote_controller_selector(
                         return decrypt;
                     }
                     break;
+                case KEELOQ_LEARNING_JCM_GEN2:
+                    // The second input byte is not carried in the packet, brute force it.
+                    for(uint32_t jcm_seed = 0; jcm_seed < 0x100u; jcm_seed++) {
+                        man = subghz_protocol_keeloq_common_learning_jcm_gen2(
+                            fix, (uint8_t)jcm_seed, manufacture_code->key);
+                        decrypt = subghz_protocol_keeloq_common_decrypt(hop, man);
+                        if(subghz_protocol_keeloq_check_decrypt(
+                               instance, decrypt, btn, end_serial)) {
+                            *manufacture_name = furi_string_get_cstr(manufacture_code->name);
+                            keystore->mfname = *manufacture_name;
+                            instance->seed = jcm_seed;
+                            return decrypt;
+                        }
+                    }
+                    break;
+                case KEELOQ_LEARNING_STAGNOLI:
+                    man = subghz_protocol_keeloq_common_learning_stagnoli(
+                        fix, manufacture_code->key);
+                    decrypt = subghz_protocol_keeloq_common_decrypt(hop, man);
+                    if(subghz_protocol_keeloq_check_decrypt(instance, decrypt, btn, end_serial)) {
+                        *manufacture_name = furi_string_get_cstr(manufacture_code->name);
+                        keystore->mfname = *manufacture_name;
+                        return decrypt;
+                    }
+                    break;
+                case KEELOQ_LEARNING_TELCOMA_TABLE_HI: {
+                    uint32_t telcoma_table[4] = {0};
+                    if(!subghz_protocol_keeloq_common_get_telcoma_table(keystore, telcoma_table))
+                        break;
+                    man = subghz_protocol_keeloq_common_learning_telcoma_table(fix, telcoma_table);
+                    decrypt = subghz_protocol_keeloq_common_decrypt(hop, man);
+                    if(subghz_protocol_keeloq_check_decrypt(instance, decrypt, btn, end_serial)) {
+                        *manufacture_name = furi_string_get_cstr(manufacture_code->name);
+                        keystore->mfname = *manufacture_name;
+                        return decrypt;
+                    }
+                    break;
+                }
                 case KEELOQ_LEARNING_UNKNOWN:
                     // Simple Learning
                     decrypt = subghz_protocol_keeloq_common_decrypt(hop, manufacture_code->key);
@@ -1436,6 +1579,11 @@ static uint32_t subghz_protocol_keeloq_check_remote_controller(
         *manufacture_name = "Dea_Mio";
         keystore->mfname = *manufacture_name;
         instance->cnt = temp_counter;
+    } else if(prog_mode == PROG_MODE_KEELOQ_ERREKA) {
+        // When we are in prog mode we should fix mfname and apply temp counter
+        *manufacture_name = "Erreka";
+        keystore->mfname = *manufacture_name;
+        instance->cnt = temp_counter;
     } else {
         // Counter protection
         furi_crash("Unsupported Prog Mode");
@@ -1470,7 +1618,11 @@ SubGhzProtocolStatus subghz_protocol_decoder_keeloq_serialize(
     subghz_protocol_keeloq_check_remote_controller(
         &instance->generic, instance->keystore, &instance->manufacture_name);
 
-    if(strcmp(instance->manufacture_name, "BFT") == 0) {
+    // Monarch keeps its discriminator in seed, so it has to be saved like the BFT seed.
+    // Erreka needs its seed kept too, without it the hops cannot be rebuilt.
+    if((strcmp(instance->manufacture_name, "BFT") == 0) ||
+       (strcmp(instance->manufacture_name, "Erreka") == 0) ||
+       (strcmp(instance->manufacture_name, "Monarch") == 0)) {
         uint8_t seed_data[sizeof(uint32_t)] = {0};
         for(size_t i = 0; i < sizeof(uint32_t); i++) {
             seed_data[sizeof(uint32_t) - i - 1] = (instance->generic.seed >> i * 8) & 0xFF;
@@ -1786,7 +1938,7 @@ void subghz_protocol_decoder_keeloq_get_string(void* context, FuriString* output
         subghz_block_generic_global.current_cnt = instance->generic.cnt;
 
         ProgMode prog_mode = subghz_custom_btn_get_prog_mode();
-        if(prog_mode == PROG_MODE_KEELOQ_BFT) {
+        if((prog_mode == PROG_MODE_KEELOQ_BFT) || (prog_mode == PROG_MODE_KEELOQ_ERREKA)) {
             furi_string_cat_printf(
                 output,
                 "%s %dbit\r\n"

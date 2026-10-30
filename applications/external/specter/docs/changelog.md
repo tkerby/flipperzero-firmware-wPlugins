@@ -1,5 +1,304 @@
 # Changelog
 
+## 3.1.1
+
+One fix, reported within the hour by the first person to watch the thing boot.
+
+- **Fix: the boot intro flashed the whole screen black.** The "contact" beat -
+  the moment the poll is found - inverted all 128x64 for two ticks. It was
+  reported as a bug, and that is the right verdict: a panel going entirely
+  black during startup does not read as emphasis, it reads as the display
+  glitching or the app crashing, which is a terrible thing for an intro to
+  imply about a tool you are about to trust. Only the band the carrier lives in
+  inverts now - rows 34-52, clear of everything drawn at that moment. Same
+  beat, same meaning, unmistakably part of the drawing rather than part of the
+  hardware.
+
+  The general lesson is worth keeping: on a screen this small, **an effect that
+  covers everything is indistinguishable from a fault**. Emphasis has to be
+  local to the thing being emphasised, or it stops being emphasis.
+
+Off-device, in the same pass: the README and the project site were each showing
+several captures twice (a contact sheet plus the same screens again as per-mode
+stills), and the site's Didone headings were pinned to a sturdier optical size
+because a hairline on true black stops being a thin line and starts being an
+intermittent one.
+
+## 3.1
+
+A boot intro, a real capture pipeline, and the end of the mock-ups.
+
+- **New: a boot intro.** Specter now opens by drawing itself. A trace writes
+  across the screen from the left, flat and silent - what a clean room looks
+  like on this instrument - then a reader's poll cuts in, the screen inverts
+  for a fifth of a second, and the SPECTER nameplate engraves itself a letter
+  at a time. The inversion is deliberately the same gesture the Sweep screen
+  makes when it locks on, so the intro and the instrument share a vocabulary,
+  and the waveform is generated from `SPECTER_FULL_SCALE_DUTY` - the duty cycle
+  the whole meter is scaled against - rather than from a shape that merely
+  looks good. Any key skips it, and **Settings -> Intro** turns it off for good.
+- **Fix: Fingerprint claimed 100% confidence that there was nothing there.**
+  With no carrier present the screen drew a completely full confidence bar and
+  "CONF 100%" next to "NO FIELD" - pixel-for-pixel the same loud, solid block
+  it draws for a nailed-on POLLING reader. The classifier is right (within the
+  noise floor, silence is the one thing it can be certain of) but the screen
+  was using its most emphatic element to say "strong finding" on the state that
+  means "nothing here". The bar and the readout are now simply absent when
+  there is no field; `NO FIELD` over `No carrier` already says it. The
+  classifier is untouched, so nothing downstream changes.
+- **Settings survive a version bump now.** Adding a field changes
+  `sizeof(SpecterSettings)`, and `saved_struct` validates size as well as
+  version - so every previous release quietly reset everyone's sensitivity,
+  survey length, stealth and logging preferences as the price of one new
+  option. The old layout is the exact prefix of the new one, so it is now tried
+  as a fallback and copied forward. This is the last release that will lose
+  your settings, and it does not lose them either.
+- **New: `tools_screenshot.py` - every image in this repository now comes off
+  the device.** It drives the Flipper over its own protobuf RPC session,
+  injects key presses, and pulls the framebuffer back: `--all` walks every
+  screen, `--reader` captures the ones that need a live reader held against
+  the back of the unit, `--splash` records the intro from the launch request
+  onwards, and `--tour-gif` records one continuous GIF of the app being used.
+  Captures land at 4x in the panel's own two colours, which is what both the
+  Apps Catalog and the branding rules want.
+- **Removed: `tools_gen_mockups.py` and `tools_gen_gif.py`.** A renderer that
+  draws the UI is a second implementation of it, and a second implementation
+  disagrees with the firmware sooner or later while still looking completely
+  convincing - which is exactly what happened in 3.0.1, where mock-ups drawn
+  at the wrong glyph advance hid a readout running off the right edge of the
+  screen for several releases. There is nothing left in the project that can
+  draw a screen Specter cannot produce.
+- **Fix: a CONTINUOUS emitter printed polling timings it does not have.** An
+  unbroken carrier has no period, burst or jitter - that is what "Always on"
+  means - but the cadence figures were retained from before the transition, so
+  a reader that stopped polling and held its field up showed a full set of
+  stale timings underneath a verdict denying they exist. The classifier also
+  forces `timing_reliable` for that class, which suppressed the `~` that marks
+  an unresolved number: stale timings, stated at full confidence. Those three
+  rows now read `--`, and UP still prints, because duty is the one figure that
+  does mean something for a continuous carrier.
+- **Fix: `Meter scale = Duty %` put CLOSE, STRONG and PEGGED out of reach.**
+  On that setting the displayed strength is raw carrier duty, which tops out
+  around 30 on a live terminal - so three of the five proximity words could
+  never appear, and the geiger clicks never got faster than their slowest
+  third. That is exactly the unreachable-vocabulary bug 2.3 fixed for the
+  default scale, re-created by the setting added alongside it. Proximity and
+  click rate are now judged on the canonical scale, for the same reason
+  `peak_ref` already was: how close you are to a reader is a fact about the
+  room, not a display preference.
+- **Fix: Site Survey ran a countdown over its own fault screen.** The header
+  was drawn before the error early-return, so "NFC radio busy" was served with
+  a live timer ticking down above it, which then froze at 0:00 and sat there
+  for the life of the scene - a screen claiming simultaneously to be measuring
+  and to be broken. It now shows the shared `NFC BUSY` state word like every
+  other measurement screen. And because the acquire failure is sticky, OK was
+  a silent no-op on the one card that tells you to close the other app *and
+  retry* - OK is now that retry.
+- **Fix: the CLEAN verdict card argued with itself.** It printed PEAK, AVG and
+  UP - none of which are gated by the sensitivity threshold, so an ordinary
+  room's noise puts a few percent on them - directly above the flat sentence
+  "No field detected". The advice now reads **"Nothing above floor"**, which is
+  what CLEAN actually decided and what the numbers above it are consistent with.
+- **Fix: Watch hid `OK=re-arm` exactly when it mattered.** The hint was drawn
+  only in the not-present branch, so the one state where a short OK destroys
+  the most - an overnight record, mid-alarm - was the only state where nothing
+  on screen warned that OK destroys anything. It now takes the footer slot that
+  `NOW %` had, because during an alarm `NOW %` is the redundant one: the
+  strength bar under the banner is the same measurement, readable across a room.
+- **Fix: the logbook described the meter in words the device never shows.**
+  Findings were stamped `m:boost` / `m:raw` while Settings said `0-100` /
+  `Duty %` - names the UI deliberately stopped using in 3.0, because
+  Boost/Raw read as a quality setting rather than as a scale. Both now come
+  from one table, so they cannot drift apart again.
+- **Fix: the README documented a proximity word that does not exist.** It
+  listed `FAINT -> NEAR -> CLOSE -> STRONG -> MAX` and explained `MAX`, while
+  the code has said `PEGGED` since 2.4 - and the same README used `PEGGED`
+  correctly in two other places.
+- **The Fingerprint capture is now chosen by measurement, not by timing.** A
+  reader polls in bursts and the trace window is about a second wide, so
+  whichever frame the shutter happens to catch decides whether the carrier is
+  a rich square wave or a flat line with two blips. `--reader` now scores every
+  frame by how many polls it actually caught and keeps the best one. This
+  matters beyond the screenshot: the banner reads its entire signature waveform
+  back out of that file.
+
+## 3.0.1
+
+Fixes found by looking at the thing on real hardware, which is the only place
+some of these show up.
+
+- **Fix: the Site Survey progress bar was touching the row of stats under it.**
+  Widening the bar in 3.0 to match the verdict banner put its bottom edge on
+  row 27 with the capitals of "FIELD 0%" starting on row 28 - not overlapping,
+  so nothing flagged it, but with no white rows between them the text visibly
+  fused with the bar. The bar is three rows shorter; its left edge, width and
+  top row still line up with the banner, which was the point of the change.
+- **The layout checker now looks for clearance, not just overlap.** That bug
+  shipped because `tools_check_layout.py` only ever asked whether two things
+  ink the same row. It now also asks how much white is between them, using an
+  ink model measured off 4x device captures rather than assumed: FontSecondary
+  capitals light rows [baseline-7 .. baseline-1] and leave the baseline row
+  blank, FontPrimary lights [baseline-8 .. baseline-1]. Zero rows against a bar
+  or box edge is a defect; two text rows stacked closer than the app's 10px
+  pitch is a defect; one row against the screen border is the house edge and is
+  fine. Reintroducing the 3.0 bar raises the count and fails CI.
+- **Fix: Fingerprint's two stat rows were on an 8px pitch** where every other
+  stacked pair in the app uses 10, leaving a single blank row between PER/BST
+  and JIT/UP. The confidence bar sat one row off the CONF readout for the same
+  reason. Every vertical gap on that screen is now two rows, with the divider
+  and pulse train moved into the two spare rows at the bottom of the screen so
+  the trace keeps its full swing.
+- **Fix: the "reader locked on" throb ring was drawn through the calibration
+  text.** It is a full circle, unlike the rest of the gauge, and its lower arc
+  reaches the bottom of the screen; in a normal alarm frame the inverted strip
+  is painted over it afterwards, but calibration paints no strip. Calibrating
+  while standing in a reader's field drew the arc straight through "HOLD
+  STILL". It is now suppressed while calibrating, which also matches the header
+  already reading CALIBRATING and the scene already silencing every other
+  reader alert for that window.
+- **Fix: a one-second Site Survey could report CLEAN.** Letting OK end a run
+  early - new in 3.0 - made that reachable, and it duly turned up in a
+  screenshot: "SURVEY 1s / CLEAN / No field detected". A run cut shorter than
+  10 s now reports **TOO SHORT** instead. The rule is deliberately asymmetric,
+  and it is the same one the rest of the app follows: presence is proof,
+  absence is not. Finding something in one second is a real finding, so TRACE
+  and ACTIVE are never withheld for being quick; finding nothing in one second
+  is a claim about a whole room that one second cannot support. The all-clear
+  chime is suppressed too, since it would say "nothing here" on a second
+  channel.
+- **Fix: long logbook entries broke mid-word.** The viewer's TextBox wraps by
+  character, so a Watch contact rendered as "...contact 2 at 8s fiel" / "d 17%
+  peak 100% m:boost", splitting "field" and losing the indent that marks a line
+  as belonging to the timestamp above it. Entries are now wrapped at spaces
+  onto indented continuation lines, which is also what keeps them filterable -
+  the filter decides what belongs to a finding by indentation. The .csv is
+  untouched and stays one flat row per finding. New pure helper with 44 host
+  checks, including running a wrapped entry back through the filter.
+- The published logbook screenshot is now generated by compiling that helper,
+  so it shows what the device actually writes. It previously showed invented
+  one-line entries about a third the length of the real ones.
+
+## 3.0
+
+A user-experience release. Nothing here changes what Specter can hear - the
+radio code is untouched - but a great deal changes about whether you can tell
+what it is telling you. Four screens written at four different times had drifted
+into four different dialects, and the single most useful instruction in the
+README ("press LEFT and hold still for three seconds") appeared nowhere on the
+device.
+
+**One name for one thing.** The strongest reading was `PK` on Sweep, `PEAK` on
+Survey and Watch, and `MAX` on the verdict card. The contact count was `C` on
+Sweep and `HITS` everywhere else. Carrier-up time was `DUTY`, `SEEN` and
+`FIELD %` on three different screens - while `FIELD` *also* meant the live meter
+one keypress away. Now: `PEAK` is the strongest reading, `HITS` is the count,
+`UP` is carrier-up time, `FIELD` is the live meter and nothing else, and `CONF`
+labels the confidence figure that used to be a bare percentage sitting next to
+another bare percentage.
+
+- **The keys are on the screen now.** Sweep bound three keys and advertised
+  none; until you have found your first reader its bottom strip carries
+  `LEFT=cal hold OK=log`, and retires the hint once a contact registers. Watch
+  shows `OK=re-arm` whenever there is something to lose - it used to show that
+  hint *only* when the count was zero, i.e. only while it was harmless. Site
+  Survey's running screen had no hint at all.
+- **The menu says what each mode is for.** "Fingerprint" reads as biometrics and
+  "Site Survey" reads as a Wi-Fi tool. They are now `Sweep - find it`,
+  `Fingerprint - type`, `Site Survey - room`, `Watch Mode - guard`,
+  `Logbook - findings`, and - the highest-value word change here - `Help & About`.
+- **The dial answers "what counts as a reader?".** The top three ticks used to be
+  drawn bolder as a "danger zone", which was decoration pretending to be
+  information: presence is decided against the sensitivity threshold, which on
+  the default setting sits near 30% of the dial, not 80%. The bold ticks are
+  gone and a real mark is drawn at the real threshold, moving when you change
+  sensitivity or calibrate.
+- **`UP` / `DOWN` change sensitivity mid-hunt.** It is the setting you most need
+  to change with the Flipper against a terminal, and reaching it meant about ten
+  keypresses and taking the device off the target.
+- **Site Survey can be stopped early.** `OK` mid-run used to silently bin the
+  whole walk and restart the countdown. It now ends the survey and grades what
+  it actually has, and the verdict card prints the duration it was graded over -
+  a 30-second `CLEAN` is not the same finding as a two-minute one.
+- **Watch Mode's alarm screen was a fifth blank.** Rows 27-39 were empty at the
+  exact moment something was happening. They now carry a strength bar, so "is it
+  on top of the Flipper or at the edge of range" is readable from across a room.
+- **One pulse when the meter pegs.** That is the "you are on it, stop moving"
+  moment, and it was announced only on a screen you are usually not looking at -
+  your hand under an ATM lip, the Flipper face-down on a pump.
+- **Help leads with the keys, and defines the jargon.** `PER`, `BST`, `JIT` and
+  `CONF` are the entire payload of the Fingerprint screen and were defined
+  nowhere on the device. About now opens with the full key map and a
+  READING THE NUMBERS legend, instead of burying both under five paragraphs.
+- **Settings say what they change.** `Meter: Boost / Raw` read as a quality
+  setting, so flipping it dropped every reading on every screen to about a third
+  and the obvious conclusion was that the app was broken. It is now
+  `Meter scale: 0-100 / Duty %`. `Logging` is `Save findings`, and the logbook
+  size reads `kB` / `B` rather than `k` / `b`.
+- **The empty logbook stops guessing.** It used to tell everyone to turn Logging
+  on - including the people who already had it on - and three of its lines ran
+  past the width of the box and wrapped mid-phrase.
+
+**Bugs fixed**
+
+- **Watch's clock froze at 99:59** while `LAST` kept counting, so a screen left
+  running overnight disagreed with itself. Past 99:59 it now rolls to `hh:mm`
+  with a marker.
+- **Re-entering a mode could flash the previous run's alarm.** No view cleared
+  its model on scene entry, so for up to 100 ms - until the first tick - Watch
+  could draw a full-screen `ACTIVE READER` for a reader that had long gone.
+- **The Sweep readout could run off the screen.** `PK100 C999+` is eleven
+  characters starting at x=68 on a 128-pixel screen. It is now `PEAK 100%`.
+- **Dead code removed.** `first_ms` was plumbed through three files and drawn by
+  nothing; `anim` was incremented on every tick in three views that never read
+  it.
+- **The published screenshots were wrong in three ways.** The menu image omitted
+  Watch Mode entirely, so it showed Logbook in the row where a real Flipper
+  shows Watch Mode; the settings image omitted LED, putting Stealth in LED's
+  row; and Watch's image drew a pair of "liveness" markers that the app
+  deliberately does not draw. The generator also rendered text 20% narrower than
+  the device does, which is precisely why the overrunning readout above looked
+  fine in every published screenshot. It now draws at the device's own advance.
+
+**Under the hood.** The chrome every measurement screen shares - the header, the
+presence dot, the divider, the "another app is using the NFC radio" screen -
+lives in one file instead of four copies that had drifted apart, which is what
+made the four screens read as one instrument again. 473 host-side checks and the
+layout checker both still pass.
+
+## 2.9
+
+A security and correctness audit of the whole codebase. The good news first: a
+strict compiler sweep (`-Wshadow -Wcast-align -Wformat=2 -Wnull-dereference
+-Wduplicated-cond -Wvla -Wstack-usage=1536` and more) found **nothing** across
+all 3,900 lines, there are no unbounded string operations, no division by zero,
+no out-of-bounds indexing, every allocation is paired with its free, and the
+worker thread uses 224 bytes of its 2 KB stack. What follows is what the
+compiler could not see.
+
+- **Fix: `threshold` was the only cross-thread field not marked `volatile`.** It
+  is written by the UI thread and read by the sampling worker in its hot loop,
+  sitting directly beside `full_scale` which was volatile. A single byte cannot
+  tear on this core, but the compiler was entitled to hoist the read out of the
+  loop, in which case a sensitivity change would never reach the worker.
+- **Fix: booleans loaded from the SD card were not normalised.** `saved_struct`
+  validates a magic, a version and a size — it cannot check that the bytes make
+  sense. A `_Bool` holding anything other than 0 or 1 is undefined behaviour the
+  moment it is read, so a hand-edited or corrupted `specter.conf` could put the
+  app somewhere the language has no answer for. Index fields were already
+  clamped; the booleans now are too.
+- **Fix: the logbook grew without any ceiling.** Watch mode appends every few
+  seconds for as long as you leave it standing guard, and nothing ever deleted
+  anything — left running it would grow by a few megabytes a day until it filled
+  the card, taking every other app's storage with it. Each file is now capped at
+  1 MB (roughly twenty thousand findings), and when it is reached the app stops
+  writing and says **`LOG FULL`** rather than failing vaguely or quietly eating
+  the card. Clear the logbook in Settings to carry on.
+- Removed `field_detector_is_running()`: unused, and it reported `true` after the
+  NFC radio failed to open, which was simply untrue.
+- New **`SECURITY.md`** documenting the threat model — chiefly that Specter never
+  transmits, so a hostile reader has no channel to deliver anything over, and the
+  realistic untrusted input is the SD card.
+
 ## 2.8
 
 - **Fix: the field meter could never reach 100%, even resting on a reader.** The strength smoother was `ema = (ema * 3 + duty) / 4`, and integer division discards the remainder on every update, so the filter cannot converge on its own input — fed a steady 31% it settles at 28 and stays there. That is a permanent ~3-point under-read of raw duty, about ten points of displayed field. Keeping the smoother's state at 1/16 resolution fixes it: on a real terminal the meter now pegs at `100% MAX` as it always should have.

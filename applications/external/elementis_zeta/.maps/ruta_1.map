@@ -1,0 +1,96 @@
+# Zone identity (M4 polish): open countryside - low bushes make the border (a few round trees stay inside), wildflowers dot the grass.
+# Ruta 1 - Villa Aliso <-> Ciudad Nodo (Route 1; M4-D: the north gate is the real way to Ciudad Nodo). column = i, row = j; the village is at the +j end (south, the bottom
+# of the grid: screen down-left), Ciudad Nodo at j=0 (north, screen up-right). Winding path, tall-grass patches with the wild
+# encounter table, three rows of one-way ledges facing south (hop SW = +j, i.e. Down + Left), a roaming wild creature.
+@map ruta_1
+@size 20 36
+@interior no
+@area ruta_1
+@bg 0
+@fill grass
+@spawn south 9 34 N
+@spawn north 9 1 S            # arriving from Ciudad Nodo (one tile inside the north exit)
+@flag clerk_gave 31           # the clerk's Salve was given (once)
+@var result 4                 # battle result (0 lost, 1 won, 2 ran, 3 caught); same variable as the lab's
+@encounters grass rate=25     # encounter when rand8 < 25 (9.8 %) on every step into tall grass
+# species lv_min lv_max weight (Route 1: only the songbird and the rodent)
+  flitter 2 5 55
+  muncrit 2 5 45
+@end
+# Open ground (contract 63, transit road): a step onto plain ground (not tall grass, water, a door, a ledge, an arrow floor) rolls this table when rand8 < 2 (2/256 per step).
+@open_rate 2
+# Roaming wild creatures (contract 55, PILOT): up to 2 creatures wander the open ground (plain grass, path, flowers: never the tall grass, the ledges, the doors) and the
+# grass table's species / levels are drawn when each (re)appears; touching one starts that wild battle, after it a new one comes 30 steps later, out of view.
+@roam 2 table=grass area=.=f period=1800
+@legend
+  .  tile=grass
+  =  tile=path
+  g  tile=tall_grass
+  f  tile=flowers
+  T  object=tree              # the few trees that stay (the borders are bushes now)
+  B  object=bush              # low bushes: the field's border (open countryside)
+  r  object=rock
+  v  ledge=SW                 # one-way ledge: hop over it toward +j (Down + Left)
+  S  object=sign interact=look text=route1.sign
+  L  object=sign interact=look text=route1.ledge
+  N  tile=path                # the way to Ciudad Nodo (warp below)
+  s  tile=path                # the way home (warp below)
+  # Mart clerk: gives a Salve on Route 1 (once); he stands beside the path at the south end, looking at it
+  k  npc=vecino id=clerk face=NW script=clerk
+  H  tile=grass hidden=salve   # hidden (contract 80, hidden items)
+@grid
+  BBBBBBBBBNNBBBBBBBBB
+  B........==........B
+  B....T...==...TT...B
+  B.ggggg..==......f.B
+  B.ggggg..==.r...f..B
+  B.ggggg..==........B
+  Bvvvvvv..==..vvvvvvB
+  Bf.......==........B
+  B..ff....==....TT..B
+  B...TT...===...T...B
+  B.f.......==..f....B
+  Bvvvvvvvv.==..vvvvvB
+  B......f..===...f..B
+  B..gggggg..==...f..B
+  B..gggggg..==.gggg.B
+  B..gggggg..==.gggg.B
+  B..gggggg.===fgggg.B
+  BH.gggggg.==..gggg.B
+  B.........==..gggg.B
+  B.TT......==..gggg.B
+  B.T......===....TT.B
+  B.f......==........B
+  Bvvvvvvv.==.vvvvvvvB
+  B........==.f..f...B
+  B.....T.L==...TT.f.B
+  B........==...T....B
+  BT.......==.gggggg.B
+  B..gggg..==.gggggg.B
+  B..gggg..==.gggggg.B
+  B.fgggg..==.gggggg.B
+  B.....f..==.gggggg.B
+  B..T.r...==...r....B
+  B.......S==k...fT..B
+  B....f.T.==..TT....B
+  B.T......==......T.B
+  BBBBBBBBBssBBBBBBBBB
+@warp s -> villa_aliso spawn=route1
+@warp N -> ciudad_nodo spawn=south
+# ---------------------------------------------------------------------------------------------------------------
+# Mart clerk: "I work at the Mart in Ciudad Nodo. Take this free sample" = a Salve, once. give_item leaves how
+# many were really added in var 0 (0 = bag full: he keeps it for later and the flag stays clear).
+@script clerk npc
+    jf clerk_gave after
+    say route1.clerk.a
+    give_item salve 1
+    jv 0 0 full
+    say route1.clerk.got
+    setf clerk_gave
+    end
+  full:
+    say route1.clerk.full
+    end
+  after:
+    say route1.clerk.b
+@end

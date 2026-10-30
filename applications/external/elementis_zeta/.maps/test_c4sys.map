@@ -1,0 +1,65 @@
+# TEST FIXTURE (id 94): the C4-A world systems (contract section 35): a DARK cave (@dark yes: only a small diamond around the hero is drawn without the Linterna module,
+# flag 89), a ghost map (@ghosts yes), arrow floors (straight run, redirect, loop, into a solid NPC, into a boulder, screen-cardinal facings with the corner rule) and an elevator
+# (the PC at (15,12): a three-row floor list, then a warp inside the map; the PC at (13,12): a five-row list). Not part of the game: reached only by the host harness (tools/host_world, `make c4sys`).
+# Arrows: `>` SE (+i)  `<` NW (-i)  `v` SW (+j)  `^` NE (-j)  `s` S (+1,+1)  `e` E (+1,-1).  Variables: c4_pick (the elevator's row), c4_cnt (the Registro's count).
+@map test_c4sys
+@size 18 14
+@interior no
+@cave yes
+@dark yes
+@ghosts yes
+@bg 3
+@fill cave
+@spawn start 1 1 S
+@var c4_pick 5
+@var c4_cnt 6
+@legend
+  .  tile=cave
+  b  tile=cave object=boulder
+  >  tile=arrow_se
+  <  tile=arrow_nw
+  v  tile=arrow_sw
+  ^  tile=arrow_ne
+  s  tile=arrow_s
+  e  tile=arrow_e
+  N  tile=cave npc=vecino id=guard face=S text=c4a.test.signal
+  L  tile=cave object=pc interact=look script=lift
+  M  tile=cave object=pc interact=look script=lift5
+@grid
+  ..................
+  ....>>>...........
+  ..........>v......
+  ...>>v....^<......
+  .....v............
+  ..b..v.......b....
+  .........s...e..b.
+  ..........s.......
+  ...>>N............
+  ..................
+  ...>>b............
+  ..................
+  .......b.....M.L..
+  ..................
+@script lift interact
+    say gl.c4a.elev.ask
+    elevator c4_pick gl.c4a.floor.b1 gl.c4a.floor.f1 gl.c4a.floor.f2
+    jv c4_pick 255 stay
+    jv c4_pick 0 f0
+    jv c4_pick 1 f1
+    warp test_c4sys 15 2 S
+  f0:
+    warp test_c4sys 2 12 S
+  f1:
+    warp test_c4sys 8 12 S
+  stay:
+    say c4a.test.signal
+@end
+@script lift5 interact
+    elevator c4_pick gl.c4a.floor.b4 gl.c4a.floor.b3 gl.c4a.floor.b2 gl.c4a.floor.b1 gl.c4a.floor.f1
+@end
+@script count called
+    caught_count c4_cnt
+@end
+@script count_ge called
+    caught_ge c4_cnt 10
+@end

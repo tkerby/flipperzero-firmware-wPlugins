@@ -1,0 +1,20 @@
+title Gimnasio Cantera - inside the rock gym: a steady pulse on D that grows eight bars (D minor, a tritone leans on it), a snare roll, and it starts again
+tempo 120
+vol 235
+meter 4/4
+inst p1 v=120,80,60
+inst p2 v=170,120,90
+inst p3 v=220,160,120
+inst p4 v=255,200,150
+inst kick drum=g5 v=255,200,140 d=0,-45,-75
+inst snr drum=a6 noise=25 seed=4 fall=12
+l8
+# --- the pulse alone, then the beat
+@p1 o5 [ d ]8 [ d ]8 |
+@p2 [ !kick:d d d e- ]4 |
+# --- the tritone leans in
+@p3 [ !kick:d d a- d !snr:d d e- d ]2 |
+# --- it climbs, the snare rolls, and it breaks off
+@p4 d e- e f f+ g a- a |
+b- b o6 c c+ d d d d |
+[ !snr=4 ]2 !snr=5 !snr=5 !snr=5 !snr=5

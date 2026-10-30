@@ -1,0 +1,35 @@
+# Sala 4 de la Liga (Arkan, Dragon, C9, contract 56), 11 x 12, interior, ONE room of the League four run (contract 50.2): DRAGON: big light marble slabs and four PixelLab dragon statues. column = i, row = j. The hero arrives at (5,10) facing NE; the door BEHIND him (5,11) is a solid NPC that appears when league_run is set;
+# the member stands at (5,4) facing SW (+j), the door AHEAD (5,1) is a solid NPC hidden when the member's beaten flag (league_e4) is set, the doorway (5,0) is the warp (`oneway`). No exit warp, no way back (a loss is the blackout to the lobby).
+@map liga_dragon
+@size 11 12
+@interior yes
+@bg 0
+@fill marb_00
+@spawn in 5 10 NE
+@legend
+  K  tile=none object=wall_corner
+  w  tile=none object=wall_j
+  |  tile=none object=wall_i
+  0  tile=marb_10 
+  1  tile=marb_11 
+  2  tile=marb_01 
+  3  tile=marb_11 npc=keydoor id=door_a face=S solid=yes gate=yes text=gl.c9.door.locked hide_flag=league_e4
+  4  tile=marb_10 
+  5  tile=marb_00 object=dstat
+  6  tile=marb_00 
+  7  tile=marb_10 npc=arkan id=member face=SW trainer=arkan text=lg.arkan.pre after=lg.arkan.after beaten_flag=league_e4 range=4
+  8  tile=marb_11 npc=keydoor id=door_x face=S solid=yes gate=yes text=gl.c9.door.shut show_flag=league_run
+@grid
+  Kwwww0wwwww
+  |1212321212
+  |4546464546
+  |1212121212
+  |4646764646
+  |1212121212
+  |4646464646
+  |1212121212
+  |4546464546
+  |1212121212
+  |4646464646
+  |1212821212
+@warp 0 -> liga_campeon spawn=in oneway

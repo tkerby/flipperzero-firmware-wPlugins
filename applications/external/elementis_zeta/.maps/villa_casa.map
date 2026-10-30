@@ -1,0 +1,65 @@
+# Player's house (interior). column = i, row = j; (0,0) = back corner.
+@map villa_casa
+@size 8 7
+@interior yes
+@bg 3
+@fill floor_wood
+@spawn start 3 4 S
+@spawn door 4 5 N
+@flag named 10          # the player and the rival have been named (new game, once)
+@flag mom_talked 1      # Mom's first greeting was heard (was her talk_flag)
+@flag starter_chosen 12 # the player has a starter (set in the lab)
+@legend
+  .  tile=floor_wood
+  C  tile=none object=wall_corner
+  w  tile=none object=wall_j
+  y  tile=none object=wall_win_j
+  |  tile=none object=wall_i
+  q  tile=none object=wall_win_i
+  B  object=bookshelf interact=look text=obj.libros.casa
+  V  object=tv interact=look text=obj.tv
+  P  object=pc interact=look text=obj.pc
+  T  object=table
+  b  object=bed
+  M  npc=mama face=S script=mom
+  m  tile=mat
+@grid
+  Cwywwyww
+  |.B.V.Pb
+  |......b
+  q....T..
+  |.......
+  |..M....
+  |..mm...
+@warp m -> villa_aliso spawn=casa_door
+# New game: before anything else the player picks his name, then the rival's (scene_name.c) and then his Solar / Lunar affinity (contract 66).
+# Runs from the start map's on_enter so it is data-driven, flag-gated (once) and saved with the flags (M3).
+@script naming on_enter if !named
+    name_select 0
+    name_select 1
+    name_select 2             # B2 (contract 66): the Solar / Lunar affinity (the same picker scene, who = 2; stored in PartyState.aff)
+    setf named
+@end
+# Mom: before the first Elementi she only talks (she sent you to the lab); once you have one she offers a rest that heals
+# the whole party (fade to white, a short wait = the healing jingle moment, heal_party, fade in).
+@script mom npc
+    jf starter_chosen rest
+    jf mom_talked again
+    say mom.a
+    setf mom_talked
+    end
+  again:
+    say mom.b
+    end
+  rest:
+    ask mom.rest
+    jv 0 1 yes
+    say mom.rest.no
+    end
+  yes:
+    fade_out
+    wait 1600
+    heal_party
+    fade_in
+    say mom.rest.done
+@end

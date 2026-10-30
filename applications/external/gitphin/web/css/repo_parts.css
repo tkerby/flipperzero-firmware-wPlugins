@@ -1,0 +1,14 @@
+.fhead{display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap;padding:var(--s2) var(--s3);background:var(--card2);border-bottom:2px solid var(--bd);position:sticky;top:0;z-index:1}
+.fhead .p{flex:1;min-width:0;overflow-wrap:anywhere;font-weight:600}
+.fsec{border-bottom:2px solid var(--bd)}
+.fl .tr{height:auto;min-height:30px;padding-top:2px;padding-bottom:2px;white-space:normal}
+.fl .tr .fp{min-width:0;overflow-wrap:anywhere}
+.fl .tr .fp small{color:var(--muted)}
+.fl .tr.on small{color:inherit;opacity:.8}
+.kv{display:flex;flex-wrap:wrap;gap:var(--s2) var(--s4);margin:var(--s2) 0}
+.title-row{display:flex;gap:var(--s3);align-items:baseline;flex-wrap:wrap}
+.title-row h2{margin:0;font-size:20px;overflow-wrap:anywhere;background:none;color:inherit;padding:0}
+.shachip{display:inline-flex;align-items:center;gap:var(--s1);font:var(--mono)}
+.newref{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center;margin-bottom:var(--s3)}
+.newref input[type=text]{flex:1;min-width:140px}
+form.inl{display:flex;gap:var(--s2);margin:var(--s2) 0 0}form.inl input{flex:1;min-width:0}

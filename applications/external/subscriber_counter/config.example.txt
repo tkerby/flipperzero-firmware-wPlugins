@@ -1,0 +1,23 @@
+# Subscriber Counter - configuration
+# Copy to SD card: apps_data/sub_counter/config.txt
+# API key from the Google Cloud Console (YouTube Data API v3)
+api_key=YOUR_API_KEY
+# Channel ID (UC...) or @handle
+channel=@yourchannel
+# Update interval in seconds (min. 60)
+interval=300
+# Keep the backlight on (1/0)
+backlight=1
+# New subscriber alert: sound, vibration, LED (1/0)
+sound=1
+vibro=1
+led=1
+# en or de
+language=en
+# inter, flipper or mix
+font=flipper
+# bridge (desktop helper) or wifi (FlipperHTTP board)
+transport=bridge
+# Optional Wi-Fi network for the board
+wifi_ssid=
+wifi_password=

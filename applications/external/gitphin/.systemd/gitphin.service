@@ -1,0 +1,11 @@
+[Unit]
+Description=Gitphin bridge (http://localhost:8080 <-> Gitphin on the Flipper)
+
+[Service]
+Type=simple
+# install.sh replaces @GITPHIN_DIR@ with the folder Gitphin is installed from.
+# Add --open-browser to open the page on every plug-in.
+ExecStart="@GITPHIN_DIR@/.venv/bin/python" -I "@GITPHIN_DIR@/pc/bridge.py" --port 8080
+# The bridge exits by itself when the Flipper is unplugged; the path unit starts it again.
+Restart=on-failure
+RestartSec=5

@@ -130,7 +130,7 @@ void draw_specs_view(Canvas* canvas, JayxApp* app) {
 
     canvas_set_font(canvas, FontSecondary);
     if(nlines == 0) {
-        canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignBottom, "—");
+        canvas_draw_str_aligned(canvas, 64, 40, AlignCenter, AlignBottom, "-");
     } else if(nlines == 1) {
         draw_centered_fit(canvas, 64, 40, lines[0], 118);
     } else if(nlines == 2) {
@@ -140,7 +140,7 @@ void draw_specs_view(Canvas* canvas, JayxApp* app) {
         draw_centered_fit(canvas, 64, 34, lines[0], 118);
         draw_centered_fit(canvas, 64, 43, lines[1], 118);
         draw_centered_fit(canvas, 64, 52, lines[2], 118);
-        /* skip pills when 3 lines — tight; still show page dots */
+        /* skip pills when 3 lines - tight; still show page dots */
         jayx_draw_page_dots(canvas, JayxPageSpecs);
         return;
     }

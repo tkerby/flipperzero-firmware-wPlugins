@@ -1,0 +1,13 @@
+title Fin - "the end" jingle (once): the first two bars of the village lullaby (G major) one last time, slowly, and a long shimmering G chord that fades; the game is over, the road goes on
+once
+tempo 100
+vol 210
+meter 4/4
+inst soft v=200,255,235,215,200,190,180
+inst chime arp=0,4,7 rate=2 lvl=0.8
+inst bell dec=3 sus=0.05 slow
+l4
+@soft o5 g b o6 d e8 d8 |
+o5 b4. a8 g4 e4 |
+@bell o6 g2 @chime o5 g2 |
+@chime o5 g2. r4 |
