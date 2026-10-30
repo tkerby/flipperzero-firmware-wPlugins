@@ -8,20 +8,17 @@ env:
   # Minimum free flash below the core2 radio stack before CI fails: 2 flash pages
   # of FURI_HAL_FLASH_PAGE_SIZE (4096)
   MIN_FREE_FLASH: 8192
-  FBT_TOOLCHAIN_PATH: /runner/_work
   FBT_GIT_SUBMODULE_SHALLOW: 1
 
 jobs:
   compact:
-    runs-on: [self-hosted, FlipperZeroShell]
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
         target: [f7, f18]
     steps:
-      - name: 'Wipe workspace'
-        run: find ./ -mount -maxdepth 1 -exec rm -rf {} \;
-
       - name: 'Checkout code'
         uses: actions/checkout@v4
         with:
@@ -127,6 +124,6 @@ jobs:
 #    name: Report status
 #    needs: [compact]
 #    if: always() && !contains(needs.*.result, 'failure')
-#    runs-on: [self-hosted, FlipperZeroShell]
+#    runs-on: ubuntu-latest
 #    steps:
 #      - run: echo "All good ✨" ;
