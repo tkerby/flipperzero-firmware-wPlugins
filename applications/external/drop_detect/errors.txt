@@ -1,0 +1,64 @@
+greenbean@greenframework:/mnt/schoolwork/PRO101/flipperzero-firmware$ ./fbt COMPACT=1 DEBUG=1 launch APPSRC=applications_user/CaptureApp
+
+fbt: warning: App folder '/mnt/schoolwork/PRO101/flipperzero-firmware/applications_user/ConfirmedWorking': missing manifest (application.fam)                                                                                                       
+LoadAppManifest, line 130, in file "/mnt/schoolwork/PRO101/flipperzero-firmware/scripts/fbt_tools/fbt_apps.py"                                                                                                                                      
+        CC      applications_user/CaptureApp/datarecord.c
+applications_user/CaptureApp/datarecord.c: In function 'capture_thread':
+applications_user/CaptureApp/datarecord.c:59:5: error: implicit declaration of function 'icm42688p_write_reg'; did you mean 'icm42688p_free'? [-Werror=implicit-function-declaration]
+   59 |     icm42688p_write_reg(ctx->icm->spi_bus, ICM42688_FIFO_CONFIG, 0x40);
+      |     ^~~~~~~~~~~~~~~~~~~
+      |     icm42688p_free
+applications_user/CaptureApp/datarecord.c:59:33: error: invalid use of incomplete typedef 'ICM42688P'
+   59 |     icm42688p_write_reg(ctx->icm->spi_bus, ICM42688_FIFO_CONFIG, 0x40);
+      |                                 ^~
+applications_user/CaptureApp/datarecord.c:59:44: error: 'ICM42688_FIFO_CONFIG' undeclared (first use in this function)
+   59 |     icm42688p_write_reg(ctx->icm->spi_bus, ICM42688_FIFO_CONFIG, 0x40);
+      |                                            ^~~~~~~~~~~~~~~~~~~~
+applications_user/CaptureApp/datarecord.c:59:44: note: each undeclared identifier is reported only once for each function it appears in
+applications_user/CaptureApp/datarecord.c:62:33: error: invalid use of incomplete typedef 'ICM42688P'
+   62 |     icm42688p_write_reg(ctx->icm->spi_bus, ICM42688_INTF_CONFIG0, 0xC0);
+      |                                 ^~
+applications_user/CaptureApp/datarecord.c:62:44: error: 'ICM42688_INTF_CONFIG0' undeclared (first use in this function)
+   62 |     icm42688p_write_reg(ctx->icm->spi_bus, ICM42688_INTF_CONFIG0, 0xC0);
+      |                                            ^~~~~~~~~~~~~~~~~~~~~
+applications_user/CaptureApp/datarecord.c:65:33: error: invalid use of incomplete typedef 'ICM42688P'
+   65 |     icm42688p_write_reg(ctx->icm->spi_bus, ICM42688_FIFO_CONFIG1, 0x72);
+      |                                 ^~
+applications_user/CaptureApp/datarecord.c:65:44: error: 'ICM42688_FIFO_CONFIG1' undeclared (first use in this function)
+   65 |     icm42688p_write_reg(ctx->icm->spi_bus, ICM42688_FIFO_CONFIG1, 0x72);
+      |                                            ^~~~~~~~~~~~~~~~~~~~~
+applications_user/CaptureApp/datarecord.c:68:33: error: invalid use of incomplete typedef 'ICM42688P'
+   68 |     icm42688p_write_reg(ctx->icm->spi_bus, ICM42688_FIFO_CONFIG2, 0x01);
+      |                                 ^~
+applications_user/CaptureApp/datarecord.c:68:44: error: 'ICM42688_FIFO_CONFIG2' undeclared (first use in this function)
+   68 |     icm42688p_write_reg(ctx->icm->spi_bus, ICM42688_FIFO_CONFIG2, 0x01);
+      |                                            ^~~~~~~~~~~~~~~~~~~~~
+applications_user/CaptureApp/datarecord.c:69:33: error: invalid use of incomplete typedef 'ICM42688P'
+   69 |     icm42688p_write_reg(ctx->icm->spi_bus, ICM42688_FIFO_CONFIG3, 0x00);
+      |                                 ^~
+applications_user/CaptureApp/datarecord.c:69:44: error: 'ICM42688_FIFO_CONFIG3' undeclared (first use in this function)
+   69 |     icm42688p_write_reg(ctx->icm->spi_bus, ICM42688_FIFO_CONFIG3, 0x00);
+      |                                            ^~~~~~~~~~~~~~~~~~~~~
+applications_user/CaptureApp/datarecord.c:73:5: error: implicit declaration of function 'icm42688p_read_mem'; did you mean 'icm42688p_read_temp'? [-Werror=implicit-function-declaration]
+   73 |     icm42688p_read_mem(ctx->icm->spi_bus, ICM42688_INT_STATUS, &dummy_byte, 1);
+      |     ^~~~~~~~~~~~~~~~~~
+      |     icm42688p_read_temp
+applications_user/CaptureApp/datarecord.c:73:32: error: invalid use of incomplete typedef 'ICM42688P'
+   73 |     icm42688p_read_mem(ctx->icm->spi_bus, ICM42688_INT_STATUS, &dummy_byte, 1);
+      |                                ^~
+applications_user/CaptureApp/datarecord.c:73:43: error: 'ICM42688_INT_STATUS' undeclared (first use in this function)
+   73 |     icm42688p_read_mem(ctx->icm->spi_bus, ICM42688_INT_STATUS, &dummy_byte, 1);
+      |                                           ^~~~~~~~~~~~~~~~~~~
+applications_user/CaptureApp/datarecord.c:85:21: error: invalid use of incomplete typedef 'ICM42688P'
+   85 |             ctx->icm->spi_bus,
+      |                     ^~
+applications_user/CaptureApp/datarecord.c:86:13: error: 'ICM42688_FIFO_DATA' undeclared (first use in this function)
+   86 |             ICM42688_FIFO_DATA,
+      |             ^~~~~~~~~~~~~~~~~~
+cc1: all warnings being treated as errors
+        SDKCHK  targets/f7/api_symbols.csv
+scons: *** [build/f7-firmware-DC/.extapps/drop_detect/datarecord.o] Error 1
+API version 87.1 is up to date
+
+********** FBT ERRORS **********
+build/f7-firmware-DC/.extapps/drop_detect/datarecord.o: Error 1

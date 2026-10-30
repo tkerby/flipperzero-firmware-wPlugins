@@ -1,0 +1,22 @@
+# ufbt build output
+dist/
+build/
+*.fap
+*.elf
+
+# ufbt generates these into the project dir
+.vscode/compile_commands.json
+.vscode/c_cpp_properties.json
+.vscode/launch.json
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/extensions.json
+
+# local ufbt state, if a project-local SDK is ever used
+.ufbt/
+
+# Python venv, if ufbt is installed per-project instead of globally
+.venv/
+
+*.swp
+.DS_Store

@@ -1,0 +1,13 @@
+App(
+    appid="debug_mode",
+    name="Debug Mode",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="debug_mode_app",
+    stack_size=4 * 1024,
+    fap_icon="debug_mode_10px.png",
+    fap_category="Tools",
+    fap_author="Alex Dean",
+    fap_weburl="https://github.com/deanmachinedev/debug_mode",
+    fap_version="0.5",
+    fap_description="A pocket debugging notebook for turning messy problems into cases, tests, results, next steps, notes, and resolutions.",
+)

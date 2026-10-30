@@ -38,8 +38,9 @@
 //     Only paired with the persistent disk backends here, which stream the ring
 //     straight to file (no frozen copy), so the ring is the whole footprint.
 //   - Classic ESP32: 3000 frames ≈ 57 KB safety cap. These are the volatile
-//     RAM-backend boards (default OFF) and a flush also frees+allocs a frozen
-//     copy of the in-window frames, so the cap bounds the transient peak.
+//     RAM-backend boards (default OFF); a flush copies the in-window frames once
+//     into the kept-event slot (blackbox_ram.h frees the previous event first),
+//     so the transient peak is one window, not two (#191), bounded by this cap.
 // All allocation/heap-guard math uses sizeof(BBFrame), so the byte figures track
 // the struct automatically — only these comments need the 18→19 B update.
 #ifndef BLACKBOX_FRAMES_PSRAM
@@ -110,6 +111,7 @@ static uint32_t  g_q_ms = 0;
 static FSDState  g_q_snap;
 static uint32_t  g_missed = 0;      // triggers neither saved nor inside a saved window
 static uint32_t  g_captures = 0;    // monotonic count since boot (badge source)
+static bool      g_save_lowmem = false;  // last armed save dropped for lack of RAM (#191)
 static uint32_t  g_next_seq = 1;    // number of the next event (blackbox_name.h)
 
 // das_ap_state mini-timeline
@@ -435,12 +437,16 @@ static bool backend_is_volatile() { return false; }
 
 #else  // ── RAM backend (volatile, download-only) ──────────────────────────────
 
+#include "blackbox_ram.h"  // BBRamSlot, bb_ram_reserve (one window at a time)
+
 static bool      g_slot_used = false;
 static char      g_slot_base[40] = {};
 static String    g_slot_json;
-static BBFrame*  g_slot_frames = nullptr;
+static BBRamSlot g_slot = {nullptr, 0};   // the frozen frames of the kept event
 static uint32_t  g_slot_n = 0;
 static uint32_t  g_slot_window_start = 0;
+
+static inline const BBFrame* g_slot_frames() { return (const BBFrame*)g_slot.buf; }
 
 static void backend_init() {
     Serial.println("[BB] backend=ram (volatile, dashboard download only)");
@@ -450,20 +456,22 @@ static void backend_init() {
 static uint32_t bb_keep_slot() { return g_cap; }
 static void bb_save_abort() {}
 
-// False when the copy could not be allocated: the event is not kept.
-static bool backend_store_ram(const char* base, const char* json,
-                              const BBFrame* frames, uint32_t n, uint32_t window_start) {
-    if (g_slot_frames) { free(g_slot_frames); g_slot_frames = nullptr; }
-    g_slot_used = false;
-    g_slot_frames = (BBFrame*)malloc((size_t)(n ? n : 1) * sizeof(BBFrame));
-    if (!g_slot_frames) { Serial.println("[BB] RAM event alloc failed"); return false; }
-    memcpy(g_slot_frames, frames, (size_t)n * sizeof(BBFrame));
+// Reserve the slot for a new event of `n` frames, freeing the previous event
+// first so the save never needs two windows at once (#191). Returns the frame
+// buffer to copy the window into, or nullptr on OOM (the slot is left empty).
+static BBFrame* backend_store_begin(uint32_t n) {
+    g_slot_used = false;   // the previous event is being replaced
+    return (BBFrame*)bb_ram_reserve(&g_slot, (size_t)n * sizeof(BBFrame), malloc, free);
+}
+
+// Mark the reserved slot as a complete event once its frames are copied in.
+static void backend_store_commit(const char* base, const char* json,
+                                 uint32_t n, uint32_t window_start) {
     g_slot_n = n;
     g_slot_window_start = window_start;
     g_slot_json = json;
     strncpy(g_slot_base, base, sizeof(g_slot_base) - 1);
     g_slot_used = true;
-    return true;
 }
 
 static int backend_count() { return g_slot_used ? 1 : 0; }
@@ -487,8 +495,9 @@ static bool backend_size(const char* name, bool json, size_t* out) {
     // .log: sum the formatted candump line lengths (no large RAM text copy).
     size_t total = 0;
     char line[72];
+    const BBFrame* frames = g_slot_frames();
     for (uint32_t i = 0; i < g_slot_n; i++) {
-        const BBFrame& f = g_slot_frames[i];
+        const BBFrame& f = frames[i];
         total += tesla_format_candump_line(line, sizeof(line), f.ts_ms - g_slot_window_start,
                                            bb_iface_name(f),
                                            f.id, f.data, f.dlc);
@@ -501,8 +510,9 @@ static void backend_stream_body(WiFiClient& client, const char* name, bool json)
     if (!g_slot_used || strcmp(name, g_slot_base) != 0) return;
     if (json) { client.print(g_slot_json); return; }
     char line[72];
+    const BBFrame* frames = g_slot_frames();
     for (uint32_t i = 0; i < g_slot_n; i++) {
-        const BBFrame& f = g_slot_frames[i];
+        const BBFrame& f = frames[i];
         int n = tesla_format_candump_line(line, sizeof(line), f.ts_ms - g_slot_window_start,
                                           bb_iface_name(f),
                                           f.id, f.data, f.dlc);
@@ -512,7 +522,8 @@ static void backend_stream_body(WiFiClient& client, const char* name, bool json)
 
 static bool backend_delete(const char* name) {
     if (!g_slot_used || strcmp(name, g_slot_base) != 0) return false;
-    if (g_slot_frames) { free(g_slot_frames); g_slot_frames = nullptr; }
+    if (g_slot.buf) { free(g_slot.buf); g_slot.buf = nullptr; g_slot.bytes = 0; }
+    g_slot_n = 0;
     g_slot_used = false;
     g_slot_json = String();
     return true;
@@ -867,7 +878,9 @@ static bool do_flush(uint32_t now_ms, uint32_t* gap_ms) {
 }
 #else
 // RAM: freeze the windowed frames into a contiguous buffer for download, in
-// one step (a copy, no file).
+// one step. The window is copied STRAIGHT into the slot buffer (one allocation,
+// one window of RAM) — no scratch copy held alongside it, so a save needs about
+// half the transient RAM the two-copy path did (#191).
 static bool do_flush(uint32_t now_ms, uint32_t* gap_ms) {
     (void)gap_ms;
     uint32_t lo = (g_trig_ms >= BLACKBOX_PRE_MS) ? g_trig_ms - BLACKBOX_PRE_MS : 0u;
@@ -893,23 +906,26 @@ static bool do_flush(uint32_t now_ms, uint32_t* gap_ms) {
     char json[640];
     bb_event_json(json, sizeof(json), count, window_start, bus0, bus1, txc);
 
-    BBFrame* frozen = (BBFrame*)malloc((size_t)(count ? count : 1) * sizeof(BBFrame));
-    uint32_t fn = 0;
-    bool kept = false;
-    if (frozen) {
-        for (uint32_t i = g_tail; i != g_head && fn < count; i = ring_next(i)) {
-            const BBFrame& fr = g_ring[i];
-            if (fr.ts_ms < lo) continue;
-            if (fr.ts_ms > hi) break;
-            frozen[fn++] = fr;
-        }
-        kept = backend_store_ram(base, json, frozen, fn, window_start);
-        free(frozen);
-    } else {
-        Serial.println("[BB] flush alloc failed");
+    // One window of RAM: the previous event is freed before this one is taken,
+    // then the ring window is copied directly into the slot.
+    BBFrame* dst = backend_store_begin(count);
+    if (!dst) {
+        // A real OOM: tell the dashboard instead of leaving a silent empty list.
+        g_save_lowmem = true;
+        Serial.printf("[BB] %s not saved: low memory (need %lu frames, %lu B free)\n",
+                      base, (unsigned long)count,
+                      (unsigned long)ESP.getFreeHeap());
+        return true;
     }
-    // The dashboard's new-event badge counts captures: only one that was kept.
-    if (!kept) return true;
+    uint32_t fn = 0;
+    for (uint32_t i = g_tail; i != g_head && fn < count; i = ring_next(i)) {
+        const BBFrame& fr = g_ring[i];
+        if (fr.ts_ms < lo) continue;
+        if (fr.ts_ms > hi) break;
+        dst[fn++] = fr;
+    }
+    backend_store_commit(base, json, fn, window_start);
+    g_save_lowmem = false;
     g_captures++;
     Serial.printf("[BB] flushed %s  frames=%lu (can0=%lu can1=%lu) in %lu ms\n",
                   base, (unsigned long)count, (unsigned long)bus0, (unsigned long)bus1,
@@ -982,6 +998,7 @@ String blackbox_status_json() {
     j += "\"queued\":";   j += g_queued ? "true" : "false"; j += ',';
     j += "\"missed\":";   j += g_missed; j += ',';
     j += "\"events\":";   j += backend_count(); j += ',';
+    j += "\"save_lowmem\":"; j += g_save_lowmem ? "true" : "false"; j += ',';
     j += "\"captures\":"; j += g_captures;
     j += '}';
     return j;

@@ -289,7 +289,7 @@ static inline void extract_purse_data(
     furi_string_free(card_number_s);
     furi_string_free(tmp_s);
 
-    if(data->type == MfClassicType1k) {
+    if(data->type == MfClassicType1k || data->type == MfClassicType1kEv1) {
         uint32_t balance = 0;
         for(uint8_t i = 0; i < 4; i++)
             balance = (balance << 8) | data->block[16].data[3 - i];
@@ -604,7 +604,7 @@ static void printf_ppk_data(FuriString* parsed_data, PPKData* ticket, bool ticke
 static bool plantain_get_card_config(PlantainCardConfig* config, MfClassicType type) {
     bool success = true;
 
-    if(type == MfClassicType1k) {
+    if(type == MfClassicType1k || type == MfClassicType1kEv1) {
         config->data_sector = 8;
         config->keys = plantain_1k_keys;
 

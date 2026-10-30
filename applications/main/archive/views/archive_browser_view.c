@@ -478,9 +478,9 @@ static bool archive_view_input(InputEvent* event, void* context) {
                 ArchiveBrowserViewModel * model,
                 {
                     size_t size_menu = menu_array_size(model->context_menu);
-                    if(event->key == InputKeyUp) {
+                    if(size_menu > 0 && event->key == InputKeyUp) {
                         model->menu_idx = ((model->menu_idx - 1) + size_menu) % size_menu;
-                    } else if(event->key == InputKeyDown) {
+                    } else if(size_menu > 0 && event->key == InputKeyDown) {
                         model->menu_idx = (model->menu_idx + 1) % size_menu;
                     }
                 },
@@ -501,17 +501,21 @@ static bool archive_view_input(InputEvent* event, void* context) {
                 },
                 true);
         } else if(event->key == InputKeyOk) {
-            uint32_t idx;
+            uint32_t idx = 0;
+            bool has_selection = false;
             with_view_model(
                 browser->view,
                 ArchiveBrowserViewModel * model,
                 {
-                    ArchiveContextMenuItem_t* current =
-                        menu_array_get(model->context_menu, model->menu_idx);
-                    idx = current->event;
+                    if(model->menu_idx < menu_array_size(model->context_menu)) {
+                        ArchiveContextMenuItem_t* current =
+                            menu_array_get(model->context_menu, model->menu_idx);
+                        idx = current->event;
+                        has_selection = true;
+                    }
                 },
                 false);
-            browser->callback(idx, browser->context);
+            if(has_selection) browser->callback(idx, browser->context);
         } else if(event->key == InputKeyBack) {
             browser->callback(ArchiveBrowserEventFileMenuClose, browser->context);
         }

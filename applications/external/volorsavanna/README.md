@@ -5,7 +5,7 @@
 * C
 * Flipper Zero
 * Python
-* Web
+* Web https://invizabel.github.io/VolorSavanna
 
 #### TODO:
 * Go

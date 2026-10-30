@@ -1,0 +1,37 @@
+App(
+    appid="radio",
+    name="FM Radio RDS [TEA5767/Si4703]",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="radio_app",
+    stack_size=4 * 1024,
+    fap_private_libs=[
+        Lib(
+            name="TEA5767",
+            cincludes=["."],
+            sources=[
+                "TEA5767.c",
+            ],
+        ),
+        Lib(
+            name="Si4703",
+            cincludes=["."],
+            sources=[
+                "Si4703.c",
+            ],
+        ),
+        Lib(
+            name="RDS",
+            cincludes=["."],
+            sources=[
+                "RDS.c",
+            ],
+        ),
+    ],
+    fap_icon="radio.png",
+    fap_icon_assets="images",
+    fap_category="GPIO",
+    fap_author="victormico",
+    fap_weburl="https://github.com/victormico/flipperzero-radio",
+    fap_version="0.1",
+    fap_description="TEA5767/Si4703 FM radio with Si4703 volume, RDS station names and radio text",
+)

@@ -1,4 +1,21 @@
 #include <furi.h>
+#include <stdlib.h> // strtoul for the bookmark file
+#include <stdarg.h>
+#include <math.h> // sqrtf for the cadence jitter (CV)
+#include <lib/subghz/receiver.h>
+#include <lib/subghz/environment.h>
+#include <lib/subghz/subghz_protocol_registry.h>
+#include "rf_logic.h" // pure, host-testable: geometry + the parked burst machine
+
+// The lab build adds a transmitter; the public build must never contain one. The switch is the
+// PRESENCE of rf_lab.h, not a runtime flag, so the public binary has the TX code compiled out --
+// syncing the two repos is therefore a plain file copy, with no patch to reapply on either side.
+#if defined(__has_include)
+#if __has_include("rf_lab.h")
+#include "rf_lab.h"
+#define RFS_LAB 1
+#endif
+#endif
 #include <furi_hal_subghz.h>
 #include <furi_hal_region.h>
 #include <furi_hal_power.h> // external module 5V (OTG) power
@@ -39,6 +56,46 @@ static const SurveyPreset PRESETS[] = {
      "FuriHalSubGhzPreset2FSKDev476Async"},
 };
 #define PRESET_N COUNT_OF(PRESETS)
+
+// config enumerations, defined up here because settings_load() validates against them
+static const char* const GAIN_TXT[] = {"Auto", "Mid", "Low"};
+static const char* const RADIO_TXT[] = {"Internal", "External"};
+static const uint8_t SETTLE_CHOICES[] = {1, 2, 3, 5, 8, 12, 20};
+#define SETTLE_N         COUNT_OF(SETTLE_CHOICES)
+// Trigger floor: -100..-45 dBm in 5 dB steps. Also the burst threshold for parked mode.
+#define TRIG_N           12
+#define TRIG_MIN         -100
+#define TRIG_MAX         (-45)
+// config rows with an action instead of a value (see conf_enter)
+// Row indices, in the exact order the rows are constructed. These were off by four from
+// Help onwards for a while, which made OK on "Help" and "Path loss" start a scan and, in the
+// lab build, made "Help" fire the transmitter. Keep them adjacent to the construction site.
+// PAGE 1 (scan): what the sweep measures. PAGE 2 (tools): one-shot actions and exports.
+// Eighteen rows on a five-row screen is thirteen presses to the bottom; two pages of about
+// ten is at most five. Each page has its OWN index space -- keep the constants next to the
+// construction and the simulator's config walk will catch any drift.
+#define CONF_ROW_TRIGGER 4
+#define CONF_ROW_PATH    8
+#define CONF_ROW_TRACE   9
+#define CONF_ROW_TOOLS   10 // switching row
+
+#define CONF2_ROW_CLEARPK 1
+#define CONF2_ROW_WFSAVE  2
+#define CONF2_ROW_BM      3
+#define CONF2_ROW_SAVEBM  4
+#define CONF2_ROW_PROFILE 5
+#define CONF2_ROW_SAVEPRF 6
+#define CONF2_ROW_HELP    7
+#define CONF2_ROW_SCAN    8 // switching row
+#define PROFILE_N         4 // numbered slots: no text input on this device
+#ifdef RFS_LAB
+#define CONF2_ROW_TXTEST  9
+#define CONF2_ROW_REPLAY  10
+#define CONF2_ROW_TXFRAME 11
+#define CONF2_ROW_BRUTE   12
+#define BRUTE_PAGE        32 // codes per press: ~3 s of airtime, never an open-ended loop
+#define REP_MAX_EDGES     2048 // ~8 KB of the last capture, kept for replay
+#endif
 
 // A permissive region covering the three CC1101 bands, installed for the app's lifetime
 // (restored on exit). Receiving is legal everywhere; without this, out-of-"default-range"
@@ -94,18 +151,27 @@ static bool tune_rx(uint32_t f) {
 // from the serial `log` without a redeploy. Stream it with the CLI `log` command.
 #define TAG "RFSurvey"
 
+static void boot_trace_to(const char* name, const char* fmt, ...);
+
 #define MAX_BINS   1024 // enough for a full 300-928 MHz sweep @650k (~967 bins); int8 -> 2 KB
 #define VIEW_SPEC  0
 #define VIEW_CONF  1
 #define VIEW_RANGE 2 // custom start/end frequency editor
 #define VIEW_CAP   3 // .sub capture screen
+#define VIEW_HELP  4 // key reference
+#define VIEW_CONF2 5 // second config page: the action rows
+#ifdef RFS_LAB
+#define PAGE_N 8 // + carrier test
+#else
+#define PAGE_N 7 // bars, connected, waterfall, numeric, history, cadence, hunt
+#endif
 #define SCR_W      128
 #define RE_MIN     3000 // 300.0 MHz in 100 kHz units (the CC1101 low-band floor)
 #define RE_MAX     9280 // 928.0 MHz
 #define RE_SPAN    10 // minimum span: 1.0 MHz
-#define BASE_Y     50 // spectrum baseline (room for pill buttons below)
-#define MAX_H      28 // tallest bar
-#define BODY_Y0    22 // top of the page body
+#define BASE_Y     62 // spectrum baseline: the plot now runs to the bottom edge
+#define MAX_H      48 // tallest bar
+#define BODY_Y0    14 // top of the plot
 #define WF_ROWS    40 // waterfall freq rows (full-bleed height)
 #define WF_COLS    120 // waterfall time columns: one per completed sweep, ring
 #define WF_H       49 // waterfall heatmap height; y 49..63 holds the time scale + hints
@@ -114,6 +180,34 @@ static bool tune_rx(uint32_t f) {
 #define RSSI_FLOOR -100.0f
 #define RSSI_CEIL  -40.0f
 #define CSV_BUF    512 // one FAT sector: CSV rows flush in chunks instead of a 5 KB line buffer
+
+// ---- parked (zero-span) cadence -------------------------------------------
+// A swept survey sees a given bin once per sweep (~1-2 s at the default step), so anything
+// shorter than a sweep -- a 25 ms keyfob frame, a 100 ms repeat group -- is aliased into a
+// single sample or missed outright. Parked mode stops the sweep, sits on one frequency and
+// samples RSSI at PARK_SAMPLE_MS, which turns the page into a burst detector: rising edges
+// give the repetition period, and the period's spread (CV) separates a crystal-locked machine
+// (weather station, TPMS, sensor: CV ~ 0.00) from a human pressing a button (CV >> 0.05).
+#define PARK_SAMPLE_MS 8 // ~125 Hz; 25 ms frame -> 3 samples (presence, not pulse detail)
+#define PARK_N         128 // envelope ring, 1 px per sample on the 128 px screen
+#define PARK_RING      RFS_PARK_RING // period + duration ring, owned by rf_logic.h
+#define PARK_PROBE_MS  20 // settle after the probe retune
+#define PARK_PROBE_N   25 // 25 x 8 ms = 200 ms per preset
+#define PARK_AB_SPAN   200000u // moving further than this invalidates the A/B result
+// Gap threshold and the burst state machine live in rf_logic.h (RFS_PARK_GAP_MS), so the PC
+// test build runs the same code the firmware does.
+
+// ---- pulse-width signature ------------------------------------------------
+// The .sub capture IS the demodulated envelope, so the |duration| histogram identifies the
+// encoding family without decoding it: a base pulse plus the ratio of the second cluster.
+// 1:3 -> pulse-width ternary (PT2262/EV1527/CAME), 1:2 -> biphase/Manchester, 1:1 -> steady
+// bit clock. Fine buckets where base pulses live (50-1010 us, 40 us), log-ish coarse above.
+#define PW_FINE_LO   50
+#define PW_FINE_STEP 40
+#define PW_FINE_N    24 // buckets 1..24 cover 50..1009 us
+#define PW_COARSE_N  14 // buckets 25..38, upper edges in PW_COARSE_EDGE
+#define PW_COARSE_0  (PW_FINE_N + 1) // index of the first coarse bucket
+#define PW_N         (PW_COARSE_0 + PW_COARSE_N + 1) // +1 for the >=400 ms overflow bucket
 
 // Known sub-GHz allocations across the whole CC1101 range (global: US/EU/JP/CN/ITU),
 // each with a typical modulation (AM = OOK, FM = 2-FSK). Used two ways: to tag a detected
@@ -164,10 +258,6 @@ static const FreqBand KNOWN_BANDS[] = {
     {921000000, 925000000, "920 ISM JP", ModFM}, // Japan/Asia 920 MHz band
     {925000000, 928000000, "GSM900 DL", ModFM}, // tower downlink
 };
-
-static const char* mod_str(Mod m) {
-    return m == ModAM ? "AM" : "FM";
-}
 
 static const FreqBand* band_lookup(uint32_t f) {
     for(size_t i = 0; i < COUNT_OF(KNOWN_BANDS); i++) {
@@ -220,11 +310,33 @@ typedef struct {
     volatile uint8_t radio; // 0 internal CC1101 (furi_hal) / 1 external cc1101_ext (bigger antenna)
     uint8_t preset_buf[128]; // RAM copy of a preset with AGCCTRL2 patched (for Mid/Low gain)
     volatile bool reconfig; // config changed -> worker recomputes bins + resets buffers
+    volatile bool trig_cal; // one-shot: worker derives the Trigger from the noise floor
+    volatile bool clear_peaks; // one-shot: worker drops the peak-hold + min-hold
+    // bookmarks from /ext/apps_data/rfsurvey/freqs.txt ("name, lo_hz, hi_hz" per line)
+    struct {
+        char name[14];
+        uint32_t lo, hi;
+    } bm[8];
+    uint8_t bm_n;
+    volatile bool shot_auto; // capture frames to SD (heartbeat + every key event)
+    bool fb_registered; // the GUI furi_checks a removal of a callback that was never added
+    uint8_t shot_buf[1024]; // latest committed frame, copied under the canvas lock
+    volatile uint32_t shot_seq; // bumped by the framebuffer callback
+    volatile uint32_t shot_written; // last sequence written to the card
+    uint32_t shot_last; // framebuffer dump throttle
+    uint32_t shot_hash; // last dumped frame, so an unchanged screen costs nothing
+    volatile uint8_t batt_pct; // cached: the worker polls it, the draw callback must not
+    volatile bool frozen; // traces hold: the worker stops measuring and leaves the buffers alone
+    uint8_t trace; // 0 Live / 1 Max hold / 2 Min hold -- what the Bars page draws
+    volatile bool wf_export; // one-shot: worker writes the waterfall as a PGM between sweeps
 
     // scan data as int8 dBm (worker writes, GUI reads; per-byte loads/stores are
     // atomic on Cortex-M4, so a torn mix is only cosmetic). Sentinel = -128.
     int8_t rssi[MAX_BINS];
     int8_t peak[MAX_BINS];
+    int8_t minv[MAX_BINS]; // min-hold: the quietest this bin has been. A channel that never
+        // drops is a continuous carrier; one that does was only passing traffic. Mayhem's
+        // "MinH" trace, and the cheapest complement to max-hold.
     uint32_t sweeps;
 
     // waterfall: one column per completed sweep (1024 bins max-folded to WF_ROWS freq rows),
@@ -240,12 +352,13 @@ typedef struct {
     volatile int8_t trigger; // dBm floor: waterfall-lit / haptic / history / capture gate
     volatile bool haptic; // vibro pulse when a bin exceeds the trigger (hands-free locate)
 
-    // session busy-channel history: which 1 MHz buckets peaked above the trigger, how often
-    struct {
-        uint16_t mhz;
-        uint16_t count;
-    } hist[8];
-    uint8_t hist_n;
+    // Per-bin occupancy: how many of the recent sweeps saw this bin above the trigger. The old
+    // hist[] kept only ONE winner per sweep, so a strong carrier hid every weaker active
+    // channel -- Codex flagged exactly that. A per-bin counter costs 1 byte per bin and the
+    // answer is a real fraction, not a popularity contest. Saturating at 255 then halving every
+    // counter keeps it a rolling window with no wide arithmetic.
+    uint8_t occ[MAX_BINS];
+    volatile uint8_t occ_n; // sweeps counted since the last halving (window length)
 
     // CSV logging. The worker owns the File*; the GUI (long-OK) only flips `recording`.
     // Stopped on any reconfig so the fixed-column CSV never mixes two ranges. Rows flush in
@@ -275,9 +388,16 @@ typedef struct {
     Gui* gui;
     ViewDispatcher* vd;
     View* view; // spectrum
-    VariableItemList* conf; // config screen
+    VariableItemList* conf; // config page 1: what the sweep measures
+    VariableItemList* conf2; // config page 2: one-shot actions and exports
     VariableItem* it_range; // "Range MHz" readout, updated when a band is picked
     VariableItem* it_preset; // "Modulation" preset (AM650/AM270/FM238/FM476)
+    VariableItem* it_step; // "Step" -> force-synced when a band change would overflow MAX_BINS
+    VariableItem* it_band; // "Band" -> re-selected after a profile load
+    uint8_t profile_slot; // 0 = none, else 1..PROFILE_N
+    uint8_t path_n; // 0 open / 1 urban / 2 indoor / 3 dense -- feeds the distance estimate
+    VariableItem* it_trigger; // "Trigger" -> text re-synced when Auto trig moves the floor
+    VariableItem* it_settle; // "Settle" -> per-bin dwell time
 
     // custom-range editor (VIEW_RANGE): start/end in 100 kHz units (779.0 MHz = 7790)
     View* range_view;
@@ -288,6 +408,7 @@ typedef struct {
     // the stream; the GUI flips `capturing`. The survey worker is stopped while capturing so
     // there is never two owners of the one radio.
     View* cap_view;
+    View* help_view; // key reference; Back returns to config
     FuriThread* cap_worker;
     FuriStreamBuffer* cap_stream; // ISR -> capture thread (int32 signed durations)
     uint32_t cap_freq; // locked capture frequency (Hz)
@@ -301,12 +422,64 @@ typedef struct {
     volatile int8_t cap_rssi; // last polled RSSI for the capture screen
     volatile uint32_t cap_samples; // durations written
     volatile uint32_t cap_overflow; // ISR drops (stream full) -> capture may be corrupt
+    int32_t cap_edge[RFS_FRAME_EDGES]; // first edges of the capture, for frame estimation
+    uint16_t cap_edge_n;
+#ifdef RFS_LAB
+    // last capture's edges, kept so it can be replayed (lab builds only)
+    int32_t* rep_buf;
+    uint16_t rep_n;
+    uint32_t rep_freq;
+    uint8_t rep_preset;
+    uint32_t brute_next; // next Princeton code the brutal page will start from
+    // carrier test page: bounded, cancellable, and the only TX that can run for long
+    volatile bool carrier_on;
+    volatile bool carrier_abort;
+    uint8_t carrier_secs; // index into CARRIER_SECS
+    uint32_t carrier_t0;
+    FuriThread* carrier_worker;
+    VariableItem* it_brute;
+#endif
+    volatile bool cap_listen; // listen mode: decode continuously, write no file
+    volatile uint16_t cap_packets; // decoded packets this session
+    char cap_decode[40]; // decoded protocol string from the firmware's decoder chain
+    volatile bool cap_decoded;
+    uint16_t cap_pw[PW_N]; // |duration| histogram of this capture (signature line)
+    volatile uint32_t cap_pw_n; // total durations histogrammed
+    // ISR run-length merge: one pending (level,duration) run that has not been emitted yet.
+    // A sub-50 us glitch is folded into it instead of being dropped, which is what used to
+    // invert the polarity of every following edge and make the .sub unreplayable.
+    volatile bool cap_run_active;
+    volatile bool cap_run_level;
+    volatile uint32_t cap_run_dur;
+    volatile bool cap_redraw; // capture stopped on its own -> one more paint of the cap view
     FuriTimer* redraw;
+
+    // parked (zero-span) cadence mode. The worker leaves the sweep loop entirely and sits on
+    // park_freq, sampling into park_env; bursts are segmented by the user Trigger.
+    volatile bool parked;
+    volatile bool park_restart; // set by the GUI, consumed by the worker (single-writer stats)
+    volatile uint32_t park_freq; // frequency under observation (Hz), Up/Down live-tunes it
+    // one-shot modulation A/B, measured by the worker at park entry: contrast (peak above the
+    // local median, dB) for OOK vs 2FSK. This is the discriminator the user used to make by
+    // toggling the preset and squinting; the winner is loaded for the session.
+    int8_t park_ab[2]; // [0] = best OOK contrast, [1] = best 2-FSK contrast
+    uint32_t park_ab_freq; // frequency the A/B was measured at
+    bool park_ab_done;
+    int8_t park_env[PARK_N]; // RSSI ring (oldest at head-count), dBm
+    volatile uint16_t park_head;
+    volatile uint16_t park_count;
+    // burst segmentation + stats: the state machine lives in rf_logic.h so it can be
+    // compiled and hammered on a PC (tests/logic_test.c) with no radio attached
+    RfsPark park;
 } App;
 
 static App* g_app;
 
 static void autoscale(const App* app, int* floor, int* ceil); // used by the worker too
+// defined with the config screen, needed earlier by the range editor
+static uint32_t step_fit(uint32_t lo, uint32_t hi, uint32_t want);
+static uint8_t step_index(uint32_t step);
+static uint16_t band_index(uint32_t lo, uint32_t hi, bool* exact);
 
 // max rssi over the bins that map to waterfall freq-row r (frequency fold is always max,
 // never average -- a narrow burst must not wash out).
@@ -319,28 +492,6 @@ static int8_t wf_row_max(const App* app, int r) {
     for(uint32_t b = b0; b < b1; b++)
         if(app->rssi[b] > m) m = app->rssi[b];
     return m;
-}
-
-// record a 1 MHz bucket hit in the session history (MRU by count): bump if present, else
-// add, else overwrite the weakest entry. Written by the worker, read by the GUI (cosmetic).
-static void hist_add(App* app, uint16_t mhz) {
-    for(uint8_t i = 0; i < app->hist_n; i++) {
-        if(app->hist[i].mhz == mhz) {
-            if(app->hist[i].count < 0xFFFF) app->hist[i].count++;
-            return;
-        }
-    }
-    if(app->hist_n < COUNT_OF(app->hist)) {
-        app->hist[app->hist_n].mhz = mhz;
-        app->hist[app->hist_n].count = 1;
-        app->hist_n++;
-        return;
-    }
-    uint8_t lo = 0; // full: replace the lowest-count slot
-    for(uint8_t i = 1; i < app->hist_n; i++)
-        if(app->hist[i].count < app->hist[lo].count) lo = i;
-    app->hist[lo].mhz = mhz;
-    app->hist[lo].count = 1;
 }
 
 // ---- CSV logging -----------------------------------------------------------
@@ -376,7 +527,8 @@ static File* csv_open(App* app, Storage* storage) {
     int n = snprintf(
         app->csv_line,
         sizeof(app->csv_line),
-        "# RF Survey\n# start=%lu end=%lu step=%lu nbins=%u settle=%u preset=%s\n"
+        "# RF Survey\n# start=%lu end=%lu step=%lu nbins=%u settle=%u preset=%s gain=%u "
+        "trigger=%d\n"
         "# rtc=%04u-%02u-%02u %02u:%02u:%02u\n"
         "# t_ms,bin0..bin%u (dBm; -128=invalid)  binfreq=start+idx*step\n",
         (unsigned long)app->f_start,
@@ -385,6 +537,8 @@ static File* csv_open(App* app, Storage* storage) {
         app->nbins,
         app->settle_ms,
         PRESETS[app->preset_idx].name,
+        (unsigned)app->gain,
+        app->trigger,
         dt.year,
         dt.month,
         dt.day,
@@ -427,9 +581,12 @@ static uint8_t bw_nibble(uint32_t step) {
 static const uint8_t* preset_regs(App* app, uint8_t p, uint8_t gain, uint8_t bwn) {
     const uint8_t* src = PRESETS[p].regs;
     if(gain == 0 && bwn == 0xFF) return src; // nothing to patch -> stock preset
+    // {0,0} terminates the reg pairs. The scan is bounded by the buffer we would copy into:
+    // a table that is not terminated (a different firmware's layout, a truncated array) would
+    // otherwise walk off the end and read whatever follows it in flash.
     size_t i = 0;
-    while(!(src[i] == 0 && src[i + 1] == 0))
-        i += 2; // {0,0} terminates the reg pairs
+    while(i + 1 < sizeof(app->preset_buf) && !(src[i] == 0 && src[i + 1] == 0))
+        i += 2;
     size_t total = i + 2 + 8; // pairs + terminator + 8-byte PA table
     if(total > sizeof(app->preset_buf)) return src; // too big -> fall back, never overflow
     memcpy(app->preset_buf, src, total);
@@ -631,12 +788,708 @@ static void radio_async_stop(void) {
         furi_hal_subghz_stop_async_rx();
 }
 
+// path loss exponent x10: the single biggest source of error in any RSSI distance number, so
+// it is the user's choice rather than a hidden constant
+static const uint8_t PATH_N10[] = {20, 27, 35, 45};
+
+// CC1101 RSSI needs a few symbol periods to settle after a retune; below this the reading is
+// biased low and a weak carrier reads as noise. Rough but honest, and monotonic in bandwidth.
+static uint8_t settle_min_ms(uint32_t step) {
+    if(step <= 100000) return 4; // narrow filter, longest settling
+    if(step <= 325000) return 2;
+    return 1;
+}
+
+// ---- pulse-width signature helpers ----------------------------------------
+
+// upper edges of the coarse buckets (us), log-ish, 1010 -> 400 ms
+static const uint32_t PW_COARSE_EDGE[PW_COARSE_N] = {
+    1200,
+    1600,
+    2500,
+    4000,
+    6300,
+    10000,
+    16000,
+    25000,
+    40000,
+    63000,
+    100000,
+    160000,
+    250000,
+    400000};
+
+// duration (us) -> histogram bucket: 0 = <50 us, 1..24 = fine (40 us wide, 50..1009 us),
+// 25..38 = coarse, 39 = overflow (>=400 ms).
+static uint8_t pw_bucket(uint32_t d) {
+    if(d < PW_FINE_LO) return 0;
+    uint32_t k = 1 + (d - PW_FINE_LO) / PW_FINE_STEP;
+    if(k <= PW_FINE_N) return (uint8_t)k; // 1..24: 40 us wide, 50..1009 us
+    for(uint8_t i = 0; i < PW_COARSE_N; i++)
+        if(d < PW_COARSE_EDGE[i]) return (uint8_t)(PW_COARSE_0 + i); // 25..38
+    return (uint8_t)(PW_COARSE_0 + PW_COARSE_N); // 39: >= 400 ms
+}
+
+// bucket -> representative duration (us), the value shown on the capture screen.
+// uint32_us: the coarse tail reaches 400 ms, which overflows 16 bits by design.
+static uint32_t pw_center(uint8_t b) {
+    if(b == 0) return PW_FINE_LO / 2;
+    if(b <= PW_FINE_N) return (uint32_t)(PW_FINE_LO + (b - 1) * PW_FINE_STEP + PW_FINE_STEP / 2);
+    if(b < PW_COARSE_0) return PW_FINE_LO; // unreachable, keeps the math obviously total
+    uint8_t i = (uint8_t)(b - PW_COARSE_0);
+    if(i >= PW_COARSE_N) return 500000u; // 400 ms+ overflow bucket
+    uint32_t lo = (i == 0) ? 1010u : PW_COARSE_EDGE[i - 1];
+    return (lo + PW_COARSE_EDGE[i]) / 2;
+}
+
+// ---- parked (zero-span) cadence -------------------------------------------
+
+// Contrast of one preset at one frequency: peak RSSI above the median of a short window.
+// Measured with the preset's OWN bandwidth (bwn = 0xFF), because forcing a common filter would
+// erase exactly the AM650-vs-AM270 distinction the number is meant to expose.
+//
+// This is a HINT, not a decision. RSSI measures channel power, not modulation, so a sustained
+// carrier scores ~0 on both families and a one-off button press may land in neither window.
+// The value of the probe is that it saves the user a preset-toggle round trip when the signal
+// happens to be repeating; it must never silently choose the radio's settings for them.
+static int8_t park_probe(App* app, uint8_t preset) {
+    if(preset >= PRESET_N) return 0;
+    radio_load_preset(preset_regs(app, preset, app->gain, 0xFF));
+    if(!tune_rx(app->park_freq)) return 0;
+    furi_delay_ms(PARK_PROBE_MS);
+    int8_t v[PARK_PROBE_N];
+    for(int i = 0; i < PARK_PROBE_N; i++) {
+        float rf = radio_rssi();
+        v[i] = (rf < -127.0f) ? (int8_t)-127 : (int8_t)rf;
+        furi_delay_ms(PARK_SAMPLE_MS);
+    }
+    for(int i = 1; i < PARK_PROBE_N; i++) { // insertion sort (15 elements)
+        int8_t k = v[i];
+        int j = i - 1;
+        while(j >= 0 && v[j] > k) {
+            v[j + 1] = v[j];
+            j--;
+        }
+        v[j + 1] = k;
+    }
+    int c = (int)v[PARK_PROBE_N - 1] - (int)v[PARK_PROBE_N / 2]; // peak - median
+    if(c < 0) c = 0;
+    if(c > 60) c = 60;
+    return (int8_t)c;
+}
+
+// Clear the per-session stats. WORKER THREAD ONLY: the GUI used to call this from the input
+// callback while park_loop was still sampling, which tore every counter (and made the duty
+// divisor transiently zero). The GUI now only sets park_restart and lets the owner reset.
+static void park_clear(App* app) {
+    rfs_park_clear(&app->park);
+    app->park_head = 0;
+    app->park_count = 0;
+    app->park_ab[0] = 0;
+    app->park_ab[1] = 0;
+    app->park_ab_freq = 0;
+    app->park_ab_done = false;
+    memset(app->park_env, -128, sizeof(app->park_env));
+}
+
+// GUI thread: pick the target frequency and ask the worker to start a fresh session. Only
+// these two writes happen off the worker, and both are single-word.
+static void park_begin(App* app) {
+    app->park_freq = selected_freq(app);
+    app->park_restart = true;
+    app->parked = true;
+}
+
+// Parked sessions log their own file. A cadence log is a time series at ONE frequency
+// (t_ms,rssi) at the sample rate, not a per-bin sweep row, so it can never share the sweep
+// CSV -- and it is the input the offline analysis actually wants: burst edges, period
+// histogram, duty, all recoverable at 125 Hz instead of one sample per sweep.
+static File* cadence_open(App* app, Storage* storage) {
+    storage_common_mkdir(storage, APP_DATA_PATH("")); // idempotent; ignore "exists"
+    DateTime dt;
+    furi_hal_rtc_get_datetime(&dt);
+    char path[96];
+    snprintf(
+        path,
+        sizeof(path),
+        APP_DATA_PATH("cadence_%04u%02u%02u_%02u%02u%02u_%03lu.csv"),
+        dt.year,
+        dt.month,
+        dt.day,
+        dt.hour,
+        dt.minute,
+        dt.second,
+        (unsigned long)(furi_get_tick() % 1000));
+    File* f = storage_file_alloc(storage);
+    if(!storage_file_open(f, path, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+        storage_file_close(f);
+        storage_file_free(f);
+        FURI_LOG_E(TAG, "cadence csv: open failed %s", path);
+        return NULL;
+    }
+    uint8_t pi = app->preset_idx < PRESET_N ? app->preset_idx : 0;
+    int n = snprintf(
+        app->csv_line,
+        CSV_BUF,
+        "# RF Survey cadence\n# freq=%lu preset=%s sample_ms=%u trigger=%d gain=%u\n"
+        "# rtc=%04u-%02u-%02u %02u:%02u:%02u\n# t_ms,rssi\n",
+        (unsigned long)app->park_freq,
+        PRESETS[pi].name,
+        (unsigned)PARK_SAMPLE_MS,
+        app->trigger,
+        (unsigned)app->gain,
+        dt.year,
+        dt.month,
+        dt.day,
+        dt.hour,
+        dt.minute,
+        dt.second);
+    if(storage_file_write(f, app->csv_line, n) != (size_t)n) {
+        storage_file_close(f);
+        storage_file_free(f);
+        FURI_LOG_E(TAG, "cadence csv: header failed");
+        return NULL;
+    }
+    app->rec_rows = 0;
+    FURI_LOG_I(TAG, "cadence csv: %s", path);
+    return f;
+}
+
+// Runs instead of the sweep while app->parked. Owns the radio (the sweep worker brought it up),
+// so it loads a narrowed filter once and thereafter only retunes when park_freq changes (the
+// user can walk the frequency while parked and watch RSSI rise). Returns when parked clears or
+// the app stops -- the caller then re-syncs the sweep's preset cache.
+static void park_loop(App* app, Storage* storage) {
+    if(app->park_restart) { // consume the GUI's request on the owning thread
+        app->park_restart = false;
+        park_clear(app);
+    }
+    uint8_t p = app->preset_idx;
+    if(p >= PRESET_N) p = 0;
+    radio_load_preset(preset_regs(app, p, app->gain, bw_nibble(100000)));
+    uint32_t cur_f = 0;
+    // cadence CSV: lines accumulate in app->csv_line (the sweep's row buffer, idle while
+    // parked) and flush a sector at a time, so we are not doing 125 FAT writes a second.
+    File* cf = NULL;
+    int coff = 0;
+    while(app->running && app->parked) {
+        uint32_t f = app->park_freq;
+        if(f != cur_f) {
+            if(!furi_hal_subghz_is_frequency_valid(f) || !tune_rx(f)) {
+                FURI_LOG_W(TAG, "park: %lu Hz untunable -> sweep", (unsigned long)f);
+                app->parked = false;
+                break;
+            }
+            cur_f = f;
+            furi_delay_ms(2); // let the PLL + RSSI settle after the retune
+            FURI_LOG_I(TAG, "park: on %lu Hz", (unsigned long)f);
+            // decide OOK vs 2-FSK on arrival, and again if the user walks the frequency far
+            // enough that the old answer is about a different signal
+            uint32_t moved = (cur_f > app->park_ab_freq) ? cur_f - app->park_ab_freq :
+                                                           app->park_ab_freq - cur_f;
+            if(!app->park_ab_done || moved > PARK_AB_SPAN) {
+                app->park_ab[0] = park_probe(app, 0); // AM650
+                app->park_ab[1] = park_probe(app, 2); // FM238
+                app->park_ab_done = true;
+                app->park_ab_freq = cur_f;
+                // the probe left the radio on FM238 -> put the parked filter back. The user's
+                // preset is untouched: the numbers are reported, not acted on.
+                radio_load_preset(preset_regs(app, p, app->gain, bw_nibble(100000)));
+                tune_rx(f);
+                furi_delay_ms(2);
+                FURI_LOG_I(
+                    TAG, "park ab: AM %d FM %d (hint only)", app->park_ab[0], app->park_ab[1]);
+            }
+        }
+        uint32_t now = furi_get_tick();
+        float rf = radio_rssi();
+        int8_t r = (rf < -127.0f) ? (int8_t)-127 : (int8_t)rf;
+        // the same strength-tracked vibro the sweep uses: rate rises with the carrier, so you
+        // can walk toward a source without looking at the screen
+        if(app->haptic && app->notif) {
+            haptic_sample(app, r);
+            haptic_pump(app, now);
+        } else if(app->hap_on) {
+            haptic_off(app);
+        }
+        app->park_env[app->park_head] = r;
+        app->park_head = (uint16_t)((app->park_head + 1) % PARK_N);
+        if(app->park_count < PARK_N) app->park_count++;
+        // reconcile the file handle with the user's recording flag, like the sweep does
+        if(app->recording && !cf) {
+            cf = cadence_open(app, storage);
+            if(!cf) app->recording = false; // open failed -> don't get stuck "recording"
+            coff = 0;
+        } else if(!app->recording && cf) {
+            if(coff) storage_file_write(cf, app->csv_line, (size_t)coff);
+            storage_file_close(cf);
+            storage_file_free(cf);
+            cf = NULL;
+            FURI_LOG_I(TAG, "cadence csv: stopped, %lu rows", (unsigned long)app->rec_rows);
+        }
+        if(cf) {
+            coff += snprintf(
+                app->csv_line + coff, (size_t)(CSV_BUF - coff), "%lu,%d\n", (unsigned long)now, r);
+            app->rec_rows++;
+            if(coff >= CSV_BUF - 24) { // keep room for the next line
+                if(storage_file_write(cf, app->csv_line, (size_t)coff) != (size_t)coff) {
+                    storage_file_close(cf);
+                    storage_file_free(cf);
+                    cf = NULL;
+                    app->recording = false;
+                    FURI_LOG_E(TAG, "cadence csv: write failed");
+                }
+                coff = 0;
+            }
+        }
+        // one call into the pure state machine: gap handling, burst segmentation, repeat
+        // grouping and the stats rings all live in rf_logic.h so tests/logic_test.c exercises
+        // the exact same code the firmware runs
+        rfs_park_feed(&app->park, now, r, app->trigger);
+
+        furi_delay_ms(PARK_SAMPLE_MS);
+    }
+    rfs_park_stop(&app->park); // mid-burst stop: the elapsed time is a lower bound, not data
+    haptic_off(app); // never leave the motor latched when parked mode ends
+    if(cf) { // flush + close whatever the user left open
+        if(coff) storage_file_write(cf, app->csv_line, (size_t)coff);
+        storage_file_close(cf);
+        storage_file_free(cf);
+        FURI_LOG_I(
+            TAG, "cadence csv: closed on park exit, %lu rows", (unsigned long)app->rec_rows);
+    }
+    FURI_LOG_I(
+        TAG,
+        "park: exit, %u bursts, %u gaps",
+        (unsigned)app->park.bursts,
+        (unsigned)app->park.gaps);
+}
+
+// ---- bookmarks ------------------------------------------------------------
+// One line per bookmark: "name, start_hz, end_hz". A hand-editable file beats another menu:
+// the interesting ranges are personal (a specific gate, a specific meter), and hardcoding 26
+// bands was never going to cover them.
+// one 1 MHz channel's occupancy aggregate: the unit the History page and the auto-bookmark
+// writer both think in
+typedef struct {
+    uint16_t mhz;
+    uint32_t sum;
+    uint16_t cnt;
+} OccBucket;
+
+#define BM_PATH APP_DATA_PATH("freqs.txt") // hand-written, never touched by the app
+#define BM_AUTO APP_DATA_PATH("freqs_auto.txt") // regenerated from measured occupancy
+
+static void bm_parse(App* app, char* line) {
+    if(!line[0] || line[0] == '#' || app->bm_n >= COUNT_OF(app->bm)) return;
+    char* c1 = strchr(line, ',');
+    if(!c1) return;
+    *c1++ = 0;
+    char* c2 = strchr(c1, ',');
+    if(!c2) return;
+    *c2++ = 0;
+    char* end = NULL;
+    unsigned long vlo = strtoul(c1, &end, 10);
+    if(end == c1 || (*end && *end != ' ' && *end != '\t' && *end != '\r')) return;
+    unsigned long vhi = strtoul(c2, &end, 10);
+    if(end == c2 || (*end && *end != ' ' && *end != '\t' && *end != '\r')) return;
+    if(vlo > 0xFFFFFFFFul || vhi > 0xFFFFFFFFul) return; // strtoul overflows differently per ABI
+    uint32_t lo = (uint32_t)vlo;
+    uint32_t hi = (uint32_t)vhi;
+    if(lo < 300000000u || hi > 928000000u || hi <= lo) return; // same gate as settings_load
+    size_t l = strlen(line);
+    while(l && (line[l - 1] == ' ' || line[l - 1] == '\t'))
+        line[--l] = 0;
+    snprintf(app->bm[app->bm_n].name, sizeof(app->bm[0].name), "%s", line);
+    app->bm[app->bm_n].lo = lo;
+    app->bm[app->bm_n].hi = hi;
+    app->bm_n++;
+}
+
+static void bookmarks_load_file(App* app, Storage* storage, const char* path) {
+    File* f = storage_file_alloc(storage);
+    if(!storage_file_open(f, path, FSAM_READ, FSOM_OPEN_EXISTING)) {
+        storage_file_free(f);
+        return; // no file is a normal state, not an error
+    }
+    char line[96];
+    size_t len = 0;
+    char c;
+    while(storage_file_read(f, &c, 1) == 1) {
+        if(c == '\n') {
+            line[len] = 0;
+            bm_parse(app, line);
+            len = 0;
+            if(app->bm_n >= COUNT_OF(app->bm)) break;
+        } else if(c != '\r' && len + 1 < sizeof(line)) {
+            line[len++] = c;
+        }
+    }
+    if(len && app->bm_n < COUNT_OF(app->bm)) {
+        line[len] = 0;
+        bm_parse(app, line);
+    }
+    storage_file_close(f);
+    storage_file_free(f);
+}
+
+static void bookmarks_load(App* app, Storage* storage) {
+    app->bm_n = 0;
+    bookmarks_load_file(app, storage, BM_PATH); // the user's own list first
+    bookmarks_load_file(app, storage, BM_AUTO); // then whatever the last scan measured
+    FURI_LOG_I(TAG, "bookmarks: %u", (unsigned)app->bm_n);
+}
+
+// Top channels by measured occupancy, written as bookmarks. Deliberately a SEPARATE file: the
+// app must never rewrite a list the user hand-edited, and the file is regenerated wholesale
+// each time so stale entries cannot accumulate.
+static void bookmarks_write_auto(App* app, Storage* storage, const OccBucket* b, uint8_t n) {
+    File* f = storage_file_alloc(storage);
+    if(!storage_file_open(f, BM_AUTO, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+        storage_file_close(f);
+        storage_file_free(f);
+        return;
+    }
+    DateTime dt;
+    furi_hal_rtc_get_datetime(&dt);
+    int w = snprintf(
+        app->csv_line,
+        CSV_BUF,
+        "# RF Survey auto bookmarks %04u-%02u-%02u %02u:%02u  (n=%u sweeps)\n"
+        "# name, start_hz, end_hz -- one 1 MHz channel each, by measured occupancy\n",
+        dt.year,
+        dt.month,
+        dt.day,
+        dt.hour,
+        dt.minute,
+        (unsigned)app->occ_n);
+    if(w > 0 && w < CSV_BUF) storage_file_write(f, app->csv_line, (size_t)w);
+    for(uint8_t k = 0; k < n; k++) {
+        uint32_t lo = (uint32_t)b[k].mhz * 1000000u;
+        w = snprintf(
+            app->csv_line,
+            CSV_BUF,
+            "b%u, %lu, %lu\n",
+            (unsigned)b[k].mhz,
+            (unsigned long)lo,
+            (unsigned long)(lo + 999999u));
+        if(w > 0 && w < CSV_BUF) storage_file_write(f, app->csv_line, (size_t)w);
+    }
+    storage_file_close(f);
+    storage_file_free(f);
+}
+
+// ---- settings persistence -------------------------------------------------
+// One small file so a field session does not start by re-entering the same six values. Uses
+// FlipperFormat (the .sub container already linked) instead of hand-rolled parsing: it gives a
+// version header and typed reads, and a corrupt/half-written file just fails the version check
+// and falls back to the in-code defaults.
+#define SETTINGS_PATH APP_DATA_PATH("settings.txt")
+#define SETTINGS_VER  1
+
+static void settings_save(App* app, Storage* storage, const char* path) {
+    FlipperFormat* ff = flipper_format_file_alloc(storage);
+    bool ok = ff && flipper_format_file_open_always(ff, path) &&
+              flipper_format_write_header_cstr(ff, "Flipper RF Survey Settings", SETTINGS_VER);
+    if(ok) {
+        uint32_t v;
+        v = app->f_start;
+        ok = flipper_format_write_uint32(ff, "Start", &v, 1);
+        v = app->f_end;
+        ok = ok && flipper_format_write_uint32(ff, "End", &v, 1);
+        v = app->f_step;
+        ok = ok && flipper_format_write_uint32(ff, "Step", &v, 1);
+        int32_t t = app->trigger;
+        ok = ok && flipper_format_write_int32(ff, "Trigger", &t, 1);
+        v = app->preset_idx;
+        ok = ok && flipper_format_write_uint32(ff, "Preset", &v, 1);
+        v = app->gain;
+        ok = ok && flipper_format_write_uint32(ff, "Gain", &v, 1);
+        v = app->radio;
+        ok = ok && flipper_format_write_uint32(ff, "Radio", &v, 1);
+        v = app->haptic ? 1 : 0;
+        ok = ok && flipper_format_write_uint32(ff, "Haptic", &v, 1);
+        v = app->settle_ms;
+        ok = ok && flipper_format_write_uint32(ff, "Settle", &v, 1);
+        v = app->win_idx;
+        ok = ok && flipper_format_write_uint32(ff, "Window", &v, 1);
+        if(!ok) FURI_LOG_W(TAG, "settings: write failed");
+    }
+    flipper_format_free(ff);
+}
+
+// Every field is optional: a missing or out-of-range value keeps the default set in the app
+// init, so an older settings file (or a truncated one) degrades instead of misconfiguring.
+//
+// Each read is preceded by flipper_format_rewind: the reader advances a cursor and a MISSING
+// key leaves it at EOF (Confirmed against the OFW 87 and Unleashed 88 FlipperFormat
+// implementations). Without the rewind, one dropped field would silently discard every field
+// after it -- a stale file would load as "half the settings are defaults" with no error.
+#define SETTINGS_READ(fn, key, dst, cnt) (flipper_format_rewind(ff), fn(ff, key, dst, cnt))
+
+static void settings_load(App* app, Storage* storage, const char* path) {
+    FlipperFormat* ff = flipper_format_file_alloc(storage);
+    FuriString* hdr = furi_string_alloc();
+    uint32_t ver = 0, v;
+    bool ok = ff && flipper_format_file_open_existing(ff, path) &&
+              flipper_format_read_header(ff, hdr, &ver) &&
+              furi_string_cmp_str(hdr, "Flipper RF Survey Settings") == 0 && ver == SETTINGS_VER;
+    if(ok) {
+        uint32_t start = app->f_start, end = app->f_end, step = app->f_step;
+        bool have_range = SETTINGS_READ(flipper_format_read_uint32, "Start", &start, 1) &&
+                          SETTINGS_READ(flipper_format_read_uint32, "End", &end, 1) &&
+                          SETTINGS_READ(flipper_format_read_uint32, "Step", &step, 1);
+        // accept only a range inside the CC1101 window with a sane step: a corrupt or
+        // hand-edited file must never make the nbins / f_end arithmetic overflow later
+        if(have_range && start >= 300000000 && end <= 928000000 && end > start && step >= 10000 &&
+           step <= 2000000) {
+            app->f_start = start;
+            app->f_end = end;
+            app->f_step = step;
+        }
+        int32_t t = app->trigger;
+        if(SETTINGS_READ(flipper_format_read_int32, "Trigger", &t, 1) && t >= -100 && t <= -45)
+            app->trigger = (int8_t)t;
+        if(SETTINGS_READ(flipper_format_read_uint32, "Preset", &v, 1) && v < PRESET_N)
+            app->preset_idx = (uint8_t)v;
+        if(SETTINGS_READ(flipper_format_read_uint32, "Gain", &v, 1) && v < COUNT_OF(GAIN_TXT))
+            app->gain = (uint8_t)v;
+        if(SETTINGS_READ(flipper_format_read_uint32, "Radio", &v, 1) && v < COUNT_OF(RADIO_TXT))
+            app->radio = (uint8_t)v;
+        if(SETTINGS_READ(flipper_format_read_uint32, "Haptic", &v, 1))
+            app->haptic = v ? true : false;
+        if(SETTINGS_READ(flipper_format_read_uint32, "Settle", &v, 1) && v >= 1 && v <= 20)
+            app->settle_ms = (uint8_t)v;
+        if(SETTINGS_READ(flipper_format_read_uint32, "Window", &v, 1) && v < WIN_N)
+            app->win_idx = (uint8_t)v;
+        FURI_LOG_I(TAG, "settings: loaded");
+    } else {
+        FURI_LOG_I(TAG, "settings: none/foreign, using defaults");
+    }
+    furi_string_free(hdr);
+    flipper_format_free(ff);
+}
+
+// Waterfall snapshot as a binary PGM. Deliberately one fixed mapping and no options: the point
+// is a file a report can embed, not an image editor. Written by the SWEEP WORKER between
+// sweeps (never from the GUI) so the ring cannot move under the exporter, and chronologically
+// ordered from the oldest column so the file is a picture of the session, not of the ring.
+// Resolution honesty: rows are max-folded from up to 1024 bins into WF_ROWS, and one column is
+// one sweep, so this is a coarse activity map -- the header says so.
+#define WF_GRAY_LO   (-125) // dBm mapped to gray 1
+#define WF_GRAY_HI   (-40) // dBm mapped to gray 255
+#define WF_GRAY_SPAN (WF_GRAY_HI - WF_GRAY_LO)
+
+// Ring index of the k-th column, oldest first. wf_head is the NEWEST written column, so the
+// oldest of `cnt` columns is (wf_head - cnt + 1) mod WF_COLS -- getting this wrong by one
+// exports an unwritten slot when cnt == 1 and rotates the chronology when the ring is full.
+static uint16_t wf_col_at(const App* app, uint16_t cnt, uint16_t k) {
+    return rfs_wf_col_at(app->wf_head, WF_COLS, cnt, k); // rf_logic.h
+}
+
+static void wf_export_pgm(App* app, Storage* storage) {
+    uint16_t cnt = app->wf_count;
+    if(cnt == 0) {
+        FURI_LOG_W(TAG, "wf export: nothing captured yet");
+        return;
+    }
+    storage_common_mkdir(storage, APP_DATA_PATH(""));
+    DateTime dt;
+    furi_hal_rtc_get_datetime(&dt);
+    char path[96];
+    snprintf(
+        path,
+        sizeof(path),
+        APP_DATA_PATH("waterfall_%04u%02u%02u_%02u%02u%02u.pgm"),
+        dt.year,
+        dt.month,
+        dt.day,
+        dt.hour,
+        dt.minute,
+        dt.second);
+    File* f = storage_file_alloc(storage);
+    if(!f || !storage_file_open(f, path, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+        FURI_LOG_E(TAG, "wf export: open failed");
+        if(f) {
+            storage_file_close(f);
+            storage_file_free(f);
+        }
+        return;
+    }
+    uint8_t pi = app->preset_idx < PRESET_N ? app->preset_idx : 0;
+    int n = snprintf(
+        app->csv_line,
+        CSV_BUF,
+        "P5\n"
+        "# RF Survey waterfall snapshot\n"
+        "# rtc %04u-%02u-%02u %02u:%02u:%02u\n"
+        "# range %lu.%03lu-%lu.%03lu MHz step %lu preset %s\n"
+        "# x=time (oldest first, one column per sweep)  y=frequency (%lu at top, %lu bottom)\n"
+        "# rows are max-folded from up to %u bins -> a coarse activity map, not a spectrum\n"
+        "# gray 1..255 = %d..%d dBm, 0 = no data\n"
+        "# columns %u\n",
+        dt.year,
+        dt.month,
+        dt.day,
+        dt.hour,
+        dt.minute,
+        dt.second,
+        (unsigned long)(app->f_start / 1000000),
+        (unsigned long)((app->f_start / 1000) % 1000),
+        (unsigned long)(app->f_end / 1000000),
+        (unsigned long)((app->f_end / 1000) % 1000),
+        (unsigned long)app->f_step,
+        PRESETS[pi].name,
+        (unsigned long)(app->f_start / 1000000),
+        (unsigned long)(app->f_end / 1000000),
+        (unsigned)MAX_BINS,
+        WF_GRAY_LO,
+        WF_GRAY_HI,
+        (unsigned)cnt);
+    // every write is checked: a full SD would otherwise leave a truncated PGM behind and the
+    // log line would still claim success
+    bool ok = (n > 0 && n < CSV_BUF) &&
+              storage_file_write(f, app->csv_line, (size_t)n) == (size_t)n;
+
+    // column timestamps, 12 per comment line: the sweep interval is not constant, so the image
+    // alone cannot tell a report reader how fast time runs
+    for(uint16_t k = 0; ok && k < cnt; k += 12) {
+        int off = snprintf(app->csv_line, CSV_BUF, "# t_ms");
+        for(uint16_t j = k; j < k + 12 && j < cnt; j++)
+            off += snprintf(
+                app->csv_line + off,
+                (size_t)(CSV_BUF - off),
+                " %lu",
+                (unsigned long)app->col_ms[wf_col_at(app, cnt, j)]);
+        off += snprintf(app->csv_line + off, (size_t)(CSV_BUF - off), "\n");
+        ok = off > 0 && off < CSV_BUF &&
+             storage_file_write(f, app->csv_line, (size_t)off) == (size_t)off;
+    }
+    if(ok) {
+        n = snprintf(app->csv_line, CSV_BUF, "%u %d\n255\n", (unsigned)cnt, WF_ROWS);
+        ok = n > 0 && n < CSV_BUF && storage_file_write(f, app->csv_line, (size_t)n) == (size_t)n;
+    }
+
+    uint8_t row[WF_COLS];
+    for(int r = 0; ok && r < WF_ROWS; r++) {
+        for(uint16_t k = 0; k < cnt; k++) {
+            int v = app->wf[r][wf_col_at(app, cnt, k)];
+            if(v == -128) {
+                row[k] = 0; // band gap / not measured
+                continue;
+            }
+            if(v < WF_GRAY_LO) v = WF_GRAY_LO;
+            if(v > WF_GRAY_HI) v = WF_GRAY_HI;
+            row[k] = (uint8_t)(1 + (v - WF_GRAY_LO) * 254 / WF_GRAY_SPAN);
+        }
+        ok = storage_file_write(f, (const char*)row, cnt) == (size_t)cnt;
+    }
+    storage_file_close(f);
+    storage_file_free(f);
+
+    // The same snapshot as text. A PGM cannot be diffed, plotted or pasted into a report; this
+    // can. Columns are time (oldest first, one per sweep), rows are frequency.
+    if(ok) {
+        char cpath[96];
+        snprintf(cpath, sizeof(cpath), "%s", path);
+        char* dot = strrchr(cpath, '.');
+        if(dot) {
+            snprintf(dot, 5, ".csv");
+            File* cf = storage_file_alloc(storage);
+            if(cf && storage_file_open(cf, cpath, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+                int m = snprintf(
+                    app->csv_line,
+                    CSV_BUF,
+                    "# RF Survey waterfall %04u-%02u-%02u %02u:%02u:%02u\n"
+                    "# columns = time (oldest first), rows = frequency %lu..%lu MHz\n"
+                    "# y=0 is the lowest frequency row; -128 = no data\n"
+                    "row,t_ms,%s\n",
+                    dt.year,
+                    dt.month,
+                    dt.day,
+                    dt.hour,
+                    dt.minute,
+                    dt.second,
+                    (unsigned long)(app->f_start / 1000000),
+                    (unsigned long)(app->f_end / 1000000),
+                    "rssi");
+                if(m > 0 && m < CSV_BUF) storage_file_write(cf, app->csv_line, (size_t)m);
+                for(int r = 0; r < WF_ROWS; r++) {
+                    int off = snprintf(app->csv_line, CSV_BUF, "%d", r);
+                    for(uint16_t k = 0; k < cnt && off < CSV_BUF - 8; k++)
+                        off += snprintf(
+                            app->csv_line + off,
+                            (size_t)(CSV_BUF - off),
+                            ",%d",
+                            app->wf[r][wf_col_at(app, cnt, k)]);
+                    if(off < CSV_BUF - 1) app->csv_line[off++] = '\n';
+                    storage_file_write(cf, app->csv_line, (size_t)off);
+                }
+                storage_file_close(cf);
+                FURI_LOG_I(TAG, "wf export csv: %s", cpath);
+            }
+            if(cf) storage_file_free(cf);
+        }
+    }
+
+    if(ok)
+        FURI_LOG_I(TAG, "wf export: %s (%u cols)", path, (unsigned)cnt);
+    else
+        FURI_LOG_E(TAG, "wf export: write failed (SD full?)");
+}
+
+// Numbered slots, not named ones: this device has no keyboard, and a profile you cannot type a
+// name for is still worth having when the alternative is re-entering six values.
+static void profile_path(char* buf, size_t n, uint8_t slot) {
+    snprintf(buf, n, APP_DATA_PATH("profile%u.txt"), (unsigned)slot);
+}
+
+// Re-read every row from app state. Called after a profile load, where the values changed
+// behind the config screen's back.
+static void conf_sync_rows(App* app) {
+    if(app->it_range) {
+        char r[24];
+        snprintf(
+            r,
+            sizeof(r),
+            "%lu-%lu",
+            (unsigned long)(app->f_start / 1000000),
+            (unsigned long)(app->f_end / 1000000));
+        variable_item_set_current_value_text(app->it_range, r);
+    }
+    if(app->it_step) {
+        uint8_t si = step_index(app->f_step);
+        variable_item_set_current_value_index(app->it_step, si);
+        variable_item_set_current_value_text(app->it_step, STEP_TXT[si]);
+    }
+    if(app->it_preset) {
+        uint8_t pi = app->preset_idx < PRESET_N ? app->preset_idx : 0;
+        variable_item_set_current_value_index(app->it_preset, pi);
+        variable_item_set_current_value_text(app->it_preset, PRESETS[pi].name);
+    }
+    if(app->it_trigger) {
+        variable_item_set_current_value_index(
+            app->it_trigger, (uint8_t)((app->trigger - TRIG_MIN) / 5));
+        char t[8];
+        snprintf(t, sizeof(t), "%d", app->trigger);
+        variable_item_set_current_value_text(app->it_trigger, t);
+    }
+    if(app->it_band) {
+        bool exact = false;
+        uint16_t bi = band_index(app->f_start, app->f_end, &exact);
+        variable_item_set_current_value_index(app->it_band, bi);
+        variable_item_set_current_value_text(app->it_band, exact ? preset_at(bi)->name : "custom");
+    }
+}
+
 // ---- radio sweep worker ----------------------------------------------------
 
 static int32_t sweep_worker(void* ctx) {
     App* app = ctx;
+    boot_trace_to("w0.txt", "entered free=%u", (unsigned)memmgr_get_free_heap());
     FURI_LOG_I(TAG, "worker: start, radio setup");
     radio_setup(app);
+    boot_trace_to("w1.txt", "radio ok ext=%d", s_ext ? 1 : 0);
 
     Storage* storage = furi_record_open(RECORD_STORAGE);
     File* csv = NULL; // open while recording; owned entirely by this thread
@@ -646,6 +1499,26 @@ static int32_t sweep_worker(void* ctx) {
     // or a short zoomed sweep would resample every bin instead of every 30 ms)
 
     while(app->running) {
+        // parked mode owns the radio instead of the sweep: one frequency, one sample clock.
+        // A parked session produces no per-bin columns, so an open CSV has to be closed here
+        // (its column count is fixed for the file's lifetime).
+        if(app->parked) {
+            if(csv) { // close the sweep file; recording carries over into a cadence CSV
+                storage_file_close(csv);
+                storage_file_free(csv);
+                csv = NULL;
+                FURI_LOG_I(TAG, "csv: stopped for park, %lu rows", (unsigned long)app->rec_rows);
+            }
+            park_loop(app, storage);
+            cur_preset = 0xFF; // force the sweep to reload its wide survey filter
+            cur_bw = 0x00;
+            app->reconfig = true; // parked left stale bins + waterfall behind
+            continue;
+        }
+        if(app->frozen) { // HOLD: measure nothing, touch nothing -- the traces stay put
+            furi_delay_ms(50);
+            continue;
+        }
         // (re)load the CC1101 preset on a preset/gain change OR a zoom bandwidth change. When
         // zoomed we narrow the RX filter to ~the step so a carrier shows a sharp peak, not a
         // 650 kHz mountain; un-zoomed keeps the wide survey BW. Snapshot once each.
@@ -684,13 +1557,16 @@ static int32_t sweep_worker(void* ctx) {
             for(uint16_t i = 0; i < app->nbins; i++) {
                 app->rssi[i] = -128;
                 app->peak[i] = -128;
+                app->minv[i] = 127;
+                app->occ[i] = 0;
             }
+            app->occ_n = 0;
             app->sweeps = 0;
             app->wf_head = 0;
             app->wf_count = 0;
             memset(app->wf, -128, sizeof(app->wf)); // waterfall history is per-range
             memset(app->col_ms, 0, sizeof(app->col_ms));
-            app->hist_n = 0; // busy-channel history is per-range too
+            app->occ_n = 0; // occupancy window is per-range too
             app->reconfig = false;
             FURI_LOG_I(
                 TAG,
@@ -713,8 +1589,8 @@ static int32_t sweep_worker(void* ctx) {
         // snapshot the range for this sweep: a mid-sweep config change (GUI) then only
         // takes effect next loop via reconfig, so one row is never a torn A/B mix.
         uint32_t fs = app->f_start, st = app->f_step;
-        int8_t smax = -128; // this sweep's strongest bin + its index (haptic + history)
-        uint16_t smaxi = 0;
+        int8_t smax = -128; // this sweep's strongest bin (unused for now, kept for the log)
+        (void)smax;
         uint16_t valid = 0; // bins actually measured this sweep (0 -> range is all band-gap)
         for(uint16_t i = 0; i < app->nbins && app->running; i++) {
             uint32_t f = fs + (uint32_t)i * st;
@@ -725,10 +1601,9 @@ static int32_t sweep_worker(void* ctx) {
                 int8_t r = (rf < -127.0f) ? (int8_t)-127 : (int8_t)rf; // keep -128 as the sentinel
                 app->rssi[i] = r;
                 if(r > app->peak[i]) app->peak[i] = r;
-                if(r > smax) {
-                    smax = r;
-                    smaxi = i;
-                }
+                if(r < app->minv[i]) app->minv[i] = r;
+                if(r > app->trigger && app->occ[i] < 255) app->occ[i]++;
+                if(r > smax) smax = r;
             } else {
                 app->rssi[i] = -128; // sentinel: band gap / invalid / un-tunable
             }
@@ -779,11 +1654,69 @@ static int32_t sweep_worker(void* ctx) {
             if(app->wf_count < WF_COLS) app->wf_count++;
         }
         app->sweeps++;
-        if((app->sweeps & 0x0F) == 0)
+        if(app->sweeps == 1)
+            boot_trace_to("w2.txt", "first sweep done nbins=%u", (unsigned)app->nbins);
+        if(app->wf_export) { // one-shot from the config screen, run by the ring's owner
+            app->wf_export = false;
+            wf_export_pgm(app, storage);
+        }
+        if((app->sweeps & 0x0F) == 0) {
+            // the draw callback must not hit the fuel gauge every 150 ms, so the worker caches it
+            app->batt_pct = furi_hal_power_get_pct();
             FURI_LOG_D(TAG, "worker: sweep %lu", (unsigned long)app->sweeps);
+        }
 
-        // above-trigger peak this sweep -> busy-channel history
-        if(smax > app->trigger) hist_add(app, (uint16_t)((fs + (uint32_t)smaxi * st) / 1000000));
+        // one-shot: derive the Trigger from this sweep's own noise floor. The 25th percentile
+        // bounds the floor without being dragged up by the handful of strong bins, and +8 dB
+        // sits clear of it. Done here (not in the GUI) so the radio has one owner.
+        if(app->trig_cal) {
+            app->trig_cal = false;
+            uint16_t h[128] = {0};
+            uint16_t n = 0;
+            for(uint16_t i = 0; i < app->nbins; i++) {
+                int8_t v = app->rssi[i];
+                if(v == -128) continue;
+                int b = (int)v + 128;
+                if(b < 0) b = 0;
+                if(b > 127) b = 127;
+                h[b]++;
+                n++;
+            }
+            if(n) {
+                uint32_t want = ((uint32_t)n + 3) / 4, acc = 0; // ceil(n/4), never 0
+                int floor_dbm = TRIG_MIN;
+                for(int b = 0; b < 128; b++) {
+                    acc += h[b];
+                    if(acc >= want) {
+                        floor_dbm = b - 128;
+                        break;
+                    }
+                }
+                int t = floor_dbm + 8;
+                if(t < TRIG_MIN) t = TRIG_MIN;
+                if(t > TRIG_MAX) t = TRIG_MAX;
+                app->trigger = (int8_t)t;
+                FURI_LOG_I(TAG, "trig cal: floor %d -> %d", floor_dbm, t);
+            }
+        }
+        if(app->clear_peaks) { // one-shot: re-seed peak-hold from the current sweep
+            app->clear_peaks = false;
+            for(uint16_t i = 0; i < app->nbins; i++) {
+                app->peak[i] = app->rssi[i];
+                app->minv[i] = app->rssi[i];
+            }
+            FURI_LOG_I(TAG, "peaks cleared");
+        }
+
+        // rolling occupancy window: bump the counters this sweep, halve the whole set when the
+        // window fills so `occ[i] / occ_n` is always "fraction of recent sweeps"
+        if(app->occ_n < 255) {
+            app->occ_n++;
+        } else {
+            for(uint16_t i = 0; i < app->nbins; i++)
+                app->occ[i] = (uint8_t)(app->occ[i] >> 1);
+            app->occ_n = (uint8_t)((app->occ_n >> 1) + 1);
+        }
 
         // log one CSV row for this sweep: "t_ms,rssi0,..,rssiN", flushed in CSV_BUF chunks
         // (one FAT sector) so the row buffer stays 512 B instead of ~5 KB.
@@ -821,6 +1754,103 @@ static int32_t sweep_worker(void* ctx) {
     FURI_LOG_I(TAG, "worker: exit, radio teardown");
     radio_teardown();
     return 0;
+}
+
+// Writes a one-line trace to boot.txt. The device's log level can be reset between CLI
+// sessions, so a file is the only evidence that survives; this is how the screenshot path was
+// debugged.
+static void boot_trace_to(const char* name, const char* fmt, ...) {
+    Storage* st = furi_record_open(RECORD_STORAGE);
+    storage_common_mkdir(st, APP_DATA_PATH(""));
+    File* f = storage_file_alloc(st);
+    char path[72];
+    snprintf(path, sizeof(path), APP_DATA_PATH("%s"), name);
+    if(f && storage_file_open(f, path, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+        char buf[160];
+        va_list ap;
+        va_start(ap, fmt);
+        int n = vsnprintf(buf, sizeof(buf), fmt, ap);
+        va_end(ap);
+        if(n > 0) storage_file_write(f, buf, (size_t)n);
+        storage_file_close(f);
+    }
+    if(f) storage_file_free(f);
+    furi_record_close(RECORD_STORAGE);
+}
+
+// ---- on-device screenshots -------------------------------------------------
+// RPC is not an option for a screenshot: an RPC session takes ~20 KB of the FAP's heap and
+// this app needs ~15 KB just to start, so a remote capture is an OOM crash on a deep screen.
+// Instead the app dumps its own framebuffer to a file the moment the page changes, and a host
+// script reads it over the CLI. One 1 KB write per page flip.
+
+// 128x64 at 1 bpp, u8g2 page layout (vertical_top_lsb): one byte per column of eight vertical
+// pixels, so a row of the file is 16 bytes = 32 hex characters.
+
+static void dump_frame(const uint8_t* fb, uint8_t page) {
+    if(!fb) return;
+    Storage* st = furi_record_open(RECORD_STORAGE);
+    storage_common_mkdir(st, APP_DATA_PATH("frames"));
+    // one file per distinct frame, named by wall clock, so the sequence survives a crash and can
+    // be sorted on the host. The newest file is always the last thing the device drew.
+    DateTime dt;
+    furi_hal_rtc_get_datetime(&dt);
+    char path[72];
+    snprintf(
+        path,
+        sizeof(path),
+        APP_DATA_PATH("frames/f_%02u%02u%02u_%02u.hex"),
+        dt.hour,
+        dt.minute,
+        dt.second,
+        (unsigned)(furi_get_tick() % 100));
+    File* f = storage_file_alloc(st);
+    if(f && storage_file_open(f, path, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+        char line[40];
+        for(int y = 0; y < 64; y++) {
+            for(int b = 0; b < 16; b++)
+                snprintf(line + b * 2, 3, "%02x", fb[y * 16 + b]);
+            line[32] = '\n';
+            storage_file_write(f, line, 33);
+        }
+        storage_file_close(f);
+    }
+    if(f) storage_file_free(f);
+    furi_record_close(RECORD_STORAGE);
+    (void)page;
+}
+
+// Fires on every committed frame, whoever drew it -- including the firmware's own widgets, which
+// is why the config screens are capturable at all.
+//
+// This runs with the canvas mutex held (canvas_commit iterates its callback array under the
+// lock), so it must NEVER touch storage: an SD write here stalls the GUI thread with the canvas
+// locked and the watchdog reboots the device. It only copies 1 KB into RAM and bumps a counter.
+static void fb_callback(uint8_t* data, size_t size, CanvasOrientation orientation, void* context) {
+    UNUSED(orientation);
+    App* app = context;
+    if(!app || !data || size != 1024) {
+        boot_trace_to("t_fb_bad.txt", "size=%u data=%p", size, (void*)data);
+        return;
+    }
+    if(!app->shot_auto) return;
+    memcpy(app->shot_buf, data, 1024);
+    if(app->shot_seq == 0) boot_trace_to("t_fb.txt", "first frame, size=%u", (unsigned)size);
+    app->shot_seq++;
+}
+
+// Writes the newest copied frame. Called from the redraw timer (500 ms heartbeat) and from the
+// input handlers (so the screen BEFORE a key press is on the card even if the press crashes the
+// app). Never called from the framebuffer callback.
+static void shot_flush(App* app, bool force);
+__attribute__((unused)) static void shot_flush(App* app, bool force) {
+    uint32_t now = furi_get_tick();
+    if(!force && now - app->shot_last < 500) return;
+    if(app->shot_written == app->shot_seq && !force) return; // nothing new on screen
+    if(app->parked) return; // a write mid-measurement is the hole the cadence page warns about
+    app->shot_written = app->shot_seq;
+    app->shot_last = now;
+    dump_frame(app->shot_buf, 0);
 }
 
 // ---- bars view -------------------------------------------------------------
@@ -924,32 +1954,6 @@ static void zoom_out(App* app) {
     FURI_LOG_I(TAG, "zoom out depth=%u", app->zdepth);
 }
 
-// peak line: "<freq>.<d> <dBm> ~<band> <AM/FM>" for a given frequency+dBm
-static void draw_info(Canvas* canvas, uint32_t f, int dbm) {
-    char s[48];
-    const FreqBand* b = band_lookup(f);
-    if(b) {
-        snprintf(
-            s,
-            sizeof(s),
-            "%lu.%lu %d ~%s %s",
-            (unsigned long)(f / 1000000),
-            (unsigned long)((f / 100000) % 10),
-            dbm,
-            b->name,
-            mod_str(b->mod));
-    } else {
-        snprintf(
-            s,
-            sizeof(s),
-            "%lu.%lu MHz  %d dBm",
-            (unsigned long)(f / 1000000),
-            (unsigned long)((f / 100000) % 10),
-            dbm);
-    }
-    canvas_draw_str(canvas, 2, 18, s);
-}
-
 static void draw_bars(Canvas* canvas, App* app, int floor, int ceil) {
     // the Trigger IS the baseline: only signal that clears the floor draws a bar, and it gets the
     // full height. Same floor the waterfall/haptic/history use. Keep the autoscaled top (>= floor+15
@@ -960,8 +1964,22 @@ static void draw_bars(Canvas* canvas, App* app, int floor, int ceil) {
     for(uint16_t k = 0; k < NBARS; k++) {
         int8_t cur, pk;
         grp_max(app, k, &cur, &pk);
+        // Trace selector: Live shows the current sweep, Max/Min draw the held extremes. The
+        // opposite extreme stays on as a thin line so you always see the spread.
+        int8_t shown = cur;
+        if(app->trace == 1) shown = pk;
+        if(app->trace == 2) {
+            uint32_t b0 = (uint32_t)k * app->nbins / NBARS;
+            uint32_t b1 = (uint32_t)(k + 1) * app->nbins / NBARS;
+            if(b1 <= b0) b1 = b0 + 1;
+            if(b1 > app->nbins) b1 = app->nbins;
+            int8_t mn = 127;
+            for(uint32_t b = b0; b < b1; b++)
+                if(app->minv[b] < mn && app->minv[b] != -128) mn = app->minv[b];
+            if(mn != 127) shown = mn;
+        }
         int x = k * BAR_PITCH;
-        int h = bar_h(cur, floor, ceil);
+        int h = bar_h(shown, floor, ceil);
         if(h > 0) canvas_draw_box(canvas, x, BASE_Y - h, BAR_PITCH - 1, h);
         int ph = bar_h(pk, floor, ceil);
         if(ph > 0) canvas_draw_line(canvas, x, BASE_Y - ph, x + BAR_PITCH - 2, BASE_Y - ph);
@@ -1097,50 +2115,92 @@ static void draw_waterfall(Canvas* canvas, App* app) {
 // GROUP_HZ are treated as one peak (a single transmitter leaks across adjacent bins -- the
 // CC1101 RX filter is 270-650 kHz wide, so sub-MHz-apart bins are the same signal), keeping
 // only the strongest so the list shows 4 real signals, not 4 slices of one.
-#define GROUP_HZ 400000u
+// -6 dB occupied width of the peak at `bin`, walking outwards while the sweep stays within
+// 6 dB of that peak. Returns 0 when the step is too coarse for the number to mean anything:
+// at 650 kHz per bin every signal is "one bin wide" and calling that a bandwidth is a lie.
+// This is the one discriminator pulse width and cadence cannot give: a chirp (LoRa 125/250/
+// 500 kHz) and a narrowband OOK remote look identical in time but differ by 10x in width.
+static uint32_t bw6(const App* app, uint16_t bin) {
+    if(app->f_step > 100000) return 0;
+    int8_t cur = app->rssi[bin]; // the LIVE value: peak[] is a max-hold and can be minutes old
+    if(cur <= app->trigger) return 0; // nothing there right now -> no honest width to report
+    int thr = (int)cur - 6;
+    uint16_t l = bin, r = bin;
+    while(l > 0 && app->rssi[l - 1] >= thr)
+        l--;
+    while(r + 1 < app->nbins && app->rssi[r + 1] >= thr)
+        r++;
+    return (uint32_t)(r - l + 1) * app->f_step;
+}
+
+// A peak only counts if it stands clear of the lowest point between it and the next higher
+// peak -- topographic PROMINENCE, the rule PortaPack's NxtPk uses ("rises at least 3 dB above
+// the valley"). The old 400 kHz grouping was a guess about the CC1101 filter width; this
+// measures the valley instead of assuming it.
+#define PEAK_PROMINENCE_DB 3
+#define PROM_CANDIDATES    12
+
+static int8_t prominence_at(const App* app, uint16_t i) {
+    int8_t v = app->rssi[i];
+    if(v == -128) return 0;
+    int8_t lmin = v, rmin = v;
+    for(int j = (int)i - 1; j >= 0; j--) { // descend until something higher bounds the basin
+        if(app->rssi[j] > v || app->rssi[j] == -128) break;
+        if(app->rssi[j] < lmin) lmin = app->rssi[j];
+    }
+    for(int j = (int)i + 1; j < app->nbins; j++) {
+        if(app->rssi[j] > v || app->rssi[j] == -128) break;
+        if(app->rssi[j] < rmin) rmin = app->rssi[j];
+    }
+    int key = (lmin > rmin) ? lmin : rmin; // the higher key col decides
+    return (int8_t)(v - key);
+}
+
+// the 4 strongest PROMINENT peaks (descending), tv=dBm tb=bin index. Shared by the numeric
+// page and the capture entry so OK captures exactly the slot the cursor is on.
 static void numeric_top4(const App* app, int tv[4], uint16_t tb[4]) {
     tv[0] = tv[1] = tv[2] = tv[3] = -200;
     tb[0] = tb[1] = tb[2] = tb[3] = 0;
+
+    // pass 1: the strongest PEAK_CANDIDATES bins above the floor. Limiting the candidate set
+    // keeps the prominence walk (which is O(n) worst case) off the 8 Hz draw path's budget.
+    uint16_t cand[PROM_CANDIDATES];
+    int8_t cval[PROM_CANDIDATES];
+    int nc = 0;
     for(uint16_t i = 0; i < app->nbins; i++) {
-        int v = app->peak[i]; // rank by peak-hold, not live RSSI, so the list doesn't jitter
-        if(v <= app->trigger) continue; // only real peaks above the floor (no noise filling slots)
-        uint32_t fi = app->f_start + (uint32_t)i * app->f_step;
-        int grp = -1; // same-peak slot, if any
-        for(int m = 0; m < 4; m++) {
-            if(tv[m] <= -200) continue;
-            uint32_t fm = app->f_start + (uint32_t)tb[m] * app->f_step;
-            uint32_t d = (fi > fm) ? (fi - fm) : (fm - fi);
-            if(d < GROUP_HZ) {
-                grp = m;
-                break;
-            }
+        int v = app->rssi[i];
+        if(v <= app->trigger) continue;
+        if(i > 0 && v <= app->rssi[i - 1]) continue; // leftmost bin of a plateau only
+        if(nc == PROM_CANDIDATES && v <= cval[PROM_CANDIDATES - 1]) continue;
+        int k = (nc < PROM_CANDIDATES) ? nc++ : PROM_CANDIDATES - 1;
+        while(k > 0 && cval[k - 1] < v) { // insertion by value, descending
+            cval[k] = cval[k - 1];
+            cand[k] = cand[k - 1];
+            k--;
         }
-        if(grp >= 0) {
-            if(v > tv[grp]) { // stronger sample of a peak we already have
-                tv[grp] = v;
-                tb[grp] = i;
-            }
+        cval[k] = (int8_t)v;
+        cand[k] = i;
+    }
+
+    // pass 2: keep the prominent ones, best first
+    int n = 0;
+    for(int c = 0; c < nc; c++) {
+        if(prominence_at(app, cand[c]) < PEAK_PROMINENCE_DB) continue;
+        int v = cval[c];
+        int slot = n < 4 ? n++ : 4;
+        if(n == 4 && v <= tv[3]) {
+            n = 4;
             continue;
         }
-        int mn = 0; // no group -> replace the weakest slot if this is stronger
-        for(int m = 1; m < 4; m++)
-            if(tv[m] < tv[mn]) mn = m;
-        if(v > tv[mn]) {
-            tv[mn] = v;
-            tb[mn] = i;
+        int k = (slot == 4) ? 3 : slot;
+        while(k > 0 && tv[k - 1] < v) {
+            tv[k] = tv[k - 1];
+            tb[k] = tb[k - 1];
+            k--;
         }
+        tv[k] = v;
+        tb[k] = cand[c];
     }
-    // sort the 4 descending (tiny)
-    for(int a = 0; a < 4; a++)
-        for(int b = a + 1; b < 4; b++)
-            if(tv[b] > tv[a]) {
-                int t = tv[a];
-                tv[a] = tv[b];
-                tv[b] = t;
-                uint16_t u = tb[a];
-                tb[a] = tb[b];
-                tb[b] = u;
-            }
 }
 
 // Numeric page: 4 full-width horizontal bars (precise top-4 bins). Bar length ~ strength;
@@ -1152,7 +2212,11 @@ static void draw_numeric(Canvas* canvas, App* app) {
     numeric_top4(app, tv, tb);
     int floor, ceil;
     autoscale(app, &floor, &ceil);
-    const int pitch = 12, bh = 10;
+    const int pitch = 13, bh = 11;
+    // M1 = the strongest peak; every other row is labelled as a delta from it (frequency offset
+    // and dB below). "How far is this from the reference, and how much weaker" is the question
+    // you actually ask when a known transmitter is sitting next to an unknown one.
+    uint32_t f0 = app->f_start + (uint32_t)tb[0] * app->f_step;
     int nshown = 0;
     for(int k = 0; k < 4; k++) {
         if(tv[k] <= -200) continue; // empty slot -> draw nothing (no stray outline)
@@ -1164,7 +2228,49 @@ static void draw_numeric(Canvas* canvas, App* app) {
         if(len > SCR_W) len = SCR_W;
         canvas_draw_box(canvas, 0, y, len, bh);
         const FreqBand* b = band_lookup(f);
-        char s[36];
+        // zoomed enough to resolve a width? show it instead of the band tag, which the header
+        // already carries -- never both, or the row overflows 128 px
+        uint32_t bw = bw6(app, tb[k]);
+        char tag[28];
+        if(k > 0 && tv[0] > -200) { // delta marker (M1 is row 0)
+            int d100 = (int)(((long)f - (long)f0) / 100); // 100 Hz units, bounded by 928 MHz
+            if(d100 > 9999999) d100 = 9999999;
+            if(d100 < -9999999) d100 = -9999999;
+            unsigned a = (unsigned)(d100 < 0 ? -d100 : d100);
+            // 100 Hz units. Peaks far apart produced "+59150.0k" and ran off the screen; above
+            // 1 MHz the decimal is noise anyway, so switch unit rather than widen the line.
+            if(a >= 10000)
+                snprintf(
+                    tag,
+                    sizeof(tag),
+                    "%s%u.%uM -%d",
+                    d100 < 0 ? "-" : "+",
+                    a / 10000,
+                    (a / 1000) % 10,
+                    tv[0] - tv[k]);
+            else
+                snprintf(
+                    tag,
+                    sizeof(tag),
+                    "%s%u.%uk -%d",
+                    d100 < 0 ? "-" : "+",
+                    a / 10,
+                    a % 10,
+                    tv[0] - tv[k]);
+        } else if(bw) {
+            if(bw >= 1000000)
+                snprintf(
+                    tag,
+                    sizeof(tag),
+                    "bw%lu.%luM",
+                    (unsigned long)(bw / 1000000),
+                    (unsigned long)((bw / 100000) % 10));
+            else
+                snprintf(tag, sizeof(tag), "bw%luk", (unsigned long)(bw / 1000));
+        } else {
+            snprintf(tag, sizeof(tag), "%s", b ? b->name : "");
+        }
+        char s[64];
         snprintf(
             s,
             sizeof(s),
@@ -1172,7 +2278,7 @@ static void draw_numeric(Canvas* canvas, App* app) {
             (unsigned long)(f / 1000000),
             (unsigned long)((f / 1000) % 1000),
             tv[k],
-            b ? b->name : "");
+            tag);
         canvas_set_color(canvas, ColorXOR); // reverse over the filled part, normal over empty
         canvas_draw_str(canvas, 3, y + bh - 2, s);
         // selected row (the one OK will capture): "<" pointer at the right end, no box
@@ -1183,38 +2289,435 @@ static void draw_numeric(Canvas* canvas, App* app) {
     if(nshown == 0) canvas_draw_str(canvas, 2, 30, "no peaks above trigger");
 }
 
-// History page: the session's busiest 1 MHz channels (peaked above the trigger), sorted by
-// hit count, tagged with the likely band. "which channels are active, and how often."
+// History page: the busy 1 MHz channels ranked by OCCUPANCY -- the fraction of the rolling
+// window's sweeps that saw them above the trigger. This replaces a "one winner per sweep"
+// counter, which let the strongest carrier hide every other active channel, and it is a real
+// fraction rather than a popularity count.
+// Top 1 MHz channels by mean occupancy. Shared by the History page and the auto-bookmark
+// writer so the screen and the file can never disagree about what "busy" means.
+static uint8_t occ_top(const App* app, OccBucket* b, uint8_t max) {
+    uint8_t nb = 0;
+    for(uint16_t i = 0; i < app->nbins; i++) {
+        if(!app->occ[i]) continue;
+        uint16_t mhz = (uint16_t)((app->f_start + (uint32_t)i * app->f_step) / 1000000);
+        int k = -1;
+        for(uint8_t j = 0; j < nb; j++)
+            if(b[j].mhz == mhz) {
+                k = (int)j;
+                break;
+            }
+        if(k < 0) {
+            if(nb == max) continue;
+            k = (int)nb++;
+            b[k].mhz = mhz;
+            b[k].sum = 0;
+            b[k].cnt = 0;
+        }
+        b[k].sum += app->occ[i];
+        b[k].cnt++;
+    }
+    for(uint8_t i = 0; i < nb; i++) // rank by mean occupancy, cross-multiplied integers
+        for(uint8_t j = (uint8_t)(i + 1); j < nb; j++)
+            if(b[j].sum * b[i].cnt > b[i].sum * b[j].cnt) {
+                OccBucket t = b[i];
+                b[i] = b[j];
+                b[j] = t;
+            }
+    return nb;
+}
+
 static void draw_history(Canvas* canvas, App* app) {
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, 2, 8, "Busy channels (xN)");
-    // snapshot the worker-owned count once: if it grew mid-draw, a reread would index
-    // uninitialized order[] entries and run off hist[].
-    uint8_t n = app->hist_n;
-    if(n > COUNT_OF(app->hist)) n = COUNT_OF(app->hist);
-    if(n == 0) {
-        canvas_draw_str(canvas, 2, 30, "none above trigger yet");
+    canvas_draw_str(canvas, 2, 8, "Channel occupancy");
+    uint8_t n = app->occ_n;
+    if(!n) {
+        canvas_draw_str(canvas, 2, 30, "no sweeps yet");
         return;
     }
-    // selection-sort the top rows by count (<=8 entries, trivial)
-    uint8_t order[8];
-    for(uint8_t i = 0; i < n; i++)
-        order[i] = i;
-    for(uint8_t i = 0; i < n; i++)
-        for(uint8_t j = i + 1; j < n; j++)
-            if(app->hist[order[j]].count > app->hist[order[i]].count) {
-                uint8_t t = order[i];
-                order[i] = order[j];
-                order[j] = t;
-            }
-    int rows = n < 4 ? n : 4;
-    for(int k = 0; k < rows; k++) {
-        uint16_t mhz = app->hist[order[k]].mhz;
-        uint16_t cnt = app->hist[order[k]].count;
-        const FreqBand* b = band_lookup((uint32_t)mhz * 1000000);
-        char s[40];
-        snprintf(s, sizeof(s), "%u %s x%u", (unsigned)mhz, b ? b->name : "", (unsigned)cnt);
-        canvas_draw_str(canvas, 2, 20 + k * 10, s);
+    {
+        char w[16];
+        snprintf(w, sizeof(w), "n=%u", (unsigned)n);
+        canvas_draw_str_aligned(canvas, SCR_W - 1, 8, AlignRight, AlignBottom, w);
+    }
+
+    OccBucket b[8];
+    uint8_t nb = occ_top(app, b, COUNT_OF(b));
+
+    for(uint8_t k = 0; k < nb && k < 4; k++) {
+        uint32_t pct = b[k].sum * 100u / ((uint32_t)b[k].cnt * n);
+        const FreqBand* bd = band_lookup((uint32_t)b[k].mhz * 1000000);
+        char line[40];
+        snprintf(
+            line,
+            sizeof(line),
+            "%3u  %3lu%%  %s",
+            (unsigned)b[k].mhz,
+            (unsigned long)pct,
+            bd ? bd->name : "");
+        // first baseline 20, not 16: the header's descenders ("p", "y" of "occupancy") reach
+        // y=10 and a row starting at 16 collided with them. 11 px leading, last row ends at 55.
+        canvas_draw_str(canvas, 2, 20 + (int)k * 11, line);
+    }
+}
+
+// ---- help ------------------------------------------------------------------
+// The controls are dense enough that they belong on the device, not only in a README nobody
+// has with them in the field.
+static void help_draw(Canvas* canvas, void* model) {
+    UNUSED(model);
+    // five lines at 11 px leading: the seven-line version overlapped itself at 7 px spacing
+    static const char* const LINES[] = {
+        "L/R  page (hold on bars)",
+        "U/D  window / tune",
+        "OK   zoom / park / capture",
+        "hold OK   log on-off",
+        "hold U/D  hold / clear",
+    };
+    canvas_clear(canvas);
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str(canvas, 2, 8, "Controls");
+    for(size_t i = 0; i < COUNT_OF(LINES); i++)
+        canvas_draw_str(canvas, 2, 18 + (int)i * 11, LINES[i]);
+}
+
+static bool help_input(InputEvent* e, void* ctx) {
+    UNUSED(ctx);
+    App* app = g_app;
+    if(!app) return false;
+    if(e->key == InputKeyBack && e->type == InputTypeShort) {
+        view_dispatcher_switch_to_view(app->vd, VIEW_CONF2); // Help is opened from page 2
+        return true;
+    }
+    return true;
+}
+
+#ifdef RFS_LAB
+// ---- carrier test (lab only) ----------------------------------------------
+// An unmodulated tone for bench work: PA check, antenna, receiver desense. Three things keep
+// it an instrument rather than a nuisance -- the API caps the duration at 60 s, only frequencies
+// the CC1101 can tune are keyed (no region gate in the lab build), and OK cancels mid-count.
+static const uint8_t CARRIER_SECS[] = {5, 10, 20, 30, 60};
+
+static int32_t carrier_worker(void* ctx) {
+    App* app = ctx;
+    uint32_t f = app->f_start + (uint32_t)(app->nbins / 2) * app->f_step;
+    app->carrier_t0 = furi_get_tick();
+    RfTxStatus st = rf_tx_carrier(
+        f,
+        subghz_device_cc1101_preset_ook_650khz_async_regs,
+        CARRIER_SECS[app->carrier_secs],
+        &app->carrier_abort);
+    FURI_LOG_I(TAG, "carrier %lu Hz -> %d", (unsigned long)f, (int)st);
+    app->carrier_on = false;
+    return 0;
+}
+
+static void carrier_stop(App* app) {
+    if(!app->carrier_worker) return;
+    app->carrier_abort = true;
+    furi_thread_join(app->carrier_worker);
+    furi_thread_free(app->carrier_worker);
+    app->carrier_worker = NULL;
+    app->carrier_on = false;
+    // hand the radio back to the survey (once: nothing else restarts it while a carrier exists)
+    if(!app->worker) {
+        app->running = true;
+        app->reconfig = true;
+        app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 6144, sweep_worker, app);
+        furi_thread_start(app->worker);
+    }
+}
+
+static void carrier_start(App* app) {
+    // a carrier that ended by itself leaves a finished thread until lab_tick reaps it; reap it
+    // here too, or the pointer below would be overwritten and the thread leaked
+    if(app->carrier_worker) {
+        furi_thread_join(app->carrier_worker);
+        furi_thread_free(app->carrier_worker);
+        app->carrier_worker = NULL;
+    }
+    // the sweep worker is the radio's owner; stop and join it before the transmitter runs
+    app->running = false;
+    if(app->worker) {
+        furi_thread_join(app->worker);
+        furi_thread_free(app->worker);
+        app->worker = NULL;
+    }
+    app->carrier_abort = false;
+    app->carrier_on = true;
+    app->carrier_worker = furi_thread_alloc_ex("rfsurvey_carrier", 6144, carrier_worker, app);
+    if(!app->carrier_worker) {
+        FURI_LOG_E(TAG, "carrier: out of memory, not starting");
+        app->carrier_on = false;
+        return;
+    }
+    furi_thread_start(app->carrier_worker);
+}
+
+// GUI-thread tick (lab only). A carrier that runs out its time ends in its own thread, which can
+// neither free itself nor safely restart the sweep: app->worker is also changed on THIS thread by
+// OK, teardown and the TX rows. So carrier_worker only clears carrier_on, and the single owner
+// (this thread) reaps it and hands the radio back. Before this the survey stayed frozen after
+// every carrier that was not cancelled with OK.
+static void lab_tick(void* ctx) {
+    App* app = ctx;
+    if(app && app->carrier_worker && !app->carrier_on) carrier_stop(app);
+}
+
+static void draw_carrier(Canvas* canvas, App* app) {
+    canvas_set_font(canvas, FontSecondary);
+    char s[32];
+    uint32_t f = app->f_start + (uint32_t)(app->nbins / 2) * app->f_step;
+    snprintf(
+        s,
+        sizeof(s),
+        "Carrier %lu.%03lu",
+        (unsigned long)(f / 1000000),
+        (unsigned long)((f / 1000) % 1000));
+    canvas_draw_str(canvas, 2, 9, s);
+
+    if(!app->carrier_on) {
+        canvas_draw_str(canvas, 2, 28, "OK: start");
+        snprintf(s, sizeof(s), "Up/Down: %u s", (unsigned)CARRIER_SECS[app->carrier_secs]);
+        canvas_draw_str(canvas, 2, 40, s);
+        canvas_draw_str(canvas, 2, 54, "unmodulated, capped at 60 s");
+        return;
+    }
+
+    uint32_t total = CARRIER_SECS[app->carrier_secs];
+    uint32_t elapsed = (furi_get_tick() - app->carrier_t0) / 1000;
+    uint32_t left = (elapsed >= total) ? 0 : total - elapsed;
+
+    canvas_set_font(canvas, FontBigNumbers);
+    snprintf(s, sizeof(s), "%lu", (unsigned long)left);
+    canvas_draw_str_aligned(canvas, SCR_W / 2, 36, AlignCenter, AlignBottom, s);
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str_aligned(canvas, SCR_W / 2, 42, AlignCenter, AlignBottom, "s left");
+    canvas_draw_str(canvas, 2, 56, "OK: stop now");
+}
+#endif
+
+// ---- cadence page (zero-span) ---------------------------------------------
+
+// Allan deviation of the period series (tau = one sample): consecutive differences cancel the
+// slow drift that plain variance counts as jitter, so a crystal sits at ~0 even when its period
+// walks, while a human's intervals do not. Floor is ~2*PARK_SAMPLE_MS/period from the sampling
+// grid alone.
+static float park_adev(const App* app) {
+    uint8_t n = app->park.per_n;
+    if(n < 3) return 0.0f;
+    uint8_t idx = (uint8_t)((app->park.per_i + PARK_RING - n) % PARK_RING);
+    int prev = app->park.per[idx];
+    float sum = (float)prev, diff2 = 0.0f;
+    idx = (uint8_t)((idx + 1) % PARK_RING);
+    for(uint8_t i = 1; i < n; i++) {
+        int cur = app->park.per[idx];
+        float d = (float)(cur - prev);
+        diff2 += d * d;
+        sum += (float)cur;
+        prev = cur;
+        idx = (uint8_t)((idx + 1) % PARK_RING);
+    }
+    float mean = sum / (float)n;
+    if(mean <= 0.0f) return 0.0f;
+    return sqrtf(0.5f * (diff2 / (float)(n - 1))) / mean;
+}
+
+static void draw_cadence(Canvas* canvas, App* app) {
+    canvas_set_font(canvas, FontSecondary);
+    char s[40];
+    // idle: show where OK WILL park (park_begin takes selected_freq), not the last parked
+    // frequency -- that one is stale and can sit outside the current range entirely
+    uint32_t f = app->parked ? app->park_freq : selected_freq(app);
+    uint8_t p = app->preset_idx < PRESET_N ? app->preset_idx : 0;
+
+    if(!app->parked) {
+        canvas_draw_str(canvas, 2, 9, "Cadence (zero-span)");
+        snprintf(
+            s,
+            sizeof(s),
+            "%lu.%03lu MHz  %s",
+            (unsigned long)(f / 1000000),
+            (unsigned long)((f / 1000) % 1000),
+            PRESETS[p].name);
+        canvas_draw_str(canvas, 2, 22, s);
+        canvas_draw_str(canvas, 2, 38, "OK: park on this freq");
+        canvas_draw_str(canvas, 2, 49, "then read period +");
+        canvas_draw_str(canvas, 2, 60, "jitter (machine/human)");
+        return;
+    }
+
+    snprintf(
+        s,
+        sizeof(s),
+        "%lu.%03lu %s",
+        (unsigned long)(f / 1000000),
+        (unsigned long)((f / 1000) % 1000),
+        PRESETS[p].name);
+    canvas_draw_str(canvas, 2, 8, s);
+    // The modulation contrast lives in the header: the three body lines were 8 px apart in a
+    // 9 px font and visibly collided (the simulator caught it; the device would show the same).
+    if(app->park_ab_done) {
+        snprintf(s, sizeof(s), "AM%d FM%d", app->park_ab[0], app->park_ab[1]);
+        canvas_draw_str_aligned(canvas, SCR_W - 1, 8, AlignRight, AlignBottom, s);
+    }
+    // "~" = the numbers on this page are degraded: an observation hole happened in the last
+    // 5 s, so some bursts were missed and their intervals were discarded
+    if(app->park.gap_t && (furi_get_tick() - app->park.gap_t) < 5000)
+        canvas_draw_str_aligned(canvas, SCR_W - 1, 18, AlignRight, AlignBottom, "~");
+
+    // envelope strip: last PARK_N samples, one pixel column each, filled to the baseline
+    int cnt = app->park_count;
+    if(cnt > PARK_N) cnt = PARK_N;
+    int lo = 127, hi = -128;
+    for(int i = 0; i < cnt; i++) {
+        int idx = (app->park_head + PARK_N - cnt + i) % PARK_N;
+        int v = app->park_env[idx];
+        if(v < lo) lo = v;
+        if(v > hi) hi = v;
+    }
+    if(hi < lo) {
+        lo = -110;
+        hi = -70;
+    }
+    if(hi - lo < 20) hi = lo + 20;
+    const int y0 = 12, y1 = 36;
+    for(int i = 0; i < cnt; i++) {
+        int idx = (app->park_head + PARK_N - cnt + i) % PARK_N;
+        int v = app->park_env[idx];
+        if(v < lo) v = lo;
+        if(v > hi) v = hi;
+        canvas_draw_line(canvas, i, y1 - (v - lo) * (y1 - y0) / (hi - lo), i, y1);
+    }
+    int ty = app->trigger;
+    if(ty < lo) ty = lo;
+    if(ty > hi) ty = hi;
+    int yt = y1 - (ty - lo) * (y1 - y0) / (hi - lo);
+    for(int x = 0; x < SCR_W; x += 3)
+        canvas_draw_dot(canvas, x, yt);
+
+    uint32_t mean_ms, sd_ms, cv_milli;
+    rfs_park_stats(&app->park, &mean_ms, &sd_ms, &cv_milli);
+    uint8_t np = app->park.per_n;
+    // absolute spread first: a 100 ms periodic device has CV ~0.02 purely from the 8 ms sample
+    // clock, so "stddev within a few sample ticks" is the honest machine test, not CV alone
+    // two devices on one frequency make the period series bimodal; averaging them would
+    // report a period that belongs to neither, so this check comes first
+    uint16_t centers[4];
+    uint8_t ncl = rfs_period_clusters(app->park.per, app->park.per_n, centers, COUNT_OF(centers));
+    const char* cls = (np < 3)                       ? "measuring..." :
+                      (ncl >= 2)                     ? "2+ devices" :
+                      (sd_ms <= 3u * PARK_SAMPLE_MS) ? "MACHINE (crystal)" :
+                      (cv_milli < 150)               ? "semi-periodic" :
+                                                       "HUMAN / event";
+    canvas_draw_str(canvas, 2, 48, cls);
+    unsigned a100 = (unsigned)(park_adev(app) * 100.0f + 0.5f);
+    snprintf(s, sizeof(s), "A%u.%02u", a100 / 100, a100 % 100);
+    canvas_draw_str_aligned(canvas, SCR_W - 1, 48, AlignRight, AlignBottom, s);
+
+    // one snapshot: the worker can zero the denominator between the test and the divide
+    uint32_t nsamp = app->park.n_samples;
+    uint32_t duty = nsamp ? (uint32_t)(((uint64_t)app->park.n_above * 100u) / nsamp) : 0;
+    unsigned last =
+        app->park.dur_n ? app->park.dur[(app->park.dur_i + PARK_RING - 1) % PARK_RING] : 0;
+    unsigned rep = app->park.rep_last ? app->park.rep_last : app->park.rep;
+    if(mean_ms >= 1000)
+        snprintf(
+            s,
+            sizeof(s),
+            "P%u.%us d%lu%% x%u",
+            (unsigned)(mean_ms / 1000),
+            (unsigned)((mean_ms / 100) % 10),
+            (unsigned long)duty,
+            rep);
+    else
+        snprintf(
+            s,
+            sizeof(s),
+            "P%lums d%lu%% x%u %ums",
+            (unsigned long)mean_ms,
+            (unsigned long)duty,
+            rep,
+            (unsigned)last);
+    canvas_draw_str(canvas, 2, 58, s);
+}
+
+// metres -> "385m" / "1.2km", short enough for a 128 px line
+static void fmt_dist(char* buf, size_t n, uint32_t m) {
+    if(m > 99999) m = 99999; // the model clamps here too; keeps the buffer arithmetic bounded
+    if(m < 1000)
+        snprintf(buf, n, "%lum", (unsigned long)m);
+    else
+        snprintf(buf, n, "%lu.%lukm", (unsigned long)(m / 1000), (unsigned long)((m / 100) % 10));
+}
+
+// Fox hunt: one frequency, one number, one bar, and the vibro. No statistics -- the question is
+// "am I getting warmer", and the answer has to be readable at arm's length while walking.
+static void draw_hunt(Canvas* canvas, App* app) {
+    canvas_set_font(canvas, FontSecondary);
+    char s[48];
+    uint32_t f = app->parked ? app->park_freq : selected_freq(app); // see draw_cadence
+    snprintf(
+        s,
+        sizeof(s),
+        "%lu.%03lu MHz",
+        (unsigned long)(f / 1000000),
+        (unsigned long)((f / 1000) % 1000));
+    canvas_draw_str(canvas, 2, 9, s);
+    canvas_draw_str_aligned(
+        canvas, SCR_W - 1, 9, AlignRight, AlignBottom, app->haptic ? "vibro" : "haptic off");
+
+    if(!app->parked) {
+        canvas_draw_str(canvas, 2, 30, "OK: start hunting");
+        canvas_draw_str(canvas, 2, 42, "Up/Down: tune");
+        canvas_draw_str(canvas, 2, 54, "max signal = the source");
+        return;
+    }
+
+    int cnt = app->park_count;
+    int8_t cur = cnt ? app->park_env[(app->park_head + PARK_N - 1) % PARK_N] : -127;
+
+    // big dBm readout, unit BESIDE the number on the same baseline: centred under it, "dBm"
+    // (bottom 40, ~7 px tall) landed on the number's last rows (bottom 34). The pair is centred
+    // as one, measured each time because "-45" and "-109" differ in width.
+    snprintf(s, sizeof(s), "%d", cur);
+    canvas_set_font(canvas, FontBigNumbers);
+    uint16_t nw = canvas_string_width(canvas, s);
+    canvas_set_font(canvas, FontSecondary);
+    uint16_t uw = canvas_string_width(canvas, "dBm");
+    int x0 = (SCR_W - (int)(nw + 3 + uw)) / 2;
+    canvas_set_font(canvas, FontBigNumbers);
+    canvas_draw_str_aligned(canvas, x0, 34, AlignLeft, AlignBottom, s);
+    canvas_set_font(canvas, FontSecondary);
+    canvas_draw_str_aligned(canvas, x0 + nw + 3, 34, AlignLeft, AlignBottom, "dBm");
+
+    // bar: -105 .. -40 dBm across the full width. Deliberately fixed rather than autoscaled --
+    // an autoscaling bar always "looks full" and defeats the whole point of walking.
+    const int lo = -105, hi = -40;
+    int v = cur;
+    if(v < lo) v = lo;
+    if(v > hi) v = hi;
+    int len = (v - lo) * (SCR_W - 4) / (hi - lo);
+    canvas_draw_frame(canvas, 2, 44, SCR_W - 4, 9);
+    if(len > 0) canvas_draw_box(canvas, 3, 45, len, 7);
+
+    // Distance as a BAND, never a number: the interval is what +-6 dB of RSSI uncertainty does
+    // to the inverse of the path loss model. Anything narrower would be fake precision.
+    if(cur > app->trigger) {
+        uint16_t gain = 0;
+        UNUSED(gain);
+        RfsDistance d = rfs_estimate_distance(
+            cur, f, 10, 0, PATH_N10[app->path_n < COUNT_OF(PATH_N10) ? app->path_n : 1], 6);
+        if(d.valid) {
+            char p1[12], p2[12], p3[12];
+            fmt_dist(p1, sizeof(p1), d.m);
+            fmt_dist(p2, sizeof(p2), d.lo);
+            fmt_dist(p3, sizeof(p3), d.hi);
+            snprintf(s, sizeof(s), "~%s (%s-%s)", p1, p2, p3);
+            canvas_draw_str(canvas, 2, 62, s);
+        }
+    } else {
+        canvas_draw_str(canvas, 2, 62, "below trigger");
     }
 }
 
@@ -1225,7 +2728,15 @@ static void spectrum_draw(Canvas* canvas, void* model) {
     canvas_clear(canvas);
     canvas_set_font(canvas, FontSecondary);
 
-    if(app->page == 3) {
+    if(app->page == 7) {
+#ifdef RFS_LAB
+        draw_carrier(canvas, app);
+#endif
+    } else if(app->page == 6) {
+        draw_hunt(canvas, app); // full-height fox-hunt page
+    } else if(app->page == 5) {
+        draw_cadence(canvas, app); // full-height zero-span page, draws its own layout
+    } else if(app->page == 3) {
         draw_numeric(canvas, app); // bars show absolute freqs; the Capture pill is below
     } else if(app->page == 2) {
         draw_waterfall(canvas, app); // full-bleed, carries its own range + span labels
@@ -1233,8 +2744,11 @@ static void spectrum_draw(Canvas* canvas, void* model) {
         draw_history(canvas, app);
     } else {
         // header: range + likely band name (+ window seconds on the connected page)
-        uint32_t fc = app->f_start / 2 + app->f_end / 2;
-        const FreqBand* hb = band_lookup(fc);
+        // The band tag is looked up at the CENTRE of the range, which is a lie for a wide
+        // sweep: 779-927 MHz is not "LTE800 UL", it just contains it. Only name the band when
+        // the whole range actually fits inside one.
+        const FreqBand* hb = band_lookup(app->f_start);
+        if(hb != band_lookup(app->f_end)) hb = NULL;
         char hdr[48];
         if(app->page == 1) {
             char w[8];
@@ -1255,22 +2769,59 @@ static void spectrum_draw(Canvas* canvas, void* model) {
                 (unsigned long)(app->f_start / 1000000),
                 (unsigned long)(app->f_end / 1000000),
                 hb ? hb->name : "");
-        canvas_draw_str(canvas, 2, 8, hdr);
-        // info line: cursor readout on bars, global peak on connected
+        // ONE readout line. Two lines of header cost the plot 8 px of its 48 -- and the range
+        // is already obvious from the axis, so the band prose was paying rent for nothing.
         if(app->page == 0) {
             int8_t cur, pk;
             grp_max(app, app->cursor, &cur, &pk);
-            draw_info(canvas, grp_freq(app, app->cursor), cur);
+            snprintf(
+                hdr,
+                sizeof(hdr),
+                "%lu.%lu %d",
+                (unsigned long)(grp_freq(app, app->cursor) / 1000000),
+                (unsigned long)((grp_freq(app, app->cursor) / 100000) % 10),
+                cur);
         } else {
             int pmax = -200;
             uint16_t pidx = 0;
-            for(uint16_t i = 0; i < app->nbins; i++) {
+            for(uint16_t i = 0; i < app->nbins; i++)
                 if(app->rssi[i] > pmax) {
                     pmax = app->rssi[i];
                     pidx = i;
                 }
-            }
-            draw_info(canvas, app->f_start + (uint32_t)pidx * app->f_step, pmax);
+            uint32_t pf = app->f_start + (uint32_t)pidx * app->f_step;
+            snprintf(
+                hdr,
+                sizeof(hdr),
+                "%lu.%lu %d",
+                (unsigned long)(pf / 1000000),
+                (unsigned long)((pf / 100000) % 10),
+                pmax);
+        }
+        canvas_draw_str(canvas, 2, 9, hdr);
+
+        // right slot, by priority: a held trace explains the screen, a low battery explains
+        // everything else, an under-settled sweep explains the numbers, otherwise show where
+        // you are in the page ring
+        char mark[8] = "";
+        if(app->frozen)
+            snprintf(mark, sizeof(mark), "HOLD");
+        else if(app->batt_pct && app->batt_pct < 15)
+            snprintf(mark, sizeof(mark), "%u%%", (unsigned)app->batt_pct);
+        else if(app->settle_ms < settle_min_ms(app->f_step))
+            snprintf(mark, sizeof(mark), "!");
+        else if(app->page == 1) { // connected: the averaging window
+            char w[8];
+            fmt_win(WIN_SECS[app->win_idx], w, sizeof(w));
+            snprintf(mark, sizeof(mark), "%s", w);
+        } else { // bars: the peak-hold of the band the cursor is on
+            int8_t cur, pk;
+            grp_max(app, app->cursor, &cur, &pk);
+            snprintf(mark, sizeof(mark), "pk%d", pk);
+        }
+        canvas_draw_str_aligned(canvas, SCR_W - 1, 9, AlignRight, AlignBottom, mark);
+        // (the info line that used to sit at y=18 is gone; see the single readout above)
+        if(0) {
         }
         int floor, ceil;
         autoscale(app, &floor, &ceil);
@@ -1280,29 +2831,29 @@ static void spectrum_draw(Canvas* canvas, void* model) {
             draw_connected(canvas, app, floor, ceil);
     }
 
-    // native pill hints (the waterfall draws its own scale + page hint instead)
-    if(app->page != 2) {
-        elements_button_left(canvas, "Page");
-        if(app->page == 0) elements_button_center(canvas, "Zoom");
+    // native pill hints (the waterfall and cadence pages draw their own layout instead)
+    if(app->page != 0 && app->page != 1 && app->page != 2 && app->page != 5 && app->page != 6 &&
+       app->page != 7) {
+        // the left pill was the word "Page" on every screen, which told you the key existed but
+        // not where you were. A position readout answers the question you actually have.
         if(app->page == 3) elements_button_center(canvas, "Capture"); // OK on the cursor row
-        // (zoom-out is Back -- no right pill, Right flips pages like elsewhere)
     }
 
-    // recording indicator (long-OK toggles): filled dot + row count, top-right.
+    // Recording indicator: a dot in the extreme corner, no text. It used to draw a dot AND a
+    // row count at y=8, which collided with every page's right-hand readout (pk-99, n=99,
+    // AM10 FM10, haptic off) -- the screenshots made that obvious and nothing else did.
+    // The row count still goes to the log; the dot is a status light.
     // XOR on the full-bleed pages (2/3) so it reads over lit/dark cells.
     if(app->recording) {
-        bool fb = (app->page == 2 || app->page == 3);
+        bool fb = (app->page == 2 || app->page == 3 || app->page == 5);
         if(fb) canvas_set_color(canvas, ColorXOR);
-        char s[16];
-        snprintf(s, sizeof(s), "REC %lu", (unsigned long)app->rec_rows);
-        int w = (int)canvas_string_width(canvas, s);
-        canvas_draw_disc(canvas, SCR_W - w - 7, 4, 2);
-        canvas_draw_str(canvas, SCR_W - w - 1, 8, s);
+        canvas_draw_disc(canvas, SCR_W - 3, 3, 2);
         if(fb) canvas_set_color(canvas, ColorBlack);
     }
 }
 
 static bool spectrum_input(InputEvent* event, void* context) {
+    // EXPERIMENT: shot_flush
     UNUSED(context);
     App* app = g_app;
     if(!app) return false;
@@ -1317,19 +2868,84 @@ static bool spectrum_input(InputEvent* event, void* context) {
         }
         return false; // -> config
     }
+    // On the bars page short Left/Right is the cursor and LONG is the page flip. It used to fall
+    // through to a page change at the edges, so leaving the page from the middle took 16 presses
+    // and the "Page" hint was a lie. Now the mapping is the same shape everywhere: short acts on
+    // the page, long changes it.
     if(event->key == InputKeyLeft && (sp || lp)) {
-        if(sp && app->page == 0 && app->cursor > 0)
-            app->cursor--; // move cursor
-        else
-            app->page = (uint8_t)((app->page + 4) % 5); // edge / long -> prev page
+        if(sp && app->page == 0) {
+            if(app->cursor > 0) app->cursor--;
+        } else {
+            app->page = (uint8_t)((app->page + PAGE_N - 1) % PAGE_N);
+        }
+        app->parked = (app->page == 5 || app->page == 6) ? app->parked : false;
         spec_redraw(app);
         return true;
     }
     if(event->key == InputKeyRight && (sp || lp)) {
-        if(sp && app->page == 0 && app->cursor < NBARS - 1)
-            app->cursor++;
+        if(sp && app->page == 0) {
+            if(app->cursor < NBARS - 1) app->cursor++;
+        } else {
+            app->page = (uint8_t)((app->page + 1) % PAGE_N);
+        }
+        app->parked = (app->page == 5 || app->page == 6) ? app->parked : false;
+        spec_redraw(app);
+        return true;
+    }
+    // long Up/Down: hold the traces / clear the holds. Kept off the short presses so the time
+    // window and page flips keep their existing meaning.
+    if(event->key == InputKeyUp && lp && app->page != 5 && app->page != 6) {
+        app->frozen = !app->frozen;
+        FURI_LOG_I(TAG, "input: hold %s", app->frozen ? "on" : "off");
+        spec_redraw(app);
+        return true;
+    }
+    if(event->key == InputKeyDown && lp && app->page != 5 && app->page != 6) {
+        app->clear_peaks = true; // max-hold and min-hold both re-seed from the next sweep
+        spec_redraw(app);
+        return true;
+    }
+#ifdef RFS_LAB
+    // Carrier page: OK starts/stops, Up/Down picks the duration while idle
+    if(app->page == 7 && event->key == InputKeyOk && sp) {
+        if(app->carrier_on)
+            carrier_stop(app);
         else
-            app->page = (uint8_t)((app->page + 1) % 5); // edge / long -> next page
+            carrier_start(app);
+        spec_redraw(app);
+        return true;
+    }
+    if(app->page == 7 && !app->carrier_on && sp &&
+       (event->key == InputKeyUp || event->key == InputKeyDown)) {
+        uint8_t n = COUNT_OF(CARRIER_SECS);
+        app->carrier_secs =
+            (uint8_t)((app->carrier_secs + (event->key == InputKeyUp ? 1 : n - 1)) % n);
+        spec_redraw(app);
+        return true;
+    }
+#endif
+    // Cadence page: OK parks on (or releases) the selected frequency. Nothing is tuned here --
+    // the sweep worker sees the flag at the top of its loop and hands the radio to park_loop.
+    if(event->key == InputKeyOk && sp && (app->page == 5 || app->page == 6)) {
+        if(app->parked) {
+            app->parked = false;
+        } else {
+            park_begin(app); // selection snapshot happens here, on the GUI thread
+        }
+        FURI_LOG_I(TAG, "input: park %s", app->parked ? "on" : "off");
+        spec_redraw(app);
+        return true;
+    }
+    // while parked, Up/Down walks the frequency in 10 kHz steps so you can watch RSSI rise and
+    // land exactly on the carrier instead of guessing from a swept bin.
+    if((app->page == 5 || app->page == 6) && app->parked && sp &&
+       (event->key == InputKeyUp || event->key == InputKeyDown)) {
+        uint32_t f = app->park_freq;
+        if(event->key == InputKeyUp)
+            f = (f <= 928000000 - 10000) ? f + 10000 : 928000000;
+        else
+            f = (f >= 300000000 + 10000) ? f - 10000 : 300000000;
+        if(furi_hal_subghz_is_frequency_valid(f)) app->park_freq = f;
         spec_redraw(app);
         return true;
     }
@@ -1394,6 +3010,170 @@ static bool spectrum_input(InputEvent* event, void* context) {
     return true;
 }
 
+// PAGE 2: actions. Everything here runs in place or opens another view; nothing navigates to
+// the spectrum by accident, because OK on a value row is the only path that does.
+static void conf2_enter(void* ctx, uint32_t index) {
+    App* app = ctx;
+    FURI_LOG_D(TAG, "tools row %lu", (unsigned long)index);
+    if(index == CONF2_ROW_HELP) {
+        FURI_LOG_I(TAG, "config: open help");
+        view_dispatcher_switch_to_view(app->vd, VIEW_HELP);
+        return;
+    }
+    if(index == CONF2_ROW_SAVEPRF) {
+        if(!app->profile_slot) {
+            FURI_LOG_W(TAG, "save profile: no slot selected");
+            return;
+        }
+        char path[64];
+        profile_path(path, sizeof(path), app->profile_slot);
+        Storage* st = furi_record_open(RECORD_STORAGE);
+        settings_save(app, st, path);
+        furi_record_close(RECORD_STORAGE);
+        FURI_LOG_I(TAG, "profile %u saved", (unsigned)app->profile_slot);
+        return;
+    }
+    if(index == CONF2_ROW_SAVEBM) {
+        OccBucket b[4];
+        uint8_t n = occ_top(app, b, COUNT_OF(b));
+        if(!n) {
+            FURI_LOG_W(TAG, "save busy: nothing measured yet");
+            return;
+        }
+        Storage* st = furi_record_open(RECORD_STORAGE);
+        bookmarks_write_auto(app, st, b, n);
+        furi_record_close(RECORD_STORAGE);
+        FURI_LOG_I(TAG, "save busy: wrote %u channels", (unsigned)n);
+        return;
+    }
+    if(index == CONF2_ROW_CLEARPK) {
+        app->clear_peaks = true;
+        FURI_LOG_I(TAG, "config: clear peaks queued");
+        return;
+    }
+    if(index == CONF2_ROW_WFSAVE) {
+        app->wf_export = true;
+        FURI_LOG_I(TAG, "config: waterfall export queued");
+        return;
+    }
+#ifdef RFS_LAB
+    if(index == CONF2_ROW_BRUTE) {
+        // LAB ONLY. One PAGE per press, then it stops and waits to be asked again. No
+        // loop-forever path: 32 codes x 3 repeats is ~3 s of airtime, the cursor advances, and
+        // the row shows where the next press starts. No region gate in the lab build (see rf_tx.h).
+        if(app->brute_next <= 0xFFFFFFu) {
+            uint32_t f = app->f_start + (uint32_t)(app->nbins / 2) * app->f_step;
+            app->running = false;
+            if(app->worker) {
+                furi_thread_join(app->worker);
+                furi_thread_free(app->worker);
+                app->worker = NULL;
+            }
+            RfTxStatus st =
+                rf_tx_code_page(f, PRESETS[0].regs, app->brute_next, BRUTE_PAGE, 3, 350);
+            FURI_LOG_I(TAG, "brute page %06lX -> %d", (unsigned long)app->brute_next, (int)st);
+            // advance only over codes that actually went out: a refused page must be retried, not
+            // silently skipped (it used to move on by 32 even when nothing was transmitted)
+            if(st == RfTxOk) app->brute_next += BRUTE_PAGE;
+            if(app->it_brute) {
+                char b[12];
+                snprintf(b, sizeof(b), "%06lX", (unsigned long)app->brute_next);
+                variable_item_set_current_value_text(app->it_brute, b);
+            }
+            app->running = true;
+            app->reconfig = true;
+            app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 6144, sweep_worker, app);
+            furi_thread_start(app->worker);
+        }
+        return;
+    }
+    if(index == CONF2_ROW_TXFRAME) {
+        // LAB ONLY. Synthesises a Princeton frame from nothing but arithmetic -- no capture,
+        // no decoder. The encoder lives in rf_logic.h and is unit-tested on the PC, so the
+        // waveform shape is verified before it is allowed near a transmitter.
+        uint32_t f = app->f_start + (uint32_t)(app->nbins / 2) * app->f_step;
+        uint16_t n = 0;
+        for(uint8_t r = 0; r < 6 && app->rep_buf; r++) {
+            uint16_t k = rfs_encode_princeton(
+                0x0A5C3Eu, 350, app->rep_buf + n, (uint16_t)(REP_MAX_EDGES - n));
+            if(!k) break;
+            n = (uint16_t)(n + k);
+        }
+        if(n) {
+            app->running = false;
+            if(app->worker) {
+                furi_thread_join(app->worker);
+                furi_thread_free(app->worker);
+                app->worker = NULL;
+            }
+            RfTxStatus st = rf_tx_edges(f, PRESETS[0].regs, app->rep_buf, n);
+            FURI_LOG_I(
+                TAG, "tx frame %lu Hz %u edges -> %d", (unsigned long)f, (unsigned)n, (int)st);
+            app->running = true;
+            app->reconfig = true;
+            app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 6144, sweep_worker, app);
+            furi_thread_start(app->worker);
+        }
+        return;
+    }
+    if(index == CONF2_ROW_REPLAY) {
+        // LAB ONLY. Re-sends the last capture through the same frequency checks as the TX test.
+        // The radio is handed over the same way: stop and join the worker first.
+        if(!app->rep_buf || app->rep_n < 8) {
+            FURI_LOG_W(TAG, "replay: nothing captured yet");
+            return;
+        }
+        app->running = false;
+        if(app->worker) {
+            furi_thread_join(app->worker);
+            furi_thread_free(app->worker);
+            app->worker = NULL;
+        }
+        uint8_t pi = app->rep_preset < PRESET_N ? app->rep_preset : 0;
+        RfTxStatus st = rf_tx_edges(app->rep_freq, PRESETS[pi].regs, app->rep_buf, app->rep_n);
+        FURI_LOG_I(
+            TAG,
+            "replay %lu Hz %u edges -> %d",
+            (unsigned long)app->rep_freq,
+            (unsigned)app->rep_n,
+            (int)st);
+        app->running = true;
+        app->reconfig = true;
+        app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 6144, sweep_worker, app);
+        furi_thread_start(app->worker);
+        return;
+    }
+    if(index == CONF2_ROW_TXTEST) {
+        // LAB ONLY. The radio has one owner and it is the sweep worker, so the worker is
+        // stopped and joined before the transmitter touches it -- the same handover the capture
+        // screen does. 20 pulses x 500 us is ~20 ms of airtime: a connectivity test, not a
+        // carrier.
+        uint32_t f = app->f_start + (uint32_t)(app->nbins / 2) * app->f_step;
+        app->running = false;
+        if(app->worker) {
+            furi_thread_join(app->worker);
+            furi_thread_free(app->worker);
+            app->worker = NULL;
+        }
+        RfTxStatus st =
+            rf_tx_burst(f, subghz_device_cc1101_preset_ook_650khz_async_regs, 20, 500, 500);
+        FURI_LOG_I(TAG, "tx test %lu Hz -> %d", (unsigned long)f, (int)st);
+        app->running = true;
+        app->reconfig = true;
+        app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 6144, sweep_worker, app);
+        furi_thread_start(app->worker);
+        return;
+    }
+#endif
+    if(index == CONF2_ROW_SCAN) { // back to page 1
+        FURI_LOG_I(TAG, "config: -> scan");
+        view_dispatcher_switch_to_view(app->vd, VIEW_CONF);
+        return;
+    }
+    FURI_LOG_I(TAG, "config: OK -> spectrum");
+    view_dispatcher_switch_to_view(app->vd, VIEW_SPEC);
+}
+
 static uint32_t view_exit(void* ctx) {
     UNUSED(ctx);
     return VIEW_NONE;
@@ -1408,6 +3188,7 @@ static uint32_t to_conf(void* ctx) {
 static void spec_enter(void* ctx) {
     App* app = ctx;
     app->spec_active = true;
+    app->cap_redraw = false; // the capture view is gone; never repaint it from here
 }
 static void spec_exit(void* ctx) {
     App* app = ctx;
@@ -1416,6 +3197,9 @@ static void spec_exit(void* ctx) {
     // in the sweep loop). Touching hap_on/the motor from this GUI thread races the worker and can
     // latch the motor ON (worker turns it on between our hap_on read and write).
     app->spec_active = false;
+    // parking is a property of the cadence/hunt pages: leaving the spectrum entirely (Back to
+    // config) must stop it, or a later sweep display looks live while the worker is still parked
+    app->parked = false;
 }
 
 // ---- custom range editor (VIEW_RANGE) --------------------------------------
@@ -1478,6 +3262,7 @@ static void range_draw(Canvas* canvas, void* model) {
 }
 
 static bool range_input(InputEvent* e, void* ctx) {
+    // EXPERIMENT: shot_flush
     UNUSED(ctx);
     App* app = g_app;
     if(!app) return false;
@@ -1500,15 +3285,11 @@ static bool range_input(InputEvent* e, void* ctx) {
         }
         app->f_start = app->re_start * 100000;
         app->f_end = app->re_end * 100000;
+        // a hand-typed range can be wide enough that the current step would overflow MAX_BINS
+        app->f_step = step_fit(app->f_start, app->f_end, app->f_step);
+        conf_sync_rows(app); // range, step AND band: the Band row kept the old name before
+        app->parked = false; // new range -> the parked frequency may be outside it
         app->reconfig = true;
-        char r[24];
-        snprintf(
-            r,
-            sizeof(r),
-            "%lu-%lu",
-            (unsigned long)(app->f_start / 1000000),
-            (unsigned long)(app->f_end / 1000000));
-        variable_item_set_current_value_text(app->it_range, r);
         FURI_LOG_I(
             TAG, "range: set %lu-%lu", (unsigned long)app->f_start, (unsigned long)app->f_end);
         view_dispatcher_switch_to_view(app->vd, VIEW_CONF);
@@ -1546,15 +3327,135 @@ static bool range_input(InputEvent* e, void* ctx) {
 
 #define CAP_STREAM 4096 // int32 slots ISR -> thread (sized for a burst; overflow is counted)
 #define CAP_MAXSPL 60000 // auto-stop after this many durations (bounds the file)
+// Pre-trigger history, PortaPack's Signal Hunter idea: when the RSSI gate is on, the edges from
+// BEFORE the trigger are the most valuable part (the preamble and the first frame), and they
+// used to be thrown away. One ring, written out in order the moment the gate opens.
+#define CAP_PRERUN 256
 
-// ISR context: pack the edge and push it; never block, never allocate, never touch the file.
+// ISR context: merge the edge into the pending run and push a run when its level ends; never
+// block, never allocate, never touch the file.
+//
+// The old code dropped any edge shorter than 50 us. Dropping an EDGE is not a glitch filter:
+// the .sub format is a signed alternation, so one missing edge inverts the polarity of every
+// pulse after it and the file stops replaying. Merging is the correct operation -- a short
+// opposite pulse between two same-level pulses is folded back into the run that contains it,
+// so 400 us | 30 us | 400 us becomes one 830 us run instead of a sign flip.
+#define CAP_GLITCH_US 50
 static void capture_isr_cb(bool level, uint32_t duration, void* ctx) {
     App* app = ctx;
     FuriStreamBuffer* sb = app->cap_stream;
     if(!sb) return;
-    if(duration < 50 || duration >= 1000000) return; // noise / huge gap -> drop (and no overflow)
-    int32_t d = level ? (int32_t)duration : -(int32_t)duration;
+
+    if(duration >= 1000000) { // sub-1 Hz gap: close the run, drop the gap itself
+        if(app->cap_run_active) {
+            int32_t d = app->cap_run_level ? (int32_t)app->cap_run_dur :
+                                             -(int32_t)app->cap_run_dur;
+            if(furi_stream_buffer_send(sb, &d, sizeof(d), 0) != sizeof(d)) app->cap_overflow++;
+            app->cap_run_active = false;
+        }
+        return;
+    }
+    if(!app->cap_run_active) {
+        app->cap_run_active = true;
+        app->cap_run_level = level;
+        app->cap_run_dur = duration;
+        return;
+    }
+    if(duration < CAP_GLITCH_US || level == app->cap_run_level) { // glitch: extend, keep level
+        uint32_t nd = app->cap_run_dur + duration;
+        app->cap_run_dur = (nd > 0x3FFFFFFF) ? 0x3FFFFFFF : nd;
+        return;
+    }
+    int32_t d = app->cap_run_level ? (int32_t)app->cap_run_dur : -(int32_t)app->cap_run_dur;
     if(furi_stream_buffer_send(sb, &d, sizeof(d), 0) != sizeof(d)) app->cap_overflow++;
+    app->cap_run_level = level;
+    app->cap_run_dur = duration;
+}
+
+// The firmware's decoder chain, fed the same edge stream we write to the .sub. This is the
+// difference between "pulse widths look like the PT2262 family" and "Came 12-bit, ID 0x1A3F":
+// subghz_receiver_* are exported to FAPs (verified against api_symbols.csv and a link test).
+static void cap_decode_cb(SubGhzReceiver* rx, SubGhzProtocolDecoderBase* base, void* ctx) {
+    App* app = ctx;
+    FuriString* str = furi_string_alloc();
+    if(subghz_protocol_decoder_base_get_string(base, str)) {
+        const char* c = furi_string_get_cstr(str);
+        size_t n = 0;
+        for(; c[n] && n + 1 < sizeof(app->cap_decode); n++)
+            app->cap_decode[n] = (c[n] == '\n' || c[n] == '\r') ? ' ' : c[n];
+        app->cap_decode[n] = 0;
+        app->cap_decoded = true;
+        if(app->cap_packets < 0xFFFF) app->cap_packets++;
+    }
+    furi_string_free(str);
+    subghz_receiver_reset(rx); // one frame per burst; the next frame re-syncs
+}
+
+// Everything the capture knows, written next to the .sub instead of squeezed onto a 128x64
+// line: the screen keeps the one number that matters (base pulse, bits, FIX/ROL) and the file
+// keeps the whole analysis for the PC.
+static void capture_sidecar(
+    App* app, // app->csv_line is the 512-byte scratch buffer; the sweep worker is stopped here
+    Storage* storage,
+    const char* sub_path,
+    uint32_t freq,
+    const char* preset,
+    uint32_t samples,
+    uint32_t base,
+    uint32_t frame,
+    uint16_t bits,
+    uint32_t baud,
+    RfsPreamble pre,
+    uint8_t code) {
+    char path[96];
+    snprintf(path, sizeof(path), "%s", sub_path);
+    char* dot = strrchr(path, '.');
+    if(!dot) return;
+    snprintf(dot, 5, ".txt");
+
+    File* f = storage_file_alloc(storage);
+    if(!storage_file_open(f, path, FSAM_WRITE, FSOM_CREATE_ALWAYS)) {
+        storage_file_close(f);
+        storage_file_free(f);
+        return;
+    }
+    const char* kind = (code == RFS_CODE_STATIC)   ? "FIX" :
+                       (code == RFS_CODE_CHANGING) ? "ROL" :
+                                                     "unknown";
+    char* buf = app->csv_line;
+    const size_t cap = CSV_BUF;
+    int n = snprintf(
+        buf,
+        cap,
+        "# RF Survey capture analysis\n"
+        "freq %lu\n"
+        "preset %s\n"
+        "samples %lu\n"
+        "base_us %lu\n"
+        "frame_us %lu\n"
+        "bits %u\n"
+        "baud %lu\n"
+        "preamble %u\n"
+        "sync_us %lu\n"
+        "code %s\n"
+        "\n"
+        "# base_us  the short pulse T (10th percentile of the edge lengths)\n"
+        "# bits     edges per frame / 2 -- one bit of a pulse-width code costs two edges\n"
+        "# code     FIX = two frames identical (replayable), ROL = they differ\n",
+        (unsigned long)freq,
+        preset,
+        (unsigned long)samples,
+        (unsigned long)base,
+        (unsigned long)frame,
+        (unsigned)bits,
+        (unsigned long)baud,
+        (unsigned)pre.count,
+        (unsigned long)pre.sync_us,
+        kind);
+    if(n > 0 && (size_t)n < cap) storage_file_write(f, buf, (size_t)n);
+    storage_file_close(f);
+    storage_file_free(f);
+    FURI_LOG_I(TAG, "cap: sidecar %s", path);
 }
 
 static int32_t capture_worker(void* ctx) {
@@ -1576,11 +3477,14 @@ static int32_t capture_worker(void* ctx) {
         dt.second,
         (unsigned long)(furi_get_tick() % 1000)); // tick suffix: never overwrite a prior .sub
 
-    FlipperFormat* ff = flipper_format_file_alloc(storage);
+    // Listen mode decodes without touching the card: some sensors (weather, TPMS) transmit once
+    // a minute, so the useful interaction is "leave it listening", not "catch a burst by hand".
+    const bool to_file = !app->cap_listen;
+    FlipperFormat* ff = to_file ? flipper_format_file_alloc(storage) : NULL;
     int32_t* buf = malloc(sizeof(int32_t) * 512);
     app->cap_stream = furi_stream_buffer_alloc(sizeof(int32_t) * CAP_STREAM, sizeof(int32_t));
-    bool ok = buf && app->cap_stream && flipper_format_file_open_always(ff, path);
-    if(ok) {
+    bool ok = buf && app->cap_stream && (!to_file || flipper_format_file_open_always(ff, path));
+    if(ok && to_file) {
         uint32_t ver = 1, freq = app->cap_freq;
         ok = flipper_format_write_header_cstr(ff, "Flipper SubGhz RAW File", ver) &&
              flipper_format_write_uint32(ff, "Frequency", &freq, 1) &&
@@ -1598,7 +3502,34 @@ static int32_t capture_worker(void* ctx) {
         app->capturing = false;
     } else {
         FURI_LOG_I(
-            TAG, "cap: recording %lu Hz %s -> %s", (unsigned long)app->cap_freq, ps->name, path);
+            TAG,
+            "cap: %s %lu Hz %s -> %s",
+            to_file ? "recording" : "listening",
+            (unsigned long)app->cap_freq,
+            ps->name,
+            to_file ? path : "-");
+        app->cap_run_active = false; // never carry a run over from a previous capture
+        app->cap_decode[0] = 0;
+        app->cap_decoded = false;
+        app->cap_packets = 0;
+        app->cap_edge_n = 0;
+#ifdef RFS_LAB
+        app->rep_n = 0;
+        app->rep_freq = app->cap_freq;
+        app->rep_preset = app->cap_preset;
+#endif
+        // decoder chain: optional. If the environment or the receiver cannot be allocated the
+        // capture still runs -- decoding is an enrichment, never a prerequisite.
+        SubGhzEnvironment* env = subghz_environment_alloc();
+        SubGhzReceiver* dec = NULL;
+        if(env) {
+            subghz_environment_set_protocol_registry(env, &subghz_protocol_registry);
+            dec = subghz_receiver_alloc_init(env);
+            if(dec) {
+                subghz_receiver_set_filter(dec, SubGhzProtocolFlag_Decodable);
+                subghz_receiver_set_rx_callback(dec, cap_decode_cb, app);
+            }
+        }
         radio_setup(app); // internal reset, or external cc1101_ext up (5V/begin); may fall back
         radio_load_preset(ps->regs);
         radio_set_freq(app->cap_freq);
@@ -1607,6 +3538,9 @@ static int32_t capture_worker(void* ctx) {
         int ind = 0;
         bool werr = false;
         uint32_t last_poll = 0;
+        int32_t* pre = app->cap_gate ? malloc(sizeof(int32_t) * CAP_PRERUN) : NULL;
+        uint16_t pre_n = 0, pre_i = 0;
+        bool was_paused = true, flush_pre = false;
         app->cap_paused = app->cap_gate; // if gating, wait for signal before the first write
         while(app->capturing && !werr && app->cap_samples < CAP_MAXSPL) {
             // poll the level ~50 Hz for the on-screen readout; only PAUSE writing when the gate
@@ -1616,6 +3550,10 @@ static int32_t capture_worker(void* ctx) {
                 float r = radio_rssi();
                 app->cap_rssi = (r < -127.0f) ? (int8_t)-127 : (int8_t)r;
                 app->cap_paused = app->cap_gate && (app->cap_rssi < app->trigger);
+                if(app->cap_gate) {
+                    if(was_paused && !app->cap_paused) flush_pre = true; // gate just opened
+                    was_paused = app->cap_paused;
+                }
                 last_poll = now;
                 // same strength-tracked locate cue as the spectrum (non-blocking: pump only toggles
                 // when its own timer elapses, so the stream drain is never stalled).
@@ -1628,11 +3566,40 @@ static int32_t capture_worker(void* ctx) {
             }
             int32_t d;
             if(furi_stream_buffer_receive(app->cap_stream, &d, sizeof(d), 20) == sizeof(d)) {
+                if(pre) { // always remember the recent past, even while gated off
+                    pre[pre_i] = d;
+                    pre_i = (uint16_t)((pre_i + 1) % CAP_PRERUN);
+                    if(pre_n < CAP_PRERUN) pre_n++;
+                }
                 if(app->cap_paused) continue; // below trigger -> drain but don't record
+                if(flush_pre && pre && pre_n) {
+                    flush_pre = false;
+                    for(uint16_t k = 0; k < pre_n; k++) {
+                        buf[ind++] =
+                            pre[(uint16_t)((pre_i + CAP_PRERUN - pre_n + k) % CAP_PRERUN)];
+                        app->cap_samples++;
+                        if(ind == 512) {
+                            if(to_file &&
+                               !(werr = !flipper_format_write_int32(ff, "RAW_Data", buf, 512)))
+                                break;
+                            ind = 0;
+                        }
+                    }
+                    pre_n = 0; // consumed; the live edges follow
+                }
                 buf[ind++] = d;
                 app->cap_samples++;
+                uint32_t m = (d < 0) ? (uint32_t)(-d) : (uint32_t)d;
+                uint8_t b = pw_bucket(m);
+                if(app->cap_pw[b] < 0xFFFF) app->cap_pw[b]++;
+                app->cap_pw_n++;
+                if(app->cap_edge_n < RFS_FRAME_EDGES) app->cap_edge[app->cap_edge_n++] = d;
+#ifdef RFS_LAB
+                if(app->rep_buf && app->rep_n < REP_MAX_EDGES) app->rep_buf[app->rep_n++] = d;
+#endif
+                if(dec) subghz_receiver_decode(dec, d > 0, m);
                 if(ind == 512) {
-                    werr = !flipper_format_write_int32(ff, "RAW_Data", buf, 512);
+                    if(to_file) werr = !flipper_format_write_int32(ff, "RAW_Data", buf, 512);
                     ind = 0;
                 }
             }
@@ -1640,17 +3607,55 @@ static int32_t capture_worker(void* ctx) {
         // teardown order is non-negotiable: stop the ISR FIRST so no callback can fire into
         // the stream after we free it; then drain the tail, flush, close, free.
         radio_async_stop();
+        // the merge holds the last run back until the next level change -> flush it by hand,
+        // otherwise the tail of every capture is silently lost
+        if(app->cap_run_active) {
+            int32_t t = app->cap_run_level ? (int32_t)app->cap_run_dur :
+                                             -(int32_t)app->cap_run_dur;
+            if(furi_stream_buffer_send(app->cap_stream, &t, sizeof(t), 0) != sizeof(t))
+                app->cap_overflow++;
+            app->cap_run_active = false;
+        }
         int32_t d;
         while(furi_stream_buffer_receive(app->cap_stream, &d, sizeof(d), 0) == sizeof(d)) {
             buf[ind++] = d;
             app->cap_samples++;
+            uint32_t m = (d < 0) ? (uint32_t)(-d) : (uint32_t)d;
+            uint8_t b = pw_bucket(m);
+            if(app->cap_pw[b] < 0xFFFF) app->cap_pw[b]++;
+            app->cap_pw_n++;
             if(ind == 512) { // keep draining the tail instead of dropping it at 512
-                flipper_format_write_int32(ff, "RAW_Data", buf, 512);
+                if(to_file) flipper_format_write_int32(ff, "RAW_Data", buf, 512);
                 ind = 0;
             }
         }
-        if(ind > 0) flipper_format_write_int32(ff, "RAW_Data", buf, (uint16_t)ind);
+        if(ind > 0 && to_file) flipper_format_write_int32(ff, "RAW_Data", buf, (uint16_t)ind);
+        if(pre) free(pre);
         radio_teardown();
+        // analysis sidecar: computed from the same edge buffer the displays use
+        if(to_file) {
+            uint32_t abase, aframe;
+            uint16_t abits;
+            rfs_frame_estimate(app->cap_edge, app->cap_edge_n, &abase, &aframe, &abits);
+            RfsPreamble pre = rfs_preamble(app->cap_edge, app->cap_edge_n, abase);
+            uint8_t ck = rfs_code_kind(app->cap_edge, app->cap_edge_n, abase);
+            uint32_t baud = aframe ? ((uint32_t)abits * 1000000u) / aframe : 0;
+            capture_sidecar(
+                app,
+                storage,
+                path,
+                app->cap_freq,
+                ps->name,
+                app->cap_samples,
+                abase,
+                aframe,
+                abits,
+                baud,
+                pre,
+                ck);
+        }
+        if(dec) subghz_receiver_free(dec);
+        if(env) subghz_environment_free(env);
         haptic_off(app); // release the locate motor when the capture stops
         FURI_LOG_I(
             TAG,
@@ -1669,7 +3674,67 @@ static int32_t capture_worker(void* ctx) {
     }
     furi_record_close(RECORD_STORAGE);
     app->capturing = false;
+    app->cap_redraw = true; // auto-stop (CAP_MAXSPL) never gets an input event -> paint once
     return 0;
+}
+
+// One-line reading of the captured envelope's duration histogram: base pulse, ratio to the
+// second cluster, and the encoding family that ratio implies. Heuristic by design -- it names
+// the FAMILY, never a specific decoder or a device. "b348 x3.0 PT2262/EV" = 348 us base with a
+// 1:3 pulse-width scheme, which is the PT2262/EV1527/CAME class of fixed-code remotes.
+static void pw_signature(const App* app, char* out, size_t n) {
+    int b1 = -1, b2 = -1;
+    for(int i = 1; i < PW_N; i++) { // skip bucket 0: sub-50 us is ISR-filtered noise
+        if(app->cap_pw[i] == 0) continue;
+        if(b1 < 0 || app->cap_pw[i] > app->cap_pw[b1]) {
+            b2 = b1;
+            b1 = i;
+        } else if(b2 < 0 || app->cap_pw[i] > app->cap_pw[b2]) {
+            b2 = i;
+        }
+    }
+    if(b1 < 0) {
+        snprintf(out, n, "no edges");
+        return;
+    }
+    uint32_t base = pw_center((uint8_t)b1);
+    if(b2 < 0) {
+        snprintf(out, n, "b%uus single", (unsigned)base);
+        return;
+    }
+    uint32_t sec = pw_center((uint8_t)b2);
+    unsigned r10 = base ? (unsigned)((sec * 10u + base / 2) / base) : 0;
+    const char* fam = "?";
+    if(base >= 250 && base <= 460) {
+        if(r10 >= 27 && r10 <= 34)
+            fam = "PT2262/EV";
+        else if(r10 >= 18 && r10 <= 22)
+            fam = "biphase";
+        else if(r10 <= 12)
+            fam = "steady";
+    } else if(base > 460 && base <= 700) {
+        fam = "Linear?";
+    } else if(base > 700) {
+        fam = "slow/sync";
+    }
+    // one bit of a pulse-width encoding costs two edges, so once the long silence delimits a
+    // frame the bit count falls out -- the number the family name could only imply
+    uint32_t fbase, fframe;
+    uint16_t fbits;
+    rfs_frame_estimate(app->cap_edge, app->cap_edge_n, &fbase, &fframe, &fbits);
+    // the one observation that decides whether replay is even possible
+    uint8_t ck = rfs_code_kind(app->cap_edge, app->cap_edge_n, base);
+    const char* code = (ck == RFS_CODE_STATIC) ? "FIX" : (ck == RFS_CODE_CHANGING) ? "ROL" : NULL;
+    if(fbits >= 8) {
+        if(code)
+            snprintf(out, n, "b%u %ub %s", (unsigned)base, (unsigned)fbits, code);
+        else
+            snprintf(out, n, "b%u %ub", (unsigned)base, (unsigned)fbits);
+    } else if(code) {
+        snprintf(out, n, "b%u x%u.%u %s", (unsigned)base, r10 / 10, r10 % 10, code);
+    } else {
+        snprintf(out, n, "b%u x%u.%u %s", (unsigned)base, r10 / 10, r10 % 10, fam);
+    }
 }
 
 static void capture_draw(Canvas* canvas, void* model) {
@@ -1680,7 +3745,8 @@ static void capture_draw(Canvas* canvas, void* model) {
     const SurveyPreset* ps = &PRESETS[app->cap_preset < PRESET_N ? app->cap_preset : 0];
 
     canvas_set_font(canvas, FontSecondary);
-    canvas_draw_str(canvas, 2, 9, "Capture .sub");
+    canvas_draw_str(
+        canvas, 2, 9, (app->capturing && app->cap_listen) ? "Listening" : "Capture .sub");
     canvas_draw_str_aligned(canvas, 126, 9, AlignRight, AlignBottom, ps->name); // preset, right
 
     canvas_draw_box(canvas, 2, 12, 124, 22);
@@ -1702,7 +3768,12 @@ static void capture_draw(Canvas* canvas, void* model) {
     canvas_set_font(canvas, FontSecondary);
     char line[40];
     if(app->capturing) {
-        if(app->cap_gate && app->cap_paused)
+        if(app->cap_listen) {
+            if(app->cap_decoded)
+                snprintf(line, sizeof(line), "%s", app->cap_decode);
+            else
+                snprintf(line, sizeof(line), "listening... %u pkts", (unsigned)app->cap_packets);
+        } else if(app->cap_gate && app->cap_paused)
             snprintf(line, sizeof(line), "signal below range (%d)", app->cap_rssi);
         else
             snprintf(
@@ -1712,9 +3783,20 @@ static void capture_draw(Canvas* canvas, void* model) {
                 (unsigned long)app->cap_samples,
                 app->cap_overflow ? "!" : "",
                 app->cap_rssi);
+    } else if(app->cap_decoded) {
+        // the firmware recognised a protocol: that beats any guess from pulse widths
+        snprintf(line, sizeof(line), "%s", app->cap_decode);
+    } else if(app->cap_pw_n > 0) {
+        // idle after a capture: the envelope's duration signature (family, not a decoder)
+        pw_signature(app, line, sizeof(line));
     } else {
-        // idle: Up/Dn tunes the frequency, long-OK toggles the filter
-        snprintf(line, sizeof(line), "Up/Dn tune  filter:%s", app->cap_gate ? "on" : "off");
+        // idle: Up/Dn tunes the frequency, long-OK switches file/listen, long-L/R the filter
+        snprintf(
+            line,
+            sizeof(line),
+            "%s  filt:%s",
+            app->cap_listen ? "LISTEN" : "FILE",
+            app->cap_gate ? "on" : "off");
     }
     canvas_draw_str(canvas, 2, 45, line);
 
@@ -1744,11 +3826,19 @@ static void capture_start(App* app) {
     app->capturing = true;
     app->cap_samples = 0;
     app->cap_overflow = 0;
-    app->cap_worker = furi_thread_alloc_ex("rfsurvey_cap", 3072, capture_worker, app);
+    memset(app->cap_pw, 0, sizeof(app->cap_pw)); // signature is per-capture
+    app->cap_pw_n = 0;
+    app->cap_worker = furi_thread_alloc_ex("rfsurvey_cap", 6144, capture_worker, app);
+    if(!app->cap_worker) { // no thread -> nothing to join later; report and stay idle
+        FURI_LOG_E(TAG, "capture: out of memory, not starting");
+        app->capturing = false;
+        return;
+    }
     furi_thread_start(app->cap_worker);
 }
 
 static bool capture_input(InputEvent* e, void* ctx) {
+    // EXPERIMENT: shot_flush
     UNUSED(ctx);
     App* app = g_app;
     if(!app) return false;
@@ -1757,10 +3847,13 @@ static bool capture_input(InputEvent* e, void* ctx) {
 
     if(e->key == InputKeyBack && e->type == InputTypeShort) {
         capture_stop(app);
-        // restart a fresh survey worker (re-inits the radio exactly like first boot)
+        // restart a fresh survey worker (re-inits the radio exactly like first boot).
+        // Leaving capture returns to a SWEEP, not to the parked view you came via: the worker
+        // would otherwise re-enter park_loop and the spectrum would look dead.
+        app->parked = false;
         app->running = true;
         app->reconfig = true;
-        app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
+        app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 6144, sweep_worker, app);
         furi_thread_start(app->worker);
         view_dispatcher_switch_to_view(app->vd, VIEW_SPEC);
         return true;
@@ -1771,7 +3864,11 @@ static bool capture_input(InputEvent* e, void* ctx) {
         else
             capture_start(app);
     } else if(e->key == InputKeyOk && lp && !app->capturing) {
-        app->cap_gate = !app->cap_gate; // long-OK: RSSI filter on/off (off = record everything)
+        app->cap_listen = !app->cap_listen; // long-OK: write a .sub, or just listen and decode
+    } else if(
+        (e->key == InputKeyLeft || e->key == InputKeyRight) && e->type == InputTypeLong &&
+        !app->capturing) {
+        app->cap_gate = !app->cap_gate; // long-Left/Right: RSSI filter on/off
     } else if(!app->capturing && sp && (e->key == InputKeyLeft || e->key == InputKeyRight)) {
         // Left/Right: capture modulation (OOK vs 2FSK) -- the user must match the signal
         if(e->key == InputKeyRight)
@@ -1798,6 +3895,35 @@ static bool capture_input(InputEvent* e, void* ctx) {
 
 // ---- config screen ---------------------------------------------------------
 
+// Finest STEP_HZ entry that still fits MAX_BINS across [lo,hi], never finer than `want`.
+// Every path that can change the range or the step funnels through this: a step that would
+// overflow the bin array used to make the worker silently rewrite f_end, so a "Full spectrum"
+// sweep quietly covered only 300-351 MHz. want = STEP_HZ[0] means "the finest that fits"
+// (band presets); want = the current step means "keep the user's choice, coarsen if forced".
+static uint32_t step_fit(uint32_t lo, uint32_t hi, uint32_t want) {
+    return rfs_step_fit(lo, hi, want, MAX_BINS); // rf_logic.h: same code the host test runs
+}
+
+// which STEP_HZ entry best represents a step loaded from settings (largest one <= step)
+static uint8_t step_index(uint32_t step) {
+    return rfs_step_index(step); // rf_logic.h
+}
+
+// which band preset exactly matches a loaded range, else the 779-928 default slot with
+// *exact = false. A restored zoomed/custom range has no preset, and showing a band name the
+// range does not match would be a lie on the config screen.
+static uint16_t band_index(uint32_t lo, uint32_t hi, bool* exact) {
+    for(uint16_t i = 0; i < PRESET_COUNT; i++) {
+        const FreqBand* b = preset_at(i);
+        if(b->lo == lo && b->hi == hi) {
+            *exact = true;
+            return i;
+        }
+    }
+    *exact = false;
+    return 3;
+}
+
 static void band_cb(VariableItem* item) {
     App* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
@@ -1805,6 +3931,17 @@ static void band_cb(VariableItem* item) {
     variable_item_set_current_value_text(item, b->name);
     app->f_start = b->lo;
     app->f_end = b->hi;
+    // A step finer than the band can hold overflows MAX_BINS, and the worker used to truncate
+    // the range silently (f_end rewritten to start + (MAX_BINS-1)*step) while this row still
+    // said e.g. "Full spectrum" -- you'd survey 300-351 MHz and believe it was 300-928. Pick
+    // the finest step that actually covers the band and push it back into the Step row.
+    app->f_step = step_fit(b->lo, b->hi, STEP_HZ[0]); // a band preset wants its finest fit
+    uint8_t si = step_index(app->f_step);
+    app->parked = false; // a new band invalidates the parked observation
+    if(app->it_step) {
+        variable_item_set_current_value_index(app->it_step, si);
+        variable_item_set_current_value_text(app->it_step, STEP_TXT[si]);
+    }
     app->reconfig = true;
     FURI_LOG_I(
         TAG,
@@ -1836,6 +3973,7 @@ static void preset_cb(VariableItem* item) {
     if(idx >= PRESET_N) idx = PRESET_N - 1;
     app->preset_idx = idx; // worker reloads the CC1101 next loop
     variable_item_set_current_value_text(item, PRESETS[idx].name);
+    app->parked = false; // park loaded the old modulation -> must re-enter
     app->reconfig = true; // changed measurement -> clear stale readings
 }
 
@@ -1843,15 +3981,18 @@ static void step_cb(VariableItem* item) {
     App* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
     if(idx >= COUNT_OF(STEP_HZ)) idx = COUNT_OF(STEP_HZ) - 1;
-    app->f_step = STEP_HZ[idx];
-    variable_item_set_current_value_text(item, STEP_TXT[idx]);
+    uint8_t si;
+    // the user's choice is kept unless it cannot fit the current range
+    app->f_step = step_fit(app->f_start, app->f_end, STEP_HZ[idx]);
+    si = step_index(app->f_step);
+    variable_item_set_current_value_index(item, si);
+    variable_item_set_current_value_text(item, STEP_TXT[si]);
+    app->parked = false;
     app->reconfig = true;
 }
 
 // Trigger floor: -100..-45 dBm in 5 dB steps (12 values). Separates weak from strong for
 // the waterfall, haptic, history and (later) capture gating.
-#define TRIG_N   12
-#define TRIG_MIN -100
 static void trigger_cb(VariableItem* item) {
     App* app = variable_item_get_context(item);
     app->trigger = (int8_t)(TRIG_MIN + (int)variable_item_get_current_value_index(item) * 5);
@@ -1860,22 +4001,102 @@ static void trigger_cb(VariableItem* item) {
     variable_item_set_current_value_text(item, t);
 }
 
+static void settle_cb(VariableItem* item) {
+    App* app = variable_item_get_context(item);
+    uint8_t idx = variable_item_get_current_value_index(item);
+    if(idx >= SETTLE_N) idx = SETTLE_N - 1;
+    app->settle_ms = SETTLE_CHOICES[idx]; // applies from the next bin, no buffer reset needed
+    char t[8];
+    snprintf(t, sizeof(t), "%ums", app->settle_ms);
+    variable_item_set_current_value_text(item, t);
+}
+
+static const char* const PATH_TXT[] = {"Open", "Urban", "Indoor", "Dense"};
+static void path_cb(VariableItem* item) {
+    App* app = variable_item_get_context(item);
+    uint8_t idx = variable_item_get_current_value_index(item);
+    if(idx >= COUNT_OF(PATH_TXT)) idx = 1;
+    app->path_n = idx;
+    variable_item_set_current_value_text(item, PATH_TXT[idx]);
+}
+
+static const char* const TRACE_TXT[] = {"Live", "Max hold", "Min hold"};
+static void trace_cb(VariableItem* item) {
+    App* app = variable_item_get_context(item);
+    uint8_t idx = variable_item_get_current_value_index(item);
+    if(idx >= COUNT_OF(TRACE_TXT)) idx = 0;
+    app->trace = idx; // draw-time only: no reconfig, the buffers are shared by all traces
+    variable_item_set_current_value_text(item, TRACE_TXT[idx]);
+}
+
+static void bm_cb(VariableItem* item) {
+    App* app = variable_item_get_context(item);
+    uint8_t idx = variable_item_get_current_value_index(item);
+    if(idx == 0 || idx > app->bm_n) {
+        variable_item_set_current_value_text(item, "-");
+        return;
+    }
+    const uint32_t lo = app->bm[idx - 1].lo, hi = app->bm[idx - 1].hi;
+    app->f_start = lo;
+    app->f_end = hi;
+    app->f_step = step_fit(lo, hi, STEP_HZ[0]); // same rule as a band preset
+    app->parked = false;
+    app->reconfig = true;
+    variable_item_set_current_value_text(item, app->bm[idx - 1].name);
+    if(app->it_step) {
+        uint8_t si = step_index(app->f_step);
+        variable_item_set_current_value_index(app->it_step, si);
+        variable_item_set_current_value_text(app->it_step, STEP_TXT[si]);
+    }
+    if(app->it_range) {
+        char r[24];
+        snprintf(
+            r, sizeof(r), "%lu-%lu", (unsigned long)(lo / 1000000), (unsigned long)(hi / 1000000));
+        variable_item_set_current_value_text(app->it_range, r);
+    }
+    FURI_LOG_I(
+        TAG, "bookmark: %s %lu-%lu", app->bm[idx - 1].name, (unsigned long)lo, (unsigned long)hi);
+}
+
+static void profile_cb(VariableItem* item) {
+    App* app = variable_item_get_context(item);
+    uint8_t idx = variable_item_get_current_value_index(item);
+    if(idx > PROFILE_N) idx = 0;
+    app->profile_slot = idx;
+    char txt[8];
+    if(!idx) {
+        variable_item_set_current_value_text(item, "off");
+        return;
+    }
+    snprintf(txt, sizeof(txt), "%u", (unsigned)idx);
+    variable_item_set_current_value_text(item, txt);
+    char path[64];
+    profile_path(path, sizeof(path), idx);
+    Storage* st = furi_record_open(RECORD_STORAGE);
+    settings_load(app, st, path); // a missing slot leaves the current values alone
+    furi_record_close(RECORD_STORAGE);
+    app->f_step = step_fit(app->f_start, app->f_end, app->f_step);
+    conf_sync_rows(app);
+    app->parked = false;
+    app->reconfig = true;
+    FURI_LOG_I(TAG, "profile %u loaded", (unsigned)idx);
+}
+
 static void haptic_cb(VariableItem* item) {
     App* app = variable_item_get_context(item);
     app->haptic = variable_item_get_current_value_index(item) ? true : false;
     variable_item_set_current_value_text(item, app->haptic ? "On" : "Off");
 }
 
-static const char* const GAIN_TXT[] = {"Auto", "Mid", "Low"};
 static void gain_cb(VariableItem* item) {
     App* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item);
     if(idx >= COUNT_OF(GAIN_TXT)) idx = 0;
     app->gain = idx; // worker reloads the preset with patched AGC next loop
     variable_item_set_current_value_text(item, GAIN_TXT[idx]);
+    app->parked = false; // park loaded the old AGC setting -> must re-enter
 }
 
-static const char* const RADIO_TXT[] = {"Internal", "External"};
 static void radio_cb(VariableItem* item) {
     App* app = variable_item_get_context(item);
     uint8_t idx = variable_item_get_current_value_index(item) ? 1 : 0;
@@ -1891,13 +4112,28 @@ static void radio_cb(VariableItem* item) {
     furi_thread_free(app->worker);
     app->radio = idx;
     app->running = true;
-    app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
+    app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 6144, sweep_worker, app);
     furi_thread_start(app->worker);
     FURI_LOG_I(TAG, "radio: switched to %s (worker restarted)", RADIO_TXT[idx]);
 }
 
+// The two config pages share the action bodies but not their indices, so the page number is
+// part of the call. index 10 on page 1 and index 8 on page 2 are the switching rows.
 static void conf_enter(void* ctx, uint32_t index) {
     App* app = ctx;
+    FURI_LOG_D(TAG, "scan row %lu", (unsigned long)index);
+    // action rows act in place and stay on the config screen. Both are one-shots consumed by
+    // the sweep worker: the radio has exactly one owner, and that owner is not this thread.
+    if(index == CONF_ROW_TRIGGER) {
+        app->trig_cal = true;
+        FURI_LOG_I(TAG, "config: trigger auto-cal queued");
+        return;
+    }
+    if(index == CONF_ROW_TOOLS) { // switch to page 2
+        FURI_LOG_I(TAG, "config: -> tools");
+        view_dispatcher_switch_to_view(app->vd, VIEW_CONF2);
+        return;
+    }
     if(index == 1) { // "Range MHz" row -> open the custom range editor
         app->re_start = app->f_start / 100000;
         app->re_end = app->f_end / 100000;
@@ -1912,14 +4148,45 @@ static void conf_enter(void* ctx, uint32_t index) {
     view_dispatcher_switch_to_view(app->vd, VIEW_SPEC); // OK on any other row starts the scan
 }
 
+// The worker can move the Trigger behind the config screen's back (Auto trig), so the row text
+// is re-read whenever the screen is entered instead of only when the value is edited here.
+static void conf_view_enter(void* ctx) {
+    // NOT `App* app = ctx`: the firmware calls an enter callback with the VIEW's context, and a
+    // VariableItemList's view context is the list itself (variable_item_list.c sets it). Reading
+    // it_trigger through that pointer read a "pointer" from ~12 KB past a 20-byte heap block and
+    // wrote through it on every switch to the config view: launch, Back from the spectrum,
+    // return from help/range. That was the v1.3 crash with a different fault every time.
+    UNUSED(ctx);
+    App* app = g_app;
+    if(!app) return;
+    if(app->it_trigger) {
+        // index AND text: the list picks the next value from the index, so a stale index would
+        // make the first Left/Right after an auto-cal jump back to the old floor
+        variable_item_set_current_value_index(
+            app->it_trigger, (uint8_t)((app->trigger - TRIG_MIN) / 5));
+        char t[8];
+        snprintf(t, sizeof(t), "%d", app->trigger);
+        variable_item_set_current_value_text(app->it_trigger, t);
+    }
+}
+
 static void redraw_cb(void* ctx) {
+    static bool traced;
     App* app = ctx;
+    if(!traced) {
+        traced = true;
+        boot_trace_to("t_timer.txt", "timer fired, seq=%lu", (unsigned long)app->shot_seq);
+    }
+    // EXPERIMENT: shot_flush(app, false);
     // commit only the view that is actually live + visible, so the timer does no work in the
     // config / range editor (they redraw on input) and never commits the hidden view. The two
     // live views are mutually exclusive: spec_active on the spectrum, capturing on the .sub screen.
     if(app->spec_active) {
         with_view_model(app->view, void** m, { UNUSED(m); }, true);
     } else if(app->capturing && app->cap_view) {
+        with_view_model(app->cap_view, void** m, { UNUSED(m); }, true);
+    } else if(app->cap_redraw && app->cap_view) {
+        app->cap_redraw = false; // one-shot: the frozen "REC" frame otherwise never updates
         with_view_model(app->cap_view, void** m, { UNUSED(m); }, true);
     }
 }
@@ -1951,6 +4218,15 @@ int32_t rf_survey_app(void* p) {
     app->radio =
         radio_external_present() ? 1 : 0; // auto-select External when the module is plugged in
     FURI_LOG_I(TAG, "radio: default %s", app->radio ? "External (detected)" : "Internal");
+    {
+        Storage* st = furi_record_open(RECORD_STORAGE);
+        settings_load(app, st, SETTINGS_PATH); // overrides every default when valid
+        bookmarks_load(app, st);
+        furi_record_close(RECORD_STORAGE);
+    }
+    // a saved step may be a zoom-derived value that has no row in STEP_HZ -> snap it so the
+    // Step row and the actual dwell width never disagree
+    if(app->f_step != 0) app->f_step = STEP_HZ[step_index(app->f_step)];
     // defensive against bad config (future editable ranges): never div-by-zero,
     // never an inverted range, always 1..MAX_BINS bins, and keep f_end consistent
     // with the bins actually scanned so the axis labels can't lie.
@@ -1961,6 +4237,13 @@ int32_t rf_survey_app(void* p) {
     if(n < 1) n = 1;
     app->nbins = (uint16_t)n;
     app->f_end = app->f_start + (uint32_t)(app->nbins - 1) * app->f_step;
+    // cadence defaults to the middle of the range so the page shows a real frequency before the
+    // first park (the user re-targets it from the bars cursor / numeric selection anyway)
+    app->park_freq = app->f_start + (uint32_t)(app->nbins / 2) * app->f_step;
+    // wf[] is a dBm ring and -128 is "no data". The app struct is zeroed, so without this the
+    // waterfall treats every untouched cell as 0 dBm -- i.e. lit. Invisible on a device that
+    // fills the ring within seconds; the simulator caught it immediately.
+    memset(app->wf, -128, sizeof(app->wf));
     for(uint16_t i = 0; i < app->nbins; i++) {
         app->rssi[i] = -128;
         app->peak[i] = -128;
@@ -1969,10 +4252,29 @@ int32_t rf_survey_app(void* p) {
     app->notif = furi_record_open(RECORD_NOTIFICATION);
     app->gui = furi_record_open(RECORD_GUI);
     app->vd = view_dispatcher_alloc();
+#ifdef RFS_LAB
+    view_dispatcher_set_event_callback_context(app->vd, app);
+    view_dispatcher_set_tick_event_callback(app->vd, lab_tick, 250);
+#endif
     view_dispatcher_attach_to_gui(app->vd, app->gui, ViewDispatcherTypeFullscreen);
+
+    // Every allocation below is furi_check'd by the firmware, so NULL means an assert. Fail
+    // loudly and leave instead of dereferencing it. (The leak on this path is deliberate: the
+    // alternative is a crash on a device with no debugger.)
+#define ALLOC_OR_BAIL(p)                           \
+    do {                                           \
+        if(!(p)) {                                 \
+            FURI_LOG_E(TAG, "out of memory: " #p); \
+            return -1;                             \
+        }                                          \
+    } while(0)
+
+    boot_trace_to(
+        "t_heap0.txt", "free=%u App=%u", (unsigned)memmgr_get_free_heap(), (unsigned)sizeof(App));
 
     // spectrum view (custom): Back returns to config
     app->view = view_alloc();
+    ALLOC_OR_BAIL(app->view);
     view_allocate_model(app->view, ViewModelTypeLockFree, sizeof(void*));
     view_set_context(app->view, app);
     view_set_draw_callback(app->view, spectrum_draw);
@@ -1985,39 +4287,115 @@ int32_t rf_survey_app(void* p) {
     // config view (VariableItemList): pick a band preset (full spectrum / full band /
     // known allocation) -> fills range; also Range readout, Modulation preset and Step. OK scans.
     app->conf = variable_item_list_alloc();
+    ALLOC_OR_BAIL(app->conf);
+    // PAGE 1 -- what the sweep measures, in the order you would change it while sweeping.
+    bool band_exact = false;
+    uint16_t bi = band_index(app->f_start, app->f_end, &band_exact);
     VariableItem* vi = variable_item_list_add(app->conf, "Band", PRESET_COUNT, band_cb, app);
-    variable_item_set_current_value_index(vi, 3); // default "Full high" (779-928)
-    variable_item_set_current_value_text(vi, preset_at(3)->name);
+    app->it_band = vi;
+    variable_item_set_current_value_index(vi, bi);
+    variable_item_set_current_value_text(vi, band_exact ? preset_at(bi)->name : "custom");
     app->it_range = variable_item_list_add(app->conf, "Range MHz", 1, NULL, app);
-    variable_item_set_current_value_text(app->it_range, "779-928");
+    {
+        char r[24];
+        snprintf(
+            r,
+            sizeof(r),
+            "%lu-%lu",
+            (unsigned long)(app->f_start / 1000000),
+            (unsigned long)(app->f_end / 1000000));
+        variable_item_set_current_value_text(app->it_range, r);
+    }
     app->it_preset = variable_item_list_add(app->conf, "Modulation", PRESET_N, preset_cb, app);
     variable_item_set_current_value_index(app->it_preset, app->preset_idx);
     variable_item_set_current_value_text(app->it_preset, PRESETS[app->preset_idx].name);
+    uint8_t si0 = step_index(app->f_step);
     vi = variable_item_list_add(app->conf, "Step", COUNT_OF(STEP_HZ), step_cb, app);
-    variable_item_set_current_value_index(vi, 4); // 650k
-    variable_item_set_current_value_text(vi, "650k");
-    vi = variable_item_list_add(app->conf, "Trigger", TRIG_N, trigger_cb, app);
-    variable_item_set_current_value_index(vi, (uint8_t)((app->trigger - TRIG_MIN) / 5));
+    variable_item_set_current_value_index(vi, si0);
+    variable_item_set_current_value_text(vi, STEP_TXT[si0]);
+    app->it_step = vi;
+    app->it_trigger = variable_item_list_add(app->conf, "Trigger", TRIG_N, trigger_cb, app);
+    variable_item_set_current_value_index(
+        app->it_trigger, (uint8_t)((app->trigger - TRIG_MIN) / 5));
     {
         char t[8];
         snprintf(t, sizeof(t), "%d", app->trigger);
-        variable_item_set_current_value_text(vi, t);
+        variable_item_set_current_value_text(app->it_trigger, t);
     }
-    vi = variable_item_list_add(app->conf, "Haptic", 2, haptic_cb, app);
-    variable_item_set_current_value_index(vi, app->haptic ? 1 : 0);
-    variable_item_set_current_value_text(vi, app->haptic ? "On" : "Off");
+    uint8_t se = 0;
+    while((uint32_t)se + 1 < SETTLE_N && SETTLE_CHOICES[se + 1] <= app->settle_ms)
+        se++;
+    app->it_settle = variable_item_list_add(app->conf, "Settle", SETTLE_N, settle_cb, app);
+    variable_item_set_current_value_index(app->it_settle, se);
+    {
+        char t[8];
+        snprintf(t, sizeof(t), "%ums", app->settle_ms);
+        variable_item_set_current_value_text(app->it_settle, t);
+    }
     vi = variable_item_list_add(app->conf, "Gain", COUNT_OF(GAIN_TXT), gain_cb, app);
     variable_item_set_current_value_index(vi, app->gain);
     variable_item_set_current_value_text(vi, GAIN_TXT[app->gain]);
     vi = variable_item_list_add(app->conf, "Radio", COUNT_OF(RADIO_TXT), radio_cb, app);
     variable_item_set_current_value_index(vi, app->radio);
     variable_item_set_current_value_text(vi, RADIO_TXT[app->radio]);
+    vi = variable_item_list_add(app->conf, "Path loss", COUNT_OF(PATH_TXT), path_cb, app);
+    variable_item_set_current_value_index(vi, app->path_n);
+    variable_item_set_current_value_text(vi, PATH_TXT[app->path_n]);
+    vi = variable_item_list_add(app->conf, "Trace", COUNT_OF(TRACE_TXT), trace_cb, app);
+    variable_item_set_current_value_index(vi, app->trace);
+    variable_item_set_current_value_text(vi, TRACE_TXT[app->trace]);
+    vi = variable_item_list_add(app->conf, "Tools", 1, NULL, app);
+    variable_item_set_current_value_text(vi, ">");
     variable_item_list_set_enter_callback(app->conf, conf_enter, app);
+    view_set_enter_callback(variable_item_list_get_view(app->conf), conf_view_enter);
     view_set_previous_callback(variable_item_list_get_view(app->conf), view_exit);
     view_dispatcher_add_view(app->vd, VIEW_CONF, variable_item_list_get_view(app->conf));
+    boot_trace_to("t_heap1.txt", "after cfg1 free=%u", (unsigned)memmgr_get_free_heap());
+
+    // PAGE 2 -- actions and exports. Nothing here changes what the sweep measures, so it is a
+    // separate page rather than rows 11..18 of the same list.
+    app->conf2 = variable_item_list_alloc();
+    ALLOC_OR_BAIL(app->conf2);
+    vi = variable_item_list_add(app->conf2, "Haptic", 2, haptic_cb, app);
+    variable_item_set_current_value_index(vi, app->haptic ? 1 : 0);
+    variable_item_set_current_value_text(vi, app->haptic ? "On" : "Off");
+    vi = variable_item_list_add(app->conf2, "Clear peaks", 1, NULL, app);
+    variable_item_set_current_value_text(vi, "OK");
+    vi = variable_item_list_add(app->conf2, "Save waterfall", 1, NULL, app);
+    variable_item_set_current_value_text(vi, "OK");
+    vi = variable_item_list_add(app->conf2, "Bookmark", app->bm_n + 1, bm_cb, app);
+    variable_item_set_current_value_index(vi, 0);
+    variable_item_set_current_value_text(vi, "-");
+    vi = variable_item_list_add(app->conf2, "Save busy", 1, NULL, app);
+    variable_item_set_current_value_text(vi, "OK");
+    vi = variable_item_list_add(app->conf2, "Profile", PROFILE_N + 1, profile_cb, app);
+    variable_item_set_current_value_index(vi, app->profile_slot);
+    variable_item_set_current_value_text(vi, app->profile_slot ? "1" : "off");
+    vi = variable_item_list_add(app->conf2, "Save prof.", 1, NULL, app);
+    variable_item_set_current_value_text(vi, "OK");
+    vi = variable_item_list_add(app->conf2, "Help", 1, NULL, app);
+    variable_item_set_current_value_text(vi, "OK");
+    vi = variable_item_list_add(app->conf2, "Scan", 1, NULL, app);
+    variable_item_set_current_value_text(vi, "<");
+#ifdef RFS_LAB
+    vi = variable_item_list_add(app->conf2, "TX test", 1, NULL, app); // lab build only
+    variable_item_set_current_value_text(vi, "OK");
+    vi = variable_item_list_add(app->conf2, "Replay last", 1, NULL, app);
+    variable_item_set_current_value_text(vi, "OK");
+    vi = variable_item_list_add(app->conf2, "TX frame", 1, NULL, app);
+    variable_item_set_current_value_text(vi, "OK");
+    app->it_brute = variable_item_list_add(app->conf2, "Code page", 1, NULL, app);
+    variable_item_set_current_value_text(app->it_brute, "000000");
+#endif
+    variable_item_list_set_enter_callback(app->conf2, conf2_enter, app);
+
+    boot_trace_to("t_heap2.txt", "after cfg2 free=%u", (unsigned)memmgr_get_free_heap());
+    view_set_previous_callback(variable_item_list_get_view(app->conf2), to_conf);
+    view_dispatcher_add_view(app->vd, VIEW_CONF2, variable_item_list_get_view(app->conf2));
 
     // custom range editor view (Back returns to config)
     app->range_view = view_alloc();
+    ALLOC_OR_BAIL(app->range_view);
     view_allocate_model(app->range_view, ViewModelTypeLockFree, sizeof(void*));
     view_set_context(app->range_view, app);
     view_set_draw_callback(app->range_view, range_draw);
@@ -2027,11 +4405,21 @@ int32_t rf_survey_app(void* p) {
 
     // .sub capture view (Back is handled in its input callback: stop + restart the survey)
     app->cap_view = view_alloc();
+    ALLOC_OR_BAIL(app->cap_view);
     view_allocate_model(app->cap_view, ViewModelTypeLockFree, sizeof(void*));
     view_set_context(app->cap_view, app);
     view_set_draw_callback(app->cap_view, capture_draw);
     view_set_input_callback(app->cap_view, capture_input);
     view_dispatcher_add_view(app->vd, VIEW_CAP, app->cap_view);
+
+    app->help_view = view_alloc();
+    ALLOC_OR_BAIL(app->help_view);
+    view_allocate_model(app->help_view, ViewModelTypeLockFree, sizeof(void*));
+    view_set_context(app->help_view, app);
+    view_set_draw_callback(app->help_view, help_draw);
+    view_set_input_callback(app->help_view, help_input);
+    view_set_previous_callback(app->help_view, to_conf);
+    view_dispatcher_add_view(app->vd, VIEW_HELP, app->help_view);
 
     // install the permissive region for the scan (RX only); restored on exit
     const FuriHalRegion* orig_region = furi_hal_region_get();
@@ -2039,10 +4427,19 @@ int32_t rf_survey_app(void* p) {
     FURI_LOG_I(TAG, "app: region set permissive (was %s)", furi_hal_region_get_name());
 
     app->running = true;
-    // 3 KB stack: the sweep worker calls into the subghz HAL (SPI); past apps in this
-    // family hit an MPU/stack fault from underestimating, so leave headroom.
-    app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 3072, sweep_worker, app);
+    // 6 KB stack: the sweep worker calls into the subghz HAL (SPI) and peaks at ~1.6 KB on the
+    // device (measured with `top`); the rest is headroom, not a fix for the v1.3 crash.
+    app->worker = furi_thread_alloc_ex("rfsurvey_sweep", 6144, sweep_worker, app);
     furi_thread_start(app->worker);
+
+#ifdef RFS_LAB
+    app->rep_buf = malloc(sizeof(int32_t) * REP_MAX_EDGES);
+#endif
+    app->shot_auto = false; // EXPERIMENT: capture path disabled entirely
+    boot_trace_to("t_boot.txt", "registered-noshot");
+    // EXPERIMENT: registration disabled to see whether it is the call that kills the app
+    // gui_add_framebuffer_callback(app->gui, fb_callback, app);
+    // app->fb_registered = true; // re-enable together with the line above
 
     app->redraw = furi_timer_alloc(redraw_cb, FuriTimerTypePeriodic, app);
     furi_timer_start(app->redraw, 150);
@@ -2057,25 +4454,43 @@ int32_t rf_survey_app(void* p) {
     furi_timer_stop(app->redraw);
     furi_timer_free(app->redraw);
     capture_stop(app); // join a capture thread if one is somehow still running
+#ifdef RFS_LAB
+    carrier_stop(app);
+#endif
     app->running = false;
     if(app->worker) { // NULL only if we somehow exit mid-capture; normally restarted on Back
         furi_thread_join(app->worker);
         furi_thread_free(app->worker);
     }
     furi_hal_region_set((FuriHalRegion*)orig_region); // restore the user's region
+    { // persist this session's config for the next launch
+        Storage* st = furi_record_open(RECORD_STORAGE);
+        settings_save(app, st, SETTINGS_PATH);
+        furi_record_close(RECORD_STORAGE);
+    }
 
     view_dispatcher_remove_view(app->vd, VIEW_SPEC);
     view_dispatcher_remove_view(app->vd, VIEW_CONF);
     view_dispatcher_remove_view(app->vd, VIEW_RANGE);
     view_dispatcher_remove_view(app->vd, VIEW_CAP);
+    view_dispatcher_remove_view(app->vd, VIEW_HELP);
+    view_dispatcher_remove_view(app->vd, VIEW_CONF2);
     view_free(app->view);
     view_free(app->range_view);
     view_free(app->cap_view);
+    view_free(app->help_view);
     variable_item_list_free(app->conf);
+    variable_item_list_free(app->conf2);
+    // canvas_remove_framebuffer_callback() furi_checks that the pair is registered exactly once:
+    // removing one that the experiment above never added crashed EVERY exit (furi_check failed)
+    if(app->fb_registered) gui_remove_framebuffer_callback(app->gui, fb_callback, app);
     view_dispatcher_free(app->vd);
     furi_record_close(RECORD_GUI);
     furi_record_close(RECORD_NOTIFICATION);
     g_app = NULL; // defensive: a stray draw after this sees NULL, not freed memory
+#ifdef RFS_LAB
+    if(app->rep_buf) free(app->rep_buf);
+#endif
     free(app);
     FURI_LOG_I(TAG, "app: end");
     return 0;

@@ -1,0 +1,13 @@
+App(
+    appid="cli_gui",
+    name="CLI-GUI Bridge",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="cligui_main",
+    stack_size=8 * 1024,
+    fap_icon="cligui.png",
+    fap_category="Tools",
+    fap_author="ranchordo",
+    fap_weburl="https://github.com/ranchordo/flipperzero-cli-bridge",
+    fap_version="0.2",
+    fap_description="Run the CLI on the device screen, with resumable background sessions",
+)

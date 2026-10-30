@@ -1,0 +1,13 @@
+App(
+    appid="servo_tester_plus",
+    name="Servo Tester+",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="servotesterapp_app",
+    stack_size=3 * 1024,
+    fap_icon="icon.png",
+    fap_category="GPIO",
+    fap_author="Enlighten Tech",
+    fap_weburl="https://github.com/gbhobbytech/flipper-servo-tester",
+    fap_version="0.5",
+    fap_description="Servo tester with wiring help and managed GPIO 5 V",
+)

@@ -2,8 +2,12 @@
 
 ## v1.3
 
-- Fix saved NFC file compatibility with Flipper Zero native NFC application
-- Use official NfcDevice ISO14443-3A serialization with standard ATQA and SAK parameters
+- Save iButton and 125 kHz RFID keys using native firmware serializers (ibutton_protocols_save and lfrfid_dict_file_save) for 100% compatibility with stock Flipper apps
+- Save NFC keys using native NfcDevice ISO14443-3A serialization
+- Move application category to Tools in application manifest
+- Remove simulated detection debug feature from shipped application
+- Remove donation address from catalog store description
+- Replace non-ASCII bullet characters with plain ASCII dashes in About UI
 - Allow selecting preloaded universal master keys from Quick Keys menu
 
 ## v1.2

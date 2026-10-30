@@ -1,0 +1,18 @@
+App(
+    appid="tea_timer",
+    name="Tea Timer",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="tea_timer_app",
+    stack_size=2 * 1024,
+    fap_icon="images/10px.png",
+    fap_icon_assets="images",
+    cdefines=["TEA_TIMER_TESTS"],
+    fap_private_libs=[
+        Lib(name="tea_logic", sources=["*.c"]),
+    ],
+    fap_category="Tools",
+    fap_author="igordanilov",
+    fap_weburl="https://github.com/polarikus/FlipperZero-TeaTimer",
+    fap_version="1.0",
+    fap_description="Pour-over tea timer with presets: leaf dosage, pour times and water temperature range.",
+)

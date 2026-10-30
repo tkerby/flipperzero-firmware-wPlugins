@@ -25,18 +25,25 @@ void archive_scene_delete_on_enter(void* context) {
     filename = furi_string_alloc();
 
     ArchiveFile_t* current = archive_get_current_file(app->browser);
+    FuriString* current_path = furi_string_alloc();
+    if(current) {
+        furi_string_set(current_path, current->path);
+    }
 
     FuriString* filename_no_ext = furi_string_alloc();
-    path_extract_filename(current->path, filename_no_ext, true);
+    path_extract_filename(current_path, filename_no_ext, true);
     strlcpy(app->text_store, furi_string_get_cstr(filename_no_ext), MAX_NAME_LEN);
     furi_string_free(filename_no_ext);
 
-    path_extract_filename(current->path, filename, false);
+    path_extract_filename(current_path, filename, false);
+    furi_string_free(current_path);
 
-    char delete_str[64];
-    snprintf(delete_str, sizeof(delete_str), "\e#Delete %s?\e#", furi_string_get_cstr(filename));
+    // File name on its own line in the small font, a long one broke mid-word before and
+    // did not fit in the two big-font lines the old 23px box had room for
+    char delete_str[MAX_NAME_LEN + 16];
+    snprintf(delete_str, sizeof(delete_str), "\e#Delete\e#\n%s?", furi_string_get_cstr(filename));
     widget_add_text_box_element(
-        app->widget, 0, 0, 128, 23, AlignCenter, AlignCenter, delete_str, false);
+        app->widget, 0, 0, 128, 52, AlignCenter, AlignCenter, delete_str, true);
 
     furi_string_free(filename);
 
@@ -49,10 +56,13 @@ bool archive_scene_delete_on_event(void* context, SceneManagerEvent event) {
 
     ArchiveBrowserView* browser = app->browser;
     ArchiveFile_t* selected = archive_get_current_file(browser);
-    const char* name = archive_get_name(browser);
+    const char* name = selected ? archive_get_name(browser) : "";
 
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == GuiButtonTypeRight) {
+            if(!selected) {
+                return scene_manager_previous_scene(app->scene_manager);
+            }
             // Show loading popup on delete
             view_dispatcher_switch_to_view(app->view_dispatcher, ArchiveViewStack);
             archive_show_loading_popup(app, true);
@@ -63,6 +73,7 @@ bool archive_scene_delete_on_event(void* context, SceneManagerEvent event) {
                 archive_delete_file(browser, "%s", name);
             }
             archive_show_loading_popup(app, false);
+            archive_show_file_menu(browser, false, false);
             return scene_manager_previous_scene(app->scene_manager);
         } else if(event.event == GuiButtonTypeLeft) {
             return scene_manager_previous_scene(app->scene_manager);

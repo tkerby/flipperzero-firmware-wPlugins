@@ -29,6 +29,11 @@ void cli_shell_execute_command(CliShell* cli_shell, FuriString* command);
 
 const char* cli_shell_get_prompt(CliShell* cli_shell);
 
+// Firmware-owned GUI sessions have a private registry and may run beside their GUI app.
+void cli_shell_set_gui_mode(CliShell* cli_shell);
+
+bool cli_shell_is_running(CliShell* cli_shell);
+
 #ifdef __cplusplus
 }
 #endif

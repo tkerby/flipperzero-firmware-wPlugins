@@ -1,0 +1,14 @@
+App(
+    appid="flipperpose",
+    name="Flipper Poser",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="flipperpose",
+    stack_size=2 * 1024,
+    fap_icon="icon.png",
+    fap_icon_assets="images",
+    fap_category="Games",
+    fap_author="mrnullone",
+    fap_weburl="https://github.com/MrNull1/flipperpose",
+    fap_version="1.0",
+    fap_description="A simple app to pose your flipper buddy for photos!",
+)

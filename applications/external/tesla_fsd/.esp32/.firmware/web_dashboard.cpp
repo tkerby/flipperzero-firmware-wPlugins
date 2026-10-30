@@ -846,6 +846,9 @@ R"rawliteral(
   <div id="bbVolatileWarn" class="log-info" style="display:none;margin:8px 0;color:var(--yellow)">
     &#9888;&#xFE0F; Volatile storage &mdash; download events before power-off; they are lost on reboot.
   </div>
+  <div id="bbSaveWarn" class="log-info" style="display:none;margin:8px 0;color:var(--red)">
+    &#9888;&#xFE0F; Last save failed &mdash; low memory. The recorded event was dropped.
+  </div>
   <button id="bbMark" type="button" class="btn-main btn-blue" onclick="cmd('blackbox_mark',true)" style="margin:8px 0">&#9873; MARK NOW</button>
   <div id="bbList" style="margin-top:4px"></div>
   <button id="bbDelAll" type="button" class="btn-main btn-stop" onclick="bbDeleteAll()" style="margin-top:10px;display:none">DELETE ALL EVENTS</button>
@@ -1219,6 +1222,7 @@ function bbSync(d){
   var st=document.getElementById('bbStore');
   if(st)st.innerHTML=bbEsc(b.backend||'?')+' · '+(b.psram?'PSRAM':sp('internal RAM'))+' · '+((b.cap||0).toLocaleString())+' '+sp('frames')+' · '+(b.events||0)+' '+sp('saved');
   var vw=document.getElementById('bbVolatileWarn');if(vw)vw.style.display=b.volatile?'block':'none';
+  var sw2=document.getElementById('bbSaveWarn');if(sw2)sw2.style.display=b.save_lowmem?'block':'none';
   var note=document.getElementById('bbNote');if(note)note.style.display=bbNoteDismissed?'none':'block';
   var da=document.getElementById('bbDelAll');if(da)da.style.display=(b.events>0)?'block':'none';
   if(bbCaptures<0){bbCaptures=b.captures;bbRefreshList();}

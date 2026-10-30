@@ -17,6 +17,7 @@
 #include "../../fsd_logic/fsd_cp_status.h" // shared 0x25D CP_status decode + EU rewrite predicate (#228)
 #include "../../fsd_logic/fsd_steer.h"     // shared 0x129 steering-angle decode + freshness
 #include "../../fsd_logic/fsd_bms.h"       // shared 0x292 SOC, 0x312 pack-temperature gate, 0x33A car SOC
+#include "../../fsd_logic/fsd_freshness.h" // shared nag fault/override guard (#176)
 #include <string.h>
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
@@ -793,6 +794,14 @@ bool fsd_handle_nag_killer(FSDState *state, const CanFrame *frame, CanFrame *out
     if (!state->nag_killer) return false;
     if (!fsd_das_ctx_fresh(state, now_ms)) return false;        // cfg DAS stale -> no-op (#122)
     if (state->nag_burst && nag_in_pause(now_ms)) return false;  // burst/pause rest (#122)
+
+    // Fault / driver-override guard (#176): don't assert a spoofed hands-on while
+    // the car is aborting AP, or while the driver is clearly applying torque —
+    // either way the echo would fight the driver's own input instead of keeping a
+    // live engagement nag-free. torsion_bar_torque_nm is this frame's value:
+    // fsd_handle_epas_status runs just before the nag killer. Gates both paths.
+    if (fsd_nag_suppress_fault(state->das_ap_state, state->torsion_bar_torque_nm))
+        return false;
 
     if (state->nag_epas_faithful) return nag_faithful_modec(state, frame, out, now_ms);
 

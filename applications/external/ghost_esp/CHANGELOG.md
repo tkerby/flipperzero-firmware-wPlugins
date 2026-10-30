@@ -1,5 +1,33 @@
 # Changelog
 
+## v1.9.0
+
+### Added
+
+- New WiFi attacks: Handshake + Deauth, Channel Switch, Probe Flood, Bad Msg, Auth Flood, and GTK Abuse
+- WiFi Packet Capture: List Saved PCAPs, Export PCAP to hc22000, and Sniff 802.15.4
+- WiFi Recon Tools: Enum Scan, Name Sniff, and channel hop plan controls
+- DNS Sinkhole submenu under WiFi Network
+- Trackers & Beacons submenu under BLE Scanning
+- BLE Spam Detector, OUI/vendor advertiser scans, and a custom AirPods spam name
+- Govee Scan, Govee Control, and Wake-on-LAN under WiFi Network > IoT Control
+- Forget Saved WiFi and Auto-Reconnect under WiFi Network > WiFi Connection
+- GhostScript list/run/status/stop commands under WiFi Settings > Device & Debug
+- Start Flipper Portal, for launching the HTML uploaded with Set Evil Portal HTML
+
+### Changed
+
+- Menus reordered to put common actions first
+- Stop Deauth/SAE/EAPOL renamed to Stop All Attacks
+- Evil Portal prompt now explains that `default` serves the uploaded HTML
+- IR Dazzler now asks for confirmation before starting
+- App size reduced by ~8 KB
+
+### Fixed
+
+- Set Evil Portal HTML no longer truncates or drops long/minified pages
+- Connect To WiFi no longer asks for the password twice or sends it as the SSID
+
 ## v1.8.3
 
 - Fixed IR remote and universal button lists showing only some entries (or needing the view to be reopened) by waiting for the complete ESP reply before parsing

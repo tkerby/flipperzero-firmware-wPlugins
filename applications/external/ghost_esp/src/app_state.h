@@ -62,6 +62,10 @@ typedef enum {
     // GPS sub-categories
     VIEW_GPS_CONFIG = 64,
     VIEW_GPS_WARDRIVE = 65,
+    // Recon / sinkhole / tracker sub-categories
+    VIEW_WIFI_RECON = 66,
+    VIEW_WIFI_NETWORK_SINKHOLE = 67,
+    VIEW_BLE_SCAN_TRACKERS = 68,
 } ViewId;
 
 typedef struct {
@@ -98,6 +102,7 @@ struct AppState {
     MainMenu* main_menu;
     Submenu* wifi_menu;
     Submenu* wifi_scanning_menu;
+    Submenu* wifi_recon_menu;
     Submenu* wifi_capture_menu;
     Submenu* wifi_attack_menu;
     Submenu* wifi_network_menu;
@@ -124,10 +129,12 @@ struct AppState {
     Submenu* wifi_network_scan_menu;
     Submenu* wifi_network_iot_menu;
     Submenu* wifi_network_webui_menu;
+    Submenu* wifi_network_sinkhole_menu;
     Submenu* ble_scan_detect_menu;
     Submenu* ble_scan_airtag_menu;
     Submenu* ble_scan_gatt_menu;
     Submenu* ble_scan_adv_menu;
+    Submenu* ble_scan_tracker_menu;
     Submenu* gps_config_menu;
     Submenu* gps_wardrive_menu;
     VariableItemList* settings_menu;
@@ -153,8 +160,11 @@ struct AppState {
     bool text_box_pause_hint_shown;
     ViewInputCallback text_box_original_input;
     void* text_box_original_context;
+    ViewInputCallback submenu_original_input;
+    void* submenu_original_context;
     uint32_t last_wifi_category_index;
     uint32_t last_wifi_scanning_index;
+    uint32_t last_wifi_recon_index;
     uint32_t last_wifi_capture_index;
     uint32_t last_wifi_attack_index;
     uint32_t last_wifi_network_index;
@@ -177,10 +187,12 @@ struct AppState {
     uint32_t last_wifi_network_scan_index;
     uint32_t last_wifi_network_iot_index;
     uint32_t last_wifi_network_webui_index;
+    uint32_t last_wifi_network_sinkhole_index;
     uint32_t last_ble_scan_detect_index;
     uint32_t last_ble_scan_airtag_index;
     uint32_t last_ble_scan_gatt_index;
     uint32_t last_ble_scan_adv_index;
+    uint32_t last_ble_scan_tracker_index;
     uint32_t last_gps_config_index;
     uint32_t last_gps_wardrive_index;
     uint32_t ir_current_remote_index;
@@ -209,6 +221,7 @@ struct AppState {
     size_t buffer_size;
     uint8_t connect_input_stage;
     char connect_ssid[128];
+    bool connect_log_active;
     char confirmation_message[256];
     bool came_from_settings;
     void* active_confirm_context; // To track confirmation context for cleanup

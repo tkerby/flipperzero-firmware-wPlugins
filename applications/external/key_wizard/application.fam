@@ -11,5 +11,5 @@ App(
     fap_author="Vazgen Grigoryan",
     fap_weburl="https://github.com/vazgen3201/flipper-key-wizard",
     fap_version="1.3",
-    fap_description="Universal Key Wizard: Auto-detect & save RFID, NFC, iButton keys. Support BTC: bc1q7fu5pck45x2v03e6yyqzf2hexu598s58c8zczg",
+    fap_description="Universal Key Wizard: Auto-detect & save RFID, NFC, and iButton keys with instant sorted storage",
 )

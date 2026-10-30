@@ -1,0 +1,15 @@
+App(
+    appid="wanbo_rc",
+    name="Wanbo RC",
+    apptype=FlipperAppType.EXTERNAL,
+    targets=["f7"],
+    entry_point="wanbo_rc_app",
+    stack_size=2 * 1024,
+    fap_icon="wanbo_rc.png",
+    fap_icon_assets="assets",
+    fap_category="Infrared",
+    fap_author="Yuri Monteiro",
+    fap_weburl="https://github.com/yurimonteir0/wanbo-rc-flipper",
+    fap_version="1.0",
+    fap_description="Infrared remote control for Wanbo's projectors: MINI, X1, X2, X5, NEWT2MAX, T4, T6R1G, Mozart 1, DaVinci 1",
+)

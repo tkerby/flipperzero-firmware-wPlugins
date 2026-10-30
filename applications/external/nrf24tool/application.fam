@@ -1,0 +1,14 @@
+App(
+    appid="nrf24tool",
+    name="NRF24 Tool",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="nrf24tool_app",
+    stack_size=4 * 1024,
+    fap_icon="nrf24tool.png",
+    fap_icon_assets="images",
+    fap_category="GPIO/NRF24",
+    fap_author="S. Terrier",
+    fap_weburl="https://github.com/OuinOuin74/nrf24tool",
+    fap_version="1.0",
+    fap_description="Utility app for NRF24L01",
+)

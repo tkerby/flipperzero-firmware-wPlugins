@@ -53,6 +53,7 @@ struct CliShell {
     const CliCommandExternalConfig* ext_config;
     FuriThread* thread;
     const char* prompt;
+    bool gui_mode;
 
     // Set and freed by shell thread
     FuriEventLoop* event_loop;
@@ -256,7 +257,7 @@ void cli_shell_execute_command(CliShell* cli_shell, FuriString* command) {
         }
 
         // lock loader
-        if(!(command_data.flags & CliCommandFlagParallelSafe)) {
+        if(!(command_data.flags & CliCommandFlagParallelSafe) && !cli_shell->gui_mode) {
             loader_locked = loader_lock(loader);
             if(!loader_locked) {
                 printf(ANSI_FG_RED
@@ -533,4 +534,16 @@ void cli_shell_set_prompt(CliShell* shell, const char* prompt) {
     furi_check(shell);
     furi_check(furi_thread_get_state(shell->thread) == FuriThreadStateStopped);
     shell->prompt = prompt;
+}
+
+void cli_shell_set_gui_mode(CliShell* shell) {
+    furi_check(shell);
+    furi_check(furi_thread_get_state(shell->thread) == FuriThreadStateStopped);
+    shell->gui_mode = true;
+    furi_thread_set_appid(shell->thread, "cli");
+}
+
+bool cli_shell_is_running(CliShell* shell) {
+    furi_check(shell);
+    return furi_thread_get_state(shell->thread) != FuriThreadStateStopped;
 }

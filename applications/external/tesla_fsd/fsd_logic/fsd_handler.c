@@ -4,6 +4,7 @@
 #include "fsd_ota.h"
 #include "fsd_bms.h"
 #include "fsd_steer.h"
+#include "fsd_freshness.h" // shared nag fault/override guard (#176)
 #include <string.h>
 
 void fsd_state_init(FSDState* state, TeslaHWVersion hw) {
@@ -1327,6 +1328,13 @@ bool fsd_handle_nag_killer(FSDState* state, const CANFRAME* frame, CANFRAME* out
     if(!fsd_das_ctx_fresh(state, now_ms)) return false;
     // Burst/pause: during the rest window, don't echo at all (gates both paths).
     if(state->nag_burst && nag_in_pause(now_ms)) return false;
+
+    // Fault / driver-override guard (#176): don't assert a spoofed hands-on while
+    // the car is aborting AP, or while the driver is clearly applying torque —
+    // either way the echo would fight the driver's own input instead of keeping a
+    // live engagement nag-free. torsion_bar_torque_nm is this frame's value:
+    // fsd_handle_epas_steering_mode runs just before the nag killer. Gates both.
+    if(fsd_nag_suppress_fault(state->das_ap_state, state->torsion_bar_torque_nm)) return false;
 
     // v2.17 EPAS-faithful (Mode-C) path takes over the whole decision.
     if(state->nag_epas_faithful) return nag_faithful_modec(state, frame, out, now_ms);

@@ -807,6 +807,10 @@ bool uart_receive_data(
         return false;
     }
 
+    // Any new log session starts as a normal one; the connect flow opts in to
+    // connect_log_active after this call returns.
+    state->connect_log_active = false;
+
     // Close any existing file
     if(uart->storageContext->HasOpenedFile) {
         storage_file_sync(uart->storageContext->current_file);
