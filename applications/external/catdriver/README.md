@@ -12,7 +12,8 @@
 <p align="center">
   <a href="https://github.com/EVL87/catwardrive/releases/tag/v1.0"><img src="https://img.shields.io/badge/Release-v1.0-orange.svg" alt="Release v1.0"></a>
   <a href="https://github.com/EVL87/catwardrive/blob/FlipperZeroApps/LICENSE"><img src="https://img.shields.io/badge/License-GPL--3.0-blue.svg" alt="License"></a>
-  <a href="https://github.com/flipperdevices/flipper-application-catalog/pull/1341"><img src="https://img.shields.io/badge/Flipper%20Lab-PR%20%231341-yellow.svg" alt="Flipper Lab PR"></a>
+  <a href="https://github.com/flipperdevices/flipper-application-catalog/pull/1362"><img src="https://img.shields.io/badge/Flipper%20Lab-PR%20%231362-yellow.svg" alt="Flipper Lab PR"></a>
+  <a href="https://github.com/Next-Flip/Momentum-Apps/pull/89"><img src="https://img.shields.io/badge/Momentum%20Apps-PR%20%2389-purple.svg" alt="Momentum Apps PR"></a>
 </p>
 
 ---
@@ -50,18 +51,17 @@ Permite capturar redes **Wi-Fi 2.4 GHz**, balizas **Bluetooth Low Energy (BLE)**
 
 ---
 
-## ⚡ Requisitos de Firmware en Flipper Zero
+## ⚡ Compatibilidad de Firmware
+La aplicación está construida sobre el SDK oficial de Flipper Zero (**Official Firmware SDK 1.5+**) y es compatible de forma nativa con:
+* **Firmware Oficial de Flipper Zero (OFW)**
+* **Momentum Firmware**
+* **Unleashed / Xtreme Firmware**
 
-Para habilitar el soporte de Dual UART simultáneo (ESP32 + GPS a la vez), el Flipper Zero debe tener instalado **Momentum Firmware**:
-
-* 📥 Descarga: [Momentum Firmware Releases (MNTM Latest)](https://github.com/Next-Flip/Momentum-Firmware/releases)
-
-### Configuración de Pines (Dual UART):
-En tu Flipper Zero con Momentum:
-1. Ve a **`Settings` $\rightarrow$ `Protocols`**.
-2. Configura los canales UART de la siguiente manera:
-   * **UART ESP Channel:** Pines **13 (TX) y 14 (RX)** (`USUART`).
-   * **UART NMEA GPS Channel:** Pines **15 (TX) y 16 (RX)** (`LPUART`).
+### Canales UART (Hardware Dual Serial):
+La aplicación adquiere directamente los puertos seriales por hardware en el bus GPIO del Flipper Zero:
+* **Canal ESP32-S3 (USART):** Pines **13 (TX) y 14 (RX)** a 115200 baudios.
+* **Canal GPS NMEA (LPUART):** Pines **15 (TX) y 16 (RX)** a 9600 baudios.
+*(En firmwares como Momentum, puedes verificar los pines en Settings -> Protocols -> GPS).*
 
 ---
 
@@ -99,14 +99,15 @@ Si utilizas la aplicación **ESP Flasher** de Flipper Zero ([0xchocolate/flipper
 
 ---
 
-### Opción 2: Flasheo desde el Navegador (Marauder Web Flasher)
-Puedes flashear la tarjeta directamente desde tu PC usando el instalador web oficial:
+### Opción 2: Flasheo en 1 Clic desde el Navegador (CatDriver Web Flasher)
+Puedes flashear tu módulo ESP32-S3 directamente desde Google Chrome o Microsoft Edge usando nuestro instalador oficial hosteado en GitHub Pages:
 
-1. Ingresa a: [**Marauder Web Installer**](https://justcallmekoko.github.io/MarauderInstaller/)
-2. Conecta la placa ESP32-S3 a tu PC mediante USB-C en modo Bootloader.
-3. Elige la opción **Custom** para cargar un binario personalizado.
-4. Selecciona el archivo binario compilado [`firmware/build/sketch.ino.bin`](firmware/build/sketch.ino.bin) o la imagen fusionada [`firmware/build/sketch.ino.merged.bin`](firmware/build/sketch.ino.merged.bin).
-5. Haz clic en **Program** y espera a que termine.
+👉 **[Abrir CatDriver Web Installer](https://evl87.github.io/catwardrive/)**
+
+1. Conecta la placa ESP32-S3 a tu PC mediante USB-C (con los 5V activos en el Flipper si tu placa no se autoalimenta).
+2. Haz clic en **Flashear CatDriver ESP32-S3**.
+3. Selecciona el puerto serie COM de la placa y listo: el instalador flasheará automáticamente el binario más reciente del repositorio en offset `0x0`.
+4. *(Opcional)* Incluye monitor serial integrado en el navegador para verificar la respuesta inmediatamente.
 
 ---
 
